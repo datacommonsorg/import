@@ -1272,7 +1272,7 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             output_import_name=output_import_name,
             skip_all_sources_present_check=False
         )
-        self.assertEqual(len(jobs), 2)
+        self.assertEqual(len(jobs), 1)
         
         # 3. Verify results in Spanner (using multi_use=True to allow multiple queries)
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -1334,7 +1334,7 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             output_import_name=output_import_name,
             skip_all_sources_present_check=False
         )
-        self.assertEqual(len(jobs), 2)
+        self.assertEqual(len(jobs), 1)
         
         # 3. Verify no observations are created
         with self.database.snapshot() as snapshot:
@@ -1366,7 +1366,7 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             output_import_name=output_import_name,
             skip_all_sources_present_check=True
         )
-        self.assertEqual(len(jobs), 2)
+        self.assertEqual(len(jobs), 1)
         
         # 3. Verify observation is created with SV_A's value
         with self.database.snapshot() as snapshot:
@@ -1409,7 +1409,7 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             output_import_name=output_import_name,
             skip_all_sources_present_check=False
         )
-        self.assertEqual(len(jobs), 2)
+        self.assertEqual(len(jobs), 1)
         
         # 3. Verify results in Spanner: should have 2 distinct aggregated TimeSeries and Observations
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -1461,7 +1461,7 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             output_import_name=output_import_name,
             skip_all_sources_present_check=False
         )
-        self.assertEqual(len(jobs), 2)
+        self.assertEqual(len(jobs), 1)
         
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:

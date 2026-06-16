@@ -80,25 +80,29 @@ class StatVarAggregator:
             f"-> output import: {output_import_name} (skip_check={skip_all_sources_present_check})"
         )
 
-        # 1. Populate TimeSeries parent rows first (required due to interleaving)
-        ts_job = self._populate_timeseries(
+        # 1. Generate TimeSeries parent query
+        ts_query = self._get_timeseries_query(
             ancestor_sv, source_svs, import_names, output_import_name
         )
         
-        # 2. Aggregate and populate Observation child rows
-        obs_job = self._populate_observations(
+        # 2. Generate Observation child query
+        obs_query = self._get_observations_query(
             ancestor_sv, source_svs, import_names, output_import_name, skip_all_sources_present_check
         )
 
-        return [ts_job, obs_job]
+        # 3. Combine into a single multi-statement SQL script (sequentially executed in a single job)
+        combined_query = f"{ts_query}\n\n{obs_query}"
+        job = self.executor.execute(combined_query)
 
-    def _populate_timeseries(
+        return [job]
+
+    def _get_timeseries_query(
         self,
         ancestor_sv: str,
         source_svs: List[str],
         import_names: List[str],
         output_import_name: str
-    ) -> bigquery.job.QueryJob:
+    ) -> str:
         """Creates TimeSeries entries for the ancestor StatVar."""
         dest = self.executor.get_spanner_destination_uri()
         connection_id = self.executor.connection_id
@@ -179,16 +183,16 @@ class StatVarAggregator:
           facet
         FROM ParsedTS;
         """
-        return self.executor.execute(query)
+        return query
 
-    def _populate_observations(
+    def _get_observations_query(
         self,
         ancestor_sv: str,
         source_svs: List[str],
         import_names: List[str],
         output_import_name: str,
         skip_all_sources_present_check: bool
-    ) -> bigquery.job.QueryJob:
+    ) -> str:
         """Aggregates child Observations and writes them to Spanner."""
         dest = self.executor.get_spanner_destination_uri()
         connection_id = self.executor.connection_id
@@ -271,4 +275,4 @@ class StatVarAggregator:
         FROM AggregatedObs
         WHERE {filter_condition};
         """
-        return self.executor.execute(query)
+        return query
