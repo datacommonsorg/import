@@ -71,7 +71,7 @@ class ProvenanceSummaryGenerator:
           measurement_method,
           unit,
           scaling_factor,
-          CAST(JSON_VALUE(facet, '$.isDCAggregate') AS BOOL) as is_dc_aggregate,
+          CAST(JSON_VALUE(facet, '$.isDcAggregate') AS BOOL) as is_dc_aggregate,
           date as date_val,
           SAFE_CAST(value AS FLOAT64) as value_num
         FROM EXTERNAL_QUERY("{connection_id}",

@@ -21,10 +21,12 @@ from .bq_executor import BigQueryExecutor
 from .linked_edge_generator import LinkedEdgeGenerator
 from .provenance_summary_generator import ProvenanceSummaryGenerator
 from .stat_var_aggregator import StatVarAggregator
+from .place_aggregation_generator import PlaceAggregationGenerator
 
 __all__ = [
     'BigQueryExecutor',
     'LinkedEdgeGenerator',
     'ProvenanceSummaryGenerator',
     'StatVarAggregator',
+    'PlaceAggregationGenerator',
 ]
