@@ -20,9 +20,11 @@ linked relationship edges and provenance summaries in Spanner.
 from .bq_executor import BigQueryExecutor
 from .linked_edge_generator import LinkedEdgeGenerator
 from .provenance_summary_generator import ProvenanceSummaryGenerator
+from .place_aggregation_generator import PlaceAggregationGenerator
 
 __all__ = [
     'BigQueryExecutor',
     'LinkedEdgeGenerator',
     'ProvenanceSummaryGenerator',
+    'PlaceAggregationGenerator',
 ]
