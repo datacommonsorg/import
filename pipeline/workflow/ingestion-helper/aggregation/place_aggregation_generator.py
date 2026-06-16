@@ -113,23 +113,51 @@ class PlaceAggregationGenerator:
             """
 
         # SQL helper fragments for dynamic lineage and hashing
-        new_prov_sql = f"CONCAT(ts.source_provenance, '_Agg', '{destination_type}')"
+        # Target provenance and method expressions working directly on the JSON 'facet' column
+        new_prov_sql = f"CONCAT(JSON_VALUE(facet, '$.provenance'), '_Agg', '{destination_type}')"
         
         new_method_sql = f"""
             IF(
-              ts.source_method IS NULL OR ts.source_method = '' OR ts.source_method = 'DataCommonsAggregate',
+              JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
               'DataCommonsAggregate',
-              CONCAT('dcAggregate/', ts.source_method)
+              CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
             )
         """
         
-        # 3. Deterministic Facet ID: Farm Fingerprint of (variable + new_method + new_provenance)
-        # We cast the resulting INT64 to STRING to match Spanner's schema.
-        target_facet_id_sql = f"""
+        # Construct the facet expression to update measurementMethod, provenance, and isDcAggregate.
+        # This preserves all other fields in the source facet.
+        # We align with Java: 'isDcAggregate', true
+        facet_expr = f"""
+          JSON_SET(
+            JSON_SET(
+              JSON_SET(facet, '$.measurementMethod', {new_method_sql}),
+              '$.provenance', {new_prov_sql}
+            ),
+            '$.isDcAggregate', true
+          )
+        """
+
+        # Fingerprint calculation for Step 1 (on 'facet' column)
+        fingerprint_step1_sql = """
             CAST(FARM_FINGERPRINT(CONCAT(
-              ts.variable_measured, '_',
-              {new_method_sql}, '_',
-              {new_prov_sql}
+              COALESCE(JSON_VALUE(facet, '$.provenance'), ''), '^',
+              COALESCE(JSON_VALUE(facet, '$.measurementMethod'), ''), '^',
+              COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), '^',
+              COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), '^',
+              COALESCE(JSON_VALUE(facet, '$.unit'), ''), '^',
+              COALESCE(JSON_VALUE(facet, '$.isDcAggregate'), 'true')
+            )) AS STRING)
+        """
+
+        # Fingerprint calculation for Step 2 (on 'new_facet' column)
+        fingerprint_step2_sql = """
+            CAST(FARM_FINGERPRINT(CONCAT(
+              COALESCE(JSON_VALUE(new_facet, '$.provenance'), ''), '^',
+              COALESCE(JSON_VALUE(new_facet, '$.measurementMethod'), ''), '^',
+              COALESCE(JSON_VALUE(new_facet, '$.observationPeriod'), ''), '^',
+              COALESCE(JSON_VALUE(new_facet, '$.scalingFactor'), ''), '^',
+              COALESCE(JSON_VALUE(new_facet, '$.unit'), ''), '^',
+              COALESCE(JSON_VALUE(new_facet, '$.isDcAggregate'), 'true')
             )) AS STRING)
         """
 
@@ -144,55 +172,23 @@ class PlaceAggregationGenerator:
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "TimeSeries"}}' ) AS
-        SELECT
-            variable_measured,
-            JSON_OBJECT('entity1', parent_id) AS entities,
-            extra_entities_id,
-            facet_id,
-            JSON_OBJECT(
-              'measurementMethod', new_method,
-              'provenance', new_prov
-            ) AS facet
-        FROM (
-          -- Inner query performs the DISTINCT on STRING columns only (Allowed in BQ!)
-          SELECT DISTINCT
-              ts.variable_measured,
-              parent.parent_id,
-              '' AS extra_entities_id,
-              {target_facet_id_sql} AS facet_id,
-              {new_method_sql} AS new_method,
-              {new_prov_sql} AS new_prov
-          FROM (
-            -- Source TimeSeries (filtered by provenance)
-            -- Extracts JSON fields as flat STRINGS immediately
-            SELECT 
-                entity1, 
-                variable_measured, 
-                facet_id, 
-                extra_entities_id,
-                JSON_VALUE(facet, '$.provenance') AS source_provenance,
-                JSON_VALUE(facet, '$.measurementMethod') AS source_method
-            FROM EXTERNAL_QUERY(
-              "{connection_id}",
-              '''
-              SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
-              FROM TimeSeries
-              WHERE provenance IN ({provenance_str})
-              '''
-            )
-          ) ts
+        WITH SourceTS AS (
+          SELECT
+            ts.variable_measured,
+            parent.parent_id,
+            '' AS extra_entities_id,
+            -- Stringify JSON columns because BigQuery does not support SELECT DISTINCT on JSON
+            TO_JSON_STRING(JSON_OBJECT('entity1', parent.parent_id)) as entities_str,
+            TO_JSON_STRING({facet_expr}) as facet_str
+          FROM EXTERNAL_QUERY("{connection_id}",
+            '''SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
+               FROM TimeSeries
+               WHERE provenance IN ({provenance_str})''') ts
           JOIN (
             -- Source Type Check (Edge where predicate = 'typeOf' and object_id = source_type)
             SELECT subject_id
-            FROM EXTERNAL_QUERY(
-              "{connection_id}",
-              '''
-              SELECT subject_id
-              FROM Edge
-              WHERE predicate = "typeOf"
-                AND object_id = "{source_type}"
-              '''
-            )
+            FROM EXTERNAL_QUERY("{connection_id}",
+              '''SELECT subject_id FROM Edge WHERE predicate = "typeOf" AND object_id = "{source_type}"''')
           ) src_type ON ts.entity1 = src_type.subject_id
           JOIN (
             -- Containment (child -> parent)
@@ -201,17 +197,35 @@ class PlaceAggregationGenerator:
           JOIN (
             -- Destination Type Check (Edge where predicate = 'typeOf' and object_id = destination_type)
             SELECT subject_id
-            FROM EXTERNAL_QUERY(
-              "{connection_id}",
-              '''
-              SELECT subject_id
-              FROM Edge
-              WHERE predicate = "typeOf"
-                AND object_id = "{destination_type}"
-              '''
-            )
+            FROM EXTERNAL_QUERY("{connection_id}",
+              '''SELECT subject_id FROM Edge WHERE predicate = "typeOf" AND object_id = "{destination_type}"''')
           ) dest_type ON parent.parent_id = dest_type.subject_id
-        ) ;
+        ),
+        UniqueTS AS (
+          SELECT DISTINCT
+            variable_measured,
+            parent_id,
+            extra_entities_id,
+            entities_str,
+            facet_str
+          FROM SourceTS
+        ),
+        ParsedTS AS (
+          SELECT
+            variable_measured,
+            parent_id,
+            extra_entities_id,
+            SAFE.PARSE_JSON(entities_str) AS entities,
+            SAFE.PARSE_JSON(facet_str) AS facet
+          FROM UniqueTS
+        )
+        SELECT
+          variable_measured,
+          entities,
+          extra_entities_id,
+          {fingerprint_step1_sql} AS facet_id,
+          facet
+        FROM ParsedTS;
 
 
         -- =========================================================================
@@ -221,84 +235,85 @@ class PlaceAggregationGenerator:
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "Observation"}}' ) AS
-        SELECT 
-            parent.parent_id AS entity1, 
+        WITH MappedObservations AS (
+          SELECT
             ts.variable_measured,
-            {target_facet_id_sql} AS facet_id,
+            parent.parent_id AS entity1,
             ts.extra_entities_id,
             obs.date,
-            CAST(SUM(SAFE_CAST(obs.value AS FLOAT64)) AS STRING) AS value
-        FROM (
-          -- Source TimeSeries (filtered by provenance)
-          -- Extracts JSON fields as flat STRINGS immediately
-          SELECT 
-              entity1, 
-              variable_measured, 
-              facet_id, 
-              extra_entities_id,
-              JSON_VALUE(facet, '$.provenance') AS source_provenance,
-              JSON_VALUE(facet, '$.measurementMethod') AS source_method
-          FROM EXTERNAL_QUERY(
-            "{connection_id}",
-            '''
-            SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
-            FROM TimeSeries
-            WHERE provenance IN ({provenance_str})
-            '''
-          )
-        ) ts
-        JOIN (
-          -- Source Type Check
-          SELECT subject_id
-          FROM EXTERNAL_QUERY(
-            "{connection_id}",
-            '''
+            SAFE_CAST(obs.value AS FLOAT64) as val_num,
+            -- Calculate the new facet JSON first to preserve all fields
+            {facet_expr} AS new_facet
+          FROM (
+            -- Source TimeSeries (filtered by provenance)
+            SELECT 
+                entity1, 
+                variable_measured, 
+                facet_id, 
+                extra_entities_id,
+                facet
+            FROM EXTERNAL_QUERY("{connection_id}",
+              '''SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
+                 FROM TimeSeries
+                 WHERE provenance IN ({provenance_str})''')
+          ) ts
+          JOIN (
+            -- Source Type Check
             SELECT subject_id
-            FROM Edge
-            WHERE predicate = "typeOf"
-              AND object_id = "{source_type}"
-            '''
-          )
-        ) src_type ON ts.entity1 = src_type.subject_id
-        JOIN (
-          -- Source Observations
-          SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value
-          FROM EXTERNAL_QUERY(
-            "{connection_id}",
-            '''
+            FROM EXTERNAL_QUERY("{connection_id}",
+              '''SELECT subject_id FROM Edge WHERE predicate = "typeOf" AND object_id = "{source_type}"''')
+          ) src_type ON ts.entity1 = src_type.subject_id
+          JOIN (
+            -- Source Observations
             SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value
-            FROM Observation
-            '''
-          )
-        ) obs ON 
-            ts.variable_measured = obs.variable_measured AND 
-            ts.entity1 = obs.entity1 AND 
-            ts.extra_entities_id = obs.extra_entities_id AND 
-            ts.facet_id = obs.facet_id
-        JOIN (
-          -- Containment (child -> parent)
-          {containment_sql}
-        ) parent ON ts.entity1 = parent.child_id
-        JOIN (
-          -- Destination Type Check
-          SELECT subject_id
-          FROM EXTERNAL_QUERY(
-            "{connection_id}",
-            '''
+            FROM EXTERNAL_QUERY("{connection_id}",
+              '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''')
+          ) obs ON 
+              ts.variable_measured = obs.variable_measured AND 
+              ts.entity1 = obs.entity1 AND 
+              ts.extra_entities_id = obs.extra_entities_id AND 
+              ts.facet_id = obs.facet_id
+          JOIN (
+            -- Containment (child -> parent)
+            {containment_sql}
+          ) parent ON ts.entity1 = parent.child_id
+          JOIN (
+            -- Destination Type Check
             SELECT subject_id
-            FROM Edge
-            WHERE predicate = "typeOf"
-              AND object_id = "{destination_type}"
-            '''
-          )
-        ) dest_type ON parent.parent_id = dest_type.subject_id
-        GROUP BY 
-            parent_id, 
-            ts.variable_measured, 
-            ts.extra_entities_id, 
-            obs.date,
-            ts.source_provenance,
-            ts.source_method ;
+            FROM EXTERNAL_QUERY("{connection_id}",
+              '''SELECT subject_id FROM Edge WHERE predicate = "typeOf" AND object_id = "{destination_type}"''')
+          ) dest_type ON parent.parent_id = dest_type.subject_id
+        ),
+        ObservationsWithFingerprint AS (
+          SELECT
+            entity1,
+            variable_measured,
+            extra_entities_id,
+            date,
+            val_num,
+            -- Calculate new_facet_id using Farm Fingerprint on the new_facet
+            {fingerprint_step2_sql} AS new_facet_id
+          FROM MappedObservations
+        ),
+        AggregatedObs AS (
+          SELECT
+            entity1,
+            variable_measured,
+            extra_entities_id,
+            new_facet_id AS facet_id,
+            date,
+            SUM(val_num) as total_val
+          FROM ObservationsWithFingerprint
+          GROUP BY entity1, variable_measured, extra_entities_id, new_facet_id, date
+        )
+        SELECT 
+            entity1, 
+            variable_measured,
+            facet_id,
+            extra_entities_id,
+            date,
+            CAST(total_val AS STRING) AS value
+        FROM AggregatedObs;
         """
 
         logging.info(f"Running place aggregation query for {import_names} ({source_type} -> {destination_type})...")

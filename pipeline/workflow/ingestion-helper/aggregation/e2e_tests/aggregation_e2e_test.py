@@ -123,7 +123,7 @@ class AggregationIntegrationTestBase(unittest.TestCase):
             'unit': unit,
             'scalingFactor': scaling,
             'provenance': provenance,
-            'isDCAggregate': is_dc_aggregate
+            'isDcAggregate': is_dc_aggregate
         })
         
         # Avoid duplicates in mock list
