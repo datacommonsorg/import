@@ -49,21 +49,21 @@ def embedding_ingestion(req: EmbeddingIngestionRequest, spanner: SpannerClient =
         for spec in config.EMBEDDING_SPECS:
             node_types = spec["node_types"]
             model_name = spec["model_name"]
-            embedding_type = spec["embedding_type"]
+            embedding_label = spec["embedding_label"]
             task_type = spec["task_type"]
 
-            logging.info(f"Job started for {embedding_type}. Fetching all nodes for types: {node_types}")
+            logging.info(f"Job started for {embedding_label}. Fetching all nodes for types: {node_types}")
             nodes = get_updated_nodes(spanner.database, timestamp, node_types, timeout=config.TIMEOUT)
             # materializing generator to list if necessary, but generator works since it yields
             converted_nodes = list(filter_and_convert_nodes(nodes))
 
-            logging.info(f"Generating embeddings for model {model_name} (embedding_type: {embedding_type})")
+            logging.info(f"Generating embeddings for model {model_name} (embedding_label: {embedding_label})")
             affected_rows = generate_embeddings_partitioned(
                 spanner.database,
                 converted_nodes,
                 model_name=model_name,
                 embedding_table=spanner.embedding_table,
-                embedding_type=embedding_type,
+                embedding_label=embedding_label,
                 task_type=task_type,
                 timeout=config.TIMEOUT
             )

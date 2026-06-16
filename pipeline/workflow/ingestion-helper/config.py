@@ -49,7 +49,7 @@ else:
 
 _DEFAULT_EMBEDDING_SPECS = [
     {
-        "embedding_type": "base_text_embedding",
+        "embedding_label": "base_text_embedding",
         "model_name": "NodeEmbeddingModel",
         "task_type": "RETRIEVAL_QUERY",
         "node_types": ["StatisticalVariable", "Topic"]
@@ -60,7 +60,7 @@ specs_env = os.environ.get('EMBEDDING_SPECS')
 if specs_env:
     try:
         parsed = json.loads(specs_env)
-        required_keys = {"embedding_type", "model_name", "task_type", "node_types"}
+        required_keys = {"embedding_label", "model_name", "task_type", "node_types"}
         if isinstance(parsed, list) and all(isinstance(s, dict) and required_keys.issubset(s.keys()) for s in parsed):
             EMBEDDING_SPECS = parsed
         else:
