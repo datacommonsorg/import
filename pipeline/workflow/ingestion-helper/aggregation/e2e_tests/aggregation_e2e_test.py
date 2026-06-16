@@ -180,8 +180,8 @@ class AggregationIntegrationTestBase(unittest.TestCase):
             self.mock_observations = []
 
 
-class LinkedEdgeGeneratorIntegrationTestBase(AggregationIntegrationTestBase):
-    """Base class for LinkedEdgeGenerator integration tests."""
+class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
+    """Integration tests for LinkedEdgeGenerator."""
 
     def get_generator(self) -> LinkedEdgeGenerator:
         executor = BigQueryExecutor(
@@ -378,16 +378,12 @@ class LinkedEdgeGeneratorIntegrationTestBase(AggregationIntegrationTestBase):
             self.assertEqual(tuple(results[0]), ('geoId/06075', 'geoId/06', expected_provenance))
 
 
-class LinkedEdgeGeneratorBaseDcTest(LinkedEdgeGeneratorIntegrationTestBase):
-    is_base_dc = True
-
-
-class LinkedEdgeGeneratorCustomDcTest(LinkedEdgeGeneratorIntegrationTestBase):
+class LinkedEdgeGeneratorCustomDcTest(LinkedEdgeGeneratorIntegrationTest):
     is_base_dc = False
 
 
-class ProvenanceSummaryGeneratorIntegrationTestBase(AggregationIntegrationTestBase):
-    """Base class for ProvenanceSummaryGenerator integration E2E tests."""
+class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
+    """Integration E2E tests for ProvenanceSummaryGenerator."""
 
     def get_generator(self) -> ProvenanceSummaryGenerator:
         executor = BigQueryExecutor(
@@ -643,11 +639,7 @@ class ProvenanceSummaryGeneratorIntegrationTestBase(AggregationIntegrationTestBa
             self.assertIsNone(top_places[1]['name']) # BigQuery LEFT JOIN returns NULL for missing name
 
 
-class ProvenanceSummaryGeneratorBaseDcTest(ProvenanceSummaryGeneratorIntegrationTestBase):
-    is_base_dc = True
-
-
-class ProvenanceSummaryGeneratorCustomDcTest(ProvenanceSummaryGeneratorIntegrationTestBase):
+class ProvenanceSummaryGeneratorCustomDcTest(ProvenanceSummaryGeneratorIntegrationTest):
     is_base_dc = False
 
 
