@@ -66,6 +66,8 @@ logging.basicConfig(level=logging.INFO)
 class AggregationIntegrationTestBase(unittest.TestCase):
     """Base class for aggregation integration tests, handling Spanner setup/teardown."""
 
+    is_base_dc = True
+
     @classmethod
     def setUpClass(cls):
         logging.info("Setting up Spanner and BigQuery clients...")
@@ -109,12 +111,14 @@ class AggregationIntegrationTestBase(unittest.TestCase):
 
     def add_edge(self, subject_id, predicate, object_id, import_name):
         """Adds an edge to mock list."""
-        provenance = f"dc/base/{import_name}"
+        prefix = "dc/base/" if self.is_base_dc else ""
+        provenance = f"{prefix}{import_name}"
         self.mock_edges.append((subject_id, predicate, object_id, provenance))
 
     def add_timeseries(self, variable, entity_id, method, period, unit, scaling, import_name, facet_id='facet1', is_dc_aggregate=False, extra_entities_id=''):
         """Adds a TimeSeries metadata row to mock list."""
-        provenance = f"dc/base/{import_name}"
+        prefix = "dc/base/" if self.is_base_dc else ""
+        provenance = f"{prefix}{import_name}"
         entities_json = json.dumps({'entity1': entity_id})
         facet_json = json.dumps({
             'measurementMethod': method,
@@ -190,7 +194,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             location=BQ_LOCATION,
             run_sequential=True
         )
-        return LinkedEdgeGenerator(executor, is_base_dc=True)
+        return LinkedEdgeGenerator(executor, is_base_dc=self.is_base_dc)
 
     def test_linked_contained_in_place(self):
         """Tests run_linked_contained_in_place.
@@ -224,7 +228,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs'
+            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
             self.assertEqual(len(results), 3)
             self.assertEqual(tuple(results[0]), ('geoId/06', 'country/USA', expected_provenance))
             self.assertEqual(tuple(results[1]), ('geoId/06075', 'country/USA', expected_provenance))
@@ -262,7 +266,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs'
+            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
             self.assertEqual(len(results), 2)
             self.assertEqual(tuple(results[0]), ('Instance_A', 'Class_B', expected_provenance))
             self.assertEqual(tuple(results[1]), ('Instance_A', 'Class_C', expected_provenance))
@@ -299,7 +303,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs'
+            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
             self.assertEqual(len(results), 1)
             self.assertEqual(tuple(results[0]), ('TestVariable', 'dc/topic/TestTopic', expected_provenance))
 
@@ -334,7 +338,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs'
+            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
             # Should resolve to 4 distinct edges: 06->06, 06->36, 36->06, 36->36
             self.assertEqual(len(results), 4)
             self.assertEqual(tuple(results[0]), ('geoId/06', 'geoId/06', expected_provenance))
@@ -371,8 +375,13 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
+            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
             self.assertEqual(len(results), 1)
-            self.assertEqual(tuple(results[0]), ('geoId/06075', 'geoId/06', 'dc/base/GeneratedGraphs'))
+            self.assertEqual(tuple(results[0]), ('geoId/06075', 'geoId/06', expected_provenance))
+
+
+class LinkedEdgeGeneratorCustomDcTest(LinkedEdgeGeneratorIntegrationTest):
+    is_base_dc = False
 
 
 class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
@@ -387,7 +396,7 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             location=BQ_LOCATION,
             run_sequential=True
         )
-        return ProvenanceSummaryGenerator(executor, is_base_dc=True)
+        return ProvenanceSummaryGenerator(executor, is_base_dc=self.is_base_dc)
 
     def test_provenance_summary_aggregation(self):
         """Tests run_provenance_summary_aggregation.
@@ -439,7 +448,9 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             row = results[0]
             self.assertEqual(row[0], 'ProvenanceSummary')
             self.assertEqual(row[1], 'Count_Person')
-            self.assertEqual(row[2], f'dc/base/{import_name}')
+            
+            expected_provenance = f'dc/base/{import_name}' if self.is_base_dc else import_name
+            self.assertEqual(row[2], expected_provenance)
             
             # Verify JSON value
             value_json = row[3]
@@ -641,6 +652,10 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             # geoId/99 (Dangling: name should be None or empty, but must not crash)
             self.assertEqual(top_places[1]['dcid'], 'geoId/99')
             self.assertIsNone(top_places[1]['name']) # BigQuery LEFT JOIN returns NULL for missing name
+
+
+class ProvenanceSummaryGeneratorCustomDcTest(ProvenanceSummaryGeneratorIntegrationTest):
+    is_base_dc = False
 
 
 class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
