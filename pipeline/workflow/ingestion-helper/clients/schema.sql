@@ -19,7 +19,9 @@ CREATE TABLE Node (
   types ARRAY<STRING(1024)>,
   last_update_timestamp TIMESTAMP OPTIONS (allow_commit_timestamp=true),
   name_tokenlist TOKENLIST AS (TOKENIZE_FULLTEXT(name)) HIDDEN,
-) PRIMARY KEY(subject_id);
+) PRIMARY KEY(subject_id), OPTIONS (
+  columnar_policy = 'enabled'
+);
 
 CREATE TABLE Edge (
   subject_id STRING(1024) NOT NULL,
@@ -27,7 +29,9 @@ CREATE TABLE Edge (
   object_id STRING(1024) NOT NULL,
   provenance STRING(1024) NOT NULL,
 ) PRIMARY KEY(subject_id, predicate, object_id, provenance),
-INTERLEAVE IN Node;
+INTERLEAVE IN Node, OPTIONS (
+  columnar_policy = 'enabled'
+);
 
 CREATE TABLE TimeSeries (
   variable_measured STRING(1024) NOT NULL,
@@ -40,8 +44,7 @@ CREATE TABLE TimeSeries (
   entity3 STRING(1024) AS (JSON_VALUE(entities, '$.entity3')) STORED,
   observation_period STRING(1024) AS (JSON_VALUE(facet, '$.observationPeriod')) STORED,
   unit STRING(1024) AS (JSON_VALUE(facet, '$.unit')) STORED,
-  measurement_method STRING(1024) AS (JSON_VALUE(facet, '$.measurementMethod')) STORED,
-  scaling_factor STRING(1024) AS (JSON_VALUE(facet, '$.scalingFactor')) STORED,
+  measurement_method STRING(1024) AS (JSON_VALUE(facet, '$.measurementMethod')) STORED,  
   provenance STRING(1024) NOT NULL AS (JSON_VALUE(facet, '$.provenance')) STORED,
   last_update_timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
 ) PRIMARY KEY(variable_measured, entity1, extra_entities_id, facet_id), OPTIONS (
@@ -55,11 +58,24 @@ CREATE TABLE Observation (
   facet_id STRING(1024) NOT NULL,
   date STRING(32) NOT NULL,
   value STRING(MAX) NOT NULL,
+  attributes JSON,
   last_update_timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
 ) PRIMARY KEY(variable_measured, entity1, extra_entities_id, facet_id, date DESC),
   INTERLEAVE IN PARENT TimeSeries ON DELETE CASCADE, OPTIONS (
   columnar_policy = 'enabled'
 );
+
+CREATE INDEX TimeSeriesByEntity1
+ON TimeSeries(entity1)
+OPTIONS (columnar_policy = 'enabled');
+
+CREATE NULL_FILTERED INDEX TimeSeriesByEntity2
+ON TimeSeries(entity2)
+OPTIONS (columnar_policy = 'enabled');
+
+CREATE NULL_FILTERED INDEX TimeSeriesByEntity3
+ON TimeSeries(entity3, variable_measured, entity1, entity2)
+OPTIONS (columnar_policy = 'enabled');
 
 CREATE INDEX TimeSeriesByProvenance ON TimeSeries(provenance) OPTIONS (
   columnar_policy = 'enabled'

@@ -489,7 +489,14 @@ class SpannerClient:
             "Node", "Edge", "TimeSeries", "Observation", "ImportStatus", "IngestionHistory",
             "ImportVersionHistory", "IngestionLock", "Cache", self.embedding_table
         ]
-        required_indexes = ["InEdge", "TimeSeriesByProvenance", self.embedding_index]
+        required_indexes = [
+            "InEdge",
+            "TimeSeriesByProvenance",
+            "TimeSeriesByEntity1",
+            "TimeSeriesByEntity2",
+            "TimeSeriesByEntity3",
+            self.embedding_index
+        ]
         required_models = [m['name'] for m in self.models]
 
         missing_tables = [
