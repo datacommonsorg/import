@@ -53,45 +53,43 @@ class ProvenanceSummaryGenerator:
         connection_id = self.executor.connection_id
 
         safe_names = [_escape_sql_literal(name) for name in import_names]
-        # Format import names for the SQL IN clause
-        imports_str = ", ".join([f"'{name}'" for name in safe_names])
-        provenance_dcid_expr = "CONCAT('dc/base/', raw.import_name)" if self.is_base_dc else "raw.import_name"
+        # Format provenances for the SQL IN clause (matching TimeSeries.provenance)
+        prefix = "dc/base/" if self.is_base_dc else ""
+        provenances = [f"'{prefix}{name}'" for name in safe_names]
+        provenances_str = ", ".join(provenances)
 
         query = f"""  # nosec
-        -- Step 1: Fetch Observation rows for the specific import
-        -- We cast 'observations' to STRING to avoid the PROTO error.
-        CREATE OR REPLACE TEMPORARY TABLE `temp_obs_raw` AS
+        -- Step 1: Fetch joined TimeSeries and Observation data from Spanner
+        -- We filter by provenance (which corresponds to import_name with prefix)
+        CREATE OR REPLACE TEMPORARY TABLE `temp_obs_flat` AS
         SELECT 
           variable_measured, 
-          observation_about, 
+          entity1 as observation_about, 
           facet_id, 
-          import_name,
+          provenance,
           observation_period,
           measurement_method,
           unit,
           scaling_factor,
-          is_dc_aggregate,
-          observations_json
+          CAST(JSON_VALUE(facet, '$.isDCAggregate') AS BOOL) as is_dc_aggregate,
+          date as date_val,
+          SAFE_CAST(value AS FLOAT64) as value_num
         FROM EXTERNAL_QUERY("{connection_id}",
           '''SELECT 
                variable_measured, 
-               observation_about, 
+               entity1, 
                facet_id, 
-               import_name,
+               provenance,
                observation_period,
                measurement_method,
                unit,
                scaling_factor,
-               is_dc_aggregate,
-               IF(ARRAY_LENGTH(observations.values) > 0,
-                 (
-                   SELECT CONCAT('{{"values":[', STRING_AGG(FORMAT('{{"key":"%s","value":"%s"}}', entry.key, entry.value), ','), ']}}')
-                   FROM UNNEST(observations.values) as entry
-                 ),
-                 NULL
-               ) as observations_json
-             FROM Observation
-             WHERE import_name IN ({imports_str}) ''');
+               facet,
+               date,
+               value
+             FROM TimeSeries
+             JOIN Observation USING (variable_measured, entity1, extra_entities_id, facet_id)
+             WHERE provenance IN ({provenances_str}) ''');
 
         -- Step 2: Fetch ALL Node names (Narrow selection to reduce data transfer)
         CREATE OR REPLACE TEMPORARY TABLE `temp_node_names` AS
@@ -108,42 +106,64 @@ class ProvenanceSummaryGenerator:
         -- Step 4: Join and Flatten in BigQuery
         CREATE OR REPLACE TEMPORARY TABLE `temp_prepared` AS
         SELECT 
-          raw.variable_measured,
-          raw.observation_about,
-          raw.facet_id,
-          raw.import_name,
-          raw.observation_period,
-          raw.measurement_method,
-          raw.unit,
-          raw.scaling_factor,
-          raw.is_dc_aggregate,
-          JSON_VALUE(v, '$.key') as date_val,
-          SAFE_CAST(JSON_VALUE(v, '$.value') AS FLOAT64) as value_num,
-          {provenance_dcid_expr} as provenance_dcid,
+          raw.*,
+          IF(raw.provenance LIKE 'dc/base/%', SUBSTR(raw.provenance, 9), raw.provenance) as import_name,
           nodes.name as place_name,
           edges.place_type
-        FROM `temp_obs_raw` raw
-        CROSS JOIN UNNEST(JSON_EXTRACT_ARRAY(SAFE.PARSE_JSON(observations_json), '$.values')) as v
+        FROM `temp_obs_flat` raw
         LEFT JOIN `temp_node_names` nodes ON raw.observation_about = nodes.subject_id
         LEFT JOIN `temp_type_edges` edges ON raw.observation_about = edges.subject_id;
 
-        -- Step 5: Aggregate Place Type Summaries
+        -- Step 5: Aggregate Place Type Summaries (with distinct top_places)
         CREATE OR REPLACE TEMPORARY TABLE `temp_place_type_summary` AS
+        WITH place_stats AS (
+          SELECT
+            variable_measured,
+            provenance,
+            facet_id,
+            place_type,
+            MIN(value_num) as min_val,
+            MAX(value_num) as max_val,
+            COUNT(DISTINCT observation_about) as place_count
+          FROM `temp_prepared`
+          WHERE place_type IS NOT NULL
+          GROUP BY variable_measured, provenance, facet_id, place_type
+        ),
+        distinct_places AS (
+          SELECT DISTINCT
+            variable_measured,
+            provenance,
+            facet_id,
+            place_type,
+            observation_about as dcid,
+            place_name as name
+          FROM `temp_prepared`
+          WHERE place_type IS NOT NULL
+        ),
+        aggregated_places AS (
+          SELECT
+            variable_measured,
+            provenance,
+            facet_id,
+            place_type,
+            ARRAY_AGG(
+              STRUCT(dcid, name)
+              ORDER BY dcid LIMIT 3
+            ) as top_places
+          FROM distinct_places
+          GROUP BY variable_measured, provenance, facet_id, place_type
+        )
         SELECT
-          variable_measured,
-          provenance_dcid,
-          facet_id,
-          place_type,
-          COUNT(DISTINCT observation_about) as place_count,
-          MIN(value_num) as min_val,
-          MAX(value_num) as max_val,
-          ARRAY_AGG(
-            STRUCT(observation_about as dcid, place_name as name)
-            ORDER BY observation_about LIMIT 3
-          ) as top_places
-        FROM `temp_prepared`
-        WHERE place_type IS NOT NULL
-        GROUP BY variable_measured, provenance_dcid, facet_id, place_type;
+          ps.variable_measured,
+          ps.provenance as provenance_dcid,
+          ps.facet_id,
+          ps.place_type,
+          ps.place_count,
+          ps.min_val,
+          ps.max_val,
+          ap.top_places
+        FROM place_stats ps
+        JOIN aggregated_places ap USING (variable_measured, provenance, facet_id, place_type);
 
         -- Step 6: Final aggregation and export to Cache
         EXPORT DATA
@@ -152,7 +172,7 @@ class ProvenanceSummaryGenerator:
             spanner_options = '{{"table": "Cache"}}' ) AS
         WITH facet_base AS (
           SELECT 
-            variable_measured, provenance_dcid, facet_id,
+            variable_measured, provenance as provenance_dcid, facet_id,
             ANY_VALUE(import_name) as import_name,
             ANY_VALUE(measurement_method) as measurement_method,
             ANY_VALUE(observation_period) as observation_period,
@@ -166,7 +186,7 @@ class ProvenanceSummaryGenerator:
             COUNT(*) as facet_obs_count,
             COUNT(DISTINCT observation_about) as facet_ts_count
           FROM `temp_prepared`
-          GROUP BY variable_measured, provenance_dcid, facet_id
+          GROUP BY variable_measured, provenance, facet_id
         ),
         facet_summaries AS (
           SELECT 

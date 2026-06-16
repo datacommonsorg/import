@@ -434,10 +434,10 @@ public class SpannerClient implements Serializable {
     JsonObject facetJson = new JsonObject();
     facetJson.addProperty(
         "provenance", ProvenanceUtils.getProvenanceDcid(obs.getImportName(), obs.getIsBaseDc()));
-    facetJson.addProperty("measurementMethod", obs.getMeasurementMethod());
-    facetJson.addProperty("observationPeriod", obs.getObservationPeriod());
-    facetJson.addProperty("scalingFactor", obs.getScalingFactor());
-    facetJson.addProperty("unit", obs.getUnit());
+    addPropertyIfNotEmpty(facetJson, "measurementMethod", obs.getMeasurementMethod());
+    addPropertyIfNotEmpty(facetJson, "observationPeriod", obs.getObservationPeriod());
+    addPropertyIfNotEmpty(facetJson, "scalingFactor", obs.getScalingFactor());
+    addPropertyIfNotEmpty(facetJson, "unit", obs.getUnit());
     facetJson.addProperty("isDcAggregate", obs.getIsDcAggregate());
 
     return Mutation.newInsertOrUpdateBuilder(timeSeriesTableName)
@@ -455,6 +455,12 @@ public class SpannerClient implements Serializable {
         .set("last_update_timestamp")
         .to(Value.COMMIT_TIMESTAMP)
         .build();
+  }
+
+  private static void addPropertyIfNotEmpty(JsonObject json, String property, String value) {
+    if (value != null && !value.trim().isEmpty()) {
+      json.addProperty(property, value);
+    }
   }
 
   public Mutation toObservationMutation(Observation obs) {
