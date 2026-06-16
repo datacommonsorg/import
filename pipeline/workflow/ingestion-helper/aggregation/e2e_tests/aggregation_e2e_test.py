@@ -13,7 +13,10 @@
 # limitations under the License.
 """Integration E2E tests for Data Commons aggregations.
 
-Covers both LinkedEdgeGenerator and ProvenanceSummaryGenerator.
+Covers:
+- LinkedEdgeGenerator (Linked Edges)
+- ProvenanceSummaryGenerator (Provenance Summaries)
+- StatVarAggregator (Statistical Variable Aggregations)
 
 NOTE: This script is intended for local testing purposes only and is NOT
 currently part of the CI pipeline.
@@ -45,7 +48,7 @@ from google.cloud import bigquery
 import sys
 # Add ingestion-helper to sys.path (two levels up from this file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, PlaceAggregationGenerator
+from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator
 
 # Configuration
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
@@ -112,7 +115,7 @@ class AggregationIntegrationTestBase(unittest.TestCase):
         provenance = f"{prefix}{import_name}"
         self.mock_edges.append((subject_id, predicate, object_id, provenance))
 
-    def add_timeseries(self, variable, entity_id, method='CensusACS5yrSurvey', period='P1Y', unit='1', scaling='1', import_name='USFed_ConstantMaturityRates_Test', facet_id='facet1', is_dc_aggregate=False):
+    def add_timeseries(self, variable, entity_id, method='CensusACS5yrSurvey', period='P1Y', unit='1', scaling='1', import_name='USFed_ConstantMaturityRates_Test', facet_id='facet1', is_dc_aggregate=False, extra_entities_id=''):
         """Adds a TimeSeries metadata row to mock list."""
         prefix = "dc/base/" if self.is_base_dc else ""
         provenance = f"{prefix}{import_name}"
@@ -129,16 +132,16 @@ class AggregationIntegrationTestBase(unittest.TestCase):
         # Avoid duplicates in mock list
         exists = False
         for ts in self.mock_timeseries:
-            if ts[0] == variable and ts[1] == entities_json and ts[3] == facet_id:
+            if ts[0] == variable and ts[1] == entities_json and ts[2] == extra_entities_id and ts[3] == facet_id:
                 exists = True
                 break
         if not exists:
-            self.mock_timeseries.append((variable, entities_json, '', facet_id, facet_json))
+            self.mock_timeseries.append((variable, entities_json, extra_entities_id, facet_id, facet_json))
 
-    def add_observation(self, variable, entity_id, date, value, method='CensusACS5yrSurvey', period='P1Y', unit='1', scaling='1', import_name='USFed_ConstantMaturityRates_Test', facet_id='facet1', is_dc_aggregate=False):
+    def add_observation(self, variable, entity_id, date, value, method='CensusACS5yrSurvey', period='P1Y', unit='1', scaling='1', import_name='USFed_ConstantMaturityRates_Test', facet_id='facet1', is_dc_aggregate=False, extra_entities_id=''):
         """Adds an Observation and ensures its parent TimeSeries exists."""
-        self.add_timeseries(variable, entity_id, method, period, unit, scaling, import_name, facet_id, is_dc_aggregate)
-        self.mock_observations.append((variable, entity_id, '', facet_id, date, str(value)))
+        self.add_timeseries(variable, entity_id, method, period, unit, scaling, import_name, facet_id, is_dc_aggregate, extra_entities_id)
+        self.mock_observations.append((variable, entity_id, extra_entities_id, facet_id, date, str(value)))
 
     def flush_to_spanner(self):
         """Writes all accumulated mock data to Spanner and clears the buffers."""
@@ -417,10 +420,14 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('geoId/06', 'typeOf', 'State', import_name)
         self.add_edge('geoId/36', 'typeOf', 'State', import_name)
         
-        # Add observations (this also adds TimeSeries)
-        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0, 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
-        self.add_observation('Count_Person', 'geoId/06', '2021', 110.0, 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
-        self.add_observation('Count_Person', 'geoId/36', '2020', 200.0, 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        # Add TimeSeries explicitly
+        self.add_timeseries('Count_Person', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('Count_Person', 'geoId/36', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        
+        # Add observations
+        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0)
+        self.add_observation('Count_Person', 'geoId/06', '2021', 110.0)
+        self.add_observation('Count_Person', 'geoId/36', '2020', 200.0)
         
         self.flush_to_spanner()
         
@@ -508,11 +515,15 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('geoId/06', 'typeOf', 'State', import_name)
         self.add_edge('geoId/36', 'typeOf', 'State', import_name)
         
+        # Add TimeSeries explicitly
+        self.add_timeseries('Count_Person', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('Count_Person', 'geoId/36', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        
         # Add observations
-        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0, 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0)
         # We use a string for the value to simulate malformed data in Spanner
-        self.add_observation('Count_Person', 'geoId/06', '2021', 'bad_value', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
-        self.add_observation('Count_Person', 'geoId/36', '2020', 200.0, 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_observation('Count_Person', 'geoId/06', '2021', 'bad_value')
+        self.add_observation('Count_Person', 'geoId/36', '2020', 200.0)
         
         self.flush_to_spanner()
         
@@ -579,10 +590,15 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.add_node('State', 'State Class', ['Class'])
         
+        # Add TimeSeries explicitly
+        self.add_timeseries('Count_Person', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('Count_Person', 'geoId/99', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('Count_Person', 'geoId/88', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        
         # Add observations for all 3
-        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0, 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
-        self.add_observation('Count_Person', 'geoId/99', '2020', 150.0, 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
-        self.add_observation('Count_Person', 'geoId/88', '2020', 250.0, 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0)
+        self.add_observation('Count_Person', 'geoId/99', '2020', 150.0)
+        self.add_observation('Count_Person', 'geoId/88', '2020', 250.0)
         
         self.flush_to_spanner()
         
@@ -681,16 +697,16 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_place('County', 'Class')
 
         # Variable 1 (Count_Person) - Year 2020 (800k + 1.6M = 2.4M)
-        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, facet_id='facet1')
-        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, facet_id='facet1')
+        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, import_name=import_name, facet_id='facet1')
+        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, import_name=import_name, facet_id='facet1')
 
         # Variable 1 (Count_Person) - Year 2021 (900k + 1.7M = 2.6M)
-        self.add_observation('Count_Person', 'geoId/06075', '2021', 900000.0, facet_id='facet1')
-        self.add_observation('Count_Person', 'geoId/06001', '2021', 1700000.0, facet_id='facet1')
+        self.add_observation('Count_Person', 'geoId/06075', '2021', 900000.0, import_name=import_name, facet_id='facet1')
+        self.add_observation('Count_Person', 'geoId/06001', '2021', 1700000.0, import_name=import_name, facet_id='facet1')
 
         # Variable 2 (Count_Farm) - Year 2020 (10 + 20 = 30)
-        self.add_observation('Count_Farm', 'geoId/06075', '2020', 10.0, method='CensusOfAgriculture', facet_id='facet_farm')
-        self.add_observation('Count_Farm', 'geoId/06001', '2020', 20.0, method='CensusOfAgriculture', facet_id='facet_farm')
+        self.add_observation('Count_Farm', 'geoId/06075', '2020', 10.0, method='CensusOfAgriculture', import_name=import_name, facet_id='facet_farm')
+        self.add_observation('Count_Farm', 'geoId/06001', '2020', 20.0, method='CensusOfAgriculture', import_name=import_name, facet_id='facet_farm')
 
         self.flush_to_spanner()
 
@@ -780,8 +796,8 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_place('State', 'Class')
         self.add_place('Country', 'Class')
 
-        self.add_observation('Count_Person', 'geoId/06', '2020', 2400000.0)
-        self.add_observation('Count_Person', 'geoId/36', '2020', 20000000.0)
+        self.add_observation('Count_Person', 'geoId/06', '2020', 2400000.0, import_name=import_name)
+        self.add_observation('Count_Person', 'geoId/36', '2020', 20000000.0, import_name=import_name)
 
         self.flush_to_spanner()
 
@@ -879,12 +895,12 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_place('County', 'Class')
 
         # Facet 1: 5yr Survey (800k + 1.6M = 2.4M)
-        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey', facet_id='facet1')
-        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey', facet_id='facet1')
+        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet1')
+        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet1')
 
         # Facet 2: 1yr Survey (900k + 1.8M = 2.7M)
-        self.add_observation('Count_Person', 'geoId/06075', '2020', 900000.0, method='CensusACS1yrSurvey', facet_id='facet2')
-        self.add_observation('Count_Person', 'geoId/06001', '2020', 1800000.0, method='CensusACS1yrSurvey', facet_id='facet2')
+        self.add_observation('Count_Person', 'geoId/06075', '2020', 900000.0, method='CensusACS1yrSurvey', import_name=import_name, facet_id='facet2')
+        self.add_observation('Count_Person', 'geoId/06001', '2020', 1800000.0, method='CensusACS1yrSurvey', import_name=import_name, facet_id='facet2')
 
         self.flush_to_spanner()
 
@@ -952,9 +968,9 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_place('State', 'Class')
         self.add_place('County', 'Class')
 
-        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey')
-        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey')
-        self.add_observation('Count_Person', 'geoId/06999', '2020', 500000.0, method='CensusACS5yrSurvey') # Orphan population
+        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('Count_Person', 'geoId/06999', '2020', 500000.0, method='CensusACS5yrSurvey', import_name=import_name) # Orphan population
 
         self.flush_to_spanner()
 
@@ -1003,8 +1019,8 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_containment('geoId/06075', 'geoId/36')
 
         # Populations: SF = 800k, Alameda = 1.6M
-        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey')
-        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey')
+        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey', import_name=import_name)
 
         self.flush_to_spanner()
 
@@ -1064,8 +1080,8 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_place('State', 'Class')
         self.add_place('County', 'Class')
         self.add_containment('geoId/06075', 'geoId/36')
-        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey')
-        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey')
+        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey', import_name=import_name)
         self.flush_to_spanner()
 
         # --- TEST 2: allow_multiple_to_places = True ---
@@ -1136,8 +1152,8 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_place('Country', 'Class')
 
         # 2. Add observations ONLY for the lowest level (Counties)
-        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey')
-        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey')
+        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey', import_name=import_name)
         
         self.flush_to_spanner()
 
@@ -1212,6 +1228,277 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
 
 class PlaceAggregationGeneratorCustomDcTest(PlaceAggregationGeneratorIntegrationTest):
+    is_base_dc = False
+
+
+
+
+class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
+    """Integration E2E tests for StatVarAggregator."""
+
+    def get_aggregator(self) -> StatVarAggregator:
+        executor = BigQueryExecutor(
+            BQ_CONNECTION_ID,
+            PROJECT_ID,
+            SPANNER_INSTANCE_ID,
+            SPANNER_DATABASE_ID,
+            location=BQ_LOCATION,
+            run_sequential=True
+        )
+        return StatVarAggregator(executor, is_base_dc=self.is_base_dc)
+
+    def test_aggregate_stat_vars_success(self):
+        """Tests successful aggregation when all sources are present."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        output_import_name = f'{import_name}_StatVarAgg'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import_name}"
+        
+        # 1. Setup mock data
+        self.add_timeseries('SV_A', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('SV_B', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, import_name=import_name)
+        self.add_observation('SV_B', 'geoId/06', '2020', 20.0, import_name=import_name)
+        
+        self.flush_to_spanner()
+        
+        # 2. Run aggregator
+        aggregator = self.get_aggregator()
+        jobs = aggregator.aggregate_stat_vars(
+            ancestor_sv='SV_Parent',
+            source_svs=['SV_A', 'SV_B'],
+            import_names=[import_name],
+            output_import_name=output_import_name,
+            skip_all_sources_present_check=False
+        )
+        self.assertEqual(len(jobs), 1)
+        
+        # 3. Verify results in Spanner (using multi_use=True to allow multiple queries)
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify TimeSeries
+            ts_query = """
+                SELECT variable_measured, extra_entities_id, facet_id, facet, provenance
+                FROM TimeSeries
+                WHERE variable_measured = 'SV_Parent'
+            """
+            ts_results = list(snapshot.execute_sql(ts_query))
+            self.assertEqual(len(ts_results), 1)
+            ts_row = ts_results[0]
+            self.assertEqual(ts_row[0], 'SV_Parent')
+            self.assertEqual(ts_row[1], '')
+            
+            # Verify facet JSON has updated measurementMethod and provenance
+            # Spanner client automatically parses JSON columns into dicts
+            facet_json = ts_row[3]
+            self.assertEqual(facet_json['measurementMethod'], 'dcAggregate/CensusACS5yrSurvey')
+            self.assertEqual(facet_json['provenance'], expected_provenance)
+            self.assertEqual(facet_json['isDcAggregate'], True)
+            
+            # Verify stored provenance column
+            self.assertEqual(ts_row[4], expected_provenance)
+            
+            # Verify Observation
+            obs_query = """
+                SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            obs_row = obs_results[0]
+            self.assertEqual(obs_row[0], 'SV_Parent')
+            self.assertEqual(obs_row[1], 'geoId/06')
+            self.assertEqual(obs_row[2], '')
+            self.assertEqual(obs_row[3], ts_row[2]) # facet_id should match
+            self.assertEqual(obs_row[4], '2020')
+            self.assertEqual(float(obs_row[5]), 30.0) # Compare as float
+
+    def test_aggregate_stat_vars_missing_source_strict(self):
+        """Tests that aggregation is skipped if a source is missing in strict mode."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        output_import_name = f'{import_name}_StatVarAgg'
+        
+        # 1. Setup mock data: SV_B is missing
+        self.add_timeseries('SV_A', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, import_name=import_name)
+        
+        self.flush_to_spanner()
+        
+        # 2. Run aggregator (strict mode)
+        aggregator = self.get_aggregator()
+        jobs = aggregator.aggregate_stat_vars(
+            ancestor_sv='SV_Parent',
+            source_svs=['SV_A', 'SV_B'],
+            import_names=[import_name],
+            output_import_name=output_import_name,
+            skip_all_sources_present_check=False
+        )
+        self.assertEqual(len(jobs), 1)
+        
+        # 3. Verify no observations are created
+        with self.database.snapshot() as snapshot:
+            obs_query = """
+                SELECT COUNT(*)
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+            """
+            count = list(snapshot.execute_sql(obs_query))[0][0]
+            self.assertEqual(count, 0)
+
+    def test_aggregate_stat_vars_missing_source_lenient(self):
+        """Tests that aggregation is performed even if a source is missing in lenient mode."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        output_import_name = f'{import_name}_StatVarAgg'
+        
+        # 1. Setup mock data: SV_B is missing
+        self.add_timeseries('SV_A', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, import_name=import_name)
+        
+        self.flush_to_spanner()
+        
+        # 2. Run aggregator (lenient mode)
+        aggregator = self.get_aggregator()
+        jobs = aggregator.aggregate_stat_vars(
+            ancestor_sv='SV_Parent',
+            source_svs=['SV_A', 'SV_B'],
+            import_names=[import_name],
+            output_import_name=output_import_name,
+            skip_all_sources_present_check=True
+        )
+        self.assertEqual(len(jobs), 1)
+        
+        # 3. Verify observation is created with SV_A's value
+        with self.database.snapshot() as snapshot:
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+            """
+            results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(results), 1)
+            self.assertEqual(float(results[0][0]), 10.0) # Compare as float
+
+    def test_aggregate_stat_vars_multiple_cohorts(self):
+        """Tests that different facets are aggregated separately."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        output_import_name = f'{import_name}_StatVarAgg'
+        
+        # 1. Setup mock data:
+        # Cohort 1 (Census): SV_A = 10, SV_B = 20
+        self.add_timeseries('SV_A', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name, facet_id='facet_census')
+        self.add_timeseries('SV_B', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name, facet_id='facet_census')
+        
+        # Cohort 2 (Survey): SV_A = 100, SV_B = 20
+        self.add_timeseries('SV_A', 'geoId/06', 'OtherSurvey', 'P1Y', '1', '1', import_name, facet_id='facet_survey')
+        self.add_timeseries('SV_B', 'geoId/06', 'OtherSurvey', 'P1Y', '1', '1', import_name, facet_id='facet_survey')
+        
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, import_name=import_name, facet_id='facet_census')
+        self.add_observation('SV_B', 'geoId/06', '2020', 20.0, import_name=import_name, facet_id='facet_census')
+        self.add_observation('SV_A', 'geoId/06', '2020', 100.0, import_name=import_name, facet_id='facet_survey')
+        self.add_observation('SV_B', 'geoId/06', '2020', 20.0, import_name=import_name, facet_id='facet_survey')
+        
+        self.flush_to_spanner()
+        
+        # 2. Run aggregator
+        aggregator = self.get_aggregator()
+        jobs = aggregator.aggregate_stat_vars(
+            ancestor_sv='SV_Parent',
+            source_svs=['SV_A', 'SV_B'],
+            import_names=[import_name],
+            output_import_name=output_import_name,
+            skip_all_sources_present_check=False
+        )
+        self.assertEqual(len(jobs), 1)
+        
+        # 3. Verify results in Spanner: should have 2 distinct aggregated TimeSeries and Observations
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify TimeSeries
+            ts_query = """
+                SELECT facet_id, facet
+                FROM TimeSeries
+                WHERE variable_measured = 'SV_Parent'
+            """
+            ts_results = list(snapshot.execute_sql(ts_query))
+            self.assertEqual(len(ts_results), 2)
+            
+            # Verify Observations
+            obs_query = """
+                SELECT facet_id, value
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+                ORDER BY CAST(value AS FLOAT64)
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 2)
+            # Order by value (numerically sorted by Spanner): 30.0 should be first, 120.0 second
+            self.assertEqual(float(obs_results[0][1]), 30.0)
+            self.assertEqual(float(obs_results[1][1]), 120.0)
+
+    def test_aggregate_stat_vars_null_method(self):
+        """Tests successful aggregation when the source has a NULL/empty measurementMethod."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        output_import_name = f'{import_name}_StatVarAgg'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import_name}"
+        
+        # 1. Setup mock data: method=None (maps to NULL in Spanner JSON)
+        self.add_timeseries('SV_A', 'geoId/06', None, 'P1Y', '1', '1', import_name)
+        self.add_timeseries('SV_B', 'geoId/06', None, 'P1Y', '1', '1', import_name)
+        
+        # add_observation automatically calls add_timeseries, so we pass method=None here too
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, method=None, import_name=import_name)
+        self.add_observation('SV_B', 'geoId/06', '2020', 20.0, method=None, import_name=import_name)
+        
+        self.flush_to_spanner()
+        
+        # 2. Run aggregator
+        aggregator = self.get_aggregator()
+        jobs = aggregator.aggregate_stat_vars(
+            ancestor_sv='SV_Parent',
+            source_svs=['SV_A', 'SV_B'],
+            import_names=[import_name],
+            output_import_name=output_import_name,
+            skip_all_sources_present_check=False
+        )
+        self.assertEqual(len(jobs), 1)
+        
+        # 3. Verify results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify TimeSeries
+            ts_query = """
+                SELECT variable_measured, extra_entities_id, facet_id, facet, provenance
+                FROM TimeSeries
+                WHERE variable_measured = 'SV_Parent'
+            """
+            ts_results = list(snapshot.execute_sql(ts_query))
+            self.assertEqual(len(ts_results), 1)
+            ts_row = ts_results[0]
+            self.assertEqual(ts_row[0], 'SV_Parent')
+            
+            # Verify facet JSON has measurementMethod = 'DataCommonsAggregate'
+            facet_json = ts_row[3]
+            self.assertEqual(facet_json['measurementMethod'], 'DataCommonsAggregate') # Aligned!
+            self.assertEqual(facet_json['provenance'], expected_provenance)
+            self.assertEqual(facet_json['isDcAggregate'], True)
+            
+            # Verify Observation
+            obs_query = """
+                SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            obs_row = obs_results[0]
+            self.assertEqual(obs_row[0], 'SV_Parent')
+            self.assertEqual(obs_row[1], 'geoId/06')
+            self.assertEqual(obs_row[3], ts_row[2]) # facet_id should match!
+            self.assertEqual(obs_row[4], '2020')
+            self.assertEqual(float(obs_row[5]), 30.0)
+
+
+class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
     is_base_dc = False
 
 

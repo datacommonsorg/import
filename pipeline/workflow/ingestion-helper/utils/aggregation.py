@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator
 from aggregation import ProvenanceSummaryGenerator
+from aggregation import StatVarAggregator
 from google.cloud import bigquery
 
 logging.getLogger().setLevel(logging.INFO)
