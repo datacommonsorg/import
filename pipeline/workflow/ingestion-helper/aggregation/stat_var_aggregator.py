@@ -114,7 +114,7 @@ class StatVarAggregator:
         output_provenance = f"{prefix}{output_import_name}"
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
-        # Construct the facet expression to update measurementMethod, provenance, and isDCAggregate.
+        # Construct the facet expression to update measurementMethod, provenance, and isDcAggregate.
         facet_expr = f"""
           JSON_SET(
             JSON_SET(
@@ -123,7 +123,7 @@ class StatVarAggregator:
               ),
               '$.provenance', '{safe_output_provenance}'
             ),
-            '$.isDCAggregate', true
+            '$.isDcAggregate', true
           )
         """
 
@@ -169,7 +169,7 @@ class StatVarAggregator:
             COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), '^',
             COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), '^',
             COALESCE(JSON_VALUE(facet, '$.unit'), ''), '^',
-            COALESCE(JSON_VALUE(facet, '$.isDCAggregate'), 'true')
+            COALESCE(JSON_VALUE(facet, '$.isDcAggregate'), 'true')
           )) AS STRING) AS facet_id,
           entities,
           facet
