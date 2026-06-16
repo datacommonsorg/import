@@ -670,12 +670,14 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             location=BQ_LOCATION,
             run_sequential=True
         )
-        return StatVarAggregator(executor, is_base_dc=True)
+        return StatVarAggregator(executor, is_base_dc=self.is_base_dc)
 
     def test_aggregate_stat_vars_success(self):
         """Tests successful aggregation when all sources are present."""
         import_name = 'CensusACS5YearSurvey_Test'
         output_import_name = f'{import_name}_StatVarAgg'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import_name}"
         
         # 1. Setup mock data
         self.add_timeseries('SV_A', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
@@ -715,10 +717,10 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             # Spanner client automatically parses JSON columns into dicts
             facet_json = ts_row[3]
             self.assertEqual(facet_json['measurementMethod'], 'dcAggregate/CensusACS5yrSurvey')
-            self.assertEqual(facet_json['provenance'], f'dc/base/{output_import_name}')
+            self.assertEqual(facet_json['provenance'], expected_provenance)
             
             # Verify stored provenance column
-            self.assertEqual(ts_row[4], f'dc/base/{output_import_name}')
+            self.assertEqual(ts_row[4], expected_provenance)
             
             # Verify Observation
             obs_query = """
@@ -856,6 +858,10 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             # Order by value (numerically sorted by Spanner): 30.0 should be first, 120.0 second
             self.assertEqual(float(obs_results[0][1]), 30.0)
             self.assertEqual(float(obs_results[1][1]), 120.0)
+
+
+class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
+    is_base_dc = False
 
 
 if __name__ == '__main__':
