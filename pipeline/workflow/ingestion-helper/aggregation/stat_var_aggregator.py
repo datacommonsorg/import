@@ -114,13 +114,17 @@ class StatVarAggregator:
         output_provenance = f"{prefix}{output_import_name}"
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
-        # Construct the facet expression to update measurementMethod, provenance, and isDcAggregate.
+        new_method_sql = """
+            IF(
+              JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
+              'DataCommonsAggregate',
+              CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+            )
+        """
         facet_expr = f"""
           JSON_SET(
             JSON_SET(
-              JSON_SET(facet, '$.measurementMethod', 
-                       CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons'))
-              ),
+              JSON_SET(facet, '$.measurementMethod', {new_method_sql}),
               '$.provenance', '{safe_output_provenance}'
             ),
             '$.isDcAggregate', true
@@ -223,7 +227,11 @@ class StatVarAggregator:
               -- New provenance
               '{safe_output_provenance}', '^',
               -- New measurementMethod
-              CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons')), '^',
+              IF(
+                JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
+                'DataCommonsAggregate',
+                CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+              ), '^',
               -- Preserved fields
               COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), '^',
               COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), '^',
