@@ -273,6 +273,6 @@ class StatVarAggregator:
           -- Cast back to string as Spanner Observation.value is STRING(MAX)
           CAST(total_val AS STRING) AS value
         FROM AggregatedObs
-        WHERE {filter_condition};
+        WHERE {filter_condition} AND total_val IS NOT NULL;
         """
         return query
