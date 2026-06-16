@@ -143,11 +143,11 @@ CREATE INDEX InEdge ON Edge(object_id, predicate, subject_id, provenance) OPTION
 
 CREATE TABLE {{ embedding_table }} (
   subject_id STRING(1024) NOT NULL,
-  embedding_type STRING(1024) NOT NULL,
+  embedding_label STRING(1024) NOT NULL,
   embedding_content JSON,
   node_types ARRAY<STRING(1024)>,
   embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }})
-) PRIMARY KEY(subject_id, embedding_type),
+) PRIMARY KEY(subject_id, embedding_label),
 INTERLEAVE IN PARENT Node ON DELETE CASCADE;
 
 CREATE VECTOR INDEX {{ embedding_index }}

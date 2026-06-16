@@ -538,29 +538,19 @@ class SpannerClient:
             logging.error(f"Failed to read schema file: {e}")
             raise
 
-        proto_path = os.path.join(os.path.dirname(__file__), 'storage.pb')
-        logging.info(f"Reading proto descriptors from {proto_path}")
-        try:
-            with open(proto_path, 'rb') as f:
-                proto_descriptors_bytes = f.read()
-        except Exception as e:
-            logging.error(f"Failed to read proto descriptors file: {e}")
-            raise
-
         database_path = self.database.name
-        logging.info(f"Updating DDL for {database_path} with protos")
+        logging.info(f"Updating DDL for {database_path}")
 
         try:
             admin_client = DatabaseAdminClient()
             request = UpdateDatabaseDdlRequest(
                 database=database_path,
-                statements=ddl_statements,
-                proto_descriptors=proto_descriptors_bytes)
+                statements=ddl_statements)
             operation = admin_client.update_database_ddl(request=request)
             operation.result()
-            logging.info("Database initialized successfully with protos.")
+            logging.info("Database initialized successfully.")
         except Exception as e:
-            logging.error(f"Failed to update DDL with protos: {e}")
+            logging.error(f"Failed to update DDL: {e}")
             raise
 
     def seed_database(self):

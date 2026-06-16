@@ -114,7 +114,7 @@ def filter_and_convert_nodes(nodes_generator):
             yield (subject_id, embedding_content, node.get("types"))
 
 
-def generate_embeddings_partitioned(database, nodes_generator, model_name, embedding_table, embedding_type, task_type, timeout):
+def generate_embeddings_partitioned(database, nodes_generator, model_name, embedding_table, embedding_label, task_type, timeout):
     """Generates embeddings in batches using standard transactions.
     Processes nodes in chunks of 500 to avoid transaction size limits.
     Accepts a generator or list to avoid loading all nodes into memory.
@@ -124,7 +124,7 @@ def generate_embeddings_partitioned(database, nodes_generator, model_name, embed
         nodes_generator: An iterable yielding tuples containing (subject_id, embedding_content, types).
         model_name: Name of the remote model defined in Spanner DDL.
         embedding_table: Name of the embedding table.
-        embedding_type: Embedding type key (e.g. model ID) to insert.
+        embedding_label: Embedding label key (e.g. model ID) to insert.
         task_type: Task type parameter for ML.PREDICT (e.g. "RETRIEVAL_QUERY").
         timeout: Timeout for the spanner client to execute queries.
         
@@ -137,8 +137,8 @@ def generate_embeddings_partitioned(database, nodes_generator, model_name, embed
     logging.info(f"Generating embeddings in batches of {_BATCH_SIZE}.")
 
     embeddings_sql = f"""
-        INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_type, embedding_content, embeddings, node_types)
-        SELECT subject_id, @embedding_type, embedding_content, embeddings.values, node_types
+        INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content, embeddings, node_types)
+        SELECT subject_id, @embedding_label, embedding_content, embeddings.values, node_types
         FROM ML.PREDICT(
             MODEL {model_name},
             (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
@@ -162,12 +162,12 @@ def generate_embeddings_partitioned(database, nodes_generator, model_name, embed
     for batch in chunked(nodes_generator, _BATCH_SIZE):
         params = {
             "nodes": batch,
-            "embedding_type": embedding_type,
+            "embedding_label": embedding_label,
             "task_type": task_type
         }
         param_types = {
             "nodes": Array(struct_type),
-            "embedding_type": STRING,
+            "embedding_label": STRING,
             "task_type": STRING
         }
 
