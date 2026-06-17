@@ -131,7 +131,6 @@ def main(argv):
         cleanup_spanner(short_import_name)
 
         # 1. Trigger Import Automation Workflow
-        job_name = "test-import"
         import_config = {
             "gcp_project_id": PROJECT_ID,
             "gcs_project_id": PROJECT_ID,
