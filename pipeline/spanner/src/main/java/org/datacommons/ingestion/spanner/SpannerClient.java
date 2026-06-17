@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -34,9 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
-import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
-import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -333,10 +330,6 @@ public class SpannerClient implements Serializable {
     return write;
   }
 
-  public WriteGrouped getWriteGroupedTransform() {
-    return new WriteGrouped(getWriteTransform());
-  }
-
   public Mutation toNodeMutation(Node node) {
     // Only update subject_id for provisional nodes.
     if (node.getTypes().size() == 1 && node.getTypes().contains("ProvisionalNode")) {
@@ -381,43 +374,6 @@ public class SpannerClient implements Serializable {
             nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
         .map(mutation -> KV.of(getGraphKVKey(mutation), mutation))
         .toList();
-  }
-
-  public List<KV<String, Mutation>> toObservationKVMutations(List<TimeSeries> observations) {
-    List<KV<String, Mutation>> kvs = new ArrayList<>();
-    for (TimeSeries obs : observations) {
-      // Reuse toTimeSeriesMutation to build the TimeSeries mutation
-      Mutation ts = toTimeSeriesMutation(obs);
-      String tsKey = getFullObservationKey(ts);
-      kvs.add(KV.of("TS::" + tsKey, ts));
-
-      String variableMeasured = obs.getVariableMeasured();
-      String entity1 = obs.getEntity1();
-      String extraEntitiesId = obs.getExtraEntitiesId();
-      String facetId = obs.getFacetId();
-
-      for (java.util.Map.Entry<String, String> entry : obs.getObservations().entrySet()) {
-        Mutation o =
-            Mutation.newInsertOrUpdateBuilder(observationTableName)
-                .set("variable_measured")
-                .to(variableMeasured)
-                .set("entity1")
-                .to(entity1)
-                .set("extra_entities_id")
-                .to(extraEntitiesId)
-                .set("facet_id")
-                .to(facetId)
-                .set("date")
-                .to(entry.getKey())
-                .set("value")
-                .to(entry.getValue())
-                .set("last_update_timestamp")
-                .to(Value.COMMIT_TIMESTAMP)
-                .build();
-        kvs.add(KV.of("OBS::" + tsKey + "::" + entry.getKey(), o));
-      }
-    }
-    return kvs;
   }
 
   public Mutation toTimeSeriesMutation(TimeSeries obs) {
@@ -483,78 +439,6 @@ public class SpannerClient implements Serializable {
         .build();
   }
 
-  public List<KV<String, Mutation>> filterObservationKVMutations(
-      List<KV<String, Mutation>> kvs, Map<String, Boolean> seenObs) {
-    var filtered = new ArrayList<KV<String, Mutation>>();
-    for (var kv : kvs) {
-      Mutation m = kv.getValue();
-      String dedupeKey;
-      var mutationMap = m.asMap();
-      String tsKey =
-          Joiner.on("::")
-              .join(
-                  getMutationValue(mutationMap, "variable_measured"),
-                  getMutationValue(mutationMap, "entity1"),
-                  getMutationValue(mutationMap, "extra_entities_id"),
-                  getMutationValue(mutationMap, "facet_id"));
-
-      if (m.getTable().equals(timeSeriesTableName)) {
-        dedupeKey = "TS::" + tsKey;
-      } else if (m.getTable().equals(observationTableName)) {
-        dedupeKey = "OBS::" + tsKey + "::" + getMutationValue(mutationMap, "date");
-      } else {
-        dedupeKey = "UNKNOWN::" + kv.getKey();
-      }
-      if (seenObs.get(dedupeKey) != null) {
-        continue;
-      }
-      seenObs.putIfAbsent(dedupeKey, true);
-
-      filtered.add(kv);
-    }
-    return filtered;
-  }
-
-  public List<KV<String, Mutation>> filterGraphKVMutations(
-      List<KV<String, Mutation>> kvs,
-      Map<String, Boolean> seenNodes,
-      Map<String, Boolean> seenEdges,
-      Counter duplicateNodesCounter,
-      Counter duplicateEdgesCounter) {
-    var filtered = new ArrayList<KV<String, Mutation>>();
-    for (var kv : kvs) {
-      var mutation = kv.getValue();
-      // Skip duplicate node mutations for the same subject_id
-      if (mutation.getTable().equals(nodeTableName)) {
-        String subjectId = getSubjectId(mutation);
-        if (seenNodes.get(subjectId) != null) {
-          duplicateNodesCounter.inc();
-          continue;
-        }
-        seenNodes.putIfAbsent(subjectId, true);
-      } else if (mutation.getTable().equals(edgeTableName)) {
-        // Skip duplicate edge mutations for the same edge key
-        String edgeKey = getEdgeKey(mutation);
-        if (seenEdges.get(edgeKey) != null) {
-          duplicateEdgesCounter.inc();
-          continue;
-        }
-        seenEdges.putIfAbsent(edgeKey, true);
-      }
-
-      filtered.add(kv);
-    }
-    return filtered;
-  }
-
-  public static String getSubjectId(Mutation mutation) {
-    return getMutationValue(mutation, "subject_id");
-  }
-
-  public static String getMutationValue(Mutation mutation, String columnName) {
-    return getMutationValue(mutation.asMap(), columnName);
-  }
-
   /**
    * Returns a string mutation value from a mutation map.
    *
@@ -575,16 +459,6 @@ public class SpannerClient implements Serializable {
     return mutationMap.getOrDefault(columnName, Value.string("")).getString();
   }
 
-  public static String getEdgeKey(Mutation mutation) {
-    var mutationMap = mutation.asMap();
-    return Joiner.on("::")
-        .join(
-            getMutationValue(mutationMap, "subject_id"),
-            getMutationValue(mutationMap, "predicate"),
-            getMutationValue(mutationMap, "object_id"),
-            getMutationValue(mutationMap, "provenance"));
-  }
-
   /**
    * Returns the key for grouping graph mutations (Nodes and Edges) in a KV.
    *
@@ -602,50 +476,6 @@ public class SpannerClient implements Serializable {
     int shard = Math.abs(Objects.hash(objectId)) % numShards;
 
     return Joiner.on("::").join(subjectId, shard);
-  }
-
-  public String getObservationKVKey(Mutation mutation) {
-    var mutationMap = mutation.asMap();
-    var parts =
-        new Object[] {
-          getMutationValue(mutationMap, "variable_measured"),
-          hashShard(
-              getMutationValue(mutationMap, "entity1"), getMutationValue(mutationMap, "facet_id"))
-        };
-
-    return Joiner.on("::").join(parts);
-  }
-
-  private int hashShard(Object... values) {
-    return Math.abs(Objects.hash(values)) % numShards;
-  }
-
-  public static String getFullObservationKey(Mutation mutation) {
-    var mutationMap = mutation.asMap();
-    String entity1 = getMutationValue(mutationMap, "entity1");
-    if (entity1 == null || entity1.isEmpty()) {
-      // Try to extract from entities JSON (since entity1 is generated in TimeSeries table)
-      String entitiesJson = getMutationValue(mutationMap, "entities");
-      if (entitiesJson != null && !entitiesJson.isEmpty()) {
-        try {
-          JsonObject json = GSON.fromJson(entitiesJson, JsonObject.class);
-          if (json.has("entity1")) {
-            entity1 = json.get("entity1").getAsString();
-          }
-        } catch (Exception e) {
-          // Ignore
-        }
-      }
-    }
-    var parts =
-        new String[] {
-          getMutationValue(mutationMap, "variable_measured"),
-          entity1,
-          getMutationValue(mutationMap, "extra_entities_id"),
-          getMutationValue(mutationMap, "facet_id")
-        };
-
-    return Joiner.on("::").join(parts);
   }
 
   public String getGcpProjectId() {

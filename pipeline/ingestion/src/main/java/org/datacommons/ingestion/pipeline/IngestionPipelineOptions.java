@@ -30,18 +30,6 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setStorageBucketId(String bucketId);
 
-  @Description("The DC version endpoint to fetch import group versions to ingest.")
-  @Default.String("https://autopush.api.datacommons.org/version")
-  String getVersionEndpoint();
-
-  void setVersionEndpoint(String versionEndpoint);
-
-  @Description(
-      "The import group version to be ingested into Spanner. e.g. auto1d_2025_03_26_02_16_23")
-  String getImportGroupVersion();
-
-  void setImportGroupVersion(String importGroupVersion);
-
   @Description("List of imports for ingestion (CSV)")
   String getImportList();
 
@@ -52,12 +40,6 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   int getNumShards();
 
   void setNumShards(int numShards);
-
-  @Description("The type of processing to be skipped, if any.")
-  @Default.Enum("SKIP_NONE")
-  SkipProcessing getSkipProcessing();
-
-  void setSkipProcessing(SkipProcessing skipProcessing);
 
   @Description("Whether to skip delete operations.")
   @Default.Boolean(false)
