@@ -52,15 +52,18 @@ _EXPORT_PROCESSES_MAX = 8
 
 
 def _uri_ref(val):
-  if not val:
+  if pd.isna(val) or val == "":
     return None
-  if is_uri_or_namespace(val):
-    return {"@id": val}
-  return {"@id": f"dcid:{val.lstrip('/')}"}
+  val_str = str(val).strip()
+  if val_str == "" or val_str.lower() in ("nan", "<na>"):
+    return None
+  if is_uri_or_namespace(val_str):
+    return {"@id": val_str}
+  return {"@id": f"dcid:{val_str.lstrip('/')}"}
 
 
 def _parse_numeric(val):
-  if val is None or val == "":
+  if val is None or val == "" or pd.isna(val):
     return None
   try:
     if "." in str(val):
@@ -83,11 +86,14 @@ def _write_observation_shard(args):
     obs_obj = {
         "@id": f"dcid:obs_{obs_hash}",
         "@type": "dcid:StatVarObservation",
-        "dcid:observationAbout": _uri_ref(entity),
         "dcid:variableMeasured": _uri_ref(variable),
         "dcid:observationDate": _parse_numeric(date),
         "dcid:value": _parse_numeric(value),
     }
+
+    entity_ref = _uri_ref(entity)
+    if entity_ref:
+      obs_obj["dcid:observationAbout"] = entity_ref
 
     if provenance:
       obs_obj["dcid:provenance"] = _uri_ref(provenance)
