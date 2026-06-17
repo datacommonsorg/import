@@ -58,7 +58,6 @@ CREATE TABLE Observation (
   facet_id STRING(1024) NOT NULL,
   date STRING(32) NOT NULL,
   value STRING(MAX) NOT NULL,
-  attributes JSON,
   last_update_timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
 ) PRIMARY KEY(variable_measured, entity1, extra_entities_id, facet_id, date DESC),
   INTERLEAVE IN PARENT TimeSeries ON DELETE CASCADE, OPTIONS (
