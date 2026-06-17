@@ -34,10 +34,6 @@ RUN uv sync --no-dev --no-install-project
 # Copy local code to the container image
 COPY . .
 
-# Compile the Spanner protobuf descriptor set
-RUN curl -o storage.proto https://raw.githubusercontent.com/datacommonsorg/import/master/pipeline/data/src/main/proto/storage.proto
-RUN protoc --include_imports --descriptor_set_out=clients/storage.pb storage.proto
-
 # Install the project itself
 RUN uv sync --no-dev
 

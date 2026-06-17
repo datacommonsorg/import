@@ -135,10 +135,7 @@ The service is packaged as a Docker container.
 
 The `Dockerfile` utilizes multi-stage building and layer caching:
 1. It copies `pyproject.toml` and performs `uv sync --no-dev --no-install-project` to cache dependencies before copying the application code.
-2. It compiles the required Google Cloud Spanner protobuf descriptor sets during build time:
-   ```dockerfile
-   RUN protoc --include_imports --descriptor_set_out=clients/storage.pb storage.proto
-   ```
+2. It copies the application code and installs the project itself.
 3. It starts the web server inside the container using Uvicorn:
    ```dockerfile
    CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
