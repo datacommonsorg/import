@@ -60,6 +60,10 @@ public class TimeSeries implements Serializable {
         facetId);
   }
 
+  public String getDedupeKey() {
+    return Joiner.on("^").useForNull("").join(variableMeasured, entity1, extraEntitiesId, facetId);
+  }
+
   public String getEntity1() {
     return entity1;
   }

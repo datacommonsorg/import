@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.util.List;
+import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
@@ -12,10 +13,13 @@ import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Values;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.ProvenanceUtils;
@@ -221,10 +225,19 @@ public class GraphIngestionPipeline {
             Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
     spannerClient.writeMutations(pipeline, "WriteEdgesToSpanner-" + importName, waitingEdges);
 
+    // Extract SV observation properties mapping as side input
+    PCollectionView<Map<String, List<String>>> svPropertiesView =
+        schemaNodes
+            .apply(
+                "ExtractSvProperties-" + importName,
+                ParDo.of(new GraphReader.ExtractSvPropertiesFn()))
+            .apply("ViewAsMap-" + importName, View.asMap());
+
     // Path 1: TimeSeries (Metadata)
     // Extract unique series keys and convert to metadata-only TimeSeries
     PCollection<TimeSeries> uniqueSeries =
-        GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc, tsCounter);
+        GraphReader.extractUniqueSeries(
+            observationNodes, importName, isBaseDc, tsCounter, svPropertiesView);
     // Convert unique TimeSeries to TimeSeries mutations
     PCollection<Mutation> tsMutations =
         uniqueSeries.apply(
@@ -235,7 +248,8 @@ public class GraphIngestionPipeline {
     // Path 2: Observations (Data Points)
     // Extract all individual data points as Observations (one per date/value)
     PCollection<Observation> obsDataPoints =
-        GraphReader.extractObservations(observationNodes, importName, isBaseDc, obsCounter);
+        GraphReader.extractObservations(
+            observationNodes, importName, isBaseDc, obsCounter, svPropertiesView);
     // Convert Observations to Observation mutations
     PCollection<Mutation> childMutations =
         obsDataPoints.apply(

@@ -385,6 +385,15 @@ public class SpannerClient implements Serializable {
     // Create entities JSON
     JsonObject entitiesJson = new JsonObject();
     entitiesJson.addProperty("entity1", entity1);
+    if (extraEntitiesId != null && !extraEntitiesId.isEmpty()) {
+      String[] extra = extraEntitiesId.split("\\^");
+      if (extra.length > 0) {
+        entitiesJson.addProperty("entity2", extra[0]);
+      }
+      if (extra.length > 1) {
+        entitiesJson.addProperty("entity3", extra[1]);
+      }
+    }
 
     // Create facet JSON
     JsonObject facetJson = new JsonObject();
