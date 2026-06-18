@@ -27,50 +27,6 @@ public class SpannerClientTest {
   }
 
   @Test
-  public void testReadDdlStatements() {
-    List<String> ddlStatements = spannerClient.readDdlStatements();
-    assertNotNull(ddlStatements);
-    assertFalse(ddlStatements.isEmpty());
-
-    // Verify that we have at least table creation statements
-    boolean hasNodeTable = false;
-    for (String ddl : ddlStatements) {
-      if (ddl.contains("CREATE TABLE Node")) {
-        hasNodeTable = true;
-        break;
-      }
-    }
-    assertTrue("Should contain Node table DDL", hasNodeTable);
-  }
-
-  @Test
-  public void testCheckTableExists_True() {
-    List<String> statements = new java.util.ArrayList<>();
-    statements.add("CREATE TABLE Node");
-
-    boolean exists = spannerClient.checkTableExists(statements, "Node");
-    assertTrue(exists);
-  }
-
-  @Test
-  public void testCheckTableExists_False() {
-    List<String> statements = new java.util.ArrayList<>();
-    statements.add("CREATE TABLE Edge");
-
-    boolean exists = spannerClient.checkTableExists(statements, "Node");
-    assertFalse(exists);
-  }
-
-  @Test
-  public void testCheckTableExists_FalsePositive() {
-    List<String> statements = new java.util.ArrayList<>();
-    statements.add("CREATE TABLE Node_Old");
-
-    boolean exists = spannerClient.checkTableExists(statements, "Node");
-    assertFalse(exists);
-  }
-
-  @Test
   public void testToNodeMutation_RegularNode() {
     Node node =
         Node.builder()

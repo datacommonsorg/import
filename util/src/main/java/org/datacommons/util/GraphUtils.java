@@ -182,7 +182,7 @@ public class GraphUtils {
       if (McfUtil.stripNamespace(entry.getKey()).equals(target)) {
         if (entry.getValue().getTypedValuesCount() > 0) {
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
-            result.add(val.getValue());
+            result.add(McfUtil.stripNamespace(val.getValue()));
           }
         }
       }
