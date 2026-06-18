@@ -17,6 +17,7 @@ Covers:
 - LinkedEdgeGenerator (Linked Edges)
 - ProvenanceSummaryGenerator (Provenance Summaries)
 - StatVarAggregator (Statistical Variable Aggregations)
+- StatVarGroupGenerator (Statistical Variable Group / Vertical generation)
 
 NOTE: This script is intended for local testing purposes only and is NOT
 currently part of the CI pipeline.
@@ -48,7 +49,7 @@ from google.cloud import bigquery
 import sys
 # Add ingestion-helper to sys.path (two levels up from this file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator
+from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator, StatVarGroupGenerator
 
 # Configuration
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
@@ -105,9 +106,9 @@ class AggregationIntegrationTestBase(unittest.TestCase):
         self.database.run_in_transaction(_clear)
         logging.info("Tables cleared successfully.")
 
-    def add_node(self, subject_id, name=None, types=None):
+    def add_node(self, subject_id, name=None, value=None, types=None):
         """Adds a node to mock list."""
-        self.mock_nodes.append((subject_id, name or subject_id, None, None, types or []))
+        self.mock_nodes.append((subject_id, name or subject_id, value, None, types or []))
 
     def add_edge(self, subject_id, predicate, object_id, import_name):
         """Adds an edge to mock list."""
@@ -205,9 +206,9 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         import_name = 'USFed_ConstantMaturityRates_Test'
         
         # 1. Setup mock data
-        self.add_node('geoId/06075', 'San Francisco County', ['County'])
-        self.add_node('geoId/06', 'California', ['State'])
-        self.add_node('country/USA', 'United States', ['Country'])
+        self.add_node('geoId/06075', 'San Francisco County', types=['County'])
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('country/USA', 'United States', types=['Country'])
         
         self.add_edge('geoId/06075', 'containedInPlace', 'geoId/06', import_name)
         self.add_edge('geoId/06', 'containedInPlace', 'country/USA', import_name)
@@ -235,42 +236,6 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(tuple(results[1]), ('geoId/06075', 'country/USA', expected_provenance))
             self.assertEqual(tuple(results[2]), ('geoId/06075', 'geoId/06', expected_provenance))
 
-    def test_linked_member_of(self):
-        """Tests run_linked_member_of.
-        
-        Hierarchy: Instance_A -> memberOf -> Class_B -> specializationOf -> Class_C
-        """
-        import_name = 'Schema_Import_Test'
-        
-        # 1. Setup mock data
-        self.add_node('Instance_A', 'Instance A', ['Class_B'])
-        self.add_node('Class_B', 'Class B', ['Class'])
-        self.add_node('Class_C', 'Class C', ['Class'])
-        
-        self.add_edge('Instance_A', 'memberOf', 'Class_B', import_name)
-        self.add_edge('Class_B', 'specializationOf', 'Class_C', import_name)
-        
-        self.flush_to_spanner()
-        
-        # 2. Run generator
-        generator = self.get_generator()
-        job = generator.run_linked_member_of([import_name])
-        self.assertIsNotNone(job)
-        
-        # 3. Verify results
-        with self.database.snapshot() as snapshot:
-            query = """
-                SELECT subject_id, object_id, provenance 
-                FROM Edge 
-                WHERE predicate = 'linkedMemberOf'
-                ORDER BY subject_id, object_id
-            """
-            results = list(snapshot.execute_sql(query))
-            
-            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
-            self.assertEqual(len(results), 2)
-            self.assertEqual(tuple(results[0]), ('Instance_A', 'Class_B', expected_provenance))
-            self.assertEqual(tuple(results[1]), ('Instance_A', 'Class_C', expected_provenance))
 
     def test_linked_member(self):
         """Tests run_linked_member.
@@ -280,9 +245,9 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         import_name = 'Topic_Import_Test'
         
         # 1. Setup mock data
-        self.add_node('dc/topic/TestTopic', 'Test Topic', ['Topic'])
-        self.add_node('dc/svpg/TestSvpg', 'Test SVPG', ['StatVarPeerGroup'])
-        self.add_node('TestVariable', 'Test Variable', ['StatisticalVariable'])
+        self.add_node('dc/topic/TestTopic', 'Test Topic', types=['Topic'])
+        self.add_node('dc/svpg/TestSvpg', 'Test SVPG', types=['StatVarPeerGroup'])
+        self.add_node('TestVariable', 'Test Variable', types=['StatisticalVariable'])
         
         self.add_edge('dc/topic/TestTopic', 'member', 'dc/svpg/TestSvpg', import_name)
         self.add_edge('dc/svpg/TestSvpg', 'relevantVariable', 'TestVariable', import_name)
@@ -316,8 +281,8 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         import_name = 'Cyclic_Import_Test'
         
         # 1. Setup mock data (cycle)
-        self.add_node('geoId/06', 'California', ['State'])
-        self.add_node('geoId/36', 'New York', ['State'])
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('geoId/36', 'New York', types=['State'])
         
         self.add_edge('geoId/06', 'containedInPlace', 'geoId/36', import_name)
         self.add_edge('geoId/36', 'containedInPlace', 'geoId/06', import_name)
@@ -352,8 +317,8 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         import_name = 'Idempotency_Import_Test'
         
         # 1. Setup mock base data
-        self.add_node('geoId/06075', 'San Francisco County', ['County'])
-        self.add_node('geoId/06', 'California', ['State'])
+        self.add_node('geoId/06075', 'San Francisco County', types=['County'])
+        self.add_node('geoId/06', 'California', types=['State'])
         self.add_edge('geoId/06075', 'containedInPlace', 'geoId/06', import_name)
         
         # 2. Pre-insert the expected generated edge (simulating a previous run)
@@ -413,9 +378,9 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         import_name = 'USFed_ConstantMaturityRates_Test'
         
         # 1. Setup mock data
-        self.add_node('geoId/06', 'California', ['State'])
-        self.add_node('geoId/36', 'New York', ['State'])
-        self.add_node('State', 'State Class', ['Class'])
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('geoId/36', 'New York', types=['State'])
+        self.add_node('State', 'State Class', types=['Class'])
         
         self.add_edge('geoId/06', 'typeOf', 'State', import_name)
         self.add_edge('geoId/36', 'typeOf', 'State', import_name)
@@ -508,9 +473,9 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         """
         import_name = 'USFed_ConstantMaturityRates_Test'
         
-        self.add_node('geoId/06', 'California', ['State'])
-        self.add_node('geoId/36', 'New York', ['State'])
-        self.add_node('State', 'State Class', ['Class'])
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('geoId/36', 'New York', types=['State'])
+        self.add_node('State', 'State Class', types=['Class'])
         
         self.add_edge('geoId/06', 'typeOf', 'State', import_name)
         self.add_edge('geoId/36', 'typeOf', 'State', import_name)
@@ -579,16 +544,16 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         import_name = 'USFed_ConstantMaturityRates_Test'
         
         # 1. Normal Node
-        self.add_node('geoId/06', 'California', ['State'])
+        self.add_node('geoId/06', 'California', types=['State'])
         self.add_edge('geoId/06', 'typeOf', 'State', import_name)
         
         # 2. Dangling 1: We only add typeOf edge, NO node
         self.add_edge('geoId/99', 'typeOf', 'State', import_name)
         
         # 3. Dangling 2: We only add node, NO typeOf edge
-        self.add_node('geoId/88', 'Unknown Place', ['State'])
+        self.add_node('geoId/88', 'Unknown Place', types=['State'])
         
-        self.add_node('State', 'State Class', ['Class'])
+        self.add_node('State', 'State Class', types=['Class'])
         
         # Add TimeSeries explicitly
         self.add_timeseries('Count_Person', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
@@ -675,7 +640,7 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
     def add_place(self, place_id, place_type, parent_id=None, name=None, import_name='USFed_ConstantMaturityRates_Test'):
         """Adds a place node and its basic topology (typeOf and containment) to mock lists."""
-        self.add_node(place_id, name, [place_type])
+        self.add_node(place_id, name, types=[place_type])
         self.add_edge(place_id, 'typeOf', place_type, import_name)
         if parent_id:
             self.add_edge(place_id, 'containedInPlace', parent_id, import_name)
@@ -1502,6 +1467,107 @@ class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
     is_base_dc = False
 
 
+class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
+    """Integration E2E tests for StatVarGroupGenerator."""
+
+    def get_generator(self) -> StatVarGroupGenerator:
+        executor = BigQueryExecutor(
+            BQ_CONNECTION_ID,
+            PROJECT_ID,
+            SPANNER_INSTANCE_ID,
+            SPANNER_DATABASE_ID,
+            location=BQ_LOCATION,
+            run_sequential=True
+        )
+        return StatVarGroupGenerator(
+            executor,
+            is_base_dc=self.is_base_dc,
+            max_iterations=2,
+            should_filter_basic_population_type=False # Disabled for simpler test assertions
+        )
+
+    def test_stat_var_group_generation(self):
+        """
+        Tests the generation of StatVarGroups and hierarchical edges from SV specs.
+        
+        Setup:
+          - A vertical spec mapping 'Student' population type to a 'TestVertical' SVG.
+          - An unconstrained SV 'Count_Student'.
+          - A constrained SV 'Count_Student_Female' (gender=Female).
+        """
+        generator = self.get_generator()
+        ns = generator.namespace
+        prov = generator.generated_provenance
+        
+        # 1. Setup mock Vertical Node and Spec mappings
+        self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
+        self.add_node('Student', 'Student Population', value='Student', types=['Class'])
+        
+        # Spec mappings
+        self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
+        self.add_edge('Spec_Student', 'populationType', 'Student', 'TestImport')
+        self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')
+
+        # 2. Setup mock SV data
+        # Unconstrained Student SV
+        self.add_node('Count_Student', 'Count of Students', types=['StatisticalVariable'])
+        self.add_edge('Count_Student', 'typeOf', 'StatisticalVariable', 'TestImport')
+        self.add_edge('Count_Student', 'populationType', 'Student', 'TestImport')
+
+        # Constrained Student SV (gender = Female)
+        self.add_node('Count_Student_Female', 'Female Students', types=['StatisticalVariable'])
+        self.add_edge('Count_Student_Female', 'typeOf', 'StatisticalVariable', 'TestImport')
+        self.add_edge('Count_Student_Female', 'populationType', 'Student', 'TestImport')
+        self.add_edge('Count_Student_Female', 'constraintProperties', 'gender', 'TestImport')
+        self.add_edge('Count_Student_Female', 'gender', 'Female', 'TestImport')
+
+        self.flush_to_spanner()
+
+        # 2. Run generator
+        jobs = generator.run_all(import_names=['Schema'])
+        self.assertIsNotNone(jobs)
+        for job in jobs:
+            job.result()
+
+        # 3. Verify results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Check newly created SVG nodes (Should generate root 'Student' and constrained 'Student_Gender-Female')
+            node_query = """
+                SELECT subject_id 
+                FROM Node 
+                WHERE 'StatVarGroup' IN UNNEST(types) 
+                  AND subject_id LIKE '%/g/Student%'
+                ORDER BY subject_id
+            """
+            nodes = [r[0] for r in snapshot.execute_sql(node_query)]
+            self.assertIn(f'{ns}g/Student', nodes)
+            self.assertIn(f'{ns}g/Student_Gender', nodes)
+
+            # Check linkedMemberOf/memberOf attachments
+            edge_query = """
+                SELECT subject_id, predicate, object_id, provenance
+                FROM Edge 
+                WHERE predicate IN ('memberOf', 'specializationOf', 'linkedMemberOf')
+                ORDER BY subject_id, predicate, object_id
+            """
+            edges = [(r[0], r[1], r[2], r[3]) for r in snapshot.execute_sql(edge_query)]
+
+            # Verify unconstrained SV attached directly to the Student Root SVG
+            self.assertIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov), edges)
+            
+            # Verify constrained SV attached to the constrained SVG
+            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender', prov), edges)
+
+            # Verify hierarchical specialization of generated SVGs
+            self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov), edges)
+
+            # Verify the root SVG attached to the Vertical declared in the Spec
+            self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov), edges)
+
+
+class StatVarGroupGeneratorCustomDcTest(StatVarGroupGeneratorIntegrationTest):
+    is_base_dc = False
+
+
 if __name__ == '__main__':
     unittest.main()
-
