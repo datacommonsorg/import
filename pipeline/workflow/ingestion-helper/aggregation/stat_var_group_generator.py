@@ -139,7 +139,7 @@ class StatVarGroupGenerator:
         CREATE OR REPLACE TEMP TABLE SpecObjects AS (
           SELECT DISTINCT E.subject_id, E.predicate, E.object_id
           FROM EXTERNAL_QUERY(
-            "{conn_id}", 
+            "{conn_id}",
             '''
             SELECT subject_id, predicate, object_id 
             FROM Edge 
@@ -481,7 +481,7 @@ class StatVarGroupGenerator:
             spanner_options = '{{"table": "Edge"}}'
           ) AS (SELECT * FROM Edge);
         """
-        
+
         job_config = bigquery.QueryJobConfig(
             use_query_cache=False,
             query_parameters=[
