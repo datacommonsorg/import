@@ -70,7 +70,7 @@ class ProvenanceSummaryGenerator:
           observation_period,
           measurement_method,
           unit,
-          scaling_factor,
+          JSON_VALUE(facet, '$.scalingFactor') as scaling_factor,
           CAST(JSON_VALUE(facet, '$.isDcAggregate') AS BOOL) as is_dc_aggregate,
           date as date_val,
           SAFE_CAST(value AS FLOAT64) as value_num
@@ -82,8 +82,7 @@ class ProvenanceSummaryGenerator:
                provenance,
                observation_period,
                measurement_method,
-               unit,
-               scaling_factor,
+               unit,               
                facet,
                date,
                value
