@@ -46,7 +46,7 @@ class LinkedEdgeGenerator:
             self.run_linked_member(import_names)
         ]
         return [job for job in jobs if job]
-    
+
     def run_linked_member_of(
             self,
             import_names: List[str] = None) -> Optional[bigquery.job.QueryJob]:

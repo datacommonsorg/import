@@ -48,8 +48,6 @@ class AggregationUtils:
             self.executor, is_base_dc)
         self.provenance_summary_generator = ProvenanceSummaryGenerator(
             self.executor, is_base_dc)
-        self.stat_var_group_generator = StatVarGroupGenerator(
-            self.executor, is_base_dc)
 
     def run_aggregation(self, import_list: List[Dict[str, Any]]) -> List[str]:
         """
