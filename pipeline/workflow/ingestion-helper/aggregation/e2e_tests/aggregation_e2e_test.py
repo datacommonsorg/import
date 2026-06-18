@@ -237,6 +237,44 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(tuple(results[2]), ('geoId/06075', 'geoId/06', expected_provenance))
 
 
+    def test_linked_member_of(self):
+        """Tests run_linked_member_of.
+        
+        Hierarchy: Instance_A -> memberOf -> Class_B -> specializationOf -> Class_C
+        """
+        import_name = 'Schema_Import_Test'
+        
+        # 1. Setup mock data
+        self.add_node('Instance_A', 'Instance A', types=['Class_B'])
+        self.add_node('Class_B', 'Class B', types=['Class'])
+        self.add_node('Class_C', 'Class C', types=['Class'])
+        
+        self.add_edge('Instance_A', 'memberOf', 'Class_B', import_name)
+        self.add_edge('Class_B', 'specializationOf', 'Class_C', import_name)
+        
+        self.flush_to_spanner()
+        
+        # 2. Run generator
+        generator = self.get_generator()
+        job = generator.run_linked_member_of([import_name])
+        self.assertIsNotNone(job)
+        
+        # 3. Verify results
+        with self.database.snapshot() as snapshot:
+            query = """
+                SELECT subject_id, object_id, provenance 
+                FROM Edge 
+                WHERE predicate = 'linkedMemberOf'
+                ORDER BY subject_id, object_id
+            """
+            results = list(snapshot.execute_sql(query))
+            
+            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+            self.assertEqual(len(results), 2)
+            self.assertEqual(tuple(results[0]), ('Instance_A', 'Class_B', expected_provenance))
+            self.assertEqual(tuple(results[1]), ('Instance_A', 'Class_C', expected_provenance))
+    
+    
     def test_linked_member(self):
         """Tests run_linked_member.
         
