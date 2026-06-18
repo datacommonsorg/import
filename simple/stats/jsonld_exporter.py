@@ -96,7 +96,7 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
 
   # Generate a deterministic ID for the observation to avoid collisions across runs
-  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
+  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
   obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
   subject = DCID[f"obs_{obs_hash}"]
 

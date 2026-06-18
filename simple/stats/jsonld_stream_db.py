@@ -80,7 +80,7 @@ def _write_observation_shard(args):
   for row in chunk:
     entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
 
-    key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
+    key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
     obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
 
     obs_obj = {
