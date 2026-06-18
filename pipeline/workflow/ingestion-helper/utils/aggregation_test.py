@@ -26,6 +26,7 @@ from utils.aggregation import AggregationUtils
 @patch('utils.aggregation.BigQueryExecutor')
 @patch('utils.aggregation.LinkedEdgeGenerator')
 @patch('utils.aggregation.ProvenanceSummaryGenerator')
+@patch('utils.aggregation.StatVarGroupGenerator')
 class TestAggregationUtils(unittest.TestCase):
 
     def test_run_aggregation(self, mock_prov_gen, mock_edge_gen, mock_executor):
