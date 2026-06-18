@@ -1468,7 +1468,6 @@ class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
 
 
 class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
-
     """Integration E2E tests for StatVarGroupGenerator."""
 
     def get_generator(self) -> StatVarGroupGenerator:
@@ -1525,8 +1524,10 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.flush_to_spanner()
 
         # 2. Run generator
-        job = generator.run_all(import_names=['Schema'])
-        self.assertIsNotNone(job)
+        jobs = generator.run_all(import_names=['Schema'])
+        self.assertIsNotNone(jobs)
+        for job in jobs:
+            job.result()
 
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:

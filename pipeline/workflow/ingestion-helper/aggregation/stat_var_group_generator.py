@@ -6,7 +6,6 @@ from .bq_executor import BigQueryExecutor
 from .sql_utils import _escape_sql_literal
 
 class StatVarGroupGenerator:
-
     """Iteratively generates StatVarGroup nodes and hierarchical edges from MCF schemas."""
 
     def __init__(self,
@@ -16,8 +15,7 @@ class StatVarGroupGenerator:
                  namespace: Optional[str] = None,
                  generated_provenance: Optional[str] = None,
                  should_filter_basic_population_type: bool = True) -> None:
-        """
-        Initializes the StatVarGroupGenerator with executor and configuration parameters.
+        """Initializes the StatVarGroupGenerator with executor and configuration parameters.
 
         Args:
         ----
@@ -33,8 +31,8 @@ class StatVarGroupGenerator:
         self.max_iterations = max_iterations
         self.namespace = namespace if namespace is not None else ('dc/' if is_base_dc else 'custom/')
         self.generated_provenance = (
-          generated_provenance 
-          if generated_provenance is not None 
+          generated_provenance
+          if generated_provenance is not None
           else ('dc/base/GeneratedGraphs' if is_base_dc else 'GeneratedGraphs')
         )
         self.should_filter_basic_population_type = should_filter_basic_population_type
@@ -59,6 +57,7 @@ class StatVarGroupGenerator:
 
         dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
         conn_id = _escape_sql_literal(self.executor.connection_id)
+        no_cache_config = bigquery.QueryJobConfig(use_query_cache=False)
 
         # =====================================================================
         # OPTIMIZATION: Two-Stage Fetch for StatVar Triples
@@ -68,40 +67,16 @@ class StatVarGroupGenerator:
             SELECT DISTINCT object_id
             FROM EXTERNAL_QUERY("{conn_id}", "SELECT object_id FROM Edge WHERE predicate = 'constraintProperties'")
         """
-        prep_sv_job = self.executor.execute(prep_query)
+        prep_sv_job = self.executor.execute(prep_query, job_config=no_cache_config)
         constraint_props = [row.object_id for row in prep_sv_job]
 
         # Combine base predicates with the dynamically discovered constraint properties
         needed_predicates = ['populationType', 'constraintProperties'] + constraint_props
-        
-        # Format into a SQL-safe string
+
+        # Format into a SQL-safe string for Spanner injection
         sv_predicates = [f"'{p.replace('\'', '')}'" for p in needed_predicates]
         sv_predicates_sql = ", ".join(sv_predicates)
         logging.info(f"Optimizing Spanner fetch. Pulling {len(sv_predicates)} specific predicates.")
-        # =====================================================================
-        # OPTIMIZATION 2: Two-Stage Fetch for Spec Nodes (Object IDs)
-        # =====================================================================
-        logging.info("Fetching distinct object_ids...")
-        prep_objects_query = f"""
-            SELECT DISTINCT object_id
-            FROM EXTERNAL_QUERY(
-                "{conn_id}", 
-                '''SELECT object_id 
-                   FROM Edge 
-                   WHERE predicate IN (
-                       'populationType', 
-                       'constraintProperties', 
-                       'vertical', 
-                       'dependentPropertyValue'
-                   )'''
-            )
-        """
-        prep_objs_job = self.executor.execute(prep_objects_query)
-        
-        # Format into a SQL-safe array string for Spanner injection
-        spec_objects = [f"'{row.object_id.replace('\'', '')}'" for row in prep_objs_job if row.object_id]
-        spec_objects_sql = ", ".join(spec_objects)
-        logging.info(f"Optimizing Spanner fetch. Pulling {len(spec_objects)} specific Spec objects.")
         # =====================================================================
 
         # Using rf-string to safely pass SQL regex backslashes while enabling variable injection
@@ -179,13 +154,10 @@ class StatVarGroupGenerator:
 
         -- Resolve StatVarGroup spec object_ids to values. 
         CREATE OR REPLACE TEMP TABLE SpecValues AS (
-          SELECT S.subject_id, S.predicate, N.value
-          FROM SpecObjects S
-          JOIN EXTERNAL_QUERY("{conn_id}", 
-            "SELECT subject_id, value FROM Node WHERE subject_id IN UNNEST([{spec_objects_sql}])"
-          ) N
-            ON S.object_id = N.subject_id
-          WHERE S.subject_id NOT IN (
+          SELECT subject_id, predicate, object_id AS value
+          FROM SpecObjects
+          -- NOTE: Excluding DPVs for now.
+          WHERE subject_id NOT IN (
             SELECT subject_id FROM SpecObjects WHERE predicate = 'dependentPropertyValue'
           )
         );
@@ -511,6 +483,7 @@ class StatVarGroupGenerator:
         """
         
         job_config = bigquery.QueryJobConfig(
+            use_query_cache=False,
             query_parameters=[
                 bigquery.ScalarQueryParameter("namespace", "STRING", self.namespace),
                 bigquery.ScalarQueryParameter("generated_provenance", "STRING", self.generated_provenance),
