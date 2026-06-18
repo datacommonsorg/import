@@ -1468,6 +1468,7 @@ class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
 
 
 class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
+
     """Integration E2E tests for StatVarGroupGenerator."""
 
     def get_generator(self) -> StatVarGroupGenerator:
@@ -1487,7 +1488,8 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         )
 
     def test_stat_var_group_generation(self):
-        """Tests the generation of StatVarGroups and hierarchical edges from SV specs.
+        """
+        Tests the generation of StatVarGroups and hierarchical edges from SV specs.
         
         Setup:
           - A vertical spec mapping 'Student' population type to a 'TestVertical' SVG.

@@ -3,8 +3,10 @@ from typing import List, Optional
 
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
+from .sql_utils import _escape_sql_literal
 
 class StatVarGroupGenerator:
+
     """Iteratively generates StatVarGroup nodes and hierarchical edges from MCF schemas."""
 
     def __init__(self,
@@ -14,20 +16,27 @@ class StatVarGroupGenerator:
                  namespace: Optional[str] = None,
                  generated_provenance: Optional[str] = None,
                  should_filter_basic_population_type: bool = True) -> None:
-        """Initializes the StatVarGroupGenerator with executor and configuration parameters.
-        
+        """
+        Initializes the StatVarGroupGenerator with executor and configuration parameters.
+
         Args:
-            executor: BigQueryExecutor instance.
-            is_base_dc: Whether this is running in the base Data Commons environment.
-            max_iterations: Max loop iterations for SV generation.
-            namespace: Namespace for generated DCIDs.
-            generated_provenance: Provenance for generated Edges.
-            self.should_filter_basic_population_type = Filter basic population type SVGs.
+        ----
+        executor: BigQueryExecutor instance.
+        is_base_dc: Whether this is running in the base Data Commons environment.
+        max_iterations: Max loop iterations for SV generation.
+        namespace: Namespace for generated DCIDs.
+        generated_provenance: Provenance for generated Edges.
+        should_filter_basic_population_type = Filter basic population type SVGs.
+        
         """
         self.executor = executor
         self.max_iterations = max_iterations
         self.namespace = namespace if namespace is not None else ('dc/' if is_base_dc else 'custom/')
-        self.generated_provenance = generated_provenance if generated_provenance is not None else ('dc/base/GeneratedGraphs' if is_base_dc else 'GeneratedGraphs')
+        self.generated_provenance = (
+          generated_provenance 
+          if generated_provenance is not None 
+          else ('dc/base/GeneratedGraphs' if is_base_dc else 'GeneratedGraphs')
+        )
         self.should_filter_basic_population_type = should_filter_basic_population_type
 
     def run_all(self,
@@ -47,21 +56,64 @@ class StatVarGroupGenerator:
     def run_stat_var_group(self) -> List[Optional[bigquery.job.QueryJob]]:
         """Compiles and executes the StatVarGroup generation script."""
         logging.info("Starting StatVarGroup generation script...")
+
+        dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
+        conn_id = _escape_sql_literal(self.executor.connection_id)
+
+        # =====================================================================
+        # OPTIMIZATION: Two-Stage Fetch for StatVar Triples
+        # =====================================================================
+        logging.info("Fetching distinct constraint properties...")
+        prep_query = f"""
+            SELECT DISTINCT object_id
+            FROM EXTERNAL_QUERY("{conn_id}", "SELECT object_id FROM Edge WHERE predicate = 'constraintProperties'")
+        """
+        prep_sv_job = self.executor.execute(prep_query)
+        constraint_props = [row.object_id for row in prep_sv_job]
+
+        # Combine base predicates with the dynamically discovered constraint properties
+        needed_predicates = ['populationType', 'constraintProperties'] + constraint_props
         
-        dest_uri = self.executor.get_spanner_destination_uri()
-        conn_id = self.executor.connection_id
-        filter_bool = "TRUE" if self.should_filter_basic_population_type else "FALSE"
+        # Format into a SQL-safe string
+        sv_predicates = [f"'{p.replace('\'', '')}'" for p in needed_predicates]
+        sv_predicates_sql = ", ".join(sv_predicates)
+        logging.info(f"Optimizing Spanner fetch. Pulling {len(sv_predicates)} specific predicates.")
+        # =====================================================================
+        # OPTIMIZATION 2: Two-Stage Fetch for Spec Nodes (Object IDs)
+        # =====================================================================
+        logging.info("Fetching distinct object_ids...")
+        prep_objects_query = f"""
+            SELECT DISTINCT object_id
+            FROM EXTERNAL_QUERY(
+                "{conn_id}", 
+                '''SELECT object_id 
+                   FROM Edge 
+                   WHERE predicate IN (
+                       'populationType', 
+                       'constraintProperties', 
+                       'vertical', 
+                       'dependentPropertyValue'
+                   )'''
+            )
+        """
+        prep_objs_job = self.executor.execute(prep_objects_query)
+        
+        # Format into a SQL-safe array string for Spanner injection
+        spec_objects = [f"'{row.object_id.replace('\'', '')}'" for row in prep_objs_job if row.object_id]
+        spec_objects_sql = ", ".join(spec_objects)
+        logging.info(f"Optimizing Spanner fetch. Pulling {len(spec_objects)} specific Spec objects.")
+        # =====================================================================
 
         # Using rf-string to safely pass SQL regex backslashes while enabling variable injection
         query = rf"""  # nosec
         DECLARE new_rows_found BOOL DEFAULT TRUE; -- Flag to continue loop
         DECLARE iteration_count INT64 DEFAULT 0; -- Iteration of loop
-        DECLARE max_iterations INT64 DEFAULT {self.max_iterations}; -- Maximum number of iterations to generate
-        DECLARE namespace STRING DEFAULT '{self.namespace}'; -- Namespace for generated DCIDs 
-        DECLARE generated_provenance STRING DEFAULT '{self.generated_provenance}'; -- Provenance for generated Edges
+        DECLARE max_iterations INT64 DEFAULT @max_iterations; -- Maximum number of iterations to generate
+        DECLARE namespace STRING DEFAULT @namespace; -- Namespace for generated DCIDs
+        DECLARE generated_provenance STRING DEFAULT @generated_provenance; -- Provenance for generated Edges
         DECLARE uncategorized_svg STRING DEFAULT CONCAT(namespace, 'g/Uncategorized'); -- DCID for uncategorized SVs/SVGs
         DECLARE root_svg STRING DEFAULT CONCAT(namespace, 'g/Root'); -- DCID for root SVG
-        DECLARE should_filter_basic_population_type BOOL DEFAULT {filter_bool}; -- Whether to filter basic population type SVGs. Default to true for base DC 
+        DECLARE should_filter_basic_population_type BOOL DEFAULT @should_filter; -- Whether to filter basic population type SVGs. Default to true for base DC
 
         -- ============================================================================
         -- UDFs
@@ -111,7 +163,17 @@ class StatVarGroupGenerator:
         -- Fetch StatVarGroupSpec edges for relevant properties.
         CREATE OR REPLACE TEMP TABLE SpecObjects AS (
           SELECT DISTINCT E.subject_id, E.predicate, E.object_id
-          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN ('populationType', 'constraintProperties', 'vertical', 'dependentPropertyValue')") E
+          FROM EXTERNAL_QUERY(
+            "{conn_id}", 
+            '''
+            SELECT subject_id, predicate, object_id 
+            FROM Edge 
+            WHERE predicate IN (
+              'populationType', 
+              'constraintProperties', 
+              'vertical', 
+              'dependentPropertyValue'
+            )''') E
           JOIN StatVarGroupSpec S ON E.subject_id = S.subject_id
         );
 
@@ -119,7 +181,9 @@ class StatVarGroupGenerator:
         CREATE OR REPLACE TEMP TABLE SpecValues AS (
           SELECT S.subject_id, S.predicate, N.value
           FROM SpecObjects S
-          JOIN EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, value FROM Node") N 
+          JOIN EXTERNAL_QUERY("{conn_id}", 
+            "SELECT subject_id, value FROM Node WHERE subject_id IN UNNEST([{spec_objects_sql}])"
+          ) N
             ON S.object_id = N.subject_id
           WHERE S.subject_id NOT IN (
             SELECT subject_id FROM SpecObjects WHERE predicate = 'dependentPropertyValue'
@@ -159,7 +223,8 @@ class StatVarGroupGenerator:
             SELECT * FROM SpecValues
             PIVOT (
               ARRAY_AGG(value IGNORE NULLS ORDER BY value) 
-              -- NOTE: Currently excluding ObsProp. This is because it can cause unexpected behavior when an SV is attached to a vertical due to another SV having a matching mprop.
+              -- NOTE: Currently excluding ObsProp.
+              -- This is because it can cause unexpected behavior when an SV is attached to a vertical due to another SV having a matching mprop.
               -- Instead, the SV will get attached only based on popType and cpops, so the result is deterministic per SV.
               -- TODO: Determine what the intended behavior is. 
               FOR predicate IN ('populationType', 'constraintProperties', 'vertical')
@@ -188,14 +253,10 @@ class StatVarGroupGenerator:
         );
 
         -- Fetch relevant StatisticalVariable triples.
-        -- This list is based on the legacy Prophet PropsThatAreNotConstraintProps, 
-        -- but excluding constraintProperties, populationType, measuredProperty, measurementDenominator, measurementQualifier which are part of the vertical spec.
-        -- Also including domainIncludes/rangeIncludes due to some incorrectly modeled SVs. TODO: Clean these up.
-        -- Also including definition, linkedMemberOf, and linkedMember, which are generated properties.    
         CREATE OR REPLACE TEMP TABLE StatVarTriple AS (
           SELECT DISTINCT E.subject_id, E.predicate, E.object_id
           FROM EXTERNAL_QUERY("{conn_id}",
-            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate NOT IN ('typeOf', 'dcid', 'provenance', 'isPublic', 'localCuratorLevelId', 'url', 'memberOf', 'name', 'label', 'description', 'descriptionUrl', 'alternateName', 'utteranceTemplate', 'source', 'footnote', 'keyString', 'resMCFFile', 'populationGroup', 'location', 'childhoodLocation', 'statType', 'censusACSTableId', 'measurementMethod', 'scalingFactor', 'unit', 'isNormalizable', 'denominatorForNormalization', 'domainIncludes', 'rangeIncludes', 'definition', 'linkedMemberOf', 'linkedMember')"
+            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}])"
           ) E
           JOIN StatVar SV ON SV.subject_id = E.subject_id
         );
@@ -252,7 +313,10 @@ class StatVarGroupGenerator:
             ON SV.populationType = VS.populationType AND IFNULL(ARRAY_LENGTH(VS.constraintProperties), 0) = 0
           CROSS JOIN UNNEST([
             STRUCT('memberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS target_array),
-            STRUCT('linkedMemberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg], VS.linkedVertical) AS target_array)
+            STRUCT(
+              'linkedMemberOf' AS predicate, 
+              IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg], VS.linkedVertical) AS target_array
+            )
           ]) AS map
           CROSS JOIN UNNEST(map.target_array) AS v
         );
@@ -289,7 +353,9 @@ class StatVarGroupGenerator:
           SET iteration_count = iteration_count + 1;
           SET new_rows_found = FALSE;
           
-          CREATE OR REPLACE TEMP TABLE CurrentIterationOutput AS (
+          -- Insert new distinct rows into AllResults
+          INSERT INTO AllResults
+          WITH CurrentIterationOutput AS (
             SELECT
               -- Set node1 to node3 of previous iteration.
               node3 AS node1,
@@ -308,7 +374,8 @@ class StatVarGroupGenerator:
                   SELECT REPLACE(REPLACE(a, ' ', ''), '=', '-') 
                   FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx WHERE a_idx != target_idx 
                 ), '_')),
-                IF(NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType)), CONCAT(namespace, 'g/', populationType), CAST(NULL AS STRING))
+                IF(NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType)), 
+                  CONCAT(namespace, 'g/', populationType), CAST(NULL AS STRING))
               ) AS node3,
               IF(ARRAY_LENGTH(attributes) > 1, 
                 CONCAT(FormatName(populationType), ' With ', ARRAY_TO_STRING(ARRAY( 
@@ -320,26 +387,27 @@ class StatVarGroupGenerator:
               ARRAY(SELECT cp FROM UNNEST(newConstraintProperties) AS cp WITH OFFSET AS cp_idx WHERE cp_idx != target_idx) AS newConstraintProperties,
               ARRAY(SELECT a FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx WHERE a_idx != target_idx) AS attributes,
               iteration + 1 AS iteration
-            FROM InitialData AS T, UNNEST(attributes) AS attr WITH OFFSET AS target_idx
-            WHERE ARRAY_LENGTH(attributes) >= 1
-          );
-
-          -- Isolate new rows generated in this iteration. This is to help prune identical paths from a SV.
-          CREATE OR REPLACE TEMP TABLE NewDistinctRows AS (
-            SELECT DISTINCT C.node1, C.node2, C.node2name, C.node3, C.node3name, C.statvar, C.populationType,
-              C.constraintProperties, C.newConstraintProperties, C.attributes, C.iteration
+            FROM InitialData AS T, UNNEST(T.attributes) AS attr WITH OFFSET AS target_idx
+            WHERE T.iteration = iteration_count - 1
+              AND ARRAY_LENGTH(T.attributes) >= 1
+          ),
+          NewDistinctRows AS (
+            SELECT DISTINCT C.*
             FROM CurrentIterationOutput C
-            LEFT JOIN AllResults AR ON C.statvar = AR.statvar AND C.node1 IS NOT DISTINCT FROM AR.node1
-              AND C.node2 IS NOT DISTINCT FROM AR.node2 AND C.node3 IS NOT DISTINCT FROM AR.node3
+            LEFT JOIN AllResults AR ON C.statvar = AR.statvar 
+              AND C.node1 IS NOT DISTINCT FROM AR.node1
+              AND C.node2 IS NOT DISTINCT FROM AR.node2 
+              AND C.node3 IS NOT DISTINCT FROM AR.node3
             WHERE AR.statvar IS NULL
-          );
+          )
+          SELECT * FROM NewDistinctRows;
 
-          IF (SELECT COUNT(1) FROM NewDistinctRows) > 0 THEN
-            INSERT INTO AllResults SELECT * FROM NewDistinctRows;
+          -- If new rows were inserted, continue the loop and update InitialData
+          IF @@row_count > 0 THEN
             SET new_rows_found = TRUE;
+            INSERT INTO InitialData
+            SELECT * FROM AllResults WHERE iteration = iteration_count;
           END IF;
-
-          CREATE OR REPLACE TEMP TABLE InitialData AS (SELECT * FROM NewDistinctRows);
         END WHILE;
 
         -- ============================================================================
@@ -442,4 +510,12 @@ class StatVarGroupGenerator:
           ) AS (SELECT * FROM Edge);
         """
         
-        return self.executor.execute(query)
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("namespace", "STRING", self.namespace),
+                bigquery.ScalarQueryParameter("generated_provenance", "STRING", self.generated_provenance),
+                bigquery.ScalarQueryParameter("max_iterations", "INT64", self.max_iterations),
+                bigquery.ScalarQueryParameter("should_filter", "BOOL", self.should_filter_basic_population_type),
+            ]
+        )
+        return self.executor.execute(query, job_config=job_config)
