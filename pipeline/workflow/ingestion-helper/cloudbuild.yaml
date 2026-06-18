@@ -11,6 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# CI/CD Execution (Triggered automatically on push to master):
+# - Pushes tags: 'latest' and commit SHORT_SHA
+#
+# Manual/Local Execution:
+#
+# 1. Build and tag with 'latest' and local commit SHA (Clean build):
+#    gcloud builds submit . --config=cloudbuild.yaml --project=datcom-ci --substitutions=_VERSION=$(git rev-parse --short HEAD)
+#
+# 2. Build for dev/testing (avoids overwriting 'latest' and clean commit SHA tags):
+#    gcloud builds submit . --config=cloudbuild.yaml --project=datcom-ci --substitutions=_TAG=dev,_VERSION=$(git rev-parse --short HEAD)-dev
+#
 
 steps:
   # Run unit tests (disabled until further testing)
@@ -19,16 +31,25 @@ steps:
 
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_VERSION}', '.']
+    args: [
+      'build',
+      '-t', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_TAG}',
+      '-t', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_VERSION}',
+      '.'
+    ]
 
-  # Push the container image
+  # Push the container image tags
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_TAG}']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_VERSION}']
 
 substitutions:
   _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
   _IMAGE_NAME: 'datacommons-ingestion-helper'
-  _VERSION: 'latest'
+  _TAG: 'latest'
+  _VERSION: '${SHORT_SHA}'
 
 images:
+  - '${_AR_REPO_URL}/${_IMAGE_NAME}:${_TAG}'
   - '${_AR_REPO_URL}/${_IMAGE_NAME}:${_VERSION}'
