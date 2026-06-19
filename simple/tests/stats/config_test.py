@@ -306,7 +306,8 @@ class TestConfig(unittest.TestCase):
 
   def test_input_file_format(self):
     config = Config({})
-    self.assertEqual(config.format(self.make_file("foo.csv")), None, "empty")
+    self.assertEqual(config.format(self.make_file("foo.csv")),
+                     InputFileFormat.VARIABLE_PER_ROW, "empty")
 
     config = Config({"inputFiles": {"foo.csv": {"format": "variablePerRow"}}})
     self.assertEqual(config.format(self.make_file("foo.csv")),
