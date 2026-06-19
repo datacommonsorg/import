@@ -317,7 +317,9 @@ public final class Vocabulary {
         || prop.equals(MEASUREMENT_DENOMINATOR)
         || prop.equals(MEASUREMENT_QUALIFIER)
         || prop.equals(STAT_TYPE)
-        || prop.equals(UNIT);
+        || prop.equals(UNIT)
+        || prop.equals(OBSERVATION_PROPERTY)
+        || prop.equals(ENTITY_MAPPING);
   }
 
   public static boolean isGlobalReference(String val) {
