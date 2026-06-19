@@ -636,6 +636,141 @@ public class GraphTransformerTest {
   }
 
   @Test
+  public void testStatVarTransformationWithObservationPropertyAndEntityMapping() {
+    McfGraph inputGraph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "FinancialAid",
+                PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:StatisticalVariable")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "populationType",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:FinancialTransaction")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "measuredProperty",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:amount")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "observationProperty",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:destinationCountry")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "entityMapping",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:someMapping")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "someActualConstraint",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:someValue")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .build())
+            .build();
+
+    McfGraph expectedGraph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "FinancialAid",
+                PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:StatisticalVariable")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "populationType",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:FinancialTransaction")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "measuredProperty",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:amount")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "observationProperty",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:destinationCountry")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "entityMapping",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:someMapping")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "someActualConstraint",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:someValue")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "constraintProperties",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("someActualConstraint")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .build())
+            .build();
+
+    PCollection<McfGraph> output =
+        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+
+    PCollection<McfGraph> mergedOutput =
+        output.apply(
+            org.apache.beam.sdk.transforms.Combine.globally(
+                    new PipelineUtilsTest.MergeMcfGraphsCombineFn())
+                .withoutDefaults());
+
+    PAssert.that(mergedOutput).containsInAnyOrder(expectedGraph);
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void testQuantityTransformationNoOverwrite() {
     McfGraph inputGraph =
         McfGraph.newBuilder()
