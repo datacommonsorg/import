@@ -41,7 +41,9 @@ public class SpannerClient implements Serializable {
 
   // Decrease batch size for observations (bigger rows)
   private static final int SPANNER_BATCH_SIZE_BYTES = 500 * 1024;
-  // Maximum size for a single column value in Spanner (10MB)
+  // Maximum size for a single string column value in Spanner (characters)
+  public static final int MAX_SPANNER_STRING_COLUMN_SIZE = 2621440;
+  // Maximum size for a single bytes column value in Spanner (10MB)
   public static final int MAX_SPANNER_COLUMN_SIZE = 10 * 1024 * 1024;
   // Increase batch size for Nodes/Edges (smaller rows)
   private static final int SPANNER_MAX_NUM_ROWS = 2000;
@@ -140,10 +142,12 @@ public class SpannerClient implements Serializable {
             .withProjectId(gcpProjectId)
             .withInstanceId(spannerInstanceId)
             .withDatabaseId(ValueProvider.StaticValueProvider.of(spannerDatabaseId))
-            .withBatchSizeBytes(SPANNER_BATCH_SIZE_BYTES)
-            .withMaxNumRows(SPANNER_MAX_NUM_ROWS)
-            .withGroupingFactor(SPANNER_GROUPING_FACTOR)
-            .withMaxNumMutations(SPANNER_MAX_NUM_MUTATIONS)
+            // Note: add parameter tuning here based on the size of mutations and latency
+            // requirements.
+            // .withBatchSizeBytes(SPANNER_BATCH_SIZE_BYTES)
+            // .withMaxNumRows(SPANNER_MAX_NUM_ROWS)
+            // .withGroupingFactor(SPANNER_GROUPING_FACTOR)
+            // .withMaxNumMutations(SPANNER_MAX_NUM_MUTATIONS)
             .withCommitDeadline(Duration.standardSeconds(SPANNER_COMMIT_DEADLINE_SECONDS));
 
     if (emulatorHost != null) {

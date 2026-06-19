@@ -4,7 +4,6 @@ import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
 import com.google.common.base.Joiner;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -71,8 +70,15 @@ public class GraphReader implements Serializable {
           }
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
-              int valSize = val.getValue().getBytes(StandardCharsets.UTF_8).length;
-              if (valSize > SpannerClient.MAX_SPANNER_COLUMN_SIZE) {
+              boolean storeAsBytes = PipelineUtils.storeValueAsBytes(entry.getKey());
+              byte[] compressedBytes =
+                  storeAsBytes ? PipelineUtils.compressString(val.getValue()) : null;
+              int valSize = storeAsBytes ? compressedBytes.length : val.getValue().length();
+              int maxSize =
+                  storeAsBytes
+                      ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
+                      : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
+              if (valSize > maxSize) {
                 LOGGER.warn(
                     "Dropping node from {} because value size {} exceeds max size.",
                     subjectId,
@@ -81,8 +87,8 @@ public class GraphReader implements Serializable {
               }
               node = Node.builder();
               node.subjectId(PipelineUtils.generateObjectValueKey(val.getValue()));
-              if (PipelineUtils.storeValueAsBytes(entry.getKey())) {
-                node.bytes(ByteArray.copyFrom(PipelineUtils.compressString(val.getValue())));
+              if (storeAsBytes) {
+                node.bytes(ByteArray.copyFrom(compressedBytes));
               } else {
                 node.value(val.getValue());
               }
@@ -109,8 +115,18 @@ public class GraphReader implements Serializable {
           }
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
-              int valSize = val.getValue().getBytes(StandardCharsets.UTF_8).length;
-              if (valSize > SpannerClient.MAX_SPANNER_COLUMN_SIZE) {
+              boolean storeAsBytes = PipelineUtils.storeValueAsBytes(entry.getKey());
+              int maxSize =
+                  storeAsBytes
+                      ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
+                      : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
+
+              int valSize = val.getValue().length();
+              if (storeAsBytes && valSize > maxSize) {
+                valSize = PipelineUtils.compressString(val.getValue()).length;
+              }
+
+              if (valSize > maxSize) {
                 LOGGER.warn(
                     "Dropping edge from {} because value size {} exceeds max size.",
                     subjectId,
