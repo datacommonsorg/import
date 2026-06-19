@@ -1,35 +1,20 @@
 package org.datacommons.ingestion.spanner;
 
-import com.google.api.gax.core.NoCredentialsProvider;
-import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
-import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Spanner;
-import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Value;
-import com.google.cloud.spanner.admin.database.v1.DatabaseAdminClient;
-import com.google.cloud.spanner.admin.database.v1.DatabaseAdminSettings;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.spanner.admin.database.v1.CreateDatabaseRequest;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
@@ -100,169 +85,6 @@ public class SpannerClient implements Serializable {
   public SpannerWriteResult writeMutations(
       Pipeline pipeline, String name, PCollection<Mutation> mutations) {
     return mutations.apply(name, getWriteTransform());
-  }
-
-  /**
-   * Parses DDL statements from a BufferedReader. DDL statements can span multiple lines and are are
-   * delimited with a newline.
-   */
-  private List<String> parseDdlStatements(BufferedReader reader) throws IOException {
-    String fullText = reader.lines().collect(Collectors.joining("\n"));
-    String[] blocksArray = fullText.split("\\n\\s*\\n+", 0);
-    return Arrays.stream(blocksArray)
-        .map(String::trim)
-        .filter(stmt -> !stmt.isEmpty())
-        .filter(stmt -> !isCommentsOnly(stmt))
-        .map(stmt -> stmt.endsWith(";") ? stmt.substring(0, stmt.length() - 1) : stmt)
-        .map(String::trim)
-        .collect(Collectors.toList());
-  }
-
-  private static boolean isCommentsOnly(String block) {
-    return Arrays.stream(block.split("\n"))
-        .map(String::trim)
-        .filter(line -> !line.isEmpty())
-        .allMatch(line -> line.startsWith("--"));
-  }
-
-  /** Initializes the remote Spanner database. */
-  private void initializeRemoteDatabase(DatabaseAdminClient dbAdminClient) {
-    LOGGER.info("Spanner database {} not found. Creating it now.", spannerDatabaseId);
-
-    CreateDatabaseRequest request =
-        CreateDatabaseRequest.newBuilder()
-            .setParent(String.format("projects/%s/instances/%s", gcpProjectId, spannerInstanceId))
-            .setCreateStatement(String.format("CREATE DATABASE `%s`", spannerDatabaseId))
-            .build();
-
-    try {
-      // Block until the database is created.
-      dbAdminClient.createDatabaseAsync(request).get();
-    } catch (java.util.concurrent.ExecutionException executionE) {
-      throw SpannerExceptionFactory.newSpannerException(
-          ErrorCode.UNKNOWN, "An error occurred during database creation.", executionE);
-    } catch (InterruptedException interruptedE) {
-      LOGGER.error("Operation was interrupted while waiting for database creation.", interruptedE);
-      throw SpannerExceptionFactory.propagateInterrupt(interruptedE);
-    }
-    LOGGER.info("Successfully created Spanner database {}.", spannerDatabaseId);
-  }
-
-  /**
-   * Validates that the Spanner database and tables exist. Initializes the database if it doesn't.
-   */
-  public void validateOrInitializeDatabase() {
-    DatabaseAdminClient dbAdminClient;
-    try {
-      if (emulatorHost != null) {
-        DatabaseAdminSettings.Builder settingsBuilder = DatabaseAdminSettings.newBuilder();
-        settingsBuilder.setCredentialsProvider(NoCredentialsProvider.create());
-        settingsBuilder.setEndpoint(emulatorHost);
-        settingsBuilder.setTransportChannelProvider(
-            InstantiatingGrpcChannelProvider.newBuilder()
-                .setEndpoint(emulatorHost)
-                .setChannelConfigurator(io.grpc.ManagedChannelBuilder::usePlaintext)
-                .build());
-        dbAdminClient = DatabaseAdminClient.create(settingsBuilder.build());
-      } else {
-        dbAdminClient = DatabaseAdminClient.create();
-      }
-    } catch (IOException e) {
-      throw new IllegalStateException("Failed to create DatabaseAdminClient.", e);
-    }
-
-    // Ensure the Database now has the proper Tables and Proto Bundle.
-    String databasePath =
-        String.format(
-            "projects/%s/instances/%s/databases/%s",
-            gcpProjectId, spannerInstanceId, spannerDatabaseId);
-
-    try {
-      dbAdminClient.getDatabase(databasePath);
-      LOGGER.info("Spanner database {} already exists.", spannerDatabaseId);
-    } catch (com.google.api.gax.rpc.NotFoundException notFoundE) {
-      initializeRemoteDatabase(dbAdminClient);
-    }
-
-    // Check if tables exist by fetching current DDL from Spanner once.
-    List<String> currentDdlStatements =
-        dbAdminClient.getDatabaseDdl(databasePath).getStatementsList();
-
-    boolean nodeExists = checkTableExists(currentDdlStatements, "Node");
-    boolean edgeExists = checkTableExists(currentDdlStatements, "Edge");
-    boolean timeSeriesExists = checkTableExists(currentDdlStatements, "TimeSeries");
-    boolean observationExists = checkTableExists(currentDdlStatements, "Observation");
-
-    if (nodeExists && edgeExists && timeSeriesExists && observationExists) {
-      LOGGER.info("Database is fully initialized.");
-      return;
-    }
-
-    if (nodeExists || edgeExists || timeSeriesExists || observationExists) {
-      throw new IllegalStateException(
-          String.format(
-              "Database is in an inconsistent state. Node: %b, Edge: %b, TimeSeries: %b, Observation: %b. Please clean up the database manually.",
-              nodeExists, edgeExists, timeSeriesExists, observationExists));
-    }
-
-    LOGGER.info("Database is empty. Applying DDL statements to existing database.");
-    List<String> statementsToApply = readDdlStatements();
-
-    try {
-      // Update the Schema to include the new tables.
-      dbAdminClient
-          .updateDatabaseDdlAsync(
-              com.google.spanner.admin.database.v1.UpdateDatabaseDdlRequest.newBuilder()
-                  .setDatabase(databasePath)
-                  .addAllStatements(statementsToApply)
-                  .build())
-          .get();
-      LOGGER.info("Successfully applied DDL statements to existing database.");
-    } catch (java.util.concurrent.ExecutionException executionE) {
-      throw SpannerExceptionFactory.newSpannerException(
-          ErrorCode.UNKNOWN, "An error occurred during DDL update.", executionE);
-    } catch (InterruptedException interruptedE) {
-      LOGGER.error("Operation was interrupted while waiting for DDL update.", interruptedE);
-      throw SpannerExceptionFactory.propagateInterrupt(interruptedE);
-    }
-  }
-
-  /** Reads DDL statements from the schema.sql file in the resources directory. */
-  List<String> readDdlStatements() {
-    InputStream inputStream = getClass().getClassLoader().getResourceAsStream("schema.sql");
-    if (inputStream == null) {
-      throw new IllegalStateException("Could not find schema.sql in resources.");
-    }
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-      List<String> statements = parseDdlStatements(reader);
-      if (emulatorHost != null) {
-        statements =
-            statements.stream()
-                .map(
-                    stmt ->
-                        stmt.replaceAll(
-                            "(?i),?\\s*OPTIONS\\s*\\(\\s*columnar_policy\\s*=\\s*'enabled'\\s*\\)",
-                            ""))
-                .toList();
-      }
-      return statements;
-    } catch (IOException e) {
-      throw new IllegalStateException("Failed to read schema.sql", e);
-    }
-  }
-
-  /**
-   * Checks if a table exists in the list of DDL statements.
-   *
-   * @param statements The list of DDL statements retrieved from Spanner.
-   * @param tableName The name of the table to check.
-   * @return true if the table exists, false otherwise.
-   */
-  boolean checkTableExists(List<String> statements, String tableName) {
-    String regex = "(?i)\\bCREATE\\s+TABLE\\s+`?" + tableName + "`?\\b";
-    Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-    return statements.stream().anyMatch(s -> pattern.matcher(s).find());
   }
 
   public PCollection<Void> deleteDataForImport(
@@ -385,6 +207,15 @@ public class SpannerClient implements Serializable {
     // Create entities JSON
     JsonObject entitiesJson = new JsonObject();
     entitiesJson.addProperty("entity1", entity1);
+    List<String> extra = obs.getExtraEntities();
+    if (extra != null) {
+      if (extra.size() > 0) {
+        addPropertyIfNotEmpty(entitiesJson, "entity2", extra.get(0));
+      }
+      if (extra.size() > 1) {
+        addPropertyIfNotEmpty(entitiesJson, "entity3", extra.get(1));
+      }
+    }
 
     // Create facet JSON
     JsonObject facetJson = new JsonObject();

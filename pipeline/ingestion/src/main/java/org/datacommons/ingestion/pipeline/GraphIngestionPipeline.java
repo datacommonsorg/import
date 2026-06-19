@@ -38,7 +38,7 @@ public class GraphIngestionPipeline {
       Metrics.counter(GraphIngestionPipeline.class, "graph_edge_count");
   private static final Counter obsCounter =
       Metrics.counter(GraphIngestionPipeline.class, "graph_observation_count");
-  private static final Counter tsCounter =
+  private static final Counter timeSeriesCounter =
       Metrics.counter(GraphIngestionPipeline.class, "graph_timeseries_count");
 
   // List of imports that require node combination.
@@ -68,12 +68,6 @@ public class GraphIngestionPipeline {
             .observationTableName(options.getSpannerObservationTableName())
             .numShards(options.getNumShards())
             .build();
-
-    if (options.getInitializeDatabase()) {
-      LOGGER.info("Starting Spanner DDL creation...");
-      spannerClient.validateOrInitializeDatabase();
-      LOGGER.info("Spanner DDL creation complete.");
-    }
 
     Pipeline pipeline = Pipeline.create(options);
     buildPipeline(pipeline, options, spannerClient);
@@ -224,9 +218,9 @@ public class GraphIngestionPipeline {
     // Path 1: TimeSeries (Metadata)
     // Extract unique series keys and convert to metadata-only TimeSeries
     PCollection<TimeSeries> uniqueSeries =
-        GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc, tsCounter);
+        GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc, timeSeriesCounter);
     // Convert unique TimeSeries to TimeSeries mutations
-    PCollection<Mutation> tsMutations =
+    PCollection<Mutation> timeSeriesMutations =
         uniqueSeries.apply(
             "ToTimeSeriesMutations-" + importName,
             MapElements.into(TypeDescriptor.of(Mutation.class))
@@ -237,22 +231,24 @@ public class GraphIngestionPipeline {
     PCollection<Observation> obsDataPoints =
         GraphReader.extractObservations(observationNodes, importName, isBaseDc, obsCounter);
     // Convert Observations to Observation mutations
-    PCollection<Mutation> childMutations =
+    PCollection<Mutation> observationMutations =
         obsDataPoints.apply(
             "ToObservationMutations-" + importName,
             MapElements.into(TypeDescriptor.of(Mutation.class))
                 .via(spannerClient::toObservationMutation));
 
     // Write TimeSeries (wait for Obs delete)
-    PCollection<Mutation> waitingTS =
-        tsMutations.apply("TSWaitOn-" + importName, Wait.on(deleteObsWait));
-    SpannerWriteResult writtenTS =
-        spannerClient.writeMutations(pipeline, "WriteTimeSeriesToSpanner-" + importName, waitingTS);
+    PCollection<Mutation> waitingTimeSeries =
+        timeSeriesMutations.apply("TimeSeriesWaitOn-" + importName, Wait.on(deleteObsWait));
+    SpannerWriteResult writtenTimeSeries =
+        spannerClient.writeMutations(
+            pipeline, "WriteTimeSeriesToSpanner-" + importName, waitingTimeSeries);
 
     // Write Observations (wait for TimeSeries write)
-    PCollection<Mutation> waitingChildren =
-        childMutations.apply("ChildWaitOn-" + importName, Wait.on(writtenTS.getOutput()));
+    PCollection<Mutation> waitingObservations =
+        observationMutations.apply(
+            "ObservationWaitOn-" + importName, Wait.on(writtenTimeSeries.getOutput()));
     spannerClient.writeMutations(
-        pipeline, "WriteChildObservationsToSpanner-" + importName, waitingChildren);
+        pipeline, "WriteObservationsToSpanner-" + importName, waitingObservations);
   }
 }

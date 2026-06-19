@@ -4,7 +4,9 @@ import com.google.common.base.Joiner;
 import com.google.common.hash.Hashing;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -16,6 +18,7 @@ import java.util.Objects;
 public class TimeSeries implements Serializable {
   private String entity1;
   private String extraEntitiesId;
+  private List<String> extraEntities;
   private String variableMeasured;
   private Map<String, String> observations;
   private String observationPeriod;
@@ -30,6 +33,7 @@ public class TimeSeries implements Serializable {
 
   private TimeSeries(Builder builder) {
     this.entity1 = builder.entity1;
+    this.extraEntities = new ArrayList<>(builder.extraEntities);
     this.extraEntitiesId = builder.extraEntitiesId;
     this.variableMeasured = builder.variableMeasured;
     this.observations = builder.observations;
@@ -60,12 +64,20 @@ public class TimeSeries implements Serializable {
         facetId);
   }
 
+  public String getDedupeKey() {
+    return Joiner.on("^").useForNull("").join(variableMeasured, entity1, extraEntitiesId, facetId);
+  }
+
   public String getEntity1() {
     return entity1;
   }
 
   public String getExtraEntitiesId() {
     return extraEntitiesId;
+  }
+
+  public List<String> getExtraEntities() {
+    return extraEntities;
   }
 
   public String getVariableMeasured() {
@@ -120,6 +132,7 @@ public class TimeSeries implements Serializable {
 
     return Objects.equals(entity1, that.entity1)
         && Objects.equals(extraEntitiesId, that.extraEntitiesId)
+        && Objects.equals(extraEntities, that.extraEntities)
         && Objects.equals(variableMeasured, that.variableMeasured)
         && Objects.equals(observations, that.observations)
         && Objects.equals(observationPeriod, that.observationPeriod)
@@ -138,6 +151,7 @@ public class TimeSeries implements Serializable {
     return Objects.hash(
         entity1,
         extraEntitiesId,
+        extraEntities,
         variableMeasured,
         observations,
         observationPeriod,
@@ -177,6 +191,7 @@ public class TimeSeries implements Serializable {
   public static class Builder {
     private String entity1 = "";
     private String extraEntitiesId = "";
+    private List<String> extraEntities = new ArrayList<>();
     private String variableMeasured = "";
     private Map<String, String> observations = new HashMap<>();
     private String observationPeriod = "";
@@ -194,8 +209,9 @@ public class TimeSeries implements Serializable {
       return this;
     }
 
-    public Builder extraEntitiesId(String extraEntitiesId) {
-      this.extraEntitiesId = extraEntitiesId;
+    public Builder extraEntities(List<String> extraEntities) {
+      this.extraEntities =
+          extraEntities == null ? new ArrayList<>() : new ArrayList<>(extraEntities);
       return this;
     }
 
@@ -258,6 +274,7 @@ public class TimeSeries implements Serializable {
       this.facetId =
           calculateFacetId(
               importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
+      this.extraEntitiesId = Joiner.on("^").useForNull("").join(extraEntities);
       return new TimeSeries(this);
     }
   }
