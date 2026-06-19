@@ -49,18 +49,21 @@ class UpdateIngestionStatusRequest(BaseModel):
     jobId: str
     status: IngestionState
 
-class UpdateImportStatusRequest(BaseModel):
+class ImportStatusItem(BaseModel):
     importName: str
+    latestVersion: Optional[str] = None
+    graphPath: Optional[str] = None
+
+class UpdateImportStatusRequest(BaseModel):
+    imports: List[ImportStatusItem]
     status: ImportState
     jobId: Optional[str] = None
     executionTime: Optional[int] = None
     dataVolume: Optional[int] = None
-    latestVersion: Optional[str] = None
-    graphPath: Optional[str] = None
     nextRefresh: Optional[str] = None
 
 class UpdateImportVersionRequest(BaseModel):
-    importName: str
+    imports: List[str]
     version: str
     comment: str
     override: Optional[bool] = False
@@ -98,31 +101,43 @@ def update_import_status(
     spanner: SpannerClient = Depends(get_spanner_client),
     storage: StorageClient = Depends(get_storage_client)
 ):
-    """Updates the status of a specific import job."""
-    logging.info(f"Updating import {req.importName} to status {req.status}")
-    
-    req_dict = req.model_dump(exclude_none=True)
-    params = import_utils.get_import_params(req_dict)
-    
-    next_refresh = None
-    if config.IS_BASE_DC:
-        next_refresh = import_utils.get_next_refresh(config.PROJECT_ID, config.LOCATION, req.importName)
+    """Updates the status of import jobs."""
+    for item in req.imports:
+        logging.info(f"Updating import {item.importName} to status {req.status}")
         
-    if next_refresh:
-        params['next_refresh'] = next_refresh
+        # Construct dictionary parameters for the individual import
+        import_req = {
+            "importName": item.importName,
+            "status": req.status,
+            "jobId": req.jobId,
+            "executionTime": req.executionTime,
+            "dataVolume": req.dataVolume,
+            "latestVersion": item.latestVersion,
+            "graphPath": item.graphPath,
+            "nextRefresh": req.nextRefresh,
+        }
+        req_dict = {k: v for k, v in import_req.items() if v is not None}
+        params = import_utils.get_import_params(req_dict)
         
-    if req.status == ImportState.STAGING:
-        version = os.path.basename(req.latestVersion or '')
-        if not version:
-            raise HTTPException(status_code=400, detail=f"Empty version for import {req.importName}")
-        storage.update_version_file(req.importName, version, is_staging=True)
-        storage.update_provenance_file(req.importName, version)
-        storage.update_import_summary(params)
-        storage.update_version_file(req.importName, version, is_staging=False)
-        comment = f"import-workflow:{req.jobId or ''}"
-        spanner.update_version_history(req.importName, version, comment)
-        
-    spanner.update_import_status(params)
+        next_refresh = None
+        if config.IS_BASE_DC:
+            next_refresh = import_utils.get_next_refresh(config.PROJECT_ID, config.LOCATION, item.importName)
+            
+        if next_refresh:
+            params['next_refresh'] = next_refresh
+            
+        if req.status == ImportState.STAGING:
+            version = os.path.basename(item.latestVersion or '')
+            if not version:
+                raise HTTPException(status_code=400, detail=f"Empty version for import {item.importName}")
+            storage.update_version_file(item.importName, version, is_staging=True)
+            storage.update_provenance_file(item.importName, version)
+            storage.update_import_summary(params)
+            storage.update_version_file(item.importName, version, is_staging=False)
+            comment = f"import-workflow:{req.jobId or ''}"
+            spanner.update_version_history(item.importName, version, comment)
+            
+        spanner.update_import_status(params)
     return BaseResponse(status=ResponseStatus.OK)
 
 @router.post("/version", response_model=BaseResponse)
@@ -132,32 +147,36 @@ def update_import_version(
     spanner: SpannerClient = Depends(get_spanner_client),
     storage: StorageClient = Depends(get_storage_client)
 ):
-    """Updates the version and status of an import."""
-    logging.info(f"Updating import {req.importName} to version {req.version} comment: {req.comment}")
-    
-    version = req.version
-    if version == 'STAGING':
-        version = storage.get_staging_version(req.importName)
+    """Updates the version and status of multiple imports."""
+    updated_imports = []
+    for import_name in req.imports:
+        logging.info(f"Updating import {import_name} to version {req.version} comment: {req.comment}")
         
-    summary = storage.get_import_summary(req.importName, version)
-    params = import_utils.get_import_params(summary)
-    
-    comment = req.comment
-    if req.override:
-        params['status'] = 'STAGING'
-        caller = import_utils.get_caller_identity(request)
-        comment = f'version-override:{caller} {comment}'
+        version = req.version
+        if version == 'STAGING':
+            version = storage.get_staging_version(import_name)
+            
+        summary = storage.get_import_summary(import_name, version)
+        params = import_utils.get_import_params(summary)
         
-    if params['status'] == 'STAGING':
-        storage.update_provenance_file(req.importName, version)
-        storage.update_version_file(req.importName, version, is_staging=False)
-        spanner.update_version_history(req.importName, version, comment)
-        logging.info(f"Updated import {req.importName} to version {version}")
-    else:
-        logging.info(f"Skipping {req.importName} version update")
+        comment = req.comment
+        if req.override:
+            params['status'] = 'STAGING'
+            caller = import_utils.get_caller_identity(request)
+            comment = f'version-override:{caller} {comment}'
+            
+        if params['status'] == 'STAGING':
+            storage.update_provenance_file(import_name, version)
+            storage.update_version_file(import_name, version, is_staging=False)
+            spanner.update_version_history(import_name, version, comment)
+            logging.info(f"Updated import {import_name} to version {version}")
+        else:
+            logging.info(f"Skipping {import_name} version update")
+            
+        spanner.update_import_status(params)
+        updated_imports.append(f"Import: {import_name} Version: {version} Status: {params['status']}")
         
-    spanner.update_import_status(params)
     return BaseResponse(
         status=ResponseStatus.OK, 
-        message=f"Import: {req.importName} Version: {version} Status: {params['status']}"
+        message="; ".join(updated_imports)
     )

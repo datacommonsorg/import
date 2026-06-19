@@ -19,7 +19,7 @@ import os
 
 from fastapi.testclient import TestClient
 from app import app
-from dependencies import get_spanner_client
+from dependencies import get_spanner_client, get_storage_client
 
 client = TestClient(app)
 
@@ -134,6 +134,84 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
         mock_spanner_client.seed_database.assert_called_once()
+
+    def test_update_import_status_success(self):
+        mock_spanner_client = MagicMock()
+        mock_storage_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
+
+        payload = {
+            "imports": [
+                {
+                    "importName": "import1",
+                    "latestVersion": "gs://bucket/import1/version1.csv",
+                    "graphPath": "gs://bucket/import1/graph/"
+                },
+                {
+                    "importName": "import2",
+                    "latestVersion": "gs://bucket/import2/version2.csv",
+                    "graphPath": "gs://bucket/import2/graph/"
+                }
+            ],
+            "status": "STAGING",
+            "jobId": "job123",
+            "executionTime": 100,
+            "dataVolume": 200,
+            "nextRefresh": "2026-07-01T00:00:00Z"
+        }
+
+        response = client.post("/imports/status", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+        
+        # Verify storage was called for both imports
+        self.assertEqual(mock_storage_client.update_version_file.call_count, 4) # 2 per import
+        self.assertEqual(mock_storage_client.update_provenance_file.call_count, 2)
+        self.assertEqual(mock_storage_client.update_import_summary.call_count, 2)
+        
+        # Verify spanner was called for both imports
+        self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
+        self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)
+
+    def test_update_import_version_success(self):
+        mock_spanner_client = MagicMock()
+        mock_storage_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
+
+        # Mock storage calls
+        mock_storage_client.get_staging_version.side_effect = lambda name: f"ver_{name}"
+        mock_storage_client.get_import_summary.side_effect = lambda name, version: {
+            "importName": name,
+            "status": "STAGING",
+            "latestVersion": f"gs://bucket/{name}/{version}.csv"
+        }
+
+        payload = {
+            "imports": ["import1", "import2"],
+            "version": "STAGING",
+            "comment": "release-comment",
+            "override": False
+        }
+
+        response = client.post("/imports/version", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+        self.assertIn("Import: import1 Version: ver_import1 Status: STAGING", response.json()["message"])
+        self.assertIn("Import: import2 Version: ver_import2 Status: STAGING", response.json()["message"])
+
+        # Verify storage was called
+        mock_storage_client.get_staging_version.assert_any_call("import1")
+        mock_storage_client.get_staging_version.assert_any_call("import2")
+        self.assertEqual(mock_storage_client.update_provenance_file.call_count, 2)
+        self.assertEqual(mock_storage_client.update_version_file.call_count, 2)
+
+        # Verify spanner was called
+        self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
+        self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)
 
 
 if __name__ == '__main__':
