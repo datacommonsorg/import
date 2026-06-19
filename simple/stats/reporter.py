@@ -17,6 +17,7 @@ from enum import auto
 from enum import Enum
 from functools import wraps
 import json
+import threading
 import time
 
 from util.filesystem import File
@@ -44,6 +45,7 @@ class ImportReporter:
     """
 
   def __init__(self, report_file: File) -> None:
+    self.lock = threading.RLock()
     self.status = Status.NOT_STARTED
     self.start_time = None
     self.last_update = datetime.now()
@@ -58,8 +60,9 @@ class ImportReporter:
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-      result = func(self, *args, **kwargs)
-      ImportReporter.save(self)
+      with self.lock:
+        result = func(self, *args, **kwargs)
+        ImportReporter.save(self)
       return result
 
     return wrapper
@@ -87,8 +90,9 @@ class ImportReporter:
     return self.file_reporters_by_full_path[import_file.full_path()]
 
   def recompute_progress(self):
-    self._compute_all_done()
-    self.save()
+    with self.lock:
+      self._compute_all_done()
+      self.save()
 
   def _compute_all_done(self):
     if self._all_file_imports(Status.SUCCESS):
@@ -152,8 +156,9 @@ class FileImportReporter:
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-      result = func(self, *args, **kwargs)
-      FileImportReporter.report(self)
+      with self.parent.lock:
+        result = func(self, *args, **kwargs)
+        FileImportReporter.report(self)
       return result
 
     return wrapper
@@ -169,7 +174,7 @@ class FileImportReporter:
 
   @_report
   def report_failure(self, error: str):
-    self.status = Status.SUCCESS
+    self.status = Status.FAILURE
     self.data["error"] = error
 
   def json(self) -> dict:

@@ -197,6 +197,8 @@
     "statChecks": true,
     "observationAbout": true,
     "allowNanSvobs": false,
-    "coordinatesResolution": false
+    "checkMeasurementResult": false,
+    "coordinatesResolution": false,
+    "includeRuntimeMetadata": true
   }
 }

@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from functools import wraps
 import logging
 import re
+import threading
 
 import pandas as pd
 from stats.config import Config
@@ -25,6 +27,7 @@ from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
 from stats.data import StatVarGroup
+from stats.data import strip_namespace
 from stats.data import Triple
 import stats.schema_constants as sc
 from util.filesystem import File
@@ -37,7 +40,7 @@ _CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
 _CUSTOM_EVENT_TYPE_ID_PREFIX = "c/e/"
 _CUSTOM_ENTITY_TYPE_ID_PREFIX = "c/n/"
 # Pattern to check if a string conforms to that of a valid DCID.
-_DCID_PATTERN = r"^[A-Za-z0-9_/]+$"
+_DCID_PATTERN = r"^(?:[A-Za-z0-9_/]+:)?[A-Za-z0-9_/]+$"
 # If group path for a variable is empty, we'll put it under a default custom group.
 _DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 _DEFAULT_CUSTOM_GROUP = StatVarGroup(sc.DEFAULT_CUSTOM_ROOT_SVG_ID,
@@ -52,10 +55,24 @@ _DEFAULT_PROVENANCE = Provenance(id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}default",
                                  url="custom-import")
 
 
+def thread_safe(func):
+  """Decorator to make a method thread-safe using the object's reentrant lock."""
+
+  @wraps(func)
+  def wrapper(self, *args, **kwargs):
+    with self.lock:
+      return func(self, *args, **kwargs)
+
+  return wrapper
+
+
 class Nodes:
 
   def __init__(self, config: Config) -> None:
+    self.lock = threading.RLock()
     self.config = config
+    # Custom namespace
+    self._custom_id_namespace = self.config.custom_id_namespace()
     # Dictionary of SVs from column name to SV
     self.variables: dict[str, StatVar] = {}
     # Dictionary of SVGs from SVG path to SVG
@@ -74,6 +91,9 @@ class Nodes:
     self.event_types: dict[str, EventType] = {}
     # dict from entity type name to EntityType
     self.entity_types: dict[str, EntityType] = {}
+    self._used_provenance_ids = set()
+    self._used_source_ids = set()
+    self.has_custom_mcf_nodes = False
     self._load_provenances_and_sources()
     # Used to generate SV IDs
     self._sv_generated_id_count = 0
@@ -120,10 +140,87 @@ class Nodes:
 
     return source.id
 
+  @thread_safe
+  def register_provenance(self,
+                          id: str,
+                          name: str = "",
+                          url: str = "",
+                          source_id: str = "",
+                          properties: dict[str, str] = None) -> Provenance:
+    self.has_custom_mcf_nodes = True
+    clean_id = _clean_metadata_id(id)
+    clean_source_id = _clean_metadata_id(source_id) if source_id else ""
+
+    prov = self.provenances.get(clean_id)
+    if not prov:
+      prov = Provenance(id=clean_id,
+                        source_id=clean_source_id,
+                        name=name or clean_id,
+                        url=url,
+                        properties=properties or {})
+      self.provenances[clean_id] = prov
+      if name:
+        self.provenances[name] = prov
+    else:
+      if name:
+        if not prov.name:
+          prov.name = name
+        self.provenances[name] = prov
+      if url and not prov.url:
+        prov.url = url
+      if clean_source_id and not prov.source_id:
+        prov.source_id = clean_source_id
+      if properties:
+        prov.properties.update(properties)
+    return prov
+
+  @thread_safe
+  def register_source(self,
+                      id: str,
+                      name: str = "",
+                      url: str = "",
+                      properties: dict[str, str] = None) -> Source:
+    self.has_custom_mcf_nodes = True
+    clean_id = _clean_metadata_id(id)
+
+    src = self.sources.get(clean_id)
+    if not src:
+      src = Source(id=clean_id,
+                   name=name or clean_id,
+                   url=url,
+                   properties=properties or {})
+      self.sources[clean_id] = src
+      if name:
+        self.sources[name] = src
+    else:
+      if name:
+        if not src.name:
+          src.name = name
+        self.sources[name] = src
+      if url and not src.url:
+        src.url = url
+      if properties:
+        src.properties.update(properties)
+    return src
+
+  @thread_safe
   def provenance(self, input_file: File) -> Provenance:
     prov_name = self.config.provenance_name(input_file)
-    return self.provenances.get(prov_name, _DEFAULT_PROVENANCE)
+    if not prov_name:
+      raise ValueError(
+          f"A provenance is absolutely required for file '{input_file.path}'. "
+          f"Please specify the 'provenance' property in your config.json.")
 
+    prov = self.provenances.get(prov_name)
+    if not prov:
+      prov = self.register_provenance(prov_name)
+
+    self._used_provenance_ids.add(prov.id)
+    if prov.source_id:
+      self._used_source_ids.add(prov.source_id)
+    return prov
+
+  @thread_safe
   def variable(self, sv_column_name: str, input_file: File) -> StatVar:
     if not sv_column_name in self.variables:
       var_cfg = self.config.variable(sv_column_name)
@@ -140,6 +237,7 @@ class Nodes:
     return self._add_provenance(self.variables[sv_column_name],
                                 self.provenance(input_file))
 
+  @thread_safe
   def property(self, property_column_name: str) -> Property:
     if not property_column_name in self.properties:
       self.properties[property_column_name] = Property(
@@ -147,6 +245,7 @@ class Nodes:
 
     return self.properties[property_column_name]
 
+  @thread_safe
   def event_type(self, event_type_name: str, input_file: File) -> EventType:
     if not event_type_name in self.event_types:
       event_type_cfg = self.config.event(event_type_name)
@@ -158,6 +257,7 @@ class Nodes:
     return self.event_types[event_type_name].add_provenance(
         self.provenance(input_file))
 
+  @thread_safe
   def entity_type(self, entity_type_name: str, input_file: File) -> EntityType:
     if not entity_type_name in self.entity_types:
       entity_type_cfg = self.config.entity(entity_type_name)
@@ -187,7 +287,7 @@ class Nodes:
     if re.fullmatch(_DCID_PATTERN, dcid):
       return dcid
     self._sv_generated_id_count += 1
-    return f"{_CUSTOM_SV_ID_PREFIX}{self._sv_generated_id_count}"
+    return f"{self._custom_id_namespace}/statvar_{self._sv_generated_id_count}"
 
   def _property_id(self, property_column_name: str) -> str:
     dcid = property_column_name
@@ -225,6 +325,7 @@ class Nodes:
     self._entity_type_generated_id_count += 1
     return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._entity_type_generated_id_count}"
 
+  @thread_safe
   def group(self, group_path: str) -> StatVarGroup | None:
     if not group_path:
       return self._default_custom_group()
@@ -238,8 +339,9 @@ class Nodes:
         parent_path = "" if "/" not in path else path[:path.rindex("/")]
         parent_id = (self.groups[parent_path].id
                      if parent_path in self.groups else sc.ROOT_SVG_ID)
-        svg = StatVarGroup(f"{_CUSTOM_GROUP_ID_PREFIX}{len(self.groups) + 1}",
-                           tokens[index], parent_id)
+        svg = StatVarGroup(
+            f"{self._custom_id_namespace}/g/group_{len(self.groups) + 1}",
+            tokens[index], parent_id)
         self.groups[path] = svg
         self.ids_to_groups[svg.id] = svg
 
@@ -247,17 +349,24 @@ class Nodes:
 
   def _default_custom_group(self) -> StatVarGroup:
     if _DEFAULT_CUSTOM_GROUP_PATH not in self.groups:
-      self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = _DEFAULT_CUSTOM_GROUP
+      # Compute id and name using config (falls back to schema constants).
+      root_id = sc.DEFAULT_CUSTOM_ROOT_SVG_ID
+      root_name = self.config.default_custom_root_svg_name()
+      svg = StatVarGroup(root_id, root_name, sc.ROOT_SVG_ID)
+      self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = svg
     return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
+  @thread_safe
   def entity_with_type(self, entity_dcid: str, entity_type: str):
     if entity_dcid not in self.entities:
       self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
 
+  @thread_safe
   def entities_with_type(self, entity_dcids: list[str], entity_type: str):
     for entity_dcid in entity_dcids:
       self.entity_with_type(entity_dcid, entity_type)
 
+  @thread_safe
   def entities_with_types(self, dcid2type: dict[str, str]):
     """
     Adds each dcid2type mapping to the list of entities with their types.
@@ -266,11 +375,16 @@ class Nodes:
     for entity_dcid, entity_type in dcid2type.items():
       self.entity_with_type(entity_dcid, entity_type)
 
+  @thread_safe
   def triples(self, triples_file: File | None = None) -> list[Triple]:
     triples: list[Triple] = []
     for source in self.sources.values():
+      if self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and _DEFAULT_SOURCE.id not in self._used_source_ids:
+        continue
       triples.extend(source.triples())
     for provenance in self.provenances.values():
+      if self.has_custom_mcf_nodes and provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
+        continue
       triples.extend(provenance.triples())
     for group in self.groups.values():
       triples.extend(group.triples())
@@ -290,3 +404,12 @@ class Nodes:
       triples_file.write(pd.DataFrame(triples).to_csv(index=False))
 
     return triples
+
+
+def _clean_metadata_id(id: str) -> str:
+  """Only strips standard Data Commons system prefixes, preserving custom namespaces."""
+  if id.startswith("dcid:"):
+    return id[5:]
+  if id.startswith("dcs:"):
+    return id[4:]
+  return id

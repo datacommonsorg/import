@@ -38,7 +38,7 @@ public class TestUtil {
     return expected.build();
   }
 
-  public static Mcf.McfGraph graphFromMcf(String mcfString) throws IOException {
+  public static Mcf.McfGraph graphFromMcf(String mcfString) {
     return McfParser.parseInstanceMcfString(mcfString, false, TestUtil.newLogCtx());
   }
 

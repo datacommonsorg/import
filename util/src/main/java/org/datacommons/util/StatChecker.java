@@ -682,6 +682,9 @@ public class StatChecker {
 
           if (nodeJson.has("out")) {
             JsonArray receivedNamesForPlace = nodeJson.getAsJsonArray("out");
+            if (receivedNamesForPlace.size() == 0) {
+              continue;
+            }
             // in case there are multiple names, simply use the first.
             // for example, Ivory Coast has multiple names:
             // https://datacommons.org/browser/country/CIV

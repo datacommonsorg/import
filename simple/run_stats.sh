@@ -245,10 +245,10 @@ function copy_to_gcs {
 
   [[ -z "$gcs_dir" ]] && return
 
-  cmd="gsutil -m cp -r $dir $gcs_dir"
+  cmd="gcloud storage cp --recursive $dir $gcs_dir"
   run_cmd $cmd
   echo_log "Copied output files to $gcs_dir"
-  run_cmd gsutil ls -l -r "$gcs_dir"
+  run_cmd gcloud storage ls --long --recursive "$gcs_dir"
 }
 
 # Return if being sourced

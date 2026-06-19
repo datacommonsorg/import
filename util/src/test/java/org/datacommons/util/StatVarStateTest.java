@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
@@ -23,7 +24,7 @@ public class StatVarStateTest {
   String TEST_SV_MEASRES_DCID = "SinanYumurtaci_DCIntern2022";
   String TEST_SV_MEASRES_HTTP_RESP =
       String.format(
-          "{\"payload\": \"{\\\"%s\\\": {\\\"out\\\":[{\\\"dcid\\\":\\\"%s\\\"}]}}\" }",
+          "{\"data\":{\"%s\":{\"arcs\":{\"statType\":{\"nodes\":[{\"dcid\":\"%s\"}]}}}}}",
           TEST_SV_MEASRES_DCID, Vocabulary.MEASUREMENT_RESULT);
 
   @Test
@@ -100,12 +101,11 @@ public class StatVarStateTest {
   public void funcParseApiStatType() {
     // Test that the payload contained in TEST_SV_MEASRES_HTTP_RESP
     // is correctly parsed and Vocabulary.MEASUREMENT_RESULT is returned.
-    JsonParser parser = new JsonParser();
+    V2NodeResponse response = new Gson().fromJson(TEST_SV_MEASRES_HTTP_RESP, V2NodeResponse.class);
 
-    String payloadString =
-        parser.parse(TEST_SV_MEASRES_HTTP_RESP).getAsJsonObject().get("payload").getAsString();
-
-    JsonObject payloadJson = parser.parse(payloadString).getAsJsonObject();
+    JsonObject payloadJson =
+        ApiHelper.convertToLegacyFormat(
+            response, List.of(TEST_SV_MEASRES_DCID), Vocabulary.STAT_TYPE);
 
     String returnValue = StatVarState.parseApiStatTypeResponse(payloadJson, TEST_SV_MEASRES_DCID);
 

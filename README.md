@@ -17,6 +17,8 @@ Detailed documentation on the Import Tool is available [here](docs/usage.md).
 
 - Make sure Java 11+ is installed([download link](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)).
 
+- Obtain an API key from [DataCommons API Portal](https://apikeys.datacommons.org/) and set environment variable DC_API_KEY as the key.
+
 - [Download the tool](https://github.com/datacommonsorg/import/releases) and run it with:
 
   ```bash
@@ -69,11 +71,11 @@ To run tests: `mvn test`
 
 To build binary: `mvn package`
 
-- which will produce `tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar`
+- which will produce `tool/target/datacommons-import-tool-0.1-jar-with-dependencies.jar`
 - and you can run it with
 
   ```bash
-  java -jar tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar
+  java -jar tool/target/datacommons-import-tool-0.1-jar-with-dependencies.jar
   ```
 
 > To run the above maven commands on M1 macs ([details][m1]), use the `-Dos.arch=x86_64` option.
@@ -92,11 +94,11 @@ To run tests: `mvn test`
 
 To build binary: `mvn package`
 
-- which will produce `server/target/datacommons-server-0.1-alpha.1.jar`
+- which will produce `server/target/datacommons-server-0.1.jar`
 - and you can run it with
 
   ```bash
-  java -jar server/target/datacommons-server-0.1-alpha.1.jar <file1.tmcf> <file2.csv>
+  java -jar server/target/datacommons-server-0.1.jar <file1.tmcf> <file2.csv>
   ```
 
 Send a request:

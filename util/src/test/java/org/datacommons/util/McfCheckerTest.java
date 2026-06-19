@@ -443,6 +443,10 @@ public class McfCheckerTest {
             + "name: \"Place\"\n"
             + "subPropertyOf: schema:sibling\n";
     assertTrue(failure(mcf, "Sanity_UnexpectedPropInClass", "subPropertyOf"));
+
+    // Nodes must not have type Thing.
+    mcf = "Node: schema:Place\n" + "typeOf: schema:Thing\n" + "name: \"Place\"\n";
+    assertTrue(failure(mcf, "Sanity_TypeThing", "node: 'schema:Place'"));
   }
 
   @Test

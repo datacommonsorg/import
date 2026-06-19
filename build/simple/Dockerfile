@@ -26,4 +26,4 @@ COPY simple/ .
 COPY build/simple/run.sh .
 
 RUN pip3 install -r /workspace/requirements.txt
-CMD ./run.sh
+ENTRYPOINT ["bash", "./run.sh"]

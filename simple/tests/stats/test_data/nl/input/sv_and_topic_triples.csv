@@ -1,0 +1,28 @@
+subject_id,predicate,object_id,object_value
+sv_with_search_descriptions,typeOf,StatisticalVariable,
+sv_with_search_descriptions,name,,Name should NOT be used
+sv_with_search_descriptions,searchDescription,,SV search description1
+sv_with_search_descriptions,searchDescription,,SV search description2
+sv_with_name_only,typeOf,StatisticalVariable,
+sv_with_name_only,name,,Name should be used
+sv_with_no_sentence_props,typeOf,StatisticalVariable,
+sv_with_no_sentence_props,description,,Descriptions are NOT used for embeddings
+topic_with_search_descriptions,typeOf,Topic,
+topic_with_search_descriptions,name,,Name should NOT be used
+topic_with_search_descriptions,searchDescription,,Topic search description1
+topic_with_search_descriptions,searchDescription,,Topic search description2
+topic_with_search_descriptions,relevantVariable,var1,
+topic_with_search_descriptions,relevantVariable,var2,
+topic_with_name_only,typeOf,Topic,
+topic_with_name_only,name,,Name should be used
+topic_with_name_only,relevantVariableList,,"var3,var4"
+topic_with_no_sentence_props,typeOf,Topic,
+topic_with_no_sentence_props,description,,Descriptions are NOT used for embeddings
+topic_with_no_sentence_props,relevantVariable,var5,
+topic_with_no_sentence_props,relevantVariable,var6,
+topic_with_no_sentence_props,relevantVariableList,,"var7,var8"
+svpg1,typeOf,StatVarPeerGroup,
+svpg1,name,,SVPG 1
+svpg1,member,var1,
+svpg1,member,var2,
+svpg1,memberList,,"var3,var4"

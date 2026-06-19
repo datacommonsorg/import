@@ -16,11 +16,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class ExistenceCheckerTest {
-  private static final String NONEXISTING_LAT = "{ \"payload\": \"{\\\"latitude\\\":{}}\" }";
+  private static final String NONEXISTING_LAT = "{\"data\":{\"latitude\":{}}}";
   private static final String EXISTING_GENDER =
-      "{ \"payload\": \"{\\\"gender\\\":{\\\"out"
-          + "\\\":[{\\\"dcid\\\":\\\"Person\\\",\\\"name\\\":\\\"Person\\\","
-          + "\\\"provenanceId\\\":\\\"dc/5l5zxr1\\\",\\\"types\\\":[\\\"Class\\\"]}]}}\" }";
+      "{\"data\":{\"gender\":{\"arcs\":{\"typeOf\":{\"nodes\":[{\"dcid\":\"Property\"}]},\"domainIncludes\":{\"nodes\":[{\"dcid\":\"Person\"}]}}}}}";
   private static final String LOCAL_KG_NODE =
       "Node: dcid:latitude\n"
           + "typeOf: schema:Property\n"
@@ -123,6 +121,7 @@ public class ExistenceCheckerTest {
   }
 
   @Test
+  @org.junit.Ignore("Relies on external live network access to Data Commons production API")
   public void endToEnd() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));

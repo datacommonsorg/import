@@ -54,6 +54,7 @@ public class McfMutatorTest {
             + "Node: dcid:Count_Person_18Years_1000To2000USD\n"
             + "age: dcid:Year18\n"
             + "bogusProp: dcid:latLong/3738848_-12208344\n"
+            + "constraintProperties: dcid:age, dcid:bogusProp, dcid:income\n"
             + "dcid: \"Count_Person_18Years_1000To2000USD\"\n"
             + "income: dcid:USDollar1000To2000\n"
             + "measuredProperty: dcid:count\n"

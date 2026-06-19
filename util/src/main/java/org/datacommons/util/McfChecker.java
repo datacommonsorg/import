@@ -438,6 +438,7 @@ public class McfChecker {
       throws IOException, InterruptedException {
     Set<String> types =
         new HashSet<>(checkRequiredValueProp(nodeId, node, "Thing", Vocabulary.TYPE_OF));
+    checkTypes(nodeId, node, types);
     for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
       String prop = pv.getKey();
       if (prop.isEmpty()) {
@@ -770,6 +771,15 @@ public class McfChecker {
               + nodeId
               + "'",
           node);
+    }
+  }
+
+  private void checkTypes(String nodeId, Mcf.McfGraph.PropertyValues node, Set<String> types) {
+    for (String typeOf : types) {
+      if (typeOf.equals(Vocabulary.THING_TYPE)) {
+        addLog("Sanity_TypeThing", "Found a node with type Thing :: node: '" + nodeId + "'", node);
+        break;
+      }
     }
   }
 

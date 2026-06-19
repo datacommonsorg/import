@@ -16,15 +16,16 @@ package org.datacommons.tool;
 
 import java.io.File;
 import java.util.List;
+import org.datacommons.util.RuntimeMetadataUtil;
 import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "dc-import",
     mixinStandardHelpOptions = true,
-    version = "dc-import 0.1",
+    versionProvider = Main.VersionProvider.class,
     description = "Tool for use in developing datasets for Data Commons.",
     subcommands = {Lint.class, GenMcf.class})
-class Main {
+public class Main {
   @CommandLine.Option(
       names = {"-o", "--output-dir"},
       description =
@@ -47,7 +48,8 @@ class Main {
       scope = CommandLine.ScopeType.INHERIT,
       description =
           "Checks DCID references to schema nodes against the KG and locally. "
-              + "If this flag is set, then calls will be made to the Staging API server, "
+              + "If this flag is set, then calls will be made to the configured Data Commons "
+              + "API endpoint (autopush by default), "
               + "and instance MCFs get fully loaded into memory. Defaults to true.")
   public boolean doExistenceChecks;
 
@@ -140,6 +142,13 @@ class Main {
   public boolean generateSummaryReport;
 
   @CommandLine.Option(
+      names = {"-og", "--optimized-graph"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "Generates optimized graph by grouping observations. Defaults to false.")
+  public boolean generateOptimizedGraph;
+
+  @CommandLine.Option(
       names = {"-ep", "--existence-checks-place"},
       defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,
@@ -149,8 +158,24 @@ class Main {
               + "Defaults to true.")
   public boolean checkObservationAbout;
 
+  @CommandLine.Option(
+      names = {"--include-runtime-metadata"},
+      defaultValue = "true",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Include runtime metadata (system info, git hash, timing) in reports. "
+              + "Defaults to true.")
+  public boolean includeRuntimeMetadata;
+
   public static void main(String... args) {
     System.exit(
         new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));
+  }
+
+  public static class VersionProvider implements CommandLine.IVersionProvider {
+    @Override
+    public String[] getVersion() {
+      return new String[] {"dc-import " + RuntimeMetadataUtil.getToolVersion(Main.class)};
+    }
   }
 }

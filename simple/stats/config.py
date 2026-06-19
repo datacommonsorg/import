@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
+import fs.path as fspath
 from stats import constants
 from stats.data import AggregationConfig
 from stats.data import EntityType
@@ -21,6 +24,7 @@ from stats.data import InputFileFormat
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
+from stats.data import strip_namespace
 from util.file_match import match
 from util.filesystem import File
 
@@ -53,9 +57,12 @@ _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "entityColumns"
 _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
-_GENERATE_TOPICS = "generateTopics"
 _OBSERVATION_PROPERTIES = "observationProperties"
 _INCLUDE_INPUT_SUBDIRS_PROPERTY = "includeInputSubdirs"
+_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD = "svHierarchyPropsBlocklist"
+_CUSTOM_SVG_PREFIX_FIELD = "customSvgPrefix"
+_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD = "defaultCustomRootStatVarGroupName"
+_CUSTOM_ID_NAMESPACE_FIELD = "customIdNamespace"
 
 
 class Config:
@@ -66,8 +73,14 @@ class Config:
 
   def __init__(self, data: dict) -> None:
     self.data = data
-    self._input_files_config: dict[str, dict] = self.data.get(
-        _INPUT_FILES_FIELD, {})
+    self._input_files_config: dict[str, dict] = {}
+    input_files = self.data.get(_INPUT_FILES_FIELD, [])
+
+    if isinstance(input_files, list):
+      self._parse_input_files_config(input_files)
+    elif isinstance(input_files, dict):
+      self._parse_legacy_input_files_config(input_files)
+
     # If input file paths are specified with wildcards - e.g. "gs://bucket/foo*.csv",
     # this dict maintains a mapping from actual file path to the wildcard key
     # for fast lookup.
@@ -79,6 +92,34 @@ class Config:
     # dict from provenance name to Source
     self.provenance_sources: dict[str, Source] = {}
     self._parse_provenances_and_sources()
+
+  def _parse_input_files_config(self, input_files: list) -> None:
+    """Parses the modern list-of-objects format for inputFiles."""
+    for entry in input_files:
+      if not isinstance(entry, dict):
+        raise ValueError(
+            f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
+        )
+      key = entry.get("pattern") or entry.get("filename")
+      if not key:
+        raise ValueError(
+            f"Invalid entry in '{_INPUT_FILES_FIELD}': must specify 'pattern' or 'filename'. Got: {entry}"
+        )
+      self._input_files_config[key] = entry
+
+  def _parse_legacy_input_files_config(self, input_files: dict) -> None:
+    """Parses the legacy dictionary format for inputFiles.
+
+    TODO: Deprecate and completely remove this legacy dictionary format
+    once all test config.json files and legacy custom installations have been
+    migrated to the modern list-of-objects format.
+    """
+    for key, entry in input_files.items():
+      if not isinstance(entry, dict):
+        raise ValueError(
+            f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
+        )
+      self._input_files_config[key] = entry
 
   def data_download_urls(self) -> list[str]:
     cfg = self.data.get(_DATA_DOWNLOAD_URL_FIELD)
@@ -188,8 +229,93 @@ class Config:
         special_files[special_file_type] = special_file_name
     return special_files
 
-  def generate_topics(self) -> bool:
-    return self.data.get(_GENERATE_TOPICS) or False
+  def sv_hierarchy_props_blocklist(self) -> set[str]:
+    """Returns the set of SV properties to exclude from hierarchy generation.
+    Behavior: Adds any provided properties to the built-in blocklist.
+    Defaults to sc.SV_HIERARCHY_PROPS_BLOCKLIST if not specified in config.
+    """
+    from stats import schema_constants as sc
+    cfg = self.data.get(_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD)
+    if cfg is None:
+      return sc.SV_HIERARCHY_PROPS_BLOCKLIST
+    if isinstance(cfg, list):
+      # Ensure all provided entries are strings.
+      if not all(isinstance(p, str) for p in cfg):
+        raise ValueError(
+            f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
+        )
+      return sc.SV_HIERARCHY_PROPS_BLOCKLIST | set(cfg)
+    raise ValueError(
+        f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
+    )
+
+  def custom_id_namespace(self) -> str:
+    """Returns the namespace token used in generated ids for SVs and manual groups.
+    Affects:
+    - Generated SV ids: '<namespace>/statvar_<n>'
+    - Generated manual group ids: '<namespace>/g/group_<n>'
+    """
+    from stats import nodes
+
+    default_ns = nodes._CUSTOM_GROUP_ID_PREFIX.rsplit("/")[0]
+    ns = self.data.get(_CUSTOM_ID_NAMESPACE_FIELD, default_ns)
+
+    if not ns:
+      raise ValueError(
+          f"If provided, {_CUSTOM_ID_NAMESPACE_FIELD} must be non-empty.")
+
+    # Validate token of alphanumerics and underscores only (no slashes), non-empty.
+    if not isinstance(ns, str) or not re.fullmatch(r"^[A-Za-z0-9_]+$", ns):
+      raise ValueError(
+          f"{_CUSTOM_ID_NAMESPACE_FIELD} must be made up entirely of letters, digits,"
+          f" or underscores, with no spaces, punctuation, or other symbols, and it must not be empty."
+      )
+    return ns
+
+  def custom_svg_prefix(self) -> str:
+    """Returns the prefix to use for generated custom SVG ids (e.g., 'c/g/').
+    Resolution order:
+    - If explicitly set via 'customSvgPrefix', return it.
+    - Else if 'customIdNamespace' is explicitly provided in config, derive as
+      f"{namespace}/g/" where namespace is the validated value of
+      customIdNamespace.
+    - Else fall back to the built-in default (e.g., 'c/g/').
+    """
+    from stats import schema_constants as sc
+    cfg = self.data.get(_CUSTOM_SVG_PREFIX_FIELD)
+    if cfg:
+      # Validate allowed chars [A-Za-z0-9_/], cannot start with '/', must end with '/'.
+      if not isinstance(cfg, str):
+        raise ValueError(
+            f"{_CUSTOM_SVG_PREFIX_FIELD} must be a string if provided.")
+      if cfg.startswith("/") or not cfg.endswith("/") or not re.fullmatch(
+          r"^[A-Za-z0-9_/]+$", cfg):
+        raise ValueError(
+            f"{_CUSTOM_SVG_PREFIX_FIELD} must be made up entirely of letters, digits, or "
+            f"underscores, with no spaces, punctuation, or other symbols. It cannot start "
+            f"with '/', must end with '/', and it must not be empty")
+      return cfg
+    # Only derive from customIdNamespace if the user explicitly provided it.
+    if _CUSTOM_ID_NAMESPACE_FIELD in self.data:
+      ns = self.custom_id_namespace()
+      return f"{ns}/g/"
+    # Otherwise use the built-in default.
+    return sc.CUSTOM_SVG_PREFIX
+
+  def default_custom_root_svg_name(self) -> str:
+    """Returns the display name of the default custom root StatVarGroup."""
+    from stats import schema_constants as sc
+    return self.data.get(_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD,
+                         sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
+
+  def import_name(self, input_file: File) -> str:
+    """Returns the normalized import name associated with a given input file."""
+    prov_id = self._per_file_config(input_file).get("provenance")
+    if prov_id:
+      return strip_namespace(prov_id).lower()
+    raise ValueError(
+        f"Could not determine import name: missing 'provenance' configuration for file '{input_file.path}'."
+    )
 
   def _per_file_config(self, input_file: File) -> dict:
     """ Looks up the config for a given file.

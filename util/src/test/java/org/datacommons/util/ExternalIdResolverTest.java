@@ -1,6 +1,5 @@
 package org.datacommons.util;
 
-import static com.google.common.truth.Truth.assertThat;
 import static org.datacommons.util.Vocabulary.LATITUDE;
 import static org.datacommons.util.Vocabulary.LONGITUDE;
 import static org.junit.Assert.assertEquals;
@@ -67,8 +66,9 @@ public class ExternalIdResolverTest {
 
     testAssertionSuiteOnResolverInstance(resolver, lw);
 
-    // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
-    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
+    // There are 3 property types with unresolved IDs (isoCode, wikidataId, nutsCode), so we must
+    // have done 3 calls.
+    assertTrue(TestUtil.checkCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER, 3));
   }
 
   @Test
@@ -109,9 +109,9 @@ public class ExternalIdResolverTest {
 
     testAssertionSuiteOnResolverInstance(resolver, lw);
 
-    // There should have been exactly one API call for the node "unk" for which no
-    // local data was available
-    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 1));
+    // There should have been exactly one API call for the node "unk" for which no local data was
+    // available.
+    assertTrue(TestUtil.checkCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER, 1));
   }
 
   @Test
@@ -133,14 +133,12 @@ public class ExternalIdResolverTest {
 
     testAssertionSuiteOnResolverInstance(resolver, lw);
 
-    // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
-    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
+    // There are 3 property types with unresolved IDs, so we must have done 3 calls.
+    // Coordinates resolution is disabled, so no calls for that.
+    assertTrue(TestUtil.checkCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER, 3));
 
     // Coordinates assertions.
 
-    // There is 1 lat-lng node but coordinates resolution is disabled so there should be no counters
-    // (represented as -1).
-    assertThat(TestUtil.getCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER)).isEqualTo(-1);
     // Since coordinates resolution is disabled, this won't resolve.
     assertEquals("", resolver.resolveNode("bigben", bigBenWithLatLng));
   }
@@ -164,13 +162,9 @@ public class ExternalIdResolverTest {
 
     testAssertionSuiteOnResolverInstance(resolver, lw);
 
-    // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
-    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
-
-    // Coordinates assertions.
-
-    // There is 1 lat-lng node so there should be 1 DC call.
-    assertThat(TestUtil.getCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER)).isEqualTo(1);
+    // There are 3 property types with unresolved IDs (3 calls) and 1 lat-lng (1 call), so we must
+    // have done 4 calls.
+    assertTrue(TestUtil.checkCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER, 4));
     // big ben with lat lng should be resolved.
     assertEquals(bigBenDcid, resolver.resolveNode("bigben", bigBenWithLatLng));
   }

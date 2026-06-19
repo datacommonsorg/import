@@ -12,8 +12,14 @@ target/
 .classpath
 .factorypath
 .project
+.flattened-pom.xml
+dependency-reduced-pom.xml
+
+util/src/main/java/org/datacommons/proto/
 
 # static files
 **/node_modules/**
 /wizard/build/**
 !wizard/build/.empty
+util/bin
+**/bin

@@ -19,12 +19,13 @@ import tempfile
 import unittest
 
 from kg_util import mcf_parser
-import pandas as pd
 from parameterized import parameterized
 from stats.data import Triple
 from stats.stat_var_hierarchy_generator import *
 from stats.stat_var_hierarchy_generator import _extract_svs
 from stats.stat_var_hierarchy_generator import _generate_internal
+from stats.stat_var_hierarchy_generator import PropVal
+from stats.stat_var_hierarchy_generator import SVPropVals
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_triples_csv
@@ -232,3 +233,62 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
   def test_gen_specialized_name(self, parent: SVPropVals, child: SVPropVals,
                                 dcid2name: dict[str, str], expected: str):
     self.assertEqual(child.gen_specialized_name(parent, dcid2name), expected)
+
+  def test_gen_svg_id(self):
+    sv_prop_vals = SVPropVals(
+        sv_id="sv1",
+        population_type="Person",
+        pvs=[PropVal("gender", "Female"),
+             PropVal("race", "Asian")],
+        measured_property="count")
+    svg_id = sv_prop_vals.gen_svg_id()
+    self.assertEqual(svg_id, "c/g/Person_Gender-Female_Race-Asian")
+
+  def test_gen_svg_id_with_long_property_values(self):
+    sv_prop_vals = SVPropVals(
+        sv_id="sv1",
+        population_type="Person",
+        pvs=[
+            PropVal(
+                "propertyWithAReallyLongValue",
+                "HereIsAPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase"
+            ),
+            PropVal(
+                "anotherPropertyWithAReallyLongValue",
+                "HereIsAotherPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase1"
+            )
+        ],
+        measured_property="count")
+    svg_id = sv_prop_vals.gen_svg_id()
+    self.assertEqual(
+        svg_id,
+        "c/g/Person_PropertyWithAReallyLongValue-HereIsAPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase_AnotherPropertyWithAReallyLongValue-HereIsAotherPropertyWithAReallyLongValueToTestCausingA-fafb3dea"
+    )
+
+  def test_gen_svg_id_with_custom_prefix(self):
+    sv_prop_vals = SVPropVals(
+        sv_id="sv1",
+        population_type="Person",
+        pvs=[PropVal("gender", "Female"),
+             PropVal("race", "Asian")],
+        measured_property="count")
+    svg_id = sv_prop_vals.gen_svg_id(custom_svg_prefix="acme/g/")
+    self.assertEqual(svg_id, "acme/g/Person_Gender-Female_Race-Asian")
+
+  def test_extract_svs_with_custom_blocklist(self):
+    # gender should be excluded when added to the custom blocklist
+    input_triples: list[Triple] = [
+        Triple("sv1", "typeOf", "StatisticalVariable", ""),
+        Triple("sv1", "populationType", "Person", ""),
+        Triple("sv1", "race", "Asian", ""),
+        Triple("sv1", "gender", "Female", ""),
+    ]
+    custom_blocklist = set(["gender"
+                           ])  # pass custom blocklist to exclude 'gender'
+    svs = _extract_svs(input_triples, custom_blocklist)
+    self.assertListEqual(svs, [
+        SVPropVals(sv_id="sv1",
+                   population_type="Person",
+                   pvs=[PropVal("race", "Asian")],
+                   measured_property="")
+    ])

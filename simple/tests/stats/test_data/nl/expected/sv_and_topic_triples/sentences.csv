@@ -1,0 +1,5 @@
+dcid,sentence
+sv_with_search_descriptions,SV search description1;SV search description2
+sv_with_name_only,Name should be used
+topic_with_search_descriptions,Topic search description1;Topic search description2
+topic_with_name_only,Name should be used

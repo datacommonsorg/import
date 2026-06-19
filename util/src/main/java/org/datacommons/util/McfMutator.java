@@ -17,6 +17,7 @@ package org.datacommons.util;
 import static org.datacommons.util.McfUtil.getPropVals;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.datacommons.proto.Debug;
@@ -24,7 +25,6 @@ import org.datacommons.proto.Mcf;
 
 // Does additional transformations on parsed MCF nodes, like expanding ComplexValues into nodes.
 //
-// TODO: Implement constraintProperties computation for SV (CPP Parity).
 // TODO: Attach provenance maybe (CPP Parity).
 // TODO: Pass in a separate SV nodes to clean SVObs double values.
 public class McfMutator {
@@ -57,10 +57,13 @@ public class McfMutator {
       return node.build();
     }
     boolean isLegacyObs = false;
+    boolean isStatVar = false;
     for (String type : types) {
       if (Vocabulary.isLegacyObservation(type)) {
         isLegacyObs = true;
-        break;
+      }
+      if (Vocabulary.STAT_VAR_TYPE.equals(type)) {
+        isStatVar = true;
       }
     }
     for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
@@ -102,6 +105,29 @@ public class McfMutator {
       }
       node.putPvs(prop, vb.build());
     }
+
+    if (isStatVar) {
+      List<String> constraintProps = new ArrayList<>();
+      for (String prop : node.getPvsMap().keySet()) {
+        if (!Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
+          constraintProps.add(prop);
+        }
+      }
+
+      if (!constraintProps.isEmpty()) {
+        Collections.sort(constraintProps);
+        Mcf.McfGraph.Values.Builder valuesBuilder = Mcf.McfGraph.Values.newBuilder();
+        for (String propDcid : constraintProps) {
+          valuesBuilder.addTypedValues(
+              Mcf.McfGraph.TypedValue.newBuilder()
+                  .setValue(propDcid)
+                  .setType(Mcf.ValueType.RESOLVED_REF)
+                  .build());
+        }
+        node.putPvs("constraintProperties", valuesBuilder.build());
+      }
+    }
+
     return node.build();
   }
 

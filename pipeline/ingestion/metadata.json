@@ -1,0 +1,61 @@
+{
+    "name": "Spannger graph ingestion pipeline",
+    "description": "Spanner graph ingestion pipeline.",
+    "parameters": [
+        {
+            "name": "importList",
+            "label": "List of imports for ingestion (JSON).",
+            "helpText": "List of imports for ingestion (JSON).",
+            "paramType": "TEXT"
+        },
+        {
+            "name": "projectId",
+            "label": "GCP project Id",
+            "helpText": "GCP project Id",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerInstanceId",
+            "label": "Spanner instance Id",
+            "helpText": "Spanner instance Id",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerDatabaseId",
+            "label": "Spanner database Id",
+            "helpText": "Spanner database Id",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "skipDelete",
+            "label": "Skip Delete",
+            "helpText": "Whether to skip the delete operation.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "forceCombineNodes",
+            "label": "Force Combine Nodes",
+            "helpText": "Whether to force combination of schema nodes across shards.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerObservationTableName",
+            "label": "Spanner Observation table name",
+            "helpText": "Spanner Observation table name",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerTimeSeriesTableName",
+            "label": "Spanner TimeSeries table name",
+            "helpText": "Spanner TimeSeries table name",
+            "paramType": "TEXT",
+            "isOptional": true
+        }
+    ]
+}

@@ -1,9 +1,6 @@
 package org.datacommons.ingestion.pipeline;
 
-import java.util.Collections;
-import java.util.List;
 import org.apache.beam.sdk.options.Default;
-import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
@@ -33,17 +30,10 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setStorageBucketId(String bucketId);
 
-  @Description("The DC version endpoint to fetch import group versions to ingest.")
-  @Default.String("https://autopush.api.datacommons.org/version")
-  String getVersionEndpoint();
+  @Description("List of imports for ingestion (CSV)")
+  String getImportList();
 
-  void setVersionEndpoint(String versionEndpoint);
-
-  @Description(
-      "The import group version to be ingested into Spanner. e.g. auto1d_2025_03_26_02_16_23")
-  String getImportGroupVersion();
-
-  void setImportGroupVersion(String importGroupVersion);
+  void setImportList(String importList);
 
   @Description("The number of shards to generate for writing mutations.")
   @Default.Integer(1)
@@ -51,11 +41,11 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setNumShards(int numShards);
 
-  @Description("The type of processing to be skipped, if any.")
-  @Default.Enum("SKIP_NONE")
-  SkipProcessing getSkipProcessing();
+  @Description("Whether to skip delete operations.")
+  @Default.Boolean(false)
+  boolean getSkipDelete();
 
-  void setSkipProcessing(SkipProcessing skipProcessing);
+  void setSkipDelete(boolean skipDelete);
 
   @Description("Spanner Observation table name")
   @Default.String("Observation")
@@ -74,4 +64,28 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   String getSpannerEdgeTableName();
 
   void setSpannerEdgeTableName(String tableName);
+
+  @Description("Spanner TimeSeries table name")
+  @Default.String("TimeSeries")
+  String getSpannerTimeSeriesTableName();
+
+  void setSpannerTimeSeriesTableName(String tableName);
+
+  @Description("Whether to initialize database schema.")
+  @Default.Boolean(false)
+  boolean getInitializeDatabase();
+
+  void setInitializeDatabase(boolean initializeDatabase);
+
+  @Description("Whether to force combination of schema nodes across shards.")
+  @Default.Boolean(false)
+  boolean getForceCombineNodes();
+
+  void setForceCombineNodes(boolean forceCombineNodes);
+
+  @Description("Whether this is a base Data Commons ingestion run")
+  @Default.Boolean(true)
+  boolean getIsBaseDc();
+
+  void setIsBaseDc(boolean isBaseDc);
 }

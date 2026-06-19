@@ -1,0 +1,370 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
+import unittest
+from unittest.mock import MagicMock, patch
+import sys
+import os
+
+# Add the current directory to path so we can import spanner_client
+sys.path.append(os.path.dirname(__file__))
+from clients.spanner import SpannerClient
+
+class TestSpannerClient(unittest.TestCase):
+
+    @patch('google.cloud.spanner.Client')
+    def test_initialize_database_all_exist(self, mock_spanner_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+        
+        # Mock snapshot results (all tables exist)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = [
+            ["table", "Node"], ["table", "Edge"], ["table", "TimeSeries"], ["table", "Observation"],
+            ["table", "NodeEmbedding"], ["table", "ImportStatus"],
+            ["table", "IngestionHistory"], ["table", "ImportVersionHistory"],
+            ["table", "IngestionLock"], ["table", "Cache"],
+            ["table", "VariableMetadata"],
+            ["index", "NodeEmbeddingIndex"],
+            ["index", "InEdge"],
+            ["index", "TimeSeriesByProvenance"],
+            ["index", "TimeSeriesByEntity1"],
+            ["index", "TimeSeriesByEntity2"],
+            ["index", "TimeSeriesByEntity3"],
+            ["model", "NodeEmbeddingModel"]
+        ]
+        
+        client = SpannerClient("project", "instance", "database")
+        
+        # Run method
+        client.initialize_database()
+        
+        # Verify update_ddl was NOT called
+        mock_db.update_ddl.assert_not_called()
+
+    @patch('clients.spanner.DatabaseAdminClient')
+    @patch('google.cloud.spanner.Client')
+    def test_initialize_database_none_exist(self, mock_spanner_client,
+                                            mock_admin_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_db.name = "projects/test-project/instances/test-instance/databases/test-db"
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        # Mock DatabaseAdminClient
+        mock_admin_instance = MagicMock()
+        mock_admin_client.return_value = mock_admin_instance
+        mock_operation = MagicMock()
+        mock_admin_instance.update_database_ddl.return_value = mock_operation
+
+        # Mock snapshot results (no tables exist)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = []
+
+        client = SpannerClient("project", "instance", "database")
+
+        def open_side_effect(file_path, mode='r', *args, **kwargs):
+            m = MagicMock()
+            m.__enter__.return_value.read.return_value = 'CREATE TABLE Node; CREATE TABLE NodeEmbedding; {% for model in models %}CREATE MODEL {{ model.name }} REMOTE OPTIONS (endpoint = \'{{ model.endpoint }}\');{% endfor %}'
+            return m
+
+        # Run method with patched open
+        with patch('builtins.open', side_effect=open_side_effect):
+            client.initialize_database()
+
+        # Verify update_database_ddl WAS called
+        mock_admin_instance.update_database_ddl.assert_called_once()
+        mock_operation.result.assert_called_once()
+        
+        # Verify placeholder replacement
+        args, kwargs = mock_admin_instance.update_database_ddl.call_args
+        request = kwargs.get('request') if kwargs else args[0]
+        statements = request.statements
+        self.assertEqual(len(statements), 3)
+        self.assertEqual(statements[0], "CREATE TABLE Node")
+        self.assertEqual(statements[1], "CREATE TABLE NodeEmbedding")
+        self.assertIn("projects/project/locations", statements[2])
+
+    @patch('google.cloud.spanner.Client')
+    def test_initialize_database_inconsistent_state(self, mock_spanner_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+        
+        # Mock snapshot results (some tables exist)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = [["table", "Node"]]
+        
+        client = SpannerClient("project", "instance", "database")
+        
+        # Run method and expect exception
+        with self.assertRaises(RuntimeError):
+            client.initialize_database()
+
+    @patch('google.cloud.spanner.Client')
+    def test_acquire_lock_new_row(self, mock_spanner_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+        
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+        
+        # Mock execute_sql to return empty results (no row found)
+        mock_transaction.execute_sql.return_value = []
+        
+        client = SpannerClient("project", "instance", "database")
+        
+        # Run method
+        result = client.acquire_lock("workflow-123", 3600)
+        
+        # Verify
+        self.assertTrue(result)
+        mock_transaction.execute_update.assert_called_once()
+        args, _ = mock_transaction.execute_update.call_args
+        self.assertIn("INSERT INTO IngestionLock", args[0])
+
+    @patch('google.cloud.spanner.Client')
+    def test_acquire_lock_existing_row(self, mock_spanner_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+        
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+        
+        # Mock execute_sql to return existing lock (owner is None)
+        mock_transaction.execute_sql.return_value = [[None, None]]
+        
+        client = SpannerClient("project", "instance", "database")
+        
+        # Run method
+        result = client.acquire_lock("workflow-123", 3600)
+        
+        # Verify
+        self.assertTrue(result)
+        mock_transaction.execute_update.assert_called_once()
+        args, _ = mock_transaction.execute_update.call_args
+        self.assertIn("UPDATE IngestionLock", args[0])
+
+    @patch('google.cloud.spanner.Client')
+    def test_seed_database(self, mock_spanner_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        mock_transaction.execute_sql.return_value = []
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+
+        # Run method
+        client.seed_database()
+
+        # Verify
+        mock_transaction.insert.assert_called_once()
+        args, kwargs = mock_transaction.insert.call_args
+        self.assertEqual(kwargs['table'], 'Node')
+        self.assertEqual(kwargs['columns'], ["subject_id", "name", "value", "types", "last_update_timestamp"])
+        self.assertEqual(len(kwargs['values']), 5)
+        expected_subjects = ["StatisticalVariable", "StatVarGroup", "StatVarObservation", "Topic", "dc/g/Root"]
+        expected_names = ["StatisticalVariable", "StatVarGroup", "StatVarObservation", "Topic", "Data Commons Variables"]
+        actual_subjects = [val[0] for val in kwargs['values']]
+        actual_names = [val[1] for val in kwargs['values']]
+        actual_values = [val[2] for val in kwargs['values']]
+        self.assertEqual(actual_subjects, expected_subjects)
+        self.assertEqual(actual_names, expected_names)
+        self.assertEqual(actual_values, expected_subjects)
+
+    @patch('google.cloud.spanner.Client')
+    def test_seed_database_already_exists(self, mock_spanner_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        mock_transaction.execute_sql.return_value = [["StatisticalVariable"], ["StatVarGroup"], ["StatVarObservation"], ["Topic"], ["dc/g/Root"]]
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+
+        # Run method
+        client.seed_database()
+
+        # Verify
+        mock_transaction.insert.assert_not_called()
+
+    @patch('clients.spanner.DatabaseAdminClient')
+    @patch('google.cloud.spanner.Client')
+    def test_initialize_database_multiple_models(self, mock_spanner_client,
+                                                 mock_admin_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_db.name = "projects/test-project/instances/test-instance/databases/test-db"
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        # Mock DatabaseAdminClient
+        mock_admin_instance = MagicMock()
+        mock_admin_client.return_value = mock_admin_instance
+        mock_operation = MagicMock()
+        mock_admin_instance.update_database_ddl.return_value = mock_operation
+
+        # Mock snapshot results (no tables exist)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = []
+
+        client = SpannerClient("project", "instance", "database", models=[
+            {"name": "NodeEmbeddingModel", "endpoint": "text-embedding-005"},
+            {"name": "NodeEmbeddingModel_multimodalembedding_001", "endpoint": "multimodalembedding-001"}
+        ], embedding_space=512)
+
+        schema_ddl = """
+        CREATE TABLE Node;
+        CREATE TABLE NodeEmbedding (embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }}));
+        {% for model in models %}
+        CREATE MODEL {{ model.name }} REMOTE OPTIONS (endpoint = '{{ model.endpoint }}');
+        {% endfor %}
+        """
+
+        def open_side_effect(file_path, mode='r', *args, **kwargs):
+            m = MagicMock()
+            m.__enter__.return_value.read.return_value = schema_ddl
+            return m
+
+        # Run method with patched open
+        with patch('builtins.open', side_effect=open_side_effect):
+            client.initialize_database()
+
+        # Verify update_database_ddl WAS called
+        mock_admin_instance.update_database_ddl.assert_called_once()
+        mock_operation.result.assert_called_once()
+        
+        # Verify placeholder replacement
+        args, kwargs = mock_admin_instance.update_database_ddl.call_args
+        request = kwargs.get('request') if kwargs else args[0]
+        statements = request.statements
+        self.assertEqual(len(statements), 4)
+        self.assertEqual(statements[0], "CREATE TABLE Node")
+        self.assertEqual(statements[1], "CREATE TABLE NodeEmbedding (embeddings ARRAY<FLOAT64>(vector_length=>512))")
+        self.assertEqual(
+            statements[2],
+            "CREATE MODEL NodeEmbeddingModel REMOTE OPTIONS (endpoint = "
+            "'//aiplatform.googleapis.com/projects/project/locations/"
+            "us-central1/publishers/google/models/text-embedding-005')"
+        )
+        self.assertEqual(
+            statements[3],
+            "CREATE MODEL NodeEmbeddingModel_multimodalembedding_001 REMOTE "
+            "OPTIONS (endpoint = '//aiplatform.googleapis.com/projects/project/"
+            "locations/us-central1/publishers/google/models/multimodalembedding-001')"
+        )
+
+    @patch('clients.spanner.DatabaseAdminClient')
+    @patch('google.cloud.spanner.Client')
+    def test_initialize_database_custom_table_and_index(self, mock_spanner_client,
+                                                       mock_admin_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_db.name = "projects/test-project/instances/test-instance/databases/test-db"
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        # Mock DatabaseAdminClient
+        mock_admin_instance = MagicMock()
+        mock_admin_client.return_value = mock_admin_instance
+        mock_operation = MagicMock()
+        mock_admin_instance.update_database_ddl.return_value = mock_operation
+
+        # Mock snapshot results (no tables exist)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = []
+
+        client = SpannerClient(
+            "project", "instance", "database",
+            embedding_table="CustomEmbeddingTable",
+            embedding_index="CustomEmbeddingIndex"
+        )
+
+        schema_ddl = """
+        CREATE TABLE Node;
+        CREATE TABLE {{ embedding_table }} (
+          subject_id STRING(1024) NOT NULL,
+          embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }})
+        ) PRIMARY KEY(subject_id);
+        CREATE VECTOR INDEX {{ embedding_index }} ON {{ embedding_table }}(embeddings);
+        """
+
+        def open_side_effect(file_path, mode='r', *args, **kwargs):
+            m = MagicMock()
+            m.__enter__.return_value.read.return_value = schema_ddl
+            return m
+
+        # Run method with patched open
+        with patch('builtins.open', side_effect=open_side_effect):
+            client.initialize_database()
+
+        # Verify update_database_ddl WAS called
+        mock_admin_instance.update_database_ddl.assert_called_once()
+        mock_operation.result.assert_called_once()
+        
+        # Verify placeholders were replaced correctly
+        args, kwargs = mock_admin_instance.update_database_ddl.call_args
+        request = kwargs.get('request') if kwargs else args[0]
+        statements = request.statements
+        self.assertEqual(len(statements), 3)
+        self.assertEqual(statements[0], "CREATE TABLE Node")
+        self.assertEqual(
+            statements[1].strip(),
+            "CREATE TABLE CustomEmbeddingTable (\n"
+            "          subject_id STRING(1024) NOT NULL,\n"
+            "          embeddings ARRAY<FLOAT64>(vector_length=>768)\n"
+            "        ) PRIMARY KEY(subject_id)"
+        )
+        self.assertEqual(statements[2].strip(), "CREATE VECTOR INDEX CustomEmbeddingIndex ON CustomEmbeddingTable(embeddings)")
+
+if __name__ == '__main__':
+    unittest.main()
+

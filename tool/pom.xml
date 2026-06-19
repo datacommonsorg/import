@@ -6,12 +6,13 @@
     <parent>
         <groupId>org.datacommons</groupId>
         <artifactId>datacommons-import</artifactId>
-        <version>0.1-alpha.1</version>
+        <version>${revision}</version>
         <relativePath>..</relativePath>
     </parent>
 
     <groupId>org.datacommons</groupId>
     <artifactId>datacommons-import-tool</artifactId>
+    <version>${revision}</version>
     <name>Data Commons - Import Tool</name>
     <url>https://datacommons.org</url>
     <packaging>jar</packaging>
@@ -30,7 +31,6 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>[3.2.0, 3.10)</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -55,7 +55,6 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
-            <version>3.7.1</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -99,6 +98,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>org.datacommons.tool.Main</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                 </configuration>
@@ -122,6 +122,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>org.datacommons.tool.Main</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                 </configuration>

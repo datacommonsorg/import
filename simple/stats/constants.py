@@ -21,6 +21,7 @@ DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
 DEFAULT_FROZEN_TIME = "2023-01-01"
 
 CONFIG_JSON_FILE_NAME = "config.json"
+ALL_IMPORTS = "ALL_IMPORTS"
 REPORT_JSON_FILE_NAME = "report.json"
 TRIPLES_FILE_NAME = "triples.csv"
 SENTENCES_FILE_NAME = "sentences.csv"
@@ -73,6 +74,46 @@ COLUMN_DATE = "date"
 COLUMN_VALUE = "value"
 COLUMN_PROVENANCE = "provenance"
 COLUMN_ENTITY = "entity"
+
+# Observation property columns
+COLUMN_UNIT = "unit"
+COLUMN_SCALING_FACTOR = "scaling_factor"
+COLUMN_MEASUREMENT_METHOD = "measurement_method"
+COLUMN_OBSERVATION_PERIOD = "observation_period"
+COLUMN_PROPERTIES = "properties"
+
+# List of all observation property columns
+OBSERVATION_PROPERTY_COLUMNS = [
+    COLUMN_UNIT,
+    COLUMN_SCALING_FACTOR,
+    COLUMN_MEASUREMENT_METHOD,
+    COLUMN_OBSERVATION_PERIOD,
+    COLUMN_PROPERTIES,
+]
+
+# Standard observation column ordering for database schema
+OBSERVATION_COLUMNS = [
+    COLUMN_ENTITY,
+    COLUMN_VARIABLE,
+    COLUMN_DATE,
+    COLUMN_VALUE,
+    COLUMN_PROVENANCE,
+    COLUMN_UNIT,
+    COLUMN_SCALING_FACTOR,
+    COLUMN_MEASUREMENT_METHOD,
+    COLUMN_OBSERVATION_PERIOD,
+    COLUMN_PROPERTIES,
+]
+
+# Columns that need namespace stripping in observation DataFrames
+COLUMNS_TO_STRIP_NAMESPACES = [
+    COLUMN_ENTITY,
+    COLUMN_VARIABLE,
+    COLUMN_PROVENANCE,
+    COLUMN_UNIT,
+    COLUMN_MEASUREMENT_METHOD,
+    COLUMN_OBSERVATION_PERIOD,
+]
 
 # Debug CSV columns and values
 DEBUG_COLUMN_INPUT = "input"

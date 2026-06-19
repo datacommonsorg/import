@@ -335,7 +335,8 @@ public final class Vocabulary {
         || lcVal.endsWith("stderror")
         || lcVal.endsWith("samplesize")
         || lcVal.endsWith("growthrate")
-        || lcVal.endsWith("limit");
+        || lcVal.endsWith("limit")
+        || lcVal.endsWith("ratio");
   }
 
   public static boolean isStatVar(String type) {

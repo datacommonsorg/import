@@ -13,6 +13,5 @@
         "Provenance1": "http://source1.com/provenance1"
       }
     }
-  },
-  "generateTopics": true
+  }
 }

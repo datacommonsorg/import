@@ -26,10 +26,10 @@ INSERT INTO "observations" VALUES('country/IND','var1','2020','0.16','c/p/1','',
 INSERT INTO "observations" VALUES('country/IND','var2','2020','53','c/p/1','','','','','');
 INSERT INTO "observations" VALUES('country/CHN','var1','2020','0.23','c/p/1','','','','','');
 INSERT INTO "observations" VALUES('country/CHN','var2','2020','67','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/USA','var1','2021','555','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/IND','var1','2022','321','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/USA','var2','2021','666','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/IND','var2','2022','123','c/p/1','','','','','');
+INSERT INTO "observations" VALUES('country/USA','var1','2021','555','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/IND','var1','2022','321','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/USA','var2','2021','666','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/IND','var2','2022','123','c/p/1','','','','','{}');
 CREATE TABLE triples (
     subject_id varchar(255),
     predicate varchar(255),
@@ -51,10 +51,6 @@ INSERT INTO "triples" VALUES('author3','includedIn','c/p/1','');
 INSERT INTO "triples" VALUES('author3','author_id','','author3');
 INSERT INTO "triples" VALUES('author3','author_name','','Jane Smith');
 INSERT INTO "triples" VALUES('author3','author_country','country/USA','');
-INSERT INTO "triples" VALUES('some_var1','typeOf','StatisticalVariable','');
-INSERT INTO "triples" VALUES('some_var1','measuredProperty','value','');
-INSERT INTO "triples" VALUES('some_var1','name','','Some Variable 1 Name');
-INSERT INTO "triples" VALUES('some_var1','description','','Some Variable 1 Description');
 INSERT INTO "triples" VALUES('c/s/default','typeOf','Source','');
 INSERT INTO "triples" VALUES('c/s/default','name','','Custom Data Commons');
 INSERT INTO "triples" VALUES('c/s/1','typeOf','Source','');

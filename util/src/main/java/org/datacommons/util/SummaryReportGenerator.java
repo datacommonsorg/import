@@ -190,7 +190,8 @@ public class SummaryReportGenerator {
       Path outputDir,
       Debug.Log log,
       Map<String, StatVarSummary> svSummaryMap,
-      Map<String, PlaceSeriesSummary> placeSeriesSummaryMap)
+      Map<String, PlaceSeriesSummary> placeSeriesSummaryMap,
+      Debug.RuntimeMetadata runtimeMetadata)
       throws IOException, TemplateException {
     Configuration cfg = getConfiguration();
     Template template = cfg.getTemplate("SummaryReport.ftl");
@@ -205,6 +206,7 @@ public class SummaryReportGenerator {
     }
     data.put("svSummaryMap", svSummaryMap);
     data.put("placeSeriesSummaryMap", placeSeriesSummaryMap);
+    data.put("runtimeMetadata", runtimeMetadata);
     Writer file = new FileWriter(Paths.get(outputDir.toString(), SUMMARY_REPORT_HTML).toString());
     template.process(data, file);
     Writer csvFile = new FileWriter(Paths.get(outputDir.toString(), SUMMARY_REPORT_CSV).toString());

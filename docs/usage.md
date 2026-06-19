@@ -14,9 +14,11 @@ It is under active development, including feature additions and bug fixes.
 
 The tool is a command line application built with Java. See below for usage instructions.
 
-# Installation
+# Prerequisites
 
-Make sure you've downloaded the .jar file under Assets [here](https://github.com/datacommonsorg/import/releases/). Note the path to .jar.
+- Make sure you've downloaded the .jar file under Assets [here](https://github.com/datacommonsorg/import/releases/). Note the path to .jar.
+
+- Obtain an API key from [DataCommons API Portal](https://apikeys.datacommons.org/) and set environment variable DC_API_KEY as the key.
 
 # Usage
 

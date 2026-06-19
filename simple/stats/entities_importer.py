@@ -144,4 +144,4 @@ class EntitiesImporter(Importer):
                              prop_object_ids=prop_object_ids)
       triples.extend(row_entity.triples())
 
-    self.db.insert_triples(triples)
+    self.db.insert_triples(triples, self.input_file)

@@ -15,22 +15,33 @@
 package org.datacommons.tool;
 
 import freemarker.template.TemplateException;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfOptimizedGraph;
+import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.util.*;
+import org.datacommons.util.JsonLdFileGroup;
+import org.datacommons.util.McfFileGroup;
+import org.datacommons.util.parser.jsonld.JsonLdParser;
 
 public class Processor {
   private static final Logger logger = LogManager.getLogger(Processor.class);
@@ -46,6 +57,7 @@ public class Processor {
 
   public static Integer process(Args args) throws IOException, TemplateException {
     Integer retVal = 0;
+    long startTimeMillis = System.currentTimeMillis();
     Processor processor = new Processor(args);
     try {
       // Load all the instance MCFs into memory, so we can do existence checks, resolution, etc.
@@ -93,7 +105,8 @@ public class Processor {
           logger.info("Loading and Checking Table MCF files " + threadStr);
         }
         processor.processTables();
-      } else if (args.fileGroup.getTmcfs() != null) {
+      } else if (args.fileGroup instanceof McfFileGroup
+          && ((McfFileGroup) args.fileGroup).getTmcfs() != null) {
         // Sanity check the TMCF nodes.
         logger.info("Loading and Checking Template MCF files");
         processor.processNodes(Mcf.McfType.TEMPLATE_MCF);
@@ -106,19 +119,37 @@ public class Processor {
       logger.error("Aborting prematurely, see report.json.");
       retVal = -1;
     }
+
+    // Create and set runtime metadata before persisting log
+    if (!LogWrapper.TEST_MODE && args.includeRuntimeMetadata) {
+      long endTimeMillis = System.currentTimeMillis();
+      Debug.RuntimeMetadata runtimeMetadata =
+          RuntimeMetadataUtil.createRuntimeMetadata(
+              startTimeMillis, endTimeMillis, Processor.class);
+      processor.logCtx.setRuntimeMetadata(runtimeMetadata);
+    }
+
     processor.logCtx.persistLog();
     if (args.generateSummaryReport) {
       SummaryReportGenerator.generateReportSummary(
           args.outputDir,
           processor.logCtx.getLog(),
           processor.statChecker.getSVSummaryMap(),
-          processor.statChecker.getPlaceSeriesSummaryMap());
+          processor.statChecker.getPlaceSeriesSummaryMap(),
+          processor.logCtx.getRuntimeMetadata().orElse(null));
     }
     return retVal;
   }
 
   private Processor(Args args) {
     logger.info("Command options: " + args.toString());
+    logger.info("Tool Version: " + RuntimeMetadataUtil.getToolVersion(Processor.class));
+    RuntimeMetadataUtil.getToolGitCommitHash()
+        .ifPresent(hash -> logger.info("Tool Git Commit Hash: " + hash));
+    RuntimeMetadataUtil.getToolBuildTimestamp()
+        .ifPresent(timestamp -> logger.info("Tool Build Timestamp: " + timestamp));
+    RuntimeMetadataUtil.getJavaVersion()
+        .ifPresent(version -> logger.info("Java Version: " + version));
 
     this.args = args;
     this.logCtx =
@@ -148,14 +179,49 @@ public class Processor {
 
   private void processNodes(Mcf.McfType type)
       throws IOException, DCTooManyFailuresException, InterruptedException {
+    List<File> files;
+
     if (type == Mcf.McfType.INSTANCE_MCF) {
-      for (var f : args.fileGroup.getMcfs()) {
-        processNodes(type, f);
+      if (args.fileGroup instanceof McfFileGroup) {
+        files = ((McfFileGroup) args.fileGroup).getMcfs();
+      } else if (args.fileGroup instanceof JsonLdFileGroup) {
+        files = ((JsonLdFileGroup) args.fileGroup).getJsonLds();
+      } else {
+        throw new IllegalArgumentException(
+            "Unsupported file group type for Instance MCF processing: "
+                + args.fileGroup.getClass().getName());
       }
     } else {
-      for (var f : args.fileGroup.getTmcfs()) {
-        processNodes(type, f);
+      if (!(args.fileGroup instanceof McfFileGroup)) {
+        throw new IllegalArgumentException("Template MCF processing requires an McfFileGroup.");
       }
+      files = ((McfFileGroup) args.fileGroup).getTmcfs();
+    }
+
+    for (File f : files) {
+      processNodes(type, f);
+    }
+  }
+
+  private void processLoadedGraph(Mcf.McfGraph n, Mcf.McfType type)
+      throws IOException, InterruptedException {
+    n = McfMutator.mutate(n.toBuilder(), logCtx);
+
+    if (idResolver != null && type == Mcf.McfType.INSTANCE_MCF) {
+      idResolver.addLocalGraph(n);
+    }
+    if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
+      existenceChecker.addLocalGraph(n);
+    } else {
+      McfChecker.check(n, existenceChecker, statVarState, logCtx);
+    }
+    if (args.checkMeasurementResult && type == Mcf.McfType.INSTANCE_MCF) {
+      statVarState.addLocalGraph(n);
+    }
+    if (existenceChecker != null
+        || args.resolutionMode != Args.ResolutionMode.NONE
+        || statChecker != null) {
+      nodesForVariousChecks.add(n);
     }
   }
 
@@ -163,37 +229,23 @@ public class Processor {
       throws IOException, DCTooManyFailuresException, InterruptedException {
     long numNodesProcessed = 0;
     if (args.verbose) logger.info("Checking {}", file.getName());
-    // TODO: isResolved is more allowing, be stricter.
-    McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
-    Mcf.McfGraph n;
-    while ((n = parser.parseNextNode()) != null) {
-      n = McfMutator.mutate(n.toBuilder(), logCtx);
 
-      if (idResolver != null && type == Mcf.McfType.INSTANCE_MCF) {
-        idResolver.addLocalGraph(n);
+    if (file.getPath().contains(".jsonld")) {
+      try (java.io.InputStream is = new java.io.FileInputStream(file)) {
+        Mcf.McfGraph n = JsonLdParser.parse(is);
+        processLoadedGraph(n, type);
+        numNodesProcessed = n.getNodesCount();
+        logCtx.trackStatus(numNodesProcessed, "nodes processed");
       }
-      if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
-        // Add instance MCF nodes to ExistenceChecker.  We load all the nodes up first
-        // before we check them later in checkNodes().
-        existenceChecker.addLocalGraph(n);
-      } else {
-        McfChecker.check(n, existenceChecker, statVarState, logCtx);
-      }
-      if (args.checkMeasurementResult && type == Mcf.McfType.INSTANCE_MCF) {
-        // Add instance MCF nodes to StatVarState, which will remember the statType
-        // of SVs so that we don't need to make HTTP requests for it for
-        // measurementResult checks.
-        statVarState.addLocalGraph(n);
-      }
-      if (existenceChecker != null
-          || args.resolutionMode != Args.ResolutionMode.NONE
-          || statChecker != null) {
-        nodesForVariousChecks.add(n);
-      }
-
-      numNodesProcessed++;
-      if (!logCtx.trackStatus(1, "nodes processed")) {
-        throw new DCTooManyFailuresException("encountered too many failures");
+    } else {
+      McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
+      Mcf.McfGraph n;
+      while ((n = parser.parseNextNode()) != null) {
+        processLoadedGraph(n, type);
+        numNodesProcessed++;
+        if (!logCtx.trackStatus(1, "nodes processed")) {
+          throw new DCTooManyFailuresException("encountered too many failures");
+        }
       }
     }
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
@@ -202,7 +254,11 @@ public class Processor {
   private void processTables()
       throws IOException, DCTooManyFailuresException, InterruptedException {
     // Parallelize
-    if (args.verbose) logger.info("TMCF " + args.fileGroup.getTmcf().getName());
+    if (args.verbose) {
+      if (args.fileGroup instanceof McfFileGroup) {
+        logger.info("TMCF " + ((McfFileGroup) args.fileGroup).getTmcf().getName());
+      }
+    }
 
     List<Callable<Void>> cbs = new ArrayList<Callable<Void>>(args.fileGroup.getCsvs().size());
     for (File csvFile : args.fileGroup.getCsvs()) {
@@ -232,27 +288,33 @@ public class Processor {
   // This is a thread-safe function invoked in parallel per CSV file.
   private void processTable(File csvFile)
       throws IOException, DCTooManyFailuresException, InterruptedException {
-    if (args.verbose) logger.info("Checking CSV " + csvFile.getPath());
-    TmcfCsvParser parser =
+    logger.info("Checking CSV " + csvFile.getPath());
+    interface GraphSupplier {
+      Mcf.McfGraph get() throws java.io.IOException, InterruptedException;
+    }
+
+    GraphSupplier parser;
+    McfFileGroup mcfGroup = (McfFileGroup) args.fileGroup;
+    TmcfCsvParser tParser =
         TmcfCsvParser.init(
-            args.fileGroup.getTmcf().getPath(),
-            csvFile.getPath(),
-            args.fileGroup.delimiter(),
-            logCtx);
-    // If there were too many failures when initializing the parser, parser will be null and we
-    // don't want to continue processing.
-    if (parser == null) {
+            mcfGroup.getTmcf().getPath(), csvFile.getPath(), args.fileGroup.delimiter(), logCtx);
+    if (tParser == null) {
       throw new DCTooManyFailuresException("processTables encountered too many failures");
     }
+    parser = () -> tParser.parseNextRow();
+
     WriterPair writerPair =
         new WriterPair(
             args,
             Args.OutputFileType.TABLE_MCF_NODES,
             Args.OutputFileType.FAILED_TABLE_MCF_NODES,
             csvFile);
+
     Mcf.McfGraph g;
     int numNodeSuccesses = 0, numPVSuccesses = 0, numRowSuccesses = 0, numRowsProcessed = 0;
-    while ((g = parser.parseNextRow()) != null) {
+    Map<Mcf.McfStatVarObsSeries.Key, Mcf.McfStatVarObsSeries.Builder> groupedObservations =
+        new HashMap<>();
+    while ((g = parser.get()) != null) {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
       // This will set counters/messages in logCtx.
@@ -283,8 +345,40 @@ public class Processor {
         }
       }
       numRowsProcessed++;
+
+      if (args.generateOptimizedGraph) {
+        // Extract observations immediately to free memory
+        List<McfStatVarObsSeries> extractedObservations = extractObservationsFromGraph(g);
+        // Group observations incrementally by key to reduce memory usage
+        for (McfStatVarObsSeries obs : extractedObservations) {
+          McfStatVarObsSeries.Key key = obs.getKey();
+          groupedObservations
+              .computeIfAbsent(key, k -> McfStatVarObsSeries.newBuilder().setKey(k))
+              .addAllSvObsList(obs.getSvObsListList());
+        }
+      }
       if (!logCtx.trackStatus(1, "rows processed")) {
         throw new DCTooManyFailuresException("encountered too many failures");
+      }
+    }
+    if (args.generateOptimizedGraph) {
+      String filePath =
+          Paths.get(
+                  args.outputDir.toString(),
+                  FilenameUtils.removeExtension(csvFile.getName()) + "_optimized_graph.pb")
+              .toString();
+      logger.info("Writing optimized graph file to {}", filePath);
+      // Build and write optimized graphs directly from grouped observations
+      try (FileOutputStream output = new FileOutputStream(filePath);
+          BufferedOutputStream outStream = new BufferedOutputStream(output)) {
+
+        for (Mcf.McfStatVarObsSeries.Builder builder : groupedObservations.values()) {
+          McfOptimizedGraph graph =
+              McfOptimizedGraph.newBuilder().setSvObsSeries(builder.build()).build();
+          graph.writeDelimitedTo(output);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
       }
     }
     logCtx.incrementInfoCounterBy("NumRowSuccesses", numRowSuccesses);
@@ -345,6 +439,10 @@ public class Processor {
   // Process all the CSV tables to load all external IDs.
   private void lookupExternalIds()
       throws IOException, InterruptedException, DCTooManyFailuresException {
+    if (!(args.fileGroup instanceof McfFileGroup)) {
+      logger.info("Skipping external ID lookup for non-MCF file group.");
+      return;
+    }
     LogWrapper dummyLog = new LogWrapper(Debug.Log.newBuilder());
     logger.info("Processing External IDs from Instance MCF nodes");
     for (var g : nodesForVariousChecks) {
@@ -393,7 +491,7 @@ public class Processor {
     if (args.verbose) logger.info("Reading external IDs from CSV " + csvFile.getPath());
     TmcfCsvParser parser =
         TmcfCsvParser.init(
-            args.fileGroup.getTmcf().getPath(),
+            ((McfFileGroup) args.fileGroup).getTmcf().getPath(),
             csvFile.getPath(),
             args.fileGroup.delimiter(),
             dummyLog);
@@ -428,6 +526,34 @@ public class Processor {
     logger.info("Performing stats checks");
     statChecker.check();
     statChecker.fetchSamplePlaceNames(httpClient);
+  }
+
+  /**
+   * Extracts StatVarObservation series from a graph for memory-efficient processing. This method
+   * immediately converts observations to their optimized representation, allowing the original
+   * graph to be garbage collected.
+   *
+   * @param graph The McfGraph to extract observations from
+   * @return List of McfStatVarObsSeries extracted from the graph, empty if no observations found
+   */
+  private List<McfStatVarObsSeries> extractObservationsFromGraph(Mcf.McfGraph graph) {
+    List<McfStatVarObsSeries> observations = new ArrayList<>();
+
+    for (Map.Entry<String, Mcf.McfGraph.PropertyValues> entry : graph.getNodesMap().entrySet()) {
+      Mcf.McfGraph.PropertyValues pv = entry.getValue();
+      if (GraphUtils.isObservation(pv)) {
+        try {
+          McfStatVarObsSeries svo =
+              GraphUtils.convertMcfGraphToMcfStatVarObsSeries(entry.getKey(), pv);
+          observations.add(svo);
+        } catch (IllegalArgumentException e) {
+          // Log and skip invalid observations
+          logger.warn("Skipping invalid observation: " + e.getMessage());
+        }
+      }
+    }
+
+    return observations;
   }
 
   private static class DCTooManyFailuresException extends Exception {

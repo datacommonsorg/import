@@ -50,7 +50,7 @@ def _rewrite_catalog_for_testing(catalog_yaml_path: str, temp_dir: str) -> None:
 
 def _test_generate_nl_sentences(test: unittest.TestCase,
                                 test_name: str,
-                                generate_topics: bool = False):
+                                generate_topic_cache: bool = False):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -78,20 +78,23 @@ def _test_generate_nl_sentences(test: unittest.TestCase,
                              nl_dir=temp_store.as_dir())
     _rewrite_catalog_for_testing(output_catalog_yaml_path, temp_dir)
 
-    if generate_topics:
-      nl.generate_topic_cache(input_triples, nl_dir=temp_store.as_dir())
+    if generate_topic_cache:
+      # Topic cache is not generated for SV triples.
+      # So remove them first.
+      nl.generate_topic_cache(_without_sv_triples(input_triples),
+                              nl_dir=temp_store.as_dir())
 
     if is_write_mode():
       shutil.copy(output_sentences_csv_path, expected_sentences_csv_path)
       shutil.copy(output_catalog_yaml_path, expected_catalog_yaml_path)
-      if generate_topics:
+      if generate_topic_cache:
         shutil.copy(output_topic_cache_json_path,
                     expected_topic_cache_json_path)
       return
 
     compare_files(test, output_sentences_csv_path, expected_sentences_csv_path)
     compare_files(test, output_catalog_yaml_path, expected_catalog_yaml_path)
-    if generate_topics:
+    if generate_topic_cache:
       compare_files(test, output_topic_cache_json_path,
                     expected_topic_cache_json_path)
 
@@ -110,10 +113,28 @@ def _without_svpg_triples(triples: list[Triple]) -> list[Triple]:
       filter(lambda triple: triple.subject_id not in svpg_dcids, triples))
 
 
+def _without_sv_triples(triples: list[Triple]) -> list[Triple]:
+  sv_dcids = set()
+  for triple in triples:
+    if triple.predicate == sc.PREDICATE_TYPE_OF and triple.object_id == sc.TYPE_STATISTICAL_VARIABLE:
+      sv_dcids.add(triple.subject_id)
+
+  if not sv_dcids:
+    return triples
+  return list(filter(lambda triple: triple.subject_id not in sv_dcids, triples))
+
+
 class TestData(unittest.TestCase):
 
   def test_generate_nl_sentences_for_sv_triples(self):
     _test_generate_nl_sentences(self, "sv_triples")
 
   def test_generate_nl_sentences_for_topic_triples(self):
-    _test_generate_nl_sentences(self, "topic_triples", generate_topics=True)
+    _test_generate_nl_sentences(self,
+                                "topic_triples",
+                                generate_topic_cache=True)
+
+  def test_generate_nl_sentences_for_sv_and_topic_triples(self):
+    _test_generate_nl_sentences(self,
+                                "sv_and_topic_triples",
+                                generate_topic_cache=True)
