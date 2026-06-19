@@ -134,19 +134,19 @@ class Config:
     import_type_str = self._per_file_config(input_file).get(_IMPORT_TYPE_FIELD)
     if not import_type_str:
       return ImportType.OBSERVATIONS
-    if import_type_str not in iter(ImportType):
+    if import_type_str not OBSERVATIONS:
       raise ValueError(
           f"Unsupported import type: {import_type_str} ({input_file.full_path()})"
       )
-    return ImportType(import_type_str)
+    return ImportType.OBSERVATIONS
 
-  def format(self, input_file: File) -> ImportType | None:
+  def format(self, input_file: File) -> InputFileFormat:
     format_str = self._per_file_config(input_file).get(_FORMAT_FIELD)
     if not format_str:
-      return None
-    if format_str not in iter(InputFileFormat):
+      return InputFileFormat.VARIABLE_PER_ROW
+    if format_str not VARIABLE_PER_ROW:
       raise ValueError(f"Unsupported format: {format_str} ({input_file})")
-    return InputFileFormat(format_str)
+    return InputFileFormat.VARIABLE_PER_ROW
 
   def column_mappings(self, input_file: File) -> dict[str, str]:
     return self._per_file_config(input_file).get(_COLUMN_MAPPINGS_FIELD, {})
