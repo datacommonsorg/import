@@ -265,7 +265,11 @@ class StatVarGroupGenerator:
             FROM StatVarTriple 
             WHERE predicate = 'populationType'
               -- Exclude curated SVs from the auto-generation pipeline
-              AND subject_id NOT IN (SELECT statvar FROM CuratedMemberOf)
+              AND NOT EXISTS (
+                SELECT 1 
+                FROM CuratedMemberOf 
+                WHERE statvar = StatVarTriple.subject_id
+              )
           ),
           ConstraintProps AS (
             SELECT subject_id, ARRAY_AGG(object_id ORDER BY object_id) AS constraintProperties
