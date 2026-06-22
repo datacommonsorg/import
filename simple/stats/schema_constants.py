@@ -23,7 +23,8 @@ SV_HIERARCHY_PROPS_BLOCKLIST: set[str] = {
     "searchDescription", "source", "footnote", "isNormalizable",
     "denominatorForNormalization", "measuredProperty", "measurementMethod",
     "measurementDenominator", "measurementQualifier", "scalingFactor", "unit",
-    "statType", "censusACSTableId", "includedIn"
+    "statType", "censusACSTableId", "includedIn", "observationProperty",
+    "entityMapping"
 }
 
 PREDICATE_TYPE_OF = "typeOf"

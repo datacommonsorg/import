@@ -71,12 +71,6 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSpannerTimeSeriesTableName(String tableName);
 
-  @Description("Whether to initialize database schema.")
-  @Default.Boolean(false)
-  boolean getInitializeDatabase();
-
-  void setInitializeDatabase(boolean initializeDatabase);
-
   @Description("Whether to force combination of schema nodes across shards.")
   @Default.Boolean(false)
   boolean getForceCombineNodes();

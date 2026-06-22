@@ -42,9 +42,103 @@ class LinkedEdgeGenerator:
 
         jobs = [
             self.run_linked_contained_in_place(import_names),
+            self.run_linked_member_of(import_names),
             self.run_linked_member(import_names)
         ]
         return [job for job in jobs if job]
+
+    def run_linked_member_of(
+            self,
+            import_names: List[str] = None) -> Optional[bigquery.job.QueryJob]:
+        """Expands membership hierarchies using memberOf and specializationOf."""
+        if not import_names:
+            return None
+
+        dest = self.executor.get_spanner_destination_uri()
+        safe_names = [_escape_sql_literal(name) for name in import_names]
+        prefix = "dc/base/" if self.is_base_dc else ""
+        provenances = [f"'{prefix}{name}'" for name in safe_names]
+        provenance_filter = f" AND provenance IN ({', '.join(provenances)})"
+        gen_graphs_prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+
+        query = f"""  # nosec
+        -- Pull base edges needed for memberOf aggregation
+        CREATE OR REPLACE TEMPORARY TABLE `temp_base_member_of` AS
+        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
+          "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN ('memberOf', 'specializationOf'){provenance_filter}");
+
+        -- Pull existing generated edges to filter them out later
+        CREATE OR REPLACE TEMPORARY TABLE `temp_existing_linked_member_of` AS
+        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
+          "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'linkedMemberOf'");
+
+        CREATE OR REPLACE TEMPORARY TABLE `temp_hierarchy` AS
+        SELECT DISTINCT subject_id, predicate, object_id
+        FROM `temp_base_member_of`;
+
+        EXPORT DATA
+          OPTIONS( uri="{dest}",
+            format='CLOUD_SPANNER',
+            spanner_options = '{{"table": "Edge"}}' ) AS
+        WITH RECURSIVE Ancestors AS (
+          SELECT
+            subject_id,
+            object_id AS ancestor,
+            1 AS level
+          FROM
+            temp_hierarchy
+          WHERE
+            predicate = 'memberOf'
+          UNION ALL
+
+          SELECT
+            a.subject_id,
+            t.object_id AS ancestor,
+            a.level + 1
+          FROM
+            Ancestors AS a
+          JOIN
+            temp_hierarchy AS t
+            ON a.ancestor = t.subject_id
+          WHERE
+            a.level <= 20 -- Limit to 20 levels
+            AND t.predicate = 'specializationOf'
+        ),
+        NewEdges AS (
+          SELECT DISTINCT
+            subject_id,
+            'linkedMemberOf' as predicate,
+            ancestor as object_id,
+            '{gen_graphs_prov}' as provenance
+          FROM
+            Ancestors
+        ),
+        FilteredEdges AS (
+          SELECT
+            subject_id,
+            predicate,
+            object_id,
+            provenance
+          FROM
+            NewEdges n
+          WHERE NOT EXISTS (
+            SELECT 1
+            FROM `temp_existing_linked_member_of` e
+            WHERE n.subject_id = e.subject_id
+              AND n.predicate = e.predicate
+              AND n.object_id = e.object_id
+              AND n.provenance = e.provenance
+          )
+        )
+        SELECT
+          subject_id,
+          predicate,
+          object_id,
+          provenance
+        FROM
+          FilteredEdges
+        """
+        return self.executor.execute(query)
 
     def run_linked_contained_in_place(
             self,

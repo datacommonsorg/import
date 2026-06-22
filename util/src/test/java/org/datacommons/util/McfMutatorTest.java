@@ -105,4 +105,31 @@ public class McfMutatorTest {
         McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx());
     assertEquals(McfUtil.serializeMcfGraph(got, true), mcf);
   }
+
+  @Test
+  public void testMultiEntityProperties() throws IOException {
+    String mcf =
+        "Node: dcid:FinancialAid\n"
+            + "typeOf: schema:StatisticalVariable\n"
+            + "populationType: dcs:FinancialTransaction\n"
+            + "measuredProperty: dcs:amount\n"
+            + "observationProperty: dcs:destinationCountry\n"
+            + "entityMapping: dcs:someMapping\n"
+            + "someActualConstraint: dcs:someValue\n";
+    Mcf.McfGraph got =
+        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx());
+
+    String want =
+        "Node: dcid:FinancialAid\n"
+            + "constraintProperties: dcid:someActualConstraint\n"
+            + "dcid: \"FinancialAid\"\n"
+            + "entityMapping: dcid:someMapping\n"
+            + "measuredProperty: dcid:amount\n"
+            + "observationProperty: dcid:destinationCountry\n"
+            + "populationType: dcid:FinancialTransaction\n"
+            + "someActualConstraint: dcid:someValue\n"
+            + "typeOf: dcid:StatisticalVariable\n"
+            + "\n";
+    assertEquals(McfUtil.serializeMcfGraph(got, true), want);
+  }
 }

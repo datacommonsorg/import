@@ -401,4 +401,207 @@ public class GraphReaderTest {
     Observation actual2 = GraphReader.toObservation(seriesKey, obs2);
     assertEquals(expected2, actual2);
   }
+
+  @Test
+  public void testExtractTimeSeries_MultiEntity() {
+    PropertyValues pv =
+        PropertyValues.newBuilder()
+            .putPvs(
+                "typeOf",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("StatVarObservation"))
+                    .build())
+            .putPvs(
+                "variableMeasured",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("dcs:FinancialTrade"))
+                    .build())
+            .putPvs(
+                "observationDate",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder().setType(ValueType.TEXT).setValue("2024"))
+                    .build())
+            .putPvs(
+                "value",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder().setType(ValueType.NUMBER).setValue("100"))
+                    .build())
+            .putPvs(
+                "dcs:sourceCountry",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("country/FRA"))
+                    .build())
+            .putPvs(
+                "dcs:destinationCountry",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("country/USA"))
+                    .build())
+            .putPvs(
+                "dcs:observationProperties",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("destinationCountry"))
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("sourceCountry"))
+                    .build())
+            .build();
+
+    TimeSeries expected =
+        TimeSeries.builder()
+            .entity1("country/USA")
+            .extraEntities(List.of("country/FRA"))
+            .variableMeasured("FinancialTrade")
+            .importName("test_import")
+            .isBaseDc(true)
+            .build();
+
+    TimeSeries actual = GraphReader.extractTimeSeries("nodeId", pv, "test_import", true);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testExtractTimeSeriesKey_MultiEntity() {
+    PropertyValues pv =
+        PropertyValues.newBuilder()
+            .putPvs(
+                "typeOf",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("StatVarObservation"))
+                    .build())
+            .putPvs(
+                "variableMeasured",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("dcs:FinancialTrade"))
+                    .build())
+            .putPvs(
+                "observationDate",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder().setType(ValueType.TEXT).setValue("2024"))
+                    .build())
+            .putPvs(
+                "value",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder().setType(ValueType.NUMBER).setValue("100"))
+                    .build())
+            .putPvs(
+                "dcs:sourceCountry",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("country/FRA"))
+                    .build())
+            .putPvs(
+                "dcs:destinationCountry",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("country/USA"))
+                    .build())
+            .putPvs(
+                "dcs:observationProperties",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("destinationCountry"))
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("sourceCountry"))
+                    .build())
+            .build();
+
+    String facetId = TimeSeries.calculateFacetId("test_import", "", "", "", "", false);
+    TimeSeriesKey expected =
+        new TimeSeriesKey("FinancialTrade", "country/USA", "country/FRA", "", "", "", "", facetId);
+
+    TimeSeriesKey actual = GraphReader.extractTimeSeriesKey("nodeId", pv, "test_import");
+    assertEquals(expected, actual);
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testExtractTimeSeries_MissingEntity() {
+    PropertyValues pv =
+        PropertyValues.newBuilder()
+            .putPvs(
+                "typeOf",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("StatVarObservation"))
+                    .build())
+            .putPvs(
+                "variableMeasured",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("dcs:FinancialTrade"))
+                    .build())
+            .putPvs(
+                "observationDate",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder().setType(ValueType.TEXT).setValue("2024"))
+                    .build())
+            .putPvs(
+                "value",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder().setType(ValueType.NUMBER).setValue("100"))
+                    .build())
+            .putPvs(
+                "dcs:destinationCountry",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("country/USA"))
+                    .build())
+            .putPvs(
+                "dcs:observationProperties",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("destinationCountry"))
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("sourceCountry"))
+                    .build())
+            .build();
+
+    // This should throw RuntimeException because sourceCountry is missing
+    GraphReader.extractTimeSeries("nodeId", pv, "test_import", true);
+  }
 }

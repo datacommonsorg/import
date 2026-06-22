@@ -428,20 +428,24 @@ class TestRunner(unittest.TestCase):
       oecd_config = {
           "importName":
               "oecd",
-          "inputFiles": [{
-              "pattern": "data.csv",
-              "entityType": "Country",
-              "provenance": "dcid:oecd"
-          }, {
-              "pattern": "*.mcf",
-              "provenance": "dcid:oecd"
-          }]
+          "inputFiles": [
+              {
+                  "pattern": "data.csv",
+                  "entityType": "Country",
+                  "provenance": "dcid:oecd"
+                  # Assume no format = variable per row
+              },
+              {
+                  "pattern": "*.mcf",
+                  "provenance": "dcid:oecd"
+              }
+          ]
       }
       with open(os.path.join(oecd_dir, "config.json"), "w") as f:
         json.dump(oecd_config, f)
 
-      # OECD data.csv (entity, date, variable)
-      oecd_data = "entity,date,Average_Age_Frog\nUSA,2020,5.5\n"
+      # OECD data.csv (entity, date, variable, value)
+      oecd_data = "entity,date,variable,value\nUSA,2020,Average_Age_Frog,5.5\n"
       with open(os.path.join(oecd_dir, "data.csv"), "w") as f:
         f.write(oecd_data)
 
@@ -460,19 +464,23 @@ class TestRunner(unittest.TestCase):
       ilo_config = {
           "importName":
               "ilo",
-          "inputFiles": [{
-              "pattern": "data.csv",
-              "entityType": "Country",
-              "provenance": "dcid:ilo"
-          }, {
-              "pattern": "*.mcf",
-              "provenance": "dcid:ilo"
-          }]
+          "inputFiles": [
+              {
+                  "pattern": "data.csv",
+                  "entityType": "Country",
+                  "provenance": "dcid:ilo"
+                  # Assume no format = variable per row
+              },
+              {
+                  "pattern": "*.mcf",
+                  "provenance": "dcid:ilo"
+              }
+          ]
       }
       with open(os.path.join(ilo_dir, "config.json"), "w") as f:
         json.dump(ilo_config, f)
 
-      ilo_data = "entity,date,Count_Frog_Green\nUSA,2020,40\n"
+      ilo_data = "entity,date,variable,value\nUSA,2020,Count_Frog_Green,40\n"
       with open(os.path.join(ilo_dir, "data.csv"), "w") as f:
         f.write(ilo_data)
 

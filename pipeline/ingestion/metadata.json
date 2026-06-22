@@ -56,6 +56,13 @@
             "helpText": "Spanner TimeSeries table name",
             "paramType": "TEXT",
             "isOptional": true
+        },
+        {
+            "name": "isBaseDc",
+            "label": "Is Base Data Commons",
+            "helpText": "Whether this is a base Data Commons ingestion run.",
+            "paramType": "TEXT",
+            "isOptional": true
         }
     ]
 }
