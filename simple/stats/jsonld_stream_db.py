@@ -40,6 +40,7 @@ from stats.db import Db
 from stats.jsonld_exporter import DCID_URL
 from stats.jsonld_exporter import expand_id
 from stats.jsonld_exporter import write_shard
+from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import create_store
 from util.filesystem import Dir
@@ -52,7 +53,7 @@ _EXPORT_PROCESSES_MAX = 8
 
 
 def _uri_ref(val):
-  if pd.isna(val) or val == "":
+  if not val or pd.isna(val):
     return None
   val_str = str(val).strip()
   if val_str == "" or val_str.lower() in ("nan", "<na>"):
@@ -83,10 +84,24 @@ def _write_observation_shard(args):
     key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
     obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
 
+    var_obj = _uri_ref(variable)
+    if props:
+      try:
+        props_dict = json.loads(props)
+        prop_keys = [
+            f"dcid:{k}" if not k.startswith(
+                ("dcid:", "http://", "https://")) else k
+            for k in props_dict.keys()
+        ]
+        if prop_keys:
+          var_obj["dcid:observationProperty"] = prop_keys
+      except json.JSONDecodeError:
+        pass
+
     obs_obj = {
         "@id": f"dcid:obs_{obs_hash}",
         "@type": "dcid:StatVarObservation",
-        "dcid:variableMeasured": _uri_ref(variable),
+        "dcid:variableMeasured": var_obj,
         "dcid:observationDate": _parse_numeric(date),
         "dcid:value": _parse_numeric(value),
     }
@@ -114,7 +129,10 @@ def _write_observation_shard(args):
         for k, v in props_dict.items():
           prop_key = f"dcid:{k}" if not k.startswith(
               "dcid:") and not k.startswith("http") else k
-          obs_obj[prop_key] = v
+          if is_entity_reference(v):
+            obs_obj[prop_key] = _uri_ref(v)
+          else:
+            obs_obj[prop_key] = _parse_numeric(v)
       except json.JSONDecodeError as e:
         logging.warning(
             "Failed to decode properties JSON for observation %s/%s: %s",
