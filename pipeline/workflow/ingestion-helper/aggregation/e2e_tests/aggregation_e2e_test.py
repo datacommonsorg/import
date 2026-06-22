@@ -49,7 +49,7 @@ from google.cloud import bigquery
 import sys
 # Add ingestion-helper to sys.path (two levels up from this file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator, StatVarGroupGenerator
+from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator, StatVarGroupGenerator, StatVarSeriesAggregator
 
 # Configuration
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
@@ -1604,6 +1604,164 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
 
 class StatVarGroupGeneratorCustomDcTest(StatVarGroupGeneratorIntegrationTest):
+    is_base_dc = False
+
+
+class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
+    """Integration E2E tests for StatVarSeriesAggregator."""
+
+    def get_aggregator(self) -> StatVarSeriesAggregator:
+        executor = BigQueryExecutor(
+            BQ_CONNECTION_ID,
+            PROJECT_ID,
+            SPANNER_INSTANCE_ID,
+            SPANNER_DATABASE_ID,
+            location=BQ_LOCATION,
+            run_sequential=True
+        )
+        return StatVarSeriesAggregator(executor, is_base_dc=self.is_base_dc)
+
+    def test_multiround_aggregation(self):
+        """Tests multi-round aggregation: Round 1 (Anomalies) -> Round 2 (Ensembles)."""
+        import_name = 'NASA_NEXGDDP_Test'
+        round1_output_import = f'{import_name}_AggrDiffStats'
+        round2_output_import = f'{import_name}_AggrStatsAcrossModels'
+        
+        prefix = "dc/base/" if self.is_base_dc else ""
+        r1_expected_provenance = f"{prefix}{round1_output_import}"
+        r2_expected_provenance = f"{prefix}{round2_output_import}"
+
+        place_id = 'geoId/5363000'
+
+        # 1. Setup mock data
+        # Baseline: 2015-07
+        self.add_observation('Max_Temperature', place_id, '2015-07', 30.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2015-07', 32.0, method='Model_B', import_name=import_name, facet_id='facet_b')
+        self.add_observation('Max_Temperature', place_id, '2015-07', 28.0, method='Model_C', import_name=import_name, facet_id='facet_c')
+
+        # Projection: 2050-07
+        self.add_observation('Max_Temperature', place_id, '2050-07', 33.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07', 36.0, method='Model_B', import_name=import_name, facet_id='facet_b')
+        self.add_observation('Max_Temperature', place_id, '2050-07', 30.0, method='Model_C', import_name=import_name, facet_id='facet_c')
+
+        self.flush_to_spanner()
+
+        # 2. Run aggregator with both Round 1 and Round 2 configs
+        aggregator = self.get_aggregator()
+        calculations = [
+            {
+                "round": 1,
+                "input_imports": [import_name],
+                "output_import": round1_output_import,
+                "aggr_funcs": [
+                    {"type": "max_diff_across_measurement_methods"},
+                    {
+                        "type": "diff_relative_to_base_date",
+                        "dates": ["2015-07"]
+                    }
+                ]
+            },
+            {
+                "round": 2,
+                "input_imports": [round1_output_import],
+                "output_import": round2_output_import,
+                "aggr_funcs": [
+                    {"type": "stats_across_models"}
+                ]
+            }
+        ]
+        
+        aggregator.aggregate_series(calculations)
+
+        # 3. Verify Round 1 Results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify TimeSeries for DifferenceAcrossModels
+            ts_diff_query = """
+                SELECT facet_id, facet
+                FROM TimeSeries
+                WHERE variable_measured = 'DifferenceAcrossModels_Max_Temperature'
+            """
+            ts_diff_results = list(snapshot.execute_sql(ts_diff_query))
+            self.assertEqual(len(ts_diff_results), 1)
+            self.assertEqual(ts_diff_results[0][1]['provenance'], r1_expected_provenance)
+            self.assertEqual(ts_diff_results[0][1]['measurementMethod'], 'dcAggregate/DifferenceAcrossModels')
+
+            # Verify TimeSeries for DifferenceRelativeToBaseDate
+            ts_rel_query = """
+                SELECT facet_id, facet
+                FROM TimeSeries
+                WHERE variable_measured = 'DifferenceRelativeToBaseDate201507_Max_Temperature'
+            """
+            ts_rel_results = list(snapshot.execute_sql(ts_rel_query))
+            self.assertEqual(len(ts_rel_results), 3) # One for each model (A, B, C)
+            
+            # Verify Observations for DifferenceAcrossModels (Max Diff in 2050 should be 36 - 30 = 6)
+            obs_diff_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'DifferenceAcrossModels_Max_Temperature'
+                  AND date = '2050-07'
+            """
+            obs_diff_results = list(snapshot.execute_sql(obs_diff_query))
+            self.assertEqual(len(obs_diff_results), 1)
+            self.assertEqual(float(obs_diff_results[0][0]), 6.0)
+
+            # Verify Observations for DifferenceRelativeToBaseDate (Anomaly in 2050)
+            # Model A: 33 - 30 = 3
+            # Model B: 36 - 32 = 4
+            # Model C: 30 - 28 = 2
+            obs_rel_query = """
+                SELECT facet_id, value
+                FROM Observation
+                WHERE variable_measured = 'DifferenceRelativeToBaseDate201507_Max_Temperature'
+                  AND date = '2050-07'
+                ORDER BY CAST(value AS FLOAT64)
+            """
+            obs_rel_results = list(snapshot.execute_sql(obs_rel_query))
+            self.assertEqual(len(obs_rel_results), 3)
+            self.assertEqual(float(obs_rel_results[0][1]), 2.0) # Model C
+            self.assertEqual(float(obs_rel_results[1][1]), 3.0) # Model A
+            self.assertEqual(float(obs_rel_results[2][1]), 4.0) # Model B
+
+            # 4. Verify Round 2 (Ensemble) Results in Spanner
+            ts_ensemble_query = """
+                SELECT variable_measured, facet
+                FROM TimeSeries
+                WHERE variable_measured LIKE '%AcrossModels_DifferenceRelativeToBaseDate201507_Max_Temperature'
+                ORDER BY variable_measured
+            """
+            ts_ensemble_results = list(snapshot.execute_sql(ts_ensemble_query))
+            self.assertEqual(len(ts_ensemble_results), 3)
+            
+            for row in ts_ensemble_results:
+                self.assertEqual(row[1]['provenance'], r2_expected_provenance)
+                self.assertEqual(row[1]['isDcAggregate'], True)
+
+            obs_ensemble_query = """
+                SELECT variable_measured, value
+                FROM Observation
+                WHERE variable_measured LIKE '%AcrossModels_DifferenceRelativeToBaseDate201507_Max_Temperature'
+                  AND date = '2050-07'
+                ORDER BY variable_measured
+            """
+            obs_ensemble_results = list(snapshot.execute_sql(obs_ensemble_query))
+            self.assertEqual(len(obs_ensemble_results), 3)
+            
+            # Sorted by variable_measured:
+            # 1. MedianAcrossModels_...
+            # 2. Percentile10AcrossModels_...
+            # 3. Percentile90AcrossModels_...
+            self.assertEqual(obs_ensemble_results[0][0], 'MedianAcrossModels_DifferenceRelativeToBaseDate201507_Max_Temperature')
+            self.assertEqual(float(obs_ensemble_results[0][1]), 3.0)
+            
+            self.assertEqual(obs_ensemble_results[1][0], 'Percentile10AcrossModels_DifferenceRelativeToBaseDate201507_Max_Temperature')
+            self.assertEqual(float(obs_ensemble_results[1][1]), 2.0)
+            
+            self.assertEqual(obs_ensemble_results[2][0], 'Percentile90AcrossModels_DifferenceRelativeToBaseDate201507_Max_Temperature')
+            self.assertEqual(float(obs_ensemble_results[2][1]), 4.0)
+
+
+class StatVarSeriesAggregatorCustomDcTest(StatVarSeriesAggregatorIntegrationTest):
     is_base_dc = False
 
 
