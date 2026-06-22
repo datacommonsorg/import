@@ -1760,6 +1760,157 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(obs_ensemble_results[2][0], 'Percentile90AcrossModels_DifferenceRelativeToBaseDate201507_Max_Temperature')
             self.assertEqual(float(obs_ensemble_results[2][1]), 4.0)
 
+    def test_temporal_aggregation(self):
+        """Tests temporal aggregation (aggr_over_time): daily to monthly/yearly."""
+        import_name = 'NASA_NEXGDDP_Test_Temporal'
+        output_import = f'{import_name}_AggrTemporal'
+        place_id = 'geoId/5363000'
+        
+        # 1. Setup mock daily data for 2050
+        self.add_observation('Max_Temperature', place_id, '2050-07-01', 30.0, method='Model_A', period='P1D', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07-02', 32.0, method='Model_A', period='P1D', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07-03', 34.0, method='Model_A', period='P1D', import_name=import_name, facet_id='facet_a')
+        
+        self.flush_to_spanner()
+        
+        # 2. Run aggregator
+        aggregator = self.get_aggregator()
+        calculations = [
+            {
+                "round": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "aggr_funcs": [
+                    {
+                        "type": "aggr_over_time",
+                        "output_period": "P1M",
+                        "operator": "MEAN",
+                        "use_input_sv_for_output": True
+                    },
+                    {
+                        "type": "aggr_over_time",
+                        "output_period": "P1Y",
+                        "operator": "MAX",
+                        "use_input_sv_for_output": False
+                    }
+                ]
+            }
+        ]
+        aggregator.aggregate_series(calculations)
+        
+        # 3. Verify Results in Spanner
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import}"
+        
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify Monthly Mean
+            ts_monthly_query = f"""
+                SELECT facet
+                FROM TimeSeries
+                WHERE variable_measured = 'Max_Temperature'
+                  AND facet_id = CAST(FARM_FINGERPRINT('{expected_provenance}^Model_A^P1M^1^1^true') AS STRING)
+            """
+            ts_monthly = list(snapshot.execute_sql(ts_monthly_query))
+            self.assertEqual(len(ts_monthly), 1)
+            self.assertEqual(ts_monthly[0][0]['observationPeriod'], 'P1M')
+            
+            obs_monthly_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'Max_Temperature'
+                  AND date = '2050-07'
+            """
+            obs_monthly = list(snapshot.execute_sql(obs_monthly_query))
+            self.assertEqual(len(obs_monthly), 1)
+            self.assertEqual(float(obs_monthly[0][0]), 32.0)
+            
+            # Verify Yearly Max
+            ts_yearly_query = f"""
+                SELECT facet
+                FROM TimeSeries
+                WHERE variable_measured = 'AggregateMax_Max_Temperature'
+                  AND facet_id = CAST(FARM_FINGERPRINT('{expected_provenance}^Model_A^P1Y^1^1^true') AS STRING)
+            """
+            ts_yearly = list(snapshot.execute_sql(ts_yearly_query))
+            self.assertEqual(len(ts_yearly), 1)
+            self.assertEqual(ts_yearly[0][0]['observationPeriod'], 'P1Y')
+            
+            obs_yearly_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'AggregateMax_Max_Temperature'
+                  AND date = '2050'
+            """
+            obs_yearly = list(snapshot.execute_sql(obs_yearly_query))
+            self.assertEqual(len(obs_yearly), 1)
+            self.assertEqual(float(obs_yearly[0][0]), 34.0)
+
+    def test_threshold_exception(self):
+        """Tests threshold exception counting (count_threshold)."""
+        import_name = 'NASA_NEXGDDP_Test_Threshold'
+        output_import = f'{import_name}_AggrThreshold'
+        place_id = 'geoId/5363000'
+        
+        # 1. Setup mock daily data for 2050
+        self.add_observation('Max_Temperature', place_id, '2050-07-01', 299.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07-02', 301.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07-03', 298.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-08-01', 302.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-08-02', 295.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        
+        self.flush_to_spanner()
+        
+        # 2. Run aggregator
+        aggregator = self.get_aggregator()
+        calculations = [
+            {
+                "round": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "aggr_funcs": [
+                    {
+                        "type": "count_threshold",
+                        "threshold_value": 300.0,
+                        "comparison": "GE",
+                        "unit": "Kelvin",
+                        "input_period": "P1D",
+                        "output_period": "P1Y"
+                    }
+                ]
+            }
+        ]
+        aggregator.aggregate_series(calculations)
+        
+        # 3. Verify Results in Spanner
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import}"
+        expected_sv = "NumberOfDays_300KelvinOrMore_Max_Temperature"
+        
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify TimeSeries (unit removed, period P1Y)
+            ts_query = f"""
+                SELECT facet
+                FROM TimeSeries
+                WHERE variable_measured = '{expected_sv}'
+                  AND facet_id = CAST(FARM_FINGERPRINT('{expected_provenance}^Model_A^P1Y^1^^true') AS STRING)
+            """
+            ts_results = list(snapshot.execute_sql(ts_query))
+            self.assertEqual(len(ts_results), 1)
+            facet = ts_results[0][0]
+            self.assertEqual(facet['observationPeriod'], 'P1Y')
+            self.assertNotIn('unit', facet)
+            
+            # Verify Observation
+            obs_query = f"""
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = '{expected_sv}'
+                  AND date = '2050'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            self.assertEqual(int(obs_results[0][0]), 2)
+
 
 class StatVarSeriesAggregatorCustomDcTest(StatVarSeriesAggregatorIntegrationTest):
     is_base_dc = False

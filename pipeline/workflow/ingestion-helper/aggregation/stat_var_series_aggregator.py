@@ -29,7 +29,7 @@ class StatVarSeriesAggregator:
 
     This class contains the SQL logic to read source observations from Spanner
     via BigQuery, perform various series aggregations (anomalies, ensembles,
-    temporal), and write the results back to Spanner.
+    temporal, thresholds), and write the results back to Spanner.
     """
 
     def __init__(self, executor: BigQueryExecutor, is_base_dc: bool = True) -> None:
@@ -106,6 +106,10 @@ class StatVarSeriesAggregator:
             elif func_type == "stats_across_models":
                 has_stats_models = True
                 self._add_stats_across_models_fragments(ts_ctes, obs_ctes, safe_output_provenance)
+            elif func_type == "aggr_over_time":
+                self._add_aggr_over_time_fragments(ts_ctes, obs_ctes, func, safe_output_provenance)
+            elif func_type == "count_threshold":
+                self._add_count_threshold_fragments(ts_ctes, obs_ctes, func, safe_output_provenance)
             else:
                 logging.warning(f"Unsupported aggregation function type: {func_type}")
 
@@ -349,6 +353,180 @@ class StatVarSeriesAggregator:
         """
         obs_ctes.append(obs_cte)
 
+    def _add_aggr_over_time_fragments(self, ts_ctes: List[str], obs_ctes: List[str], func_config: Dict[str, Any], output_provenance: str):
+        """Adds SQL fragments for aggr_over_time (Temporal Aggregation)."""
+        output_period = func_config.get("output_period", "P1Y")
+        operator = func_config.get("operator", "MEAN")
+        use_input_sv = func_config.get("use_input_sv_for_output", True)
+        sv_prefix = func_config.get("output_sv_prefix", "")
+
+        # Map operator to SQL aggregate function and prefix
+        sql_op = "AVG"
+        op_name = "AggregateMean"
+        if operator == "MAX":
+            sql_op = "MAX"
+            op_name = "AggregateMax"
+        elif operator == "MIN":
+            sql_op = "MIN"
+            op_name = "AggregateMin"
+        elif operator == "SUM":
+            sql_op = "SUM"
+            op_name = "AggregateSum"
+
+        # Determine date binning expression based on target period
+        if output_period == "P1Y":
+            date_bin_expr = "SUBSTR(date, 1, 4)"
+        elif output_period == "P1M":
+            date_bin_expr = "SUBSTR(date, 1, 7)"
+        else:
+            logging.warning(f"Unsupported output period for aggr_over_time: {output_period}. Defaulting to YYYY.")
+            date_bin_expr = "SUBSTR(date, 1, 4)"
+
+        # Determine output SV name
+        if use_input_sv:
+            sv_expr = f"CONCAT('{sv_prefix}', variable_measured)"
+        else:
+            sv_expr = f"CONCAT('{op_name}_', variable_measured)"
+
+        idx = len(ts_ctes)
+
+        # TimeSeries Metadata CTE (sets new period and provenance)
+        ts_cte = f"""
+        AggrOverTimeTS_{idx} AS (
+          SELECT DISTINCT
+            {sv_expr} AS variable_measured,
+            entity1,
+            extra_entities_id,
+            TO_JSON_STRING(JSON_SET(
+              JSON_SET(
+                JSON_SET(facet, '$.provenance', '{output_provenance}'),
+                '$.observationPeriod', '{output_period}'
+              ),
+              '$.isDcAggregate', true
+            )) AS facet_str
+          FROM SourceTS
+        )
+        """
+        ts_ctes.append(ts_cte)
+
+        # Observation Data CTE
+        obs_cte = f"""
+        AggrOverTimeObs_{idx} AS (
+          SELECT
+            {sv_expr} AS variable_measured,
+            entity1,
+            extra_entities_id,
+            {date_bin_expr} AS date,
+            {sql_op}(val_num) AS val,
+            CAST(FARM_FINGERPRINT(CONCAT(
+              '{output_provenance}', '^',
+              COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.measurementMethod'), ''), '^',
+              '{output_period}', '^',
+              COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.scalingFactor'), ''), '^',
+              COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.unit'), ''), '^',
+              'true'
+            )) AS STRING) AS facet_id
+          FROM RawObs
+          GROUP BY entity1, extra_entities_id, variable_measured, model, {date_bin_expr}
+        )
+        """
+        obs_ctes.append(obs_cte)
+
+    def _add_count_threshold_fragments(self, ts_ctes: List[str], obs_ctes: List[str], func_config: Dict[str, Any], output_provenance: str):
+        """Adds SQL fragments for count_threshold (Threshold Exception counting)."""
+        threshold = func_config.get("threshold_value")
+        comparison = func_config.get("comparison", "GE")
+        unit = func_config.get("unit", "")
+        input_period = func_config.get("input_period", "P1D")
+        output_period = func_config.get("output_period", "P1Y")
+        output_obs_date = func_config.get("output_obs_date")
+
+        if threshold is None:
+            logging.warning("count_threshold missing threshold_value. Skipping.")
+            return
+
+        # Determine SV prefix based on input period (replicating C++ logic)
+        if input_period == "P1D":
+            sv_prefix = "NumberOfDays_"
+        elif input_period == "P1M":
+            sv_prefix = "NumberOfMonths_"
+        else:
+            logging.warning(f"Unsupported input period for count_threshold: {input_period}. Defaulting to NumberOfDays_")
+            sv_prefix = "NumberOfDays_"
+
+        # Format threshold value (remove trailing .0 if integer to match DCID standard)
+        thres_str = str(threshold)
+        if thres_str.endswith(".0"):
+            thres_str = thres_str[:-2]
+
+        unit_str = unit if unit else "Units"
+        suffix = "OrMore_" if comparison == "GE" else "OrLess_"
+        
+        # New SV ID: e.g. NumberOfDays_35KelvinOrMore_Max_Temperature
+        new_sv_prefix = f"{sv_prefix}{thres_str}{unit_str}{suffix}"
+        sv_expr = f"CONCAT('{new_sv_prefix}', variable_measured)"
+
+        sql_comp = ">=" if comparison == "GE" else "<="
+
+        # Determine date binning and output date
+        if output_obs_date:
+            date_expr = f"'{_escape_sql_literal(output_obs_date)}'"
+            group_by_date = ""
+        else:
+            if output_period == "P1Y":
+                date_expr = "SUBSTR(date, 1, 4)"
+            elif output_period == "P1M":
+                date_expr = "SUBSTR(date, 1, 7)"
+            else:
+                date_expr = "SUBSTR(date, 1, 4)"
+            group_by_date = f", {date_expr}"
+
+        idx = len(ts_ctes)
+
+        # TimeSeries Metadata CTE (removes unit, updates period and provenance)
+        ts_cte = f"""
+        CountThresholdTS_{idx} AS (
+          SELECT DISTINCT
+            {sv_expr} AS variable_measured,
+            entity1,
+            extra_entities_id,
+            TO_JSON_STRING(JSON_SET(
+              JSON_SET(
+                JSON_REMOVE(facet, '$.unit'),
+                '$.provenance', '{output_provenance}'
+              ),
+              '$.observationPeriod', '{output_period}'
+            )) AS facet_str
+          FROM SourceTS
+        )
+        """
+        ts_ctes.append(ts_cte)
+
+        # Observation Data CTE
+        obs_cte = f"""
+        CountThresholdObs_{idx} AS (
+          SELECT
+            {sv_expr} AS variable_measured,
+            entity1,
+            extra_entities_id,
+            {date_expr} AS date,
+            SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) AS val,
+            CAST(FARM_FINGERPRINT(CONCAT(
+              '{output_provenance}', '^',
+              COALESCE(model, ''), '^',
+              '{output_period}', '^',
+              COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.scalingFactor'), ''), '^',
+              '', '^',
+              'true'
+            )) AS STRING) AS facet_id
+          FROM RawObs
+          WHERE COALESCE(JSON_VALUE(facet, '$.observationPeriod'), '') = '{input_period}'
+          GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
+          HAVING SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) > 0
+        )
+        """
+        obs_ctes.append(obs_cte)
+
     def _build_combined_query(
         self, connection_id: str, dest: str, input_provenance_str: str, output_provenance: str,
         ts_ctes: List[str], obs_ctes: List[str],
@@ -363,10 +541,15 @@ class StatVarSeriesAggregator:
         if has_max_diff:
             ts_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_str FROM DiffAcrossModelsTS")
         
-        # Add specific date anomaly TS branches
+        # Dynamically add branches for indexed CTEs by scanning the combined CTE string
         for idx in range(len(ts_ctes)):
             if f"DiffRelTS_{idx}" in ts_ctes_combined:
                 ts_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_str FROM DiffRelTS_{idx}")
+            if f"AggrOverTimeTS_{idx}" in ts_ctes_combined:
+                ts_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_str FROM AggrOverTimeTS_{idx}")
+            if f"CountThresholdTS_{idx}" in ts_ctes_combined:
+                ts_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_str FROM CountThresholdTS_{idx}")
+
         if "DiffRelRangeTS" in ts_ctes_combined:
             ts_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_str FROM DiffRelRangeTS")
             
@@ -404,7 +587,6 @@ class StatVarSeriesAggregator:
         """
 
         # Source filtering for TimeSeries (Step 1)
-        # We filter by provenance INSIDE the Spanner query for efficiency
         ts_exclude_filter = ""
         if has_stats_models:
             # Stats across models consumes the output of Round 1, but we must ignore
@@ -441,6 +623,11 @@ class StatVarSeriesAggregator:
         for idx in range(len(obs_ctes)):
             if f"DiffRelObs_{idx}" in obs_ctes_combined:
                 obs_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM DiffRelObs_{idx}")
+            if f"AggrOverTimeObs_{idx}" in obs_ctes_combined:
+                obs_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM AggrOverTimeObs_{idx}")
+            if f"CountThresholdObs_{idx}" in obs_ctes_combined:
+                obs_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM CountThresholdObs_{idx}")
+
         if "DiffRelRangeObs" in obs_ctes_combined:
             obs_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM DiffRelRangeObs")
 
@@ -468,7 +655,6 @@ class StatVarSeriesAggregator:
         obs_final_select = "\nUNION ALL\n".join(obs_union_targets)
 
         # Source filtering for Observations (Step 2)
-        # We filter TimeSeries by provenance inside Spanner, and join on it, which naturally filters Observations.
         obs_exclude_filter = ""
         if has_stats_models:
             obs_exclude_filter = "WHERE NOT variable_measured LIKE 'DifferenceAcrossModels_%'"
