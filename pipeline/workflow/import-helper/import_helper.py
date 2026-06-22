@@ -121,12 +121,12 @@ def update_import_status(import_name,
         ':', '/') + '/' + import_version
     import_item = {
         'importName': import_name,
+        'status': import_status,
         'latestVersion': latest_version,
         'graphPath': graph_path
     }
     request = {
         'imports': [import_item],
-        'status': import_status,
         'jobId': job_id
     }
     if cron_schedule:

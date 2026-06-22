@@ -51,12 +51,12 @@ class UpdateIngestionStatusRequest(BaseModel):
 
 class ImportStatusItem(BaseModel):
     importName: str
+    status: ImportState
     latestVersion: Optional[str] = None
     graphPath: Optional[str] = None
 
 class UpdateImportStatusRequest(BaseModel):
     imports: List[ImportStatusItem]
-    status: ImportState
     jobId: Optional[str] = None
     executionTime: Optional[int] = None
     dataVolume: Optional[int] = None
@@ -103,12 +103,12 @@ def update_import_status(
 ):
     """Updates the status of import jobs."""
     for item in req.imports:
-        logging.info(f"Updating import {item.importName} to status {req.status}")
+        logging.info(f"Updating import {item.importName} to status {item.status}")
         
         # Construct dictionary parameters for the individual import
         import_req = {
             "importName": item.importName,
-            "status": req.status,
+            "status": item.status,
             "jobId": req.jobId,
             "executionTime": req.executionTime,
             "dataVolume": req.dataVolume,
@@ -126,7 +126,7 @@ def update_import_status(
         if next_refresh:
             params['next_refresh'] = next_refresh
             
-        if req.status == ImportState.STAGING:
+        if item.status == ImportState.STAGING:
             version = os.path.basename(item.latestVersion or '')
             if not version:
                 raise HTTPException(status_code=400, detail=f"Empty version for import {item.importName}")
@@ -149,6 +149,7 @@ def update_import_version(
 ):
     """Updates the version and status of multiple imports."""
     updated_imports = []
+    caller = import_utils.get_caller_identity(request) if req.override else None
     for import_name in req.imports:
         logging.info(f"Updating import {import_name} to version {req.version} comment: {req.comment}")
         
@@ -162,7 +163,6 @@ def update_import_version(
         comment = req.comment
         if req.override:
             params['status'] = 'STAGING'
-            caller = import_utils.get_caller_identity(request)
             comment = f'version-override:{caller} {comment}'
             
         if params['status'] == 'STAGING':

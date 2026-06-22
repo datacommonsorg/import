@@ -83,8 +83,8 @@ main:
                     jobId: ${jobId}
                     imports:
                       - importName: ${importName}
+                        status: 'FAILURE'
                         latestVersion: ${"gs://" + gcsImportBucket + "/" + text.replace_all(importName, ":", "/")}
-                    status: 'FAILURE'
                     executionTime: ${int(sys.now() - startTime)}
                 result: functionResponse
             - failWorkflow:
