@@ -1,0 +1,15 @@
+{
+  "inputFiles": [
+    {
+      "pattern": "input*",
+      "provenance": "dcid:provenance/CustomImport",
+      "columnMappings": {
+        "dcid:variableMeasured": "SERIES",
+        "dcid:observationDate": "TIME_PERIOD",
+        "dcid:value": "OBS_VALUE",
+        "custom:sourceCountry": "SOURCE_COUNTRY",
+        "custom:destinationCountry": "DESTINATION_COUNTRY"
+      }
+    }
+  ]
+}

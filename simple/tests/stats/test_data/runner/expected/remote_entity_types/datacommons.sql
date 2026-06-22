@@ -26,10 +26,10 @@ INSERT INTO "observations" VALUES('country/FAKE1','var1','2024','1','c/p/1','','
 INSERT INTO "observations" VALUES('country/FAKE2','var1','2024','3','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/FAKE1','var2','2024','2','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/FAKE2','var2','2024','4','c/p/1','','','','','{}');
-INSERT INTO "observations" VALUES('country/FAKE3','var1','2024','5','Provenance1','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE3','var2','2024','6','Provenance1','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE4','var1','2024','7','Provenance1','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE4','var2','2024','8','Provenance1','','','','','');
+INSERT INTO "observations" VALUES(NULL,'var1','2024','5','Provenance1','','','','','{"dcid:observationAbout": "country/FAKE3"}');
+INSERT INTO "observations" VALUES(NULL,'var2','2024','6','Provenance1','','','','','{"dcid:observationAbout": "country/FAKE3"}');
+INSERT INTO "observations" VALUES(NULL,'var1','2024','7','Provenance1','','','','','{"dcid:observationAbout": "country/FAKE4"}');
+INSERT INTO "observations" VALUES(NULL,'var2','2024','8','Provenance1','','','','','{"dcid:observationAbout": "country/FAKE4"}');
 CREATE TABLE triples (
     subject_id varchar(255),
     predicate varchar(255),
