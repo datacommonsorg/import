@@ -29,7 +29,7 @@ class StatVarGroupGenerator:
         """
         self.executor = executor
         self.max_iterations = max_iterations
-        self.namespace = namespace if namespace is not None else ('dc/' if is_base_dc else 'custom/')
+        self.namespace = namespace if namespace is not None else ('dc/' if is_base_dc else 'c/')
         self.generated_provenance = (
           generated_provenance
           if generated_provenance is not None
@@ -176,8 +176,7 @@ class StatVarGroupGenerator:
             FROM VerticalHierarchy H
             JOIN (
               SELECT DISTINCT value AS subject_id FROM SpecValues WHERE predicate = 'vertical'
-            ) V ON H.subject_id = V.subject_id
-            
+            ) V ON H.subject_id = V.subject_id   
             UNION ALL
             SELECT A.subject_id, H.object_id AS ancestor_svg, A.level + 1
             FROM Ancestors A
@@ -218,6 +217,32 @@ class StatVarGroupGenerator:
           ORDER BY subject_id
         );
 
+        -- Fetch curated memberOf edges to identify which SVs to skip during generation.
+        CREATE OR REPLACE TEMP TABLE CuratedMemberOf AS (
+          SELECT subject_id AS statvar, object_id AS parent_svg
+          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, object_id, provenance FROM Edge WHERE predicate = 'memberOf'")
+          WHERE provenance != generated_provenance
+        );
+        
+        -- Find all recursive ancestors for curated SVs to generate linkedMemberOf edges
+        CREATE OR REPLACE TEMP TABLE CuratedLinkedEdges AS (
+          WITH RECURSIVE Ancestors AS (
+            SELECT statvar, parent_svg AS ancestor_svg, 1 AS level
+            FROM CuratedMemberOf
+            UNION ALL
+            SELECT A.statvar, H.object_id AS ancestor_svg, A.level + 1
+            FROM Ancestors A
+            JOIN VerticalHierarchy H ON A.ancestor_svg = H.subject_id
+            WHERE A.level <= 10
+          )
+          SELECT DISTINCT 
+            statvar AS subject_id, 
+            'linkedMemberOf' AS predicate, 
+            ancestor_svg AS object_id, 
+            generated_provenance AS provenance
+          FROM Ancestors
+        );
+
         -- Fetch all StatisticalVariable nodes.
         CREATE OR REPLACE TEMP TABLE StatVar AS (
           SELECT subject_id
@@ -236,7 +261,15 @@ class StatVarGroupGenerator:
         -- Seed the intial data for iteratively generating SVGs.
         CREATE OR REPLACE TEMPORARY TABLE InitialData AS (
           WITH PopType AS (
-            SELECT subject_id, object_id FROM StatVarTriple WHERE predicate = 'populationType'
+            SELECT subject_id, object_id 
+            FROM StatVarTriple 
+            WHERE predicate = 'populationType'
+              -- Exclude curated SVs from the auto-generation pipeline
+              AND NOT EXISTS (
+                SELECT 1 
+                FROM CuratedMemberOf 
+                WHERE statvar = StatVarTriple.subject_id
+              )
           ),
           ConstraintProps AS (
             SELECT subject_id, ARRAY_AGG(object_id ORDER BY object_id) AS constraintProperties
@@ -263,8 +296,8 @@ class StatVarGroupGenerator:
             PopType.subject_id AS statvar,
             PopType.object_id AS populationType,
             ARRAY<STRING>[] AS constraintProperties,
-            ConstraintProps.constraintProperties AS newConstraintProperties,
-            Constraints.pvs AS attributes,
+            IFNULL(ConstraintProps.constraintProperties, ARRAY<STRING>[]) AS newConstraintProperties,
+            IFNULL(Constraints.pvs, ARRAY<STRING>[]) AS attributes,
             0 AS iteration
           FROM PopType
           LEFT JOIN ConstraintProps ON ConstraintProps.subject_id = PopType.subject_id
@@ -388,7 +421,7 @@ class StatVarGroupGenerator:
         -- Create Edges for top level SVGs (those with 0 or 1 constraintProperties) to verticals.
         CREATE OR REPLACE TEMP TABLE SVGVerticalEdges AS (
           WITH FilteredSVG AS (
-            SELECT * FROM AllResults WHERE ARRAY_LENGTH(constraintProperties) = 1
+            SELECT * FROM AllResults WHERE ARRAY_LENGTH(constraintProperties) <= 1
           ),
           BaseJoined AS (
             SELECT
@@ -461,6 +494,7 @@ class StatVarGroupGenerator:
           WHERE edge_data.keep = TRUE
           UNION ALL SELECT * FROM SVVerticalEdges
           UNION ALL SELECT * FROM SVGVerticalEdges
+          UNION ALL SELECT * FROM CuratedLinkedEdges
           ORDER BY subject_id, predicate, object_id
         );
 

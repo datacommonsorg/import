@@ -48,8 +48,6 @@ class AggregationUtils:
             self.executor, is_base_dc)
         self.provenance_summary_generator = ProvenanceSummaryGenerator(
             self.executor, is_base_dc)
-        self.stat_var_group_generator = StatVarGroupGenerator(
-            self.executor, is_base_dc)
 
     def run_aggregation(self, import_list: List[Dict[str, Any]]) -> List[str]:
         """
@@ -79,7 +77,6 @@ class AggregationUtils:
             jobs = []
             jobs.extend(self.linked_edge_generator.run_all(import_names))
             jobs.extend(self.provenance_summary_generator.run_all(import_names))
-            jobs.extend(self.stat_var_group_generator.run_all(import_names))
 
             job_ids = [job.job_id for job in jobs if job]
             logging.info(f"Submitted async aggregation jobs: {job_ids}")

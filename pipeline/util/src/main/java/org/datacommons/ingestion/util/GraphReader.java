@@ -2,16 +2,18 @@ package org.datacommons.ingestion.util;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
+import com.google.common.base.Joiner;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
@@ -68,8 +70,15 @@ public class GraphReader implements Serializable {
           }
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
-              int valSize = val.getValue().getBytes(StandardCharsets.UTF_8).length;
-              if (valSize > SpannerClient.MAX_SPANNER_COLUMN_SIZE) {
+              boolean storeAsBytes = PipelineUtils.storeValueAsBytes(entry.getKey());
+              byte[] compressedBytes =
+                  storeAsBytes ? PipelineUtils.compressString(val.getValue()) : null;
+              int valSize = storeAsBytes ? compressedBytes.length : val.getValue().length();
+              int maxSize =
+                  storeAsBytes
+                      ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
+                      : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
+              if (valSize > maxSize) {
                 LOGGER.warn(
                     "Dropping node from {} because value size {} exceeds max size.",
                     subjectId,
@@ -78,8 +87,8 @@ public class GraphReader implements Serializable {
               }
               node = Node.builder();
               node.subjectId(PipelineUtils.generateObjectValueKey(val.getValue()));
-              if (PipelineUtils.storeValueAsBytes(entry.getKey())) {
-                node.bytes(ByteArray.copyFrom(PipelineUtils.compressString(val.getValue())));
+              if (storeAsBytes) {
+                node.bytes(ByteArray.copyFrom(compressedBytes));
               } else {
                 node.value(val.getValue());
               }
@@ -106,8 +115,18 @@ public class GraphReader implements Serializable {
           }
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
-              int valSize = val.getValue().getBytes(StandardCharsets.UTF_8).length;
-              if (valSize > SpannerClient.MAX_SPANNER_COLUMN_SIZE) {
+              boolean storeAsBytes = PipelineUtils.storeValueAsBytes(entry.getKey());
+              int maxSize =
+                  storeAsBytes
+                      ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
+                      : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
+
+              int valSize = val.getValue().length();
+              if (storeAsBytes && valSize > maxSize) {
+                valSize = PipelineUtils.compressString(val.getValue()).length;
+              }
+
+              if (valSize > maxSize) {
                 LOGGER.warn(
                     "Dropping edge from {} because value size {} exceeds max size.",
                     subjectId,
@@ -134,37 +153,31 @@ public class GraphReader implements Serializable {
 
   public static PCollection<TimeSeries> extractUniqueSeries(
       PCollection<McfGraph> graph, String importName, boolean isBaseDc, Counter tsCounter) {
-    PCollection<McfStatVarObsSeries.Key> keys =
+    PCollection<TimeSeries> series =
         graph.apply(
-            "ExtractSeriesKeys-" + importName,
-            ParDo.of(
-                new DoFn<McfGraph, McfStatVarObsSeries.Key>() {
-                  @ProcessElement
-                  public void processElement(
-                      @Element McfGraph g, OutputReceiver<McfStatVarObsSeries.Key> receiver) {
-                    for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
-                      PropertyValues pv = entry.getValue();
-                      if (GraphUtils.isObservation(pv)) {
-                        McfStatVarObsSeries svoSeries =
-                            GraphUtils.convertMcfGraphToMcfStatVarObsSeries(entry.getKey(), pv);
-                        receiver.output(svoSeries.getKey());
-                      }
-                    }
+            "ExtractTimeSeries-" + importName,
+            ParDo.of(new ExtractTimeSeriesFn(importName, isBaseDc)));
+
+    PCollection<TimeSeries> uniqueSeries =
+        series.apply(
+            "DeduplicateSeries-" + importName,
+            Distinct.withRepresentativeValueFn(
+                new SerializableFunction<TimeSeries, String>() {
+                  @Override
+                  public String apply(TimeSeries ts) {
+                    return ts.getDedupeKey();
                   }
                 }));
 
-    PCollection<McfStatVarObsSeries.Key> uniqueKeys =
-        keys.apply("DeduplicateKeys-" + importName, Distinct.create());
-
-    return uniqueKeys.apply(
-        "KeysToTimeSeriesObservations-" + importName,
+    return uniqueSeries.apply(
+        "CountTimeSeries-" + importName,
         ParDo.of(
-            new DoFn<McfStatVarObsSeries.Key, TimeSeries>() {
+            new DoFn<TimeSeries, TimeSeries>() {
               @ProcessElement
               public void processElement(
-                  @Element McfStatVarObsSeries.Key key, OutputReceiver<TimeSeries> receiver) {
-                receiver.output(toTimeSeries(key, importName, isBaseDc));
+                  @Element TimeSeries ts, OutputReceiver<TimeSeries> receiver) {
                 tsCounter.inc();
+                receiver.output(ts);
               }
             }));
   }
@@ -173,25 +186,189 @@ public class GraphReader implements Serializable {
       PCollection<McfGraph> graph, String importName, boolean isBaseDc, Counter obsCounter) {
     return graph.apply(
         "ExtractObservationDataPoints-" + importName,
-        ParDo.of(
-            new DoFn<McfGraph, Observation>() {
-              @ProcessElement
-              public void processElement(
-                  @Element McfGraph g, OutputReceiver<Observation> receiver) {
-                for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
-                  PropertyValues pv = entry.getValue();
-                  if (GraphUtils.isObservation(pv)) {
-                    McfStatVarObsSeries svoSeries =
-                        GraphUtils.convertMcfGraphToMcfStatVarObsSeries(entry.getKey(), pv);
-                    TimeSeriesKey seriesKey = toTimeSeriesKey(svoSeries.getKey(), importName);
-                    for (StatVarObs obs : svoSeries.getSvObsListList()) {
-                      receiver.output(toObservation(seriesKey, obs));
-                      obsCounter.inc();
-                    }
-                  }
-                }
-              }
-            }));
+        ParDo.of(new ExtractObservationsFn(importName, obsCounter)));
+  }
+
+  /** Extracts unique TimeSeries (metadata series keys) from observation nodes. */
+  public static class ExtractTimeSeriesFn extends DoFn<McfGraph, TimeSeries> {
+    private final String importName;
+    private final boolean isBaseDc;
+
+    public ExtractTimeSeriesFn(String importName, boolean isBaseDc) {
+      this.importName = importName;
+      this.isBaseDc = isBaseDc;
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext c) {
+      McfGraph g = c.element();
+      for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
+        PropertyValues pv = entry.getValue();
+        if (GraphUtils.isObservation(pv)) {
+          TimeSeries ts = extractTimeSeries(entry.getKey(), pv, importName, isBaseDc);
+          c.output(ts);
+        }
+      }
+    }
+  }
+
+  /**
+   * Extracts individual Observation data points (date, value, series key) from observation nodes.
+   */
+  public static class ExtractObservationsFn extends DoFn<McfGraph, Observation> {
+    private final String importName;
+    private final Counter obsCounter;
+
+    public ExtractObservationsFn(String importName, Counter obsCounter) {
+      this.importName = importName;
+      this.obsCounter = obsCounter;
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext c) {
+      McfGraph g = c.element();
+      for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
+        PropertyValues pv = entry.getValue();
+        if (!GraphUtils.isObservation(pv)) {
+          continue;
+        }
+        TimeSeriesKey seriesKey = extractTimeSeriesKey(entry.getKey(), pv, importName);
+
+        String date = GraphUtils.getPropVal(pv, "observationDate");
+        String value = GraphUtils.getPropVal(pv, "value");
+
+        Observation obs =
+            Observation.builder().seriesKey(seriesKey).date(date).value(value).build();
+
+        c.output(obs);
+        obsCounter.inc();
+      }
+    }
+  }
+
+  private static class EntitiesInfo {
+    final String entity1;
+    final List<String> extraEntities;
+
+    EntitiesInfo(String entity1, List<String> extraEntities) {
+      this.entity1 = entity1;
+      this.extraEntities = extraEntities;
+    }
+  }
+
+  private static EntitiesInfo extractEntities(String nodeId, PropertyValues pv) {
+    String entity1 = "";
+    List<String> extraEntities = new ArrayList<>();
+
+    List<String> obsProps = null;
+    List<String> rawProps = GraphUtils.getPropertyValues(pv.getPvsMap(), "observationProperties");
+    if (rawProps != null && !rawProps.isEmpty()) {
+      obsProps = rawProps.stream().sorted().collect(Collectors.toList());
+    }
+
+    if (obsProps != null && !obsProps.isEmpty()) {
+      // Multi-entity case
+      List<String> entityValues = new ArrayList<>();
+      for (String prop : obsProps) {
+        String val = GraphUtils.getPropVal(pv, prop);
+        if (val.isEmpty()) {
+          throw new RuntimeException(
+              String.format("Observation %s is missing expected entity property %s", nodeId, prop));
+        }
+        entityValues.add(val);
+      }
+      if (!entityValues.isEmpty()) {
+        entity1 = entityValues.get(0);
+        for (int i = 1; i < entityValues.size(); i++) {
+          extraEntities.add(entityValues.get(i));
+        }
+      }
+    } else {
+      // Standard case
+      entity1 = GraphUtils.getPropVal(pv, "observationAbout");
+      if (entity1.isEmpty()) {
+        throw new RuntimeException(
+            String.format("Observation %s is missing observationAbout", nodeId));
+      }
+    }
+    return new EntitiesInfo(entity1, extraEntities);
+  }
+
+  public static TimeSeriesKey extractTimeSeriesKey(
+      String nodeId, PropertyValues pv, String importName) {
+    String sv = GraphUtils.getPropVal(pv, "variableMeasured");
+
+    EntitiesInfo entitiesInfo = extractEntities(nodeId, pv);
+    String entity1 = entitiesInfo.entity1;
+    String extraEntitiesId = Joiner.on("^").useForNull("").join(entitiesInfo.extraEntities);
+
+    String measurementMethod = GraphUtils.getPropVal(pv, "measurementMethod");
+    boolean isDcAggregate = false;
+    if (measurementMethod.startsWith(DC_AGGREGATE)) {
+      isDcAggregate = true;
+      measurementMethod = measurementMethod.replace(DC_AGGREGATE, "");
+    }
+    if (measurementMethod.equals(DATCOM_AGGREGATE)) {
+      isDcAggregate = true;
+      measurementMethod = "";
+    }
+
+    String observationPeriod = GraphUtils.getPropVal(pv, "observationPeriod");
+    String unit = GraphUtils.getPropVal(pv, "unit");
+    String scalingFactor = GraphUtils.getPropVal(pv, "scalingFactor");
+
+    String facetId =
+        TimeSeries.calculateFacetId(
+            importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
+
+    return new TimeSeriesKey(
+        sv,
+        entity1,
+        extraEntitiesId,
+        observationPeriod,
+        measurementMethod,
+        unit,
+        scalingFactor,
+        facetId);
+  }
+
+  public static TimeSeries extractTimeSeries(
+      String nodeId, PropertyValues pv, String importName, boolean isBaseDc) {
+
+    String sv = GraphUtils.getPropVal(pv, "variableMeasured");
+
+    EntitiesInfo entitiesInfo = extractEntities(nodeId, pv);
+    String entity1 = entitiesInfo.entity1;
+
+    String measurementMethod = GraphUtils.getPropVal(pv, "measurementMethod");
+    boolean isDcAggregate = false;
+    if (measurementMethod.startsWith(DC_AGGREGATE)) {
+      isDcAggregate = true;
+      measurementMethod = measurementMethod.replace(DC_AGGREGATE, "");
+    }
+    if (measurementMethod.equals(DATCOM_AGGREGATE)) {
+      isDcAggregate = true;
+      measurementMethod = "";
+    }
+
+    String observationPeriod = GraphUtils.getPropVal(pv, "observationPeriod");
+    String unit = GraphUtils.getPropVal(pv, "unit");
+    String scalingFactor = GraphUtils.getPropVal(pv, "scalingFactor");
+    String provenanceUrl = GraphUtils.getPropVal(pv, "provenanceUrl");
+
+    return TimeSeries.builder()
+        .variableMeasured(sv)
+        .entity1(entity1)
+        .extraEntities(entitiesInfo.extraEntities)
+        .observationPeriod(observationPeriod)
+        .measurementMethod(measurementMethod)
+        .unit(unit)
+        .scalingFactor(scalingFactor)
+        .importName(importName)
+        .isBaseDc(isBaseDc)
+        .isDcAggregate(isDcAggregate)
+        .provenanceUrl(provenanceUrl)
+        .build();
   }
 
   static TimeSeries toTimeSeries(McfStatVarObsSeries.Key key, String importName, boolean isBaseDc) {

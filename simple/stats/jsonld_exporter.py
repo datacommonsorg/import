@@ -24,6 +24,7 @@ from rdflib import Literal
 from rdflib import Namespace
 from rdflib import RDF
 from rdflib import URIRef
+from stats.util import is_entity_reference
 from util.filesystem import create_store
 
 DCID_URL = "https://datacommons.org/browser/"
@@ -96,13 +97,23 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
 
   # Generate a deterministic ID for the observation to avoid collisions across runs
-  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
+  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
   obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
   subject = DCID[f"obs_{obs_hash}"]
 
   g.add((subject, RDF.type, DCID["StatVarObservation"]))
-  g.add((subject, DCID["observationAbout"], expand_id(entity)))
-  g.add((subject, DCID["variableMeasured"], expand_id(variable)))
+  entity_ref = expand_id(entity)
+  if entity_ref:
+    g.add((subject, DCID["observationAbout"], entity_ref))
+  var_ref = expand_id(variable)
+  g.add((subject, DCID["variableMeasured"], var_ref))
+  if props:
+    try:
+      props_dict = json.loads(props)
+      for k in props_dict.keys():
+        g.add((var_ref, DCID["observationProperty"], expand_id(k)))
+    except json.JSONDecodeError:
+      pass
   g.add((subject, DCID["observationDate"], Literal(date)))
 
   try:
@@ -127,7 +138,10 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
     try:
       props_dict = json.loads(props)
       for k, v in props_dict.items():
-        g.add((subject, expand_id(k), Literal(v)))
+        if is_entity_reference(v):
+          g.add((subject, expand_id(k), expand_id(v)))
+        else:
+          g.add((subject, expand_id(k), Literal(v)))
     except json.JSONDecodeError as e:
       logging.warning(
           f"Failed to decode properties JSON for observation {entity}/{variable}: {e}"

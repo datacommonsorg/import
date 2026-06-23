@@ -131,10 +131,15 @@ public class GraphUtils {
    * @return value for the property
    */
   public static String getPropVal(McfGraph.PropertyValues node, String prop) {
-    McfGraph.Values v = node.getPvsMap().get(prop);
-    if (v != null && v.getTypedValuesCount() > 0) {
-      String val = v.getTypedValues(0).getValue();
-      return McfUtil.stripNamespace(val);
+    String target = McfUtil.stripNamespace(prop);
+    for (Map.Entry<String, McfGraph.Values> entry : node.getPvsMap().entrySet()) {
+      if (McfUtil.stripNamespace(entry.getKey()).equals(target)) {
+        McfGraph.Values v = entry.getValue();
+        if (v.getTypedValuesCount() > 0) {
+          String val = v.getTypedValues(0).getValue();
+          return McfUtil.stripNamespace(val);
+        }
+      }
     }
     return "";
   }
@@ -147,11 +152,20 @@ public class GraphUtils {
    * @return property value
    */
   public static String getPropertyValue(Map<String, McfGraph.Values> pvs, String key) {
-    String value = pvs.get(key) != null ? pvs.get(key).getTypedValues(0).getValue() : "";
-    if (value.contains(",")) {
-      value = String.format("\"%s\"", value);
+    String target = McfUtil.stripNamespace(key);
+    for (Map.Entry<String, McfGraph.Values> entry : pvs.entrySet()) {
+      if (McfUtil.stripNamespace(entry.getKey()).equals(target)) {
+        String value =
+            entry.getValue().getTypedValuesCount() > 0
+                ? entry.getValue().getTypedValues(0).getValue()
+                : "";
+        if (value.contains(",")) {
+          value = String.format("\"%s\"", value);
+        }
+        return value;
+      }
     }
-    return value;
+    return "";
   }
 
   /**
@@ -163,9 +177,14 @@ public class GraphUtils {
    */
   public static List<String> getPropertyValues(Map<String, McfGraph.Values> pvs, String key) {
     List<String> result = new ArrayList<>();
-    if (pvs.get(key) != null && pvs.get(key).getTypedValuesCount() > 0) {
-      for (TypedValue val : pvs.get(key).getTypedValuesList()) {
-        result.add(val.getValue());
+    String target = McfUtil.stripNamespace(key);
+    for (Map.Entry<String, McfGraph.Values> entry : pvs.entrySet()) {
+      if (McfUtil.stripNamespace(entry.getKey()).equals(target)) {
+        if (entry.getValue().getTypedValuesCount() > 0) {
+          for (TypedValue val : entry.getValue().getTypedValuesList()) {
+            result.add(McfUtil.stripNamespace(val.getValue()));
+          }
+        }
       }
     }
     return result;

@@ -114,7 +114,8 @@ public class GraphIngestionPipelineIntegrationTest {
             .numShards(1)
             .emulatorHost(emulatorHost)
             .build();
-    spannerClient.validateOrInitializeDatabase();
+    SpannerDatabaseInitializer.validateOrInitializeDatabase(
+        projectId, instanceId, databaseId, emulatorHost);
 
     // Clear tables
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
@@ -196,30 +197,9 @@ public class GraphIngestionPipelineIntegrationTest {
     }
   }
 
-  private void setPipelineOptions(IngestionPipelineOptions options) throws IOException {
+  private void setPipelineOptions(IngestionPipelineOptions options, String mcfContent)
+      throws IOException {
     String graphPath;
-    String mcfContent =
-        "Node: dcid:TestNode\n"
-            + "typeOf: schema:Thing\n"
-            + "name: \""
-            + nodeNameValue
-            + "\"\n\n"
-            + "Node: dcid:TestObs\n"
-            + "typeOf: dcs:StatVarObservation\n"
-            + "observationAbout: dcid:TestNode\n"
-            + "variableMeasured: dcs:TestVariable\n"
-            + "value: 10\n"
-            + "observationDate: \"2023\"\n"
-            + "unit: dcs:TestUnit\n"
-            + "measurementMethod: dcs:TestMethod\n\n"
-            + "Node: dcid:TestObs2\n"
-            + "typeOf: dcs:StatVarObservation\n"
-            + "observationAbout: dcid:TestNode\n"
-            + "variableMeasured: dcs:TestVariable\n"
-            + "value: 20\n"
-            + "observationDate: \"2024\"\n"
-            + "unit: dcs:TestUnit\n"
-            + "measurementMethod: dcs:TestMethod\n";
 
     if (isLocal) {
       // Local Mode: Use local file
@@ -257,7 +237,6 @@ public class GraphIngestionPipelineIntegrationTest {
     options.setSpannerDatabaseId(databaseId);
     options.setNumShards(1);
     options.setImportList(importArray.toString());
-    options.setInitializeDatabase(true);
   }
 
   @Test
@@ -265,9 +244,31 @@ public class GraphIngestionPipelineIntegrationTest {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.create().as(IngestionPipelineOptions.class);
 
-    // Common Options
+    String mcfContent =
+        "Node: dcid:TestNode\n"
+            + "typeOf: schema:Thing\n"
+            + "name: \""
+            + nodeNameValue
+            + "\"\n\n"
+            + "Node: dcid:TestObs\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "observationAbout: dcid:TestNode\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 10\n"
+            + "observationDate: \"2023\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n\n"
+            + "Node: dcid:TestObs2\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "observationAbout: dcid:TestNode\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 20\n"
+            + "observationDate: \"2024\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n";
+
     try {
-      setPipelineOptions(options);
+      setPipelineOptions(options, mcfContent);
     } catch (IOException ex) {
       assertFalse(options.getImportList().isEmpty());
     }
@@ -280,19 +281,80 @@ public class GraphIngestionPipelineIntegrationTest {
     // Verify Spanner
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
     DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
+    verifySpannerOutputs(dbClient, "TestNode", nodeNameValue, "Thing", "TestNode", "");
+  }
 
+  @Test
+  public void testPipelineExecutionMultiEntity() {
+    IngestionPipelineOptions options =
+        PipelineOptionsFactory.create().as(IngestionPipelineOptions.class);
+
+    String mcfContent =
+        "Node: dcid:CountryUSA\n"
+            + "typeOf: schema:Place\n"
+            + "name: \"United States\"\n\n"
+            + "Node: dcid:CountryFRA\n"
+            + "typeOf: schema:Place\n"
+            + "name: \"France\"\n\n"
+            + "Node: dcid:TestObs\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 10\n"
+            + "observationDate: \"2023\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n"
+            + "observationProperties: destinationCountry, sourceCountry\n"
+            + "destinationCountry: dcid:CountryUSA\n"
+            + "sourceCountry: dcid:CountryFRA\n\n"
+            + "Node: dcid:TestObs2\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 20\n"
+            + "observationDate: \"2024\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n"
+            + "observationProperties: destinationCountry, sourceCountry\n"
+            + "destinationCountry: dcid:CountryUSA\n"
+            + "sourceCountry: dcid:CountryFRA\n";
+
+    try {
+      setPipelineOptions(options, mcfContent);
+    } catch (IOException ex) {
+      assertFalse(options.getImportList().isEmpty());
+    }
+
+    // Run Pipeline
+    Pipeline pipeline = Pipeline.create(options);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient);
+    pipeline.run().waitUntilFinish();
+
+    // Verify Spanner
+    DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
+    DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
+    verifySpannerOutputs(
+        dbClient, "CountryUSA", "United States", "Place", "CountryUSA", "CountryFRA");
+  }
+
+  private void verifySpannerOutputs(
+      DatabaseClient dbClient,
+      String expectedNodeId,
+      String expectedNodeName,
+      String expectedNodeType,
+      String expectedEntity1,
+      String expectedExtraEntitiesId) {
     // Verify Node
     try (ResultSet resultSet =
         dbClient
             .singleUse()
-            .executeQuery(Statement.of("SELECT * FROM Node where subject_id = 'TestNode'"))) {
+            .executeQuery(
+                Statement.of("SELECT * FROM Node where subject_id = '" + expectedNodeId + "'"))) {
       boolean found = false;
       while (resultSet.next()) {
         String subjectId = resultSet.getString("subject_id");
         String name = resultSet.getString("name");
-        if ("TestNode".equals(subjectId) || "dcid:TestNode".equals(subjectId)) {
+        if (expectedNodeId.equals(subjectId) || ("dcid:" + expectedNodeId).equals(subjectId)) {
           found = true;
-          assertTrue("Name should match", nodeNameValue.equals(name));
+          assertTrue("Name should match", expectedNodeName.equals(name));
         }
       }
       assertTrue("Node should exist in Spanner", found);
@@ -300,7 +362,7 @@ public class GraphIngestionPipelineIntegrationTest {
 
     // Verify Edges
     String expectedObjectId =
-        org.datacommons.ingestion.util.PipelineUtils.generateObjectValueKey(nodeNameValue);
+        org.datacommons.ingestion.util.PipelineUtils.generateObjectValueKey(expectedNodeName);
 
     // Verify 'name' edge
     try (ResultSet resultSet =
@@ -310,7 +372,7 @@ public class GraphIngestionPipelineIntegrationTest {
                 Statement.newBuilder(
                         "SELECT * FROM Edge WHERE subject_id = @subject_id AND predicate = @predicate")
                     .bind("subject_id")
-                    .to("TestNode")
+                    .to(expectedNodeId)
                     .bind("predicate")
                     .to("name")
                     .build())) {
@@ -332,12 +394,13 @@ public class GraphIngestionPipelineIntegrationTest {
                 Statement.newBuilder(
                         "SELECT * FROM Edge WHERE subject_id = @subject_id AND predicate = @predicate")
                     .bind("subject_id")
-                    .to("TestNode")
+                    .to(expectedNodeId)
                     .bind("predicate")
                     .to("typeOf")
                     .build())) {
       assertTrue("TypeOf edge should exist", resultSet.next());
-      assertEquals("TypeOf edge object_id should match", "Thing", resultSet.getString("object_id"));
+      assertEquals(
+          "TypeOf edge object_id should match", expectedNodeType, resultSet.getString("object_id"));
       assertEquals(
           "TypeOf edge provenance should match",
           "dc/base/" + importName,
@@ -364,7 +427,8 @@ public class GraphIngestionPipelineIntegrationTest {
       entity1 = resultSet.getString("entity1");
       extraEntitiesId = resultSet.getString("extra_entities_id");
       facetId = resultSet.getString("facet_id");
-      assertTrue("entity1 should contain TestNode", entity1.contains("TestNode"));
+      assertEquals("entity1 should match", expectedEntity1, entity1);
+      assertEquals("extraEntitiesId should match", expectedExtraEntitiesId, extraEntitiesId);
 
       // Verify facet JSON contains unit and measurement method
       String facet = resultSet.getJson("facet");

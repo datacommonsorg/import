@@ -120,6 +120,40 @@ public class McfResolverTest {
     assertTrue(!McfUtil.getPropVal(observationNode, Vocabulary.DCID).isEmpty());
   }
 
+  @Test
+  public void multiEntityPropertiesReferenceResolution() throws IOException {
+    Debug.Log.Builder log = Debug.Log.newBuilder();
+    LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
+    McfResolver resolver =
+        new McfResolver(
+            TestUtil.graphFromMcf(
+                String.join(
+                    "\n",
+                    "Node: MyCustomProp",
+                    "typeOf: schema:Property",
+                    "dcid: \"customDestinationCountry\"",
+                    "",
+                    "Node: FinancialAid",
+                    "typeOf: schema:StatisticalVariable",
+                    "dcid: \"FinancialAid\"",
+                    "populationType: dcs:FinancialTransaction",
+                    "measuredProperty: dcs:amount",
+                    "observationProperty: l:MyCustomProp",
+                    "")),
+            true,
+            null,
+            logCtx);
+
+    resolver.resolve();
+
+    assertEquals(0, resolver.failedGraph().getNodesCount());
+
+    var resolvedGraph = resolver.resolvedGraph();
+    var svNode = resolvedGraph.getNodesOrThrow("FinancialAid");
+    assertEquals(
+        "customDestinationCountry", McfUtil.getPropVal(svNode, Vocabulary.OBSERVATION_PROPERTY));
+  }
+
   private String getFile(String name) throws IOException {
     return this.getClass().getResource(name).getPath();
   }
