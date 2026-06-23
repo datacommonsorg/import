@@ -89,13 +89,14 @@ def _write_observation_shard(args):
     if props:
       try:
         props_dict = json.loads(props)
-        prop_keys = [
-            f"dcid:{k}" if not k.startswith(
-                ("dcid:", "http://", "https://")) else k
-            for k in props_dict.keys()
-        ]
-        if prop_keys and var_obj:
-          var_obj["dcid:observationProperties"] = prop_keys
+        if isinstance(props_dict, dict):
+          prop_keys = [
+              f"dcid:{k}" if not k.startswith(
+                  ("dcid:", "http://", "https://")) else k
+              for k in props_dict.keys()
+          ]
+          if prop_keys and var_obj:
+            var_obj["dcid:observationProperties"] = prop_keys
       except json.JSONDecodeError:
         pass
 
@@ -127,13 +128,14 @@ def _write_observation_shard(args):
     if props:
       try:
         props_dict = json.loads(props)
-        for k, v in props_dict.items():
-          prop_key = f"dcid:{k}" if not k.startswith(
-              "dcid:") and not k.startswith("http") else k
-          if is_entity_reference(v):
-            obs_obj[prop_key] = _uri_ref(v)
-          else:
-            obs_obj[prop_key] = _parse_numeric(v)
+        if isinstance(props_dict, dict):
+          for k, v in props_dict.items():
+            prop_key = f"dcid:{k}" if not k.startswith(
+                "dcid:") and not k.startswith("http") else k
+            if is_entity_reference(v):
+              obs_obj[prop_key] = _uri_ref(v)
+            else:
+              obs_obj[prop_key] = _parse_numeric(v)
       except json.JSONDecodeError as e:
         logging.warning(
             "Failed to decode properties JSON for observation %s/%s: %s",
