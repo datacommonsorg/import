@@ -369,11 +369,11 @@ class SpannerClient:
         try:
             with self.database.snapshot() as snapshot:
                 results = snapshot.execute_sql(
-                    "SELECT 1 FROM ImportStatus WHERE State = 'PENDING' LIMIT 1"
+                    "SELECT 1 FROM ImportStatus WHERE State = 'RETRY' LIMIT 1"
                 )
                 return any(results)
         except Exception as e:
-            logging.error(f'Error checking for pending imports: {e}')
+            logging.error(f'Error checking for retry imports: {e}')
             return True
 
     def update_import_status(self, params: dict):
