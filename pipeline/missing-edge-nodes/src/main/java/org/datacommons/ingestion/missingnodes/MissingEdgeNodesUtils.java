@@ -48,13 +48,13 @@ class MissingEdgeNodesUtils {
     return ParDo.of(new ExtractCandidatesFn());
   }
 
-  static ParDo.SingleOutput<KV<String, String>, KV<String, String>> countCandidateTypes(
+  static ParDo.SingleOutput<KV<String, String>, KV<String, String>> countTypedValues(
       String subjectIdCounterName,
       String predicateCounterName,
       String objectIdCounterName,
       String provenanceCounterName) {
     return ParDo.of(
-        new CountCandidateTypesFn(
+        new CountTypedValuesFn(
             subjectIdCounterName,
             predicateCounterName,
             objectIdCounterName,
@@ -171,7 +171,7 @@ class MissingEdgeNodesUtils {
     }
   }
 
-  static class CountCandidateTypesFn extends DoFn<KV<String, String>, KV<String, String>> {
+  static class CountTypedValuesFn extends DoFn<KV<String, String>, KV<String, String>> {
     private final String subjectIdCounterName;
     private final String predicateCounterName;
     private final String objectIdCounterName;
@@ -181,7 +181,7 @@ class MissingEdgeNodesUtils {
     private transient Counter objectIdCounter;
     private transient Counter provenanceCounter;
 
-    CountCandidateTypesFn(
+    CountTypedValuesFn(
         String subjectIdCounterName,
         String predicateCounterName,
         String objectIdCounterName,
