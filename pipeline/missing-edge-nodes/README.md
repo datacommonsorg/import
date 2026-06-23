@@ -19,12 +19,28 @@ mvn compile exec:java -pl missing-edge-nodes -am \
     --spannerProjectId=<spanner-project> \
     --spannerInstanceId=<spanner-instance> \
     --spannerDatabaseId=<spanner-database> \
-    --outputLocation=gs://<bucket>/missing-edge-node-dcids"
+    --writeDedupedInputs=true \
+    --outputLocation=gs://<bucket>/edge-node-audit"
+```
+
+Staging Spanner command:
+
+```bash
+mvn compile exec:java -pl missing-edge-nodes -am -Dexec.mainClass=org.datacommons.ingestion.missingnodes.MissingEdgeNodesPipeline -Dexec.args="--runner=DataflowRunner --project=datcom-store --region=us-central1 --tempLocation=gs://rohitrkumar-dataflow/temp/tmp --stagingLocation=gs://rohitrkumar-dataflow/temp/staging --jobName=missing-edge-node-dcids --spannerProjectId=datcom-store --spannerInstanceId=dc-graph-staging --spannerDatabaseId=dc_graph --writeDedupedInputs=true --outputLocation=gs://rohitrkumar-dataflow/edge-node-audit"
 ```
 
 Output:
 
 ```text
-gs://<bucket>/missing-edge-node-dcids/missing-edge-node-dcids-*.csv
+gs://<bucket>/edge-node-audit/missing-edge-node-dcids/part-*.csv
 dcid,type
+```
+
+When `writeDedupedInputs` is enabled, the job also writes headerless files:
+
+```text
+gs://<bucket>/edge-node-audit/distinct-nodes/part-*.csv
+gs://<bucket>/edge-node-audit/distinct-predicates/part-*.csv
+gs://<bucket>/edge-node-audit/distinct-object-ids/part-*.csv
+gs://<bucket>/edge-node-audit/distinct-provenances/part-*.csv
 ```

@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.missingnodes;
 
+import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.Validation.Required;
@@ -29,4 +30,10 @@ public interface MissingEdgeNodesOptions extends PipelineOptions {
   String getOutputLocation();
 
   void setOutputLocation(String value);
+
+  @Description("Whether to write deduplicated Edge column audit files")
+  @Default.Boolean(true)
+  boolean getWriteDedupedInputs();
+
+  void setWriteDedupedInputs(boolean value);
 }

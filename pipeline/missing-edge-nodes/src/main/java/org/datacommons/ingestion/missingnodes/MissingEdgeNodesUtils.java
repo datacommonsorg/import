@@ -26,12 +26,16 @@ class MissingEdgeNodesUtils {
     return ParDo.of(new NodeKeyFn());
   }
 
-  static ParDo.SingleOutput<Struct, KV<String, String>> edgeCandidates() {
-    return ParDo.of(new EdgeCandidateFn());
+  static ParDo.SingleOutput<Struct, String> extractColumn(String columnName) {
+    return ParDo.of(new ExtractColumnFn(columnName));
   }
 
-  static Distinct<KV<String, String>> distinctCandidates() {
+  static Distinct<String> distinctValues() {
     return Distinct.create();
+  }
+
+  static ParDo.SingleOutput<String, KV<String, String>> toCandidates(String type) {
+    return ParDo.of(new CandidateFn(type));
   }
 
   static PCollection<KV<String, String>> findMissingCandidates(
@@ -47,6 +51,10 @@ class MissingEdgeNodesUtils {
 
   static ParDo.SingleOutput<KV<String, String>, String> formatCsvRows() {
     return ParDo.of(new FormatCsvRowFn());
+  }
+
+  static ParDo.SingleOutput<String, String> formatCsvValues() {
+    return ParDo.of(new FormatCsvValueFn());
   }
 
   private static boolean hasValue(String value) {
@@ -80,26 +88,32 @@ class MissingEdgeNodesUtils {
     }
   }
 
-  static class EdgeCandidateFn extends DoFn<Struct, KV<String, String>> {
+  static class ExtractColumnFn extends DoFn<Struct, String> {
+    private final String columnName;
+
+    ExtractColumnFn(String columnName) {
+      this.columnName = columnName;
+    }
+
     @ProcessElement
     public void processElement(ProcessContext context) {
-      Struct row = context.element();
-      String subjectId = nullableString(row, SUBJECT_ID);
-      String predicate = nullableString(row, PREDICATE);
-      String objectId = nullableString(row, OBJECT_ID);
-      String provenance = nullableString(row, PROVENANCE);
-      if (hasValue(subjectId)) {
-        context.output(KV.of(subjectId, SUBJECT_ID));
+      String value = nullableString(context.element(), columnName);
+      if (hasValue(value)) {
+        context.output(value);
       }
-      if (hasValue(predicate)) {
-        context.output(KV.of(predicate, PREDICATE));
-      }
-      if (hasValue(objectId)) {
-        context.output(KV.of(objectId, OBJECT_ID));
-      }
-      if (hasValue(provenance)) {
-        context.output(KV.of(provenance, PROVENANCE));
-      }
+    }
+  }
+
+  static class CandidateFn extends DoFn<String, KV<String, String>> {
+    private final String type;
+
+    CandidateFn(String type) {
+      this.type = type;
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      context.output(KV.of(context.element(), type));
     }
   }
 
@@ -129,6 +143,13 @@ class MissingEdgeNodesUtils {
     public void processElement(ProcessContext context) {
       KV<String, String> input = context.element();
       context.output(escapeCsv(input.getKey()) + "," + escapeCsv(input.getValue()));
+    }
+  }
+
+  static class FormatCsvValueFn extends DoFn<String, String> {
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      context.output(escapeCsv(context.element()));
     }
   }
 }
