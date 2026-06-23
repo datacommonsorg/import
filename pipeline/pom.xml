@@ -21,6 +21,7 @@
     <module>data</module>
     <module>differ</module>
     <module>ingestion</module>
+    <module>missing-edge-nodes</module>
     <module>spanner</module>
     <module>util</module>
   </modules>
