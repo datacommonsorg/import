@@ -39,7 +39,8 @@ dcid,type
 When `writeDedupedInputs` is enabled, the job also writes headerless files:
 
 ```text
-gs://<bucket>/edge-node-audit/distinct-nodes/part-*.csv
+gs://<bucket>/edge-node-audit/distinct-node-subject-ids/part-*.csv
+gs://<bucket>/edge-node-audit/distinct-edge-subject-ids/part-*.csv
 gs://<bucket>/edge-node-audit/distinct-predicates/part-*.csv
 gs://<bucket>/edge-node-audit/distinct-object-ids/part-*.csv
 gs://<bucket>/edge-node-audit/distinct-provenances/part-*.csv

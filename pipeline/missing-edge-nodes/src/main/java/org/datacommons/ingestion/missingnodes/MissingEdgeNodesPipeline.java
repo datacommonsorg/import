@@ -23,10 +23,16 @@ public class MissingEdgeNodesPipeline {
         PipelineOptionsFactory.fromArgs(args).withValidation().as(MissingEdgeNodesOptions.class);
     Pipeline pipeline = Pipeline.create(options);
 
+    PCollection<Struct> nodeRows =
+        pipeline.apply("Read Node subject_ids", spannerRead(options, NODE_QUERY));
+    PCollection<String> nodeSubjectIds =
+        nodeRows
+            .apply(
+                "Extract Node subject_ids",
+                MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.SUBJECT_ID))
+            .apply("Deduplicate Node subject_ids", MissingEdgeNodesUtils.distinctValues());
     PCollection<KV<String, String>> nodeKeys =
-        pipeline
-            .apply("Read Node subject_ids", spannerRead(options, NODE_QUERY))
-            .apply("Key Node subject_ids", MissingEdgeNodesUtils.nodeKeys());
+        nodeSubjectIds.apply("Key Node subject_ids", MissingEdgeNodesUtils.nodeKeys());
 
     PCollection<Struct> edgeRows =
         pipeline.apply("Read Edge identifiers", spannerRead(options, EDGE_QUERY));
@@ -58,7 +64,13 @@ public class MissingEdgeNodesPipeline {
 
     if (options.getWriteDedupedInputs()) {
       writeDedupedValues(
-          subjectIds, "subject_ids", outputPrefix(options.getOutputLocation(), "distinct-nodes"));
+          nodeSubjectIds,
+          "node_subject_ids",
+          outputPrefix(options.getOutputLocation(), "distinct-node-subject-ids"));
+      writeDedupedValues(
+          subjectIds,
+          "edge_subject_ids",
+          outputPrefix(options.getOutputLocation(), "distinct-edge-subject-ids"));
       writeDedupedValues(
           predicates,
           "predicates",

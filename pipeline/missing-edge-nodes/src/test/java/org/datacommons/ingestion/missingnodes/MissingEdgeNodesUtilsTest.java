@@ -86,8 +86,9 @@ public class MissingEdgeNodesUtilsTest {
                     MissingEdgeNodesUtils.toCandidates(MissingEdgeNodesUtils.PROVENANCE)))
             .apply(Flatten.pCollections());
     PCollection<KV<String, String>> nodeKeys =
-        pipeline.apply(
-            "Create node keys", Create.<KV<String, String>>of(KV.of("missing2", "node")));
+        pipeline
+            .apply("Create node ids", Create.of("missing2"))
+            .apply(MissingEdgeNodesUtils.nodeKeys());
 
     PCollection<KV<String, String>> missing =
         MissingEdgeNodesUtils.findMissingCandidates(edgeCandidates, nodeKeys);

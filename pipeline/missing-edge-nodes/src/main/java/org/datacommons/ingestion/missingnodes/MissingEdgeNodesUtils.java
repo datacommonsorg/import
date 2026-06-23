@@ -22,7 +22,7 @@ class MissingEdgeNodesUtils {
 
   private MissingEdgeNodesUtils() {}
 
-  static ParDo.SingleOutput<Struct, KV<String, String>> nodeKeys() {
+  static ParDo.SingleOutput<String, KV<String, String>> nodeKeys() {
     return ParDo.of(new NodeKeyFn());
   }
 
@@ -78,10 +78,10 @@ class MissingEdgeNodesUtils {
     return "\"" + value.replace("\"", "\"\"") + "\"";
   }
 
-  static class NodeKeyFn extends DoFn<Struct, KV<String, String>> {
+  static class NodeKeyFn extends DoFn<String, KV<String, String>> {
     @ProcessElement
     public void processElement(ProcessContext context) {
-      String subjectId = nullableString(context.element(), SUBJECT_ID);
+      String subjectId = context.element();
       if (hasValue(subjectId)) {
         context.output(KV.of(subjectId, NODE_MARKER));
       }
