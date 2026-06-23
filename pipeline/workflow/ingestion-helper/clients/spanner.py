@@ -590,13 +590,13 @@ class SpannerClient:
 
             # 2. Seed Edge table (relationships)
             edge_candidates = [
-                ["c/g/Root", "specializationOf", "dc/g/Root", "GeneratedGraphs"],
-                ["c/g/Root", "memberOf", "dc/g/Root", "GeneratedGraphs"],
+                ("c/g/Root", "specializationOf", "dc/g/Root", "GeneratedGraphs"),
+                ("c/g/Root", "memberOf", "dc/g/Root", "GeneratedGraphs"),
             ]
             edge_sql = """
                 SELECT subject_id, predicate, object_id, provenance 
                 FROM Edge 
-                WHERE subject_id = 'c/g/Root' AND object_id = 'dc/g/Root'
+                WHERE subject_id = 'c/g/Root'
             """
             existing_edges = set()
             for row in transaction.execute_sql(edge_sql):
@@ -604,7 +604,7 @@ class SpannerClient:
 
             edges_to_insert = [
                 edge for edge in edge_candidates 
-                if (edge[0], edge[1], edge[2], edge[3]) not in existing_edges
+                if edge not in existing_edges
             ]
 
             if edges_to_insert:
