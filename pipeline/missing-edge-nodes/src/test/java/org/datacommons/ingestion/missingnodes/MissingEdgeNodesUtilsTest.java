@@ -150,6 +150,34 @@ public class MissingEdgeNodesUtilsTest {
   }
 
   @Test
+  public void countTypedValuesPassesThroughElements() {
+    options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
+    options.setRunner(DirectRunner.class);
+
+    PCollection<KV<String, String>> values =
+        pipeline
+            .apply(
+                Create.<KV<String, String>>of(
+                    KV.of("subject", MissingEdgeNodesUtils.SUBJECT_ID),
+                    KV.of("predicate", MissingEdgeNodesUtils.PREDICATE),
+                    KV.of("object", MissingEdgeNodesUtils.OBJECT_ID),
+                    KV.of("provenance", MissingEdgeNodesUtils.PROVENANCE)))
+            .apply(
+                MissingEdgeNodesUtils.countTypedValues(
+                    "test_subject_ids", "test_predicates", "test_object_ids", "test_provenances"));
+
+    PAssert.that(values)
+        .containsInAnyOrder(
+            Arrays.asList(
+                KV.of("subject", MissingEdgeNodesUtils.SUBJECT_ID),
+                KV.of("predicate", MissingEdgeNodesUtils.PREDICATE),
+                KV.of("object", MissingEdgeNodesUtils.OBJECT_ID),
+                KV.of("provenance", MissingEdgeNodesUtils.PROVENANCE)));
+
+    pipeline.run();
+  }
+
+  @Test
   public void formatCsvEscapesSpecialCharacters() {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
     options.setRunner(DirectRunner.class);

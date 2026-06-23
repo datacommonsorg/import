@@ -22,6 +22,10 @@ public class MissingEdgeNodesPipeline {
   private static final String DISTINCT_PREDICATES = "distinct_predicates";
   private static final String DISTINCT_OBJECT_IDS = "distinct_object_ids";
   private static final String DISTINCT_PROVENANCES = "distinct_provenances";
+  private static final String MISSING_EDGE_SUBJECT_IDS = "missing_edge_subject_ids";
+  private static final String MISSING_PREDICATES = "missing_predicates";
+  private static final String MISSING_OBJECT_IDS = "missing_object_ids";
+  private static final String MISSING_PROVENANCES = "missing_provenances";
 
   public static void main(String[] args) {
     MissingEdgeNodesOptions options =
@@ -58,7 +62,7 @@ public class MissingEdgeNodesPipeline {
             .apply("Deduplicate Edge candidates", MissingEdgeNodesUtils.distinctValues())
             .apply(
                 "Count distinct Edge candidate types",
-                MissingEdgeNodesUtils.countCandidateTypes(
+                MissingEdgeNodesUtils.countTypedValues(
                     DISTINCT_EDGE_SUBJECT_IDS,
                     DISTINCT_PREDICATES,
                     DISTINCT_OBJECT_IDS,
@@ -96,6 +100,13 @@ public class MissingEdgeNodesPipeline {
     }
 
     MissingEdgeNodesUtils.findMissingCandidates(edgeCandidates, nodeKeys)
+        .apply(
+            "Count missing candidate types",
+            MissingEdgeNodesUtils.countTypedValues(
+                MISSING_EDGE_SUBJECT_IDS,
+                MISSING_PREDICATES,
+                MISSING_OBJECT_IDS,
+                MISSING_PROVENANCES))
         .apply("Format CSV rows", MissingEdgeNodesUtils.formatCsvRows())
         .apply(
             "Write missing dcids",
