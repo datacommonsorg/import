@@ -94,7 +94,7 @@ def _write_observation_shard(args):
                 ("dcid:", "http://", "https://")) else k
             for k in props_dict.keys()
         ]
-        if prop_keys:
+        if prop_keys and var_obj:
           var_obj["dcid:observationProperties"] = prop_keys
       except json.JSONDecodeError:
         pass
