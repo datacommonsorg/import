@@ -4,6 +4,9 @@ Migration-only Dataflow pipeline to find distinct values from `Edge.subject_id`,
 `Edge.predicate`, `Edge.object_id`, and `Edge.provenance` that are missing from
 `Node.subject_id`.
 
+The Spanner queries are plain scans; Beam deduplicates the combined typed Edge
+candidate stream.
+
 Run from `import/pipeline`:
 
 ```bash

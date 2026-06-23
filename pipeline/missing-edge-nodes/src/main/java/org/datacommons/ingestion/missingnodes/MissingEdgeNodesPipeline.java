@@ -5,10 +5,8 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
 
 /** Dataflow pipeline for finding Edge identifiers missing from Node.subject_id. */
 public class MissingEdgeNodesPipeline {
@@ -41,7 +39,6 @@ public class MissingEdgeNodesPipeline {
             .apply(
                 "Extract Node subject_ids",
                 MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.SUBJECT_ID))
-            .apply("Deduplicate Node subject_ids", MissingEdgeNodesUtils.distinctValues())
             .apply(
                 "Count distinct Node subject_ids",
                 MissingEdgeNodesUtils.countStringValues(DISTINCT_NODE_SUBJECT_IDS));
@@ -55,42 +52,17 @@ public class MissingEdgeNodesPipeline {
                 "Count Spanner Edge rows",
                 MissingEdgeNodesUtils.countStructRows(SPANNER_EDGE_ROWS_READ));
 
-    PCollection<String> subjectIds =
+    PCollection<KV<String, String>> edgeCandidates =
         edgeRows
+            .apply("Extract Edge candidates", MissingEdgeNodesUtils.extractCandidates())
+            .apply("Deduplicate Edge candidates", MissingEdgeNodesUtils.distinctValues())
             .apply(
-                "Extract Edge subject_ids",
-                MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.SUBJECT_ID))
-            .apply("Deduplicate Edge subject_ids", MissingEdgeNodesUtils.distinctValues())
-            .apply(
-                "Count distinct Edge subject_ids",
-                MissingEdgeNodesUtils.countStringValues(DISTINCT_EDGE_SUBJECT_IDS));
-    PCollection<String> predicates =
-        edgeRows
-            .apply(
-                "Extract Edge predicates",
-                MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.PREDICATE))
-            .apply("Deduplicate Edge predicates", MissingEdgeNodesUtils.distinctValues())
-            .apply(
-                "Count distinct Edge predicates",
-                MissingEdgeNodesUtils.countStringValues(DISTINCT_PREDICATES));
-    PCollection<String> objectIds =
-        edgeRows
-            .apply(
-                "Extract Edge object_ids",
-                MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.OBJECT_ID))
-            .apply("Deduplicate Edge object_ids", MissingEdgeNodesUtils.distinctValues())
-            .apply(
-                "Count distinct Edge object_ids",
-                MissingEdgeNodesUtils.countStringValues(DISTINCT_OBJECT_IDS));
-    PCollection<String> provenances =
-        edgeRows
-            .apply(
-                "Extract Edge provenances",
-                MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.PROVENANCE))
-            .apply("Deduplicate Edge provenances", MissingEdgeNodesUtils.distinctValues())
-            .apply(
-                "Count distinct Edge provenances",
-                MissingEdgeNodesUtils.countStringValues(DISTINCT_PROVENANCES));
+                "Count distinct Edge candidate types",
+                MissingEdgeNodesUtils.countCandidateTypes(
+                    DISTINCT_EDGE_SUBJECT_IDS,
+                    DISTINCT_PREDICATES,
+                    DISTINCT_OBJECT_IDS,
+                    DISTINCT_PROVENANCES));
 
     if (options.getWriteDedupedInputs()) {
       writeDedupedValues(
@@ -98,41 +70,30 @@ public class MissingEdgeNodesPipeline {
           "node_subject_ids",
           outputPrefix(options.getOutputLocation(), "distinct-node-subject-ids"));
       writeDedupedValues(
-          subjectIds,
+          edgeCandidates.apply(
+              "Filter distinct Edge subject_ids",
+              MissingEdgeNodesUtils.filterAndExtractKeys(MissingEdgeNodesUtils.SUBJECT_ID)),
           "edge_subject_ids",
           outputPrefix(options.getOutputLocation(), "distinct-edge-subject-ids"));
       writeDedupedValues(
-          predicates,
+          edgeCandidates.apply(
+              "Filter distinct predicates",
+              MissingEdgeNodesUtils.filterAndExtractKeys(MissingEdgeNodesUtils.PREDICATE)),
           "predicates",
           outputPrefix(options.getOutputLocation(), "distinct-predicates"));
       writeDedupedValues(
-          objectIds,
+          edgeCandidates.apply(
+              "Filter distinct object_ids",
+              MissingEdgeNodesUtils.filterAndExtractKeys(MissingEdgeNodesUtils.OBJECT_ID)),
           "object_ids",
           outputPrefix(options.getOutputLocation(), "distinct-object-ids"));
       writeDedupedValues(
-          provenances,
+          edgeCandidates.apply(
+              "Filter distinct provenances",
+              MissingEdgeNodesUtils.filterAndExtractKeys(MissingEdgeNodesUtils.PROVENANCE)),
           "provenances",
           outputPrefix(options.getOutputLocation(), "distinct-provenances"));
     }
-
-    PCollection<KV<String, String>> edgeCandidates =
-        PCollectionList.of(
-                subjectIds.apply(
-                    "Convert subject_ids to candidates",
-                    MissingEdgeNodesUtils.toCandidates(MissingEdgeNodesUtils.SUBJECT_ID)))
-            .and(
-                predicates.apply(
-                    "Convert predicates to candidates",
-                    MissingEdgeNodesUtils.toCandidates(MissingEdgeNodesUtils.PREDICATE)))
-            .and(
-                objectIds.apply(
-                    "Convert object_ids to candidates",
-                    MissingEdgeNodesUtils.toCandidates(MissingEdgeNodesUtils.OBJECT_ID)))
-            .and(
-                provenances.apply(
-                    "Convert provenances to candidates",
-                    MissingEdgeNodesUtils.toCandidates(MissingEdgeNodesUtils.PROVENANCE)))
-            .apply("Flatten Edge candidates", Flatten.pCollections());
 
     MissingEdgeNodesUtils.findMissingCandidates(edgeCandidates, nodeKeys)
         .apply("Format CSV rows", MissingEdgeNodesUtils.formatCsvRows())

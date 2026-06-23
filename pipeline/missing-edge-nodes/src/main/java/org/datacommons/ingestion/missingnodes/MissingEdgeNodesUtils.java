@@ -40,12 +40,29 @@ class MissingEdgeNodesUtils {
     return ParDo.of(new ExtractColumnFn(columnName));
   }
 
-  static Distinct<String> distinctValues() {
+  static <T> Distinct<T> distinctValues() {
     return Distinct.create();
   }
 
-  static ParDo.SingleOutput<String, KV<String, String>> toCandidates(String type) {
-    return ParDo.of(new CandidateFn(type));
+  static ParDo.SingleOutput<Struct, KV<String, String>> extractCandidates() {
+    return ParDo.of(new ExtractCandidatesFn());
+  }
+
+  static ParDo.SingleOutput<KV<String, String>, KV<String, String>> countCandidateTypes(
+      String subjectIdCounterName,
+      String predicateCounterName,
+      String objectIdCounterName,
+      String provenanceCounterName) {
+    return ParDo.of(
+        new CountCandidateTypesFn(
+            subjectIdCounterName,
+            predicateCounterName,
+            objectIdCounterName,
+            provenanceCounterName));
+  }
+
+  static ParDo.SingleOutput<KV<String, String>, String> filterAndExtractKeys(String type) {
+    return ParDo.of(new FilterAndExtractKeysFn(type));
   }
 
   static PCollection<KV<String, String>> findMissingCandidates(
@@ -136,16 +153,106 @@ class MissingEdgeNodesUtils {
     }
   }
 
-  static class CandidateFn extends DoFn<String, KV<String, String>> {
+  static class ExtractCandidatesFn extends DoFn<Struct, KV<String, String>> {
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      Struct row = context.element();
+      outputIfValid(context, row, SUBJECT_ID);
+      outputIfValid(context, row, PREDICATE);
+      outputIfValid(context, row, OBJECT_ID);
+      outputIfValid(context, row, PROVENANCE);
+    }
+
+    private void outputIfValid(ProcessContext context, Struct row, String columnName) {
+      String value = nullableString(row, columnName);
+      if (hasValue(value)) {
+        context.output(KV.of(value, columnName));
+      }
+    }
+  }
+
+  static class CountCandidateTypesFn extends DoFn<KV<String, String>, KV<String, String>> {
+    private final String subjectIdCounterName;
+    private final String predicateCounterName;
+    private final String objectIdCounterName;
+    private final String provenanceCounterName;
+    private transient Counter subjectIdCounter;
+    private transient Counter predicateCounter;
+    private transient Counter objectIdCounter;
+    private transient Counter provenanceCounter;
+
+    CountCandidateTypesFn(
+        String subjectIdCounterName,
+        String predicateCounterName,
+        String objectIdCounterName,
+        String provenanceCounterName) {
+      this.subjectIdCounterName = subjectIdCounterName;
+      this.predicateCounterName = predicateCounterName;
+      this.objectIdCounterName = objectIdCounterName;
+      this.provenanceCounterName = provenanceCounterName;
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      KV<String, String> candidate = context.element();
+      incrementCounter(candidate.getValue());
+      context.output(candidate);
+    }
+
+    private void incrementCounter(String type) {
+      if (SUBJECT_ID.equals(type)) {
+        getSubjectIdCounter().inc();
+      } else if (PREDICATE.equals(type)) {
+        getPredicateCounter().inc();
+      } else if (OBJECT_ID.equals(type)) {
+        getObjectIdCounter().inc();
+      } else if (PROVENANCE.equals(type)) {
+        getProvenanceCounter().inc();
+      }
+    }
+
+    private Counter getSubjectIdCounter() {
+      if (subjectIdCounter == null) {
+        subjectIdCounter = Metrics.counter(MissingEdgeNodesUtils.class, subjectIdCounterName);
+      }
+      return subjectIdCounter;
+    }
+
+    private Counter getPredicateCounter() {
+      if (predicateCounter == null) {
+        predicateCounter = Metrics.counter(MissingEdgeNodesUtils.class, predicateCounterName);
+      }
+      return predicateCounter;
+    }
+
+    private Counter getObjectIdCounter() {
+      if (objectIdCounter == null) {
+        objectIdCounter = Metrics.counter(MissingEdgeNodesUtils.class, objectIdCounterName);
+      }
+      return objectIdCounter;
+    }
+
+    private Counter getProvenanceCounter() {
+      if (provenanceCounter == null) {
+        provenanceCounter = Metrics.counter(MissingEdgeNodesUtils.class, provenanceCounterName);
+      }
+      return provenanceCounter;
+    }
+  }
+
+  static class FilterAndExtractKeysFn extends DoFn<KV<String, String>, String> {
     private final String type;
 
-    CandidateFn(String type) {
+    FilterAndExtractKeysFn(String type) {
       this.type = type;
     }
 
     @ProcessElement
     public void processElement(ProcessContext context) {
-      context.output(KV.of(context.element(), type));
+      KV<String, String> candidate = context.element();
+      if (type.equals(candidate.getValue())) {
+        context.output(candidate.getKey());
+      }
     }
   }
 

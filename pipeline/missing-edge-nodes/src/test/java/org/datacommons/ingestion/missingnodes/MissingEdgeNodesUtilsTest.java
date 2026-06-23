@@ -8,10 +8,8 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -69,22 +67,33 @@ public class MissingEdgeNodesUtilsTest {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
     options.setRunner(DirectRunner.class);
 
-    PCollection<String> objectIds =
-        pipeline
-            .apply("Create object ids", Create.of("missing", "missing"))
-            .apply(MissingEdgeNodesUtils.distinctValues());
-    PCollection<String> provenances =
-        pipeline
-            .apply("Create provenances", Create.of("missing", "missing2"))
-            .apply(MissingEdgeNodesUtils.distinctValues());
+    PCollection<Struct> edgeRows =
+        pipeline.apply(
+            Create.of(
+                Struct.newBuilder()
+                    .set(MissingEdgeNodesUtils.SUBJECT_ID)
+                    .to("subj1")
+                    .set(MissingEdgeNodesUtils.PREDICATE)
+                    .to("pred1")
+                    .set(MissingEdgeNodesUtils.OBJECT_ID)
+                    .to("missing")
+                    .set(MissingEdgeNodesUtils.PROVENANCE)
+                    .to("missing")
+                    .build(),
+                Struct.newBuilder()
+                    .set(MissingEdgeNodesUtils.SUBJECT_ID)
+                    .to("subj2")
+                    .set(MissingEdgeNodesUtils.PREDICATE)
+                    .to("pred2")
+                    .set(MissingEdgeNodesUtils.OBJECT_ID)
+                    .to("missing")
+                    .set(MissingEdgeNodesUtils.PROVENANCE)
+                    .to("missing2")
+                    .build()));
     PCollection<KV<String, String>> edgeCandidates =
-        PCollectionList.of(
-                objectIds.apply(
-                    MissingEdgeNodesUtils.toCandidates(MissingEdgeNodesUtils.OBJECT_ID)))
-            .and(
-                provenances.apply(
-                    MissingEdgeNodesUtils.toCandidates(MissingEdgeNodesUtils.PROVENANCE)))
-            .apply(Flatten.pCollections());
+        edgeRows
+            .apply(MissingEdgeNodesUtils.extractCandidates())
+            .apply(MissingEdgeNodesUtils.distinctValues());
     PCollection<KV<String, String>> nodeKeys =
         pipeline
             .apply("Create node ids", Create.of("missing2"))
@@ -96,8 +105,31 @@ public class MissingEdgeNodesUtilsTest {
     PAssert.that(missing)
         .containsInAnyOrder(
             Arrays.asList(
+                KV.of("subj1", MissingEdgeNodesUtils.SUBJECT_ID),
+                KV.of("subj2", MissingEdgeNodesUtils.SUBJECT_ID),
+                KV.of("pred1", MissingEdgeNodesUtils.PREDICATE),
+                KV.of("pred2", MissingEdgeNodesUtils.PREDICATE),
                 KV.of("missing", MissingEdgeNodesUtils.OBJECT_ID),
                 KV.of("missing", MissingEdgeNodesUtils.PROVENANCE)));
+
+    pipeline.run();
+  }
+
+  @Test
+  public void filterAndExtractKeysKeepsOnlyRequestedType() {
+    options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
+    options.setRunner(DirectRunner.class);
+
+    PCollection<String> objectIds =
+        pipeline
+            .apply(
+                Create.<KV<String, String>>of(
+                    KV.of("subject", MissingEdgeNodesUtils.SUBJECT_ID),
+                    KV.of("object", MissingEdgeNodesUtils.OBJECT_ID),
+                    KV.of("predicate", MissingEdgeNodesUtils.PREDICATE)))
+            .apply(MissingEdgeNodesUtils.filterAndExtractKeys(MissingEdgeNodesUtils.OBJECT_ID));
+
+    PAssert.that(objectIds).containsInAnyOrder(Arrays.asList("object"));
 
     pipeline.run();
   }
