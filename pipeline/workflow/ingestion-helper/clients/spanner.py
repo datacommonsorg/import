@@ -565,12 +565,14 @@ class SpannerClient:
         logging.info("Seeding database with base nodes...")
 
         def _seed(transaction: Transaction):
+            # 1. Seed Node table
             candidates = {
                 "StatisticalVariable": ["StatisticalVariable", "StatisticalVariable", "StatisticalVariable", ["Class"], spanner.COMMIT_TIMESTAMP],
                 "StatVarGroup": ["StatVarGroup", "StatVarGroup", "StatVarGroup", ["Class"], spanner.COMMIT_TIMESTAMP],
                 "StatVarObservation": ["StatVarObservation", "StatVarObservation", "StatVarObservation", ["Class"], spanner.COMMIT_TIMESTAMP],
                 "Topic": ["Topic", "Topic", "Topic", ["Class"], spanner.COMMIT_TIMESTAMP],
                 "dc/g/Root": ["dc/g/Root", "Data Commons Variables", "dc/g/Root", ["StatVarGroup"], spanner.COMMIT_TIMESTAMP],
+                "c/g/Root": ["c/g/Root", "Custom Variables", "c/g/Root", ["StatVarGroup"], spanner.COMMIT_TIMESTAMP],
             }
             subjects = list(candidates.keys())
             sql = "SELECT subject_id FROM Node WHERE subject_id IN UNNEST(@subjects)"
@@ -585,6 +587,29 @@ class SpannerClient:
             if values:
                 columns = ["subject_id", "name", "value", "types", "last_update_timestamp"]
                 transaction.insert(table="Node", columns=columns, values=values)
+
+            # 2. Seed Edge table (relationships)
+            edge_candidates = [
+                ["c/g/Root", "specializationOf", "dc/g/Root", "GeneratedGraphs"],
+                ["c/g/Root", "memberOf", "dc/g/Root", "GeneratedGraphs"],
+            ]
+            edge_sql = """
+                SELECT subject_id, predicate, object_id, provenance 
+                FROM Edge 
+                WHERE subject_id = 'c/g/Root' AND object_id = 'dc/g/Root'
+            """
+            existing_edges = set()
+            for row in transaction.execute_sql(edge_sql):
+                existing_edges.add((row[0], row[1], row[2], row[3]))
+
+            edges_to_insert = [
+                edge for edge in edge_candidates 
+                if (edge[0], edge[1], edge[2], edge[3]) not in existing_edges
+            ]
+
+            if edges_to_insert:
+                edge_columns = ["subject_id", "predicate", "object_id", "provenance"]
+                transaction.insert(table="Edge", columns=edge_columns, values=edges_to_insert)
 
         try:
             self.database.run_in_transaction(_seed)

@@ -196,19 +196,34 @@ class TestSpannerClient(unittest.TestCase):
         client.seed_database()
 
         # Verify
-        mock_transaction.insert.assert_called_once()
-        args, kwargs = mock_transaction.insert.call_args
-        self.assertEqual(kwargs['table'], 'Node')
-        self.assertEqual(kwargs['columns'], ["subject_id", "name", "value", "types", "last_update_timestamp"])
-        self.assertEqual(len(kwargs['values']), 5)
-        expected_subjects = ["StatisticalVariable", "StatVarGroup", "StatVarObservation", "Topic", "dc/g/Root"]
-        expected_names = ["StatisticalVariable", "StatVarGroup", "StatVarObservation", "Topic", "Data Commons Variables"]
-        actual_subjects = [val[0] for val in kwargs['values']]
-        actual_names = [val[1] for val in kwargs['values']]
-        actual_values = [val[2] for val in kwargs['values']]
+        self.assertEqual(mock_transaction.insert.call_count, 2)
+        
+        # Verify Node table insert
+        node_call = mock_transaction.insert.call_args_list[0]
+        node_kwargs = node_call.kwargs
+        self.assertEqual(node_kwargs['table'], 'Node')
+        self.assertEqual(node_kwargs['columns'], ["subject_id", "name", "value", "types", "last_update_timestamp"])
+        self.assertEqual(len(node_kwargs['values']), 6)
+        expected_subjects = ["StatisticalVariable", "StatVarGroup", "StatVarObservation", "Topic", "dc/g/Root", "c/g/Root"]
+        expected_names = ["StatisticalVariable", "StatVarGroup", "StatVarObservation", "Topic", "Data Commons Variables", "Custom Variables"]
+        actual_subjects = [val[0] for val in node_kwargs['values']]
+        actual_names = [val[1] for val in node_kwargs['values']]
+        actual_values = [val[2] for val in node_kwargs['values']]
         self.assertEqual(actual_subjects, expected_subjects)
         self.assertEqual(actual_names, expected_names)
         self.assertEqual(actual_values, expected_subjects)
+
+        # Verify Edge table insert
+        edge_call = mock_transaction.insert.call_args_list[1]
+        edge_kwargs = edge_call.kwargs
+        self.assertEqual(edge_kwargs['table'], 'Edge')
+        self.assertEqual(edge_kwargs['columns'], ["subject_id", "predicate", "object_id", "provenance"])
+        self.assertEqual(len(edge_kwargs['values']), 2)
+        expected_edges = [
+            ["c/g/Root", "specializationOf", "dc/g/Root", "GeneratedGraphs"],
+            ["c/g/Root", "memberOf", "dc/g/Root", "GeneratedGraphs"],
+        ]
+        self.assertEqual(edge_kwargs['values'], expected_edges)
 
     @patch('google.cloud.spanner.Client')
     def test_seed_database_already_exists(self, mock_spanner_client):
@@ -219,7 +234,23 @@ class TestSpannerClient(unittest.TestCase):
         mock_instance.database.return_value = mock_db
 
         mock_transaction = MagicMock()
-        mock_transaction.execute_sql.return_value = [["StatisticalVariable"], ["StatVarGroup"], ["StatVarObservation"], ["Topic"], ["dc/g/Root"]]
+        
+        def execute_sql_side_effect(sql, *args, **kwargs):
+            if "FROM Edge" in sql:
+                return [
+                    ["c/g/Root", "specializationOf", "dc/g/Root", "GeneratedGraphs"],
+                    ["c/g/Root", "memberOf", "dc/g/Root", "GeneratedGraphs"],
+                ]
+            return [
+                ["StatisticalVariable"],
+                ["StatVarGroup"],
+                ["StatVarObservation"],
+                ["Topic"],
+                ["dc/g/Root"],
+                ["c/g/Root"],
+            ]
+        mock_transaction.execute_sql.side_effect = execute_sql_side_effect
+
         def run_in_transaction_side_effect(callback, *args, **kwargs):
             return callback(mock_transaction, *args, **kwargs)
         mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
