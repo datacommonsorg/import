@@ -106,8 +106,6 @@ def _write_observation_shard(args):
         "dcid:observationDate": _parse_numeric(date),
         "dcid:value": _parse_numeric(value),
     }
-    if prop_keys:
-      obs_obj["dcid:observationProperties"] = prop_keys
 
     entity_ref = _uri_ref(entity)
     if entity_ref:
