@@ -31,7 +31,7 @@ mvn compile exec:java -pl missing-edge-nodes -am \
 Staging Spanner command:
 
 ```bash
-mvn compile exec:java -pl missing-edge-nodes -am -Dexec.mainClass=org.datacommons.ingestion.missingnodes.MissingEdgeNodesPipeline -Dexec.args="--runner=DataflowRunner --project=datcom-store --region=us-central1 --tempLocation=gs://rohitrkumar-dataflow/temp/tmp --stagingLocation=gs://rohitrkumar-dataflow/temp/staging --jobName=missing-edge-node-dcids --workerMachineType=e2-highmem-16 --numberOfWorkerHarnessThreads=8 --spannerProjectId=datcom-store --spannerInstanceId=dc-graph-staging --spannerDatabaseId=dc_graph --writeDedupedInputs=true --outputLocation=gs://rohitrkumar-dataflow/edge-node-audit"
+mvn compile exec:java -pl missing-edge-nodes -am -Dexec.mainClass=org.datacommons.ingestion.missingnodes.MissingEdgeNodesPipeline -Dexec.args="--runner=DataflowRunner --project=datcom-store --region=us-central1 --tempLocation=gs://rohitrkumar-dataflow/temp/tmp --stagingLocation=gs://rohitrkumar-dataflow/temp/staging --jobName=missing-edge-node-dcids --workerMachineType=e2-highmem-16 --numberOfWorkerHarnessThreads=8 --spannerProjectId=datcom-store --spannerInstanceId=dc-graph-staging --spannerDatabaseId=dc_graph --writeDedupedInputs=true --outputLocation=gs://rohitrkumar-dataflow/edge-node-audit-$(date +%Y%m%d)"
 ```
 
 For large runs, start with `e2-highmem-16`. If workers still OOM, retry with
