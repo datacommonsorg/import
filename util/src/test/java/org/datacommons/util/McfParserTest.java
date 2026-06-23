@@ -214,13 +214,5 @@ public class McfParserTest {
             McfType.INSTANCE_MCF, false, "observationProperties", "destinationCountry", null);
     assertNotNull(actual);
     assertEquals(expected.build(), actual.build());
-
-    // Verify entityMapping is parsed as TEXT (non-reference property)
-    expected.clear();
-    expected.setValue("origin=entity1");
-    expected.setType(ValueType.TEXT);
-    actual = parseTypedValue(McfType.INSTANCE_MCF, false, "entityMapping", "origin=entity1", null);
-    assertNotNull(actual);
-    assertEquals(expected.build(), actual.build());
   }
 }

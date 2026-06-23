@@ -148,7 +148,6 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
         Triple("sv1", "measuredProperty", "count", ""),
         Triple("sv1", "searchDescription", "", "SV1 search description"),
         Triple("sv1", "observationProperties", "destinationCountry", ""),
-        Triple("sv1", "entityMapping", "someMapping", ""),
         Triple("non_sv1", "typeOf", "Person", ""),
         Triple("non_sv1", "gender", "Male", ""),
         Triple("non_sv1", "race", "AmericanIndianOrAlaskaNative", ""),

@@ -121,7 +121,6 @@ public final class Vocabulary {
   public static final String STAT_TYPE = "statType";
   public static final String CONSTRAINT_PROPS = "constraintProperties";
   public static final String OBSERVATION_PROPERTIES = "observationProperties";
-  public static final String ENTITY_MAPPING = "entityMapping";
   public static final String MEASUREMENT_DENOMINATOR = "measurementDenominator";
   public static final String MEASUREMENT_QUALIFIER = "measurementQualifier";
   public static final String SCALING_FACTOR = "scalingFactor";
@@ -257,7 +256,6 @@ public final class Vocabulary {
           LOCATION,
           CONSTRAINT_PROPS,
           OBSERVATION_PROPERTIES,
-          ENTITY_MAPPING,
           MEASURED_PROP,
           STAT_TYPE,
           MEASUREMENT_DENOMINATOR,

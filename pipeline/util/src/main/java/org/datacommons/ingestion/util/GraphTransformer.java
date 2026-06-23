@@ -38,8 +38,7 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
           "measurementDenominator",
           "measurementMethod",
           "constraintProperties",
-          "observationProperties",
-          "entityMapping");
+          "observationProperties");
 
   @ProcessElement
   public void processElement(@Element McfGraph inputGraph, OutputReceiver<McfGraph> receiver) {
