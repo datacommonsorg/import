@@ -87,4 +87,67 @@ public class JsonLdParserTest {
     }
     assertTrue("Stored type should be 'Person' without schema prefix", hasCleanType);
   }
+
+  @Test
+  public void testNestedObservationProperties() throws Exception {
+    String jsonLd =
+        "{\n"
+            + "  \"@context\": {\n"
+            + "    \"custom\": \"https://customsource.org/schema/\",\n"
+            + "    \"dcid\": \"https://datacommons.org/browser/\"\n"
+            + "  },\n"
+            + "  \"@graph\": [\n"
+            + "    {\n"
+            + "      \"@id\": \"dcid:TestObs\",\n"
+            + "      \"@type\": \"dcid:StatVarObservation\",\n"
+            + "      \"dcid:variableMeasured\": {\n"
+            + "        \"@id\": \"custom:FinancialTrade\",\n"
+            + "        \"dcid:observationProperties\": [\n"
+            + "          { \"@id\": \"custom:destinationCountry\" },\n"
+            + "          { \"@id\": \"custom:sourceCountry\" }\n"
+            + "        ]\n"
+            + "      },\n"
+            + "      \"dcid:observationDate\": \"2024\",\n"
+            + "      \"dcid:value\": 100,\n"
+            + "      \"custom:sourceCountry\": { \"@id\": \"dcid:country/FRA\" },\n"
+            + "      \"custom:destinationCountry\": { \"@id\": \"dcid:country/USA\" }\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}";
+
+    InputStream in = new java.io.ByteArrayInputStream(jsonLd.getBytes(StandardCharsets.UTF_8));
+    McfGraph graph = JsonLdParser.parse(in);
+
+    assertNotNull(graph);
+    assertTrue(graph.getNodesMap().containsKey("TestObs"));
+    McfGraph.PropertyValues node = graph.getNodesMap().get("TestObs");
+
+    assertTrue(node.containsPvs("variableMeasured"));
+    boolean hasVariableMeasured = false;
+    for (McfGraph.TypedValue tv : node.getPvsMap().get("variableMeasured").getTypedValuesList()) {
+      if ("https://customsource.org/schema/FinancialTrade".equals(tv.getValue())) {
+        hasVariableMeasured = true;
+        break;
+      }
+    }
+    assertTrue(hasVariableMeasured);
+
+    assertTrue(node.containsPvs("observationProperties"));
+    java.util.List<McfGraph.TypedValue> values =
+        node.getPvsMap().get("observationProperties").getTypedValuesList();
+    assertTrue(values.size() == 2);
+
+    boolean foundDest = false;
+    boolean foundSource = false;
+    for (McfGraph.TypedValue tv : values) {
+      if ("https://customsource.org/schema/destinationCountry".equals(tv.getValue())) {
+        foundDest = true;
+      }
+      if ("https://customsource.org/schema/sourceCountry".equals(tv.getValue())) {
+        foundSource = true;
+      }
+    }
+    assertTrue(foundDest);
+    assertTrue(foundSource);
+  }
 }

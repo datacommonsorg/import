@@ -36,6 +36,25 @@ public class JsonLdParser {
     return value;
   }
 
+  private static String cleanKey(String key) {
+    if (key == null) {
+      return null;
+    }
+    while (key.endsWith("/") || key.endsWith("#")) {
+      if (key.length() <= 1) {
+        return "";
+      }
+      key = key.substring(0, key.length() - 1);
+    }
+    if (key.contains("/")) {
+      key = key.substring(key.lastIndexOf('/') + 1);
+    }
+    if (key.contains("#")) {
+      key = key.substring(key.lastIndexOf('#') + 1);
+    }
+    return key;
+  }
+
   /**
    * Parses a JSON-LD input stream and returns an McfGraph.
    *
@@ -89,14 +108,8 @@ public class JsonLdParser {
     addProperty(nodeBuilder, "dcid", id, org.datacommons.proto.Mcf.ValueType.TEXT);
 
     for (Map.Entry<String, Object> entry : nodeMap.entrySet()) {
-      String key = entry.getKey();
-      if (key.contains("/")) {
-        key = key.substring(key.lastIndexOf('/') + 1);
-      }
-      if (key.contains("#")) {
-        key = key.substring(key.lastIndexOf('#') + 1);
-      }
-      if (key.isEmpty()) {
+      String key = cleanKey(entry.getKey());
+      if (key == null || key.isEmpty()) {
         continue;
       }
       Object value = entry.getValue();
@@ -147,6 +160,28 @@ public class JsonLdParser {
         Mcf.ValueType type =
             idStr.startsWith("l:") ? Mcf.ValueType.UNRESOLVED_REF : Mcf.ValueType.RESOLVED_REF;
         addProperty(nodeBuilder, property, idStr, type);
+
+        // Process nested properties (like observationProperties)
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+          String key = entry.getKey().toString();
+          if ("@id".equals(key)) {
+            continue;
+          }
+          String cleanKey = cleanKey(key);
+          if (cleanKey == null || cleanKey.isEmpty()) {
+            continue;
+          }
+          if ("observationProperties".equals(cleanKey)) {
+            Object val = entry.getValue();
+            if (val instanceof List) {
+              for (Object innerItem : (List<?>) val) {
+                processValueItem(nodeBuilder, cleanKey, innerItem);
+              }
+            } else if (val != null) {
+              processValueItem(nodeBuilder, cleanKey, val);
+            }
+          }
+        }
       } else {
         LOGGER.warn("Ignoring unsupported JSON-LD object for property {}: {}", property, map);
       }
