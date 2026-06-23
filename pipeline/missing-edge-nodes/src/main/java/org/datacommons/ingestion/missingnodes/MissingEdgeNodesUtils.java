@@ -1,6 +1,8 @@
 package org.datacommons.ingestion.missingnodes;
 
 import com.google.cloud.spanner.Struct;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -24,6 +26,14 @@ class MissingEdgeNodesUtils {
 
   static ParDo.SingleOutput<String, KV<String, String>> nodeKeys() {
     return ParDo.of(new NodeKeyFn());
+  }
+
+  static ParDo.SingleOutput<Struct, Struct> countStructRows(String counterName) {
+    return ParDo.of(new CountElementsFn<>(counterName));
+  }
+
+  static ParDo.SingleOutput<String, String> countStringValues(String counterName) {
+    return ParDo.of(new CountElementsFn<>(counterName));
   }
 
   static ParDo.SingleOutput<Struct, String> extractColumn(String columnName) {
@@ -85,6 +95,28 @@ class MissingEdgeNodesUtils {
       if (hasValue(subjectId)) {
         context.output(KV.of(subjectId, NODE_MARKER));
       }
+    }
+  }
+
+  static class CountElementsFn<T> extends DoFn<T, T> {
+    private final String counterName;
+    private transient Counter counter;
+
+    CountElementsFn(String counterName) {
+      this.counterName = counterName;
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      getCounter().inc();
+      context.output(context.element());
+    }
+
+    private Counter getCounter() {
+      if (counter == null) {
+        counter = Metrics.counter(MissingEdgeNodesUtils.class, counterName);
+      }
+      return counter;
     }
   }
 

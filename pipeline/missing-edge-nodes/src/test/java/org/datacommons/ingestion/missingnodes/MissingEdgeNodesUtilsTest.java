@@ -103,6 +103,21 @@ public class MissingEdgeNodesUtilsTest {
   }
 
   @Test
+  public void countStringValuesPassesThroughElements() {
+    options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
+    options.setRunner(DirectRunner.class);
+
+    PCollection<String> values =
+        pipeline
+            .apply(Create.of("a", "b"))
+            .apply(MissingEdgeNodesUtils.countStringValues("test_distinct_values"));
+
+    PAssert.that(values).containsInAnyOrder(Arrays.asList("a", "b"));
+
+    pipeline.run();
+  }
+
+  @Test
   public void formatCsvEscapesSpecialCharacters() {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
     options.setRunner(DirectRunner.class);

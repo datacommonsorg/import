@@ -17,6 +17,13 @@ public class MissingEdgeNodesPipeline {
   private static final String EDGE_QUERY =
       "SELECT subject_id, predicate, object_id, provenance FROM Edge";
   private static final String PART_PREFIX = "part";
+  private static final String SPANNER_NODE_ROWS_READ = "spanner_node_rows_read";
+  private static final String SPANNER_EDGE_ROWS_READ = "spanner_edge_rows_read";
+  private static final String DISTINCT_NODE_SUBJECT_IDS = "distinct_node_subject_ids";
+  private static final String DISTINCT_EDGE_SUBJECT_IDS = "distinct_edge_subject_ids";
+  private static final String DISTINCT_PREDICATES = "distinct_predicates";
+  private static final String DISTINCT_OBJECT_IDS = "distinct_object_ids";
+  private static final String DISTINCT_PROVENANCES = "distinct_provenances";
 
   public static void main(String[] args) {
     MissingEdgeNodesOptions options =
@@ -24,43 +31,66 @@ public class MissingEdgeNodesPipeline {
     Pipeline pipeline = Pipeline.create(options);
 
     PCollection<Struct> nodeRows =
-        pipeline.apply("Read Node subject_ids", spannerRead(options, NODE_QUERY));
+        pipeline
+            .apply("Read Node subject_ids", spannerRead(options, NODE_QUERY))
+            .apply(
+                "Count Spanner Node rows",
+                MissingEdgeNodesUtils.countStructRows(SPANNER_NODE_ROWS_READ));
     PCollection<String> nodeSubjectIds =
         nodeRows
             .apply(
                 "Extract Node subject_ids",
                 MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.SUBJECT_ID))
-            .apply("Deduplicate Node subject_ids", MissingEdgeNodesUtils.distinctValues());
+            .apply("Deduplicate Node subject_ids", MissingEdgeNodesUtils.distinctValues())
+            .apply(
+                "Count distinct Node subject_ids",
+                MissingEdgeNodesUtils.countStringValues(DISTINCT_NODE_SUBJECT_IDS));
     PCollection<KV<String, String>> nodeKeys =
         nodeSubjectIds.apply("Key Node subject_ids", MissingEdgeNodesUtils.nodeKeys());
 
     PCollection<Struct> edgeRows =
-        pipeline.apply("Read Edge identifiers", spannerRead(options, EDGE_QUERY));
+        pipeline
+            .apply("Read Edge identifiers", spannerRead(options, EDGE_QUERY))
+            .apply(
+                "Count Spanner Edge rows",
+                MissingEdgeNodesUtils.countStructRows(SPANNER_EDGE_ROWS_READ));
 
     PCollection<String> subjectIds =
         edgeRows
             .apply(
                 "Extract Edge subject_ids",
                 MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.SUBJECT_ID))
-            .apply("Deduplicate Edge subject_ids", MissingEdgeNodesUtils.distinctValues());
+            .apply("Deduplicate Edge subject_ids", MissingEdgeNodesUtils.distinctValues())
+            .apply(
+                "Count distinct Edge subject_ids",
+                MissingEdgeNodesUtils.countStringValues(DISTINCT_EDGE_SUBJECT_IDS));
     PCollection<String> predicates =
         edgeRows
             .apply(
                 "Extract Edge predicates",
                 MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.PREDICATE))
-            .apply("Deduplicate Edge predicates", MissingEdgeNodesUtils.distinctValues());
+            .apply("Deduplicate Edge predicates", MissingEdgeNodesUtils.distinctValues())
+            .apply(
+                "Count distinct Edge predicates",
+                MissingEdgeNodesUtils.countStringValues(DISTINCT_PREDICATES));
     PCollection<String> objectIds =
         edgeRows
             .apply(
                 "Extract Edge object_ids",
                 MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.OBJECT_ID))
-            .apply("Deduplicate Edge object_ids", MissingEdgeNodesUtils.distinctValues());
+            .apply("Deduplicate Edge object_ids", MissingEdgeNodesUtils.distinctValues())
+            .apply(
+                "Count distinct Edge object_ids",
+                MissingEdgeNodesUtils.countStringValues(DISTINCT_OBJECT_IDS));
     PCollection<String> provenances =
         edgeRows
             .apply(
                 "Extract Edge provenances",
                 MissingEdgeNodesUtils.extractColumn(MissingEdgeNodesUtils.PROVENANCE))
-            .apply("Deduplicate Edge provenances", MissingEdgeNodesUtils.distinctValues());
+            .apply("Deduplicate Edge provenances", MissingEdgeNodesUtils.distinctValues())
+            .apply(
+                "Count distinct Edge provenances",
+                MissingEdgeNodesUtils.countStringValues(DISTINCT_PROVENANCES));
 
     if (options.getWriteDedupedInputs()) {
       writeDedupedValues(
