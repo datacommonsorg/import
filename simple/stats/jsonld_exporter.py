@@ -110,8 +110,9 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
   if props:
     try:
       props_dict = json.loads(props)
-      for k in props_dict.keys():
-        g.add((var_ref, DCID["observationProperty"], expand_id(k)))
+      if isinstance(props_dict, dict):
+        for k in props_dict.keys():
+          g.add((var_ref, DCID["observationProperties"], expand_id(k)))
     except json.JSONDecodeError:
       pass
   g.add((subject, DCID["observationDate"], Literal(date)))
@@ -137,11 +138,12 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
   if props:
     try:
       props_dict = json.loads(props)
-      for k, v in props_dict.items():
-        if is_entity_reference(v):
-          g.add((subject, expand_id(k), expand_id(v)))
-        else:
-          g.add((subject, expand_id(k), Literal(v)))
+      if isinstance(props_dict, dict):
+        for k, v in props_dict.items():
+          if is_entity_reference(v):
+            g.add((subject, expand_id(k), expand_id(v)))
+          else:
+            g.add((subject, expand_id(k), Literal(v)))
     except json.JSONDecodeError as e:
       logging.warning(
           f"Failed to decode properties JSON for observation {entity}/{variable}: {e}"
