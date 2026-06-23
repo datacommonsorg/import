@@ -162,10 +162,21 @@ public class McfUtil {
   }
 
   public static String stripNamespace(String val) {
-    if (val.startsWith(Vocabulary.DCID_PREFIX)
-        || val.startsWith(Vocabulary.SCHEMA_ORG_PREFIX)
-        || val.startsWith(Vocabulary.DC_SCHEMA_PREFIX)) {
-      return val.substring(val.indexOf(Vocabulary.REFERENCE_DELIMITER) + 1);
+    if (val == null) {
+      return null;
+    }
+    if (val.startsWith("http://") || val.startsWith("https://")) {
+      int lastSlash = val.lastIndexOf('/');
+      int lastHash = val.lastIndexOf('#');
+      int idx = Math.max(lastSlash, lastHash);
+      if (idx > 0 && idx < val.length() - 1) {
+        return val.substring(idx + 1);
+      }
+      return val;
+    }
+    int colonIdx = val.indexOf(Vocabulary.REFERENCE_DELIMITER);
+    if (colonIdx > 0) {
+      return val.substring(colonIdx + 1);
     }
     return val;
   }
