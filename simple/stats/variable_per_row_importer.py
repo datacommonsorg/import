@@ -50,6 +50,8 @@ STANDARD_PROPERTY_MAPPING = {
         constants.COLUMN_MEASUREMENT_METHOD,  # "measurement_method"
     "dcid:observationPeriod":
         constants.COLUMN_OBSERVATION_PERIOD,  # "observation_period"
+    "dcid:scalingFactor":
+        constants.COLUMN_SCALING_FACTOR,  # "scaling_factor"
 }
 
 
