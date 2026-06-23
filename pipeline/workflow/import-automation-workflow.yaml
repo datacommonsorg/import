@@ -81,10 +81,11 @@ main:
                     type: OIDC
                   body:
                     jobId: ${jobId}
-                    importName: ${importName}
-                    status: 'FAILURE'
+                    imports:
+                      - importName: ${importName}
+                        status: 'FAILURE'
+                        latestVersion: ${"gs://" + gcsImportBucket + "/" + text.replace_all(importName, ":", "/")}
                     executionTime: ${int(sys.now() - startTime)}
-                    latestVersion: ${"gs://" + gcsImportBucket + "/" + text.replace_all(importName, ":", "/")}
                 result: functionResponse
             - failWorkflow:
                 raise: ${e}
@@ -95,7 +96,8 @@ main:
           auth:
             type: OIDC
           body:
-            importName: ${importName}
+            imports:
+              - ${importName}
             version: 'STAGING'
             override: false
             comment: '${"import-workflow:" + sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
