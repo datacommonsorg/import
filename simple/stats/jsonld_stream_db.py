@@ -113,9 +113,6 @@ def _write_observation_shard(args):
     if entity_ref:
       obs_obj["dcid:observationAbout"] = entity_ref
 
-    entity_ref = _uri_ref(entity)
-    if entity_ref:
-      obs_obj["dcid:observationAbout"] = entity_ref
 
     if provenance:
       obs_obj["dcid:provenance"] = _uri_ref(provenance)
