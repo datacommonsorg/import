@@ -1,0 +1,3 @@
+entity,variable,date,value,provenance,unit,scaling_factor,measurement_method,observation_period,properties
+,FinancialTrade,2024,100,provenance/CustomImport,,,,,"{""dcid:observationAbout"": ""geoId/06"", ""custom:sourceCountry"": ""country/FRA""}"
+,FinancialTrade,2024,200,provenance/CustomImport,,,,,"{""dcid:observationAbout"": ""geoId/08"", ""custom:sourceCountry"": ""country/DEU""}"

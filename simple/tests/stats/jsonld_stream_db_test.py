@@ -297,7 +297,8 @@ class TestJsonLdStreamDb(unittest.TestCase):
       # Verify custom properties from JSON string
       self.assertEqual(obs1["dcid:customIntProp"], 42)
       self.assertEqual(obs1["dcid:customStrProp"], "customVal")
-      self.assertEqual(obs1["http://schema.org/url"], "https://test-prop.org")
+      self.assertEqual(obs1["http://schema.org/url"],
+                       {"@id": "https://test-prop.org"})
 
       # 2. Verify second observation (Float types)
       obs2 = [

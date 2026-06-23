@@ -1,7 +1,0 @@
-entity,variable,date,value,provenance,unit,scaling_factor,measurement_method,observation_period,properties
-country/BRA,var1,2023,0.19,input.csv,,,,,
-country/BRA,var2,2023,6,input.csv,,,,,
-country/JPN,var1,2023,0.21,input.csv,,,,,
-country/JPN,var2,2023,56,input.csv,,,,,
-country/USA,var2,2023,66,input.csv,,,,,
-country/CHN,var1,2022,-123.456,input.csv,,,,,

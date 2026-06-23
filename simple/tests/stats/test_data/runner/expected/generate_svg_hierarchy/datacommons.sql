@@ -22,10 +22,10 @@ CREATE TABLE observations (
     observation_period varchar(255),
     properties TEXT
 );
-INSERT INTO "observations" VALUES('country/IND','var1','2020','0.16','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/IND','var2','2020','53','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/CHN','var1','2020','0.23','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/CHN','var2','2020','67','c/p/1','','','','','');
+INSERT INTO "observations" VALUES(NULL,'var1','2020','0.16','c/p/1','','','','','{"dcid:observationAbout": "country/IND"}');
+INSERT INTO "observations" VALUES(NULL,'var2','2020','53','c/p/1','','','','','{"dcid:observationAbout": "country/IND"}');
+INSERT INTO "observations" VALUES(NULL,'var1','2020','0.23','c/p/1','','','','','{"dcid:observationAbout": "country/CHN"}');
+INSERT INTO "observations" VALUES(NULL,'var2','2020','67','c/p/1','','','','','{"dcid:observationAbout": "country/CHN"}');
 CREATE TABLE triples (
     subject_id varchar(255),
     predicate varchar(255),
