@@ -220,8 +220,8 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(edge_kwargs['columns'], ["subject_id", "predicate", "object_id", "provenance"])
         self.assertEqual(len(edge_kwargs['values']), 2)
         expected_edges = [
-            ["c/g/Root", "specializationOf", "dc/g/Root", "GeneratedGraphs"],
-            ["c/g/Root", "memberOf", "dc/g/Root", "GeneratedGraphs"],
+            ("c/g/Root", "specializationOf", "dc/g/Root", "GeneratedGraphs"),
+            ("c/g/Root", "memberOf", "dc/g/Root", "GeneratedGraphs"),
         ]
         self.assertEqual(edge_kwargs['values'], expected_edges)
 
