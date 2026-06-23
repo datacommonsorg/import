@@ -113,8 +113,7 @@ public class McfMutatorTest {
             + "typeOf: schema:StatisticalVariable\n"
             + "populationType: dcs:FinancialTransaction\n"
             + "measuredProperty: dcs:amount\n"
-            + "observationProperty: dcs:destinationCountry\n"
-            + "entityMapping: dcs:someMapping\n"
+            + "observationProperties: dcs:destinationCountry\n"
             + "someActualConstraint: dcs:someValue\n";
     Mcf.McfGraph got =
         McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx());
@@ -123,9 +122,8 @@ public class McfMutatorTest {
         "Node: dcid:FinancialAid\n"
             + "constraintProperties: dcid:someActualConstraint\n"
             + "dcid: \"FinancialAid\"\n"
-            + "entityMapping: dcid:someMapping\n"
             + "measuredProperty: dcid:amount\n"
-            + "observationProperty: dcid:destinationCountry\n"
+            + "observationProperties: dcid:destinationCountry\n"
             + "populationType: dcid:FinancialTransaction\n"
             + "someActualConstraint: dcid:someValue\n"
             + "typeOf: dcid:StatisticalVariable\n"

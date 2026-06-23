@@ -205,21 +205,13 @@ public class McfParserTest {
     assertNotNull(actual);
     assertEquals(expected.build(), actual.build());
 
-    // Verify observationProperty is parsed as RESOLVED_REF (reference property)
+    // Verify observationProperties is parsed as RESOLVED_REF (reference property)
     expected.clear();
     expected.setValue("destinationCountry");
     expected.setType(ValueType.RESOLVED_REF);
     actual =
         parseTypedValue(
-            McfType.INSTANCE_MCF, false, "observationProperty", "destinationCountry", null);
-    assertNotNull(actual);
-    assertEquals(expected.build(), actual.build());
-
-    // Verify entityMapping is parsed as TEXT (non-reference property)
-    expected.clear();
-    expected.setValue("origin=entity1");
-    expected.setType(ValueType.TEXT);
-    actual = parseTypedValue(McfType.INSTANCE_MCF, false, "entityMapping", "origin=entity1", null);
+            McfType.INSTANCE_MCF, false, "observationProperties", "destinationCountry", null);
     assertNotNull(actual);
     assertEquals(expected.build(), actual.build());
   }
