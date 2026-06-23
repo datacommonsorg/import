@@ -636,7 +636,7 @@ public class GraphTransformerTest {
   }
 
   @Test
-  public void testStatVarTransformationWithObservationPropertyAndEntityMapping() {
+  public void testStatVarTransformationWithObservationPropertiesAndEntityMapping() {
     McfGraph inputGraph =
         McfGraph.newBuilder()
             .putNodes(
@@ -667,7 +667,7 @@ public class GraphTransformerTest {
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
-                        "observationProperty",
+                        "observationProperties",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
@@ -723,7 +723,7 @@ public class GraphTransformerTest {
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
-                        "observationProperty",
+                        "observationProperties",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()

@@ -120,7 +120,7 @@ public final class Vocabulary {
   public static final String VARIABLE_MEASURED = "variableMeasured";
   public static final String STAT_TYPE = "statType";
   public static final String CONSTRAINT_PROPS = "constraintProperties";
-  public static final String OBSERVATION_PROPERTY = "observationProperty";
+  public static final String OBSERVATION_PROPERTIES = "observationProperties";
   public static final String ENTITY_MAPPING = "entityMapping";
   public static final String MEASUREMENT_DENOMINATOR = "measurementDenominator";
   public static final String MEASUREMENT_QUALIFIER = "measurementQualifier";
@@ -256,7 +256,7 @@ public final class Vocabulary {
           POPULATION_GROUP,
           LOCATION,
           CONSTRAINT_PROPS,
-          OBSERVATION_PROPERTY,
+          OBSERVATION_PROPERTIES,
           ENTITY_MAPPING,
           MEASURED_PROP,
           STAT_TYPE,
@@ -318,7 +318,7 @@ public final class Vocabulary {
         || prop.equals(MEASUREMENT_QUALIFIER)
         || prop.equals(STAT_TYPE)
         || prop.equals(UNIT)
-        || prop.equals(OBSERVATION_PROPERTY);
+        || prop.equals(OBSERVATION_PROPERTIES);
   }
 
   public static boolean isGlobalReference(String val) {

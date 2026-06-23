@@ -111,7 +111,8 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
     try:
       props_dict = json.loads(props)
       for k in props_dict.keys():
-        g.add((var_ref, DCID["observationProperty"], expand_id(k)))
+        g.add((var_ref, DCID["observationProperties"], expand_id(k)))
+        g.add((subject, DCID["observationProperties"], expand_id(k)))
     except json.JSONDecodeError:
       pass
   g.add((subject, DCID["observationDate"], Literal(date)))

@@ -38,7 +38,7 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
           "measurementDenominator",
           "measurementMethod",
           "constraintProperties",
-          "observationProperty",
+          "observationProperties",
           "entityMapping");
 
   @ProcessElement

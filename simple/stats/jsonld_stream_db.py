@@ -85,6 +85,7 @@ def _write_observation_shard(args):
     obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
 
     var_obj = _uri_ref(variable)
+    prop_keys = None
     if props:
       try:
         props_dict = json.loads(props)
@@ -94,7 +95,7 @@ def _write_observation_shard(args):
             for k in props_dict.keys()
         ]
         if prop_keys:
-          var_obj["dcid:observationProperty"] = prop_keys
+          var_obj["dcid:observationProperties"] = prop_keys
       except json.JSONDecodeError:
         pass
 
@@ -105,6 +106,12 @@ def _write_observation_shard(args):
         "dcid:observationDate": _parse_numeric(date),
         "dcid:value": _parse_numeric(value),
     }
+    if prop_keys:
+      obs_obj["dcid:observationProperties"] = prop_keys
+
+    entity_ref = _uri_ref(entity)
+    if entity_ref:
+      obs_obj["dcid:observationAbout"] = entity_ref
 
     entity_ref = _uri_ref(entity)
     if entity_ref:
