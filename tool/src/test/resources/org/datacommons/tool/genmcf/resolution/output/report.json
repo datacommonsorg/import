@@ -5,7 +5,7 @@
         "NumRowSuccesses": "10",
         "NumPVSuccesses": "100",
         "Existence_NumChecks": "155",
-        "NumNodeSuccesses": "20",
+        "NumNodeSuccesses": "29",
         "ReconClient_NumApiCalls": "2",
         "Existence_NumDcCalls": "2"
       }
