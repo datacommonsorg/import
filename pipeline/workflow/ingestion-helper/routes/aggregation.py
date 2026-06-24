@@ -22,9 +22,7 @@ from routes.models import BaseResponse, ResponseStatus
 from aggregation import AggregationOrchestrator
 from utils.logging import log_start
 
-# =============================================================================
-# Pydantic Models for the New Stateless API
-# =============================================================================
+
 
 class AggregationWorkflowState(BaseModel):
     """Represents the execution state of a multi-stage aggregation pipeline run.
@@ -42,10 +40,7 @@ class AggregationWorkflowState(BaseModel):
 class InitiateRequest(BaseModel):
     importList: List[Dict[str, Any]] = Field(default_factory=list)
 
-# =============================================================================
-# Pydantic Models for Backward Compatibility (Temporary)
 # TODO: Remove these models once all consumers migrate to /initiate and /poll
-# =============================================================================
 
 class AggregationRequest(BaseModel):
     """Temporary request model for compatibility run endpoint."""
@@ -64,9 +59,7 @@ class AggregationStatusResponse(BaseResponse):
     error: Optional[str] = Field(default=None, description="Detailed error message if failed")
     failedJobs: Optional[List[str]] = Field(default_factory=list, description="List of failed BigQuery job IDs")
 
-# =============================================================================
-# Router Definition
-# =============================================================================
+
 
 router = APIRouter(prefix="/aggregation", tags=["aggregation"])
 
@@ -87,9 +80,7 @@ def _get_orchestrator() -> AggregationOrchestrator:
         is_base_dc=config.IS_BASE_DC,
     )
 
-# -----------------------------------------------------------------------------
-# New Stateless API Endpoints (Stage-based)
-# -----------------------------------------------------------------------------
+
 
 @router.post("/initiate", response_model=AggregationWorkflowState)
 @log_start
@@ -192,10 +183,7 @@ def poll_aggregation(state: AggregationWorkflowState):
             error=f"Orchestrator error: {str(e)}"
         )
 
-# -----------------------------------------------------------------------------
-# API Endpoints for Backward Compatibility (Temporary)
 # TODO: Remove these endpoints once all consumers migrate to /initiate and /poll
-# -----------------------------------------------------------------------------
 
 @router.post("/run", response_model=AggregationResponse, deprecated=True)
 @log_start
