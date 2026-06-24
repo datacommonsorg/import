@@ -3,6 +3,7 @@
     "LEVEL_INFO": {
       "counters": {
         "Existence_NumChecks": "159",
+        "NumNodeSuccesses": "4",
         "Existence_NumDcCalls": "1"
       }
     },
