@@ -135,6 +135,8 @@ class AggregationOrchestrator:
 
             elif step_type == "stat_var_groups":
                 step_jobs.extend(self.stat_var_group_generator.run_all(applicable_imports))
+            else:
+                raise ValueError(f"Unsupported or unimplemented aggregation step type: {step_type}")
 
             # Collect BQ jobs
             for job in step_jobs:

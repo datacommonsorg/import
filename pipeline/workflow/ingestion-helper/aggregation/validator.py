@@ -57,9 +57,8 @@ def validate_config(config_file_path: str, schema_file_path: str) -> List[Dict[s
         logging.error(f"Failed to parse YAML file {config_file_path}: {e}")
         raise e
 
-    if not config or "aggregations" not in config:
-        logging.warning("Aggregation config is empty or missing 'aggregations' key.")
-        return []
+    if config is None:
+        config = {}
 
     # 2. Load JSON Schema
     try:

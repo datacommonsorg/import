@@ -284,6 +284,26 @@ class TestConfigValidator(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 validate_config("aggregation.yaml", "non_existent_schema.json")
 
+    @patch('builtins.open')
+    def test_validate_config_missing_aggregations_key(self, mock_file_open):
+        """Verifies that missing the required 'aggregations' root key raises ValidationError."""
+        missing_aggregations_yaml = """
+        some_other_key: []
+        """
+        mock_file_open.side_effect = self._get_mock_open(missing_aggregations_yaml)
+        with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
+            validate_config("aggregation.yaml", self.schema_path)
+        self.assertIn("'aggregations' is a required property", ctx.exception.message)
+
+    @patch('builtins.open')
+    def test_validate_config_empty_file(self, mock_file_open):
+        """Verifies that a completely empty configuration file raises ValidationError."""
+        empty_yaml = ""
+        mock_file_open.side_effect = self._get_mock_open(empty_yaml)
+        with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
+            validate_config("aggregation.yaml", self.schema_path)
+        self.assertIn("'aggregations' is a required property", ctx.exception.message)
+
 
 if __name__ == '__main__':
     unittest.main()

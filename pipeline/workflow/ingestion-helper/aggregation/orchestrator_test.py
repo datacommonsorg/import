@@ -53,8 +53,6 @@ aggregations:
 """
 
 
-
-
 @patch('aggregation.orchestrator.BigQueryExecutor')
 @patch('aggregation.orchestrator.PlaceAggregationGenerator')
 @patch('aggregation.orchestrator.StatVarAggregator')
@@ -171,6 +169,27 @@ class TestAggregationOrchestrator(unittest.TestCase):
             output_import_name=None,
             skip_all_sources_present_check=True
         )
+
+    @patch('builtins.open')
+    def test_execute_stage_unsupported_type(self, mock_file_open, *mocks):
+        """Tests that an unsupported aggregation step type raises ValueError."""
+        # Use 'entity' which is valid in schema but unimplemented in orchestrator
+        unimplemented_config = """
+        aggregations:
+          - type: entity
+            entity_types: ["MortalityEvent"]
+            location_props: ["location"]
+            imports: ["*"]
+            stage: 1
+        """
+        mock_file_open.side_effect = self._get_mock_open(unimplemented_config)
+
+        utils = AggregationOrchestrator(connection_id="conn", project_id="proj", instance_id="inst", database_id="db")
+
+        # Running Stage 1 should raise ValueError due to unimplemented "entity" type
+        with self.assertRaises(ValueError) as ctx:
+            utils.execute_stage(stage_num=1, active_imports=["USFed_Census"])
+        self.assertIn("Unsupported or unimplemented aggregation step type: entity", str(ctx.exception))
 
 
 if __name__ == '__main__':
