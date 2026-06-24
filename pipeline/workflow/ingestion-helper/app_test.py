@@ -290,6 +290,7 @@ class TestMain(unittest.TestCase):
         # Setup mock orchestrator to simulate Stage 1 completion and Stage 2 execution
         mock_instance = MagicMock()
         mock_aggregation_utils.return_value = mock_instance
+        mock_instance.aggregations = [{"stage": 1}, {"stage": 2}]
         
         # Mock BQ reporting Stage 1 jobs are DONE
         mock_instance.check_jobs_status.return_value = {"status": "DONE"}
@@ -348,6 +349,7 @@ class TestMain(unittest.TestCase):
         # Setup mock orchestrator
         mock_instance = MagicMock()
         mock_aggregation_utils.return_value = mock_instance
+        mock_instance.aggregations = [{"stage": 1}, {"stage": 2}]
         mock_instance.has_stage.side_effect = lambda stage, imports: stage in [1, 2]
         mock_instance.execute_stage.side_effect = lambda stage, imports: [f"job-stage{stage}-1"]
 

@@ -94,7 +94,8 @@ def initiate_aggregation(req: InitiateRequest):
         
         # Find the first stage that has active aggregations (usually Stage 1)
         first_stage = 1
-        while first_stage <= 10: # Arbitrary upper limit for safety
+        max_stage = max((cfg.get("stage", 1) for cfg in orchestrator.aggregations), default=1)
+        while first_stage <= max_stage:
             if orchestrator.has_stage(first_stage, import_names):
                 break
             first_stage += 1
@@ -152,7 +153,8 @@ def poll_aggregation(state: StateObject):
             
         # Case C: All jobs succeeded -> Find and execute the next active stage
         next_stage = state.current_stage + 1
-        while next_stage <= 10: # Arbitrary upper limit
+        max_stage = max((cfg.get("stage", 1) for cfg in orchestrator.aggregations), default=1)
+        while next_stage <= max_stage:
             if orchestrator.has_stage(next_stage, import_names):
                 logging.info(f"Stage {state.current_stage} completed. Transitioning to Stage {next_stage}...")
                 new_job_ids = orchestrator.execute_stage(next_stage, import_names)
@@ -201,7 +203,8 @@ def run_aggregation_legacy(req: LegacyAggregationRequest):
         
         # Compatibility Mode: Submit ALL enabled stages in parallel
         job_ids = []
-        for stage_num in range(1, 10):
+        max_stage = max((cfg.get("stage", 1) for cfg in orchestrator.aggregations), default=1)
+        for stage_num in range(1, max_stage + 1):
             if orchestrator.has_stage(stage_num, import_names):
                 job_ids.extend(orchestrator.execute_stage(stage_num, import_names))
                 
