@@ -18,7 +18,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from clients.spanner import SpannerClient
 from dependencies import get_spanner_client
-from utils.embeddings import get_latest_lock_timestamp, get_updated_nodes, filter_and_convert_nodes, generate_embeddings_partitioned
+from utils.embeddings import EmbeddingUtils
 import config
 from routes.models import BaseResponse, ResponseStatus
 from utils.logging import log_start
@@ -44,30 +44,8 @@ def embedding_ingestion(req: EmbeddingIngestionRequest, spanner: SpannerClient =
         )
         
     try:
-        timestamp = get_latest_lock_timestamp(spanner.database)
-        total_affected_rows = 0
-        for spec in config.EMBEDDING_SPECS:
-            node_types = spec["node_types"]
-            model_name = spec["model_name"]
-            embedding_label = spec["embedding_label"]
-            task_type = spec["task_type"]
-
-            logging.info(f"Job started for {embedding_label}. Fetching all nodes for types: {node_types}")
-            nodes = get_updated_nodes(spanner.database, timestamp, node_types, timeout=config.TIMEOUT)
-            # materializing generator to list if necessary, but generator works since it yields
-            converted_nodes = list(filter_and_convert_nodes(nodes))
-
-            logging.info(f"Generating embeddings for model {model_name} (embedding_label: {embedding_label})")
-            affected_rows = generate_embeddings_partitioned(
-                spanner.database,
-                converted_nodes,
-                model_name=model_name,
-                embedding_table=spanner.embedding_table,
-                embedding_label=embedding_label,
-                task_type=task_type,
-                timeout=config.TIMEOUT
-            )
-            total_affected_rows += affected_rows
+        embedding_utils = EmbeddingUtils(spanner)
+        total_affected_rows = embedding_utils.ingest_embeddings()
         return EmbeddingIngestionResponse(status=ResponseStatus.OK, affected_rows=total_affected_rows)
     except Exception as e:
         logging.error(f"Embedding ingestion failed: {e}")

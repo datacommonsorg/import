@@ -18,29 +18,29 @@ import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 
-from utils.embeddings import (
-    get_latest_lock_timestamp,
-    get_updated_nodes,
-    filter_and_convert_nodes,
-    generate_embeddings_partitioned
-)
+from utils.embeddings import EmbeddingUtils
 
 class TestEmbeddingUtils(unittest.TestCase):
 
+    def setUp(self):
+        self.mock_spanner = MagicMock()
+        self.mock_database = MagicMock()
+        self.mock_spanner.database = self.mock_database
+        self.mock_spanner.embedding_table = "NodeEmbedding"
+        self.utils = EmbeddingUtils(self.mock_spanner)
+
     def test_get_latest_lock_timestamp(self):
-        mock_database = MagicMock()
         mock_snapshot = MagicMock()
-        mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
+        self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
         expected_timestamp = datetime(2026, 4, 20, 12, 0, 0)
         mock_snapshot.execute_sql.return_value = [(expected_timestamp,)]
 
-        timestamp = get_latest_lock_timestamp(mock_database)
+        timestamp = self.utils.get_latest_lock_timestamp()
         self.assertEqual(timestamp, expected_timestamp)
 
     def test_get_updated_nodes(self):
-        mock_database = MagicMock()
         mock_snapshot = MagicMock()
-        mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
+        self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
 
         class MockField:
             def __init__(self, name):
@@ -59,7 +59,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             field_names=["subject_id", "name", "types"]
         )
 
-        nodes = list(get_updated_nodes(mock_database, None, ["Topic"], 3600))
+        nodes = list(self.utils.get_updated_nodes(None, ["Topic"], 3600))
         
         # Verify Spanner call
         mock_snapshot.execute_sql.assert_called_once()
@@ -75,9 +75,8 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.assertEqual(nodes[0]["types"], ["Topic"])
 
     def test_get_updated_nodes_with_timestamp(self):
-        mock_database = MagicMock()
         mock_snapshot = MagicMock()
-        mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
+        self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
 
         class MockField:
             def __init__(self, name):
@@ -97,7 +96,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         )
 
         test_timestamp = datetime(2026, 4, 25, 0, 0, 0)
-        nodes = list(get_updated_nodes(mock_database, test_timestamp, ["Topic"], 3600))
+        nodes = list(self.utils.get_updated_nodes(test_timestamp, ["Topic"], 3600))
         
         # Verify Spanner call
         mock_snapshot.execute_sql.assert_called_once()
@@ -118,14 +117,14 @@ class TestEmbeddingUtils(unittest.TestCase):
             {"subject_id": "dc/4", "name": "", "types": ["StatisticalVariable"]}
         ]
 
-        converted = list(filter_and_convert_nodes(nodes))
+        converted = list(self.utils.filter_and_convert_nodes(nodes))
         self.assertEqual(len(converted), 2)
         self.assertEqual(converted[0], ("dc/1", json.dumps({"title": "dc/1", "name": "Node 1"}), ["Topic"]))
         self.assertEqual(converted[1], ("dc/3", json.dumps({"title": "dc/3", "name": "Node 3"}), ["Topic", "StatisticalVariable"]))
 
     def test_filter_and_convert_nodes_json_order(self):
         nodes = [{"subject_id": "dc/order_test", "name": "Test Name", "types": ["Topic"]}]
-        converted = list(filter_and_convert_nodes(nodes))
+        converted = list(self.utils.filter_and_convert_nodes(nodes))
         self.assertEqual(len(converted), 1)
 
         json_str = converted[0][1]
@@ -138,8 +137,6 @@ class TestEmbeddingUtils(unittest.TestCase):
 
     @patch('utils.embeddings._BATCH_SIZE', 2)
     def test_generate_embeddings_partitioned(self):
-        mock_database = MagicMock()
-
         nodes = [
             ("dc/1", json.dumps({"title": "dc/1", "text": {"description": "Node 1"}}), ["Topic"]),
             ("dc/2", json.dumps({"title": "dc/2", "text": {"description": "Node 2"}}), ["Topic"]),
@@ -168,10 +165,9 @@ class TestEmbeddingUtils(unittest.TestCase):
             transactions.append(mock_transaction)
             return func(mock_transaction)
 
-        mock_database.run_in_transaction.side_effect = side_effect
+        self.mock_database.run_in_transaction.side_effect = side_effect
 
-        affected_rows = generate_embeddings_partitioned(
-            mock_database,
+        affected_rows = self.utils.generate_embeddings_partitioned(
             nodes,
             model_name="NodeEmbeddingModel",
             embedding_table="NodeEmbedding",
@@ -180,7 +176,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             timeout=3600
         )
         self.assertEqual(affected_rows, 8)
-        self.assertEqual(mock_database.run_in_transaction.call_count, 4)
+        self.assertEqual(self.mock_database.run_in_transaction.call_count, 4)
         
         # Verify execute_update calls
         self.assertEqual(len(transactions), 4)
