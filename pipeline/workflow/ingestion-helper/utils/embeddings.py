@@ -32,7 +32,7 @@ class EmbeddingUtils:
     def __init__(self, spanner: SpannerClient) -> None:
         self.spanner = spanner
 
-    def get_latest_lock_timestamp(self):
+    def _get_latest_lock_timestamp(self):
         """Gets the latest AcquiredTimestamp from IngestionLock table.
 
         Returns:
@@ -49,7 +49,7 @@ class EmbeddingUtils:
             raise
         return None
 
-    def get_updated_nodes(self, timestamp, node_types, timeout):
+    def _get_updated_nodes(self, timestamp, node_types, timeout):
         """Gets subject_ids and names from Node table where last_update_timestamp > timestamp.
         Yields results to avoid loading all into memory.
 
@@ -94,7 +94,7 @@ class EmbeddingUtils:
             logging.error(f"Error fetching updated nodes: {e}")
             raise
 
-    def filter_and_convert_nodes(self, nodes_generator):
+    def _filter_and_convert_nodes(self, nodes_generator):
         """Filters out nodes without a name and converts dictionaries to tuples.
         Reads from a generator and yields results.
 
@@ -114,7 +114,7 @@ class EmbeddingUtils:
                 ]))
                 yield (subject_id, embedding_content, node.get("types"))
 
-    def generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_table, embedding_label, task_type, timeout):
+    def _generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_table, embedding_label, task_type, timeout):
         """Generates embeddings in batches using standard transactions.
         Processes nodes in chunks of 500 to avoid transaction size limits.
         Accepts a generator or list to avoid loading all nodes into memory.
@@ -193,7 +193,7 @@ class EmbeddingUtils:
         """
         import config
 
-        timestamp = self.get_latest_lock_timestamp()
+        timestamp = self._get_latest_lock_timestamp()
         total_affected_rows = 0
         for spec in config.EMBEDDING_SPECS:
             node_types = spec["node_types"]
@@ -202,11 +202,11 @@ class EmbeddingUtils:
             task_type = spec["task_type"]
 
             logging.info(f"Job started for {embedding_label}. Fetching all nodes for types: {node_types}")
-            nodes = self.get_updated_nodes(timestamp, node_types, timeout=config.TIMEOUT)
-            converted_nodes = list(self.filter_and_convert_nodes(nodes))
+            nodes = self._get_updated_nodes(timestamp, node_types, timeout=config.TIMEOUT)
+            converted_nodes = list(self._filter_and_convert_nodes(nodes))
 
             logging.info(f"Generating embeddings for model {model_name} (embedding_label: {embedding_label})")
-            affected_rows = self.generate_embeddings_partitioned(
+            affected_rows = self._generate_embeddings_partitioned(
                 converted_nodes,
                 model_name=model_name,
                 embedding_table=self.spanner.embedding_table,

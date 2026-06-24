@@ -35,7 +35,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         expected_timestamp = datetime(2026, 4, 20, 12, 0, 0)
         mock_snapshot.execute_sql.return_value = [(expected_timestamp,)]
 
-        timestamp = self.utils.get_latest_lock_timestamp()
+        timestamp = self.utils._get_latest_lock_timestamp()
         self.assertEqual(timestamp, expected_timestamp)
 
     def test_get_updated_nodes(self):
@@ -59,7 +59,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             field_names=["subject_id", "name", "types"]
         )
 
-        nodes = list(self.utils.get_updated_nodes(None, ["Topic"], 3600))
+        nodes = list(self.utils._get_updated_nodes(None, ["Topic"], 3600))
         
         # Verify Spanner call
         mock_snapshot.execute_sql.assert_called_once()
@@ -96,7 +96,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         )
 
         test_timestamp = datetime(2026, 4, 25, 0, 0, 0)
-        nodes = list(self.utils.get_updated_nodes(test_timestamp, ["Topic"], 3600))
+        nodes = list(self.utils._get_updated_nodes(test_timestamp, ["Topic"], 3600))
         
         # Verify Spanner call
         mock_snapshot.execute_sql.assert_called_once()
@@ -117,14 +117,14 @@ class TestEmbeddingUtils(unittest.TestCase):
             {"subject_id": "dc/4", "name": "", "types": ["StatisticalVariable"]}
         ]
 
-        converted = list(self.utils.filter_and_convert_nodes(nodes))
+        converted = list(self.utils._filter_and_convert_nodes(nodes))
         self.assertEqual(len(converted), 2)
         self.assertEqual(converted[0], ("dc/1", json.dumps({"title": "dc/1", "name": "Node 1"}), ["Topic"]))
         self.assertEqual(converted[1], ("dc/3", json.dumps({"title": "dc/3", "name": "Node 3"}), ["Topic", "StatisticalVariable"]))
 
     def test_filter_and_convert_nodes_json_order(self):
         nodes = [{"subject_id": "dc/order_test", "name": "Test Name", "types": ["Topic"]}]
-        converted = list(self.utils.filter_and_convert_nodes(nodes))
+        converted = list(self.utils._filter_and_convert_nodes(nodes))
         self.assertEqual(len(converted), 1)
 
         json_str = converted[0][1]
@@ -167,7 +167,7 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         self.mock_database.run_in_transaction.side_effect = side_effect
 
-        affected_rows = self.utils.generate_embeddings_partitioned(
+        affected_rows = self.utils._generate_embeddings_partitioned(
             nodes,
             model_name="NodeEmbeddingModel",
             embedding_table="NodeEmbedding",
