@@ -50,6 +50,7 @@ STANDARD_PROPERTY_MAPPING = {
         constants.COLUMN_MEASUREMENT_METHOD,  # "measurement_method"
     "dcid:observationPeriod":
         constants.COLUMN_OBSERVATION_PERIOD,  # "observation_period"
+    "dcid:scalingFactor": constants.COLUMN_SCALING_FACTOR,  # "scaling_factor"
 }
 
 
@@ -92,9 +93,9 @@ def _apply_property_defaults(df: pd.DataFrame,
 
   for prop, col_name in property_mapping.items():
     default_value = getattr(obs_props, col_name, "")
-    if prop in df.columns:
+    if col_name in df.columns:
       # Replace empty strings with NaN for consistent handling
-      source_col = df[prop].replace("", pd.NA)
+      source_col = df[col_name].replace("", pd.NA)
 
       # Check if source is numeric before filling (to preserve int format for numeric columns)
       is_source_numeric = pd.api.types.is_numeric_dtype(source_col)
@@ -104,10 +105,6 @@ def _apply_property_defaults(df: pd.DataFrame,
                                                   default_for_na=default_value)
       else:
         df[col_name] = source_col.fillna(default_value).astype(str)
-
-        # Drop the original property column (if different from target)
-      if prop != col_name:
-        df = df.drop(columns=[prop])
     else:
       # If the column doesn't exist, use default for all rows
       df[col_name] = default_value
