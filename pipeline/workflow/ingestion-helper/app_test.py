@@ -268,7 +268,7 @@ class TestMain(unittest.TestCase):
         # Setup mock orchestrator
         mock_instance = MagicMock()
         mock_aggregation_utils.return_value = mock_instance
-        mock_instance.has_stage.side_effect = lambda stage, imports: stage == 1
+        mock_instance.get_active_stages.return_value = [1]
         mock_instance.execute_stage.return_value = ["job-1", "job-2"]
 
         # Call endpoint
@@ -290,12 +290,10 @@ class TestMain(unittest.TestCase):
         # Setup mock orchestrator to simulate Stage 1 completion and Stage 2 execution
         mock_instance = MagicMock()
         mock_aggregation_utils.return_value = mock_instance
-        mock_instance.aggregations = [{"stage": 1}, {"stage": 2}]
+        mock_instance.get_active_stages.return_value = [1, 2]
         
         # Mock BQ reporting Stage 1 jobs are DONE
         mock_instance.check_jobs_status.return_value = {"status": "DONE"}
-        # Mock Stage 2 existence and execution
-        mock_instance.has_stage.side_effect = lambda stage, imports: stage == 2
         mock_instance.execute_stage.return_value = ["job-stage2-1"]
 
         # Input state (Stage 1 completed)
@@ -321,6 +319,7 @@ class TestMain(unittest.TestCase):
         # Setup mock orchestrator to simulate jobs still in PENDING state
         mock_instance = MagicMock()
         mock_aggregation_utils.return_value = mock_instance
+        mock_instance.get_active_stages.return_value = [1]
         
         # Mock BQ reporting Stage 1 jobs are PENDING (still executing)
         mock_instance.check_jobs_status.return_value = {"status": "PENDING"}
@@ -349,8 +348,7 @@ class TestMain(unittest.TestCase):
         # Setup mock orchestrator
         mock_instance = MagicMock()
         mock_aggregation_utils.return_value = mock_instance
-        mock_instance.aggregations = [{"stage": 1}, {"stage": 2}]
-        mock_instance.has_stage.side_effect = lambda stage, imports: stage in [1, 2]
+        mock_instance.get_active_stages.return_value = [1, 2]
         mock_instance.execute_stage.side_effect = lambda stage, imports: [f"job-stage{stage}-1"]
 
         # Call legacy endpoint

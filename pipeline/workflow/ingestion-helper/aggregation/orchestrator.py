@@ -165,8 +165,26 @@ class AggregationOrchestrator:
             # Check if it applies to any active imports
             if self._get_applicable_imports(config, active_imports):
                 return True
-                
+
         return False
+
+    def get_active_stages(self, active_imports: List[str]) -> List[int]:
+        """Returns a sorted list of unique, active, and enabled stage numbers.
+
+        Args:
+            active_imports: The list of active import names.
+
+        Returns:
+            A sorted list of unique active stage numbers.
+        """
+        stages = set()
+        for config in self.aggregations:
+            if config.get("disabled", False):
+                continue
+            # Check if it applies to any active imports
+            if self._get_applicable_imports(config, active_imports):
+                stages.add(config.get("stage", 1))
+        return sorted(list(stages))
 
     def check_jobs_status(self, job_ids: List[str]) -> Dict[str, Any]:
         """Checks the status of the specified BigQuery job IDs.

@@ -92,16 +92,12 @@ def initiate_aggregation(req: InitiateRequest):
         orchestrator = _get_orchestrator()
         import_names = [item.get('importName') for item in req.importList if item.get('importName')]
         
-        # Find the first stage that has active aggregations (usually Stage 1)
-        first_stage = 1
-        max_stage = max((cfg.get("stage", 1) for cfg in orchestrator.aggregations), default=1)
-        while first_stage <= max_stage:
-            if orchestrator.has_stage(first_stage, import_names):
-                break
-            first_stage += 1
-        else:
+        active_stages = orchestrator.get_active_stages(import_names)
+        if not active_stages:
             logging.info("No stages have active aggregations for the current imports. Completing immediately.")
             return StateObject(status="SUCCEEDED", current_stage=0, active_job_ids=[], import_list=req.importList)
+
+        first_stage = active_stages[0]
 
         logging.info(f"Initiating aggregation at Stage {first_stage}")
         job_ids = orchestrator.execute_stage(first_stage, import_names)
@@ -152,19 +148,19 @@ def poll_aggregation(state: StateObject):
             return state # Return unchanged
             
         # Case C: All jobs succeeded -> Find and execute the next active stage
-        next_stage = state.current_stage + 1
-        max_stage = max((cfg.get("stage", 1) for cfg in orchestrator.aggregations), default=1)
-        while next_stage <= max_stage:
-            if orchestrator.has_stage(next_stage, import_names):
-                logging.info(f"Stage {state.current_stage} completed. Transitioning to Stage {next_stage}...")
-                new_job_ids = orchestrator.execute_stage(next_stage, import_names)
-                return StateObject(
-                    status="RUNNING",
-                    current_stage=next_stage,
-                    active_job_ids=new_job_ids,
-                    import_list=state.import_list
-                )
-            next_stage += 1
+        active_stages = orchestrator.get_active_stages(import_names)
+        next_stages = [s for s in active_stages if s > state.current_stage]
+        
+        if next_stages:
+            next_stage = next_stages[0]
+            logging.info(f"Stage {state.current_stage} completed. Transitioning to Stage {next_stage}...")
+            new_job_ids = orchestrator.execute_stage(next_stage, import_names)
+            return StateObject(
+                status="RUNNING",
+                current_stage=next_stage,
+                active_job_ids=new_job_ids,
+                import_list=state.import_list
+            )
             
         # If we exit the loop, there are no more active stages left
         logging.info("All aggregation stages completed successfully!")
@@ -203,10 +199,9 @@ def run_aggregation_legacy(req: LegacyAggregationRequest):
         
         # Compatibility Mode: Submit ALL enabled stages in parallel
         job_ids = []
-        max_stage = max((cfg.get("stage", 1) for cfg in orchestrator.aggregations), default=1)
-        for stage_num in range(1, max_stage + 1):
-            if orchestrator.has_stage(stage_num, import_names):
-                job_ids.extend(orchestrator.execute_stage(stage_num, import_names))
+        active_stages = orchestrator.get_active_stages(import_names)
+        for stage_num in active_stages:
+            job_ids.extend(orchestrator.execute_stage(stage_num, import_names))
                 
         return LegacyAggregationResponse(status=ResponseStatus.SUBMITTED, jobIds=job_ids)
     except Exception as e:

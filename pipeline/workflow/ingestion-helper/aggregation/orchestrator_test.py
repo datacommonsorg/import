@@ -99,6 +99,27 @@ class TestAggregationOrchestrator(unittest.TestCase):
         self.assertFalse(utils.has_stage(3, ["USFed_Census"]))
 
     @patch('builtins.open')
+    def test_get_active_stages(self, mock_file_open, *mocks):
+        """Tests that get_active_stages correctly extracts, filters, and sorts active stages."""
+        mock_file_open.side_effect = self._get_mock_open(VALID_CONFIG_YAML)
+
+        utils = AggregationOrchestrator(connection_id="conn", project_id="proj", instance_id="inst", database_id="db")
+
+        # 1. For active import "USFed_Census":
+        # Stage 1 (linked_edges, place) and Stage 2 (stat_var) have active steps.
+        # The place rollup in Stage 2 is disabled, but the stat_var step is enabled and active.
+        # Therefore, active stages should be [1, 2].
+        stages = utils.get_active_stages(active_imports=["USFed_Census"])
+        self.assertEqual(stages, [1, 2])
+
+        # 2. For active import "OtherImport":
+        # Stage 1 (linked_edges) matches via wildcard.
+        # Stage 2 (place rollup is disabled, stat_var does not match "OtherImport").
+        # Therefore, only Stage 1 is active. Active stages should be [1].
+        stages = utils.get_active_stages(active_imports=["OtherImport"])
+        self.assertEqual(stages, [1])
+
+    @patch('builtins.open')
     def test_execute_stage_1(self, mock_file_open, 
                              mock_svg_gen, mock_prov_gen, mock_edge_gen, 
                              mock_sv_agg, mock_place_gen, mock_executor):
