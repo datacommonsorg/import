@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import sys
 import os
+from datetime import datetime
 
 # Add the current directory to path so we can import spanner_client
 sys.path.append(os.path.dirname(__file__))
@@ -364,6 +365,76 @@ class TestSpannerClient(unittest.TestCase):
             "        ) PRIMARY KEY(subject_id)"
         )
         self.assertEqual(statements[2].strip(), "CREATE VECTOR INDEX CustomEmbeddingIndex ON CustomEmbeddingTable(embeddings)")
+
+    @patch('google.cloud.spanner.Client')
+    def test_update_ingestion_status_success(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+        client.update_ingestion_status(["import1"], "workflow-123", "SUCCESS")
+
+        mock_transaction.execute_update.assert_called_once()
+        args, kwargs = mock_transaction.execute_update.call_args
+        self.assertIn("DataImportTimestamp = PENDING_COMMIT_TIMESTAMP()", args[0])
+        self.assertEqual(kwargs['params']['importStatus'], "SUCCESS")
+
+    @patch('google.cloud.spanner.Client')
+    def test_update_ingestion_status_failed(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+        client.update_ingestion_status(["import1"], "workflow-123", "FAILED")
+
+        mock_transaction.execute_update.assert_called_once()
+        args, kwargs = mock_transaction.execute_update.call_args
+        self.assertNotIn("DataImportTimestamp = PENDING_COMMIT_TIMESTAMP()", args[0])
+        self.assertEqual(kwargs['params']['importStatus'], "FAILED")
+
+    @patch('google.cloud.spanner.Client')
+    def test_update_import_status(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+
+        params = {
+            'import_name': 'import1',
+            'job_id': 'job123',
+            'execution_time': 100,
+            'data_volume': 200,
+            'status': 'STAGING',
+            'latest_version': 'v1',
+            'next_refresh': '2026-07-01T00:00:00+00:00',
+            'graph_path': 'gs://path'
+        }
+        client.update_import_status(params)
+
+        mock_transaction.insert_or_update.assert_called_once()
+        _, kwargs = mock_transaction.insert_or_update.call_args
+        self.assertNotIn("DataImportTimestamp", kwargs['columns'])
 
 if __name__ == '__main__':
     unittest.main()

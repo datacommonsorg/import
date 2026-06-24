@@ -32,9 +32,10 @@ class SpannerClient:
     """
     _LOCK_ID = "global_ingestion_lock"
     _EMBEDDING_MODEL_PATH = "//aiplatform.googleapis.com/projects/{project}/locations/{location}/publishers/google/models/{model}"
-    _DEFAULT_MODELS = [
-        {"name": "NodeEmbeddingModel", "endpoint": "text-embedding-005"}
-    ]
+    _DEFAULT_MODELS = [{
+        "name": "NodeEmbeddingModel",
+        "endpoint": "text-embedding-005"
+    }]
 
     def __init__(self,
                  project_id: str,
@@ -77,10 +78,7 @@ class SpannerClient:
         for model in models:
             name = model["name"]
             endpoint = self._get_embeddings_endpoint(model["endpoint"])
-            self.models.append({
-                "name": name,
-                "endpoint": endpoint
-            })
+            self.models.append({"name": name, "endpoint": endpoint})
 
     def _get_embeddings_endpoint(self, model: str) -> str:
         """Returns the parameterized embedding model endpoint."""
@@ -262,7 +260,14 @@ class SpannerClient:
         logging.info(f"Updated ingestion status for {import_names}")
 
         def _update(transaction: Transaction):
-            update_sql = "UPDATE ImportStatus SET State = @importStatus, WorkflowId = @workflowId, StatusUpdateTimestamp = PENDING_COMMIT_TIMESTAMP() WHERE ImportName IN UNNEST(@importNames)"
+            update_fields = [
+                "State = @importStatus", "WorkflowId = @workflowId",
+                "StatusUpdateTimestamp = PENDING_COMMIT_TIMESTAMP()"
+            ]
+            if status == 'SUCCESS':
+                update_fields.append(
+                    "DataImportTimestamp = PENDING_COMMIT_TIMESTAMP()")
+            update_sql = f"UPDATE ImportStatus SET {', '.join(update_fields)} WHERE ImportName IN UNNEST(@importNames)"
             transaction.execute_update(update_sql,
                                        params={
                                            "importNames": import_names,
@@ -369,8 +374,7 @@ class SpannerClient:
         try:
             with self.database.snapshot() as snapshot:
                 results = snapshot.execute_sql(
-                    "SELECT 1 FROM ImportStatus WHERE State = 'RETRY' LIMIT 1"
-                )
+                    "SELECT 1 FROM ImportStatus WHERE State = 'RETRY' LIMIT 1")
                 return any(results)
         except Exception as e:
             logging.error(f'Error checking for retry imports: {e}')
@@ -404,10 +408,6 @@ class SpannerClient:
                 next_refresh, latest_version, graph_path,
                 spanner.COMMIT_TIMESTAMP
             ]
-
-            if status == 'STAGING':
-                columns.append("DataImportTimestamp")
-                row_values.append(spanner.COMMIT_TIMESTAMP)
 
             transaction.insert_or_update(table="ImportStatus",
                                          columns=columns,
@@ -486,16 +486,13 @@ class SpannerClient:
         logging.info(f"Existing models: {existing_models}")
 
         required_tables = [
-            "Node", "Edge", "TimeSeries", "Observation", "ImportStatus", "IngestionHistory",
-            "ImportVersionHistory", "IngestionLock", "Cache", self.embedding_table
+            "Node", "Edge", "TimeSeries", "Observation", "ImportStatus",
+            "IngestionHistory", "ImportVersionHistory", "IngestionLock",
+            "Cache", self.embedding_table
         ]
         required_indexes = [
-            "InEdge",
-            "TimeSeriesByProvenance",
-            "TimeSeriesByEntity1",
-            "TimeSeriesByEntity2",
-            "TimeSeriesByEntity3",
-            self.embedding_index
+            "InEdge", "TimeSeriesByProvenance", "TimeSeriesByEntity1",
+            "TimeSeriesByEntity2", "TimeSeriesByEntity3", self.embedding_index
         ]
         required_models = [m['name'] for m in self.models]
 
@@ -531,12 +528,11 @@ class SpannerClient:
             with open(schema_path, 'r') as f:
                 schema_content = f.read()
 
-            schema_content = Template(
-                schema_content).render(
-                    models=self.models,
-                    embedding_space=self.embedding_space,
-                    embedding_table=self.embedding_table,
-                    embedding_index=self.embedding_index)
+            schema_content = Template(schema_content).render(
+                models=self.models,
+                embedding_space=self.embedding_space,
+                embedding_table=self.embedding_table,
+                embedding_index=self.embedding_index)
 
             ddl_statements = [
                 s.strip() for s in schema_content.split(';') if s.strip()
@@ -550,9 +546,8 @@ class SpannerClient:
 
         try:
             admin_client = DatabaseAdminClient()
-            request = UpdateDatabaseDdlRequest(
-                database=database_path,
-                statements=ddl_statements)
+            request = UpdateDatabaseDdlRequest(database=database_path,
+                                               statements=ddl_statements)
             operation = admin_client.update_database_ddl(request=request)
             operation.result()
             logging.info("Database initialized successfully.")
@@ -566,11 +561,26 @@ class SpannerClient:
 
         def _seed(transaction: Transaction):
             candidates = {
-                "StatisticalVariable": ["StatisticalVariable", "StatisticalVariable", "StatisticalVariable", ["Class"], spanner.COMMIT_TIMESTAMP],
-                "StatVarGroup": ["StatVarGroup", "StatVarGroup", "StatVarGroup", ["Class"], spanner.COMMIT_TIMESTAMP],
-                "StatVarObservation": ["StatVarObservation", "StatVarObservation", "StatVarObservation", ["Class"], spanner.COMMIT_TIMESTAMP],
-                "Topic": ["Topic", "Topic", "Topic", ["Class"], spanner.COMMIT_TIMESTAMP],
-                "dc/g/Root": ["dc/g/Root", "Data Commons Variables", "dc/g/Root", ["StatVarGroup"], spanner.COMMIT_TIMESTAMP],
+                "StatisticalVariable": [
+                    "StatisticalVariable", "StatisticalVariable",
+                    "StatisticalVariable", ["Class"], spanner.COMMIT_TIMESTAMP
+                ],
+                "StatVarGroup": [
+                    "StatVarGroup", "StatVarGroup", "StatVarGroup", ["Class"],
+                    spanner.COMMIT_TIMESTAMP
+                ],
+                "StatVarObservation": [
+                    "StatVarObservation", "StatVarObservation",
+                    "StatVarObservation", ["Class"], spanner.COMMIT_TIMESTAMP
+                ],
+                "Topic": [
+                    "Topic", "Topic", "Topic", ["Class"],
+                    spanner.COMMIT_TIMESTAMP
+                ],
+                "dc/g/Root": [
+                    "dc/g/Root", "Data Commons Variables", "dc/g/Root",
+                    ["StatVarGroup"], spanner.COMMIT_TIMESTAMP
+                ],
             }
             subjects = list(candidates.keys())
             sql = "SELECT subject_id FROM Node WHERE subject_id IN UNNEST(@subjects)"
@@ -580,10 +590,15 @@ class SpannerClient:
             for row in transaction.execute_sql(sql, params, param_types):
                 existing.add(row[0])
 
-            values = [candidates[subj] for subj in subjects if subj not in existing]
+            values = [
+                candidates[subj] for subj in subjects if subj not in existing
+            ]
 
             if values:
-                columns = ["subject_id", "name", "value", "types", "last_update_timestamp"]
+                columns = [
+                    "subject_id", "name", "value", "types",
+                    "last_update_timestamp"
+                ]
                 transaction.insert(table="Node", columns=columns, values=values)
 
         try:
@@ -594,4 +609,3 @@ class SpannerClient:
         except Exception as e:
             logging.error(f"Error seeding database: {e}")
             raise
-
