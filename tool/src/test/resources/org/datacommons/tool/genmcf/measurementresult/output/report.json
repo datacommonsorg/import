@@ -6,7 +6,7 @@
         "NumPVSuccesses": "105",
         "StatVarState_NumDcCalls": "2",
         "Existence_NumChecks": "125",
-        "NumNodeSuccesses": "15",
+        "NumNodeSuccesses": "16",
         "Existence_NumDcCalls": "4"
       }
     },
