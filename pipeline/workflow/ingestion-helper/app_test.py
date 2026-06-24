@@ -344,7 +344,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(state["active_job_ids"], ["job-1", "job-2"])
 
     @patch('routes.aggregation._get_orchestrator')
-    def test_aggregation_legacy_run(self, mock_aggregation_utils):
+    def test_aggregation_run(self, mock_aggregation_utils):
         # Setup mock orchestrator
         mock_instance = MagicMock()
         mock_aggregation_utils.return_value = mock_instance

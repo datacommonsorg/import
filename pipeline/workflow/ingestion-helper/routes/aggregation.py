@@ -43,19 +43,24 @@ class InitiateRequest(BaseModel):
     importList: List[Dict[str, Any]] = Field(default_factory=list)
 
 # =============================================================================
-# Pydantic Models for the Legacy API (Backward Compatibility)
+# Pydantic Models for Backward Compatibility (Temporary)
+# TODO: Remove these models once all consumers migrate to /initiate and /poll
 # =============================================================================
 
-class LegacyAggregationRequest(BaseModel):
+class AggregationRequest(BaseModel):
+    """Temporary request model for compatibility run endpoint."""
     importList: List[Dict[str, Any]] = Field(default_factory=list)
 
-class LegacyAggregationStatusRequest(BaseModel):
+class AggregationStatusRequest(BaseModel):
+    """Temporary request model for compatibility status endpoint."""
     jobIds: List[str] = Field(default_factory=list)
 
-class LegacyAggregationResponse(BaseResponse):
+class AggregationResponse(BaseResponse):
+    """Temporary response model for compatibility run endpoint."""
     jobIds: List[str] = Field(default_factory=list, description="BigQuery job IDs submitted for async aggregation")
 
-class LegacyAggregationStatusResponse(BaseResponse):
+class AggregationStatusResponse(BaseResponse):
+    """Temporary response model for compatibility status endpoint."""
     error: Optional[str] = Field(default=None, description="Detailed error message if failed")
     failedJobs: Optional[List[str]] = Field(default_factory=list, description="List of failed BigQuery job IDs")
 
@@ -188,16 +193,20 @@ def poll_aggregation(state: AggregationWorkflowState):
         )
 
 # -----------------------------------------------------------------------------
-# Legacy API Endpoints (Backward Compatibility Mode)
+# API Endpoints for Backward Compatibility (Temporary)
+# TODO: Remove these endpoints once all consumers migrate to /initiate and /poll
 # -----------------------------------------------------------------------------
 
-@router.post("/run", response_model=LegacyAggregationResponse)
+@router.post("/run", response_model=AggregationResponse, deprecated=True)
 @log_start
-def run_aggregation_legacy(req: LegacyAggregationRequest):
-    """Legacy endpoint. Runs ALL enabled aggregations in parallel (ignores stages)."""
+def run_aggregation(req: AggregationRequest):
+    """Temporary endpoint. Runs ALL enabled aggregations in parallel (ignores stages).
+
+    Please migrate to /initiate and /poll endpoints.
+    """
     if not req.importList:
-        logging.info("Empty import list. Skipping legacy aggregation.")
-        return LegacyAggregationResponse(status=ResponseStatus.SUBMITTED, jobIds=[])
+        logging.info("Empty import list. Skipping temporary aggregation.")
+        return AggregationResponse(status=ResponseStatus.SUBMITTED, jobIds=[])
         
     try:
         orchestrator = _get_orchestrator()
@@ -209,28 +218,31 @@ def run_aggregation_legacy(req: LegacyAggregationRequest):
         for stage_num in active_stages:
             job_ids.extend(orchestrator.execute_stage(stage_num, import_names))
                 
-        return LegacyAggregationResponse(status=ResponseStatus.SUBMITTED, jobIds=job_ids)
+        return AggregationResponse(status=ResponseStatus.SUBMITTED, jobIds=job_ids)
     except Exception as e:
-        logging.error(f"Legacy aggregation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Legacy aggregation failed: {str(e)}")
+        logging.error(f"Temporary aggregation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Temporary aggregation failed: {str(e)}")
 
 
-@router.post("/status", response_model=LegacyAggregationStatusResponse)
+@router.post("/status", response_model=AggregationStatusResponse, deprecated=True)
 @log_start
-def check_aggregation_status_legacy(req: LegacyAggregationStatusRequest):
-    """Legacy endpoint. Checks the status of the submitted BigQuery jobs."""
+def get_aggregation_status(req: AggregationStatusRequest):
+    """Temporary endpoint. Checks the status of the submitted BigQuery jobs.
+
+    Please migrate to /initiate and /poll endpoints.
+    """
     if not req.jobIds:
         logging.info("Empty jobIds. Returning status DONE.")
-        return LegacyAggregationStatusResponse(status=ResponseStatus.DONE)
+        return AggregationStatusResponse(status=ResponseStatus.DONE)
         
     try:
         orchestrator = _get_orchestrator()
         status_info = orchestrator.check_jobs_status(req.jobIds)
-        return LegacyAggregationStatusResponse(
+        return AggregationStatusResponse(
             status=ResponseStatus.from_str(status_info.get("status", "ERROR")),
             error=status_info.get("error"),
-            failedJobs=status_info.get("failedJobs", [])
+            failedJobs=status_info.get("failed_jobs", [])
         )
     except Exception as e:
-        logging.error(f"Legacy status check failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Legacy status check failed: {str(e)}")
+        logging.error(f"Temporary check status failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Temporary check status failed: {str(e)}")
