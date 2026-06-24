@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Unit tests for the AggregationOrchestrator class using real temporary files."""
+"""Unit tests for the AggregationOrchestrator class."""
 
 import json
 import os

@@ -48,8 +48,6 @@ class AggregationOrchestrator:
             config_file_path: Optional custom path to the aggregation.yaml file.
                 If not specified, defaults to the aggregation.yaml in the parent directory.
         """
-        # Always run asynchronously at the executor level for stages to run in parallel
-        # We handle sequential blocking between stages at the workflow/router level
         self.executor = BigQueryExecutor(connection_id=connection_id,
                                          project_id=project_id,
                                          instance_id=instance_id,
@@ -78,7 +76,7 @@ class AggregationOrchestrator:
         Returns:
             A list of BigQuery job IDs submitted for this stage.
         """
-        logging.info(f"=== Starting Aggregation Orchestration for Stage {stage_num} ===")
+        logging.info(f"Starting Aggregation Orchestration for Stage {stage_num}")
         logging.info(f"Active imports in this run: {active_imports}")
         jobs = []
 
