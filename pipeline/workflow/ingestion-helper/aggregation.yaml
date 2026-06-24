@@ -1,15 +1,6 @@
-# =============================================================================
-# Data Commons Aggregation Configuration
-# =============================================================================
-# By default, this runs the standard global post-processing steps in parallel.
-# You can customize this file to add place-based rollups, statistical variable
-# aggregations, or to disable specific steps.
+# Data Commons Aggregation Configuration. See the README for details.
 
 aggregations:
-
-  # ---------------------------------------------------------------------------
-  # Stage 1: Standard Global Steps (Run in parallel by default)
-  # ---------------------------------------------------------------------------
   # Generates linkedContainedInPlace, linkedMemberOf, etc.
   - type: linked_edges
     imports: ["*"]
