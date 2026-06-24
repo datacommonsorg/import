@@ -40,20 +40,25 @@ class AggregationWorkflowState(BaseModel):
 class InitiateRequest(BaseModel):
     importList: List[Dict[str, Any]] = Field(default_factory=list)
 
-# TODO: Remove these models once all consumers migrate to /initiate and /poll
-
+# TODO: Remove AggregationRequest once all consumers migrate to /initiate and /poll
 class AggregationRequest(BaseModel):
     """Temporary request model for compatibility run endpoint."""
     importList: List[Dict[str, Any]] = Field(default_factory=list)
 
+
+# TODO: Remove AggregationStatusRequest once all consumers migrate to /initiate and /poll
 class AggregationStatusRequest(BaseModel):
     """Temporary request model for compatibility status endpoint."""
     jobIds: List[str] = Field(default_factory=list)
 
+
+# TODO: Remove AggregationResponse once all consumers migrate to /initiate and /poll
 class AggregationResponse(BaseResponse):
     """Temporary response model for compatibility run endpoint."""
     jobIds: List[str] = Field(default_factory=list, description="BigQuery job IDs submitted for async aggregation")
 
+
+# TODO: Remove AggregationStatusResponse once all consumers migrate to /initiate and /poll
 class AggregationStatusResponse(BaseResponse):
     """Temporary response model for compatibility status endpoint."""
     error: Optional[str] = Field(default=None, description="Detailed error message if failed")
@@ -183,8 +188,7 @@ def poll_aggregation(state: AggregationWorkflowState):
             error=f"Orchestrator error: {str(e)}"
         )
 
-# TODO: Remove these endpoints once all consumers migrate to /initiate and /poll
-
+# TODO: Remove the /run endpoint once all consumers migrate to /initiate and /poll
 @router.post("/run", response_model=AggregationResponse, deprecated=True)
 @log_start
 def run_aggregation(req: AggregationRequest):
@@ -212,6 +216,7 @@ def run_aggregation(req: AggregationRequest):
         raise HTTPException(status_code=500, detail=f"Temporary aggregation failed: {str(e)}")
 
 
+# TODO: Remove the /status endpoint once all consumers migrate to /initiate and /poll
 @router.post("/status", response_model=AggregationStatusResponse, deprecated=True)
 @log_start
 def get_aggregation_status(req: AggregationStatusRequest):
