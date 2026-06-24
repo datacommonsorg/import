@@ -54,6 +54,7 @@ public class Processor {
   private final ExecutorService execService;
   private final LogWrapper logCtx;
   private HttpClient httpClient;
+  private int numMcfNodeSuccesses = 0;
 
   public static Integer process(Args args) throws IOException, TemplateException {
     Integer retVal = 0;
@@ -129,6 +130,12 @@ public class Processor {
       processor.logCtx.setRuntimeMetadata(runtimeMetadata);
     }
 
+    if (args.fileGroup instanceof McfFileGroup) {
+      McfFileGroup mcfGroup = (McfFileGroup) args.fileGroup;
+      if (mcfGroup.getMcfs() != null && !mcfGroup.getMcfs().isEmpty()) {
+        processor.logCtx.incrementInfoCounterBy("NumNodeSuccesses", processor.numMcfNodeSuccesses);
+      }
+    }
     processor.logCtx.persistLog();
     if (args.generateSummaryReport) {
       SummaryReportGenerator.generateReportSummary(
@@ -213,7 +220,9 @@ public class Processor {
     if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
       existenceChecker.addLocalGraph(n);
     } else {
-      McfChecker.check(n, existenceChecker, statVarState, logCtx);
+      if (McfChecker.check(n, existenceChecker, statVarState, logCtx)) {
+        numMcfNodeSuccesses += n.getNodesCount();
+      }
     }
     if (args.checkMeasurementResult && type == Mcf.McfType.INSTANCE_MCF) {
       statVarState.addLocalGraph(n);
@@ -398,7 +407,9 @@ public class Processor {
   // Called only when existenceChecker is enabled.
   private void checkNodes() throws IOException, InterruptedException, DCTooManyFailuresException {
     for (Mcf.McfGraph n : nodesForVariousChecks) {
-      McfChecker.check(n, existenceChecker, statVarState, logCtx);
+      if (McfChecker.check(n, existenceChecker, statVarState, logCtx)) {
+        numMcfNodeSuccesses += n.getNodesCount();
+      }
       if (!logCtx.trackStatus(n.getNodesCount(), "nodes checked")) {
         throw new DCTooManyFailuresException("checkNodes encountered too many failures");
       }
