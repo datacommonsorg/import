@@ -1,5 +1,7 @@
 package org.datacommons.ingestion.missingnodes;
 
+import static org.junit.Assert.assertFalse;
+
 import com.google.cloud.spanner.Struct;
 import java.util.Arrays;
 import org.apache.beam.runners.direct.DirectRunner;
@@ -63,7 +65,7 @@ public class MissingEdgeNodesUtilsTest {
   }
 
   @Test
-  public void findMissingCandidatesUsesDistinctTypedStreams() {
+  public void findMissingCandidateOutputsUsesDistinctTypedStreams() {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
     options.setRunner(DirectRunner.class);
 
@@ -99,10 +101,10 @@ public class MissingEdgeNodesUtilsTest {
             .apply("Create node ids", Create.of("missing2"))
             .apply(MissingEdgeNodesUtils.nodeKeys());
 
-    PCollection<KV<String, String>> missing =
-        MissingEdgeNodesUtils.findMissingCandidates(edgeCandidates, nodeKeys);
+    MissingEdgeNodesUtils.MissingCandidateOutputs missing =
+        MissingEdgeNodesUtils.findMissingCandidateOutputs(edgeCandidates, nodeKeys);
 
-    PAssert.that(missing)
+    PAssert.that(missing.typedRows())
         .containsInAnyOrder(
             Arrays.asList(
                 KV.of("subj1", MissingEdgeNodesUtils.SUBJECT_ID),
@@ -111,6 +113,8 @@ public class MissingEdgeNodesUtilsTest {
                 KV.of("pred2", MissingEdgeNodesUtils.PREDICATE),
                 KV.of("missing", MissingEdgeNodesUtils.OBJECT_ID),
                 KV.of("missing", MissingEdgeNodesUtils.PROVENANCE)));
+    PAssert.that(missing.dcids())
+        .containsInAnyOrder(Arrays.asList("subj1", "subj2", "pred1", "pred2", "missing"));
 
     pipeline.run();
   }
@@ -178,6 +182,43 @@ public class MissingEdgeNodesUtilsTest {
   }
 
   @Test
+  public void classifyProvisionalMcfDcidsSplitsValidAndInvalidDcids() {
+    options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
+    options.setRunner(DirectRunner.class);
+    String longDcid = repeat('a', 257);
+
+    MissingEdgeNodesUtils.ProvisionalMcfDcidOutputs outputs =
+        MissingEdgeNodesUtils.classifyProvisionalMcfDcids(
+            pipeline.apply(
+                Create.of(
+                    "myCustomProperty",
+                    "geoId/06",
+                    "dc/p/abc",
+                    "has,comma",
+                    "has\nnewline",
+                    "has\"quote",
+                    "has space",
+                    "bio/foo bar",
+                    "",
+                    longDcid)));
+
+    PAssert.that(outputs.validDcids())
+        .containsInAnyOrder(Arrays.asList("myCustomProperty", "geoId/06", "dc/p/abc"));
+    PAssert.that(outputs.invalidDcids())
+        .containsInAnyOrder(
+            Arrays.asList(
+                KV.of("has,comma", "invalid_dcid_chars"),
+                KV.of("has\nnewline", "invalid_dcid_chars"),
+                KV.of("has\"quote", "invalid_dcid_chars"),
+                KV.of("has space", "invalid_dcid_chars"),
+                KV.of("bio/foo bar", "invalid_dcid_chars"),
+                KV.of("", "empty"),
+                KV.of(longDcid, "too_long")));
+
+    pipeline.run();
+  }
+
+  @Test
   public void formatCsvEscapesSpecialCharacters() {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
     options.setRunner(DirectRunner.class);
@@ -209,5 +250,36 @@ public class MissingEdgeNodesUtilsTest {
         .containsInAnyOrder(Arrays.asList("plain", "\"has,comma\"", "\"has\"\"quote\""));
 
     pipeline.run();
+  }
+
+  @Test
+  public void formatProvisionalMcfNodes() {
+    options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
+    options.setRunner(DirectRunner.class);
+
+    PCollection<String> rows =
+        pipeline
+            .apply(Create.of("myCustomProperty"))
+            .apply(MissingEdgeNodesUtils.formatProvisionalMcfNodes());
+
+    PAssert.that(rows)
+        .containsInAnyOrder(
+            Arrays.asList("Node: dcid:myCustomProperty\ntypeOf: dcs:ProvisionalNode\n"));
+
+    pipeline.run();
+  }
+
+  @Test
+  public void writeDedupedInputsDefaultsToFalse() {
+    MissingEdgeNodesOptions missingOptions =
+        PipelineOptionsFactory.create().as(MissingEdgeNodesOptions.class);
+
+    assertFalse(missingOptions.getWriteDedupedInputs());
+  }
+
+  private static String repeat(char value, int count) {
+    char[] chars = new char[count];
+    Arrays.fill(chars, value);
+    return new String(chars);
   }
 }

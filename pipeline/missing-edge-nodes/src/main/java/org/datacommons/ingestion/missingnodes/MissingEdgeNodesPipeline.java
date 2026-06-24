@@ -11,6 +11,7 @@ import org.apache.beam.sdk.values.PCollection;
 /** Dataflow pipeline for finding Edge identifiers missing from Node.subject_id. */
 public class MissingEdgeNodesPipeline {
   private static final String OUTPUT_HEADER = "dcid,type";
+  private static final String INVALID_PROVISIONAL_NODE_HEADER = "dcid,reason";
   private static final String NODE_QUERY = "SELECT subject_id FROM Node";
   private static final String EDGE_QUERY =
       "SELECT subject_id, predicate, object_id, provenance FROM Edge";
@@ -26,6 +27,9 @@ public class MissingEdgeNodesPipeline {
   private static final String MISSING_PREDICATES = "missing_predicates";
   private static final String MISSING_OBJECT_IDS = "missing_object_ids";
   private static final String MISSING_PROVENANCES = "missing_provenances";
+  private static final String PROVISIONAL_MCF_NODES_WRITTEN = "provisional_mcf_nodes_written";
+  private static final String PROVISIONAL_MCF_NODES_SKIPPED_INVALID_DCID =
+      "provisional_mcf_nodes_skipped_invalid_dcid";
 
   public static void main(String[] args) {
     MissingEdgeNodesOptions options =
@@ -99,7 +103,13 @@ public class MissingEdgeNodesPipeline {
           outputPrefix(options.getOutputLocation(), "distinct-provenances"));
     }
 
-    MissingEdgeNodesUtils.findMissingCandidates(edgeCandidates, nodeKeys)
+    MissingEdgeNodesUtils.MissingCandidateOutputs missingCandidates =
+        MissingEdgeNodesUtils.findMissingCandidateOutputs(edgeCandidates, nodeKeys);
+    MissingEdgeNodesUtils.ProvisionalMcfDcidOutputs provisionalMcfDcids =
+        MissingEdgeNodesUtils.classifyProvisionalMcfDcids(missingCandidates.dcids());
+
+    missingCandidates
+        .typedRows()
         .apply(
             "Count missing candidate types",
             MissingEdgeNodesUtils.countTypedValues(
@@ -114,6 +124,31 @@ public class MissingEdgeNodesPipeline {
                 .to(outputPrefix(options.getOutputLocation(), "missing-edge-node-dcids"))
                 .withSuffix(".csv")
                 .withHeader(OUTPUT_HEADER));
+
+    provisionalMcfDcids
+        .validDcids()
+        .apply(
+            "Count provisional MCF nodes",
+            MissingEdgeNodesUtils.countStringValues(PROVISIONAL_MCF_NODES_WRITTEN))
+        .apply("Format provisional MCF nodes", MissingEdgeNodesUtils.formatProvisionalMcfNodes())
+        .apply(
+            "Write provisional MCF nodes",
+            TextIO.write()
+                .to(outputPrefix(options.getOutputLocation(), "provisional-nodes"))
+                .withSuffix(".mcf"));
+
+    provisionalMcfDcids
+        .invalidDcids()
+        .apply(
+            "Count skipped provisional MCF dcids",
+            MissingEdgeNodesUtils.countKvValues(PROVISIONAL_MCF_NODES_SKIPPED_INVALID_DCID))
+        .apply("Format invalid provisional MCF dcids", MissingEdgeNodesUtils.formatCsvRows())
+        .apply(
+            "Write invalid provisional MCF dcids",
+            TextIO.write()
+                .to(outputPrefix(options.getOutputLocation(), "invalid-provisional-node-dcids"))
+                .withSuffix(".csv")
+                .withHeader(INVALID_PROVISIONAL_NODE_HEADER));
 
     pipeline.run();
   }
