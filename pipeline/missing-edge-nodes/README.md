@@ -24,14 +24,14 @@ mvn compile exec:java -pl missing-edge-nodes -am \
     --spannerProjectId=<spanner-project> \
     --spannerInstanceId=<spanner-instance> \
     --spannerDatabaseId=<spanner-database> \
-    --writeDedupedInputs=true \
+    --writeDedupedInputs=false \
     --outputLocation=gs://<bucket>/edge-node-audit"
 ```
 
 Staging Spanner command:
 
 ```bash
-mvn compile exec:java -pl missing-edge-nodes -am -Dexec.mainClass=org.datacommons.ingestion.missingnodes.MissingEdgeNodesPipeline -Dexec.args="--runner=DataflowRunner --project=datcom-store --region=us-central1 --tempLocation=gs://rohitrkumar-dataflow/temp/tmp --stagingLocation=gs://rohitrkumar-dataflow/temp/staging --jobName=missing-edge-node-dcids --workerMachineType=e2-highmem-16 --numberOfWorkerHarnessThreads=8 --spannerProjectId=datcom-store --spannerInstanceId=dc-graph-staging --spannerDatabaseId=dc_graph --writeDedupedInputs=true --outputLocation=gs://rohitrkumar-dataflow/edge-node-audit-$(date +%Y%m%d)"
+mvn compile exec:java -pl missing-edge-nodes -am -Dexec.mainClass=org.datacommons.ingestion.missingnodes.MissingEdgeNodesPipeline -Dexec.args="--runner=DataflowRunner --project=datcom-store --region=us-central1 --tempLocation=gs://rohitrkumar-dataflow/temp/tmp --stagingLocation=gs://rohitrkumar-dataflow/temp/staging --jobName=missing-edge-node-dcids --workerMachineType=e2-highmem-16 --numberOfWorkerHarnessThreads=8 --spannerProjectId=datcom-store --spannerInstanceId=dc-graph-staging --spannerDatabaseId=dc_graph --writeDedupedInputs=false --outputLocation=gs://rohitrkumar-dataflow/edge-node-audit-$(date +%Y%m%d)"
 ```
 
 For large runs, start with `e2-highmem-16`. If workers still OOM, retry with
@@ -44,7 +44,19 @@ Output:
 ```text
 gs://<bucket>/edge-node-audit/missing-edge-node-dcids/part-*.csv
 dcid,type
+
+gs://<bucket>/edge-node-audit/provisional-nodes/part-*.mcf
+Node: dcid:<missing_dcid>
+typeOf: dcs:ProvisionalNode
+
+gs://<bucket>/edge-node-audit/invalid-provisional-node-dcids/part-*.csv
+dcid,reason
 ```
+
+The provisional MCF output only includes missing dcids that are safe for
+`Node: dcid:<dcid>` MCF syntax. Missing dcids with invalid characters, empty
+values, or values longer than 256 characters are skipped from the MCF shards and
+written to `invalid-provisional-node-dcids`.
 
 When `writeDedupedInputs` is enabled, the job also writes headerless files:
 

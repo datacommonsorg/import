@@ -25,14 +25,14 @@ public interface MissingEdgeNodesOptions extends PipelineOptions {
 
   void setSpannerDatabaseId(String value);
 
-  @Description("GCS output folder for missing dcid CSV shards")
+  @Description("GCS output folder for missing dcid and provisional MCF shards")
   @Required
   String getOutputLocation();
 
   void setOutputLocation(String value);
 
   @Description("Whether to write deduplicated Edge column audit files")
-  @Default.Boolean(true)
+  @Default.Boolean(false)
   boolean getWriteDedupedInputs();
 
   void setWriteDedupedInputs(boolean value);

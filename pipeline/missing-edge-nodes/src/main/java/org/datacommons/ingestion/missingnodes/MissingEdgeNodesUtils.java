@@ -1,6 +1,8 @@
 package org.datacommons.ingestion.missingnodes;
 
 import com.google.cloud.spanner.Struct;
+import java.util.Iterator;
+import java.util.regex.Pattern;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.Distinct;
@@ -11,7 +13,9 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TupleTagList;
 
 /** Utility transforms for the missing Edge dcids pipeline. */
 class MissingEdgeNodesUtils {
@@ -20,7 +24,10 @@ class MissingEdgeNodesUtils {
   static final String OBJECT_ID = "object_id";
   static final String PROVENANCE = "provenance";
 
+  private static final int MAX_DCID_LENGTH = 256;
   private static final String NODE_MARKER = "node";
+  private static final Pattern VALID_DCID_PATTERN =
+      Pattern.compile("^[A-Za-z0-9_&/%\\)\\(+\\-\\.:]+$");
 
   private MissingEdgeNodesUtils() {}
 
@@ -33,6 +40,11 @@ class MissingEdgeNodesUtils {
   }
 
   static ParDo.SingleOutput<String, String> countStringValues(String counterName) {
+    return ParDo.of(new CountElementsFn<>(counterName));
+  }
+
+  static ParDo.SingleOutput<KV<String, String>, KV<String, String>> countKvValues(
+      String counterName) {
     return ParDo.of(new CountElementsFn<>(counterName));
   }
 
@@ -67,13 +79,38 @@ class MissingEdgeNodesUtils {
 
   static PCollection<KV<String, String>> findMissingCandidates(
       PCollection<KV<String, String>> edgeCandidates, PCollection<KV<String, String>> nodeKeys) {
+    return findMissingCandidateOutputs(edgeCandidates, nodeKeys).typedRows();
+  }
+
+  static MissingCandidateOutputs findMissingCandidateOutputs(
+      PCollection<KV<String, String>> edgeCandidates, PCollection<KV<String, String>> nodeKeys) {
     TupleTag<String> edgeTag = new TupleTag<>();
     TupleTag<String> nodeTag = new TupleTag<>();
+    TupleTag<KV<String, String>> missingTypedRowsTag = new TupleTag<KV<String, String>>() {};
+    TupleTag<String> missingDcidsTag = new TupleTag<String>() {};
 
-    return KeyedPCollectionTuple.of(edgeTag, edgeCandidates)
-        .and(nodeTag, nodeKeys)
-        .apply("Join Edge candidates to Node keys", CoGroupByKey.create())
-        .apply("Keep candidates without Node", ParDo.of(new MissingCandidateFn(edgeTag, nodeTag)));
+    PCollectionTuple outputs =
+        KeyedPCollectionTuple.of(edgeTag, edgeCandidates)
+            .and(nodeTag, nodeKeys)
+            .apply("Join Edge candidates to Node keys", CoGroupByKey.create())
+            .apply(
+                "Keep candidates without Node",
+                ParDo.of(new MissingCandidateFn(edgeTag, nodeTag, missingDcidsTag))
+                    .withOutputTags(missingTypedRowsTag, TupleTagList.of(missingDcidsTag)));
+    return new MissingCandidateOutputs(
+        outputs.get(missingTypedRowsTag), outputs.get(missingDcidsTag));
+  }
+
+  static ProvisionalMcfDcidOutputs classifyProvisionalMcfDcids(PCollection<String> dcids) {
+    TupleTag<String> validDcidsTag = new TupleTag<String>() {};
+    TupleTag<KV<String, String>> invalidDcidsTag = new TupleTag<KV<String, String>>() {};
+
+    PCollectionTuple outputs =
+        dcids.apply(
+            "Classify provisional MCF dcids",
+            ParDo.of(new ClassifyProvisionalMcfDcidFn(invalidDcidsTag))
+                .withOutputTags(validDcidsTag, TupleTagList.of(invalidDcidsTag)));
+    return new ProvisionalMcfDcidOutputs(outputs.get(validDcidsTag), outputs.get(invalidDcidsTag));
   }
 
   static ParDo.SingleOutput<KV<String, String>, String> formatCsvRows() {
@@ -82,6 +119,10 @@ class MissingEdgeNodesUtils {
 
   static ParDo.SingleOutput<String, String> formatCsvValues() {
     return ParDo.of(new FormatCsvValueFn());
+  }
+
+  static ParDo.SingleOutput<String, String> formatProvisionalMcfNodes() {
+    return ParDo.of(new FormatProvisionalMcfNodeFn());
   }
 
   private static boolean hasValue(String value) {
@@ -103,6 +144,19 @@ class MissingEdgeNodesUtils {
       return value;
     }
     return "\"" + value.replace("\"", "\"\"") + "\"";
+  }
+
+  private static String invalidProvisionalMcfDcidReason(String dcid) {
+    if (!hasValue(dcid)) {
+      return "empty";
+    }
+    if (dcid.length() > MAX_DCID_LENGTH) {
+      return "too_long";
+    }
+    if (!VALID_DCID_PATTERN.matcher(dcid).matches()) {
+      return "invalid_dcid_chars";
+    }
+    return "";
   }
 
   static class NodeKeyFn extends DoFn<String, KV<String, String>> {
@@ -256,13 +310,72 @@ class MissingEdgeNodesUtils {
     }
   }
 
+  static class MissingCandidateOutputs {
+    private final PCollection<KV<String, String>> typedRows;
+    private final PCollection<String> dcids;
+
+    MissingCandidateOutputs(PCollection<KV<String, String>> typedRows, PCollection<String> dcids) {
+      this.typedRows = typedRows;
+      this.dcids = dcids;
+    }
+
+    PCollection<KV<String, String>> typedRows() {
+      return typedRows;
+    }
+
+    PCollection<String> dcids() {
+      return dcids;
+    }
+  }
+
+  static class ProvisionalMcfDcidOutputs {
+    private final PCollection<String> validDcids;
+    private final PCollection<KV<String, String>> invalidDcids;
+
+    ProvisionalMcfDcidOutputs(
+        PCollection<String> validDcids, PCollection<KV<String, String>> invalidDcids) {
+      this.validDcids = validDcids;
+      this.invalidDcids = invalidDcids;
+    }
+
+    PCollection<String> validDcids() {
+      return validDcids;
+    }
+
+    PCollection<KV<String, String>> invalidDcids() {
+      return invalidDcids;
+    }
+  }
+
+  static class ClassifyProvisionalMcfDcidFn extends DoFn<String, String> {
+    private final TupleTag<KV<String, String>> invalidDcidsTag;
+
+    ClassifyProvisionalMcfDcidFn(TupleTag<KV<String, String>> invalidDcidsTag) {
+      this.invalidDcidsTag = invalidDcidsTag;
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      String dcid = context.element();
+      String invalidReason = invalidProvisionalMcfDcidReason(dcid);
+      if (invalidReason.isEmpty()) {
+        context.output(dcid);
+        return;
+      }
+      context.output(invalidDcidsTag, KV.of(dcid == null ? "" : dcid, invalidReason));
+    }
+  }
+
   static class MissingCandidateFn extends DoFn<KV<String, CoGbkResult>, KV<String, String>> {
     private final TupleTag<String> edgeTag;
     private final TupleTag<String> nodeTag;
+    private final TupleTag<String> missingDcidsTag;
 
-    MissingCandidateFn(TupleTag<String> edgeTag, TupleTag<String> nodeTag) {
+    MissingCandidateFn(
+        TupleTag<String> edgeTag, TupleTag<String> nodeTag, TupleTag<String> missingDcidsTag) {
       this.edgeTag = edgeTag;
       this.nodeTag = nodeTag;
+      this.missingDcidsTag = missingDcidsTag;
     }
 
     @ProcessElement
@@ -271,8 +384,13 @@ class MissingEdgeNodesUtils {
       if (input.getValue().getAll(nodeTag).iterator().hasNext()) {
         return;
       }
-      for (String type : input.getValue().getAll(edgeTag)) {
-        context.output(KV.of(input.getKey(), type));
+      Iterator<String> edgeTypes = input.getValue().getAll(edgeTag).iterator();
+      if (!edgeTypes.hasNext()) {
+        return;
+      }
+      context.output(missingDcidsTag, input.getKey());
+      while (edgeTypes.hasNext()) {
+        context.output(KV.of(input.getKey(), edgeTypes.next()));
       }
     }
   }
@@ -289,6 +407,13 @@ class MissingEdgeNodesUtils {
     @ProcessElement
     public void processElement(ProcessContext context) {
       context.output(escapeCsv(context.element()));
+    }
+  }
+
+  static class FormatProvisionalMcfNodeFn extends DoFn<String, String> {
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      context.output("Node: dcid:" + context.element() + "\n" + "typeOf: dcs:ProvisionalNode\n");
     }
   }
 }
