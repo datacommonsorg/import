@@ -276,7 +276,10 @@ class StatVarGroupGenerator:
             FROM StatVarTriple WHERE predicate = 'constraintProperties' GROUP BY subject_id
           ),
           Constraints AS (
-            SELECT T.subject_id, ARRAY_AGG(CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id)) ORDER BY T.predicate) AS pvs
+            SELECT 
+              T.subject_id, 
+              ARRAY_AGG(T.predicate ORDER BY T.predicate, T.object_id) AS aligned_cps,
+              ARRAY_AGG(CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id)) ORDER BY T.predicate, T.object_id) AS pvs
             FROM StatVarTriple T
             JOIN ConstraintProps ON T.subject_id = ConstraintProps.subject_id
             WHERE predicate IN UNNEST(ConstraintProps.constraintProperties) GROUP BY subject_id 
@@ -296,7 +299,7 @@ class StatVarGroupGenerator:
             PopType.subject_id AS statvar,
             PopType.object_id AS populationType,
             ARRAY<STRING>[] AS constraintProperties,
-            IFNULL(ConstraintProps.constraintProperties, ARRAY<STRING>[]) AS newConstraintProperties,
+            IFNULL(Constraints.aligned_cps, ARRAY<STRING>[]) AS newConstraintProperties,
             IFNULL(Constraints.pvs, ARRAY<STRING>[]) AS attributes,
             0 AS iteration
           FROM PopType
