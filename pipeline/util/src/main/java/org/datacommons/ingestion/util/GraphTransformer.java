@@ -25,20 +25,49 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
 
   private static final Set<String> NON_CONSTRAINT_PROPS =
       Set.of(
-          "dcid",
+          // -- Legacy Prophet PropsThatAreNotConstraintProps --
+          // Basic properties
           "typeOf",
-          "name",
-          "description",
+          "dcid",
           "provenance",
+          "isPublic",
+          "localCuratorLevelId",
+          "url",
           "memberOf",
+          "name",
+          "label",
+          "description",
+          "descriptionUrl",
+          "alternateName",
+          "utteranceTemplate",
+          "source",
+          "footnote",
+          // Debug properties
+          "keyString",
+          "resMCFFile",
+          // StatPop / StatVar properties (current + past)
           "populationType",
+          "populationGroup",
+          "location",
+          "childhoodLocation",
+          "constraintProperties",
           "measuredProperty",
           "statType",
-          "measurementQualifier",
           "measurementDenominator",
+          "measurementQualifier",
+          "censusACSTableId",
           "measurementMethod",
-          "constraintProperties",
-          "observationProperties");
+          "scalingFactor",
+          "unit",
+          "isNormalizable",
+          "denominatorForNormalization",
+
+          // -- New properties --
+          // Extensible StatVar properties
+          "observationProperties",
+          // Generated properties
+          "linkedMember",
+          "linkedMemberOf");
 
   @ProcessElement
   public void processElement(@Element McfGraph inputGraph, OutputReceiver<McfGraph> receiver) {

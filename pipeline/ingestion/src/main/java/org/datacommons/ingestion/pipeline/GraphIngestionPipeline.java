@@ -42,7 +42,7 @@ public class GraphIngestionPipeline {
       Metrics.counter(GraphIngestionPipeline.class, "graph_timeseries_count");
 
   // List of imports that require node combination.
-  private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place");
+  private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place", "Provenance");
 
   private static boolean isJsonNullOrEmpty(JsonElement element) {
     return element == null || element.getAsString().isEmpty();
@@ -181,10 +181,16 @@ public class GraphIngestionPipeline {
     }
 
     // Transform schema nodes (handle quantities, etc.)
-    PCollection<McfGraph> transformedGraph =
-        combinedGraph.apply(
-            "TransformNodes-" + importName,
-            org.apache.beam.sdk.transforms.ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> transformedGraph;
+    if (options.getSkipTransformation()) {
+      LOGGER.info("Skipping transformation step for import: {}", importName);
+      transformedGraph = combinedGraph;
+    } else {
+      transformedGraph =
+          combinedGraph.apply(
+              "TransformNodes-" + importName,
+              org.apache.beam.sdk.transforms.ParDo.of(new GraphTransformer()));
+    }
 
     // Convert all nodes to mutations
     PCollection<Mutation> nodeMutations =

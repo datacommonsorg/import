@@ -5,7 +5,7 @@
         "NumRowSuccesses": "2",
         "NumPVSuccesses": "11",
         "Existence_NumChecks": "35",
-        "NumNodeSuccesses": "2",
+        "NumNodeSuccesses": "5",
         "Existence_NumDcCalls": "2"
       }
     },
