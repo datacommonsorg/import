@@ -160,6 +160,65 @@ public class GraphIngestionPipelineTest implements Serializable {
     assertTrue("Node mutations should be combined into 1", nodeMutationCount == 1);
   }
 
+  @Test
+  public void testBuildPipelineWithSkipTransformation() throws Exception {
+    // 1. Setup Test Data (MCF File with a StatisticalVariable)
+    File mcfFile = tmpFolder.newFile("test_skip_transform.mcf");
+    Files.writeString(
+        Path.of(mcfFile.getPath()),
+        "Node: dcid:testStatVar\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "populationType: dcs:Person\n"
+            + "gender: dcs:Female\n\n"); // gender is a constraint property
+
+    // 2. Setup Options
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    String importListJson =
+        String.format(
+            "[{\"importName\": \"testImport\", \"graphPath\": \"%s\"}]", mcfFile.getPath());
+    options.setImportList(importListJson);
+    options.setProjectId("test-project");
+    options.setSpannerInstanceId("test-instance");
+    options.setSpannerDatabaseId("test-database");
+    options.setSkipTransformation(true); // Enable skip transformation!
+
+    // 3. Setup Mock SpannerClient
+    PCollection<Void> emptySignal =
+        pipeline.apply(
+            "CreateEmptySignal_SkipTransform", Create.empty(TypeDescriptor.of(Void.class)));
+
+    SpannerWriteResult mockWriteResult =
+        mock(SpannerWriteResult.class, withSettings().serializable());
+    PCollection<Void> mockWriteOutput =
+        pipeline.apply(
+            "CreateWriteSignal_SkipTransform", Create.empty(TypeDescriptor.of(Void.class)));
+    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
+
+    SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
+
+    // 4. Build Pipeline
+    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+
+    // 5. Run Pipeline
+    pipeline.run().waitUntilFinish();
+
+    // 6. Assertions
+    // If transformation is skipped, we should NOT see "constraintProperties" in the mutations.
+    // "gender" is NOT in NON_CONSTRAINT_PROPS, so it would normally trigger constraintProperties
+    // generation.
+    boolean foundConstraintProperties = false;
+    for (Mutation m : capturedMutations) {
+      if (m.getTable().equals("Edge")
+          && m.asMap().get("subject_id").getString().equals("testStatVar")
+          && m.asMap().get("predicate").getString().equals("constraintProperties")) {
+        foundConstraintProperties = true;
+      }
+    }
+    assertTrue(
+        "Should NOT find constraintProperties when transformation is skipped",
+        !foundConstraintProperties);
+  }
+
   static class MockSpannerClient extends SpannerClient {
     private final transient PCollection<Void> deleteSignal;
     private final transient SpannerWriteResult mockWriteResult;

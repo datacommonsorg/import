@@ -40,10 +40,10 @@ INSERT INTO "observations" VALUES('country/ASM','var2','2023','34','c/p/1','',''
 INSERT INTO "observations" VALUES('country/AIA','var2','2023','42','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/WLF','var2','2023','75','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/ESH','var2','2023','65','c/p/1','','','','','{}');
-INSERT INTO "observations" VALUES('country/IND','var1','2020','0.16','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/IND','var2','2020','53','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/CHN','var1','2020','0.23','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/CHN','var2','2020','67','c/p/1','','','','','');
+INSERT INTO "observations" VALUES(NULL,'var1','2020','0.16','c/p/1','','','','','{"dcid:observationAbout": "country/IND"}');
+INSERT INTO "observations" VALUES(NULL,'var2','2020','53','c/p/1','','','','','{"dcid:observationAbout": "country/IND"}');
+INSERT INTO "observations" VALUES(NULL,'var1','2020','0.23','c/p/1','','','','','{"dcid:observationAbout": "country/CHN"}');
+INSERT INTO "observations" VALUES(NULL,'var2','2020','67','c/p/1','','','','','{"dcid:observationAbout": "country/CHN"}');
 INSERT INTO "observations" VALUES('country/USA','var1','2021','555','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/IND','var1','2022','321','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/USA','var2','2021','666','c/p/1','','','','','{}');

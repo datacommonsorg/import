@@ -184,7 +184,7 @@ public class TimeSeries implements Serializable {
                 String.valueOf(isDcAggregate));
     long fingerprint =
         Hashing.farmHashFingerprint64().hashString(concatString, StandardCharsets.UTF_8).asLong();
-    return String.valueOf(fingerprint);
+    return Long.toUnsignedString(fingerprint);
   }
 
   // Builder for TimeSeries

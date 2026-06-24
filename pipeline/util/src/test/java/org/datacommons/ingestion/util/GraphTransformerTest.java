@@ -636,7 +636,7 @@ public class GraphTransformerTest {
   }
 
   @Test
-  public void testStatVarTransformationWithObservationPropertyAndEntityMapping() {
+  public void testStatVarTransformationWithObservationProperties() {
     McfGraph inputGraph =
         McfGraph.newBuilder()
             .putNodes(
@@ -667,19 +667,11 @@ public class GraphTransformerTest {
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
-                        "observationProperty",
+                        "observationProperties",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("dcid:destinationCountry")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .putPvs(
-                        "entityMapping",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:someMapping")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
@@ -723,19 +715,11 @@ public class GraphTransformerTest {
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
-                        "observationProperty",
+                        "observationProperties",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("dcid:destinationCountry")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .putPvs(
-                        "entityMapping",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:someMapping")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(

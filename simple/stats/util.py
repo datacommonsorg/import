@@ -19,6 +19,13 @@ import base64
 import gzip
 import io
 import json
+import re
+
+# Pre-compiled regular expression for validating entity references (URIs, DCIDs, or namespaced IDs)
+# - Branch 1: Matches standard HTTP/HTTPS URLs (e.g. https://schema.org/url)
+# - Branch 2: Matches standard slashed or namespaced IDs (e.g. country/FRA, dcid:country/FRA, wikidata:Q30)
+_ENTITY_REF_RE = re.compile(
+    r'^https?://\S+$|^[a-zA-Z0-9_-]+[/:][a-zA-Z0-9_/.-]+$')
 
 
 def gzip_and_base64_encode(data: bytes) -> str:
@@ -61,3 +68,10 @@ def is_uri_or_namespace(val: str) -> bool:
     # A valid namespace prefix must be purely alphanumeric (e.g. 'custom', 'un', 'myorg')
     return prefix.isalnum()
   return False
+
+
+def is_entity_reference(val: any) -> bool:
+  """Returns True if the value syntactically looks like an entity reference (DCID or URI)."""
+  if not isinstance(val, str):
+    return False
+  return bool(_ENTITY_REF_RE.match(val.strip()))

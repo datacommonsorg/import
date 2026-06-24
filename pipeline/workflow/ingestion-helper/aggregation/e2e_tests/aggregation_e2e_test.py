@@ -1539,12 +1539,15 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         # 1. Setup mock Vertical Node and Spec mappings
         self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
+        self.add_node(f'{ns}g/TestCustomVertical', 'Test Custom Vertical', types=['StatVarGroup'])
         self.add_node('Student', 'Student Population', value='Student', types=['Class'])
         
         # Spec mappings
         self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Student', 'populationType', 'Student', 'TestImport')
         self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')
+        self.add_edge(f'{ns}g/TestVertical', 'specializationOf', f'{ns}g/Root', 'TestImport')
+        self.add_edge(f'{ns}g/TestCustomVertical', 'specializationOf', f'{ns}g/Root', 'TestCustomImport')
 
         # 2. Setup mock SV data
         # Unconstrained Student SV
@@ -1558,6 +1561,12 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('Count_Student_Female', 'populationType', 'Student', 'TestImport')
         self.add_edge('Count_Student_Female', 'constraintProperties', 'gender', 'TestImport')
         self.add_edge('Count_Student_Female', 'gender', 'Female', 'TestImport')
+
+        # SV with curated grouping
+        self.add_node('Median_Age_Student', 'Median age of students', types=['StatisticalVariable'])
+        self.add_edge('Median_Age_Student', 'typeOf', 'StatisticalVariable', 'TestCustomImport')
+        self.add_edge('Median_Age_Student', 'populationType', 'Student', 'TestCustomImport')
+        self.add_edge('Median_Age_Student', 'memberOf', f'{ns}g/TestCustomVertical', 'TestCustomImport')
 
         self.flush_to_spanner()
 
@@ -1592,15 +1601,33 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
             # Verify unconstrained SV attached directly to the Student Root SVG
             self.assertIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov), edges)
+
+            # Verify unconstrained SV attached to ancestor SVGs
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
             
             # Verify constrained SV attached to the constrained SVG
             self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender', prov), edges)
+
+            # Verify constrained SV attached to ancestor SVGs
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
             # Verify hierarchical specialization of generated SVGs
             self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov), edges)
 
             # Verify the root SVG attached to the Vertical declared in the Spec
             self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov), edges)
+
+            # Verify curated SVs attached to ancestor SVs based on curated hierarchy
+            self.assertNotIn(('Median_Age_Student', 'memberOf', f'{ns}g/Student', prov), edges)
+            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
+            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov), edges)
+            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
 
 class StatVarGroupGeneratorCustomDcTest(StatVarGroupGeneratorIntegrationTest):
