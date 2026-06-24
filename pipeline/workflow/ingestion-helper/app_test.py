@@ -15,7 +15,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
-import os
 
 from fastapi.testclient import TestClient
 from app import app

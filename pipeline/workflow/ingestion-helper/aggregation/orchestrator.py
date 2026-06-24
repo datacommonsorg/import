@@ -115,7 +115,8 @@ class AggregationOrchestrator:
                     destination_type=config["destination_type"],
                     allow_multiple_to_places=config.get("allow_multiple_to_places", False)
                 )
-                if job: step_jobs.append(job)
+                if job:
+                    step_jobs.append(job)
 
             elif step_type == "stat_var":
                 sv_jobs = self.stat_var_aggregator.aggregate_stat_vars(
