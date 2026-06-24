@@ -82,4 +82,10 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   boolean getIsBaseDc();
 
   void setIsBaseDc(boolean isBaseDc);
+
+  @Description("Whether to skip transformation step.")
+  @Default.Boolean(true)
+  boolean getSkipTransformation();
+
+  void setSkipTransformation(boolean skipTransformation);
 }
