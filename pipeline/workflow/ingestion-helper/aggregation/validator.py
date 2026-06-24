@@ -23,8 +23,6 @@ from typing import Any, Dict, List
 import yaml
 import jsonschema
 
-logging.basicConfig(level=logging.INFO)
-
 # ANSI escape codes for colored terminal output
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -83,6 +81,7 @@ def validate_config(config_file_path: str, schema_file_path: str) -> List[Dict[s
 
 def main():
     """CLI entry point for standalone configuration validation."""
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description="Validate Data Commons aggregation configuration files against the JSON Schema.")
     
     # Resolve default paths relative to this script's directory (aggregation/)

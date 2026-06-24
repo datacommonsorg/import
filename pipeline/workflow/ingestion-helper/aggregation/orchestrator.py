@@ -24,8 +24,6 @@ from .place_aggregation_generator import PlaceAggregationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
 from .validator import validate_config
 
-logging.getLogger().setLevel(logging.INFO)
-
 
 class AggregationOrchestrator:
     """Orchestrates the overall aggregation workflow."""
