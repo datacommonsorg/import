@@ -68,8 +68,7 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
           // Generated properties
           "linkedMember",
           "linkedMemberOf",
-          "description"
-          );
+          "description");
 
   @ProcessElement
   public void processElement(@Element McfGraph inputGraph, OutputReceiver<McfGraph> receiver) {
