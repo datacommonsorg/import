@@ -33,6 +33,8 @@ dependencies = [
     "google-cloud-bigquery",
     "redis",
     "jinja2",
+    "pyyaml>=6.0.3",
+    "jsonschema>=4.26.0",
 ]
 
 [tool.hatch.version]

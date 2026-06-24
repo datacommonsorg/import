@@ -263,6 +263,78 @@ class TestMain(unittest.TestCase):
         # Verify get_caller_identity was called exactly once outside of the loop
         mock_get_caller_identity.assert_called_once()
 
+    @patch('routes.aggregation._get_orchestrator')
+    def test_aggregation_initiate_success(self, mock_aggregation_utils):
+        # Setup mock orchestrator
+        mock_instance = MagicMock()
+        mock_aggregation_utils.return_value = mock_instance
+        mock_instance.has_stage.side_effect = lambda stage, imports: stage == 1
+        mock_instance.execute_stage.return_value = ["job-1", "job-2"]
+
+        # Call endpoint
+        payload = {
+            "importList": [{"importName": "USFed_Census"}]
+        }
+        response = client.post("/aggregation/initiate", json=payload)
+
+        # Assertions
+        self.assertEqual(response.status_code, 200)
+        state = response.json()
+        self.assertEqual(state["status"], "RUNNING")
+        self.assertEqual(state["current_stage"], 1)
+        self.assertEqual(state["active_job_ids"], ["job-1", "job-2"])
+        self.assertEqual(state["import_list"], [{"importName": "USFed_Census"}])
+
+    @patch('routes.aggregation._get_orchestrator')
+    def test_aggregation_poll_transition(self, mock_aggregation_utils):
+        # Setup mock orchestrator to simulate Stage 1 completion and Stage 2 execution
+        mock_instance = MagicMock()
+        mock_aggregation_utils.return_value = mock_instance
+        
+        # Mock BQ reporting Stage 1 jobs are DONE
+        mock_instance.check_jobs_status.return_value = {"status": "DONE"}
+        # Mock Stage 2 existence and execution
+        mock_instance.has_stage.side_effect = lambda stage, imports: stage == 2
+        mock_instance.execute_stage.return_value = ["job-stage2-1"]
+
+        # Input state (Stage 1 completed)
+        payload = {
+            "status": "RUNNING",
+            "current_stage": 1,
+            "active_job_ids": ["job-1", "job-2"],
+            "import_list": [{"importName": "USFed_Census"}]
+        }
+        
+        # Call endpoint
+        response = client.post("/aggregation/poll", json=payload)
+
+        # Assertions
+        self.assertEqual(response.status_code, 200)
+        state = response.json()
+        self.assertEqual(state["status"], "RUNNING")
+        self.assertEqual(state["current_stage"], 2) # Transitioned to 2!
+        self.assertEqual(state["active_job_ids"], ["job-stage2-1"])
+
+    @patch('routes.aggregation._get_orchestrator')
+    def test_aggregation_legacy_run(self, mock_aggregation_utils):
+        # Setup mock orchestrator
+        mock_instance = MagicMock()
+        mock_aggregation_utils.return_value = mock_instance
+        mock_instance.has_stage.side_effect = lambda stage, imports: stage in [1, 2]
+        mock_instance.execute_stage.side_effect = lambda stage, imports: [f"job-stage{stage}-1"]
+
+        # Call legacy endpoint
+        payload = {
+            "importList": [{"importName": "USFed_Census"}]
+        }
+        response = client.post("/aggregation/run", json=payload)
+
+        # Assertions (should return all jobs from all stages in parallel)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "SUBMITTED")
+        self.assertEqual(data["jobIds"], ["job-stage1-1", "job-stage2-1"])
+
 
 if __name__ == '__main__':
     unittest.main()
