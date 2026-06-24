@@ -128,8 +128,11 @@ def poll_aggregation(state: StateObject):
         import_names = [item.get('importName') for item in state.import_list if item.get('importName')]
 
         # 1. Check status of active jobs in BigQuery
-        logging.info(f"Polling status for jobs in Stage {state.current_stage}: {state.active_job_ids}")
-        bq_status = orchestrator.check_jobs_status(state.active_job_ids)
+        if not state.active_job_ids:
+            bq_status = {"status": "DONE"}
+        else:
+            logging.info(f"Polling status for jobs in Stage {state.current_stage}: {state.active_job_ids}")
+            bq_status = orchestrator.check_jobs_status(state.active_job_ids)
         
         # Case A: Any job failed
         if bq_status["status"] == "FAILED":
@@ -142,9 +145,9 @@ def poll_aggregation(state: StateObject):
                 error=bq_status.get("error")
             )
             
-        # Case B: Jobs are still running
-        if bq_status["status"] == "RUNNING":
-            logging.info(f"Stage {state.current_stage} is still executing.")
+        # Case B: Jobs are still executing (explicitly check for DONE to transition)
+        if bq_status["status"] != "DONE":
+            logging.info(f"Stage {state.current_stage} is still executing (status: {bq_status['status']}).")
             return state # Return unchanged
             
         # Case C: All jobs succeeded -> Find and execute the next active stage

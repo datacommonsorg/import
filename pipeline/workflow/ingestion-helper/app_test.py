@@ -316,6 +316,34 @@ class TestMain(unittest.TestCase):
         self.assertEqual(state["active_job_ids"], ["job-stage2-1"])
 
     @patch('routes.aggregation._get_orchestrator')
+    def test_aggregation_poll_still_running(self, mock_aggregation_utils):
+        # Setup mock orchestrator to simulate jobs still in PENDING state
+        mock_instance = MagicMock()
+        mock_aggregation_utils.return_value = mock_instance
+        
+        # Mock BQ reporting Stage 1 jobs are PENDING (still executing)
+        mock_instance.check_jobs_status.return_value = {"status": "PENDING"}
+
+        # Input state
+        payload = {
+            "status": "RUNNING",
+            "current_stage": 1,
+            "active_job_ids": ["job-1", "job-2"],
+            "import_list": [{"importName": "USFed_Census"}]
+        }
+        
+        # Call endpoint
+        response = client.post("/aggregation/poll", json=payload)
+
+        # Assertions
+        self.assertEqual(response.status_code, 200)
+        state = response.json()
+        # Verify state is returned unchanged
+        self.assertEqual(state["status"], "RUNNING")
+        self.assertEqual(state["current_stage"], 1)
+        self.assertEqual(state["active_job_ids"], ["job-1", "job-2"])
+
+    @patch('routes.aggregation._get_orchestrator')
     def test_aggregation_legacy_run(self, mock_aggregation_utils):
         # Setup mock orchestrator
         mock_instance = MagicMock()
