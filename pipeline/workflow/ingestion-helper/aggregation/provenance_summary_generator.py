@@ -172,7 +172,7 @@ class ProvenanceSummaryGenerator:
         WITH facet_base AS (
           SELECT 
             variable_measured, provenance as provenance_dcid, facet_id,
-            ANY_VALUE(import_name) as import_name,
+            ANY_VALUE(IF(provenance LIKE 'dc/base/%', SUBSTR(provenance, 9), provenance)) as import_name,
             ANY_VALUE(measurement_method) as measurement_method,
             ANY_VALUE(observation_period) as observation_period,
             ANY_VALUE(unit) as unit,
@@ -184,7 +184,7 @@ class ProvenanceSummaryGenerator:
             MAX(value_num) as facet_max,
             COUNT(*) as facet_obs_count,
             COUNT(DISTINCT observation_about) as facet_ts_count
-          FROM `temp_prepared`
+          FROM `temp_obs_flat`
           GROUP BY variable_measured, provenance, facet_id
         ),
         facet_summaries AS (
