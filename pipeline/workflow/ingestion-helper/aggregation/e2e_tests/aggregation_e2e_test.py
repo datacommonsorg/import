@@ -1896,6 +1896,27 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             self.assertEqual(len(res_sub), 1)
             self.assertEqual(float(res_sub[0][0]), 8.0)
 
+            # C. Verify TimeSeries metadata
+            res_ts_add = list(snapshot.execute_sql(
+                "SELECT facet FROM TimeSeries WHERE variable_measured = 'SV_Add_Result'"
+            ))
+            self.assertEqual(len(res_ts_add), 1)
+            facet_json_add = res_ts_add[0][0]
+            self.assertEqual(facet_json_add['provenance'], expected_provenance)
+            self.assertEqual(facet_json_add['observationPeriod'], 'P1Y')
+            self.assertEqual(facet_json_add['measurementMethod'], 'Add_Method')
+            self.assertTrue(facet_json_add['isDcAggregate'])
+
+            res_ts_sub = list(snapshot.execute_sql(
+                "SELECT facet FROM TimeSeries WHERE variable_measured = 'SV_Sub_Result'"
+            ))
+            self.assertEqual(len(res_ts_sub), 1)
+            facet_json_sub = res_ts_sub[0][0]
+            self.assertEqual(facet_json_sub['provenance'], expected_provenance)
+            self.assertEqual(facet_json_sub['observationPeriod'], 'P1Y')
+            self.assertEqual(facet_json_sub['measurementMethod'], 'Sub_Method')
+            self.assertTrue(facet_json_sub['isDcAggregate'])
+
     def test_calculate_dynamic_name_resolution(self):
         """Tests complex Climate temperature dynamic SV and MM prefix naming rules."""
         import_name = 'Climate_Import_Test'

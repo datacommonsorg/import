@@ -14,7 +14,7 @@
 """Statistical Variable Calculation Generator using BQ Federation."""
 
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from google.cloud import bigquery
 
