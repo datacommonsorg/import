@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import functools
 import re
 
 import fs.path as fspath
@@ -20,120 +22,137 @@ from util.filesystem import File
 def match(f: File, pattern: str) -> bool:
   """Returns true if this file's name or path matches a given pattern.
 
-    Pattern rules:
-    - A leading double slash means the path must match from the filesystem root, i.e. the absolute path.
-      - Protocol (e.g. gs://) can optionally be included in the pattern and will also add the requirement of matching from the root.
-    - A leading single slash will match the full path relative to the input dir.
-    - A single wildcard (*) in the name or protocol portions of a pattern can be zero or more characters.
-      - Double wildcards for name or protocol are invalid; use single wildcards instead.
-    - A single wildcard (*) in the directory portion of a pattern can be any non-slash character.
-    - A double wildcard (**) in the directory portion of a pattern can be any character including slashes, i.e. multiple dir levels.
-
-    Since matching is ultimately done with regular expressions, it may be
-    possible to do more complex matching by passing in patterns containing special
-    characters, but this behavior is not officially supported and may break at any time.
-
-    Examples:
-    - Match any CSV file in any directory or subdirectory: "*.csv"
-    - Match any file called foo.csv in any directory or subdirectory: "foo.csv"
-    - Match any file in a particular directory of a GCS bucket and its subdirectories: "gs://bucket/dir/**/*"
-    - Match any file in any directory called 'bar': "bar/*"
-    - Match any file in the input directory, but not its subdirectories: "/*"
-    """
+  Standard Glob Rules:
+  - A leading double slash means the path must match from the absolute filesystem root.
+  - A leading single slash will match the full path relative to the input dir.
+  - '*' matches any characters within a single directory level.
+  - '**' matches zero or more recursive directory levels.
+  - '?' matches any single character (except a slash).
+  - '{a,b}' matches alternative options (standard brace expansion).
+  - '(a|b)' matches alternative options (standard parenthesis grouping).
+  """
   original_pattern = pattern
-  full_path = f.full_path()
-  match_from_beginning = False
 
-  # Handle protocol prefix.
-  if "://" in pattern:
-    if "://" not in full_path:
+  # 1. Parse pattern context
+  protocol, pattern_body, anchored = _parse_pattern(pattern)
+
+  # 2. Check protocol if specified (lazy evaluation)
+  if protocol:
+    if "://" not in f.full_path():
       return False
-    protocol_pattern, pattern = pattern.split("://", 1)
-    protocol_regex = _regexify_for_name(protocol_pattern, original_pattern)
-    protocol, abs_path = full_path.split('://', 1)
-    if not _full_match(protocol_regex, protocol):
+    file_protocol, _ = f.full_path().split("://", 1)
+    protocol_regex = _glob_to_regex(protocol)
+    if not _full_match(protocol_regex, file_protocol):
       return False
-    match_from_beginning = True
-  else:
-    if "://" in full_path and f.syspath() is not None:
-      # Switch to syspath
-      abs_path = fspath.relpath(f.syspath())
+
+  # 3. Compile the entire pattern body to a single unified regex
+  regex_str = _glob_to_regex_unified(pattern_body)
+
+  # 4. Determine the target path for matching
+  if anchored:
+    if protocol:
+      target = f.full_path().split("://", 1)[1]
+    elif original_pattern.startswith("//"):
+      if "://" in f.full_path() and f.syspath() is not None:
+        target = fspath.relpath(f.syspath())
+      else:
+        target = fspath.relpath(f.full_path())
     else:
-      abs_path = fspath.relpath(full_path)
-
-  dir_path, name = fspath.split(f.path)
-
-  # Leading double slash -> full match with absolute path
-  if pattern.startswith("//"):
-    # We'll capture the full match requirement with re.search vs re.match.
-    pattern = pattern[2:]
-    match_from_beginning = True
-    # Use absolute path instead
-    dir_path, name = fspath.split(abs_path)
-
-  # Leading single slash -> full match with relative path
-  elif pattern.startswith("/"):
-    # We'll capture the full match requirement with re.search vs re.match.
-    pattern = pattern[1:]
-    match_from_beginning = True
-
-  # Handle directory if accounted for in the pattern.
-  if "/" in pattern:
-    # Split the pattern at the last slash only to get the name part.
-    dir_pattern, name_pattern = pattern.rsplit("/", 1)
-    # Add a leading slash back to both the dir path and the dir pattern.
-    dir_pattern = "/" + dir_pattern
-    dir_path = "/" + dir_path
-    dir_regex = _regexify_for_dir(dir_pattern, original_pattern)
-    name_regex = _regexify_for_name(name_pattern, original_pattern)
-    if match_from_beginning:
-      dir_regex = "^" + dir_regex
-    dir_regex += "$"
-    if re.search(dir_regex, dir_path) is None:
-      return False
+      target = "/" + f.path.lstrip("/")
   else:
-    name_regex = _regexify_for_name(pattern, original_pattern)
-    if match_from_beginning and dir_path != "":
-      return False
+    target = "/" + f.path.lstrip("/")
 
-  # Handle file name.
-  return _full_match(name_regex, name)
+  # 5. Build final anchored regex
+  if anchored:
+    regex = f"^(?:{regex_str})$"
+  else:
+    # Suffix match: must either start at the beginning of the target or follow a slash (non-greedy)
+    regex = f"^(?:.*?\\/)?(?:{regex_str})$"
+
+  return re.search(regex, target) is not None
 
 
-def _regexify_for_dir(pattern: str, original_pattern: str) -> str:
-  if "**/**" in pattern:
+def _parse_pattern(pattern: str) -> tuple[str | None, str, bool]:
+  """Parses a pattern into (protocol, body, anchored) tuple."""
+  anchored = False
+  protocol = None
+
+  if "://" in pattern:
+    protocol, pattern = pattern.split("://", 1)
+    anchored = True
+  elif pattern.startswith("//"):
+    pattern = pattern[2:]
+    anchored = True
+  elif pattern.startswith("/"):
+    # Keep the leading slash in the pattern body so it matches the target's leading slash
+    anchored = True
+
+  return protocol, pattern, anchored
+
+
+@functools.lru_cache(maxsize=256)
+def _expand_braces(pattern: str) -> str:
+  """Expands standard glob braces: '{dirA,dirB}' -> '(?:dirA|dirB)'."""
+  def repl(match):
+    return "(?:" + match.group(1).replace(",", "|") + ")"
+  while True:
+    new_pattern = re.sub(r"\{([^}]+)\}", repl, pattern)
+    if new_pattern == pattern:
+      break
+    pattern = new_pattern
+  return pattern
+
+
+@functools.lru_cache(maxsize=256)
+def _glob_to_regex_unified(pattern: str) -> str:
+  """Translates a standard glob pattern to a single unified regex."""
+  # 1. Expand standard braces first
+  pattern = _expand_braces(pattern)
+
+  # 2. Validate that double wildcards do not appear in the filename portion
+  name_part = pattern.rsplit("/", 1)[1] if "/" in pattern else pattern
+  if "**" in name_part:
     raise ValueError(
-        f"Adjacent double wildcards in the directory portion of a pattern are not supported. Pattern: {original_pattern}"
+        f"Adjacent double wildcards in the name portion of a pattern are not supported. Pattern: {pattern}"
     )
-  # 1. Remove and split at double wildcard segments
-  between_doubles = pattern.split("/**")
-  regex_segments = []
-  for segment in between_doubles:
-    # 2. Remove and split at slashes
-    between_slashes = segment.split("/")
-    # 3. Regexify periods
-    between_slashes = [s.replace(".", r"\.") for s in between_slashes]
-    # 4. Regexify single wildcards:
-    #    A single wildcard can be any character but a slash.
-    between_slashes = [s.replace("*", r"[^\/]+") for s in between_slashes]
-    # 5. Add back and regexify slashes:
-    #    A slash must be a literal slash.
-    #    (EXCEPTION: Slash after a double wildcard.)
-    with_slashes = (r"\/").join(between_slashes)
-    regex_segments.append(with_slashes)
-  # 6. Add back and regexify double wildcards:
-  #    A double wildcard can be any character.
-  regex = ".*".join(regex_segments)
-  return regex
+
+  # 3. Escape all regex special characters except '*', '|', '(', ')' and '?'
+  # We do not escape '?' to preserve the '(?:' syntax generated by brace expansion.
+  for char in ["\\", ".", "^", "$", "+", "[", "]", "{", "}"]:
+    pattern = pattern.replace(char, "\\" + char)
+
+  # 4. Protect double wildcards temporarily
+  pattern = pattern.replace("**", "__DOUBLE_WILDCARD__")
+
+  # 5. Process single wildcards segment-by-segment
+  segments = pattern.split("/")
+  for i, seg in enumerate(segments):
+    if seg == "*":
+      segments[i] = "[^/]+"
+    elif "*" in seg:
+      segments[i] = seg.replace("*", "[^/]*")
+
+  pattern = "/".join(segments)
+
+  # 6. Translate protected double wildcards
+  pattern = pattern.replace("/__DOUBLE_WILDCARD__", "(?:/.*)?")
+  pattern = pattern.replace("__DOUBLE_WILDCARD__/", "(?:.*/)?")
+  pattern = pattern.replace("__DOUBLE_WILDCARD__", ".*")
+
+  return pattern
 
 
-def _regexify_for_name(pattern: str, original_pattern: str) -> str:
+@functools.lru_cache(maxsize=256)
+def _glob_to_regex(pattern: str) -> str:
+  """Simple name/protocol glob translator (for simple non-path segments)."""
   if "**" in pattern:
     raise ValueError(
-        f"Adjacent double wildcards in the name or protocol portion of a pattern are not supported. Pattern: {original_pattern}"
+        f"Adjacent double wildcards in the name or protocol portion of a pattern are not supported. Pattern: {pattern}"
     )
-  return pattern.replace(".", r"\.").replace("*", ".*")
+  for char in ["\\", ".", "^", "$", "+", "?", "(", ")", "[", "]", "{", "}"]:
+    pattern = pattern.replace(char, "\\" + char)
+  return pattern.replace("*", ".*")
 
 
 def _full_match(regex: str, value: str) -> bool:
-  return re.search(f"^{regex}$", value) is not None
+  return re.search(f"^(?:{regex})$", value) is not None
