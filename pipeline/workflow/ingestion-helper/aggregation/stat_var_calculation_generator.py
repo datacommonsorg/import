@@ -79,7 +79,10 @@ class StatVarCalculationGenerator:
 
         for idx, calc in enumerate(calculations):
             operation = calc.get('operation')
-            multiplier = calc.get('multiplier', 1.0)
+            try:
+                multiplier = float(calc.get('multiplier', 1.0))
+            except (ValueError, TypeError):
+                raise ValueError(f"Invalid multiplier: {calc.get('multiplier')}")
             input1 = calc.get('input1', {})
             input2 = calc.get('input2', {})
             output = calc.get('output', {})
@@ -353,12 +356,14 @@ class StatVarCalculationGenerator:
         # SV name filter (always present, but might be regex)
         sv_regex = input_spec.get('sv_regex', '')
         if sv_regex:
-            filters.append(f"REGEXP_CONTAINS(o.variable_measured, r'^{sv_regex}$')")
+            safe_sv_regex = sv_regex.replace("'", "\\'")
+            filters.append(f"REGEXP_CONTAINS(o.variable_measured, r'^{safe_sv_regex}$')")
 
         # Measurement Method filter (extracted from facet JSON)
         mm_regex = input_spec.get('measurement_method_regex', '')
         if mm_regex:
-            filters.append(f"REGEXP_CONTAINS(JSON_VALUE(ts.facet, '$.measurementMethod'), r'^{mm_regex}$')")
+            safe_mm_regex = mm_regex.replace("'", "\\'")
+            filters.append(f"REGEXP_CONTAINS(JSON_VALUE(ts.facet, '$.measurementMethod'), r'^{safe_mm_regex}$')")
 
         # Facet filters (all extracted from facet JSON to ensure compatibility with older schemas)
         facet_info = input_spec.get('facet_info', {})
