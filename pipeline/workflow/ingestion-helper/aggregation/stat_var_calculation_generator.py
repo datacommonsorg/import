@@ -75,7 +75,32 @@ class StatVarCalculationGenerator:
         output_provenance = f"{prefix}{output_import_name}"
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
-        sql_statements = []
+        # 1. Construct the Temp Table Caching statements at the very beginning of the script.
+        # This scans the Spanner TimeSeries and Observation tables ONCE, filters them by provenance,
+        # and caches them locally in BigQuery. All subsequent calculations run against these fast,
+        # cached tables, preventing multiple expensive full table scans.
+        temp_tables_sql = f"""
+        -- =========================================================================
+        -- CACHE INPUT TABLES (Run once at the start of the script)
+        -- =========================================================================
+        CREATE TEMP TABLE temp_timeseries AS
+        SELECT variable_measured, entity1, extra_entities_id, facet_id, entities, facet
+        FROM EXTERNAL_QUERY("{connection_id}",
+          '''SELECT variable_measured, entity1, extra_entities_id, facet_id, entities, facet 
+             FROM TimeSeries 
+             WHERE provenance IN ({provenance_str})''');
+
+        CREATE TEMP TABLE temp_observation AS
+        SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value
+        FROM EXTERNAL_QUERY("{connection_id}",
+          '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''') o
+        JOIN temp_timeseries ts ON o.variable_measured = ts.variable_measured
+          AND o.entity1 = ts.entity1
+          AND o.extra_entities_id = ts.extra_entities_id
+          AND o.facet_id = ts.facet_id;
+        """
+
+        sql_statements = [temp_tables_sql]
 
         for idx, calc in enumerate(calculations):
             operation = calc.get('operation')
@@ -83,6 +108,7 @@ class StatVarCalculationGenerator:
                 multiplier = float(calc.get('multiplier', 1.0))
             except (ValueError, TypeError):
                 raise ValueError(f"Invalid multiplier: {calc.get('multiplier')}")
+
             input1 = calc.get('input1', {})
             input2 = calc.get('input2', {})
             output = calc.get('output', {})
@@ -140,7 +166,6 @@ class StatVarCalculationGenerator:
                     )
                 """
             else:
-                # If neither is specified, default to NULL
                 out_mm_expr = "CAST(NULL AS STRING)"
 
             # Determine output facet info values
@@ -185,10 +210,8 @@ class StatVarCalculationGenerator:
                 )) AS STRING)
             """
 
-            # Build the query for this specific calculation
-            # Note: We stringify the JSON columns ('entities' and 'facet') in SourceTS before running
-            # SELECT DISTINCT in UniqueTS, then parse them back to JSON in ParsedTS. This is a workaround
-            # for BigQuery's limitation: "Column of type JSON cannot be used in SELECT DISTINCT".
+            # Build the query for this specific calculation.
+            # Both CTEs query directly from our fast, local BigQuery temp tables: temp_timeseries and temp_observation.
             query = f"""
             -- =========================================================================
             -- CALCULATION {idx}: Export TimeSeries Metadata
@@ -204,12 +227,8 @@ class StatVarCalculationGenerator:
                 JSON_VALUE(ts.facet, '$.measurementMethod') AS mm,
                 o.variable_measured AS sv,
                 ts.entities
-              FROM EXTERNAL_QUERY("{connection_id}",
-                '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''') o
-              JOIN EXTERNAL_QUERY("{connection_id}",
-                '''SELECT variable_measured, entity1, extra_entities_id, facet_id, entities, facet 
-                   FROM TimeSeries 
-                   WHERE provenance IN ({provenance_str})''') ts
+              FROM temp_observation o
+              JOIN temp_timeseries ts
               ON o.variable_measured = ts.variable_measured
                 AND o.entity1 = ts.entity1
                 AND o.extra_entities_id = ts.extra_entities_id
@@ -222,12 +241,8 @@ class StatVarCalculationGenerator:
                 o.extra_entities_id,
                 JSON_VALUE(ts.facet, '$.measurementMethod') AS mm,
                 o.variable_measured AS sv
-              FROM EXTERNAL_QUERY("{connection_id}",
-                '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''') o
-              JOIN EXTERNAL_QUERY("{connection_id}",
-                '''SELECT variable_measured, entity1, extra_entities_id, facet_id, entities, facet 
-                   FROM TimeSeries 
-                   WHERE provenance IN ({provenance_str})''') ts
+              FROM temp_observation o
+              JOIN temp_timeseries ts
               ON o.variable_measured = ts.variable_measured
                 AND o.entity1 = ts.entity1
                 AND o.extra_entities_id = ts.extra_entities_id
@@ -285,12 +300,8 @@ class StatVarCalculationGenerator:
                 SAFE_CAST(o.value AS FLOAT64) AS val,
                 o.variable_measured AS sv,
                 JSON_VALUE(ts.facet, '$.measurementMethod') AS mm
-              FROM EXTERNAL_QUERY("{connection_id}",
-                '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''') o
-              JOIN EXTERNAL_QUERY("{connection_id}",
-                '''SELECT variable_measured, entity1, extra_entities_id, facet_id, entities, facet 
-                   FROM TimeSeries 
-                   WHERE provenance IN ({provenance_str})''') ts
+              FROM temp_observation o
+              JOIN temp_timeseries ts
               ON o.variable_measured = ts.variable_measured
                 AND o.entity1 = ts.entity1
                 AND o.extra_entities_id = ts.extra_entities_id
@@ -305,12 +316,8 @@ class StatVarCalculationGenerator:
                 SAFE_CAST(o.value AS FLOAT64) AS val,
                 o.variable_measured AS sv,
                 JSON_VALUE(ts.facet, '$.measurementMethod') AS mm
-              FROM EXTERNAL_QUERY("{connection_id}",
-                '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''') o
-              JOIN EXTERNAL_QUERY("{connection_id}",
-                '''SELECT variable_measured, entity1, extra_entities_id, facet_id, entities, facet 
-                   FROM TimeSeries 
-                   WHERE provenance IN ({provenance_str})''') ts
+              FROM temp_observation o
+              JOIN temp_timeseries ts
               ON o.variable_measured = ts.variable_measured
                 AND o.entity1 = ts.entity1
                 AND o.extra_entities_id = ts.extra_entities_id
@@ -350,20 +357,26 @@ class StatVarCalculationGenerator:
         return [job]
 
     def _get_input_filter_sql(self, input_spec: Dict) -> str:
-        """Translates input manifest filter rules into SQL WHERE clause constraints."""
+        """Translates input manifest filter rules into SQL WHERE clause constraints.
+
+        Uses double-quoted raw string literals (r"...") to prevent backslash preservation
+        issues with escaped single quotes inside BigQuery regex matching.
+        """
         filters = []
         
         # SV name filter (always present, but might be regex)
         sv_regex = input_spec.get('sv_regex', '')
         if sv_regex:
-            safe_sv_regex = sv_regex.replace("'", "\\'")
-            filters.append(f"REGEXP_CONTAINS(o.variable_measured, r'^{safe_sv_regex}$')")
+            # Escape double quotes since we wrap the raw string in double quotes
+            safe_sv_regex = sv_regex.replace('"', '\\"')
+            filters.append(f'REGEXP_CONTAINS(o.variable_measured, r"^{safe_sv_regex}$")')
 
         # Measurement Method filter (extracted from facet JSON)
         mm_regex = input_spec.get('measurement_method_regex', '')
         if mm_regex:
-            safe_mm_regex = mm_regex.replace("'", "\\'")
-            filters.append(f"REGEXP_CONTAINS(JSON_VALUE(ts.facet, '$.measurementMethod'), r'^{safe_mm_regex}$')")
+            # Escape double quotes since we wrap the raw string in double quotes
+            safe_mm_regex = mm_regex.replace('"', '\\"')
+            filters.append(f'REGEXP_CONTAINS(JSON_VALUE(ts.facet, \'$.measurementMethod\'), r"^{safe_mm_regex}$")')
 
         # Facet filters (all extracted from facet JSON to ensure compatibility with older schemas)
         facet_info = input_spec.get('facet_info', {})
