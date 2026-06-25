@@ -33,6 +33,24 @@ INTERLEAVE IN Node, OPTIONS (
   columnar_policy = 'enabled'
 );
 
+CREATE INDEX InEdge ON Edge(object_id, predicate, subject_id, provenance) OPTIONS (
+  columnar_policy = 'enabled'
+);
+
+CREATE NULL_FILTERED INDEX EdgeByProvenance ON Edge(provenance) OPTIONS (
+  columnar_policy = 'enabled'
+);
+
+-- Foreign key constraints on Edge table
+
+-- Optimization - helps Spanner's query optimizer plan efficient joins from Edge.object_id to Node.subject_id for multi-hop graph traversals
+-- CONSTRAINT FKObject FOREIGN KEY(object_id) REFERENCES Node(subject_id);
+
+-- For edge-node consistency
+-- ALTER TABLE Edge SET INTERLEAVE IN PARENT Node;
+-- CONSTRAINT FKPredicate FOREIGN KEY(predicate) REFERENCES Node(subject_id);
+-- CONSTRAINT FKProvenance FOREIGN KEY(provenance) REFERENCES Node(subject_id);
+
 CREATE TABLE TimeSeries (
   variable_measured STRING(1024) NOT NULL,
   entity1 STRING(1024) NOT NULL AS (JSON_VALUE(entities, '$.entity1')) STORED,
@@ -149,9 +167,7 @@ CREATE TABLE Cache (
   value JSON,
 ) PRIMARY KEY(type, key, provenance);
 
-CREATE INDEX InEdge ON Edge(object_id, predicate, subject_id, provenance) OPTIONS (
-  columnar_policy = 'enabled'
-);
+
 
 
 -- NodeEmbedding table, NodeEmbeddingIndex index and NodeEmbeddingModel model are necessary for embeddings to work properly.
