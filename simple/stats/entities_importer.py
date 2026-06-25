@@ -139,11 +139,12 @@ class EntitiesImporter(Importer):
         if pd.isna(v):
           continue
         if k in self.entity_columns:
-          if "," in v:
-            ids = list(map(lambda x: strip_namespace(x.strip()), str(v).split(",")))
+          v_str = str(v)
+          if "," in v_str:
+            ids = list(map(lambda x: strip_namespace(x.strip()), v_str.split(",")))
             prop_object_ids[k] = ids
           else:
-            prop_object_ids[k] = strip_namespace(str(v))
+            prop_object_ids[k] = strip_namespace(v_str)
         else:
           prop_object_values[k] = v
 
