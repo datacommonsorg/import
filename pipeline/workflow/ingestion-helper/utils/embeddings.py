@@ -20,11 +20,18 @@ import json
 import logging
 import time
 from datetime import datetime
+import pandas as pd
 from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON
 from clients.spanner import SpannerClient
 
 
 _BATCH_SIZE = 1000
+_NL_STAT_VAR_FILE = f"gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
+
+def _extract_nl_stat_var():
+    output_df = pd.read_csv(_NL_STAT_VAR_FILE)
+    return list(set(output_df.dcid.apply(lambda x: x.split(';')).explode().to_list()))
+
 
 class EmbeddingUtils:
     """Orchestrates the embedding ingestion workflow."""
@@ -49,7 +56,17 @@ class EmbeddingUtils:
             raise
         return None
 
-    def _get_updated_nodes(self, timestamp, node_types, timeout):
+    def _get_node_filter_condition(self, node_filter_type):
+        if node_filter_type == "NoFilter":
+            return "TRUE"
+        elif node_filter_type == "NLStatisticalVariable":
+            quoted_vars = ", ".join(f"'{x}'" for x in _extract_nl_stat_var())
+            return f"subject_id IN UNNEST([{quoted_vars}])"
+        else:
+            logging.error(f"Unknown node filter type: {node_filter_type}")
+            raise ValueError(f"Unknown node filter type: {node_filter_type}")
+
+    def _get_updated_nodes(self, timestamp, node_types, node_filter_type, timeout):
         """Gets subject_ids and names from Node table where last_update_timestamp > timestamp.
         Yields results to avoid loading all into memory.
 
@@ -67,6 +84,7 @@ class EmbeddingUtils:
             SELECT subject_id, name, types FROM Node 
             WHERE name IS NOT NULL
               AND {timestamp_condition}
+              AND {self._get_node_filter_condition(node_filter_type)}
               AND EXISTS (
                 SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST(@node_types)
               )
@@ -200,9 +218,10 @@ class EmbeddingUtils:
             model_name = spec["model_name"]
             embedding_label = spec["embedding_label"]
             task_type = spec["task_type"]
+            node_filter_type = spec["node_filter_type"]
 
             logging.info(f"Job started for {embedding_label}. Fetching all nodes for types: {node_types}")
-            nodes = self._get_updated_nodes(timestamp, node_types, timeout=config.TIMEOUT)
+            nodes = self._get_updated_nodes(timestamp, node_types, node_filter_type, timeout=config.TIMEOUT)
             converted_nodes = list(self._filter_and_convert_nodes(nodes))
 
             logging.info(f"Generating embeddings for model {model_name} (embedding_label: {embedding_label})")

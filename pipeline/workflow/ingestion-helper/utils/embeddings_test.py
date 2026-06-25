@@ -38,6 +38,20 @@ class TestEmbeddingUtils(unittest.TestCase):
         timestamp = self.utils._get_latest_lock_timestamp()
         self.assertEqual(timestamp, expected_timestamp)
 
+    def test_get_node_filter_condition_no_filter(self):
+        condition = self.utils._get_node_filter_condition("NoFilter")
+        self.assertEqual(condition, "TRUE")
+
+    @patch('utils.embeddings._extract_nl_stat_var')
+    def test_get_node_filter_condition_nl_filter(self, mock_extract):
+        mock_extract.return_value = ["Count_Person", "Median_Age"]
+        condition = self.utils._get_node_filter_condition("NLStatisticalVariable")
+        self.assertEqual(condition, "subject_id IN UNNEST(['Count_Person', 'Median_Age'])")
+
+    def test_get_node_filter_condition_invalid(self):
+        with self.assertRaises(ValueError):
+            self.utils._get_node_filter_condition("InvalidFilter")
+
     def test_get_updated_nodes(self):
         mock_snapshot = MagicMock()
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
@@ -59,7 +73,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             field_names=["subject_id", "name", "types"]
         )
 
-        nodes = list(self.utils._get_updated_nodes(None, ["Topic"], 3600))
+        nodes = list(self.utils._get_updated_nodes(None, ["Topic"], "NoFilter", 3600))
         
         # Verify Spanner call
         mock_snapshot.execute_sql.assert_called_once()
@@ -96,7 +110,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         )
 
         test_timestamp = datetime(2026, 4, 25, 0, 0, 0)
-        nodes = list(self.utils._get_updated_nodes(test_timestamp, ["Topic"], 3600))
+        nodes = list(self.utils._get_updated_nodes(test_timestamp, ["Topic"], "NoFilter", 3600))
         
         # Verify Spanner call
         mock_snapshot.execute_sql.assert_called_once()
@@ -108,6 +122,42 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/2")
+
+    @patch('utils.embeddings._extract_nl_stat_var')
+    def test_get_updated_nodes_with_nl_filter(self, mock_extract):
+        mock_snapshot = MagicMock()
+        self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_extract.return_value = ["dc/1", "dc/2"]
+
+        class MockField:
+            def __init__(self, name):
+                self.name = name
+
+        class MockResults:
+            def __init__(self, rows, field_names):
+                self.rows = rows
+                self.fields = [MockField(name) for name in field_names]
+
+            def __iter__(self):
+                return iter(self.rows)
+
+        mock_snapshot.execute_sql.return_value = MockResults(
+            rows=[("dc/1", "Node 1", ["Topic"])],
+            field_names=["subject_id", "name", "types"]
+        )
+
+        nodes = list(self.utils._get_updated_nodes(None, ["Topic"], "NLStatisticalVariable", 3600))
+
+        # Verify Spanner call
+        mock_snapshot.execute_sql.assert_called_once()
+        args, kwargs = mock_snapshot.execute_sql.call_args
+        query = args[0]
+        self.assertIn("SELECT subject_id, name, types FROM Node", query)
+        self.assertIn("subject_id IN UNNEST(['dc/1', 'dc/2'])", query)
+        self.assertEqual(kwargs["params"], {"node_types": ["Topic"]})
+
+        self.assertEqual(len(nodes), 1)
+        self.assertEqual(nodes[0]["subject_id"], "dc/1")
 
     def test_filter_and_convert_nodes(self):
         nodes = [
