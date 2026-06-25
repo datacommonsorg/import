@@ -17,6 +17,7 @@ from collections import OrderedDict
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
+from google.cloud.spanner_v1.param_types import STRING, Array
 
 from utils.embeddings import EmbeddingUtils
 
@@ -39,18 +40,29 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.assertEqual(timestamp, expected_timestamp)
 
     def test_get_node_filter_condition_no_filter(self):
-        condition = self.utils._get_node_filter_condition("NoFilter")
+        params = {}
+        param_types = {}
+        condition = self.utils._get_node_filter_condition("NoFilter", params, param_types)
         self.assertEqual(condition, "TRUE")
+        self.assertEqual(params, {})
+        self.assertEqual(param_types, {})
 
     @patch('utils.embeddings._extract_nl_stat_var')
     def test_get_node_filter_condition_nl_filter(self, mock_extract):
+        from google.cloud.spanner_v1.param_types import STRING, Array
         mock_extract.return_value = ["Count_Person", "Median_Age"]
-        condition = self.utils._get_node_filter_condition("NLStatisticalVariable")
-        self.assertEqual(condition, "subject_id IN UNNEST(['Count_Person', 'Median_Age'])")
+        params = {}
+        param_types = {}
+        condition = self.utils._get_node_filter_condition("NLStatisticalVariable", params, param_types)
+        self.assertEqual(condition, "subject_id IN UNNEST(@nl_stat_vars)")
+        self.assertEqual(params["nl_stat_vars"], ["Count_Person", "Median_Age"])
+        self.assertEqual(param_types["nl_stat_vars"], Array(STRING))
 
     def test_get_node_filter_condition_invalid(self):
+        params = {}
+        param_types = {}
         with self.assertRaises(ValueError):
-            self.utils._get_node_filter_condition("InvalidFilter")
+            self.utils._get_node_filter_condition("InvalidFilter", params, param_types)
 
     def test_get_updated_nodes(self):
         mock_snapshot = MagicMock()
@@ -117,7 +129,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         args, kwargs = mock_snapshot.execute_sql.call_args
         query = args[0]
         self.assertIn("SELECT subject_id, name, types FROM Node", query)
-        self.assertIn("update_timestamp > @timestamp", query)
+        self.assertIn("last_update_timestamp > @timestamp", query)
         self.assertEqual(kwargs["params"], {"node_types": ["Topic"], "timestamp": test_timestamp})
 
         self.assertEqual(len(nodes), 1)
@@ -153,8 +165,9 @@ class TestEmbeddingUtils(unittest.TestCase):
         args, kwargs = mock_snapshot.execute_sql.call_args
         query = args[0]
         self.assertIn("SELECT subject_id, name, types FROM Node", query)
-        self.assertIn("subject_id IN UNNEST(['dc/1', 'dc/2'])", query)
-        self.assertEqual(kwargs["params"], {"node_types": ["Topic"]})
+        self.assertIn("subject_id IN UNNEST(@nl_stat_vars)", query)
+        self.assertEqual(kwargs["params"], {"node_types": ["Topic"], "nl_stat_vars": ["dc/1", "dc/2"]})
+        self.assertEqual(kwargs["param_types"], {"node_types": Array(STRING), "nl_stat_vars": Array(STRING)})
 
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/1")
