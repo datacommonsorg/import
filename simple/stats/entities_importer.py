@@ -17,8 +17,8 @@ import logging
 import pandas as pd
 from stats import constants
 from stats.data import RowEntity
-from stats.data import Triple
 from stats.data import strip_namespace
+from stats.data import Triple
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -55,7 +55,9 @@ class EntitiesImporter(Importer):
 
     # Initialize reverse column mappings from config
     column_mappings = self.config.column_mappings(self.input_file)
-    self.reverse_mappings = {v: strip_namespace(k) for k, v in column_mappings.items()}
+    self.reverse_mappings = {
+        v: strip_namespace(k) for k, v in column_mappings.items()
+    }
 
     self.df = pd.DataFrame()
 
@@ -97,7 +99,8 @@ class EntitiesImporter(Importer):
     # Rename property columns to their IDs (using custom mappings if defined)
     property_column_names = self.df.columns
     property_ids = [
-        self.reverse_mappings.get(col, self.nodes.property(col).dcid)
+        self.reverse_mappings.get(col,
+                                  self.nodes.property(col).dcid)
         for col in property_column_names
     ]
 
@@ -121,7 +124,8 @@ class EntitiesImporter(Importer):
     id_column_name = ""
     if self.id_column:
       id_column_name = self.reverse_mappings.get(
-          self.id_column, self.nodes.property(self.id_column).dcid)
+          self.id_column,
+          self.nodes.property(self.id_column).dcid)
 
     triples: list[Triple] = []
     for index, row in self.df.iterrows():
@@ -141,7 +145,8 @@ class EntitiesImporter(Importer):
         if k in self.entity_columns:
           v_str = str(v)
           if "," in v_str:
-            ids = list(map(lambda x: strip_namespace(x.strip()), v_str.split(",")))
+            ids = list(
+                map(lambda x: strip_namespace(x.strip()), v_str.split(",")))
             prop_object_ids[k] = ids
           else:
             prop_object_ids[k] = strip_namespace(v_str)
