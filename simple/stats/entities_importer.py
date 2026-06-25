@@ -17,6 +17,7 @@ import logging
 import pandas as pd
 from stats import constants
 from stats.data import RowEntity
+from stats.data import strip_namespace
 from stats.data import Triple
 from stats.db import Db
 from stats.importer import Importer
@@ -51,6 +52,12 @@ class EntitiesImporter(Importer):
     self.id_column = self.config.id_column(self.input_file)
     # Reassigned when renaming columns.
     self.entity_columns = set(self.config.entity_columns(self.input_file))
+
+    # Initialize reverse column mappings from config
+    column_mappings = self.config.column_mappings(self.input_file)
+    self.reverse_mappings = {
+        v: strip_namespace(k) for k, v in column_mappings.items()
+    }
 
     self.df = pd.DataFrame()
 
@@ -89,11 +96,12 @@ class EntitiesImporter(Importer):
   def _rename_columns(self) -> None:
     renamed = {}
 
-    # Rename property columns to their IDs
+    # Rename property columns to their IDs (using custom mappings if defined)
     property_column_names = self.df.columns
     property_ids = [
-        self.nodes.property(property_column_name).dcid
-        for property_column_name in property_column_names
+        self.reverse_mappings.get(col,
+                                  self.nodes.property(col).dcid)
+        for col in property_column_names
     ]
 
     for col, id in zip(property_column_names, property_ids):
@@ -113,8 +121,11 @@ class EntitiesImporter(Importer):
 
     # All property columns would've been renamed to their dcids by now.
     # So use the id column's dcid as the id column name.
-    id_column_name = self.nodes.property(
-        self.id_column).dcid if self.id_column else ""
+    id_column_name = ""
+    if self.id_column:
+      id_column_name = self.reverse_mappings.get(
+          self.id_column,
+          self.nodes.property(self.id_column).dcid)
 
     triples: list[Triple] = []
     for index, row in self.df.iterrows():
@@ -122,23 +133,28 @@ class EntitiesImporter(Importer):
       dcid = row[
           id_column_name] if id_column_name else f"{self.row_entity_type}_{index}"
 
+      # Normalize subject ID
+      dcid = strip_namespace(str(dcid))
+
       prop_object_values: dict[str, str] = {}
-      prop_object_ids: dict[str, str] = {}
+      prop_object_ids: dict[str, str | list[str]] = {}
 
       for i, (k, v) in enumerate(row.items()):
         if pd.isna(v):
           continue
         if k in self.entity_columns:
-          if "," in v:
-            ids = list(map(lambda x: x.strip(), v.split(",")))
+          v_str = str(v)
+          if "," in v_str:
+            ids = list(
+                map(lambda x: strip_namespace(x.strip()), v_str.split(",")))
             prop_object_ids[k] = ids
           else:
-            prop_object_ids[k] = v
+            prop_object_ids[k] = strip_namespace(v_str)
         else:
           prop_object_values[k] = v
 
       row_entity = RowEntity(dcid,
-                             self.row_entity_type,
+                             strip_namespace(self.row_entity_type),
                              provenance_id=self.provenance,
                              prop_object_values=prop_object_values,
                              prop_object_ids=prop_object_ids)
