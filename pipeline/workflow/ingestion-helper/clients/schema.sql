@@ -37,7 +37,7 @@ CREATE INDEX InEdge ON Edge(object_id, predicate, subject_id, provenance) OPTION
   columnar_policy = 'enabled'
 );
 
-CREATE NULL_FILTERED INDEX EdgeByProvenance ON Edge(provenance) OPTIONS (
+CREATE INDEX EdgeByProvenance ON Edge(provenance) OPTIONS (
   columnar_policy = 'enabled'
 );
 
