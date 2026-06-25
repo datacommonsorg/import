@@ -238,7 +238,7 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         self.assertIn("test-conn", query)
         self.assertIn("import1", query)
         self.assertIn("spanner-uri", query)
-        self.assertIn("CONCAT('dc/base/', raw.import_name)",
+        self.assertIn("'dc/base/import1'",
                       query)  # Since is_base_dc=True
 
 
