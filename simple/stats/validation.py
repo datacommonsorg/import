@@ -41,12 +41,11 @@ class MetadataValidator:
     if not referenced_provenances:
       return
 
-    defined_provenances, defined_sources, provenance_to_source = self._collect_defined_nodes(
-    )
+    defined_provenances, provenance_to_source = self._collect_defined_nodes()
 
     self._validate_provenance_definitions(referenced_provenances,
                                           defined_provenances)
-    self._validate_source_links(defined_provenances, defined_sources,
+    self._validate_source_links(defined_provenances,
                                 provenance_to_source)
 
     logging.info(
@@ -79,10 +78,9 @@ class MetadataValidator:
       referenced.add(self._clean_dcid(prov))
     return referenced
 
-  def _collect_defined_nodes(self) -> tuple[set[str], set[str], dict[str, str]]:
-    """Gathers all defined Provenances, Sources, and their links from the DB triples."""
+  def _collect_defined_nodes(self) -> tuple[set[str], dict[str, str]]:
+    """Gathers all defined Provenances and their links from the DB triples."""
     defined_provenances = set()
-    defined_sources = set()
     provenance_to_source = {}
 
     all_triples = []
@@ -99,15 +97,13 @@ class MetadataValidator:
         obj = triple.object_id or ""
         if "Provenance" in obj:
           defined_provenances.add(sub)
-        elif "Source" in obj:
-          defined_sources.add(sub)
 
       elif pred in ["sourceLink", "source"]:
         obj = triple.object_id or ""
         if obj:
           provenance_to_source[sub] = self._clean_dcid(obj)
 
-    return defined_provenances, defined_sources, provenance_to_source
+    return defined_provenances, provenance_to_source
 
   def _validate_provenance_definitions(self, referenced: set[str],
                                        defined: set[str]) -> None:
@@ -121,24 +117,23 @@ class MetadataValidator:
       )
 
   def _validate_source_links(self, defined_provs: set[str],
-                             defined_sources: set[str],
                              links: dict[str, str]) -> None:
-    """Verifies all defined provenances link to a valid defined Source."""
-    missing_sources = {}
+    """Verifies all defined provenances link to a Source."""
+    missing_sources = []
     for prov in defined_provs:
       source = links.get(prov)
-      if not source or source not in defined_sources:
-        missing_sources[prov] = source or "None"
+      if not source:
+        missing_sources.append(prov)
 
     if missing_sources:
       details = [
-          f"  - Provenance '{p}' points to missing/empty Source '{s}'"
-          for p, s in missing_sources.items()
+          f"  - Provenance '{p}' has no linked Source (sourceLink/source property is missing or empty)"
+          for p in missing_sources
       ]
       raise ValueError(
           f"Metadata Validation Failed: Linked sources are missing for "
           f"defined provenances:\n" + "\n".join(details) +
-          f"\nPlease define the missing Source nodes in your MCF files.")
+          f"\nPlease specify a sourceLink or source property on these Provenance nodes.")
 
   def _clean_dcid(self, val: str) -> str:
     """Normalizes a DCID value by ensuring it starts with 'dcid:' and has no prefix namespaces."""

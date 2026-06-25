@@ -75,7 +75,7 @@ class TestMetadataValidator(unittest.TestCase):
                   str(context.exception))
     self.assertIn("dcid:MissingProvenance", str(context.exception))
 
-  def test_validation_missing_source(self):
+  def test_validation_missing_source_link(self):
     # Setup mock config with referenced provenance
     mock_config = mock.MagicMock(spec=Config)
     mock_config.data = {
@@ -85,14 +85,11 @@ class TestMetadataValidator(unittest.TestCase):
         }]
     }
 
-    # Setup mock database where Provenance is defined but points to a missing Source
+    # Setup mock database where Provenance is defined but completely lacks a linked source
     mock_db = mock.MagicMock(spec=Db)
     mock_db._triples = {
         "_global": [
             Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
-            Triple("dcid:MyProvenance",
-                   "sourceLink",
-                   object_id="dcid:MissingSource"),
         ]
     }
 
@@ -102,8 +99,32 @@ class TestMetadataValidator(unittest.TestCase):
 
     self.assertIn("Linked sources are missing for defined provenances",
                   str(context.exception))
-    self.assertIn("points to missing/empty Source 'dcid:MissingSource'",
+    self.assertIn("has no linked Source",
                   str(context.exception))
+
+  def test_validation_undefined_source_node_passes(self):
+    # Setup mock config with referenced provenance
+    mock_config = mock.MagicMock(spec=Config)
+    mock_config.data = {
+        "inputFiles": [{
+            "pattern": "data.csv",
+            "provenance": "dcid:MyProvenance"
+        }]
+    }
+
+    # Setup mock database where Provenance is defined and points to a source,
+    # but the Source node itself is NOT defined in the database triples
+    mock_db = mock.MagicMock(spec=Db)
+    mock_db._triples = {
+        "_global": [
+            Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
+            Triple("dcid:MyProvenance", "sourceLink", object_id="dcid:MySource"),
+        ]
+    }
+
+    validator = MetadataValidator(mock_config, mock_db)
+    # This should now succeed without raising any exceptions!
+    validator.validate()
 
   def test_validation_missing_provenance_key(self):
     # Setup mock config with missing provenance property
