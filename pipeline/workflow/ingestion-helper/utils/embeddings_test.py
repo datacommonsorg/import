@@ -49,7 +49,6 @@ class TestEmbeddingUtils(unittest.TestCase):
 
     @patch('utils.embeddings._extract_nl_stat_var')
     def test_get_node_filter_condition_nl_filter(self, mock_extract):
-        from google.cloud.spanner_v1.param_types import STRING, Array
         mock_extract.return_value = ["Count_Person", "Median_Age"]
         params = {}
         param_types = {}
