@@ -792,7 +792,9 @@ class Runner:
         # Fail immediately if column mappings are missing from config
         mappings = self.config.column_mappings(input_file)
         if not mappings and self.mode == RunMode.DCP_BRIDGE:
-          raise ValueError("Missing column mappings in config.json")
+          raise ValueError(
+              f"Missing column mappings for file '{input_file.path}' in config.json"
+          )
         return VariablePerRowImporter(
             input_file=input_file,
             db=self.db,
