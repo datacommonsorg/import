@@ -24,7 +24,7 @@ class MetadataValidator:
 
   Verifies that:
   1. Any provenance referenced in config.json is defined in the MCF files.
-  2. Any defined provenance in the MCF files points to a defined Source.
+  2. Any defined provenance in the MCF files points to a Source.
   """
 
   def __init__(self, config: Config, db: Db) -> None:
