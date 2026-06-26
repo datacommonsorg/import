@@ -789,6 +789,10 @@ class Runner:
     if import_type == ImportType.OBSERVATIONS:
       input_file_format = self.config.format(input_file)
       if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
+        # Fail immediately if column mappings are missing from config
+        mappings = self.config.column_mappings(input_file)
+        if not mappings and self.mode == RunMode.DCP_BRIDGE:
+          raise ValueError("Missing column mappings in config.json")
         return VariablePerRowImporter(
             input_file=input_file,
             db=self.db,
