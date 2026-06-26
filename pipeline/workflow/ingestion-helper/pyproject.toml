@@ -33,6 +33,7 @@ dependencies = [
     "google-cloud-bigquery",
     "redis",
     "jinja2",
+    "pandas",
 ]
 
 [tool.hatch.version]
