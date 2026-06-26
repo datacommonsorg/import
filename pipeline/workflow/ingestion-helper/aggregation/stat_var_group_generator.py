@@ -336,7 +336,7 @@ class StatVarGroupGenerator:
           FROM ZeroConstraintStatVars SV
           LEFT JOIN VerticalSpec VS 
             ON SV.populationType = VS.populationType 
-            AND SV.observationProperties IS NOT DISTINCT FROM VS.observationProperties
+            AND (VS.observationProperties IS NULL OR SV.observationProperties = VS.observationProperties)
             AND IFNULL(ARRAY_LENGTH(VS.constraintProperties), 0) = 0
           CROSS JOIN UNNEST([
             STRUCT('memberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS target_array),
