@@ -71,7 +71,7 @@ class StatVarGroupGenerator:
         constraint_props = [row.object_id for row in prep_sv_job]
 
         # Combine base predicates with the dynamically discovered constraint properties
-        needed_predicates = ['populationType', 'constraintProperties'] + constraint_props
+        needed_predicates = ['populationType', 'measuredProperty', 'constraintProperties'] + constraint_props
 
         # Format into a SQL-safe string for Spanner injection
         sv_predicates = [f"'{p.replace('\'', '')}'" for p in needed_predicates]
@@ -212,7 +212,7 @@ class StatVarGroupGenerator:
               ORDER BY val
             ) AS linkedVertical
           FROM PivotSpec
-          LEFT JOIN UNNEST(observationProperties) AS observationProperties
+          LEFT JOIN UNNEST(IFNULL(PivotSpec.observationProperties, [])) AS observationProperties
           LEFT JOIN VerticalAncestors A ON A.subject_id IN UNNEST(PivotSpec.vertical)
           WHERE ARRAY_LENGTH(constraintProperties) <= 1 OR constraintProperties IS NULL
           ORDER BY subject_id
@@ -336,7 +336,7 @@ class StatVarGroupGenerator:
           FROM ZeroConstraintStatVars SV
           LEFT JOIN VerticalSpec VS 
             ON SV.populationType = VS.populationType 
-            AND SV.observationProperties = VS.observationProperties
+            AND SV.observationProperties IS NOT DISTINCT FROM VS.observationProperties
             AND IFNULL(ARRAY_LENGTH(VS.constraintProperties), 0) = 0
           CROSS JOIN UNNEST([
             STRUCT('memberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS target_array),

@@ -1520,8 +1520,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         return StatVarGroupGenerator(
             executor,
             is_base_dc=self.is_base_dc,
-            max_iterations=2,
-            should_filter_basic_population_type=False # Disabled for simpler test assertions
+            max_iterations=2
         )
 
     def test_stat_var_group_generation(self):
@@ -1532,6 +1531,8 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           - A vertical spec mapping 'Student' population type to a 'TestVertical' SVG.
           - An unconstrained SV 'Count_Student'.
           - A constrained SV 'Count_Student_Female' (gender=Female).
+          - A curated SV 'Median_Age_Student'.
+          - A basic populationType SV 'Count_Person'.
         """
         generator = self.get_generator()
         ns = generator.namespace
@@ -1540,12 +1541,17 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         # 1. Setup mock Vertical Node and Spec mappings
         self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
         self.add_node(f'{ns}g/TestCustomVertical', 'Test Custom Vertical', types=['StatVarGroup'])
-        self.add_node('Student', 'Student Population', value='Student', types=['Class'])
+        self.add_node('Student', 'Student', value='Student', types=['Class'])
+        self.add_node('Person', 'Person', value='Person', types=['Class'])
         
         # Spec mappings
         self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Student', 'populationType', 'Student', 'TestImport')
         self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')
+        self.add_edge('Spec_Person', 'typeOf', 'StatVarGroupSpec', 'TestImport')
+        self.add_edge('Spec_Person', 'populationType', 'Person', 'TestImport')
+        self.add_edge('Spec_Person', 'observationProperties', 'measuredProperty=count', 'TestImport')
+        self.add_edge('Spec_Person', 'vertical', f'{ns}g/TestVertical', 'TestImport')
         self.add_edge(f'{ns}g/TestVertical', 'specializationOf', f'{ns}g/Root', 'TestImport')
         self.add_edge(f'{ns}g/TestCustomVertical', 'specializationOf', f'{ns}g/Root', 'TestCustomImport')
 
@@ -1568,6 +1574,12 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('Median_Age_Student', 'populationType', 'Student', 'TestCustomImport')
         self.add_edge('Median_Age_Student', 'memberOf', f'{ns}g/TestCustomVertical', 'TestCustomImport')
 
+        # SV with basic populationType
+        self.add_node('Count_Person', 'Population', types=['StatisticalVariable'])
+        self.add_edge('Count_Person', 'typeOf', 'StatisticalVariable', 'TestImport')
+        self.add_edge('Count_Person', 'populationType', 'Person', 'TestImport')
+        self.add_edge('Count_Person', 'measuredProperty', 'count', 'TestImport')
+        
         self.flush_to_spanner()
 
         # 2. Run generator
@@ -1618,6 +1630,13 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
+            # Verify basic populationType SV attached to SVG by mprop
+            self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+
+            # Verify basic populationType SV attached to ancestor SVGs
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            
             # Verify hierarchical specialization of generated SVGs
             self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov), edges)
             self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov), edges)
