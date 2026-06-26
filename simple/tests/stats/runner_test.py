@@ -491,13 +491,7 @@ class TestRunner(unittest.TestCase):
               },
               {
                   "pattern": "*.mcf",
-                  "provenance": "dcid:ilo",
-                  "columnMappings": {
-                      "dcid:variableMeasured": "variable",
-                      "dcid:observationAbout": "entity",
-                      "dcid:observationDate": "date",
-                      "dcid:value": "value"
-                  }
+                  "provenance": "dcid:ilo"
               }
           ]
       }
