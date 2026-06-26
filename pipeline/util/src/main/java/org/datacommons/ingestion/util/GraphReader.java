@@ -107,6 +107,7 @@ public class GraphReader implements Serializable {
       PropertyValues pvs = nodeEntry.getValue();
       if (!GraphUtils.isObservation(pvs)) {
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
+        String nodeProvenance = getProvenance(pvs, provenance);
         String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
         String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
@@ -137,7 +138,7 @@ public class GraphReader implements Serializable {
             Edge.Builder edge = Edge.builder();
             edge.subjectId(subjectId);
             edge.predicate(entry.getKey());
-            edge.provenance(provenance);
+            edge.provenance(nodeProvenance);
             if (val.getType() == ValueType.RESOLVED_REF) {
               edge.objectId(McfUtil.stripNamespace(val.getValue()));
             } else {
@@ -317,9 +318,11 @@ public class GraphReader implements Serializable {
     String unit = GraphUtils.getPropVal(pv, "unit");
     String scalingFactor = GraphUtils.getPropVal(pv, "scalingFactor");
 
+    String provenance = getProvenance(pv, importName);
+
     String facetId =
         TimeSeries.calculateFacetId(
-            importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
+            provenance, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
 
     return new TimeSeriesKey(
         sv,
@@ -356,6 +359,8 @@ public class GraphReader implements Serializable {
     String scalingFactor = GraphUtils.getPropVal(pv, "scalingFactor");
     String provenanceUrl = GraphUtils.getPropVal(pv, "provenanceUrl");
 
+    String provenance = getProvenance(pv, importName);
+
     return TimeSeries.builder()
         .variableMeasured(sv)
         .entity1(entity1)
@@ -364,7 +369,7 @@ public class GraphReader implements Serializable {
         .measurementMethod(measurementMethod)
         .unit(unit)
         .scalingFactor(scalingFactor)
-        .importName(importName)
+        .importName(provenance)
         .isBaseDc(isBaseDc)
         .isDcAggregate(isDcAggregate)
         .provenanceUrl(provenanceUrl)
@@ -490,5 +495,14 @@ public class GraphReader implements Serializable {
                 edgeCounter.inc(mutations.size());
               }
             }));
+  }
+
+  /**
+   * Fallback logic to handle base DC case where provenance mcf node may not be a part of the data
+   * files of the import.
+   */
+  private static String getProvenance(PropertyValues pv, String fallbackProvenance) {
+    String provenance = GraphUtils.getPropVal(pv, "provenance");
+    return provenance.isEmpty() ? fallbackProvenance : provenance;
   }
 }
