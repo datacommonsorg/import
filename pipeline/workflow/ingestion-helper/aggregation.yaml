@@ -1,0 +1,17 @@
+# Data Commons Aggregation Configuration. See the README for details.
+
+aggregations:
+  # Generates linkedContainedInPlace, linkedMemberOf, etc.
+  - type: linked_edges
+    imports: ["*"]
+    stage: 1
+
+  # Generates summary statistics in the Cache table
+  - type: provenance_summary
+    imports: ["*"]
+    stage: 1
+
+  # Generates the Statistical Variable hierarchy/verticals
+  - type: stat_var_groups
+    imports: ["*"]
+    stage: 1
