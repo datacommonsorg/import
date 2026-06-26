@@ -498,6 +498,67 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(top_places[1]['dcid'], 'geoId/36')
             self.assertEqual(top_places[1]['name'], 'New York')
 
+    def test_provenance_summary_aggregation_duplicate_types(self):
+        """Tests run_provenance_summary_aggregation when entities have duplicate typeOf edges.
+
+        This verifies that duplicate typeOf edges (e.g., from different imports)
+        do not cause the observation count to be duplicated in the Cache.
+        """
+        import_name = 'USFed_ConstantMaturityRates_Test'
+        
+        # 1. Setup mock data: 1 place with 2 observations
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('State', 'State Class', types=['Class'])
+        
+        # Add DUPLICATE typeOf edges with different provenances (simulating real DB)
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+        self.add_edge('geoId/06', 'typeOf', 'State', 'AnotherImport')
+        
+        # Add TimeSeries and Observations (2 observations total)
+        self.add_timeseries('Count_Person', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0)
+        self.add_observation('Count_Person', 'geoId/06', '2021', 110.0)
+        
+        self.flush_to_spanner()
+        
+        # 2. Run generator
+        generator = self.get_generator()
+        jobs = generator.run_all([import_name])
+        self.assertEqual(len(jobs), 1)
+        
+        # 3. Verify results in Spanner Cache table
+        with self.database.snapshot() as snapshot:
+            query = """
+                SELECT type, key, provenance, value 
+                FROM Cache 
+                WHERE type = 'ProvenanceSummary'
+            """
+            results = list(snapshot.execute_sql(query))
+            
+            self.assertEqual(len(results), 1)
+            row = results[0]
+            value_json = row[3]
+            
+            # The observation count MUST be 2.0 (the true count), NOT 4.0 (which would happen if duplicated)
+            self.assertEqual(value_json['observation_count'], 2.0)
+            self.assertEqual(value_json['time_series_count'], 1.0)
+            
+            series_summary = value_json['series_summary']
+            self.assertEqual(len(series_summary), 1)
+            summary = series_summary[0]
+            
+            self.assertEqual(summary['observation_count'], 2.0)
+            self.assertEqual(summary['time_series_count'], 1.0)
+            
+            # Place type summary should also be correct
+            pts = summary['place_type_summary']
+            self.assertIsNotNone(pts)
+            self.assertIn('State', pts)
+            state_summary = pts['State']
+            self.assertEqual(state_summary['place_count'], 1.0)
+            self.assertEqual(state_summary['min_value'], 100.0)
+            self.assertEqual(state_summary['max_value'], 110.0)
+
     def test_provenance_summary_robustness_non_numeric_values(self):
         """Tests run_provenance_summary_aggregation with non-numeric values.
         
