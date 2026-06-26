@@ -491,11 +491,12 @@ class SpannerClient:
         ]
         required_indexes = [
             "InEdge",
+            "EdgeByProvenance",
             "TimeSeriesByProvenance",
             "TimeSeriesByEntity1",
             "TimeSeriesByEntity2",
             "TimeSeriesByEntity3",
-            self.embedding_index
+            self.embedding_index,
         ]
         required_models = [m['name'] for m in self.models]
 
