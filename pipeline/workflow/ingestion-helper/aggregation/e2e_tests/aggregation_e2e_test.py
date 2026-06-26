@@ -1589,6 +1589,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             nodes = [r[0] for r in snapshot.execute_sql(node_query)]
             self.assertIn(f'{ns}g/Student', nodes)
             self.assertIn(f'{ns}g/Student_Gender', nodes)
+            self.assertIn(f'{ns}g/Student_Gender-Female', nodes)
 
             # Check linkedMemberOf/memberOf attachments
             edge_query = """
@@ -1608,15 +1609,17 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
             
             # Verify constrained SV attached to the constrained SVG
-            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender', prov), edges)
+            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov), edges)
 
             # Verify constrained SV attached to ancestor SVGs
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender-Female', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
             # Verify hierarchical specialization of generated SVGs
+            self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov), edges)
             self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov), edges)
 
             # Verify the root SVG attached to the Vertical declared in the Spec
