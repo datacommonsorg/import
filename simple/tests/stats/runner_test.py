@@ -449,13 +449,7 @@ class TestRunner(unittest.TestCase):
               },
               {
                   "pattern": "*.mcf",
-                  "provenance": "dcid:oecd",
-                  "columnMappings": {
-                      "dcid:variableMeasured": "variable",
-                      "dcid:observationAbout": "entity",
-                      "dcid:observationDate": "date",
-                      "dcid:value": "value"
-                  }
+                  "provenance": "dcid:oecd"
               }
           ]
       }
