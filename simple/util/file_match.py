@@ -77,8 +77,10 @@ def _parse_pattern(pattern: str) -> tuple[str | None, str, bool]:
 @functools.lru_cache(maxsize=256)
 def _expand_braces(pattern: str) -> str:
   """Expands standard glob braces: '{dirA,dirB}' -> '(?:dirA|dirB)'."""
+
   def repl(match):
     return "(?:" + match.group(1).replace(",", "|") + ")"
+
   while True:
     new_pattern = re.sub(r"\{([^}]+)\}", repl, pattern)
     if new_pattern == pattern:

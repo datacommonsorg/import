@@ -83,7 +83,7 @@ class TestFileMatch(unittest.TestCase):
     yes("path/to/foo.csv")
     yes("to/foo.csv")  # Partial match allowed
     yes("path/to*/foo.csv")  # Single wildcard in dir matches zero chars
-    yes("path/t*/foo.csv")   # Single wildcard in dir matches one char
+    yes("path/t*/foo.csv")  # Single wildcard in dir matches one char
     yes("*/foo.csv")  # Wrong depth, but partial match allowed
     yes("*/*/foo.csv")
     yes("*/to/foo.csv")
@@ -186,5 +186,3 @@ class TestFileMatch(unittest.TestCase):
     self.assertTrue(match(f4, "{match_events.csv,**/schema.mcf}"))
     self.assertTrue(match(f5, "{match_events.csv,**/schema.mcf}"))
     self.assertFalse(match(f1, "{match_events.csv,**/schema.mcf}"))
-
-
