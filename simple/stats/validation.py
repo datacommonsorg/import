@@ -45,8 +45,7 @@ class MetadataValidator:
 
     self._validate_provenance_definitions(referenced_provenances,
                                           defined_provenances)
-    self._validate_source_links(defined_provenances,
-                                provenance_to_source)
+    self._validate_source_links(defined_provenances, provenance_to_source)
 
     logging.info(
         "Metadata validation completed successfully. All provenances and sources are valid."
@@ -133,7 +132,8 @@ class MetadataValidator:
       raise ValueError(
           f"Metadata Validation Failed: Linked sources are missing for "
           f"defined provenances:\n" + "\n".join(details) +
-          f"\nPlease specify a sourceLink or source property on these Provenance nodes.")
+          f"\nPlease specify a sourceLink or source property on these Provenance nodes."
+      )
 
   def _clean_dcid(self, val: str) -> str:
     """Normalizes a DCID value by ensuring it starts with 'dcid:' and has no prefix namespaces."""

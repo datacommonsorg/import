@@ -99,8 +99,7 @@ class TestMetadataValidator(unittest.TestCase):
 
     self.assertIn("Linked sources are missing for defined provenances",
                   str(context.exception))
-    self.assertIn("has no linked Source",
-                  str(context.exception))
+    self.assertIn("has no linked Source", str(context.exception))
 
   def test_validation_undefined_source_node_passes(self):
     # Setup mock config with referenced provenance
@@ -118,7 +117,8 @@ class TestMetadataValidator(unittest.TestCase):
     mock_db._triples = {
         "_global": [
             Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
-            Triple("dcid:MyProvenance", "sourceLink", object_id="dcid:MySource"),
+            Triple("dcid:MyProvenance", "sourceLink",
+                   object_id="dcid:MySource"),
         ]
     }
 
