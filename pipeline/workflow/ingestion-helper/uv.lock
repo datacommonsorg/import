@@ -300,7 +300,7 @@ requires-dist = [
     { name = "google-cloud-spanner" },
     { name = "google-cloud-storage" },
     { name = "jinja2" },
-    { name = "pandas" },
+    { name = "pandas", specifier = "~=3.0.3" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "redis" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.28.0" },
