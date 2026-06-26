@@ -119,7 +119,7 @@ class MetadataValidator:
                              links: dict[str, str]) -> None:
     """Verifies all defined provenances link to a Source."""
     missing_sources = []
-    for prov in defined_provs:
+    for prov in sorted(defined_provs):
       source = links.get(prov)
       if not source:
         missing_sources.append(prov)
