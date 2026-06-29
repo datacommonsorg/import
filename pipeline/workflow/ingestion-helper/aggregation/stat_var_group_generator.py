@@ -71,7 +71,7 @@ class StatVarGroupGenerator:
         constraint_props = [row.object_id for row in prep_sv_job]
 
         # Combine base predicates with the dynamically discovered constraint properties
-        needed_predicates = ['populationType', 'constraintProperties'] + constraint_props
+        needed_predicates = ['populationType', 'measuredProperty', 'constraintProperties'] + constraint_props
 
         # Format into a SQL-safe string for Spanner injection
         sv_predicates = [f"'{p.replace('\'', '')}'" for p in needed_predicates]
@@ -145,6 +145,7 @@ class StatVarGroupGenerator:
             FROM Edge 
             WHERE predicate IN (
               'populationType', 
+              'observationProperties',
               'constraintProperties', 
               'vertical', 
               'dependentPropertyValue'
@@ -194,16 +195,15 @@ class StatVarGroupGenerator:
             SELECT * FROM SpecValues
             PIVOT (
               ARRAY_AGG(value IGNORE NULLS ORDER BY value) 
-              -- NOTE: Currently excluding ObsProp.
-              -- This is because it can cause unexpected behavior when an SV is attached to a vertical due to another SV having a matching mprop.
-              -- Instead, the SV will get attached only based on popType and cpops, so the result is deterministic per SV.
-              -- TODO: Determine what the intended behavior is. 
-              FOR predicate IN ('populationType', 'constraintProperties', 'vertical')
+              FOR predicate IN ('populationType', 'observationProperties', 'constraintProperties', 'vertical')
             )
           )
           SELECT 
             PivotSpec.subject_id,
             populationType[SAFE_OFFSET(0)] AS populationType,
+            -- NOTE: Legacy vertical matching does not include measurementQualifier or measurementDenominator,
+            -- so filtering out from ObsProps.
+            SPLIT(observationProperties, ',')[SAFE_OFFSET(0)] AS observationProperties,
             IFNULL(constraintProperties, []) AS constraintProperties,
             vertical,
             ARRAY(
@@ -212,6 +212,7 @@ class StatVarGroupGenerator:
               ORDER BY val
             ) AS linkedVertical
           FROM PivotSpec
+          LEFT JOIN UNNEST(IFNULL(PivotSpec.observationProperties, [])) AS observationProperties
           LEFT JOIN VerticalAncestors A ON A.subject_id IN UNNEST(PivotSpec.vertical)
           WHERE ARRAY_LENGTH(constraintProperties) <= 1 OR constraintProperties IS NULL
           ORDER BY subject_id
@@ -271,6 +272,18 @@ class StatVarGroupGenerator:
                 WHERE statvar = StatVarTriple.subject_id
               )
           ),
+          ObservationProps AS (
+            SELECT
+              subject_id,
+              CONCAT(predicate, '=', object_id) AS observationProperties
+            FROM
+              StatVarTriple
+            WHERE
+              -- NOTE: Legacy matching does not include measurementQualifier or measurementDenominator,
+              -- so filtering out from ObsProps.
+              predicate = 'measuredProperty'
+              AND object_id IS NOT NULL
+          ),
           ConstraintProps AS (
             SELECT subject_id, ARRAY_AGG(object_id ORDER BY object_id) AS constraintProperties
             FROM StatVarTriple WHERE predicate = 'constraintProperties' GROUP BY subject_id
@@ -290,19 +303,23 @@ class StatVarGroupGenerator:
             '' AS node2name,
             IF(ARRAY_LENGTH(Constraints.pvs) > 0, 
               CONCAT(namespace, 'g/', PopType.object_id, '_', REPLACE(REPLACE(ARRAY_TO_STRING(Constraints.pvs, '_'), ' ', ''), '=', '-')), 
-              CAST(NULL AS STRING)
+              IF(NOT (should_filter_basic_population_type AND IsBasicPopulationType(PopType.object_id)),
+                CONCAT(namespace, 'g/', PopType.object_id), CAST(NULL AS STRING))
             ) AS node3,
             IF(ARRAY_LENGTH(Constraints.pvs) > 0, 
               CONCAT(FormatName(PopType.object_id), ' With ', ARRAY_TO_STRING(Constraints.pvs, ', ')), 
-              ''
+              IF(NOT (should_filter_basic_population_type AND IsBasicPopulationType(PopType.object_id)),
+                FormatName(PopType.object_id), CAST(NULL AS STRING))
             ) AS node3name,
             PopType.subject_id AS statvar,
             PopType.object_id AS populationType,
+            ObservationProps.observationProperties,
             ARRAY<STRING>[] AS constraintProperties,
             IFNULL(Constraints.aligned_cps, ARRAY<STRING>[]) AS newConstraintProperties,
             IFNULL(Constraints.pvs, ARRAY<STRING>[]) AS attributes,
             0 AS iteration
           FROM PopType
+          LEFT JOIN ObservationProps ON ObservationProps.subject_id = PopType.subject_id
           LEFT JOIN ConstraintProps ON ConstraintProps.subject_id = PopType.subject_id
           LEFT JOIN Constraints ON Constraints.subject_id = PopType.subject_id
         );
@@ -318,7 +335,9 @@ class StatVarGroupGenerator:
             SV.statvar AS subject_id, map.predicate, v AS object_id, generated_provenance AS provenance 
           FROM ZeroConstraintStatVars SV
           LEFT JOIN VerticalSpec VS 
-            ON SV.populationType = VS.populationType AND IFNULL(ARRAY_LENGTH(VS.constraintProperties), 0) = 0
+            ON SV.populationType = VS.populationType 
+            AND (VS.observationProperties IS NULL OR SV.observationProperties = VS.observationProperties)
+            AND IFNULL(ARRAY_LENGTH(VS.constraintProperties), 0) = 0
           CROSS JOIN UNNEST([
             STRUCT('memberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS target_array),
             STRUCT(
@@ -335,27 +354,13 @@ class StatVarGroupGenerator:
         -- Create table to hold the results from the iteration.
         CREATE OR REPLACE TEMP TABLE AllResults ( 
           node1 STRING, node2 STRING, node2name STRING, node3 STRING, node3name STRING,
-          statvar STRING, populationType STRING, constraintProperties ARRAY<STRING>,
-          newConstraintProperties ARRAY<STRING>, attributes ARRAY<STRING>, iteration INT64 
+          statvar STRING, populationType STRING, observationProperties STRING,
+          constraintProperties ARRAY<STRING>, newConstraintProperties ARRAY<STRING>,
+          attributes ARRAY<STRING>, iteration INT64 
         );
 
-        -- Seed 0-constraint SVs with non-basic population types so they generate an intermediate SVG
         INSERT INTO AllResults
-        SELECT
-          CAST(NULL AS STRING) AS node1,
-          CONCAT(namespace, 'g/', populationType) AS node2,
-          FormatName(populationType) AS node2name,
-          CAST(NULL AS STRING) AS node3,
-          CAST(NULL AS STRING) AS node3name,
-          statvar,
-          populationType,
-          ARRAY<STRING>[] AS constraintProperties,
-          ARRAY<STRING>[] AS newConstraintProperties,
-          ARRAY<STRING>[] AS attributes,
-          1 AS iteration
-        FROM InitialData
-        WHERE ARRAY_LENGTH(attributes) = 0
-          AND NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType));
+        SELECT * FROM InitialData;
 
         WHILE new_rows_found AND iteration_count < max_iterations DO
           SET iteration_count = iteration_count + 1;
@@ -391,7 +396,7 @@ class StatVarGroupGenerator:
                 ), ', ')),
                 IF(NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType)), FormatName(populationType), CAST(NULL AS STRING))
               ) AS node3name,
-              statvar, populationType, newConstraintProperties AS constraintProperties,
+              statvar, populationType, observationProperties, newConstraintProperties AS constraintProperties,
               ARRAY(SELECT cp FROM UNNEST(newConstraintProperties) AS cp WITH OFFSET AS cp_idx WHERE cp_idx != target_idx) AS newConstraintProperties,
               ARRAY(SELECT a FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx WHERE a_idx != target_idx) AS attributes,
               iteration + 1 AS iteration
@@ -423,20 +428,35 @@ class StatVarGroupGenerator:
         -- ============================================================================
         -- Create Edges for top level SVGs (those with 0 or 1 constraintProperties) to verticals.
         CREATE OR REPLACE TEMP TABLE SVGVerticalEdges AS (
-          WITH FilteredSVG AS (
-            SELECT * FROM AllResults WHERE ARRAY_LENGTH(constraintProperties) <= 1
+          WITH TopLevelSVGs AS (
+            -- Basic PopTypes: Attach the 1-constraint group (node2) to the vertical.
+            SELECT DISTINCT node2 AS svg_id, statvar, constraintProperties, populationType
+            FROM AllResults
+            WHERE iteration > 0
+              AND (should_filter_basic_population_Type AND IsBasicPopulationType(populationType))
+              AND ARRAY_LENGTH(constraintProperties) = 1
+            UNION ALL
+            -- Non-basic PopTypes: Attach the 0-constraint group (node3) to the vertical.
+            SELECT DISTINCT node3 AS svg_id, statvar, ARRAY<STRING>[] AS constraintProperties, populationType
+            FROM AllResults
+            WHERE node3 IS NOT NULL
+              AND NOT (should_filter_basic_population_Type AND IsBasicPopulationType(populationType))
+              AND ARRAY_LENGTH(attributes) = 0
           ),
           BaseJoined AS (
             SELECT
-              SVG.statvar, COALESCE(SVG.node3, SVG.node2) AS svg_id, generated_provenance AS provenance,
+              SVG.statvar, SVG.svg_id, generated_provenance AS provenance,
               IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS svg_targets,
               IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg], VS.linkedVertical) AS statvar_targets
-            FROM FilteredSVG SVG
-            LEFT JOIN VerticalSpec VS 
-              ON SVG.populationType = VS.populationType AND (
-                (SVG.node3 IS NOT NULL AND IFNULL(ARRAY_LENGTH(VS.constraintProperties), 0) = 0) OR 
-                (SVG.node3 IS NULL AND TO_JSON_STRING(SVG.constraintProperties) = TO_JSON_STRING(VS.constraintProperties))
-              )
+            FROM TopLevelSVGs SVG 
+            LEFT JOIN VerticalSpec VS
+              -- NOTE: Currently excluding ObsProps.
+              -- This is because it can cause unexpected behavior when an SVG is attached to a vertical
+              -- due to another SVG having a matching mprop.
+              -- Instead, the SVG will get attached only based on popType and cprops, so the result is deterministic per SV
+              -- TODO: Determine what the intended behavior is.
+              ON SVG.populationType = VS.populationType
+              AND TO_JSON_STRING(SVG.constraintProperties) = TO_JSON_STRING(VS.constraintProperties)
           ),
           RawSVGEdges AS (
             SELECT DISTINCT svg_id AS subject_id, 'specializationOf' AS predicate, v AS object_id, provenance
@@ -484,12 +504,12 @@ class StatVarGroupGenerator:
           SELECT DISTINCT edge_data.subject_id, edge_data.predicate, edge_data.object_id, generated_provenance AS provenance
           FROM AllResults
           CROSS JOIN UNNEST([
-            STRUCT(statvar AS subject_id, 'memberOf' AS predicate, node2 AS object_id, iteration = 1 AS keep),
+            STRUCT(statvar AS subject_id, 'memberOf' AS predicate, node3 AS object_id, iteration = 0 AND node3 IS NOT NULL AS keep),
             STRUCT(node2, 'typeOf', 'StatVarGroup', node2 IS NOT NULL),
             STRUCT(node2, 'name', CONCAT(SUBSTR(node2name, 1, 16), ':', TO_BASE64(SHA256(node2name))), node2 IS NOT NULL),
             STRUCT(node3, 'typeOf', 'StatVarGroup', node3 IS NOT NULL),
             STRUCT(node3, 'name', CONCAT(SUBSTR(node3name, 1, 16), ':', TO_BASE64(SHA256(node3name))), node3 IS NOT NULL),
-            STRUCT(node1, 'specializationOf', node2, node1 IS NOT NULL AND node2 IS NOT NULL AND iteration > 1),
+            STRUCT(node1, 'specializationOf', node2, node1 IS NOT NULL AND node2 IS NOT NULL),
             STRUCT(node2, 'specializationOf', node3, node2 IS NOT NULL AND node3 IS NOT NULL),
             STRUCT(statvar, 'linkedMemberOf', node2, node2 IS NOT NULL),
             STRUCT(statvar, 'linkedMemberOf', node3, node3 IS NOT NULL)
