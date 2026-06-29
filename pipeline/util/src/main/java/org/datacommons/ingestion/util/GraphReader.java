@@ -25,6 +25,7 @@ import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
+import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
@@ -107,6 +108,7 @@ public class GraphReader implements Serializable {
       PropertyValues pvs = nodeEntry.getValue();
       if (!GraphUtils.isObservation(pvs)) {
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
+        String nodeProvenance = getProvenance(pvs, provenance);
         String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
         String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
@@ -137,7 +139,7 @@ public class GraphReader implements Serializable {
             Edge.Builder edge = Edge.builder();
             edge.subjectId(subjectId);
             edge.predicate(entry.getKey());
-            edge.provenance(provenance);
+            edge.provenance(nodeProvenance);
             if (val.getType() == ValueType.RESOLVED_REF) {
               edge.objectId(McfUtil.stripNamespace(val.getValue()));
             } else {
@@ -317,9 +319,11 @@ public class GraphReader implements Serializable {
     String unit = GraphUtils.getPropVal(pv, "unit");
     String scalingFactor = GraphUtils.getPropVal(pv, "scalingFactor");
 
+    String provenance = getProvenance(pv, importName);
+
     String facetId =
         TimeSeries.calculateFacetId(
-            importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
+            provenance, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
 
     return new TimeSeriesKey(
         sv,
@@ -356,6 +360,8 @@ public class GraphReader implements Serializable {
     String scalingFactor = GraphUtils.getPropVal(pv, "scalingFactor");
     String provenanceUrl = GraphUtils.getPropVal(pv, "provenanceUrl");
 
+    String provenance = getProvenance(pv, importName);
+
     return TimeSeries.builder()
         .variableMeasured(sv)
         .entity1(entity1)
@@ -364,11 +370,51 @@ public class GraphReader implements Serializable {
         .measurementMethod(measurementMethod)
         .unit(unit)
         .scalingFactor(scalingFactor)
-        .importName(importName)
+        .importName(provenance)
         .isBaseDc(isBaseDc)
         .isDcAggregate(isDcAggregate)
         .provenanceUrl(provenanceUrl)
         .build();
+  }
+
+  public static PCollection<TimeSeries> extractSeriesFromOptimized(
+      PCollection<McfOptimizedGraph> graph,
+      String importName,
+      boolean isBaseDc,
+      Counter tsCounter) {
+    return graph.apply(
+        "SeriesToTimeSeriesObservations-" + importName,
+        ParDo.of(
+            new DoFn<McfOptimizedGraph, TimeSeries>() {
+              @ProcessElement
+              public void processElement(
+                  @Element McfOptimizedGraph g, OutputReceiver<TimeSeries> receiver) {
+                receiver.output(toTimeSeries(g.getSvObsSeries().getKey(), importName, isBaseDc));
+                tsCounter.inc();
+              }
+            }));
+  }
+
+  public static PCollection<Observation> extractObservationsFromOptimized(
+      PCollection<McfOptimizedGraph> graph,
+      String importName,
+      boolean isBaseDc,
+      Counter obsCounter) {
+    return graph.apply(
+        "ExtractObservationDataPoints-" + importName,
+        ParDo.of(
+            new DoFn<McfOptimizedGraph, Observation>() {
+              @ProcessElement
+              public void processElement(
+                  @Element McfOptimizedGraph g, OutputReceiver<Observation> receiver) {
+                McfStatVarObsSeries svoSeries = g.getSvObsSeries();
+                TimeSeriesKey seriesKey = toTimeSeriesKey(svoSeries.getKey(), importName);
+                for (StatVarObs obs : svoSeries.getSvObsListList()) {
+                  receiver.output(toObservation(seriesKey, obs));
+                  obsCounter.inc();
+                }
+              }
+            }));
   }
 
   static TimeSeries toTimeSeries(McfStatVarObsSeries.Key key, String importName, boolean isBaseDc) {
@@ -490,5 +536,14 @@ public class GraphReader implements Serializable {
                 edgeCounter.inc(mutations.size());
               }
             }));
+  }
+
+  /**
+   * Fallback logic to handle base DC case where provenance mcf node may not be a part of the data
+   * files of the import.
+   */
+  private static String getProvenance(PropertyValues pv, String fallbackProvenance) {
+    String provenance = GraphUtils.getPropVal(pv, "provenance");
+    return provenance.isEmpty() ? fallbackProvenance : provenance;
   }
 }
