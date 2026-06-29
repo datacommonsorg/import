@@ -664,7 +664,9 @@ class Runner:
     for input_store in self.input_stores:
       if input_store.isdir():
         if not self.include_input_subdirs:
-          logging.warning("You have specified subdirectories as part of this import, but you have not set includeInputSubdirs = true. If this is unintentional, you may incur errors. To fix the errors, set this option in your config.json file(s).")
+          logging.warning(
+              "You have specified subdirectories as part of this import, but you have not set includeInputSubdirs = true. If this is unintentional, you may incur errors. To fix this, if you want the subdirectories to be included, set this option in your config.json file. Otherwise, remove the subdirectories from your inputFiles list."
+          )
         input_files.extend(input_store.as_dir().all_files(
             self.include_input_subdirs))
       else:

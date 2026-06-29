@@ -498,6 +498,67 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(top_places[1]['dcid'], 'geoId/36')
             self.assertEqual(top_places[1]['name'], 'New York')
 
+    def test_provenance_summary_aggregation_duplicate_types(self):
+        """Tests run_provenance_summary_aggregation when entities have duplicate typeOf edges.
+
+        This verifies that duplicate typeOf edges (e.g., from different imports)
+        do not cause the observation count to be duplicated in the Cache.
+        """
+        import_name = 'USFed_ConstantMaturityRates_Test'
+        
+        # 1. Setup mock data: 1 place with 2 observations
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('State', 'State Class', types=['Class'])
+        
+        # Add DUPLICATE typeOf edges with different provenances (simulating real DB)
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+        self.add_edge('geoId/06', 'typeOf', 'State', 'AnotherImport')
+        
+        # Add TimeSeries and Observations (2 observations total)
+        self.add_timeseries('Count_Person', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0)
+        self.add_observation('Count_Person', 'geoId/06', '2021', 110.0)
+        
+        self.flush_to_spanner()
+        
+        # 2. Run generator
+        generator = self.get_generator()
+        jobs = generator.run_all([import_name])
+        self.assertEqual(len(jobs), 1)
+        
+        # 3. Verify results in Spanner Cache table
+        with self.database.snapshot() as snapshot:
+            query = """
+                SELECT type, key, provenance, value 
+                FROM Cache 
+                WHERE type = 'ProvenanceSummary'
+            """
+            results = list(snapshot.execute_sql(query))
+            
+            self.assertEqual(len(results), 1)
+            row = results[0]
+            value_json = row[3]
+            
+            # The observation count MUST be 2.0 (the true count), NOT 4.0 (which would happen if duplicated)
+            self.assertEqual(value_json['observation_count'], 2.0)
+            self.assertEqual(value_json['time_series_count'], 1.0)
+            
+            series_summary = value_json['series_summary']
+            self.assertEqual(len(series_summary), 1)
+            summary = series_summary[0]
+            
+            self.assertEqual(summary['observation_count'], 2.0)
+            self.assertEqual(summary['time_series_count'], 1.0)
+            
+            # Place type summary should also be correct
+            pts = summary['place_type_summary']
+            self.assertIsNotNone(pts)
+            self.assertIn('State', pts)
+            state_summary = pts['State']
+            self.assertEqual(state_summary['place_count'], 1.0)
+            self.assertEqual(state_summary['min_value'], 100.0)
+            self.assertEqual(state_summary['max_value'], 110.0)
+
     def test_provenance_summary_robustness_non_numeric_values(self):
         """Tests run_provenance_summary_aggregation with non-numeric values.
         
@@ -1520,8 +1581,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         return StatVarGroupGenerator(
             executor,
             is_base_dc=self.is_base_dc,
-            max_iterations=2,
-            should_filter_basic_population_type=False # Disabled for simpler test assertions
+            max_iterations=2
         )
 
     def test_stat_var_group_generation(self):
@@ -1532,6 +1592,8 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           - A vertical spec mapping 'Student' population type to a 'TestVertical' SVG.
           - An unconstrained SV 'Count_Student'.
           - A constrained SV 'Count_Student_Female' (gender=Female).
+          - A curated SV 'Median_Age_Student'.
+          - A basic populationType SV 'Count_Person'.
         """
         generator = self.get_generator()
         ns = generator.namespace
@@ -1540,12 +1602,17 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         # 1. Setup mock Vertical Node and Spec mappings
         self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
         self.add_node(f'{ns}g/TestCustomVertical', 'Test Custom Vertical', types=['StatVarGroup'])
-        self.add_node('Student', 'Student Population', value='Student', types=['Class'])
+        self.add_node('Student', 'Student', value='Student', types=['Class'])
+        self.add_node('Person', 'Person', value='Person', types=['Class'])
         
         # Spec mappings
         self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Student', 'populationType', 'Student', 'TestImport')
         self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')
+        self.add_edge('Spec_Person', 'typeOf', 'StatVarGroupSpec', 'TestImport')
+        self.add_edge('Spec_Person', 'populationType', 'Person', 'TestImport')
+        self.add_edge('Spec_Person', 'observationProperties', 'measuredProperty=count', 'TestImport')
+        self.add_edge('Spec_Person', 'vertical', f'{ns}g/TestVertical', 'TestImport')
         self.add_edge(f'{ns}g/TestVertical', 'specializationOf', f'{ns}g/Root', 'TestImport')
         self.add_edge(f'{ns}g/TestCustomVertical', 'specializationOf', f'{ns}g/Root', 'TestCustomImport')
 
@@ -1568,6 +1635,12 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('Median_Age_Student', 'populationType', 'Student', 'TestCustomImport')
         self.add_edge('Median_Age_Student', 'memberOf', f'{ns}g/TestCustomVertical', 'TestCustomImport')
 
+        # SV with basic populationType
+        self.add_node('Count_Person', 'Population', types=['StatisticalVariable'])
+        self.add_edge('Count_Person', 'typeOf', 'StatisticalVariable', 'TestImport')
+        self.add_edge('Count_Person', 'populationType', 'Person', 'TestImport')
+        self.add_edge('Count_Person', 'measuredProperty', 'count', 'TestImport')
+        
         self.flush_to_spanner()
 
         # 2. Run generator
@@ -1589,6 +1662,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             nodes = [r[0] for r in snapshot.execute_sql(node_query)]
             self.assertIn(f'{ns}g/Student', nodes)
             self.assertIn(f'{ns}g/Student_Gender', nodes)
+            self.assertIn(f'{ns}g/Student_Gender-Female', nodes)
 
             # Check linkedMemberOf/memberOf attachments
             edge_query = """
@@ -1608,15 +1682,24 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
             
             # Verify constrained SV attached to the constrained SVG
-            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender', prov), edges)
+            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov), edges)
 
             # Verify constrained SV attached to ancestor SVGs
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender-Female', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
+            # Verify basic populationType SV attached to SVG by mprop
+            self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+
+            # Verify basic populationType SV attached to ancestor SVGs
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            
             # Verify hierarchical specialization of generated SVGs
+            self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov), edges)
             self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov), edges)
 
             # Verify the root SVG attached to the Vertical declared in the Spec
