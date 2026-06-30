@@ -87,6 +87,7 @@ class StatVarGroupGenerator:
         DECLARE namespace STRING DEFAULT @namespace; -- Namespace for generated DCIDs
         DECLARE generated_provenance STRING DEFAULT @generated_provenance; -- Provenance for generated Edges
         DECLARE uncategorized_svg STRING DEFAULT CONCAT(namespace, 'g/Uncategorized'); -- DCID for uncategorized SVs/SVGs
+        DECLARE uncategorized_sv_svg STRING DEFAULT CONCAT(namespace, 'g/Uncategorized_Variables'); -- DCID for uncategorized SVs
         DECLARE root_svg STRING DEFAULT CONCAT(namespace, 'g/Root'); -- DCID for root SVG
         DECLARE should_filter_basic_population_type BOOL DEFAULT @should_filter; -- Whether to filter basic population type SVGs. Default to true for base DC
 
@@ -251,10 +252,13 @@ class StatVarGroupGenerator:
         );
 
         -- Fetch relevant StatisticalVariable triples.
+        -- For now, avoid any PVs that should have been converted to Quantities.
+        -- This is to avoid generating improper groups.
+        -- TODO: Ensure all Quantities are properly resolved in ingestion.
         CREATE OR REPLACE TEMP TABLE StatVarTriple AS (
           SELECT DISTINCT E.subject_id, E.predicate, E.object_id
           FROM EXTERNAL_QUERY("{conn_id}",
-            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}])"
+            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}]) AND object_id NOT LIKE '[%'"
           ) E
           JOIN StatVar SV ON SV.subject_id = E.subject_id
         );
@@ -339,10 +343,10 @@ class StatVarGroupGenerator:
             AND (VS.observationProperties IS NULL OR SV.observationProperties = VS.observationProperties)
             AND IFNULL(ARRAY_LENGTH(VS.constraintProperties), 0) = 0
           CROSS JOIN UNNEST([
-            STRUCT('memberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS target_array),
+            STRUCT('memberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_sv_svg], VS.vertical) AS target_array),
             STRUCT(
               'linkedMemberOf' AS predicate, 
-              IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg], VS.linkedVertical) AS target_array
+              IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg, uncategorized_sv_svg], VS.linkedVertical) AS target_array
             )
           ]) AS map
           CROSS JOIN UNNEST(map.target_array) AS v
@@ -433,14 +437,14 @@ class StatVarGroupGenerator:
             SELECT DISTINCT node2 AS svg_id, statvar, constraintProperties, populationType
             FROM AllResults
             WHERE iteration > 0
-              AND (should_filter_basic_population_Type AND IsBasicPopulationType(populationType))
+              AND (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
               AND ARRAY_LENGTH(constraintProperties) = 1
             UNION ALL
             -- Non-basic PopTypes: Attach the 0-constraint group (node3) to the vertical.
             SELECT DISTINCT node3 AS svg_id, statvar, ARRAY<STRING>[] AS constraintProperties, populationType
             FROM AllResults
             WHERE node3 IS NOT NULL
-              AND NOT (should_filter_basic_population_Type AND IsBasicPopulationType(populationType))
+              AND NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
               AND ARRAY_LENGTH(attributes) = 0
           ),
           BaseJoined AS (
