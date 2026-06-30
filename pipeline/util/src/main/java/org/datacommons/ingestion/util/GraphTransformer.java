@@ -1,10 +1,10 @@
 package org.datacommons.ingestion.util;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -117,22 +117,59 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
     graphBuilder.putNodes(nodeId, newPvBuilder.build());
   }
 
+  // Generate definition for a StatisticalVariable.
+  private String generateSVDefinition(
+      PropertyValues.Builder pvBuilder, Map<String, Values> constraintPvs) {
+    List<String> parts = new ArrayList<>();
+
+    String md = McfUtil.getFirstPropertyValue(pvBuilder, "measurementDenominator");
+    if (md != null) parts.add("md=" + md);
+
+    String mq = McfUtil.getFirstPropertyValue(pvBuilder, "measurementQualifier");
+    if (mq != null) parts.add("mq=" + mq);
+
+    String st = McfUtil.getFirstPropertyValue(pvBuilder, "statType");
+    if (st != null && !st.equals("measuredValue")) parts.add("st=" + st);
+
+    String mp = McfUtil.getFirstPropertyValue(pvBuilder, "measuredProperty");
+    if (mp != null) parts.add("mp=" + mp);
+
+    String pt = McfUtil.getFirstPropertyValue(pvBuilder, "populationType");
+    if (pt != null) parts.add("pt=" + pt);
+
+    constraintPvs.forEach(
+        (key, value) -> {
+          if (value.getTypedValuesCount() > 0) {
+            parts.add(key + "=" + McfUtil.stripNamespace(value.getTypedValues(0).getValue()));
+          }
+        });
+
+    return String.join(",", parts);
+  }
+
   private void handleStatisticalVariable(PropertyValues.Builder pvBuilder) {
-    List<String> constraintProps = new ArrayList<>();
-    for (String prop : pvBuilder.getPvsMap().keySet()) {
+    Map<String, Values> constraintPvs = new TreeMap<>();
+
+    for (Map.Entry<String, Values> pv : pvBuilder.getPvsMap().entrySet()) {
+      String prop = pv.getKey();
       if (!NON_CONSTRAINT_PROPS.contains(prop)) {
-        constraintProps.add(prop);
+        constraintPvs.put(prop, pv.getValue());
       }
     }
 
-    if (!constraintProps.isEmpty()) {
-      Collections.sort(constraintProps);
+    if (!constraintPvs.isEmpty()) {
       Values.Builder valuesBuilder = Values.newBuilder();
-      for (String propDcid : constraintProps) {
+      for (String propDcid : constraintPvs.keySet()) {
         valuesBuilder.addTypedValues(
             TypedValue.newBuilder().setValue(propDcid).setType(ValueType.RESOLVED_REF).build());
       }
       pvBuilder.putPvs("constraintProperties", valuesBuilder.build());
+    }
+
+    // Generate definition.
+    if (!pvBuilder.containsPvs("definition")) {
+      String definition = generateSVDefinition(pvBuilder, constraintPvs);
+      pvBuilder.putPvs("definition", createValues(definition, ValueType.TEXT));
     }
   }
 

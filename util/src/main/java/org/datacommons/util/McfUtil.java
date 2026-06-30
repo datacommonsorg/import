@@ -214,4 +214,14 @@ public class McfUtil {
     }
     return false;
   }
+
+  // Return the first value of a TypedValue for a property, or null if none.
+  public static String getFirstPropertyValue(
+      Mcf.McfGraph.PropertyValues.Builder pvBuilder, String prop) {
+    Mcf.McfGraph.Values values = pvBuilder.getPvsMap().get(prop);
+    if (values != null && values.getTypedValuesCount() > 0) {
+      return stripNamespace(values.getTypedValues(0).getValue());
+    }
+    return null;
+  }
 }
