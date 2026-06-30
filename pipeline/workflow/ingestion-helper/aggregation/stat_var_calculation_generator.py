@@ -75,10 +75,10 @@ class StatVarCalculationGenerator:
         output_provenance = f"{prefix}{output_import_name}"
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
+        # Collect all unique input SV patterns to filter Spanner Observations early.
+        spanner_where = self._build_spanner_observation_filter(calculations)
+
         # 1. Construct the Temp Table Caching statements at the very beginning of the script.
-        # This scans the Spanner TimeSeries and Observation tables ONCE, filters them by provenance,
-        # and caches them locally in BigQuery. All subsequent calculations run against these fast,
-        # cached tables, preventing multiple expensive full table scans.
         temp_tables_sql = f"""
         -- =========================================================================
         -- CACHE INPUT TABLES (Run once at the start of the script)
@@ -93,7 +93,9 @@ class StatVarCalculationGenerator:
         CREATE TEMP TABLE temp_observation AS
         SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value
         FROM EXTERNAL_QUERY("{connection_id}",
-          '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''') o
+          '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value 
+             FROM Observation 
+             {spanner_where}''') o
         JOIN temp_timeseries ts ON o.variable_measured = ts.variable_measured
           AND o.entity1 = ts.entity1
           AND o.extra_entities_id = ts.extra_entities_id
@@ -211,7 +213,6 @@ class StatVarCalculationGenerator:
             """
 
             # Build the query for this specific calculation.
-            # Both CTEs query directly from our fast, local BigQuery temp tables: temp_timeseries and temp_observation.
             query = f"""
             -- =========================================================================
             -- CALCULATION {idx}: Export TimeSeries Metadata
@@ -355,6 +356,36 @@ class StatVarCalculationGenerator:
         
         job = self.executor.execute(combined_query)
         return [job]
+
+    def _build_spanner_observation_filter(self, calculations: List[Dict]) -> str:
+        """Builds a Spanner WHERE clause to filter Observations early.
+
+        Extracts all unique input SV patterns from the calculations and joins them
+        with OR. Uses '=' for exact matches and 'REGEXP_CONTAINS' for regexes.
+        """
+        spanner_filters = []
+        for calc in calculations:
+            for input_key in ['input1', 'input2']:
+                input_spec = calc.get(input_key, {})
+                sv_regex = input_spec.get('sv_regex', '')
+                if sv_regex:
+                    # Escape single quotes for Spanner SQL string literals
+                    safe_sv = sv_regex.replace("'", "''")
+                    if self._is_regex(sv_regex):
+                        spanner_filters.append(f"REGEXP_CONTAINS(variable_measured, r\"^{safe_sv}$\")")
+                    else:
+                        spanner_filters.append(f"variable_measured = \"{safe_sv}\"")
+
+        if not spanner_filters:
+            return ""
+
+        # De-duplicate and sort for deterministic query generation
+        unique_filters = sorted(list(set(spanner_filters)))
+        return "WHERE " + " OR ".join(unique_filters)
+
+    def _is_regex(self, pattern: str) -> bool:
+        """Checks if a string contains regex wildcard characters."""
+        return any(c in pattern for c in r'.*+?^$()[]{}|\/')
 
     def _get_input_filter_sql(self, input_spec: Dict) -> str:
         """Translates input manifest filter rules into SQL WHERE clause constraints.
