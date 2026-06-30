@@ -20,8 +20,103 @@ from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
 from .sql_utils import _escape_sql_literal
 
+def get_dc_base32_encode_sql() -> str:
+    """Returns the SQL definition for the DC_BASE32_ENCODE UDF.
+
+    This UDF replicates Data Commons' custom Base32 encoding (from dcid.cc).
+    It has the following characteristics:
+    1. Uses a custom alphabet: "0123456789bcdfghjklmnpqrstvwxyze" (no vowels).
+    2. Variable-length and no padding (unlike RFC 4648).
+    3. Encodes from LSB to MSB, stopping when the remaining value is 0.
+    4. Handles signed BigQuery INT64 by casting negative numbers to their
+       unsigned 64-bit equivalent (adding 2^64) in JavaScript.
+    """
+    return r'''
+CREATE TEMP FUNCTION DC_BASE32_ENCODE(fingerprint INT64)
+RETURNS STRING
+LANGUAGE js AS r"""
+  const alphabet = "0123456789bcdfghjklmnpqrstvwxyze";
+  let id = BigInt(fingerprint);
+  if (id < 0n) {
+    id = id + (1n << 64n);
+  }
+  if (id === 0n) {
+    return alphabet[0];
+  }
+  let result = "";
+  while (id > 0n) {
+    const val = Number(id & 0x1fn);
+    result += alphabet[val];
+    id = id >> 5n;
+  }
+  return result;
+""";
+'''
 
 
+def get_is_measured_prop_aggregatable_sql() -> str:
+    """Returns the SQL definition for IS_MEASURED_PROP_AGGREGATABLE.
+
+    This function determines if a measured property is aggregatable.
+    Rules:
+    1. Returns TRUE if the property name ends with 'count' (case-insensitive).
+    2. Returns TRUE if the property is in the whitelisted set:
+       'amount', 'area', 'coverageArea', 'generation', 'reserves', 'retailDrugDistribution'.
+    3. Returns FALSE otherwise.
+    """
+    return r'''
+CREATE TEMP FUNCTION IS_MEASURED_PROP_AGGREGATABLE(prop STRING) AS (
+  ENDS_WITH(LOWER(prop), 'count') OR
+  prop IN ('amount', 'area', 'coverageArea', 'generation', 'reserves', 'retailDrugDistribution')
+);
+'''
+
+
+def get_aggr_strategy_sql() -> str:
+    """Returns the SQL definition for GET_AGGR_STRATEGY.
+
+    This function determines the aggregation strategy (SUM, MIN, MAX, MEAN, NONE)
+    for a StatVar based on its statType and measuredProperty.
+    It matches the C++ logic exactly (google3/datacommons/prophet/derived_graph/util.cc).
+
+    Rules:
+    1. If the property IS aggregatable (e.g., 'count'):
+       - 'measuredValue' -> 'SUM'
+       - 'minValue' -> 'MIN'
+       - 'maxValue' -> 'MAX'
+       - Any other statType -> 'NONE' (means are not summed).
+    2. If the property is NOT aggregatable:
+       - Returns 'MEAN' only for a specific whitelist of (statType, property) pairs:
+         * 'meanValue' + 'concentration'
+         * 'measuredValue' + 'lifetimeContractionProbability'
+         * 'measuredValue' + 'heavyPrecipitationIndex'
+         * 'measuredValue' + 'consecutiveDryDays'
+         * 'kurtosis' / 'skewness' / 'stdDeviation' + 'precipitation' / 'maxTemperature' / 'minTemperature'
+       - Returns 'NONE' otherwise.
+    """
+    return r'''
+CREATE TEMP FUNCTION GET_AGGR_STRATEGY(stat_type STRING, prop STRING) AS (
+  IF(IS_MEASURED_PROP_AGGREGATABLE(prop),
+    CASE 
+      WHEN stat_type = 'measuredValue' THEN 'SUM'
+      WHEN stat_type = 'minValue' THEN 'MIN'
+      WHEN stat_type = 'maxValue' THEN 'MAX'
+      ELSE 'NONE'
+    END,
+    IF(
+      (stat_type = 'meanValue' AND prop = 'concentration') OR
+      (stat_type = 'measuredValue' AND prop = 'lifetimeContractionProbability') OR
+      (stat_type = 'measuredValue' AND prop = 'heavyPrecipitationIndex') OR
+      (stat_type = 'measuredValue' AND prop = 'consecutiveDryDays') OR
+      (stat_type = 'kurtosis' AND prop IN ('precipitation', 'maxTemperature', 'minTemperature')) OR
+      (stat_type = 'skewness' AND prop IN ('precipitation', 'maxTemperature', 'minTemperature')) OR
+      (stat_type = 'stdDeviation' AND prop IN ('precipitation', 'maxTemperature', 'minTemperature')),
+      'MEAN',
+      'NONE'
+    )
+  )
+);
+'''
 
 
 class SuperEnumAggregationGenerator:
@@ -63,51 +158,16 @@ class SuperEnumAggregationGenerator:
             prefix = ""
         provenance_str = ", ".join([f"'{name}'" for name in provenance_names])
 
-        logging.info(f"Running Pure BQ Super Enum aggregation for imports: {import_names}")
+        logging.info(f"Running Super Enum aggregation for imports: {import_names}")
 
         # SQL script containing JS UDF and multi-statement execution
         query = f"""
         -- =========================================================================
-        -- DEFINE JS UDF FOR BASE32 ENCODING (Custom DC Alphabet, No Padding)
+        -- DEFINE HELPERS
         -- =========================================================================
-        CREATE TEMP FUNCTION DC_BASE32_ENCODE(fingerprint INT64)
-        RETURNS STRING
-        LANGUAGE js AS r\"\"\"
-          const alphabet = "0123456789bcdfghjklmnpqrstvwxyze";
-          let id = BigInt(fingerprint);
-          if (id < 0n) {{
-            id = id + (1n << 64n);
-          }}
-          if (id === 0n) {{
-            return alphabet[0];
-          }}
-          let result = "";
-          while (id > 0n) {{
-            const val = Number(id & 0x1fn);
-            result += alphabet[val];
-            id = id >> 5n;
-          }}
-          return result;
-        \"\"\";
-
-        -- Helper to check if measuredProperty is aggregatable
-        CREATE TEMP FUNCTION IS_MEASURED_PROP_AGGREGATABLE(prop STRING) AS (
-          ENDS_WITH(LOWER(prop), 'count') OR
-          prop IN ('amount', 'area', 'coverageArea', 'generation', 'reserves', 'retailDrugDistribution')
-        );
-
-        -- Helper to get aggregation strategy
-        CREATE TEMP FUNCTION GET_AGGR_STRATEGY(stat_type STRING, prop STRING) AS (
-          IF(IS_MEASURED_PROP_AGGREGATABLE(prop),
-            CASE 
-              WHEN stat_type = 'measuredValue' THEN 'SUM'
-              WHEN stat_type = 'minValue' THEN 'MIN'
-              WHEN stat_type = 'maxValue' THEN 'MAX'
-              ELSE 'NONE'
-            END,
-            IF(stat_type = 'meanValue' OR (stat_type = 'measuredValue' AND prop = 'lifetimeContractionProbability'), 'MEAN', 'NONE')
-          )
-        );
+        {get_dc_base32_encode_sql()}
+        {get_is_measured_prop_aggregatable_sql()}
+        {get_aggr_strategy_sql()}
 
         -- =========================================================================
         -- STEP 1: Get SpecializationOf Relations
@@ -380,6 +440,6 @@ class SuperEnumAggregationGenerator:
         WHERE total_val IS NOT NULL;
         """
 
-        logging.info("Submitting Pure BQ Super Enum aggregation job...")
+        logging.info("Submitting Super Enum aggregation BQ job...")
         job = self.executor.execute(query)
         return [job]
