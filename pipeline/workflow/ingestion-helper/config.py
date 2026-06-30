@@ -62,6 +62,8 @@ _DEFAULT_EMBEDDING_SPECS = [
 spec_path = os.environ.get('EMBEDDING_SPEC_PATH')
 if spec_path:
     resolved_path = os.path.abspath(spec_path)
+    if not (os.path.isabs(spec_path) or os.path.exists(resolved_path)):
+        resolved_path = os.path.join(os.path.dirname(__file__), spec_path)
     if os.path.exists(resolved_path):
         try:
             with open(resolved_path, 'r') as f:

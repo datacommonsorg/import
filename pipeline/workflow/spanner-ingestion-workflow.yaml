@@ -170,7 +170,7 @@ run_embedding_job:
         call: http.post
         args:
           url: ${helper_url + "/embeddings/ingest"}
-          timeout: 3600
+          timeout: 1800
           auth:
             type: OIDC
           body:

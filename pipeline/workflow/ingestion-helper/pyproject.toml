@@ -35,6 +35,7 @@ dependencies = [
     "jinja2",
     "pandas~=3.0.3",
     "pyyaml",
+    "gcsfs",
 ]
 
 [tool.hatch.version]
