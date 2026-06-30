@@ -1594,6 +1594,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           - A constrained SV 'Count_Student_Female' (gender=Female).
           - A curated SV 'Median_Age_Student'.
           - A basic populationType SV 'Count_Person'.
+          - An uncategorized basic SV 'Count_Thing'.
         """
         generator = self.get_generator()
         ns = generator.namespace
@@ -1604,6 +1605,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_node(f'{ns}g/TestCustomVertical', 'Test Custom Vertical', types=['StatVarGroup'])
         self.add_node('Student', 'Student', value='Student', types=['Class'])
         self.add_node('Person', 'Person', value='Person', types=['Class'])
+        self.add_node('Thing', 'Thing', value='Thing', types=['Class'])
         
         # Spec mappings
         self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
@@ -1641,6 +1643,12 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('Count_Person', 'populationType', 'Person', 'TestImport')
         self.add_edge('Count_Person', 'measuredProperty', 'count', 'TestImport')
         
+        # Uncategorized SV with basic populationType
+        self.add_node('Count_Thing', 'Population', types=['StatisticalVariable'])
+        self.add_edge('Count_Thing', 'typeOf', 'StatisticalVariable', 'TestImport')
+        self.add_edge('Count_Thing', 'populationType', 'Thing', 'TestImport')
+        self.add_edge('Count_Thing', 'measuredProperty', 'count', 'TestImport')
+
         self.flush_to_spanner()
 
         # 2. Run generator
@@ -1697,6 +1705,14 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             # Verify basic populationType SV attached to ancestor SVGs
             self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
             self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+
+            # Verify uncategorized basic populationType SV attached to Uncategorized_Variables SVG
+            self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+
+            # Verify uncategorized basic populationType SV attached to ancestor SVGs
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized', prov), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
             
             # Verify hierarchical specialization of generated SVGs
             self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov), edges)
