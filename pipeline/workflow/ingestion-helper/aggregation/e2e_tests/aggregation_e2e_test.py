@@ -42,6 +42,8 @@ import os
 import unittest
 import logging
 import json
+import random
+from typing import Any
 from collections.abc import Mapping
 from google.cloud import spanner
 from google.cloud import bigquery
@@ -49,7 +51,20 @@ from google.cloud import bigquery
 import sys
 # Add ingestion-helper to sys.path (two levels up from this file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator, StatVarGroupGenerator
+from aggregation import (
+    BigQueryExecutor,
+    LinkedEdgeGenerator,
+    ProvenanceSummaryGenerator,
+    StatVarAggregator,
+    PlaceAggregationGenerator,
+    StatVarGroupGenerator,
+    SuperEnumAggregationGenerator,
+)
+from aggregation.super_enum_aggregation_generator import (
+    get_dc_base32_encode_sql,
+    get_is_measured_prop_aggregatable_sql,
+    get_aggr_strategy_sql,
+)
 
 # Configuration
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
@@ -1715,6 +1730,310 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
 class StatVarGroupGeneratorCustomDcTest(StatVarGroupGeneratorIntegrationTest):
     is_base_dc = False
+
+
+class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
+    """Integration E2E tests for SuperEnumAggregationGenerator."""
+
+    def get_generator(self) -> SuperEnumAggregationGenerator:
+        executor = BigQueryExecutor(
+            BQ_CONNECTION_ID,
+            PROJECT_ID,
+            SPANNER_INSTANCE_ID,
+            SPANNER_DATABASE_ID,
+            location=BQ_LOCATION,
+            run_sequential=True
+        )
+        return SuperEnumAggregationGenerator(
+            executor=executor,
+            spanner_client=self.spanner_client,
+            spanner_database=self.database,
+            is_base_dc=self.is_base_dc
+        )
+
+    def test_super_enum_aggregation_success(self):
+        """Verifies successful aggregation of child enums into a parent enum."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        
+        # --- 1. SETUP SCHEMA ---
+        self.add_node('SchoolGradeLevelEnum', 'School Grade Level', types=['Class'])
+        self.add_node('Grade1', 'Grade 1', types=['SchoolGradeLevelEnum'])
+        self.add_node('Grade2', 'Grade 2', types=['SchoolGradeLevelEnum'])
+        self.add_node('PrimarySchool', 'Primary School', types=['SchoolGradeLevelEnum'])
+        
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_name)
+        self.add_edge('Grade2', 'specializationOf', 'PrimarySchool', import_name)
+        
+        # --- 2. SETUP STATVARS ---
+        self.add_node('SV_G1', 'Students in Grade 1', types=['StatisticalVariable'])
+        self.add_edge('SV_G1', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_G1', 'populationType', 'Person', import_name)
+        self.add_edge('SV_G1', 'measuredProperty', 'count', import_name)
+        self.add_edge('SV_G1', 'statType', 'measuredValue', import_name)
+        self.add_edge('SV_G1', 'schoolGradeLevel', 'Grade1', import_name)
+        
+        self.add_node('SV_G2', 'Students in Grade 2', types=['StatisticalVariable'])
+        self.add_edge('SV_G2', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_G2', 'populationType', 'Person', import_name)
+        self.add_edge('SV_G2', 'measuredProperty', 'count', import_name)
+        self.add_edge('SV_G2', 'statType', 'measuredValue', import_name)
+        self.add_edge('SV_G2', 'schoolGradeLevel', 'Grade2', import_name)
+        
+        # --- 3. SETUP OBSERVATIONS ---
+        self.add_observation('SV_G1', 'geoId/06', '2020', 10.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_census')
+        self.add_observation('SV_G2', 'geoId/06', '2020', 20.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_census')
+        self.add_observation('SV_G1', 'geoId/36', '2020', 30.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_census')
+        self.add_observation('SV_G2', 'geoId/36', '2020', 40.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_census')
+        
+        self.flush_to_spanner()
+        
+        # --- 4. RUN GENERATOR ---
+        generator = self.get_generator()
+        jobs = generator.run(import_names=[import_name])
+        self.assertIsNotNone(jobs)
+        for job in jobs:
+            job.result()
+            
+        # --- 5. VERIFY RESULTS ---
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Find the target SV
+            query_sv = """
+                SELECT subject_id 
+                FROM Edge 
+                WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool'
+            """
+            sv_results = list(snapshot.execute_sql(query_sv))
+            self.assertEqual(len(sv_results), 1)
+            target_sv = sv_results[0][0]
+            
+            # Verify target SV properties
+            query_props = f"""
+                SELECT predicate, object_id 
+                FROM Edge 
+                WHERE subject_id = '{target_sv}'
+            """
+            props = {r[0]: r[1] for r in snapshot.execute_sql(query_props)}
+            self.assertEqual(props.get('populationType'), 'Person')
+            self.assertEqual(props.get('measuredProperty'), 'count')
+            self.assertEqual(props.get('statType'), 'measuredValue')
+            self.assertEqual(props.get('typeOf'), 'StatisticalVariable')
+            
+            # Verify Observations for geoId/06 (CA): 10 + 20 = 30
+            query_ts_ca = f"""
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = '{target_sv}' 
+                  AND entity1 = 'geoId/06'
+                  AND JSON_VALUE(facet, '$.measurementMethod') = 'dcAggregate/CensusACS5yrSurvey'
+            """
+            res_ts_ca = list(snapshot.execute_sql(query_ts_ca))
+            self.assertEqual(len(res_ts_ca), 1)
+            facet_ca = res_ts_ca[0][0]
+            
+            query_obs_ca = f"""
+                SELECT value FROM Observation 
+                WHERE variable_measured = '{target_sv}' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_ca}'
+            """
+            self.assertAlmostEqual(float(list(snapshot.execute_sql(query_obs_ca))[0][0]), 30.0)
+            
+            # Verify Observations for geoId/36 (NY): 30 + 40 = 70
+            query_ts_ny = f"""
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = '{target_sv}' 
+                  AND entity1 = 'geoId/36'
+                  AND JSON_VALUE(facet, '$.measurementMethod') = 'dcAggregate/CensusACS5yrSurvey'
+            """
+            res_ts_ny = list(snapshot.execute_sql(query_ts_ny))
+            self.assertEqual(len(res_ts_ny), 1)
+            facet_ny = res_ts_ny[0][0]
+            
+            query_obs_ny = f"""
+                SELECT value FROM Observation 
+                WHERE variable_measured = '{target_sv}' AND entity1 = 'geoId/36' AND date = '2020' AND facet_id = '{facet_ny}'
+            """
+            self.assertAlmostEqual(float(list(snapshot.execute_sql(query_obs_ny))[0][0]), 70.0)
+
+    def test_super_enum_aggregation_multi_facet(self):
+        """Verifies that different facets are aggregated and isolated correctly."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        
+        # --- 1. SETUP SCHEMA ---
+        self.add_node('SchoolGradeLevelEnum', 'School Grade Level', types=['Class'])
+        self.add_node('Grade1', 'Grade 1', types=['SchoolGradeLevelEnum'])
+        self.add_node('Grade2', 'Grade 2', types=['SchoolGradeLevelEnum'])
+        self.add_node('PrimarySchool', 'Primary School', types=['SchoolGradeLevelEnum'])
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_name)
+        self.add_edge('Grade2', 'specializationOf', 'PrimarySchool', import_name)
+        
+        # --- 2. SETUP STATVARS ---
+        self.add_node('SV_G1', 'Students in Grade 1', types=['StatisticalVariable'])
+        self.add_edge('SV_G1', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_G1', 'schoolGradeLevel', 'Grade1', import_name)
+        self.add_edge('SV_G1', 'populationType', 'Person', import_name)
+        self.add_edge('SV_G1', 'measuredProperty', 'count', import_name)
+        self.add_edge('SV_G1', 'statType', 'measuredValue', import_name)
+        
+        self.add_node('SV_G2', 'Students in Grade 2', types=['StatisticalVariable'])
+        self.add_edge('SV_G2', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_G2', 'schoolGradeLevel', 'Grade2', import_name)
+        self.add_edge('SV_G2', 'populationType', 'Person', import_name)
+        self.add_edge('SV_G2', 'measuredProperty', 'count', import_name)
+        self.add_edge('SV_G2', 'statType', 'measuredValue', import_name)
+        
+        # --- 3. SETUP OBSERVATIONS (Two different facets for the same place/date)
+        # Facet 1: Census (geoId/06, 2020: 10 + 20 = 30)
+        self.add_observation('SV_G1', 'geoId/06', '2020', 10.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_census')
+        self.add_observation('SV_G2', 'geoId/06', '2020', 20.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_census')
+        # Facet 2: Other (geoId/06, 2020: 100 + 200 = 300)
+        self.add_observation('SV_G1', 'geoId/06', '2020', 100.0, method='OtherSurvey', import_name=import_name, facet_id='facet_other')
+        self.add_observation('SV_G2', 'geoId/06', '2020', 200.0, method='OtherSurvey', import_name=import_name, facet_id='facet_other')
+        
+        self.flush_to_spanner()
+        
+        # --- 4. RUN GENERATOR ---
+        generator = self.get_generator()
+        jobs = generator.run(import_names=[import_name])
+        for job in jobs:
+            job.result()
+            
+        # --- 5. VERIFY RESULTS ---
+        with self.database.snapshot(multi_use=True) as snapshot:
+            query_sv = "SELECT subject_id FROM Edge WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool'"
+            target_sv = list(snapshot.execute_sql(query_sv))[0][0]
+            
+            # Verify Facet 1 (Census) Aggregation: 10 + 20 = 30
+            query_ts_census = f"""
+                SELECT facet_id FROM TimeSeries 
+                WHERE variable_measured = '{target_sv}' AND entity1 = 'geoId/06'
+                  AND JSON_VALUE(facet, '$.measurementMethod') = 'dcAggregate/CensusACS5yrSurvey'
+            """
+            facet_census = list(snapshot.execute_sql(query_ts_census))[0][0]
+            query_obs_census = f"""
+                SELECT value FROM Observation 
+                WHERE variable_measured = '{target_sv}' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_census}'
+            """
+            self.assertAlmostEqual(float(list(snapshot.execute_sql(query_obs_census))[0][0]), 30.0)
+            
+            # Verify Facet 2 (Other) Aggregation: 100 + 200 = 300
+            query_ts_other = f"""
+                SELECT facet_id FROM TimeSeries 
+                WHERE variable_measured = '{target_sv}' AND entity1 = 'geoId/06'
+                  AND JSON_VALUE(facet, '$.measurementMethod') = 'dcAggregate/OtherSurvey'
+            """
+            facet_other = list(snapshot.execute_sql(query_ts_other))[0][0]
+            query_obs_other = f"""
+                SELECT value FROM Observation 
+                WHERE variable_measured = '{target_sv}' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_other}'
+            """
+            self.assertAlmostEqual(float(list(snapshot.execute_sql(query_obs_other))[0][0]), 300.0)
+
+    def test_super_enum_aggregation_ignored(self):
+        """Verifies that non-aggregatable SVs and SVs with denominators are ignored."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        
+        # --- 1. SETUP SCHEMA ---
+        self.add_node('SchoolGradeLevelEnum', 'School Grade Level', types=['Class'])
+        self.add_node('Grade1', 'Grade 1', types=['SchoolGradeLevelEnum'])
+        self.add_node('PrimarySchool', 'Primary School', types=['SchoolGradeLevelEnum'])
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_name)
+        
+        # --- 2. SETUP STATVARS ---
+        # SV_NonAgg (Invalid: measuredProperty 'income' is not aggregatable)
+        self.add_node('SV_NonAgg', 'Income in Grade 1', types=['StatisticalVariable'])
+        self.add_edge('SV_NonAgg', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_NonAgg', 'populationType', 'Person', import_name)
+        self.add_edge('SV_NonAgg', 'measuredProperty', 'income', import_name)
+        self.add_edge('SV_NonAgg', 'statType', 'measuredValue', import_name)
+        self.add_edge('SV_NonAgg', 'schoolGradeLevel', 'Grade1', import_name)
+        
+        # SV_Denom (Invalid: has measurementDenominator)
+        self.add_node('SV_Denom', 'Students in Grade 1 with Denom', types=['StatisticalVariable'])
+        self.add_edge('SV_Denom', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_Denom', 'populationType', 'Person', import_name)
+        self.add_edge('SV_Denom', 'measuredProperty', 'count', import_name)
+        self.add_edge('SV_Denom', 'statType', 'measuredValue', import_name)
+        self.add_edge('SV_Denom', 'schoolGradeLevel', 'Grade1', import_name)
+        self.add_edge('SV_Denom', 'measurementDenominator', 'SV_Pop', import_name)
+        
+        # --- 3. SETUP OBSERVATIONS ---
+        self.add_observation('SV_NonAgg', 'geoId/06', '2020', 50.0, import_name=import_name)
+        self.add_observation('SV_Denom', 'geoId/06', '2020', 60.0, import_name=import_name)
+        
+        self.flush_to_spanner()
+        
+        # --- 4. RUN GENERATOR ---
+        generator = self.get_generator()
+        jobs = generator.run(import_names=[import_name])
+        for job in jobs:
+            job.result()
+            
+        # --- 5. VERIFY RESULTS (No target SV should be created)
+        with self.database.snapshot(multi_use=True) as snapshot:
+            query_sv = "SELECT COUNT(DISTINCT subject_id) FROM Edge WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool'"
+            self.assertEqual(list(snapshot.execute_sql(query_sv))[0][0], 0)
+
+
+class SuperEnumAggregationGeneratorCustomDcTest(SuperEnumAggregationGeneratorIntegrationTest):
+    is_base_dc = False
+
+
+class SuperEnumSQLHelpersTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.bq_client = bigquery.Client(project=PROJECT_ID)
+
+    def run_query(self, query: str) -> Any:
+        """Helper to run a query and return the single result."""
+        query_job = self.bq_client.query(query)
+        results = list(query_job.result())
+        return results[0][0]
+
+    def test_dc_base32_encode(self):
+        # Known cases
+        self.assertEqual(self.run_query(f"{get_dc_base32_encode_sql()} SELECT DC_BASE32_ENCODE(0)"), "0")
+        self.assertEqual(self.run_query(f"{get_dc_base32_encode_sql()} SELECT DC_BASE32_ENCODE(1)"), "1")
+        self.assertEqual(self.run_query(f"{get_dc_base32_encode_sql()} SELECT DC_BASE32_ENCODE(31)"), "e")
+        self.assertEqual(self.run_query(f"{get_dc_base32_encode_sql()} SELECT DC_BASE32_ENCODE(32)"), "01")
+        self.assertEqual(self.run_query(f"{get_dc_base32_encode_sql()} SELECT DC_BASE32_ENCODE(12345)"), "t1d")
+        
+        # Negative / Large integer cases (treated as unsigned 64-bit)
+        self.assertEqual(self.run_query(f"{get_dc_base32_encode_sql()} SELECT DC_BASE32_ENCODE(-1)"), "eeeeeeeeeeeeh") # Max uint64
+        self.assertEqual(self.run_query(f"{get_dc_base32_encode_sql()} SELECT DC_BASE32_ENCODE(-2)"), "zeeeeeeeeeeeh") # Max uint64 - 1
+        self.assertEqual(self.run_query(f"{get_dc_base32_encode_sql()} SELECT DC_BASE32_ENCODE(-9223372036854775808)"), "0000000000008") # Min int64
+
+    def test_is_measured_prop_aggregatable(self):
+        # Helper to avoid repeating SQL block
+        def check(prop):
+            return self.run_query(f"{get_is_measured_prop_aggregatable_sql()} SELECT IS_MEASURED_PROP_AGGREGATABLE('{prop}')")
+
+        self.assertTrue(check('count'))
+        self.assertTrue(check('gdpCount'))
+        self.assertTrue(check('amount'))
+        self.assertTrue(check('retailDrugDistribution'))
+        self.assertFalse(check('income'))
+        self.assertFalse(check('gdp'))
+
+    def test_get_aggr_strategy(self):
+        # Helper to avoid repeating SQL block
+        def get_strategy(stat_type, prop):
+            q = f"{get_is_measured_prop_aggregatable_sql()} {get_aggr_strategy_sql()} SELECT GET_AGGR_STRATEGY('{stat_type}', '{prop}')"
+            return self.run_query(q)
+
+        # Aggregatable properties
+        self.assertEqual(get_strategy('measuredValue', 'count'), 'SUM')
+        self.assertEqual(get_strategy('minValue', 'count'), 'MIN')
+        self.assertEqual(get_strategy('maxValue', 'count'), 'MAX')
+        self.assertEqual(get_strategy('meanValue', 'count'), 'NONE') # Not supported for aggregatable
+        
+        # Non-aggregatable properties (special cases)
+        self.assertEqual(get_strategy('measuredValue', 'income'), 'NONE')
+        self.assertEqual(get_strategy('measuredValue', 'lifetimeContractionProbability'), 'MEAN')
+        self.assertEqual(get_strategy('meanValue', 'concentration'), 'MEAN')
+        self.assertEqual(get_strategy('meanValue', 'gdp'), 'NONE')
+        self.assertEqual(get_strategy('kurtosis', 'precipitation'), 'MEAN')
+        self.assertEqual(get_strategy('kurtosis', 'gdp'), 'NONE')
+        self.assertEqual(get_strategy('measuredValue', 'retailDrugDistribution'), 'SUM')
 
 
 if __name__ == '__main__':
