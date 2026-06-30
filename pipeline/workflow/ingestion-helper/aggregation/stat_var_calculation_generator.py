@@ -409,6 +409,13 @@ class StatVarCalculationGenerator:
             safe_mm_regex = mm_regex.replace('"', '\\"')
             filters.append(f'REGEXP_CONTAINS(JSON_VALUE(ts.facet, \'$.measurementMethod\'), r"^{safe_mm_regex}$")')
 
+        # Import name regex filter (extracted from facet JSON provenance)
+        import_regex = input_spec.get('import_name_regex', '')
+        if import_regex:
+            # Escape double quotes since we wrap the raw string in double quotes
+            safe_import_regex = import_regex.replace('"', '\\"')
+            filters.append(f'REGEXP_CONTAINS(JSON_VALUE(ts.facet, \'$.provenance\'), r"^{safe_import_regex}$")')
+
         # Facet filters (all extracted from facet JSON to ensure compatibility with older schemas)
         facet_info = input_spec.get('facet_info', {})
         if facet_info:

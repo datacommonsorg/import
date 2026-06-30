@@ -2175,6 +2175,68 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             self.assertEqual(results[0][0], 'entityA')
             self.assertEqual(float(results[0][1]), 5.0)
 
+    def test_calculate_import_name_regex_filtering(self):
+        """Tests that import_name_regex in the input spec correctly filters input observations by provenance."""
+        import_alpha = 'Import_Alpha'
+        import_beta = 'Import_Beta'
+        output_import_name = 'Filtered_StatVarCalculation'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import_name}"
+
+        # 1. Setup mock data
+        # SV_A in Import_Alpha (value = 10.0)
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, method='CensusACS5yrSurvey', import_name=import_alpha, facet_id='facet_alpha')
+        # SV_A in Import_Beta (value = 20.0) - this should be ignored!
+        self.add_observation('SV_A', 'geoId/06', '2020', 20.0, method='CensusACS5yrSurvey', import_name=import_beta, facet_id='facet_beta')
+        # SV_B in Import_Alpha (value = 2.0)
+        self.add_observation('SV_B', 'geoId/06', '2020', 2.0, method='CensusACS5yrSurvey', import_name=import_alpha, facet_id='facet_alpha')
+
+        self.flush_to_spanner()
+
+        # 2. Run generator with import_name_regex on input1
+        calculations = [
+            {
+                'operation': 'DIVIDE',
+                'input1': {
+                    'sv_regex': 'SV_A',
+                    'measurement_method_regex': 'CensusACS5yrSurvey',
+                    'import_name_regex': '.*Alpha$'  # Should only match Import_Alpha
+                },
+                'input2': {
+                    'sv_regex': 'SV_B',
+                    'measurement_method_regex': 'CensusACS5yrSurvey'
+                },
+                'multiplier': 1.0,
+                'output': {
+                    'sv': 'Calculated_Ratio',
+                    'measurement_method': 'Ratio_Method'
+                }
+            }
+        ]
+
+        generator = self.get_generator()
+        # We pass both imports as active inputs to the run
+        jobs = generator.calculate_stat_vars(calculations, [import_alpha, import_beta], output_import_name)
+        self.assertEqual(len(jobs), 1)
+
+        # 3. Verify results
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # We expect exactly one result: 10.0 (from Alpha) / 2.0 = 5.0
+            # If it used Beta, it would be 20.0 / 2.0 = 10.0 (or we might have duplicate rows)
+            query = "SELECT value FROM Observation WHERE variable_measured = 'Calculated_Ratio' AND entity1 = 'geoId/06'"
+            results = list(snapshot.execute_sql(query))
+            
+            self.assertEqual(len(results), 1)
+            self.assertEqual(float(results[0][0]), 5.0)
+
+            # Verify TimeSeries facet has correct provenance
+            res_ts = list(snapshot.execute_sql(
+                "SELECT facet FROM TimeSeries WHERE variable_measured = 'Calculated_Ratio'"
+            ))
+            self.assertEqual(len(res_ts), 1)
+            facet_json = res_ts[0][0] # Already a dict
+            self.assertEqual(facet_json['provenance'], expected_provenance)
+
 
 class StatVarCalculationGeneratorCustomDcTest(StatVarCalculationGeneratorIntegrationTest):
     is_base_dc = False
