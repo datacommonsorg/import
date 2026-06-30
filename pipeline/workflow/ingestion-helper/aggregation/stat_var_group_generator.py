@@ -345,8 +345,11 @@ class StatVarGroupGenerator:
           CROSS JOIN UNNEST([
             STRUCT('memberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_sv_svg], VS.vertical) AS target_array),
             STRUCT(
-              'linkedMemberOf' AS predicate, 
-              IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg, uncategorized_sv_svg], VS.linkedVertical) AS target_array
+              'linkedMemberOf' AS predicate,
+              IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0,
+                ARRAY<STRING>[root_svg, uncategorized_svg, uncategorized_sv_svg],
+                VS.linkedVertical
+              ) AS target_array
             )
           ]) AS map
           CROSS JOIN UNNEST(map.target_array) AS v
