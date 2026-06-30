@@ -1,5 +1,7 @@
 package org.datacommons.ingestion.util;
 
+import static org.datacommons.util.Vocabulary.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -122,19 +124,19 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
       PropertyValues.Builder pvBuilder, Map<String, Values> constraintPvs) {
     List<String> parts = new ArrayList<>();
 
-    String md = McfUtil.getFirstPropertyValue(pvBuilder, "measurementDenominator");
+    String md = McfUtil.getFirstPropertyValue(pvBuilder, MEASUREMENT_DENOMINATOR);
     if (md != null) parts.add("md=" + md);
 
-    String mq = McfUtil.getFirstPropertyValue(pvBuilder, "measurementQualifier");
+    String mq = McfUtil.getFirstPropertyValue(pvBuilder, MEASUREMENT_QUALIFIER);
     if (mq != null) parts.add("mq=" + mq);
 
-    String st = McfUtil.getFirstPropertyValue(pvBuilder, "statType");
-    if (st != null && !st.equals("measuredValue")) parts.add("st=" + st);
+    String st = McfUtil.getFirstPropertyValue(pvBuilder, STAT_TYPE);
+    if (st != null && !st.equals(MEASURED_VALUE)) parts.add("st=" + st);
 
-    String mp = McfUtil.getFirstPropertyValue(pvBuilder, "measuredProperty");
+    String mp = McfUtil.getFirstPropertyValue(pvBuilder, MEASURED_PROP);
     if (mp != null) parts.add("mp=" + mp);
 
-    String pt = McfUtil.getFirstPropertyValue(pvBuilder, "populationType");
+    String pt = McfUtil.getFirstPropertyValue(pvBuilder, POPULATION_TYPE);
     if (pt != null) parts.add("pt=" + pt);
 
     constraintPvs.forEach(
@@ -163,13 +165,13 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
         valuesBuilder.addTypedValues(
             TypedValue.newBuilder().setValue(propDcid).setType(ValueType.RESOLVED_REF).build());
       }
-      pvBuilder.putPvs("constraintProperties", valuesBuilder.build());
+      pvBuilder.putPvs(CONSTRAINT_PROPS, valuesBuilder.build());
     }
 
     // Generate definition.
-    if (!pvBuilder.containsPvs("definition")) {
+    if (!pvBuilder.containsPvs(DEFINITION)) {
       String definition = generateSVDefinition(pvBuilder, constraintPvs);
-      pvBuilder.putPvs("definition", createValues(definition, ValueType.TEXT));
+      pvBuilder.putPvs(DEFINITION, createValues(definition, ValueType.TEXT));
     }
   }
 

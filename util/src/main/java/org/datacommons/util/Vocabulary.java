@@ -133,6 +133,7 @@ public final class Vocabulary {
   public static final String LOCATION = "location"; // Deprecated
   public static final String POPULATION_GROUP = "populationGroup";
   public static final String UTTERANCE_TEMPLATE = "utteranceTemplate";
+  public static final String DEFINITION = "definition";
 
   // Values taken by statType.
   public static final String MEDIAN_VALUE = "medianValue";
