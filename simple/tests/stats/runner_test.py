@@ -269,6 +269,12 @@ class TestRunner(unittest.TestCase):
               "pattern": "variable_per_row.csv",
               "importType": "observations",
               "format": "variablePerRow",
+              "columnMappings": {
+                  "dcid:variableMeasured": "variable",
+                  "dcid:observationAbout": "entity",
+                  "dcid:observationDate": "date",
+                  "dcid:value": "value"
+              },
               "entityType": "Country",
               "provenance": "dcid:Provenance1"
           }, {
@@ -432,8 +438,14 @@ class TestRunner(unittest.TestCase):
               {
                   "pattern": "data.csv",
                   "entityType": "Country",
-                  "provenance": "dcid:oecd"
+                  "provenance": "dcid:oecd",
                   # Assume no format = variable per row
+                  "columnMappings": {
+                      "dcid:variableMeasured": "variable",
+                      "dcid:observationAbout": "entity",
+                      "dcid:observationDate": "date",
+                      "dcid:value": "value"
+                  }
               },
               {
                   "pattern": "*.mcf",
@@ -468,8 +480,14 @@ class TestRunner(unittest.TestCase):
               {
                   "pattern": "data.csv",
                   "entityType": "Country",
-                  "provenance": "dcid:ilo"
+                  "provenance": "dcid:ilo",
                   # Assume no format = variable per row
+                  "columnMappings": {
+                      "dcid:variableMeasured": "variable",
+                      "dcid:observationAbout": "entity",
+                      "dcid:observationDate": "date",
+                      "dcid:value": "value"
+                  }
               },
               {
                   "pattern": "*.mcf",
