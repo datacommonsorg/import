@@ -70,6 +70,13 @@
             "helpText": "Whether to skip transformation step.",
             "paramType": "TEXT",
             "isOptional": true
+        },
+        {
+            "name": "skipWait",
+            "label": "Skip Wait Operations",
+            "helpText": "Whether to skip wait operations between pipeline stages.",
+            "paramType": "TEXT",
+            "isOptional": true
         }
     ]
 }

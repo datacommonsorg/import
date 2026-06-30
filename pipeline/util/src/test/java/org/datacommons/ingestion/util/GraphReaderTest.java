@@ -134,7 +134,7 @@ public class GraphReaderTest {
                 .value("Node Zero")
                 .build(),
             Node.builder()
-                .subjectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .subjectId("{   \"type\": \"Pol:EvbccRWWGibzhA4ntdF1bboIUsn4ThUiAZe3TV4hmB8=")
                 .bytes(
                     ByteArray.copyFrom(
                         PipelineUtils.compressString(
@@ -279,7 +279,7 @@ public class GraphReaderTest {
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("geoJsonCoordinates")
-                .objectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .objectId("{   \"type\": \"Pol:EvbccRWWGibzhA4ntdF1bboIUsn4ThUiAZe3TV4hmB8=")
                 .provenance("dc/base/Test")
                 .build(),
             Edge.builder()
