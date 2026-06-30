@@ -49,7 +49,7 @@ from google.cloud import bigquery
 import sys
 # Add ingestion-helper to sys.path (two levels up from this file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator, StatVarGroupGenerator
+from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator, StatVarGroupGenerator, EntityAggregationGenerator, EntityAggregationConfig
 
 # Configuration
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
@@ -1295,6 +1295,372 @@ class PlaceAggregationGeneratorCustomDcTest(PlaceAggregationGeneratorIntegration
     is_base_dc = False
 
 
+class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
+    """Integration E2E tests for EntityAggregationGenerator."""
+
+    def get_generator(self) -> EntityAggregationGenerator:
+        executor = BigQueryExecutor(
+            BQ_CONNECTION_ID,
+            PROJECT_ID,
+            SPANNER_INSTANCE_ID,
+            SPANNER_DATABASE_ID,
+            location=BQ_LOCATION,
+            run_sequential=True
+        )
+        return EntityAggregationGenerator(executor, is_base_dc=self.is_base_dc)
+
+    def test_aggregate_earthquakes(self):
+        """Tests aggregation of EarthquakeEvents with magnitude constraint and multiple date formats."""
+        import_name = 'EarthquakeUSGS'
+        output_import = 'EarthquakeUSGS_Agg'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import}"
+
+        # 1. Setup mock data
+        # Location (California)
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_1: Mag 7.2 (Included)
+        self.add_node('eq_1', 'Earthquake 1', types=['EarthquakeEvent'])
+        self.add_edge('eq_1', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_1', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+        self.add_edge('eq_1', 'magnitude', '7.2', import_name)
+
+        # eq_2: Mag 6.5 (Filtered out)
+        self.add_node('eq_2', 'Earthquake 2', types=['EarthquakeEvent'])
+        self.add_edge('eq_2', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_2', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_2', 'occurrenceTime', '2023-06-20T12:00:00Z', import_name)
+        self.add_edge('eq_2', 'magnitude', '6.5', import_name)
+
+        # eq_3: Mag 7.0 (Included)
+        self.add_node('eq_3', 'Earthquake 3', types=['EarthquakeEvent'])
+        self.add_edge('eq_3', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_3', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_3', 'occurrenceTime', '2023-09-01T12:00:00Z', import_name)
+        self.add_edge('eq_3', 'magnitude', '7.0', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent'],
+            location_props=['affectedPlace'],
+            date_prop='occurrenceTime',
+            agg_date_formats=['YYYY', 'YYYY-MM'],
+            constraints=['magnitude: [7 - M]'],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # A. Find the generated SV DCID
+            sv_query = """
+                SELECT subject_id FROM Edge 
+                WHERE predicate = 'populationType' AND object_id = 'EarthquakeEvent'
+                  AND subject_id IN (
+                    SELECT subject_id FROM Edge 
+                    WHERE predicate = 'magnitude' AND object_id = '[7 - M]'
+                  )
+            """
+            sv_results = list(snapshot.execute_sql(sv_query))
+            self.assertEqual(len(sv_results), 1, "Should generate exactly one SV DCID")
+            sv_dcid = sv_results[0][0]
+            self.assertTrue(sv_dcid.startswith("dc/sv/gp/"), f"SV DCID should start with dc/sv/gp/, got {sv_dcid}")
+
+            # Verify SV Node exists
+            node_query = f"SELECT name, types FROM Node WHERE subject_id = '{sv_dcid}'"
+            node_results = list(snapshot.execute_sql(node_query))
+            self.assertEqual(len(node_results), 1)
+            self.assertIn('StatisticalVariable', node_results[0][1])
+
+            # Verify SV Edges
+            edge_query = f"SELECT predicate, object_id, provenance FROM Edge WHERE subject_id = '{sv_dcid}'"
+            edges = {r[0]: (r[1], r[2]) for r in snapshot.execute_sql(edge_query)}
+            self.assertEqual(edges.get('typeOf'), ('StatisticalVariable', expected_provenance))
+            self.assertEqual(edges.get('populationType'), ('EarthquakeEvent', expected_provenance))
+            self.assertEqual(edges.get('measuredProperty'), ('count', expected_provenance))
+            self.assertEqual(edges.get('statType'), ('measuredValue', expected_provenance))
+            self.assertEqual(edges.get('magnitude'), ('[7 - M]', expected_provenance))
+
+            # B. Verify TimeSeries (should have 2: one for P1Y, one for P1M)
+            ts_query = f"""
+                SELECT facet_id, facet, provenance 
+                FROM TimeSeries 
+                WHERE variable_measured = '{sv_dcid}' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'
+            """
+            ts_results = list(snapshot.execute_sql(ts_query))
+            self.assertEqual(len(ts_results), 2, "Should have 2 TimeSeries (yearly and monthly)")
+            
+            facets = {r[1]['observationPeriod']: (r[0], r[1], r[2]) for r in ts_results}
+            self.assertIn('P1Y', facets)
+            self.assertIn('P1M', facets)
+
+            # Verify yearly facet
+            facet_id_y, facet_y, prov_y = facets['P1Y']
+            self.assertEqual(facet_y['measurementMethod'], 'DataCommonsAggregate')
+            self.assertEqual(prov_y, expected_provenance)
+            self.assertEqual(facet_y['provenance'], expected_provenance)
+            self.assertEqual(facet_y['isDcAggregate'], True)
+
+            # Verify monthly facet
+            facet_id_m, facet_m, prov_m = facets['P1M']
+            self.assertEqual(facet_m['measurementMethod'], 'DataCommonsAggregate')
+            self.assertEqual(prov_m, expected_provenance)
+            self.assertEqual(facet_m['provenance'], expected_provenance)
+            self.assertEqual(facet_m['isDcAggregate'], True)
+
+            # C. Verify Observations
+            # Yearly Obs (2023 -> 2)
+            obs_y_query = f"""
+                SELECT value FROM Observation 
+                WHERE variable_measured = '{sv_dcid}' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2023' 
+                  AND facet_id = '{facet_id_y}'
+            """
+            obs_y_results = list(snapshot.execute_sql(obs_y_query))
+            self.assertEqual(len(obs_y_results), 1)
+            self.assertAlmostEqual(float(obs_y_results[0][0]), 2.0)
+
+            # Monthly Obs (2023-05 -> 1, 2023-09 -> 1)
+            obs_m_query = f"""
+                SELECT date, value FROM Observation 
+                WHERE variable_measured = '{sv_dcid}' 
+                  AND entity1 = 'geoId/06' 
+                  AND facet_id = '{facet_id_m}'
+                ORDER BY date
+            """
+            obs_m_results = list(snapshot.execute_sql(obs_m_query))
+            self.assertEqual(len(obs_m_results), 2, "Should have exactly 2 monthly observations")
+            self.assertEqual(obs_m_results[0][0], '2023-05')
+            self.assertAlmostEqual(float(obs_m_results[0][1]), 1.0)
+            self.assertEqual(obs_m_results[1][0], '2023-09')
+            self.assertAlmostEqual(float(obs_m_results[1][1]), 1.0)
+
+    def test_aggregate_wildcards_and_default_date(self):
+        """Tests aggregation with wildcard constraints (generating multiple SVs) and default date handling."""
+        import_name = 'EarthquakeUSGS_Wildcard'
+        output_import = 'EarthquakeUSGS_Wildcard_Agg'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import}"
+
+        # 1. Setup mock data
+        # Location (California)
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_1: cause = Tsunami, no date (defaults to current date)
+        self.add_node('eq_1', 'Earthquake 1', types=['EarthquakeEvent'])
+        self.add_edge('eq_1', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_1', 'cause', 'Tsunami', import_name)
+
+        # eq_2: cause = Tectonic, no date
+        self.add_node('eq_2', 'Earthquake 2', types=['EarthquakeEvent'])
+        self.add_edge('eq_2', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_2', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_2', 'cause', 'Tectonic', import_name)
+
+        # eq_3: cause = Tsunami, no date
+        self.add_node('eq_3', 'Earthquake 3', types=['EarthquakeEvent'])
+        self.add_edge('eq_3', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_3', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_3', 'cause', 'Tsunami', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator (date_prop is omitted -> defaults to current date)
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent'],
+            location_props=['affectedPlace'],
+            date_prop='', 
+            agg_date_formats=['YYYY', 'YYYY-MM'],
+            constraints=['cause: *'],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # Get current dates for assertion
+        from datetime import datetime
+        current_year = datetime.utcnow().strftime('%Y')
+        current_month = datetime.utcnow().strftime('%Y-%m')
+
+        # 3. Verify results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # We expect TWO SVs to be generated (one for Tsunami, one for Tectonic)
+            sv_query = """
+                SELECT subject_id, object_id FROM Edge 
+                WHERE predicate = 'cause' AND subject_id IN (
+                    SELECT subject_id FROM Edge 
+                    WHERE predicate = 'populationType' AND object_id = 'EarthquakeEvent'
+                )
+                ORDER BY object_id
+            """
+            sv_results = list(snapshot.execute_sql(sv_query))
+            self.assertEqual(len(sv_results), 2, "Should generate exactly two SVs")
+            
+            # Map cause -> SV DCID
+            sv_map = {r[1]: r[0] for r in sv_results}
+            self.assertIn('Tsunami', sv_map)
+            self.assertIn('Tectonic', sv_map)
+            
+            tsunami_sv = sv_map['Tsunami']
+            tectonic_sv = sv_map['Tectonic']
+
+            # Verify Tsunami SV Edges (should have cause=Tsunami)
+            tsunami_edges_query = f"SELECT predicate, object_id FROM Edge WHERE subject_id = '{tsunami_sv}'"
+            tsunami_edges = {r[0]: r[1] for r in snapshot.execute_sql(tsunami_edges_query)}
+            self.assertEqual(tsunami_edges.get('cause'), 'Tsunami')
+            self.assertEqual(tsunami_edges.get('populationType'), 'EarthquakeEvent')
+
+            # Verify Tectonic SV Edges (should have cause=Tectonic)
+            tectonic_edges_query = f"SELECT predicate, object_id FROM Edge WHERE subject_id = '{tectonic_sv}'"
+            tectonic_edges = {r[0]: r[1] for r in snapshot.execute_sql(tectonic_edges_query)}
+            self.assertEqual(tectonic_edges.get('cause'), 'Tectonic')
+            self.assertEqual(tectonic_edges.get('populationType'), 'EarthquakeEvent')
+
+            # Verify Observations for Tsunami (Count = 2)
+            obs_tsunami_query = f"""
+                SELECT date, value FROM Observation 
+                WHERE variable_measured = '{tsunami_sv}' 
+                  AND entity1 = 'geoId/06'
+                ORDER BY date
+            """
+            obs_tsunami = list(snapshot.execute_sql(obs_tsunami_query))
+            # Should have 2 observations (one yearly, one monthly)
+            self.assertEqual(len(obs_tsunami), 2)
+            # Yearly
+            self.assertEqual(obs_tsunami[0][0], current_year)
+            self.assertAlmostEqual(float(obs_tsunami[0][1]), 2.0)
+            # Monthly
+            self.assertEqual(obs_tsunami[1][0], current_month)
+            self.assertAlmostEqual(float(obs_tsunami[1][1]), 2.0)
+
+            # Verify Observations for Tectonic (Count = 1)
+            obs_tectonic_query = f"""
+                SELECT date, value FROM Observation 
+                WHERE variable_measured = '{tectonic_sv}' 
+                  AND entity1 = 'geoId/06'
+                ORDER BY date
+            """
+            obs_tectonic = list(snapshot.execute_sql(obs_tectonic_query))
+            self.assertEqual(len(obs_tectonic), 2)
+            # Yearly
+            self.assertEqual(obs_tectonic[0][0], current_year)
+            self.assertAlmostEqual(float(obs_tectonic[0][1]), 1.0)
+            # Monthly
+            self.assertEqual(obs_tectonic[1][0], current_month)
+            self.assertAlmostEqual(float(obs_tectonic[1][1]), 1.0)
+
+    def test_aggregate_multiple_constraints_and_bounds(self):
+        """Tests aggregation with multiple constraints (range with bounds and literal value)."""
+        import_name = 'EarthquakeUSGS_MultiCons'
+        output_import = 'EarthquakeUSGS_MultiCons_Agg'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import}"
+
+        # 1. Setup mock data
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_1: Mag 4.0, type MagnitudeMl (Included: 3 <= 4.0 <= 5)
+        self.add_node('eq_1', 'Earthquake 1', types=['EarthquakeEvent'])
+        self.add_edge('eq_1', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_1', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+        self.add_edge('eq_1', 'magnitude', '4.0', import_name)
+        self.add_edge('eq_1', 'magnitudeType', 'MagnitudeMl', import_name)
+
+        # eq_2: Mag 2.5, type MagnitudeMl (Filtered out: too weak)
+        self.add_node('eq_2', 'Earthquake 2', types=['EarthquakeEvent'])
+        self.add_edge('eq_2', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_2', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_2', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+        self.add_edge('eq_2', 'magnitude', '2.5', import_name)
+        self.add_edge('eq_2', 'magnitudeType', 'MagnitudeMl', import_name)
+
+        # eq_3: Mag 6.0, type MagnitudeMl (Filtered out: too strong)
+        self.add_node('eq_3', 'Earthquake 3', types=['EarthquakeEvent'])
+        self.add_edge('eq_3', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_3', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_3', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+        self.add_edge('eq_3', 'magnitude', '6.0', import_name)
+        self.add_edge('eq_3', 'magnitudeType', 'MagnitudeMl', import_name)
+
+        # eq_4: Mag 4.0, type MagnitudeMs (Filtered out: wrong type)
+        self.add_node('eq_4', 'Earthquake 4', types=['EarthquakeEvent'])
+        self.add_edge('eq_4', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_4', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_4', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+        self.add_edge('eq_4', 'magnitude', '4.0', import_name)
+        self.add_edge('eq_4', 'magnitudeType', 'MagnitudeMs', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent'],
+            location_props=['affectedPlace'],
+            date_prop='occurrenceTime',
+            agg_date_formats=['YYYY'],
+            constraints=['magnitude: [3 5 M]', 'magnitudeType: MagnitudeMl'],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Find SV
+            sv_query = """
+                SELECT subject_id FROM Edge 
+                WHERE predicate = 'populationType' AND object_id = 'EarthquakeEvent'
+                  AND subject_id IN (
+                    SELECT subject_id FROM Edge 
+                    WHERE predicate = 'magnitude' AND object_id = '[3 5 M]'
+                  )
+                  AND subject_id IN (
+                    SELECT subject_id FROM Edge 
+                    WHERE predicate = 'magnitudeType' AND object_id = 'MagnitudeMl'
+                  )
+            """
+            sv_results = list(snapshot.execute_sql(sv_query))
+            self.assertEqual(len(sv_results), 1)
+            sv_dcid = sv_results[0][0]
+
+            # Verify count is 1 (only eq_1 satisfies all constraints)
+            obs_query = f"""
+                SELECT value FROM Observation 
+                WHERE variable_measured = '{sv_dcid}' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2023'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            self.assertAlmostEqual(float(obs_results[0][0]), 1.0)
+
+
+class EntityAggregationGeneratorCustomDcTest(EntityAggregationGeneratorIntegrationTest):
+    is_base_dc = False
 
 
 class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
