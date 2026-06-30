@@ -30,7 +30,7 @@ substitutions:
   _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
   _BQ_SPANNER_CONN_ID: 'projects/datcom-ci/locations/us-central1/connections/bq_spanner_conn_test'
   _VERSION: '${SHORT_SHA}'
-  _PROD_TAG: 'stable'
+  _PROD_TAG: 'latest'
 
 steps:
 
