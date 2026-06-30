@@ -68,6 +68,7 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
           // Extensible StatVar properties
           "observationProperties",
           // Generated properties
+          "definition",
           "linkedMember",
           "linkedMemberOf");
 
