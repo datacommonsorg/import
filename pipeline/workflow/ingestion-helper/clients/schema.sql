@@ -51,6 +51,7 @@ CREATE INDEX EdgeByProvenance ON Edge(provenance) OPTIONS (
 -- CONSTRAINT FKPredicate FOREIGN KEY(predicate) REFERENCES Node(subject_id);
 -- CONSTRAINT FKProvenance FOREIGN KEY(provenance) REFERENCES Node(subject_id);
 
+
 CREATE TABLE TimeSeries (
   variable_measured STRING(1024) NOT NULL,
   entity1 STRING(1024) NOT NULL AS (JSON_VALUE(entities, '$.entity1')) STORED,
@@ -113,16 +114,18 @@ CREATE TABLE ImportStatus (
 ) PRIMARY KEY(ImportName);
 
 CREATE TABLE IngestionHistory (
-  CompletionTimestamp TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE ),
-  IngestionFailure Bool NOT NULL,
   WorkflowExecutionID STRING(1024) NOT NULL,
+  Timestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+  IngestionFailure Bool,
+  Status STRING(1024),
+  Stage STRING(1024),
   DataflowJobID STRING(1024),
   IngestedImports ARRAY<STRING(MAX)>,
   ExecutionTime INT64,
   NodeCount INT64,
   EdgeCount INT64,
   ObservationCount INT64,
-) PRIMARY KEY(CompletionTimestamp DESC);
+) PRIMARY KEY(WorkflowExecutionID);
 
 CREATE TABLE ImportVersionHistory (
   ImportName STRING(MAX) NOT NULL,

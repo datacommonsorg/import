@@ -29,7 +29,13 @@ from routes.models import BaseResponse, ResponseStatus
 class IngestionState(str, Enum):
     SUCCESS = "SUCCESS"
     PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    FAILURE = "FAILURE"
     RETRY = "RETRY"
+
+class IngestionStage(str, Enum):
+    DATAFLOW = "dataflow"
+    POSTPROCESSING = "postprocessing"
 
 class ImportState(str, Enum):
     STAGING = "STAGING"
@@ -46,8 +52,17 @@ class ImportInfoRequest(BaseModel):
 class UpdateIngestionStatusRequest(BaseModel):
     importList: List[ImportItem]
     workflowId: str
-    jobId: str
     status: IngestionState
+    jobId: Optional[str] = None
+
+
+class UpdateIngestionHistoryRequest(BaseModel):
+    workflowId: str
+    status: IngestionState
+    stage: Optional[IngestionStage] = None
+    importList: Optional[List[ImportItem]] = Field(default_factory=list)
+    jobId: Optional[str] = None
+
 
 class ImportStatusItem(BaseModel):
     importName: str
@@ -81,19 +96,50 @@ def get_import_info(req: ImportInfoRequest, spanner: SpannerClient = Depends(get
     """Gets the details of imports that are ready for ingestion."""
     return spanner.get_import_info(req.importList)
 
+def _extract_import_names(import_list: Optional[List[ImportItem]]) -> Optional[List[str]]:
+    if not import_list:
+        return None
+    return [item.importName for item in import_list]
+
 @router.post("/ingestion-status", response_model=BaseResponse)
 def update_ingestion_status(req: UpdateIngestionStatusRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Updates the status of imports after ingestion."""
-    ingested_imports = [item.importName for item in req.importList]
+    ingested_imports = _extract_import_names(req.importList)
     spanner.update_ingestion_status(ingested_imports, req.workflowId, req.status.value)
-    
-    metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
-    spanner.update_ingestion_history(req.workflowId, req.jobId, ingested_imports, metrics)
     
     if req.status == IngestionState.SUCCESS:
         import_list_dicts = [item.model_dump() for item in req.importList]
         spanner.update_import_version_history(import_list_dicts, req.workflowId)
     return BaseResponse(status=ResponseStatus.OK)
+
+@router.post("/ingestion-history", response_model=BaseResponse)
+def update_ingestion_history(req: UpdateIngestionHistoryRequest, spanner: SpannerClient = Depends(get_spanner_client)):
+    """Updates the ingestion history record for the workflow execution."""
+    ingested_imports = _extract_import_names(req.importList)
+    
+    metrics = None
+    if req.status in (IngestionState.SUCCESS, IngestionState.FAILURE) and req.stage == IngestionStage.DATAFLOW and req.jobId:
+        try:
+            metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
+        except Exception as e:
+            logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
+            metrics = {
+                'execution_time': 0,
+                'node_count': 0,
+                'edge_count': 0,
+                'obs_count': 0
+            }
+
+    spanner.update_ingestion_history(
+        workflow_id=req.workflowId,
+        status=req.status.value,
+        stage=req.stage.value if req.stage else None,
+        job_id=req.jobId,
+        ingested_imports=ingested_imports,
+        metrics=metrics
+    )
+    return BaseResponse(status=ResponseStatus.OK)
+
 
 @router.post("/status", response_model=BaseResponse)
 def update_import_status(

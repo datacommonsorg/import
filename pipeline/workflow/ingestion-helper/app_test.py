@@ -20,6 +20,7 @@ import os
 from fastapi.testclient import TestClient
 from app import app
 from dependencies import get_spanner_client, get_storage_client
+import config
 
 client = TestClient(app)
 
@@ -263,6 +264,91 @@ class TestMain(unittest.TestCase):
         # Verify get_caller_identity was called exactly once outside of the loop
         mock_get_caller_identity.assert_called_once()
 
+
+    def test_update_ingestion_status_success(self):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        payload = {
+            "importList": [{"importName": "import1"}],
+            "workflowId": "wf-123",
+            "status": "SUCCESS"
+        }
+
+        response = client.post("/imports/ingestion-status", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+        mock_spanner_client.update_ingestion_status.assert_called_once_with(
+            ["import1"], "wf-123", "SUCCESS"
+        )
+        mock_spanner_client.update_import_version_history.assert_called_once_with(
+            [{"importName": "import1", "latestVersion": None}], "wf-123"
+        )
+        mock_spanner_client.update_ingestion_history.assert_not_called()
+
+    @patch('routes.imports.import_utils.get_ingestion_metrics')
+    def test_update_ingestion_history_pending(self, mock_get_ingestion_metrics):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        payload = {
+            "workflowId": "wf-123",
+            "status": "PENDING",
+            "stage": "dataflow",
+            "importList": [{"importName": "import1"}]
+        }
+
+        response = client.post("/imports/ingestion-history", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+        mock_spanner_client.update_ingestion_history.assert_called_once_with(
+            workflow_id="wf-123",
+            status="PENDING",
+            stage="dataflow",
+            job_id=None,
+            ingested_imports=["import1"],
+            metrics=None
+        )
+        mock_get_ingestion_metrics.assert_not_called()
+
+    @patch('routes.imports.import_utils.get_ingestion_metrics')
+    def test_update_ingestion_history_success(self, mock_get_ingestion_metrics):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        mock_metrics = {
+            'execution_time': 120,
+            'node_count': 1000,
+            'edge_count': 2000,
+            'obs_count': 500
+        }
+        mock_get_ingestion_metrics.return_value = mock_metrics
+
+        payload = {
+            "workflowId": "wf-123",
+            "status": "SUCCESS",
+            "stage": "dataflow",
+            "jobId": "job-456",
+            "importList": [{"importName": "import1"}]
+        }
+
+        response = client.post("/imports/ingestion-history", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+        mock_get_ingestion_metrics.assert_called_once_with(
+            config.PROJECT_ID, config.LOCATION, "job-456"
+        )
+        mock_spanner_client.update_ingestion_history.assert_called_once_with(
+            workflow_id="wf-123",
+            status="SUCCESS",
+            stage="dataflow",
+            job_id="job-456",
+            ingested_imports=["import1"],
+            metrics=mock_metrics
+        )
 
 if __name__ == '__main__':
     unittest.main()
