@@ -225,10 +225,20 @@ public class McfUtil {
     return null;
   }
 
+  // Generate SV definition.
   public static String generateSVDefinition(
       Mcf.McfGraph.PropertyValuesOrBuilder pvBuilder,
       Map<String, Mcf.McfGraph.Values> constraintPvs) {
     List<String> parts = new ArrayList<>();
+
+    addCoreProperties(parts, pvBuilder);
+    addConstraints(parts, constraintPvs);
+
+    return String.join(",", parts);
+  }
+
+  private static void addCoreProperties(
+      List<String> parts, Mcf.McfGraph.PropertyValuesOrBuilder pvBuilder) {
 
     String md = getFirstPropertyValue(pvBuilder, Vocabulary.MEASUREMENT_DENOMINATOR);
     if (md != null) parts.add("md=" + md);
@@ -244,16 +254,19 @@ public class McfUtil {
 
     String pt = getFirstPropertyValue(pvBuilder, Vocabulary.POPULATION_TYPE);
     if (pt != null) parts.add("pt=" + pt);
+  }
+
+  private static void addConstraints(
+      List<String> parts, Map<String, Mcf.McfGraph.Values> constraintPvs) {
 
     List<String> sortedKeys = new ArrayList<>(constraintPvs.keySet());
     Collections.sort(sortedKeys);
+
     for (String key : sortedKeys) {
       Mcf.McfGraph.Values value = constraintPvs.get(key);
       if (value != null && value.getTypedValuesCount() > 0) {
         parts.add(key + "=" + stripNamespace(value.getTypedValues(0).getValue()));
       }
     }
-
-    return String.join(",", parts);
   }
 }
