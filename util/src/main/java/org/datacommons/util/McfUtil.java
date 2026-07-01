@@ -224,4 +224,35 @@ public class McfUtil {
     }
     return null;
   }
+
+  // Generate definition for a StatisticalVariable.
+  public static String generateSVDefinition(
+      Mcf.McfGraph.PropertyValues.Builder pvBuilder,
+      Map<String, Mcf.McfGraph.Values> constraintPvs) {
+    List<String> parts = new ArrayList<>();
+
+    String md = getFirstPropertyValue(pvBuilder, Vocabulary.MEASUREMENT_DENOMINATOR);
+    if (md != null) parts.add("md=" + md);
+
+    String mq = getFirstPropertyValue(pvBuilder, Vocabulary.MEASUREMENT_QUALIFIER);
+    if (mq != null) parts.add("mq=" + mq);
+
+    String st = getFirstPropertyValue(pvBuilder, Vocabulary.STAT_TYPE);
+    if (st != null && !st.equals(Vocabulary.MEASURED_VALUE)) parts.add("st=" + st);
+
+    String mp = getFirstPropertyValue(pvBuilder, Vocabulary.MEASURED_PROP);
+    if (mp != null) parts.add("mp=" + mp);
+
+    String pt = getFirstPropertyValue(pvBuilder, Vocabulary.POPULATION_TYPE);
+    if (pt != null) parts.add("pt=" + pt);
+
+    constraintPvs.forEach(
+        (key, value) -> {
+          if (value.getTypedValuesCount() > 0) {
+            parts.add(key + "=" + stripNamespace(value.getTypedValues(0).getValue()));
+          }
+        });
+
+    return String.join(",", parts);
+  }
 }
