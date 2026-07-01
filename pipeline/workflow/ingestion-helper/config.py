@@ -14,6 +14,8 @@
 
 import os
 import json
+import logging
+import yaml
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
 SPANNER_PROJECT_ID = os.environ.get('SPANNER_PROJECT_ID')
@@ -57,16 +59,25 @@ _DEFAULT_EMBEDDING_SPECS = [
     }
 ]
 
-specs_env = os.environ.get('EMBEDDING_SPECS')
-if specs_env:
-    try:
-        parsed = json.loads(specs_env)
-        required_keys = {"embedding_label", "model_name", "task_type", "node_types", "node_filter_type"}
-        if isinstance(parsed, list) and all(isinstance(s, dict) and required_keys.issubset(s.keys()) for s in parsed):
-            EMBEDDING_SPECS = parsed
-        else:
+spec_path = os.environ.get('EMBEDDING_SPEC_PATH')
+if spec_path:
+    resolved_path = os.path.abspath(spec_path)
+    if os.path.exists(resolved_path):
+        try:
+            with open(resolved_path, 'r') as f:
+                parsed = yaml.safe_load(f)
+            required_keys = {"embedding_label", "model_name", "task_type", "node_types", "node_filter_type"}
+            if isinstance(parsed, list) and all(isinstance(s, dict) and required_keys.issubset(s.keys()) for s in parsed):
+                EMBEDDING_SPECS = parsed
+                logging.info(f"Successfully loaded embedding specs from {resolved_path}")
+            else:
+                logging.warning(f"Invalid format in EMBEDDING_SPEC_PATH file: {resolved_path}. Using defaults.")
+                EMBEDDING_SPECS = _DEFAULT_EMBEDDING_SPECS
+        except Exception as e:
+            logging.warning(f"Error reading EMBEDDING_SPEC_PATH file: {e}. Using defaults.")
             EMBEDDING_SPECS = _DEFAULT_EMBEDDING_SPECS
-    except Exception:
+    else:
+        logging.warning(f"EMBEDDING_SPEC_PATH file not found: {resolved_path}. Using defaults.")
         EMBEDDING_SPECS = _DEFAULT_EMBEDDING_SPECS
 else:
     EMBEDDING_SPECS = _DEFAULT_EMBEDDING_SPECS

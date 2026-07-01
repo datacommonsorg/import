@@ -15,6 +15,7 @@ main:
           - helper_url: ${"https://ingestion-helper-service-" + sys.get_env("PROJECT_NUMBER") + "." + location + ".run.app"}
           - import_list: ${default(map.get(args, "importList"), [])}
           - skip_aggregation: ${default(map.get(args, "skipAggregation"), true)}
+          - skip_embedding: ${sys.get_env("ENABLE_EMBEDDINGS") != "true"}
           - dataflow_job_id: null
           - execution_error: null
     - acquire_ingestion_lock:
@@ -62,15 +63,36 @@ main:
                   helper_url: ${helper_url}
                   workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
                 result: dataflow_job_id
-            - check_skip_aggregation:
-                switch:
-                  - condition: ${skip_aggregation}
-                    next: update_ingestion_status
-            - run_aggregation_job:
-                call: run_aggregation_job
-                args:
-                  import_list: ${import_info.body}
-                  helper_url: ${helper_url}
+            - run_parallel_aggregation_and_embedding:
+                parallel:
+                  branches:
+                    - aggregation_branch:
+                        steps:
+                          - check_skip_aggregation:
+                              switch:
+                                - condition: ${skip_aggregation}
+                                  next: end_aggregation_branch
+                          - run_aggregation_job:
+                              call: run_aggregation_job
+                              args:
+                                import_list: ${import_info.body}
+                                helper_url: ${helper_url}
+                          - end_aggregation_branch:
+                              assign:
+                                - dummy_agg: null
+                    - embedding_branch:
+                        steps:
+                          - check_skip_embedding:
+                              switch:
+                                - condition: ${skip_embedding}
+                                  next: end_embedding_branch
+                          - run_embedding_job:
+                              call: run_embedding_job
+                              args:
+                                helper_url: ${helper_url}
+                          - end_embedding_branch:
+                              assign:
+                                - dummy_emb: null
             - update_ingestion_status:
                 call: http.post
                 args:
@@ -153,6 +175,21 @@ run_aggregation_job:
                 - condition: ${aggregation_status_response.body.status == "FAILED"}
                   raise: ${aggregation_status_response.body.error}
               next: check_aggregation_status_loop
+
+# This sub-workflow runs embedding jobs and waits for them to complete.
+run_embedding_job:
+  params: [helper_url]
+  steps:
+    - run_embedding:
+        call: http.post
+        args:
+          url: ${helper_url + "/embeddings/ingest"}
+          timeout: 3600
+          auth:
+            type: OIDC
+          body:
+            enableEmbeddings: true
+        result: embedding_response
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.
 run_dataflow_job:
