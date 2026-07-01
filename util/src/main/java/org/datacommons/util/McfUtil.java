@@ -225,9 +225,8 @@ public class McfUtil {
     return null;
   }
 
-  // Generate definition for a StatisticalVariable.
   public static String generateSVDefinition(
-      Mcf.McfGraph.PropertyValues.Builder pvBuilder,
+      Mcf.McfGraph.PropertyValuesOrBuilder pvBuilder,
       Map<String, Mcf.McfGraph.Values> constraintPvs) {
     List<String> parts = new ArrayList<>();
 
@@ -246,12 +245,14 @@ public class McfUtil {
     String pt = getFirstPropertyValue(pvBuilder, Vocabulary.POPULATION_TYPE);
     if (pt != null) parts.add("pt=" + pt);
 
-    constraintPvs.forEach(
-        (key, value) -> {
-          if (value.getTypedValuesCount() > 0) {
-            parts.add(key + "=" + stripNamespace(value.getTypedValues(0).getValue()));
-          }
-        });
+    List<String> sortedKeys = new ArrayList<>(constraintPvs.keySet());
+    Collections.sort(sortedKeys);
+    for (String key : sortedKeys) {
+      Mcf.McfGraph.Values value = constraintPvs.get(key);
+      if (value != null && value.getTypedValuesCount() > 0) {
+        parts.add(key + "=" + stripNamespace(value.getTypedValues(0).getValue()));
+      }
+    }
 
     return String.join(",", parts);
   }
