@@ -23,9 +23,10 @@ import java.util.Map;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
-// Does additional transformations on parsed MCF nodes, like expanding ComplexValues into nodes.
+// Does additional transformations on parsed MCF nodes
+// - expanding ComplexValues into nodes
+// - adding constraintProperties to StatVar nodes
 //
-// TODO: Attach provenance maybe (CPP Parity).
 // TODO: Pass in a separate SV nodes to clean SVObs double values.
 public class McfMutator {
   private Mcf.McfGraph.Builder graph;

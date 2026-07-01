@@ -194,6 +194,7 @@ public class ComplexValueParser {
           complexNode.putPvs(
               Vocabulary.TYPE_OF, McfUtil.newValues(RESOLVED_REF, Vocabulary.QUANTITY_TYPE));
           complexNode.putPvs(Vocabulary.VALUE, McfUtil.newValues(NUMBER, fields.get(valueIdx)));
+          complexNode.putPvs(Vocabulary.UNIT_OF_MEASURE, McfUtil.newValues(RESOLVED_REF, unit));
         } else {
           complexNode.putPvs(
               Vocabulary.TYPE_OF, McfUtil.newValues(RESOLVED_REF, Vocabulary.QUANTITY_RANGE_TYPE));
@@ -205,8 +206,11 @@ public class ComplexValueParser {
               Vocabulary.END_VALUE,
               McfUtil.newValues(
                   fields.get(endIdx).equals("-") ? TEXT : NUMBER, fields.get(endIdx)));
+          complexNode.putPvs(Vocabulary.UNIT, McfUtil.newValues(RESOLVED_REF, unit));
         }
-        complexNode.putPvs(Vocabulary.UNIT, McfUtil.newValues(RESOLVED_REF, unit));
+      }
+      if (mainNode.containsPvs(Vocabulary.PROVENANCE)) {
+        complexNode.putPvs(Vocabulary.PROVENANCE, mainNode.getPvsOrThrow(Vocabulary.PROVENANCE));
       }
       if (mainNode.getLocationsCount() > 0) {
         complexNode.addAllLocations(mainNode.getLocationsList());
