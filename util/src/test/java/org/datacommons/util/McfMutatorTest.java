@@ -48,7 +48,7 @@ public class McfMutatorTest {
             + "dcid: \"Year18\"\n"
             + "name: \"Year 18\"\n"
             + "typeOf: dcid:Quantity\n"
-            + "unit: dcid:Year\n"
+            + "unitOfMeasure: dcid:Year\n"
             + "value: 18\n"
             + "\n"
             + "Node: dcid:Count_Person_18Years_1000To2000USD\n"

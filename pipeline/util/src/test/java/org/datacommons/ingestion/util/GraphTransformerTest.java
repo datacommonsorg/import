@@ -102,7 +102,7 @@ public class GraphTransformerTest {
                                 TypedValue.newBuilder().setValue("31.61").setType(ValueType.NUMBER))
                             .build())
                     .putPvs(
-                        "unit",
+                        "unitOfMeasure",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
@@ -124,6 +124,14 @@ public class GraphTransformerTest {
                                 TypedValue.newBuilder()
                                     .setValue("Kilometer 31.61")
                                     .setType(ValueType.TEXT))
+                            .build())
+                    .putPvs(
+                        "provenance",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:prov1")
+                                    .setType(ValueType.RESOLVED_REF))
                             .build())
                     .build())
             .build();
@@ -439,7 +447,7 @@ public class GraphTransformerTest {
                                 TypedValue.newBuilder().setValue("10").setType(ValueType.NUMBER))
                             .build())
                     .putPvs(
-                        "unit",
+                        "unitOfMeasure",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
@@ -982,7 +990,7 @@ public class GraphTransformerTest {
                                 TypedValue.newBuilder().setValue("-5.5").setType(ValueType.NUMBER))
                             .build())
                     .putPvs(
-                        "unit",
+                        "unitOfMeasure",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
