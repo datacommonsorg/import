@@ -41,15 +41,7 @@ CREATE INDEX EdgeByProvenance ON Edge(provenance) OPTIONS (
   columnar_policy = 'enabled'
 );
 
--- Foreign key constraints on Edge table
 
--- Optimization - helps Spanner's query optimizer plan efficient joins from Edge.object_id to Node.subject_id for multi-hop graph traversals
--- CONSTRAINT FKObject FOREIGN KEY(object_id) REFERENCES Node(subject_id);
-
--- For edge-node consistency
--- ALTER TABLE Edge SET INTERLEAVE IN PARENT Node;
--- CONSTRAINT FKPredicate FOREIGN KEY(predicate) REFERENCES Node(subject_id);
--- CONSTRAINT FKProvenance FOREIGN KEY(provenance) REFERENCES Node(subject_id);
 
 CREATE TABLE TimeSeries (
   variable_measured STRING(1024) NOT NULL,
@@ -113,16 +105,19 @@ CREATE TABLE ImportStatus (
 ) PRIMARY KEY(ImportName);
 
 CREATE TABLE IngestionHistory (
-  CompletionTimestamp TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE ),
-  IngestionFailure Bool NOT NULL,
   WorkflowExecutionID STRING(1024) NOT NULL,
+  Timestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+  IngestionFailure Bool,
+  Status STRING(1024),
+  Stage STRING(1024),
   DataflowJobID STRING(1024),
   IngestedImports ARRAY<STRING(MAX)>,
   ExecutionTime INT64,
   NodeCount INT64,
   EdgeCount INT64,
   ObservationCount INT64,
-) PRIMARY KEY(CompletionTimestamp DESC);
+) PRIMARY KEY(WorkflowExecutionID);
+
 
 CREATE TABLE ImportVersionHistory (
   ImportName STRING(MAX) NOT NULL,
