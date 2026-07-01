@@ -23,6 +23,7 @@ from .provenance_summary_generator import ProvenanceSummaryGenerator
 from .stat_var_aggregator import StatVarAggregator
 from .place_aggregation_generator import PlaceAggregationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
+from .stat_var_calculation_generator import StatVarCalculationGenerator
 
 __all__ = [
     'BigQueryExecutor',
@@ -30,5 +31,6 @@ __all__ = [
     'ProvenanceSummaryGenerator',
     'StatVarAggregator',
     'PlaceAggregationGenerator',
-    'StatVarGroupGenerator'
+    'StatVarGroupGenerator',
+    'StatVarCalculationGenerator'
 ]
