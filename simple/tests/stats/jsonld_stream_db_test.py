@@ -287,6 +287,14 @@ class TestJsonLdStreamDb(unittest.TestCase):
           o for o in graph
           if o["dcid:observationAbout"]["@id"] == "dcid:country/ALB"
       ][0]
+      self.assertEqual(obs1["dcid:variableMeasured"], {
+          "@id": "dcid:v1",
+          "dcid:observationProperties": [
+              {"@id": "dcid:customIntProp"},
+              {"@id": "dcid:customStrProp"},
+              {"@id": "http://schema.org/url"}
+          ]
+      })
       self.assertEqual(obs1["dcid:value"], 99)
       self.assertEqual(obs1["dcid:observationDate"], 2026)
       self.assertEqual(obs1["dcid:scalingFactor"], 100)

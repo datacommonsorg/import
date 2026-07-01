@@ -91,9 +91,7 @@ def _write_observation_shard(args):
         props_dict = json.loads(props)
         if isinstance(props_dict, dict):
           prop_keys = [
-              f"dcid:{k}" if not k.startswith(
-                  ("dcid:", "http://", "https://")) else k
-              for k in props_dict.keys()
+              _uri_ref(k) for k in props_dict.keys()
           ]
           if prop_keys and var_obj:
             var_obj["dcid:observationProperties"] = prop_keys

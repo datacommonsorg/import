@@ -612,4 +612,51 @@ public class GraphReaderTest {
     // This should throw RuntimeException because sourceCountry is missing
     GraphReader.extractTimeSeries("nodeId", pv, "test_import", true);
   }
+
+  @Test
+  public void testExtractTimeSeries_JsonLd_MultiEntity_Integration() throws Exception {
+    String jsonLd =
+        "{\n"
+            + "  \"@context\": {\n"
+            + "    \"custom\": \"https://customsource.org/schema/\",\n"
+            + "    \"dcid\": \"https://datacommons.org/browser/\"\n"
+            + "  },\n"
+            + "  \"@graph\": [\n"
+            + "    {\n"
+            + "      \"@id\": \"dcid:TestObs\",\n"
+            + "      \"@type\": \"dcid:StatVarObservation\",\n"
+            + "      \"dcid:variableMeasured\": {\n"
+            + "        \"@id\": \"custom:FinancialTrade\",\n"
+            + "        \"dcid:observationProperties\": [\n"
+            + "          \"custom:destinationCountry\",\n"
+            + "          \"custom:sourceCountry\"\n"
+            + "        ]\n"
+            + "      },\n"
+            + "      \"dcid:observationDate\": \"2024\",\n"
+            + "      \"dcid:value\": 100,\n"
+            + "      \"custom:sourceCountry\": { \"@id\": \"dcid:country/FRA\" },\n"
+            + "      \"custom:destinationCountry\": { \"@id\": \"dcid:country/USA\" }\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}";
+
+    java.io.InputStream in =
+        new java.io.ByteArrayInputStream(jsonLd.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    McfGraph graph = org.datacommons.util.parser.jsonld.JsonLdParser.parse(in);
+
+    PropertyValues pv = graph.getNodesMap().get("TestObs");
+    org.junit.Assert.assertNotNull(pv);
+
+    TimeSeries expected =
+        TimeSeries.builder()
+            .entity1("country/USA")
+            .extraEntities(List.of("country/FRA"))
+            .variableMeasured("FinancialTrade")
+            .importName("test_import")
+            .isBaseDc(true)
+            .build();
+
+    TimeSeries actual = GraphReader.extractTimeSeries("TestObs", pv, "test_import", true);
+    assertEquals(expected, actual);
+  }
 }
