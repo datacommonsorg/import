@@ -631,6 +631,15 @@ public class GraphTransformerTest {
                                     .setValue("medicalStatus")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
+                    .putPvs(
+                        "definition",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue(
+                                        "mp=cumulativeCount,pt=MedicalConditionIncident,incidentType=COVID_19,medicalStatus=ConfirmedCase")
+                                    .setType(ValueType.TEXT))
+                            .build())
                     .build())
             .build();
 
@@ -762,6 +771,15 @@ public class GraphTransformerTest {
                                     .setValue("medicalStatus")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
+                    .putPvs(
+                        "definition",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue(
+                                        "mp=cumulativeCount,pt=MedicalConditionIncident,incidentType=COVID_19,medicalStatus=ConfirmedCase")
+                                    .setType(ValueType.TEXT))
+                            .build())
                     .build())
             .build();
 
@@ -880,6 +898,15 @@ public class GraphTransformerTest {
                                 TypedValue.newBuilder()
                                     .setValue("someActualConstraint")
                                     .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "definition",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue(
+                                        "mp=amount,pt=FinancialTransaction,someActualConstraint=someValue")
+                                    .setType(ValueType.TEXT))
                             .build())
                     .build())
             .build();
