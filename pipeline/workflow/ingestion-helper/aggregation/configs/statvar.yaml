@@ -120,81 +120,145 @@ calculations:
         - ancestor_sv_id: Count_Person_NoPrivateHealthInsurance
           source_sv_ids:
             # Population: 26 - 34 Years, Female, No Private Health Insurance
+            - dc/0kyv91d5902mg
             # Population: 75 Years or More, Male, No Private Health Insurance
+            - dc/1ld59l0sp7z85
             # Population: 6 Years or Less, Male, No Private Health Insurance
+            - dc/27q8fsx1rm8e1
             # Population: 55 - 64 Years, Female, No Private Health Insurance
+            - dc/2v3y7wgqrzm5f
             # Population: 65 - 74 Years, Female, No Private Health Insurance
+            - dc/388xq8h8hdhyh
             # Population: 18 - 24 Years, Female, No Private Health Insurance
+            - dc/40rjc7178vkrd
             # Population: 25 - 34 Years, Male, No Private Health Insurance
+            - dc/4qk2e1c4zhsr8
             # Population: 45 - 54 Years, Female, No Private Health Insurance
+            - dc/60mq1lysnc39g
             # Population: 35 - 44 Years, Female, No Private Health Insurance
+            - dc/9cwrwgd2t1r95
             # Population: 19 - 25 Years, Male, No Private Health Insurance
+            - dc/9xxzewchgl6bd
             # Population: 6 - 17 Years, Female, No Private Health Insurance
+            - dc/b9s112lccg17g
             # Population: 26 - 34 Years, Male, No Private Health Insurance
+            - dc/dsmsdwbj1yqf9
             # Population: 45 - 54 Years, Male, No Private Health Insurance
+            - dc/hycewjthgy8w
             # Population: 6 Years or Less, Female, No Private Health Insurance
+            - dc/n0e5f7zjsbedg
             # Population: 6 - 18 Years, Male, No Private Health Insurance
+            - dc/njeqykf73dng2
             # Population: 19 - 25 Years, Female, No Private Health Insurance
+            - dc/nl2wdjffxpdx3
             # Population: 25 - 34 Years, Female, No Private Health Insurance
+            - dc/s11tttbvg3dzh
             # Population: 55 - 64 Years, Male, No Private Health Insurance
+            - dc/v6d0158t101s7
             # Population: 65 - 74 Years, Male, No Private Health Insurance
+            - dc/v80klfl3e9m7f
             # Population: 6 - 18 Years, Female, No Private Health Insurance
+            - dc/w77cv2c32fck7
             # Population: 18 - 24 Years, Male, No Private Health Insurance
+            - dc/wch97nj65s85f
             # Population: 75 Years or More, Female, No Private Health Insurance
+            - dc/wrz9m375r1yy
             # Population: 35 - 44 Years, Male, No Private Health Insurance
+            - dc/wyfvejhn9fe7
             # Population: 6 - 17 Years, Male, No Private Health Insurance
+            - dc/yfmzp444fj5r5
       # dc/g/Person_HealthInsurance-NoPublicHealthInsurance
       # Level 3
         - ancestor_sv_id: Count_Person_NoPublicHealthInsurance
           source_sv_ids:
             # Population: 26 - 34 Years, Female, No Public Health Insurance
+            - dc/0l10mjl6jcb43
             # Population: 65 - 74 Years, Male, No Public Health Insurance
+            - dc/34kcegr057z16
             # Population: 19 - 25 Years, Female, No Public Health Insurance
+            - dc/3l656p2tqt8m9
             # Population: 45 - 54 Years, Female, No Public Health Insurance
+            - dc/81xpj06sdg2kd
             # Population: 26 - 34 Years, Male, No Public Health Insurance
+            - dc/cpcn8j7mw3tx3
             # Population: 35 - 44 Years, Male, No Public Health Insurance
+            - dc/e922mrcqvemm6
             # Population: 19 - 25 Years, Male, No Public Health Insurance
+            - dc/edh0y8vjc9y55
             # Population: 6 - 18 Years, Male, No Public Health Insurance
+            - dc/efg2r5lbj2rs
             # Population: 65 - 74 Years, Female, No Public Health Insurance
+            - dc/fz5dn8yl6m516
             # Population: 45 - 54 Years, Male, No Public Health Insurance
+            - dc/g9qp5cejpyhq5
             # Population: 75 Years or More, Male, No Public Health Insurance
+            - dc/gc7lcsrrv1rm5
             # Population: 6 - 18 Years, Female, No Public Health Insurance
+            - dc/grj8xq0mmr602
             # Population: 35 - 44 Years, Female, No Public Health Insurance
+            - dc/h8123v7kk1xr
             # Population: 55 - 64 Years, Male, No Public Health Insurance
+            - dc/jrh189de6x30h
             # Population: 6 - 17 Years, Male, No Public Health Insurance
+            - dc/ljcepzzm38m7h
             # Population: 18 - 24 Years, Female, No Public Health Insurance
+            - dc/mhfv62j3s22rc
             # Population: 18 - 24 Years, Male, No Public Health Insurance
+            - dc/p8pjrf6ffdeb
             # Population: 75 Years or More, Female, No Public Health Insurance
+            - dc/qtmer196cydk
             # Population: 6 Years or Less, Female, No Public Health Insurance
+            - dc/r4yy8tmxk2pb
             # Population: 25 - 34 Years, Male, No Public Health Insurance
+            - dc/t8p05s93nvjq1
             # Population: 6 - 17 Years, Female, No Public Health Insurance
+            - dc/v1ez3g1cnv2b2
             # Population: 6 Years or Less, Male, No Public Health Insurance
+            - dc/v7xhmvehm80ph
             # Population: 55 - 64 Years, Female, No Public Health Insurance
+            - dc/vxecjxxbmhy43
             # Population: 25 - 34 Years, Female, No Public Health Insurance
+            - dc/yjxmx3n02dx08
       # dc/g/Person_HealthInsurance-WithOneTypeOfHealthInsurance
       # Level 1
         - ancestor_sv_id: Count_Person_WithOneTypeOfHealthInsurance
           source_sv_ids:
             # Population: 18 Years or Less, With One Type of Health Insurance
+            - dc/3jbqx1kf03nd4
             # Population: 18 - 34 Years, With One Type of Health Insurance
+            - dc/3s8t9m1k1pgw5
             # Population: 35 - 64 Years, With One Type of Health Insurance
+            - dc/hcvy4028mk048
             # Population: 19 Years or Less, With One Type of Health Insurance
+            - dc/sjvp50nwdlpmf
             # Population: 19 - 34 Years, With One Type of Health Insurance
+            - dc/thcbepzex9zd9
             # Population: 65 Years or More, With One Type of Health Insurance
+            - dc/v1w52jrtvw6m2
       # dc/g/Person_HealthInsurance-WithPublicCoverage
       # Level 3
         - ancestor_sv_id: Count_Person_WithPublicCoverage
           source_sv_ids:
             # Population: 18 Years or Less, With Disability, With Public Coverage
+            - dc/0f66x8keewypb
             # Population: 19 Years or Less, With Disability, With Public Coverage
+            - dc/1s4eg9f8m6328
             # Population: 19 Years or Less, No Disability, With Public Coverage
+            - dc/35b9fkeh2qlf
             # Population: 65 Years or More, No Disability, With Public Coverage
+            - dc/7cj9xhqe5262d
             # Population: 19 - 64 Years, No Disability, With Public Coverage
+            - dc/84cnddqz2egl6
             # Population: 65 Years or More, With Disability, With Public Coverage
+            - dc/nqtzsgv2g5h09
             # Population: 18 - 64 Years, With Disability, With Public Coverage
+            - dc/qekes8xvrvz18
             # Population: 18 Years or Less, No Disability, With Public Coverage
+            - dc/r7975mdk9v7kh
             # Population: 18 - 64 Years, No Disability, With Public Coverage
+            - dc/t41xetm1g0q6h
             # Population: 19 - 64 Years, With Disability, With Public Coverage
+            - dc/zkcy0f52ewh04
 
       #
       # Ability to speak English
@@ -326,83 +390,137 @@ calculations:
         - ancestor_sv_id: Count_Person_Years25Onwards_EducationalAttainment_5ThAnd6ThGrade
           source_sv_ids:
             # Population: 5th And 6th Grade, Female
+            - Count_Person_25OrMoreYears_EducationalAttainment5ThAnd6ThGrade_Female
             # Population: 5th And 6th Grade, Male
+            - Count_Person_25OrMoreYears_EducationalAttainment5ThAnd6ThGrade_Male
       # dc/g/Person_EducationalAttainment-7ThAnd8ThGrade
       # Level 1
         - ancestor_sv_id: Count_Person_Years25Onwards_EducationalAttainment_7ThAnd8ThGrade
           source_sv_ids:
             # Population: 7th And 8th Grade, Female
+            - Count_Person_25OrMoreYears_EducationalAttainment7ThAnd8ThGrade_Female
             # Population: 7th And 8th Grade, Male
+            - Count_Person_25OrMoreYears_EducationalAttainment7ThAnd8ThGrade_Male
       # dc/g/Person_EducationalAttainment-9ThTo12ThGradeNoDiploma
       # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_9ThTo12ThGradeNoDiploma
           source_sv_ids:
             # Population: 18 - 24 Years, 9th To 12th Grade No Diploma, Female
+            - dc/g0y4zefyr10n7
             # Population: 18 - 24 Years, 9th To 12th Grade No Diploma, Male
+            - dc/0kptwgt2r2j97
             # Population: 25 - 34 Years, 9th To 12th Grade No Diploma, Female
+            - dc/4f3r13e4gkhq6
             # Population: 25 - 34 Years, 9th To 12th Grade No Diploma, Male
+            - dc/tcv30t9ydkldc
             # Population: 35 - 44 Years, 9th To 12th Grade No Diploma, Female
+            - dc/7k5lylyz4l2th
             # Population: 35 - 44 Years, 9th To 12th Grade No Diploma, Male
+            - dc/nrmj89cggsfg6
             # Population: 45 - 64 Years, 9th To 12th Grade No Diploma, Female
+            - dc/m3g8esl121v73
             # Population: 45 - 64 Years, 9th To 12th Grade No Diploma, Male
+            - dc/3hfl00nblgvg5
             # Population: 65 Years or More, 9th To 12th Grade No Diploma, Female
+            - dc/5sps7rmylm73b
             # Population: 65 Years or More, 9th To 12th Grade No Diploma, Male
+            - dc/07hctc6f9e2k9
       # dc/g/Person_EducationalAttainment-LessThan9ThGrade
       # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_LessThan9ThGrade
           source_sv_ids:
             # Population: 18 - 24 Years, Less Than 9th Grade, Female
+            - dc/935ftchsz31b1
             # Population: 18 - 24 Years, Less Than 9th Grade, Male
+            - dc/n6v6b8vh8jnd5
             # Population: 25 - 34 Years, Less Than 9th Grade, Female
+            - dc/dr8wcfnpxyrj7
             # Population: 25 - 34 Years, Less Than 9th Grade, Male
+            - dc/k8g20v452g617
             # Population: 35 - 44 Years, Less Than 9th Grade, Female
+            - dc/y051838618t9c
             # Population: 35 - 44 Years, Less Than 9th Grade, Male
+            - dc/cpx5ll8vth2n7
             # Population: 45 - 64 Years, Less Than 9th Grade, Female
+            - dc/b841qxd3smpt
             # Population: 45 - 64 Years, Less Than 9th Grade, Male
+            - dc/5vhc0r8m4x5g9
             # Population: 65 Years or More, Less Than 9th Grade, Female
+            - dc/292723k92k5tb
             # Population: 65 Years or More, Less Than 9th Grade, Male
+            - dc/68pblb53csteb
       # dc/g/Person_EducationalAttainment-LessThanHighSchoolDiploma
       # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_LessThanHighSchoolDiploma
           source_sv_ids:
             # Population: Less Than High School Diploma, Male, Two or More Races
+            - dc/3g5g2k9n19l45
             # Population: Less Than High School Diploma, Male, Asian Alone
+            - dc/z3z44q7edbyp7
             # Population: Less Than High School Diploma, Female, Hispanic or Latino
+            - dc/0p89e7q72edr1
             # Population: Less Than High School Diploma, Male, White Alone
+            - dc/70kcr1l5jldsb
             # Population: Less Than High School Diploma, Female, Asian Alone
+            - dc/nbfp13v6t9v87
             # Population: Less Than High School Diploma, Male, Hispanic or Latino
+            - dc/szpdtvh1v6p49
             # Population: Less Than High School Diploma, Male, Some Other Race Alone
+            - dc/pyflt85w79j35
             # Population: Less Than High School Diploma, Female, White Alone Not Hispanic or Latino
+            - dc/vhxsz5bplmef4
             # Population: Less Than High School Diploma, Male, Black or African American Alone
+            - dc/k51n39gvd22t5
             # Population: Less Than High School Diploma, Female, Black or African American Alone
+            - dc/m1trmbvh8sygd
             # Population: Less Than High School Diploma, Male, Native Hawaiian or Other Pacific Islander Alone
+            - dc/7n0468s56spt8
             # Population: Less Than High School Diploma, Male, American Indian or Alaska Native Alone
+            - dc/5e4qydg4slyvd
             # Population: Less Than High School Diploma, Female, Native Hawaiian or Other Pacific Islander Alone
+            - dc/y95cbfgtlqrmb
             # Population: Less Than High School Diploma, Female, Some Other Race Alone
+            - dc/p7978m8tbsns6
             # Population: Less Than High School Diploma, Female, American Indian or Alaska Native Alone
+            - dc/lyzcfc37eet64
             # Population: Less Than High School Diploma, Female, White Alone
+            - dc/m4q40nln3qms
             # Population: Less Than High School Diploma, Male, White Alone Not Hispanic or Latino
+            - dc/yfrrvevrmyr74
             # Population: Less Than High School Diploma, Female, Two or More Races
+            - dc/29l3m1z7d3n7c
       # dc/g/Person_EducationalAttainment-NurseryTo4ThGrade
       # Level 1
         - ancestor_sv_id: Count_Person_Years25Onwards_EducationalAttainment_NurseryTo4ThGrade
           source_sv_ids:
             # Population: Nursery To 4th Grade, Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentNurseryTo4ThGrade_Female
             # Population: Nursery To 4th Grade, Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentNurseryTo4ThGrade_Male
       # dc/g/Person_EducationalAttainment-SomeCollegeNoDegree
       # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_SomeCollegeNoDegree
           source_sv_ids:
             # Population: 18 - 24 Years, Some College No Degree, Female
+            - dc/x8sydp80d61v9
             # Population: 18 - 24 Years, Some College No Degree, Male
+            - dc/bxs5x91p5jbf
             # Population: 25 - 34 Years, Some College No Degree, Female
+            - dc/z8j7q9303cpx8
             # Population: 25 - 34 Years, Some College No Degree, Male
+            - dc/d4p0m2p51v7d3
             # Population: 35 - 44 Years, Some College No Degree, Female
+            - dc/66nscflhly519
             # Population: 35 - 44 Years, Some College No Degree, Male
+            - dc/q4eclxrhd5mrd
             # Population: 45 - 64 Years, Some College No Degree, Female
+            - dc/dsmks2epl3ve
             # Population: 45 - 64 Years, Some College No Degree, Male
+            - dc/6ms49l0q9tq44
             # Population: 65 Years or More, Some College No Degree, Female
+            - dc/c0vyt03x0h0v4
             # Population: 65 Years or More, Some College No Degree, Male
+            - dc/5s08n6kdt26db
         - ancestor_sv_id: Count_Person_EducationalAttainment_1StTo12ThGrade
           source_sv_ids:
             - Count_Person_EducationalAttainment1StGrade

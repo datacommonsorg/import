@@ -34,7 +34,120 @@
           "entity_aggregation": { "type": "object" },
           "stat_var_series_aggregation": { "type": "object" },
           "stat_var_calculation": { "type": "object" }
-        }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "type": { "const": "PLACE_AGGREGATION" } } },
+            "then": {
+              "required": ["place_aggregation"],
+              "properties": {
+                "place_aggregation": {
+                  "type": "object",
+                  "required": ["from_place_types", "to_place_types"],
+                  "properties": {
+                    "from_place_types": { "type": "string" },
+                    "to_place_types": { "type": "string" },
+                    "allow_multiple_to_places": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "STAT_VAR_AGGREGATION" } } },
+            "then": {
+              "required": ["stat_var_aggregation"],
+              "properties": {
+                "stat_var_aggregation": {
+                  "type": "object",
+                  "required": ["aggregations"],
+                  "properties": {
+                    "aggregations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["ancestor_sv_id", "source_sv_ids"],
+                        "properties": {
+                          "ancestor_sv_id": { "type": "string" },
+                          "source_sv_ids": {
+                            "type": "array",
+                            "items": { "type": "string" },
+                            "minItems": 1
+                          },
+                          "skip_all_sources_present_check": { "type": "boolean" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "ENTITY_AGGREGATION" } } },
+            "then": {
+              "required": ["entity_aggregation"],
+              "properties": {
+                "entity_aggregation": {
+                  "type": "object",
+                  "required": ["entity_types", "location_props", "date_prop", "agg_date_formats"],
+                  "properties": {
+                    "entity_types": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "minItems": 1
+                    },
+                    "location_props": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "minItems": 1
+                    },
+                    "date_prop": { "type": "string" },
+                    "agg_date_formats": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "minItems": 1
+                    },
+                    "constraints": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "STAT_VAR_SERIES_AGGREGATION" } } },
+            "then": {
+              "required": ["stat_var_series_aggregation"],
+              "properties": {
+                "stat_var_series_aggregation": {
+                  "type": "object",
+                  "required": ["aggr_funcs"],
+                  "properties": {
+                    "aggr_funcs": { "type": "array" }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "STAT_VAR_CALCULATION" } } },
+            "then": {
+              "required": ["stat_var_calculation"],
+              "properties": {
+                "stat_var_calculation": {
+                  "type": "object",
+                  "required": ["calculations"],
+                  "properties": {
+                    "calculations": { "type": "array" }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     }
   }
