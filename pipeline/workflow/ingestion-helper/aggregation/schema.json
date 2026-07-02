@@ -28,7 +28,7 @@
             "minItems": 1
           },
           "output_import": { "type": "string" },
-          "round": { "type": "integer" },
+          "stage": { "type": "integer" },
           "place_aggregation": { "type": "object" },
           "stat_var_aggregation": { "type": "object" },
           "entity_aggregation": { "type": "object" },

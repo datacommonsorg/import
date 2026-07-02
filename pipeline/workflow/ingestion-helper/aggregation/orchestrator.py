@@ -29,7 +29,7 @@ from .validator import validate_config
 
 
 class AggregationOrchestrator:
-    """Orchestrates the overall aggregation workflow across multi-round execution."""
+    """Orchestrates the overall aggregation workflow across multi-stage execution."""
 
     def __init__(
         self,
@@ -75,8 +75,8 @@ class AggregationOrchestrator:
     def run(self, active_imports: List[str]) -> None:
         """Executes aggregations independently for each active import.
 
-        Blocks and synchronizes round progression for each import:
-        Round 1 -> Wait -> Round 2 -> Wait -> Round 3 -> Wait.
+        Blocks and synchronizes stage progression for each import:
+        Stage 1 -> Wait -> Stage 2 -> Wait -> Stage 3 -> Wait.
 
         Args:
             active_imports: List of active import dataset names to process.
@@ -85,45 +85,45 @@ class AggregationOrchestrator:
 
         for single_import in active_imports:
             logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
-            active_rounds = self.get_active_rounds_for_import(single_import)
+            active_stages = self.get_active_stages_for_import(single_import)
 
-            if not active_rounds:
+            if not active_stages:
                 logging.info(f"No aggregation steps configured for import '{single_import}'. Skipping.")
                 continue
 
-            for round_num in active_rounds:
-                logging.info(f"--- Triggering Round {round_num} for import '{single_import}' ---")
-                self._execute_and_synchronize_round(single_import, round_num)
+            for stage_num in active_stages:
+                logging.info(f"--- Triggering Stage {stage_num} for import '{single_import}' ---")
+                self._execute_and_synchronize_stage(single_import, stage_num)
 
-            logging.info(f"=== Successfully completed all aggregation rounds for Import: '{single_import}' ===")
+            logging.info(f"=== Successfully completed all aggregation stages for Import: '{single_import}' ===")
 
-    def get_active_rounds_for_import(self, single_import: str) -> List[int]:
-        """Returns a sorted list of unique active round numbers for a single import.
+    def get_active_stages_for_import(self, single_import: str) -> List[int]:
+        """Returns a sorted list of unique active stage numbers for a single import.
 
         Args:
             single_import: The active import dataset name.
 
         Returns:
-            Sorted list of round numbers (e.g., [1, 2, 3]).
+            Sorted list of stage numbers (e.g., [1, 2, 3]).
         """
-        rounds = set()
+        stages = set()
         for calc in self.calculations:
             if self._calc_applies_to_import(calc, single_import):
-                rounds.add(calc.get("round", 1))
-        return sorted(list(rounds))
+                stages.add(calc.get("stage", 1))
+        return sorted(list(stages))
 
-    def get_active_rounds(self, active_imports: List[str]) -> List[int]:
-        """Returns a sorted list of unique active round numbers across active imports."""
-        rounds = set()
+    def get_active_stages(self, active_imports: List[str]) -> List[int]:
+        """Returns a sorted list of unique active stage numbers across active imports."""
+        stages = set()
         for single_import in active_imports:
-            rounds.update(self.get_active_rounds_for_import(single_import))
-        return sorted(list(rounds))
+            stages.update(self.get_active_stages_for_import(single_import))
+        return sorted(list(stages))
 
-    def execute_round(self, stage_num: int, active_imports: List[str]) -> List[str]:
-        """Executes and collects BigQuery job IDs for a given round/stage.
+    def execute_stage(self, stage_num: int, active_imports: List[str]) -> List[str]:
+        """Executes and collects BigQuery job IDs for a given stage.
 
         Args:
-            stage_num: The round/stage number to execute.
+            stage_num: The stage number to execute.
             active_imports: List of active import dataset names.
 
         Returns:
@@ -131,35 +131,35 @@ class AggregationOrchestrator:
         """
         job_ids = []
         for single_import in active_imports:
-            jobs = self._dispatch_round_steps(single_import, stage_num)
+            jobs = self._dispatch_stage_steps(single_import, stage_num)
             for job in jobs:
                 if job and getattr(job, "job_id", None):
                     job_ids.append(job.job_id)
         return job_ids
 
-    def _execute_and_synchronize_round(self, single_import: str, round_num: int) -> None:
-        """Triggers round steps for a single import and blocks until completion."""
-        jobs = self._dispatch_round_steps(single_import, round_num)
+    def _execute_and_synchronize_stage(self, single_import: str, stage_num: int) -> None:
+        """Triggers stage steps for a single import and blocks until completion."""
+        jobs = self._dispatch_stage_steps(single_import, stage_num)
         job_ids = [job.job_id for job in jobs if job and getattr(job, "job_id", None)]
 
         if not job_ids:
-            logging.info(f"No BigQuery jobs submitted for Round {round_num} (import: '{single_import}').")
+            logging.info(f"No BigQuery jobs submitted for Stage {stage_num} (import: '{single_import}').")
             return
 
-        logging.info(f"Submitted {len(job_ids)} job(s) for Round {round_num} (import: '{single_import}'): {job_ids}")
+        logging.info(f"Submitted {len(job_ids)} job(s) for Stage {stage_num} (import: '{single_import}'): {job_ids}")
         self._wait_for_jobs(job_ids)
 
-    def _dispatch_round_steps(self, single_import: str, round_num: int) -> List[Any]:
-        """Dispatches matching calculation steps for an import and round number."""
+    def _dispatch_stage_steps(self, single_import: str, stage_num: int) -> List[Any]:
+        """Dispatches matching calculation steps for an import and stage number."""
         jobs = []
         for calc in self.calculations:
-            if calc.get("round", 1) != round_num:
+            if calc.get("stage", 1) != stage_num:
                 continue
             if not self._calc_applies_to_import(calc, single_import):
                 continue
 
             step_type = calc["type"]
-            logging.info(f"Triggering '{step_type}' (Round {round_num}) for import '{single_import}'...")
+            logging.info(f"Triggering '{step_type}' (Stage {stage_num}) for import '{single_import}'...")
 
             step_jobs = []
             if step_type == "PLACE_AGGREGATION" or step_type == "place":
@@ -199,13 +199,13 @@ class AggregationOrchestrator:
             status = status_info.get("status")
 
             if status == "DONE":
-                logging.info("All BigQuery jobs in round completed successfully.")
+                logging.info("All BigQuery jobs in stage completed successfully.")
                 return
             elif status == "FAILED":
                 error_msg = status_info.get("error", "One or more BigQuery jobs failed.")
-                logging.error(f"Round execution failed: {error_msg}")
+                logging.error(f"Stage execution failed: {error_msg}")
                 raise RuntimeError(f"Aggregation execution failed: {error_msg}")
-            
+
             time.sleep(poll_interval)
 
     def _trigger_place(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:

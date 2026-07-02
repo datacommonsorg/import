@@ -46,7 +46,7 @@ class TestValidatorSuccess(unittest.TestCase):
                 input_imports:
                   - CensusACS5YearSurvey
                 output_import: CensusACS5YearSurvey_AggCountry
-                round: 1
+                stage: 1
                 place_aggregation:
                   from_place_types: State
                   to_place_types: Country
@@ -77,7 +77,7 @@ class TestValidatorSuccess(unittest.TestCase):
               - type: STAT_VAR_SERIES_AGGREGATION
                 input_imports:
                   - NASA_NEXDCP30
-                round: 1
+                stage: 1
                 output_import: NASA_NEXDCP30_AggrDiffStats
                 stat_var_series_aggregation:
                   aggr_funcs:

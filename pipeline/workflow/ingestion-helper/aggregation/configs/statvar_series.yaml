@@ -2,7 +2,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXDCP30
-    round: 1
+    stage: 1
     output_import: NASA_NEXDCP30_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -16,7 +16,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_Subnational
-    round: 1
+    stage: 1
     output_import: NASA_NEXGDDP_Subnational_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -32,7 +32,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_Country
-    round: 1
+    stage: 1
     output_import: NASA_NEXGDDP_Country_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -46,7 +46,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
-    round: 1
+    stage: 1
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -62,7 +62,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50
-    round: 1
+    stage: 1
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -78,7 +78,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
-    round: 2
+    stage: 2
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
@@ -92,7 +92,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50
-    round: 2
+    stage: 2
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
@@ -106,7 +106,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
-    round: 3
+    stage: 3
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrOverTimeOnStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
@@ -209,7 +209,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
-    round: 3
+    stage: 3
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrOverTimeOnStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
@@ -312,7 +312,7 @@ calculations:
   - type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_IpccPlaces50
-    round: 1
+    stage: 1
     output_import: NASA_NEXGDDP_IpccPlaces50_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:

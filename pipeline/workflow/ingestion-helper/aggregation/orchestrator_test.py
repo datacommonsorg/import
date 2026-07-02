@@ -31,7 +31,7 @@ VALID_CONFIG_YAML = textwrap.dedent("""\
         input_imports:
           - USFed_Census
         output_import: USFed_Census_AggState
-        round: 1
+        stage: 1
         place_aggregation:
           from_place_types: County
           to_place_types: State
@@ -40,7 +40,7 @@ VALID_CONFIG_YAML = textwrap.dedent("""\
         input_imports:
           - USFed_Census
         output_import: USFed_Census_StatVarAgg
-        round: 2
+        stage: 2
         stat_var_aggregation:
           aggregations:
             - ancestor_sv_id: Count_Person
@@ -53,7 +53,7 @@ VALID_CONFIG_YAML = textwrap.dedent("""\
 
 @patch('aggregation.orchestrator.BigQueryExecutor')
 class TestOrchestratorScanning(unittest.TestCase):
-    """Tests round scanning and active round resolution methods."""
+    """Tests stage scanning and active stage resolution methods."""
 
     def setUp(self):
         self.tmpdir = tempfile.TemporaryDirectory()
@@ -72,20 +72,20 @@ class TestOrchestratorScanning(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
 
-    def test_get_active_rounds_for_import(self, mock_executor):
-        """Tests getting active rounds for matching and non-matching imports."""
-        rounds = self.orchestrator.get_active_rounds_for_import("USFed_Census")
-        self.assertEqual(rounds, [1, 2])
+    def test_get_active_stages_for_import(self, mock_executor):
+        """Tests getting active stages for matching and non-matching imports."""
+        stages = self.orchestrator.get_active_stages_for_import("USFed_Census")
+        self.assertEqual(stages, [1, 2])
 
-        rounds = self.orchestrator.get_active_rounds_for_import("OtherImport")
-        self.assertEqual(rounds, [])
+        stages = self.orchestrator.get_active_stages_for_import("OtherImport")
+        self.assertEqual(stages, [])
 
 
 @patch('aggregation.orchestrator.BigQueryExecutor')
 @patch('aggregation.orchestrator.PlaceAggregationGenerator')
 @patch('aggregation.orchestrator.StatVarAggregator')
 class TestOrchestratorExecution(unittest.TestCase):
-    """Tests round execution, verifying job submission and synchronization."""
+    """Tests stage execution, verifying job submission and synchronization."""
 
     def setUp(self):
         self.tmpdir = tempfile.TemporaryDirectory()
@@ -105,7 +105,7 @@ class TestOrchestratorExecution(unittest.TestCase):
         self.tmpdir.cleanup()
 
     def test_run_synchronized_pipeline(self, mock_sv_agg, mock_place_gen, mock_executor_cls):
-        """Tests complete synchronized run pipeline for an import across rounds."""
+        """Tests complete synchronized run pipeline for an import across stages."""
         mock_job1 = MagicMock()
         mock_job1.job_id = "job-place-1"
         mock_place_gen.return_value.aggregate_places.return_value = mock_job1

@@ -5,7 +5,7 @@ calculations:
     place_aggregation:
       from_place_types: State
       to_place_types: Country
-    round: 1
+    stage: 1
     output_import: CensusACS5YearSurvey_AggCountry
 
   - type: PLACE_AGGREGATION
@@ -14,7 +14,7 @@ calculations:
     place_aggregation:
       from_place_types: State
       to_place_types: Country
-    round: 1
+    stage: 1
     output_import: CensusSAHIE_AggCountry
 
   - type: PLACE_AGGREGATION
@@ -23,7 +23,7 @@ calculations:
     place_aggregation:
       from_place_types: County
       to_place_types: State
-    round: 1
+    stage: 1
     output_import: CDCMortality_AggState
 
   - type: PLACE_AGGREGATION
@@ -32,7 +32,7 @@ calculations:
     place_aggregation:
       from_place_types: State
       to_place_types: Country
-    round: 2
+    stage: 2
     output_import: CDCMortality_AggState_AggCountry
 
   # - type: PLACE_AGGREGATION
@@ -41,7 +41,7 @@ calculations:
   #   place_aggregation:
   #     from_place_types: State
   #     to_place_types: Country
-  #   round: 1
+  #   stage: 1
   #   output_import: FBIGovCrime_AggCountry
 
   - type: PLACE_AGGREGATION
@@ -50,7 +50,7 @@ calculations:
     place_aggregation:
       from_place_types: County
       to_place_types: State
-    round: 1
+    stage: 1
     output_import: DEA_ARCOS_AggState
 
   - type: PLACE_AGGREGATION
@@ -59,7 +59,7 @@ calculations:
     place_aggregation:
       from_place_types: State
       to_place_types: Country
-    round: 2
+    stage: 2
     output_import: DEA_ARCOS_AggState_AggCountry
 
   - type: PLACE_AGGREGATION
@@ -68,7 +68,7 @@ calculations:
     place_aggregation:
       from_place_types: CensusBlockGroup
       to_place_types: CensusTract
-    round: 1
+    stage: 1
     output_import: EPA_EJSCREEN_AggCensusTract
 
   - type: PLACE_AGGREGATION
@@ -77,7 +77,7 @@ calculations:
     place_aggregation:
       from_place_types: CensusTract
       to_place_types: County
-    round: 2
+    stage: 2
     output_import: EPA_EJSCREEN_AggCensusTract_AggCounty
 
   - type: PLACE_AGGREGATION
@@ -86,7 +86,7 @@ calculations:
     place_aggregation:
       from_place_types: CensusBlockGroup
       to_place_types: CensusTract
-    round: 1
+    stage: 1
     output_import: DeepSolar_AggCensusTract
 
   - type: PLACE_AGGREGATION
@@ -95,7 +95,7 @@ calculations:
     place_aggregation:
       from_place_types: CensusTract
       to_place_types: County
-    round: 2
+    stage: 2
     output_import: DeepSolar_AggCensusTract_AggCounty
 
   - type: PLACE_AGGREGATION
@@ -104,7 +104,7 @@ calculations:
     place_aggregation:
       from_place_types: EpaReportingFacility
       to_place_types: County
-    round: 1
+    stage: 1
     output_import: EPA_GHGRP_AggCounty
 
   - type: PLACE_AGGREGATION
@@ -113,7 +113,7 @@ calculations:
     place_aggregation:
       from_place_types: EpaReportingFacility
       to_place_types: CensusZipCodeTabulationArea
-    round: 1
+    stage: 1
     output_import: EPA_GHGRP_AggCensusZipCodeTabulationArea
 
   - type: PLACE_AGGREGATION
@@ -122,7 +122,7 @@ calculations:
     place_aggregation:
       from_place_types: County
       to_place_types: State
-    round: 2
+    stage: 2
     output_import: EPA_GHGRP_AggCounty_AggState
 
   - type: PLACE_AGGREGATION
@@ -132,7 +132,7 @@ calculations:
       from_place_types: GeoGridPlace_0.25Deg
       to_place_types: County
       allow_multiple_to_places: true
-    round: 1
+    stage: 1
     output_import: RFF_USGridGeo_WeatherVariabilityForecast_AggCounty
 
   - type: PLACE_AGGREGATION
@@ -142,7 +142,7 @@ calculations:
       from_place_types: State
       to_place_types: Country
       allow_multiple_to_places: true
-    round: 1
+    stage: 1
     output_import: India_RBIStateDomesticProduct_AggCountry
 
   - type: PLACE_AGGREGATION
@@ -152,5 +152,5 @@ calculations:
       from_place_types: State
       to_place_types: Country
       allow_multiple_to_places: true
-    round: 1
+    stage: 1
     output_import: India_RBIStateDomesticProduct_StatVarAgg_AggCountry
