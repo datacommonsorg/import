@@ -16,7 +16,6 @@ calculations:
       #    We use that to compute total and by disability-status.
       #
       # Total uninsured
-      # https://screenshot.googleplex.com/v4s43nzoCC9G5Qp
         - ancestor_sv_id: Count_Person_NoHealthInsurance
           source_sv_ids:
             # No Disability
@@ -28,7 +27,6 @@ calculations:
             - dc/96dqj47csvmy8
             - dc/qr4s77egv27q2
       # Total insured
-      # https://screenshot.googleplex.com/ARqaVprXtizwETy
         - ancestor_sv_id: Count_Person_WithHealthInsurance
           source_sv_ids:
             # No Disability
@@ -73,7 +71,6 @@ calculations:
       #    breakdown (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B27001). We
       #    use that to compute gender breakdown.
       #
-      # https://screenshot.googleplex.com/aSP3i8ASJDxct2C
         - ancestor_sv_id: Count_Person_Female_NoHealthInsurance
           source_sv_ids:
             - dc/jx2q10tbnwhf3
@@ -85,7 +82,6 @@ calculations:
             - dc/jydkzj9v0yb2
             - dc/qb6th3c5tcd92
             - dc/zj152fzswgrw6
-      # https://screenshot.googleplex.com/57jf9CpaC7KGd7y
         - ancestor_sv_id: Count_Person_Male_NoHealthInsurance
           source_sv_ids:
             - dc/fwqlkjjch0dg5
@@ -97,7 +93,6 @@ calculations:
             - dc/nn4xz2lv98h5c
             - dc/ywjqcxc244sx2
             - dc/j88b1fy7045j1
-      # https://screenshot.googleplex.com/5buzauZqyhTdnkV
         - ancestor_sv_id: Count_Person_Female_WithHealthInsurance
           source_sv_ids:
             - dc/jjhxlkp3qk2m6
@@ -109,7 +104,6 @@ calculations:
             - dc/y9xxbzfr8yb06
             - dc/whh1y53fj4p69
             - dc/965mdb0c8tef9
-      # https://screenshot.googleplex.com/38JDwJJGKhNLmWM
         - ancestor_sv_id: Count_Person_Male_WithHealthInsurance
           source_sv_ids:
             - dc/ve6s1v1eyrbt7
@@ -220,7 +214,6 @@ calculations:
       - CensusACS5YearSurvey_AggCountry
     stat_var_aggregation:
       aggregations:
-      # https://screenshot.googleplex.com/3Fw42DhNnD5fPLi
         - ancestor_sv_id: Count_Person_SpeakEnglishNotAtAll
           source_sv_ids:
             - dc/edfjy64gmxf6f
@@ -231,7 +224,6 @@ calculations:
             - dc/6yzk8t4e9t6v6
             - dc/0kx32ff9c6d79
             - dc/7cxlkzf56zk26
-      # https://screenshot.googleplex.com/3ExaNScXGyyEP2c
         - ancestor_sv_id: Count_Person_SpeakEnglishNotWell
           source_sv_ids:
             - dc/f8qh4hp1830dg
@@ -242,7 +234,6 @@ calculations:
             - dc/6rzmvxpgqlww6
             - dc/wf1rm5zx34dtg
             - dc/4xykjw3v6n4t3
-      # https://screenshot.googleplex.com/AaaSNUMpQwHRvSZ
         - ancestor_sv_id: Count_Person_SpeakEnglishWell
           source_sv_ids:
             - dc/4n1wg2c7hjem
@@ -271,7 +262,6 @@ calculations:
     stat_var_aggregation:
       aggregations:
       # Women in armed forces
-      # https://screenshot.googleplex.com/3ik3W3g2eqMjkSm
         - ancestor_sv_id: Count_Person_Female_InArmedForces
           source_sv_ids:
             - dc/173smewzddlb
@@ -285,7 +275,6 @@ calculations:
             - dc/lb3lb4mg82mph
             - dc/g2m31qc7q1x64
       # Men in armed forces
-      # https://screenshot.googleplex.com/6dvhYcbmtHsjifQ
         - ancestor_sv_id: Count_Person_Male_InArmedForces
           source_sv_ids:
             - dc/vp1gqv00d2ql3
@@ -694,7 +683,6 @@ calculations:
 #     stat_var_aggregation:
 #       aggregations:
       # # Women Employed
-      # # https://screenshot.googleplex.com/AYFWvJqXa3EB2eU
       #
       # # The ancestor has "armedForcesStatus: dcs:Civilian", but the following sources
       # # don't have. Fix it before adding this to aggregation.
@@ -725,7 +713,6 @@ calculations:
             # # dc/xepldf55yq6s5
             #
             # # Men Employed
-            # # https://screenshot.googleplex.com/C24sFkxNbUpWiQJ
 #         - ancestor_sv_id: Count_Person_Male_Employed
 #           source_sv_ids:
 #             - dc/2s6hps4z1qced

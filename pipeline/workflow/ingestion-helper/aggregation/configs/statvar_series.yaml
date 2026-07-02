@@ -8,7 +8,6 @@ calculations:
       aggr_funcs:
         - max_diff_across_measurement_methods:
         - diff_relative_to_base_date:
-          # TODO(b/220070731): Consider adding start_date/end_date spec.
             date_specs:
             # There are two series in this import:
             # 1. Monthly historical data from 1950 to 2005.
@@ -44,7 +43,6 @@ calculations:
       aggr_funcs:
         - max_diff_across_measurement_methods:
         - diff_relative_to_base_date:
-          # TODO(b/220070731): Consider adding start_date/end_date spec.
             date_specs:
             # There are two series in this import:
             # 1. Monthly historical data from 1950 to 2005.
