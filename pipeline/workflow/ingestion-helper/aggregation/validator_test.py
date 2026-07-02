@@ -33,59 +33,86 @@ class TestValidatorSuccess(unittest.TestCase):
     def setUp(self):
         self.schema_path = os.path.join(os.path.dirname(__file__), "schema.json")
         self.tmpdir = tempfile.TemporaryDirectory()
-        self.config_path = os.path.join(self.tmpdir.name, "aggregation.yaml")
+        self.config_path = os.path.join(self.tmpdir.name, "config.yaml")
 
     def tearDown(self):
         self.tmpdir.cleanup()
 
     def test_validate_config_success_all_types(self):
-        """Verifies that a comprehensive, valid config with all types passes validation."""
+        """Verifies that a comprehensive, valid config with all 6 calculation types passes validation."""
         valid_all_types_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: linked_edges
-                imports: ["*"]
-                stage: 1
-                disabled: false
+            calculations:
+              - type: PLACE_AGGREGATION
+                input_imports:
+                  - CensusACS5YearSurvey
+                output_import: CensusACS5YearSurvey_AggCountry
+                round: 1
+                place_aggregation:
+                  from_place_types: State
+                  to_place_types: Country
 
-              - type: place
-                source_type: County
-                destination_type: State
-                allow_multiple_to_places: true
-                imports: ["ImportA", "ImportB"]
-                stage: 2
+              - type: STAT_VAR_AGGREGATION
+                output_import: CensusACS5YearSurvey_HealthInsurance_StatVarAgg
+                input_imports:
+                  - CensusACS5YearSurvey
+                stat_var_aggregation:
+                  aggregations:
+                    - ancestor_sv_id: Count_Person_NoHealthInsurance
+                      source_sv_ids:
+                        - dc/y0dvhk0sggzef
 
-              - type: stat_var
-                ancestor_sv_id: Count_Person
-                source_sv_ids: ["Count_Person_Male", "Count_Person_Female"]
-                skip_all_sources_present_check: true
-                output_import_name: "Aggregated_Pop"
-                imports: ["ImportC"]
-                stage: 3
+              - type: ENTITY_AGGREGATION
+                output_import: FireFAMWEB_Agg
+                input_imports:
+                  - FireFAMWEB
+                entity_aggregation:
+                  entity_types:
+                    - BurnedArea
+                  location_props:
+                    - location
+                  date_prop: startDate
+                  agg_date_formats:
+                    - "%Y"
 
-              - type: entity
-                entity_types: ["MortalityEvent"]
-                location_props: ["location"]
-                date_prop: "date"
-                agg_date_formats: ["%Y"]
-                imports: ["ImportD"]
+              - type: STAT_VAR_SERIES_AGGREGATION
+                input_imports:
+                  - NASA_NEXDCP30
+                round: 1
+                output_import: NASA_NEXDCP30_AggrDiffStats
+                stat_var_series_aggregation:
+                  aggr_funcs:
+                    - max_diff_across_measurement_methods: {}
 
-              - type: provenance_summary
-                imports: ["*"]
+              - type: STAT_VAR_CALCULATION
+                input_imports:
+                  - EIA_Electricity
+                output_import: Energy_StatVarCalculation
+                stat_var_calculation:
+                  calculations:
+                    - input1:
+                        sv_regex: Annual_Emissions
+                      operation: DIVIDE
+                      output:
+                        sv: Annual_Emissions_Per_Capita
 
-              - type: stat_var_groups
-                imports: ["*"]
+              - type: SUPER_ENUM_AGGREGATION
+                input_imports:
+                  - CensusACS5YearSurvey
+                output_import: CensusACS5YearSurvey_SuperEnum
         """)
 
         with open(self.config_path, "w") as f:
             f.write(valid_all_types_yaml)
 
-        aggregations = validate_config(self.config_path, self.schema_path)
-        
-        self.assertEqual(len(aggregations), 6)
-        self.assertEqual(aggregations[0]["type"], "linked_edges")
-        self.assertEqual(aggregations[1]["source_type"], "County")
-        self.assertEqual(aggregations[2]["ancestor_sv_id"], "Count_Person")
-        self.assertEqual(aggregations[3]["entity_types"], ["MortalityEvent"])
+        calculations = validate_config(self.config_path, self.schema_path)
+
+        self.assertEqual(len(calculations), 6)
+        self.assertEqual(calculations[0]["type"], "PLACE_AGGREGATION")
+        self.assertEqual(calculations[1]["type"], "STAT_VAR_AGGREGATION")
+        self.assertEqual(calculations[2]["type"], "ENTITY_AGGREGATION")
+        self.assertEqual(calculations[3]["type"], "STAT_VAR_SERIES_AGGREGATION")
+        self.assertEqual(calculations[4]["type"], "STAT_VAR_CALCULATION")
+        self.assertEqual(calculations[5]["type"], "SUPER_ENUM_AGGREGATION")
 
 
 class TestValidatorSchemaConstraints(unittest.TestCase):
@@ -94,7 +121,7 @@ class TestValidatorSchemaConstraints(unittest.TestCase):
     def setUp(self):
         self.schema_path = os.path.join(os.path.dirname(__file__), "schema.json")
         self.tmpdir = tempfile.TemporaryDirectory()
-        self.config_path = os.path.join(self.tmpdir.name, "aggregation.yaml")
+        self.config_path = os.path.join(self.tmpdir.name, "config.yaml")
 
     def tearDown(self):
         self.tmpdir.cleanup()
@@ -102,35 +129,36 @@ class TestValidatorSchemaConstraints(unittest.TestCase):
     def test_validate_config_missing_type(self):
         """Verifies that missing the required 'type' field raises ValidationError."""
         invalid_missing_type_yaml = textwrap.dedent("""\
-            aggregations:
-              - imports: ["*"]
+            calculations:
+              - input_imports:
+                  - ImportA
         """)
         with open(self.config_path, "w") as f:
             f.write(invalid_missing_type_yaml)
 
         with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
             validate_config(self.config_path, self.schema_path)
-        self.assertIn("'type' is a required property", ctx.exception.message)
+        self.assertEqual(ctx.exception.validator, "required")
 
-    def test_validate_config_missing_imports(self):
-        """Verifies that missing the required 'imports' field raises ValidationError."""
+    def test_validate_config_missing_input_imports(self):
+        """Verifies that missing the required 'input_imports' field raises ValidationError."""
         invalid_missing_imports_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: linked_edges
+            calculations:
+              - type: SUPER_ENUM_AGGREGATION
         """)
         with open(self.config_path, "w") as f:
             f.write(invalid_missing_imports_yaml)
 
         with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
             validate_config(self.config_path, self.schema_path)
-        self.assertIn("'imports' is a required property", ctx.exception.message)
+        self.assertIn("'input_imports' is a required property", ctx.exception.message)
 
-    def test_validate_config_invalid_imports_type(self):
-        """Verifies that imports field being a string instead of an array raises ValidationError."""
+    def test_validate_config_invalid_input_imports_type(self):
+        """Verifies that input_imports field being a string instead of an array raises ValidationError."""
         invalid_imports_type_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: linked_edges
-                imports: "*"
+            calculations:
+              - type: SUPER_ENUM_AGGREGATION
+                input_imports: "SingleImportString"
         """)
         with open(self.config_path, "w") as f:
             f.write(invalid_imports_type_yaml)
@@ -139,42 +167,12 @@ class TestValidatorSchemaConstraints(unittest.TestCase):
             validate_config(self.config_path, self.schema_path)
         self.assertIn("is not of type 'array'", ctx.exception.message)
 
-    def test_validate_config_invalid_stage_type(self):
-        """Verifies that stage field being a string instead of an integer raises ValidationError."""
-        invalid_stage_type_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: linked_edges
-                imports: ["*"]
-                stage: "first"
-        """)
-        with open(self.config_path, "w") as f:
-            f.write(invalid_stage_type_yaml)
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
-            validate_config(self.config_path, self.schema_path)
-        self.assertIn("is not of type 'integer'", ctx.exception.message)
-
-    def test_validate_config_invalid_stage_value(self):
-        """Verifies that a stage value of 0 (minimum is 1) raises ValidationError."""
-        invalid_stage_value_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: linked_edges
-                imports: ["*"]
-                stage: 0
-        """)
-        with open(self.config_path, "w") as f:
-            f.write(invalid_stage_value_yaml)
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
-            validate_config(self.config_path, self.schema_path)
-        self.assertIn("is less than the minimum of 1", ctx.exception.message)
-
-    def test_validate_config_empty_imports_list(self):
-        """Verifies that an empty imports list raises ValidationError."""
+    def test_validate_config_empty_input_imports_list(self):
+        """Verifies that an empty input_imports list raises ValidationError."""
         invalid_empty_imports_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: linked_edges
-                imports: []
+            calculations:
+              - type: SUPER_ENUM_AGGREGATION
+                input_imports: []
         """)
         with open(self.config_path, "w") as f:
             f.write(invalid_empty_imports_yaml)
@@ -183,17 +181,17 @@ class TestValidatorSchemaConstraints(unittest.TestCase):
             validate_config(self.config_path, self.schema_path)
         self.assertIn("should be non-empty", ctx.exception.message)
 
-    def test_validate_config_missing_aggregations_key(self):
-        """Verifies that missing the required 'aggregations' root key raises ValidationError."""
-        missing_aggregations_yaml = textwrap.dedent("""\
+    def test_validate_config_missing_calculations_key(self):
+        """Verifies that missing the required 'calculations' root key raises ValidationError."""
+        missing_calculations_yaml = textwrap.dedent("""\
             some_other_key: []
         """)
         with open(self.config_path, "w") as f:
-            f.write(missing_aggregations_yaml)
+            f.write(missing_calculations_yaml)
 
         with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
             validate_config(self.config_path, self.schema_path)
-        self.assertIn("'aggregations' is a required property", ctx.exception.message)
+        self.assertIn("'calculations' is a required property", ctx.exception.message)
 
     def test_validate_config_empty_file(self):
         """Verifies that a completely empty configuration file raises ValidationError."""
@@ -203,58 +201,61 @@ class TestValidatorSchemaConstraints(unittest.TestCase):
 
         with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
             validate_config(self.config_path, self.schema_path)
-        self.assertIn("'aggregations' is a required property", ctx.exception.message)
+        self.assertIn("'calculations' is a required property", ctx.exception.message)
 
 
 class TestValidatorConditionalDependencies(unittest.TestCase):
-    """Verifies type-specific conditional dependencies (OneOf / dependencies)."""
+    """Verifies type-specific conditional sub-block dependencies."""
 
     def setUp(self):
         self.schema_path = os.path.join(os.path.dirname(__file__), "schema.json")
         self.tmpdir = tempfile.TemporaryDirectory()
-        self.config_path = os.path.join(self.tmpdir.name, "aggregation.yaml")
+        self.config_path = os.path.join(self.tmpdir.name, "config.yaml")
 
     def tearDown(self):
         self.tmpdir.cleanup()
 
-    def test_validate_config_place_missing_field(self):
-        """Verifies that a place step missing the required 'source_type' raises ValidationError."""
-        invalid_place_missing_field_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: place
-                destination_type: State
-                imports: ["*"]
+    def test_validate_config_place_missing_subblock(self):
+        """Verifies that a PLACE_AGGREGATION step missing 'place_aggregation' raises ValidationError."""
+        invalid_place_missing_yaml = textwrap.dedent("""\
+            calculations:
+              - type: PLACE_AGGREGATION
+                input_imports:
+                  - ImportA
         """)
         with open(self.config_path, "w") as f:
-            f.write(invalid_place_missing_field_yaml)
+            f.write(invalid_place_missing_yaml)
 
         with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
             validate_config(self.config_path, self.schema_path)
-        self.assertIn("is not valid under any of the given schemas", ctx.exception.message)
+        self.assertIn("'place_aggregation' is a required property", ctx.exception.message)
 
-    def test_validate_config_stat_var_missing_field(self):
-        """Verifies that a stat_var step missing the required 'source_sv_ids' raises ValidationError."""
-        invalid_stat_var_missing_field_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: stat_var
-                ancestor_sv_id: Count_Person
-                imports: ["*"]
+    def test_validate_config_stat_var_missing_subblock(self):
+        """Verifies that a STAT_VAR_AGGREGATION step missing 'stat_var_aggregation' raises ValidationError."""
+        invalid_stat_var_missing_yaml = textwrap.dedent("""\
+            calculations:
+              - type: STAT_VAR_AGGREGATION
+                input_imports:
+                  - ImportA
         """)
         with open(self.config_path, "w") as f:
-            f.write(invalid_stat_var_missing_field_yaml)
+            f.write(invalid_stat_var_missing_yaml)
 
         with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
             validate_config(self.config_path, self.schema_path)
-        self.assertIn("is not valid under any of the given schemas", ctx.exception.message)
+        self.assertIn("'stat_var_aggregation' is a required property", ctx.exception.message)
 
     def test_validate_config_stat_var_empty_source_svs(self):
-        """Verifies that a stat_var step with an empty source_sv_ids array raises ValidationError."""
+        """Verifies that an aggregation item with an empty source_sv_ids array raises ValidationError."""
         invalid_stat_var_empty_svs_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: stat_var
-                ancestor_sv_id: Count_Person
-                source_sv_ids: []
-                imports: ["*"]
+            calculations:
+              - type: STAT_VAR_AGGREGATION
+                input_imports:
+                  - ImportA
+                stat_var_aggregation:
+                  aggregations:
+                    - ancestor_sv_id: Count_Person
+                      source_sv_ids: []
         """)
         with open(self.config_path, "w") as f:
             f.write(invalid_stat_var_empty_svs_yaml)
@@ -263,20 +264,20 @@ class TestValidatorConditionalDependencies(unittest.TestCase):
             validate_config(self.config_path, self.schema_path)
         self.assertIn("should be non-empty", ctx.exception.message)
 
-    def test_validate_config_entity_missing_field(self):
-        """Verifies that an entity step missing the required 'location_props' raises ValidationError."""
-        invalid_entity_missing_field_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: entity
-                entity_types: ["Event"]
-                imports: ["*"]
+    def test_validate_config_entity_missing_subblock(self):
+        """Verifies that an ENTITY_AGGREGATION step missing 'entity_aggregation' raises ValidationError."""
+        invalid_entity_missing_yaml = textwrap.dedent("""\
+            calculations:
+              - type: ENTITY_AGGREGATION
+                input_imports:
+                  - ImportA
         """)
         with open(self.config_path, "w") as f:
-            f.write(invalid_entity_missing_field_yaml)
+            f.write(invalid_entity_missing_yaml)
 
         with self.assertRaises(jsonschema.exceptions.ValidationError) as ctx:
             validate_config(self.config_path, self.schema_path)
-        self.assertIn("is not valid under any of the given schemas", ctx.exception.message)
+        self.assertIn("'entity_aggregation' is a required property", ctx.exception.message)
 
 
 class TestValidatorErrorsAndFileSystem(unittest.TestCase):
@@ -285,7 +286,7 @@ class TestValidatorErrorsAndFileSystem(unittest.TestCase):
     def setUp(self):
         self.schema_path = os.path.join(os.path.dirname(__file__), "schema.json")
         self.tmpdir = tempfile.TemporaryDirectory()
-        self.config_path = os.path.join(self.tmpdir.name, "aggregation.yaml")
+        self.config_path = os.path.join(self.tmpdir.name, "config.yaml")
 
     def tearDown(self):
         self.tmpdir.cleanup()
@@ -293,10 +294,10 @@ class TestValidatorErrorsAndFileSystem(unittest.TestCase):
     def test_validate_config_yaml_syntax_error(self):
         """Verifies that malformed YAML syntax raises YAMLError."""
         malformed_yaml = textwrap.dedent("""\
-            aggregations:
-              - type: linked_edges
-              imports:
-              - "*"
+            calculations:
+              - type: PLACE_AGGREGATION
+              input_imports:
+              - "ImportA"
         """)
         with open(self.config_path, "w") as f:
             f.write(malformed_yaml)
@@ -313,7 +314,7 @@ class TestValidatorErrorsAndFileSystem(unittest.TestCase):
     def test_validate_config_missing_schema_file(self):
         """Verifies that a missing schema file path raises FileNotFoundError."""
         with open(self.config_path, "w") as f:
-            f.write("aggregations: []")
+            f.write("calculations: []")
 
         with self.assertRaises(FileNotFoundError) as ctx:
             validate_config(self.config_path, "non_existent_schema.json")
