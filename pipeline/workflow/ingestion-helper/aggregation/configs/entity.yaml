@@ -3,9 +3,9 @@ calculations:
   # Earthquakes
   - name: "EarthquakeUSGS: Earthquake Event Aggregation"
     type: ENTITY_AGGREGATION
-    output_import: EarthquakeUSGS_Agg
     input_imports:
       - EarthquakeUSGS
+    output_import: EarthquakeUSGS_Agg
     entity_aggregation:
       entity_types:
         - EarthquakeEvent
@@ -33,9 +33,9 @@ calculations:
   # Fires
   - name: "FireFAMWEB: Wildland Fire Event Aggregation"
     type: ENTITY_AGGREGATION
-    output_import: FireFAMWEB_Agg
     input_imports:
       - FireFAMWEB
+    output_import: FireFAMWEB_Agg
     entity_aggregation:
       entity_types:
         - WildlandFireEvent
@@ -47,9 +47,9 @@ calculations:
 
   - name: "FireWFIGS: Fire Incident Event Aggregation"
     type: ENTITY_AGGREGATION
-    output_import: FireWFIGS_Agg
     input_imports:
       - FireWFIGS
+    output_import: FireWFIGS_Agg
     entity_aggregation:
       entity_types:
         - FireIncidentComplexEvent
@@ -64,10 +64,10 @@ calculations:
 
   - name: "NASA_VIIRSActiveFiresEvents: Fire Event S2 Cell Aggregation"
     type: ENTITY_AGGREGATION
-    output_import: NASA_VIIRSActiveFiresEvents_Agg
     # Aggregate event counts for S2-cells of level 13
     input_imports:
       - NASA_VIIRSActiveFiresEvents
+    output_import: NASA_VIIRSActiveFiresEvents_Agg
     entity_aggregation:
       entity_types:
         - FireEvent
@@ -81,9 +81,9 @@ calculations:
   # Storms
   - name: "StormNOAA: Storm & Extreme Weather Event Aggregation"
     type: ENTITY_AGGREGATION
-    output_import: StormNOAA_Agg
     input_imports:
       - StormNOAA
+    output_import: StormNOAA_Agg
     entity_aggregation:
       location_props:
         - affectedPlace
@@ -158,10 +158,10 @@ calculations:
   # Floods
   - name: "DynamicWorld_FloodEvents: Flood Event S2 Cell Aggregation"
     type: ENTITY_AGGREGATION
-    output_import: DynamicWorld_FloodEvents_Agg
     # Aggregate event counts for S2-cells of level 13
     input_imports:
       - DynamicWorld_FloodEvents
+    output_import: DynamicWorld_FloodEvents_Agg
     entity_aggregation:
       entity_types:
         - FloodEvent
@@ -175,9 +175,9 @@ calculations:
   # Heat/Cold Temperature Events counts
   - name: "TemperatureEvents: Heat & Cold Event Aggregation"
     type: ENTITY_AGGREGATION
-    output_import: TemperatureEvents_Agg
     input_imports:
       - TemperatureEvents
+    output_import: TemperatureEvents_Agg
     entity_aggregation:
       entity_types:
         - HeatTemperatureEvent

@@ -6,10 +6,10 @@ calculations:
 #
   - name: "CensusACS5YearSurvey: Health Insurance SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_HealthInsurance_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_HealthInsurance_StatVarAgg
     stat_var_aggregation:
       aggregations:
       # 1. Census Table B18135 includes insurance coverage by disability-status and
@@ -274,10 +274,10 @@ calculations:
       #
   - name: "CensusACS5YearSurvey: Ability To Speak English SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_AbilityToSpeakEnglish_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_AbilityToSpeakEnglish_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_SpeakEnglishNotAtAll
@@ -322,10 +322,10 @@ calculations:
       #
   - name: "CensusACS5YearSurvey: In Armed Forces SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_InArmedForces_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_InArmedForces_StatVarAgg
     stat_var_aggregation:
       aggregations:
       # Women in armed forces
@@ -383,10 +383,10 @@ calculations:
       # Education - CensusACS5YearSurvey
   - name: "CensusACS5YearSurvey: Education SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_Education_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_Education_StatVarAgg
     stat_var_aggregation:
       aggregations:
       # dc/g/Person_EducationalAttainment-5ThAnd6ThGrade
@@ -599,9 +599,9 @@ calculations:
       # Education - ACSED5YrSurvey
   - name: "CensusSAHIE_AggCountry: Health Insurance SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusSAHIE_AggCountry_StatVarAgg
     input_imports:
       - ACSED5YrSurvey
+    output_import: CensusSAHIE_AggCountry_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Parent_Occupation_Management_Business_Science_Arts
@@ -628,10 +628,10 @@ calculations:
       # Demographics
   - name: "CensusACS5YearSurvey: Demographics SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_Demographics_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_Demographics_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_85OrMoreYears
@@ -646,9 +646,9 @@ calculations:
       # Agriculture
   - name: "USDA_AgricultureCensus: Agriculture Producer SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: USDA_AgricultureCensus_Agriculture_StatVarAgg
     input_imports:
       - USDA_AgricultureCensus
+    output_import: USDA_AgricultureCensus_Agriculture_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_Producer
@@ -668,10 +668,10 @@ calculations:
 
   - name: "CensusACS5YearSurvey: Employment & Industry SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_Employment_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_Employment_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_16OrMoreYears_Civilian_Employed_InLaborForce_NAICSAgricultureForestryFishingHunting
@@ -859,9 +859,9 @@ calculations:
       # Crime
   - name: "USNationalPrisonerStatistics: Crime & Correctional Facility SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: USNationalPrisonerStatistics_Crime_StatVarAgg
     input_imports:
       - USNationalPrisonerStatistics
+    output_import: USNationalPrisonerStatistics_Crime_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_CorrectionalFacilityLocation_OutOfState
@@ -872,9 +872,9 @@ calculations:
       # WithOwnChildrenUnder18.
   - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_SubjectTables_S1251_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S1251
+    output_import: CensusACS5YearSurvey_SubjectTables_S1251_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_WithOwnChildrenUnder18_Female
@@ -893,9 +893,9 @@ calculations:
       # Marriage
   - name: "CensusACS5YearSurvey_SubjectTables_S1201: Marital Status SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_SubjectTables_S1201_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S1201
+    output_import: CensusACS5YearSurvey_SubjectTables_S1201_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_InLaborForce_Divorced
@@ -918,9 +918,9 @@ calculations:
       # Employment by business ownership type.
   - name: "CensusACS5YearSurvey_SubjectTables_S2408: Business Ownership Employment SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_SubjectTables_S2408_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S2408
+    output_import: CensusACS5YearSurvey_SubjectTables_S2408_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_PrivatelyOwnedNotForProfitEstablishment_PaidWorker
@@ -935,9 +935,9 @@ calculations:
       # US Citizen by Naturalization
   - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_SubjectTables_S0504_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0504
+    output_import: CensusACS5YearSurvey_SubjectTables_S0504_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_USCitizenByNaturalization_DateOfEntry2000OrLater_ForeignBorn
@@ -1066,10 +1066,10 @@ calculations:
       # HousingUnit HomeValue.
   - name: "CensusACS5YearSurvey: Home Value SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_HousingUnit_HomeValue_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_HousingUnit_HomeValue_StatVarAgg
     stat_var_aggregation:
       aggregations:
       # Census ACS 5 year, Count_HousingUnit_HomeValue
@@ -1117,10 +1117,10 @@ calculations:
 
   - name: "CensusACS5YearSurvey: Person Age Groups SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_Person_Age_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_Person_Age_StatVarAgg
     stat_var_aggregation:
       aggregations:
       # Census ACS 5 year, Age group
@@ -1133,10 +1133,10 @@ calculations:
 
   - name: "CensusACS5YearSurvey: Individual Income SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_Income_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_Income_StatVarAgg
     stat_var_aggregation:
       aggregations:
       # The following 9 aggregations are: High income (100,000 USD or More), by race.
@@ -1325,9 +1325,9 @@ calculations:
 
   - name: "DEA_ARCOS: Opioid Prescription SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: IndiaNSS_HealthAilments_StatVarAgg
     input_imports:
       - IndiaNSS_HealthAilments
+    output_import: IndiaNSS_HealthAilments_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_MedicalConditionIncident_ConditionBloodDisease_AsAFractionOf_Count_Person
@@ -1637,9 +1637,9 @@ calculations:
 
   - name: "OECDRegionalDemography: Person Age Groups SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: OECDRegionalDemography_Person_Age_StatVarAgg
     input_imports:
       - OECDRegionalDemography_Population
+    output_import: OECDRegionalDemography_Person_Age_StatVarAgg
     stat_var_aggregation:
       aggregations:
       # OECD, Age group
@@ -1723,9 +1723,9 @@ calculations:
 
   - name: "CensusACS5YearSurvey_SubjectTables_S0801: Work Commute SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_SubjectTables_S0801_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0801
+    output_import: CensusACS5YearSurvey_SubjectTables_S0801_StatVarAgg
     stat_var_aggregation:
       aggregations:
       # Census ACS 5 year, Work Commute group
@@ -1840,9 +1840,9 @@ calculations:
             - Count_Person_Years16Onwards_60OrMoreMinute_WorkCommute_Employed_Female_WorkedOutsideOfHome
   - name: "CensusACS5YearSurvey_SubjectTables_S0804: Means of Transportation Work Commute SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: CensusACS5YearSurvey_SubjectTables_S0804_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0804
+    output_import: CensusACS5YearSurvey_SubjectTables_S0804_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_Years16Onwards_PublicTransportationExcludingTaxicab_WorkCommute_Employed_WorkedOutsideOfHome
@@ -1880,9 +1880,9 @@ calculations:
             - Count_Person_Years16Onwards_CarTruckOrVanCarpooled_60OrMoreMinute_WorkCommute_Employed_WorkedOutsideOfHome
   - name: "India_RBIStateDomesticProduct: Gross Value Added SV Aggregation"
     type: STAT_VAR_AGGREGATION
-    output_import: India_RBIStateDomesticProduct_StatVarAgg
     input_imports:
       - India_RBIStateDomesticProduct
+    output_import: India_RBIStateDomesticProduct_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Nominal_Amount_EconomicActivity_GrossValueAdded

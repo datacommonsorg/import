@@ -1,9 +1,9 @@
 calculations:
   - name: "NASA_NEXDCP30: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 1
     input_imports:
       - NASA_NEXDCP30
-    stage: 1
     output_import: NASA_NEXDCP30_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -16,9 +16,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_Subnational: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 1
     input_imports:
       - NASA_NEXGDDP_Subnational
-    stage: 1
     output_import: NASA_NEXGDDP_Subnational_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -33,9 +33,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_Country: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 1
     input_imports:
       - NASA_NEXGDDP_Country
-    stage: 1
     output_import: NASA_NEXGDDP_Country_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -48,9 +48,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_Subnational: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 1
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
-    stage: 1
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -65,9 +65,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 1
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50
-    stage: 1
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
@@ -82,9 +82,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_Subnational: Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 2
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
-    stage: 2
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
@@ -97,9 +97,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 2
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50
-    stage: 2
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
@@ -112,9 +112,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_Subnational: Over Time Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 3
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
-    stage: 3
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrOverTimeOnStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
@@ -216,9 +216,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Over Time Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 3
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
-    stage: 3
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrOverTimeOnStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
@@ -320,9 +320,9 @@ calculations:
 
   - name: "NASA_NEXGDDP_IpccPlaces50: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    stage: 1
     input_imports:
       - NASA_NEXGDDP_IpccPlaces50
-    stage: 1
     output_import: NASA_NEXGDDP_IpccPlaces50_AggrDiffStats
     stat_var_series_aggregation:
       aggr_funcs:
