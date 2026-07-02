@@ -121,52 +121,38 @@ main:
 run_aggregation_job:
   params: [import_list, helper_url]
   steps:
-    # 1. Start the aggregation and get the initial state
-    - initiate_aggregation:
+    - run_aggregation:
         call: http.post
         args:
-          url: ${helper_url + "/aggregation/initiate"}
+          url: ${helper_url + "/aggregation/run"}
           timeout: 300
           auth:
             type: OIDC
           body:
             importList: ${import_list}
-        result: initiate_response
-    # 2. Store the state in a workflow variable
-    - assign_state:
-        assign:
-          - state: ${initiate_response.body}
-    # 3. State Check loop
-    - check_status_loop:
-        switch:
-          # Exit successfully if done
-          - condition: ${state.status == "SUCCEEDED"}
-            return: "OK"
-          # Raise error if failed
-          - condition: ${state.status == "FAILED"}
-            raise: ${state.error}
-        next: poll_and_wait
-    # 4. Sleep and Poll
-    - poll_and_wait:
+        result: aggregation_response
+    - check_aggregation_status_loop:
         steps:
-          - wait_step:
+          - wait_for_aggregation:
               call: sys.sleep
               args:
                 seconds: 300
-          # Pass the state back to the server, get the new state
-          - poll_server:
+          - check_aggregation_status:
               call: http.post
               args:
-                url: ${helper_url + "/aggregation/poll"}
+                url: ${helper_url + "/aggregation/status"}
                 auth:
                   type: OIDC
-                body: ${state}
-              result: poll_response
-          - update_state:
-              assign:
-                - state: ${poll_response.body}
-        next: check_status_loop
-
+                body:
+                  jobIds: ${aggregation_response.body.jobIds}
+              result: aggregation_status_response
+          - evaluate_aggregation_status:
+              switch:
+                - condition: ${aggregation_status_response.body.status == "DONE"}
+                  return: 'OK'
+                - condition: ${aggregation_status_response.body.status == "FAILED"}
+                  raise: ${aggregation_status_response.body.error}
+              next: check_aggregation_status_loop
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.
 run_dataflow_job:
