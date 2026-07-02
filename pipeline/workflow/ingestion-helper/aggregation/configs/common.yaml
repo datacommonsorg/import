@@ -1,18 +1,21 @@
 calculations:
   # Generates linkedContainedInPlace, linkedMemberOf, etc.
-  - type: LINKED_EDGES
+  - name: "Global: ContainedInPlace & MemberOf Graph Linked Edges"
+    type: LINKED_EDGES
     input_imports:
       - "*"
     stage: 1
 
   # Generates summary statistics in the Cache table
-  - type: PROVENANCE_SUMMARY
+  - name: "Global: Cache Provenance & Lineage Summary"
+    type: PROVENANCE_SUMMARY
     input_imports:
       - "*"
     stage: 1
 
   # Generates the Statistical Variable hierarchy/verticals
-  - type: STAT_VAR_GROUPS
+  - name: "Global: StatVar Group Hierarchy & Verticals"
+    type: STAT_VAR_GROUPS
     input_imports:
       - "*"
     stage: 1

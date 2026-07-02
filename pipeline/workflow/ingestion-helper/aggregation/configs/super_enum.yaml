@@ -1,25 +1,30 @@
 calculations:
-  - type: SUPER_ENUM_AGGREGATION
+  - name: "CensusACS5YearSurvey: Super Enum Mapping Aggregation"
+    type: SUPER_ENUM_AGGREGATION
     input_imports:
       - CensusACS5YearSurvey
     output_import: CensusACS5YearSurvey_SuperEnum
 
-  - type: SUPER_ENUM_AGGREGATION
+  - name: "CensusACS5YearSurvey_AggCountry: Super Enum Mapping Aggregation"
+    type: SUPER_ENUM_AGGREGATION
     input_imports:
       - CensusACS5YearSurvey_AggCountry
     output_import: CensusACS5YearSurvey_AggCountry_SuperEnum
 
-  - type: SUPER_ENUM_AGGREGATION
+  - name: "NCES_PrivateSchoolStats: Super Enum Mapping Aggregation"
+    type: SUPER_ENUM_AGGREGATION
     input_imports:
       - NCES_PrivateSchoolStats
     output_import: NCES_PrivateSchoolStats_SuperEnum
 
-  - type: SUPER_ENUM_AGGREGATION
+  - name: "NCES_PublicSchoolStats: Super Enum Mapping Aggregation"
+    type: SUPER_ENUM_AGGREGATION
     input_imports:
       - NCES_PublicSchoolStats
     output_import: NCES_PublicSchoolStats_SuperEnum
 
-  - type: SUPER_ENUM_AGGREGATION
+  - name: "NCES_SchoolDistrictStats: Super Enum Mapping Aggregation"
+    type: SUPER_ENUM_AGGREGATION
     input_imports:
       - NCES_SchoolDistrictStats
     output_import: NCES_SchoolDistrictStats_SuperEnum

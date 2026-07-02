@@ -1,5 +1,6 @@
 calculations:
-  - type: PLACE_AGGREGATION
+  - name: "CensusACS5YearSurvey: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - CensusACS5YearSurvey
     place_aggregation:
@@ -8,7 +9,8 @@ calculations:
     stage: 1
     output_import: CensusACS5YearSurvey_AggCountry
 
-  - type: PLACE_AGGREGATION
+  - name: "CensusSAHIE: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - CensusSAHIE
     place_aggregation:
@@ -17,7 +19,8 @@ calculations:
     stage: 1
     output_import: CensusSAHIE_AggCountry
 
-  - type: PLACE_AGGREGATION
+  - name: "CDCMortality: County -> State Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - CDCMortality
     place_aggregation:
@@ -26,7 +29,8 @@ calculations:
     stage: 1
     output_import: CDCMortality_AggState
 
-  - type: PLACE_AGGREGATION
+  - name: "CDCMortality: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - CDCMortality_AggState
     place_aggregation:
@@ -35,16 +39,8 @@ calculations:
     stage: 2
     output_import: CDCMortality_AggState_AggCountry
 
-  # - type: PLACE_AGGREGATION
-  #   input_imports:
-  #     - FBIGovCrime
-  #   place_aggregation:
-  #     from_place_types: State
-  #     to_place_types: Country
-  #   stage: 1
-  #   output_import: FBIGovCrime_AggCountry
-
-  - type: PLACE_AGGREGATION
+  - name: "DEA_ARCOS: County -> State Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - DEA_ARCOS
     place_aggregation:
@@ -53,7 +49,8 @@ calculations:
     stage: 1
     output_import: DEA_ARCOS_AggState
 
-  - type: PLACE_AGGREGATION
+  - name: "DEA_ARCOS: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - DEA_ARCOS_AggState
     place_aggregation:
@@ -62,7 +59,8 @@ calculations:
     stage: 2
     output_import: DEA_ARCOS_AggState_AggCountry
 
-  - type: PLACE_AGGREGATION
+  - name: "EPA_EJSCREEN: CensusBlockGroup -> CensusTract Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - EPA_EJSCREEN
     place_aggregation:
@@ -71,7 +69,8 @@ calculations:
     stage: 1
     output_import: EPA_EJSCREEN_AggCensusTract
 
-  - type: PLACE_AGGREGATION
+  - name: "EPA_EJSCREEN: CensusTract -> County Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - EPA_EJSCREEN_AggCensusTract
     place_aggregation:
@@ -80,7 +79,8 @@ calculations:
     stage: 2
     output_import: EPA_EJSCREEN_AggCensusTract_AggCounty
 
-  - type: PLACE_AGGREGATION
+  - name: "DeepSolar: CensusBlockGroup -> CensusTract Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - DeepSolar
     place_aggregation:
@@ -89,7 +89,8 @@ calculations:
     stage: 1
     output_import: DeepSolar_AggCensusTract
 
-  - type: PLACE_AGGREGATION
+  - name: "DeepSolar: CensusTract -> County Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - DeepSolar_AggCensusTract
     place_aggregation:
@@ -98,7 +99,8 @@ calculations:
     stage: 2
     output_import: DeepSolar_AggCensusTract_AggCounty
 
-  - type: PLACE_AGGREGATION
+  - name: "EPA_GHGRP: EpaReportingFacility -> County Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - EPA_GHGRP
     place_aggregation:
@@ -107,7 +109,8 @@ calculations:
     stage: 1
     output_import: EPA_GHGRP_AggCounty
 
-  - type: PLACE_AGGREGATION
+  - name: "EPA_GHGRP: EpaReportingFacility -> CensusZipCodeTabulationArea Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - EPA_GHGRP
     place_aggregation:
@@ -116,7 +119,8 @@ calculations:
     stage: 1
     output_import: EPA_GHGRP_AggCensusZipCodeTabulationArea
 
-  - type: PLACE_AGGREGATION
+  - name: "EPA_GHGRP: County -> State Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - EPA_GHGRP_AggCounty
     place_aggregation:
@@ -125,7 +129,8 @@ calculations:
     stage: 2
     output_import: EPA_GHGRP_AggCounty_AggState
 
-  - type: PLACE_AGGREGATION
+  - name: "RFF_USGridGeo: GeoGrid -> County Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - RFF_USGridGeo_WeatherVariabilityForecast
     place_aggregation:
@@ -135,7 +140,8 @@ calculations:
     stage: 1
     output_import: RFF_USGridGeo_WeatherVariabilityForecast_AggCounty
 
-  - type: PLACE_AGGREGATION
+  - name: "India_RBIStateDomesticProduct: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - India_RBIStateDomesticProduct
     place_aggregation:
@@ -145,7 +151,8 @@ calculations:
     stage: 1
     output_import: India_RBIStateDomesticProduct_AggCountry
 
-  - type: PLACE_AGGREGATION
+  - name: "India_RBIStateDomesticProduct: StatVarAgg State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
     input_imports:
       - India_RBIStateDomesticProduct_StatVarAgg
     place_aggregation:

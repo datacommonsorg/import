@@ -1,5 +1,6 @@
 calculations:
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXDCP30: Measurement Methods & Base Date Diff Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXDCP30
     stage: 1
@@ -13,7 +14,8 @@ calculations:
                   - "1990"
                   - "2006"
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_Subnational: Measurement Methods & Base Date Diff Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_Subnational
     stage: 1
@@ -29,7 +31,8 @@ calculations:
                   - "1990"
                   - "2006"
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_Country: Measurement Methods & Base Date Diff Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_Country
     stage: 1
@@ -43,7 +46,8 @@ calculations:
                   - "1990"
                   - "2006"
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_CMIP6_Subnational: Measurement Methods & Base Date Diff Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
     stage: 1
@@ -59,7 +63,8 @@ calculations:
                   - "1990"
                   - "2006"
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Measurement Methods & Base Date Diff Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50
     stage: 1
@@ -75,7 +80,8 @@ calculations:
                   - "1990"
                   - "2006"
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_CMIP6_Subnational: Stats Across Models Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
     stage: 2
@@ -89,7 +95,8 @@ calculations:
               - OPERATOR_PERCENTILE90
               - OPERATOR_PERCENTILE10
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Stats Across Models Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50
     stage: 2
@@ -103,7 +110,8 @@ calculations:
               - OPERATOR_PERCENTILE90
               - OPERATOR_PERCENTILE10
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_CMIP6_Subnational: Over Time Stats Across Models Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
     stage: 3
@@ -206,7 +214,8 @@ calculations:
                 comparison: OPERATOR_LE
                 output_cprop: minTemperature
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Over Time Stats Across Models Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
     stage: 3
@@ -309,7 +318,8 @@ calculations:
                 comparison: OPERATOR_LE
                 output_cprop: minTemperature
 
-  - type: STAT_VAR_SERIES_AGGREGATION
+  - name: "NASA_NEXGDDP_IpccPlaces50: Measurement Methods & Base Date Diff Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
     input_imports:
       - NASA_NEXGDDP_IpccPlaces50
     stage: 1

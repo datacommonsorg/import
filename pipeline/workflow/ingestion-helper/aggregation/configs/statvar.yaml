@@ -4,7 +4,8 @@ calculations:
 # Health Insurance Coverage
 # -------------------------
 #
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: Health Insurance SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_HealthInsurance_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -271,7 +272,8 @@ calculations:
       # NOTE: Values SpeakEnglishLessThanVeryWell and SpeakEnglishVeryWell already
       # have population values from a different table.
       #
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: Ability To Speak English SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_AbilityToSpeakEnglish_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -318,7 +320,8 @@ calculations:
       # aggregate to total and by gender.
       # (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B23001)
       #
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: In Armed Forces SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_InArmedForces_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -378,7 +381,8 @@ calculations:
             - dc/2zj8jthd4f563
 
       # Education - CensusACS5YearSurvey
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: Education SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_Education_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -593,8 +597,9 @@ calculations:
             - dc/dc9v9h3q8l8n7
 
       # Education - ACSED5YrSurvey
-  - type: STAT_VAR_AGGREGATION
-    output_import: ACSED5YrSurvey_StatVarAgg
+  - name: "CensusSAHIE_AggCountry: Health Insurance SV Aggregation"
+    type: STAT_VAR_AGGREGATION
+    output_import: CensusSAHIE_AggCountry_StatVarAgg
     input_imports:
       - ACSED5YrSurvey
     stat_var_aggregation:
@@ -621,7 +626,8 @@ calculations:
             - dc/bstxmnb4k1wrb
 
       # Demographics
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: Demographics SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_Demographics_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -638,7 +644,8 @@ calculations:
             - Count_Person_0To4Years_Female
 
       # Agriculture
-  - type: STAT_VAR_AGGREGATION
+  - name: "USDA_AgricultureCensus: Agriculture Producer SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: USDA_AgricultureCensus_Agriculture_StatVarAgg
     input_imports:
       - USDA_AgricultureCensus
@@ -659,7 +666,8 @@ calculations:
       # Employment
       # ------------------------
 
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: Employment & Industry SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_Employment_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -849,7 +857,8 @@ calculations:
             #   }
 
       # Crime
-  - type: STAT_VAR_AGGREGATION
+  - name: "USNationalPrisonerStatistics: Crime & Correctional Facility SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: USNationalPrisonerStatistics_Crime_StatVarAgg
     input_imports:
       - USNationalPrisonerStatistics
@@ -861,7 +870,8 @@ calculations:
             - dc/91vy0sf20wlg9
 
       # WithOwnChildrenUnder18.
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_SubjectTables_S1251_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S1251
@@ -881,7 +891,8 @@ calculations:
             - Count_Person_WithOwnChildrenUnder18_Male
 
       # Marriage
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey_SubjectTables_S1201: Marital Status SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_SubjectTables_S1201_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S1201
@@ -905,7 +916,8 @@ calculations:
             - Count_Person_InLaborForce_Male_Widowed
 
       # Employment by business ownership type.
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey_SubjectTables_S2408: Business Ownership Employment SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_SubjectTables_S2408_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S2408
@@ -921,7 +933,8 @@ calculations:
             - Count_Person_PrivatelyOwnedForProfitEstablishment_Female_PaidWorker
 
       # US Citizen by Naturalization
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_SubjectTables_S0504_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0504
@@ -1051,7 +1064,8 @@ calculations:
             - Count_Person_USCitizenByNaturalization_DateOfEntry2010OrLater_ForeignBorn
 
       # HousingUnit HomeValue.
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: Home Value SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_HousingUnit_HomeValue_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -1101,7 +1115,8 @@ calculations:
             - Count_HousingUnit_HomeValue750000To999999USDollar
           skip_all_sources_present_check: true
 
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: Person Age Groups SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_Person_Age_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -1116,7 +1131,8 @@ calculations:
             - Count_Person_62To64Years
           skip_all_sources_present_check: true
 
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey: Individual Income SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_Income_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey
@@ -1307,7 +1323,8 @@ calculations:
             # Population: Male, 10,000 - 12,499 USD, White Alone Not Hispanic or Latino, Worked Full Time
             - dc/5jp07brw3g26h
 
-  - type: STAT_VAR_AGGREGATION
+  - name: "DEA_ARCOS: Opioid Prescription SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: IndiaNSS_HealthAilments_StatVarAgg
     input_imports:
       - IndiaNSS_HealthAilments
@@ -1618,7 +1635,8 @@ calculations:
             - Count_MedicalConditionIncident_70OrMoreYears_Male_ConditionSkinDisease_AsAFractionOf_Count_Person
           skip_all_sources_present_check: true
 
-  - type: STAT_VAR_AGGREGATION
+  - name: "OECDRegionalDemography: Person Age Groups SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: OECDRegionalDemography_Person_Age_StatVarAgg
     input_imports:
       - OECDRegionalDemography_Population
@@ -1703,7 +1721,8 @@ calculations:
             - Count_Person_80OrMoreYears
           skip_all_sources_present_check: true
 
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey_SubjectTables_S0801: Work Commute SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_SubjectTables_S0801_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0801
@@ -1819,7 +1838,8 @@ calculations:
             - Count_Person_Years16Onwards_35To44Minute_WorkCommute_Employed_Female_WorkedOutsideOfHome
             - Count_Person_Years16Onwards_45To59Minute_WorkCommute_Employed_Female_WorkedOutsideOfHome
             - Count_Person_Years16Onwards_60OrMoreMinute_WorkCommute_Employed_Female_WorkedOutsideOfHome
-  - type: STAT_VAR_AGGREGATION
+  - name: "CensusACS5YearSurvey_SubjectTables_S0804: Means of Transportation Work Commute SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: CensusACS5YearSurvey_SubjectTables_S0804_StatVarAgg
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0804
@@ -1858,7 +1878,8 @@ calculations:
             - Count_Person_Years16Onwards_CarTruckOrVanCarpooled_35To44Minute_WorkCommute_Employed_WorkedOutsideOfHome
             - Count_Person_Years16Onwards_CarTruckOrVanCarpooled_45To59Minute_WorkCommute_Employed_WorkedOutsideOfHome
             - Count_Person_Years16Onwards_CarTruckOrVanCarpooled_60OrMoreMinute_WorkCommute_Employed_WorkedOutsideOfHome
-  - type: STAT_VAR_AGGREGATION
+  - name: "India_RBIStateDomesticProduct: Gross Value Added SV Aggregation"
+    type: STAT_VAR_AGGREGATION
     output_import: India_RBIStateDomesticProduct_StatVarAgg
     input_imports:
       - India_RBIStateDomesticProduct

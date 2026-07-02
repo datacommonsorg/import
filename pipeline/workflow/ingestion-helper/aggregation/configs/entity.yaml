@@ -1,7 +1,8 @@
 calculations:
 
   # Earthquakes
-  - type: ENTITY_AGGREGATION
+  - name: "EarthquakeUSGS: Earthquake Event Aggregation"
+    type: ENTITY_AGGREGATION
     output_import: EarthquakeUSGS_Agg
     input_imports:
       - EarthquakeUSGS
@@ -30,7 +31,8 @@ calculations:
         - "magnitude: [8 9 M]"
 
   # Fires
-  - type: ENTITY_AGGREGATION
+  - name: "FireFAMWEB: Wildland Fire Event Aggregation"
+    type: ENTITY_AGGREGATION
     output_import: FireFAMWEB_Agg
     input_imports:
       - FireFAMWEB
@@ -43,7 +45,8 @@ calculations:
       agg_date_formats:
         - YYYY
 
-  - type: ENTITY_AGGREGATION
+  - name: "FireWFIGS: Fire Incident Event Aggregation"
+    type: ENTITY_AGGREGATION
     output_import: FireWFIGS_Agg
     input_imports:
       - FireWFIGS
@@ -59,7 +62,8 @@ calculations:
         - YYYY-MM
         - YYYY
 
-  - type: ENTITY_AGGREGATION
+  - name: "NASA_VIIRSActiveFiresEvents: Fire Event S2 Cell Aggregation"
+    type: ENTITY_AGGREGATION
     output_import: NASA_VIIRSActiveFiresEvents_Agg
     # Aggregate event counts for S2-cells of level 13
     input_imports:
@@ -75,7 +79,8 @@ calculations:
         - YYYY-MM
 
   # Storms
-  - type: ENTITY_AGGREGATION
+  - name: "StormNOAA: Storm & Extreme Weather Event Aggregation"
+    type: ENTITY_AGGREGATION
     output_import: StormNOAA_Agg
     input_imports:
       - StormNOAA
@@ -86,11 +91,6 @@ calculations:
       agg_date_formats:
         - YYYY
         - YYYY-MM
-      # The following query is used to get all the types:
-      #
-      # SELECT DISTINCT object_id
-      # FROM `datcom-store.dc_kg_latest.Triple`
-      # WHERE prov_id='dc/svnv9g3' AND predicate = 'typeOf'
       entity_types:
         - MarineHighWindEvent
         - HighWindEvent
@@ -156,7 +156,8 @@ calculations:
         - StormEpisode
 
   # Floods
-  - type: ENTITY_AGGREGATION
+  - name: "DynamicWorld_FloodEvents: Flood Event S2 Cell Aggregation"
+    type: ENTITY_AGGREGATION
     output_import: DynamicWorld_FloodEvents_Agg
     # Aggregate event counts for S2-cells of level 13
     input_imports:
@@ -172,7 +173,8 @@ calculations:
         - YYYY-MM
 
   # Heat/Cold Temperature Events counts
-  - type: ENTITY_AGGREGATION
+  - name: "TemperatureEvents: Heat & Cold Event Aggregation"
+    type: ENTITY_AGGREGATION
     output_import: TemperatureEvents_Agg
     input_imports:
       - TemperatureEvents

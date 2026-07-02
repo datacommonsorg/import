@@ -1,7 +1,8 @@
 calculations:
 
 # Energy.
-  - type: STAT_VAR_CALCULATION
+  - name: "EIA_Electricity: Annual Emissions Per Capita StatVar Calculation"
+    type: STAT_VAR_CALCULATION
     input_imports:
       - EPA_GHGRP_AggCounty
       - EPA_GHGRP_AggCensusZipCodeTabulationArea
@@ -39,7 +40,8 @@ calculations:
 # note that the output uses sv_prefix and measurement_method_prefix which is not
 # the case above, for example. Whenever sv and measurement_method are set in the
 # output, they are preferred. Otherwise, the *_prefix is used.
-  - type: STAT_VAR_CALCULATION
+  - name: "Climate: NASA CMIP6 Temperature Modeling Diffs Calculation"
+    type: STAT_VAR_CALCULATION
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
       - NASA_NEXGDDP_CMIP6_IpccPlaces50

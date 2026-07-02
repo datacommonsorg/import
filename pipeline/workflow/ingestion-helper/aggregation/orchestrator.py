@@ -159,7 +159,8 @@ class AggregationOrchestrator:
                 continue
 
             step_type = calc["type"]
-            logging.info(f"Triggering '{step_type}' (Stage {stage_num}) for import '{single_import}'...")
+            calc_name = calc.get("name") or step_type
+            logging.info(f"Triggering step: '{calc_name}' (Stage {stage_num}) for import '{single_import}'...")
 
             step_jobs = []
             if step_type == "PLACE_AGGREGATION":
