@@ -162,15 +162,15 @@ class AggregationOrchestrator:
             logging.info(f"Triggering '{step_type}' (Stage {stage_num}) for import '{single_import}'...")
 
             step_jobs = []
-            if step_type == "PLACE_AGGREGATION" or step_type == "place":
+            if step_type == "PLACE_AGGREGATION":
                 step_jobs = self._trigger_place(calc, [single_import])
-            elif step_type == "STAT_VAR_AGGREGATION" or step_type == "stat_var":
+            elif step_type == "STAT_VAR_AGGREGATION":
                 step_jobs = self._trigger_stat_var(calc, [single_import])
-            elif step_type == "linked_edges":
+            elif step_type == "LINKED_EDGES":
                 step_jobs = self._trigger_linked_edges(calc, [single_import])
-            elif step_type == "provenance_summary":
+            elif step_type == "PROVENANCE_SUMMARY":
                 step_jobs = self._trigger_provenance_summary(calc, [single_import])
-            elif step_type == "stat_var_groups":
+            elif step_type == "STAT_VAR_GROUPS":
                 step_jobs = self._trigger_stat_var_groups(calc, [single_import])
             else:
                 logging.warning(

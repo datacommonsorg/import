@@ -19,7 +19,10 @@
               "ENTITY_AGGREGATION",
               "STAT_VAR_SERIES_AGGREGATION",
               "STAT_VAR_CALCULATION",
-              "SUPER_ENUM_AGGREGATION"
+              "SUPER_ENUM_AGGREGATION",
+              "LINKED_EDGES",
+              "PROVENANCE_SUMMARY",
+              "STAT_VAR_GROUPS"
             ]
           },
           "input_imports": {
