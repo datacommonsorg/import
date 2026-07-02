@@ -1,93 +1,41 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "AggregationConfig",
+  "title": "AggregationCalculationsConfig",
   "type": "object",
+  "required": ["calculations"],
+  "additionalProperties": false,
   "properties": {
-    "aggregations": {
+    "calculations": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["type", "imports"],
+        "required": ["type", "input_imports"],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["place", "stat_var", "entity", "linked_edges", "provenance_summary", "stat_var_groups"]
+            "enum": [
+              "PLACE_AGGREGATION",
+              "STAT_VAR_AGGREGATION",
+              "ENTITY_AGGREGATION",
+              "STAT_VAR_SERIES_AGGREGATION",
+              "STAT_VAR_CALCULATION",
+              "SUPER_ENUM_AGGREGATION"
+            ]
           },
-          "disabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "stage": {
-            "type": "integer",
-            "minimum": 1,
-            "default": 1
-          },
-          "imports": {
+          "input_imports": {
             "type": "array",
             "items": { "type": "string" },
             "minItems": 1
-          }
-        },
-        "dependencies": {
-          "type": {
-            "oneOf": [
-              {
-                "properties": {
-                  "type": { "const": "place" },
-                  "source_type": { "type": "string" },
-                  "destination_type": { "type": "string" },
-                  "allow_multiple_to_places": { "type": "boolean" }
-                },
-                "required": ["source_type", "destination_type"]
-              },
-              {
-                "properties": {
-                  "type": { "const": "stat_var" },
-                  "ancestor_sv_id": { "type": "string" },
-                  "source_sv_ids": {
-                    "type": "array",
-                    "items": { "type": "string" },
-                    "minItems": 1
-                  },
-                  "skip_all_sources_present_check": { "type": "boolean" },
-                  "output_import_name": { "type": "string" }
-                },
-                "required": ["ancestor_sv_id", "source_sv_ids"]
-              },
-              {
-                "properties": {
-                  "type": { "const": "entity" },
-                  "entity_types": {
-                    "type": "array",
-                    "items": { "type": "string" }
-                  },
-                  "location_props": {
-                    "type": "array",
-                    "items": { "type": "string" }
-                  },
-                  "date_prop": { "type": "string" },
-                  "agg_date_formats": {
-                    "type": "array",
-                    "items": { "type": "string" }
-                  },
-                  "constraints": {
-                    "type": "array",
-                    "items": { "type": "string" }
-                  }
-                },
-                "required": ["entity_types", "location_props"]
-              },
-              {
-                "properties": {
-                  "type": { "enum": ["linked_edges", "provenance_summary", "stat_var_groups"] }
-                }
-              }
-            ]
-          }
+          },
+          "output_import": { "type": "string" },
+          "round": { "type": "integer" },
+          "place_aggregation": { "type": "object" },
+          "stat_var_aggregation": { "type": "object" },
+          "entity_aggregation": { "type": "object" },
+          "stat_var_series_aggregation": { "type": "object" },
+          "stat_var_calculation": { "type": "object" }
         }
       }
     }
-  },
-  "required": ["aggregations"],
-  "additionalProperties": false
+  }
 }

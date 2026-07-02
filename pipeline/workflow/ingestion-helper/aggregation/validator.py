@@ -15,6 +15,7 @@
 """Configuration validator and CLI tool for Data Commons aggregations."""
 
 import argparse
+import glob
 import json
 import logging
 import os
@@ -30,14 +31,14 @@ RESET = "\033[0m"
 
 
 def validate_config(config_file_path: str, schema_file_path: str) -> List[Dict[str, Any]]:
-    """Loads and validates the aggregation YAML configuration against the JSON Schema.
+    """Loads and validates an aggregation YAML configuration file against the JSON Schema.
 
     Args:
-        config_file_path: Path to the aggregation.yaml configuration file.
-        schema_file_path: Path to the aggregation_schema.json validation file.
+        config_file_path: Path to a .yaml configuration file.
+        schema_file_path: Path to the JSON Schema validation file.
 
     Returns:
-        A list of validated aggregation dictionaries.
+        A list of validated calculation dictionaries.
 
     Raises:
         FileNotFoundError: If either the config or schema file is missing.
@@ -75,24 +76,25 @@ def validate_config(config_file_path: str, schema_file_path: str) -> List[Dict[s
         logging.error(f"Schema validation failed for config {config_file_path}: {e.message}")
         raise e
 
-    return config["aggregations"]
+    return config.get("calculations", [])
 
 
 def main():
     """CLI entry point for standalone configuration validation."""
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser(description="Validate Data Commons aggregation configuration files against the JSON Schema.")
-    
-    # Resolve default paths relative to this script's directory (aggregation/)
+    parser = argparse.ArgumentParser(
+        description="Validate Data Commons aggregation configuration files against the JSON Schema."
+    )
+
     curr_dir = os.path.dirname(os.path.abspath(__file__))
-    default_config = os.path.join(curr_dir, "..", "aggregation.yaml")
+    default_config = os.path.join(curr_dir, "configs")
     default_schema = os.path.join(curr_dir, "schema.json")
 
     parser.add_argument(
         "--config",
         type=str,
         default=default_config,
-        help=f"Path to the aggregation YAML config file (default: {default_config})"
+        help=f"Path to an aggregation YAML config file or directory (default: {default_config})"
     )
     parser.add_argument(
         "--schema",
@@ -103,27 +105,48 @@ def main():
 
     args = parser.parse_args()
 
-    print(f"Validating '{os.path.basename(args.config)}' against '{os.path.basename(args.schema)}'...")
+    # Collect target config files
+    if os.path.isdir(args.config):
+        yaml_files = sorted(
+            glob.glob(os.path.join(args.config, "*.yaml")) + glob.glob(os.path.join(args.config, "*.yml"))
+        )
+        if not yaml_files:
+            print(f"{RED}[ERROR] No YAML config files found in directory: {args.config}{RESET}", file=sys.stderr)
+            sys.exit(1)
+        print(f"Validating {len(yaml_files)} configuration file(s) in '{args.config}' against '{os.path.basename(args.schema)}'...")
+    else:
+        yaml_files = [args.config]
+        print(f"Validating '{os.path.basename(args.config)}' against '{os.path.basename(args.schema)}'...")
 
-    try:
-        aggregations = validate_config(args.config, args.schema)
-        print(f"{GREEN}[SUCCESS] Configuration is valid!{RESET}")
-        print(f"Parsed {len(aggregations)} aggregation steps successfully.")
+    total_calculations = 0
+    has_error = False
+
+    for file_path in yaml_files:
+        try:
+            calculations = validate_config(file_path, args.schema)
+            total_calculations += len(calculations)
+            print(f"  {GREEN}✓{RESET} {os.path.basename(file_path)} ({len(calculations)} calculation steps)")
+        except FileNotFoundError as e:
+            print(f"  {RED}✗ {os.path.basename(file_path)} - File not found: {e}{RESET}", file=sys.stderr)
+            has_error = True
+        except jsonschema.exceptions.ValidationError as e:
+            print(f"  {RED}✗ {os.path.basename(file_path)} - Schema Validation Failed:{RESET}", file=sys.stderr)
+            print(f"    {RED}- Path: {'.'.join(str(p) for p in e.path)}{RESET}", file=sys.stderr)
+            print(f"    {RED}- Message: {e.message}{RESET}", file=sys.stderr)
+            has_error = True
+        except yaml.YAMLError as e:
+            print(f"  {RED}✗ {os.path.basename(file_path)} - YAML Syntax Error: {e}{RESET}", file=sys.stderr)
+            has_error = True
+        except Exception as e:
+            print(f"  {RED}✗ {os.path.basename(file_path)} - Validation failure: {e}{RESET}", file=sys.stderr)
+            has_error = True
+
+    if has_error:
+        print(f"\n{RED}[FAILURE] Validation failed for one or more configuration files.{RESET}", file=sys.stderr)
+        sys.exit(1)
+    else:
+        print(f"\n{GREEN}[SUCCESS] All {len(yaml_files)} configuration file(s) passed validation! ({total_calculations} calculation steps total){RESET}")
         sys.exit(0)
-    except FileNotFoundError as e:
-        print(f"{RED}[ERROR] File not found: {e}{RESET}", file=sys.stderr)
-        sys.exit(1)
-    except jsonschema.exceptions.ValidationError as e:
-        print(f"{RED}[ERROR] Schema Validation Failed:{RESET}", file=sys.stderr)
-        print(f"{RED}  - Path: {'.'.join(str(p) for p in e.path)}{RESET}", file=sys.stderr)
-        print(f"{RED}  - Message: {e.message}{RESET}", file=sys.stderr)
-        sys.exit(1)
-    except yaml.YAMLError as e:
-        print(f"{RED}[ERROR] YAML Syntax Error: {e}{RESET}", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"{RED}[ERROR] Unexpected validation failure: {e}{RESET}", file=sys.stderr)
-        sys.exit(1)
 
 
 if __name__ == "__main__":
