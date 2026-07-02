@@ -1,9 +1,6 @@
 calculations:
 
-#
-# Health Insurance Coverage
-# -------------------------
-#
+  # Health Insurance Coverage
   - name: "CensusACS5YearSurvey: Health Insurance SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -12,11 +9,11 @@ calculations:
     output_import: CensusACS5YearSurvey_HealthInsurance_StatVarAgg
     stat_var_aggregation:
       aggregations:
-      # 1. Census Table B18135 includes insurance coverage by disability-status and
-      #    age (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B18135).
-      #    We use that to compute total and by disability-status.
-      #
-      # Total uninsured
+        # 1. Census Table B18135 includes insurance coverage by disability-status and
+        #    age (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B18135).
+        #    We use that to compute total and by disability-status.
+        #
+        # Total uninsured
         - ancestor_sv_id: Count_Person_NoHealthInsurance
           source_sv_ids:
             # No Disability
@@ -27,7 +24,7 @@ calculations:
             - dc/bew8kj6l7tv93
             - dc/96dqj47csvmy8
             - dc/qr4s77egv27q2
-      # Total insured
+        # Total insured
         - ancestor_sv_id: Count_Person_WithHealthInsurance
           source_sv_ids:
             # No Disability
@@ -38,40 +35,40 @@ calculations:
             - dc/s5efzs4x817p5
             - dc/9j39148yn79zf
             - dc/p3v76jcvdx919
-      # Uninsured with no disability
-      # The following 4 aggregations come from parts of the above two aggregations.
+        # Uninsured with no disability
+        # The following 4 aggregations come from parts of the above two aggregations.
         - ancestor_sv_id: Count_Person_NoHealthInsurance_NoDisability
           source_sv_ids:
             # No Disability
             - dc/y0dvhk0sggzef
             - dc/kdg05h55y45y6
             - dc/9drszqwd2nef7
-      # Uninsured with disability
+        # Uninsured with disability
         - ancestor_sv_id: Count_Person_NoHealthInsurance_WithDisability
           source_sv_ids:
             # With Disability
             - dc/bew8kj6l7tv93
             - dc/96dqj47csvmy8
             - dc/qr4s77egv27q2
-      # Insured with no disability
+        # Insured with no disability
         - ancestor_sv_id: Count_Person_WithHealthInsurance_NoDisability
           source_sv_ids:
             # No Disability
             - dc/32mhsxvq7qsm4
             - dc/2s2dkbb7gz038
             - dc/dc8vqzkx18x0c
-      # Insured with disability
+        # Insured with disability
         - ancestor_sv_id: Count_Person_WithHealthInsurance_WithDisability
           source_sv_ids:
             # With Disability
             - dc/s5efzs4x817p5
             - dc/9j39148yn79zf
             - dc/p3v76jcvdx919
-      #
-      # 2. Census Table B27001 includes insurance coverage by age and gender
-      #    breakdown (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B27001). We
-      #    use that to compute gender breakdown.
-      #
+        #
+        # 2. Census Table B27001 includes insurance coverage by age and gender
+        #    breakdown (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B27001). We
+        #    use that to compute gender breakdown.
+        #
         - ancestor_sv_id: Count_Person_Female_NoHealthInsurance
           source_sv_ids:
             - dc/jx2q10tbnwhf3
@@ -116,8 +113,8 @@ calculations:
             - dc/wp3txgscfen9c
             - dc/b3n86k0h3h2w
             - dc/j8se7wv2gbdfd
-      # dc/g/Person_HealthInsurance-NoPrivateHealthInsurance
-      # Level 3
+        # dc/g/Person_HealthInsurance-NoPrivateHealthInsurance
+        # Level 3
         - ancestor_sv_id: Count_Person_NoPrivateHealthInsurance
           source_sv_ids:
             # Population: 26 - 34 Years, Female, No Private Health Insurance
@@ -168,8 +165,8 @@ calculations:
             - dc/wyfvejhn9fe7
             # Population: 6 - 17 Years, Male, No Private Health Insurance
             - dc/yfmzp444fj5r5
-      # dc/g/Person_HealthInsurance-NoPublicHealthInsurance
-      # Level 3
+        # dc/g/Person_HealthInsurance-NoPublicHealthInsurance
+        # Level 3
         - ancestor_sv_id: Count_Person_NoPublicHealthInsurance
           source_sv_ids:
             # Population: 26 - 34 Years, Female, No Public Health Insurance
@@ -220,8 +217,8 @@ calculations:
             - dc/vxecjxxbmhy43
             # Population: 25 - 34 Years, Female, No Public Health Insurance
             - dc/yjxmx3n02dx08
-      # dc/g/Person_HealthInsurance-WithOneTypeOfHealthInsurance
-      # Level 1
+        # dc/g/Person_HealthInsurance-WithOneTypeOfHealthInsurance
+        # Level 1
         - ancestor_sv_id: Count_Person_WithOneTypeOfHealthInsurance
           source_sv_ids:
             # Population: 18 Years or Less, With One Type of Health Insurance
@@ -236,8 +233,8 @@ calculations:
             - dc/thcbepzex9zd9
             # Population: 65 Years or More, With One Type of Health Insurance
             - dc/v1w52jrtvw6m2
-      # dc/g/Person_HealthInsurance-WithPublicCoverage
-      # Level 3
+        # dc/g/Person_HealthInsurance-WithPublicCoverage
+        # Level 3
         - ancestor_sv_id: Count_Person_WithPublicCoverage
           source_sv_ids:
             # Population: 18 Years or Less, With Disability, With Public Coverage
@@ -261,17 +258,17 @@ calculations:
             # Population: 19 - 64 Years, With Disability, With Public Coverage
             - dc/zkcy0f52ewh04
 
-      #
-      # Ability to speak English
-      # ------------------------
-      #
-      # We aggregate abilityToSpeakEnglish over nativity (2) and languageSpokenAtHome
-      # (4) for a total of 8 source SVs from Census Table B16005
-      #   (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B16005)
-      #
-      # NOTE: Values SpeakEnglishLessThanVeryWell and SpeakEnglishVeryWell already
-      # have population values from a different table.
-      #
+  #
+  # Ability to speak English
+  # ------------------------
+  #
+  # We aggregate abilityToSpeakEnglish over nativity (2) and languageSpokenAtHome
+  # (4) for a total of 8 source SVs from Census Table B16005
+  #   (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B16005)
+  #
+  # NOTE: Values SpeakEnglishLessThanVeryWell and SpeakEnglishVeryWell already
+  # have population values from a different table.
+  #
   - name: "CensusACS5YearSurvey: Ability To Speak English SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -311,15 +308,15 @@ calculations:
             - dc/yx0mdj3dnk3mb
             - dc/1x48nzrne2f88
 
-      #
-      # In Armed Forces
-      # ---------------
-      #
-      # Census Table B23001 includes count of people in armed forces (in which case
-      # In labor Forces is implied) broken down by gender and age. From that we
-      # aggregate to total and by gender.
-      # (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B23001)
-      #
+  #
+  # In Armed Forces
+  # ---------------
+  #
+  # Census Table B23001 includes count of people in armed forces (in which case
+  # In labor Forces is implied) broken down by gender and age. From that we
+  # aggregate to total and by gender.
+  # (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B23001)
+  #
   - name: "CensusACS5YearSurvey: In Armed Forces SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -328,7 +325,7 @@ calculations:
     output_import: CensusACS5YearSurvey_InArmedForces_StatVarAgg
     stat_var_aggregation:
       aggregations:
-      # Women in armed forces
+        # Women in armed forces
         - ancestor_sv_id: Count_Person_Female_InArmedForces
           source_sv_ids:
             - dc/173smewzddlb
@@ -341,7 +338,7 @@ calculations:
             - dc/8d182v9j04mg4
             - dc/lb3lb4mg82mph
             - dc/g2m31qc7q1x64
-      # Men in armed forces
+        # Men in armed forces
         - ancestor_sv_id: Count_Person_Male_InArmedForces
           source_sv_ids:
             - dc/vp1gqv00d2ql3
@@ -354,7 +351,7 @@ calculations:
             - dc/x63tjfw28tzvc
             - dc/fpx513jvf4xed
             - dc/2zj8jthd4f563
-      # Armed forces population, from combining the above two sets of SVs.
+        # Armed forces population, from combining the above two sets of SVs.
         - ancestor_sv_id: Count_Person_InArmedForces
           source_sv_ids:
             # Female
@@ -380,7 +377,7 @@ calculations:
             - dc/fpx513jvf4xed
             - dc/2zj8jthd4f563
 
-      # Education - CensusACS5YearSurvey
+  # Education - CensusACS5YearSurvey
   - name: "CensusACS5YearSurvey: Education SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -389,24 +386,24 @@ calculations:
     output_import: CensusACS5YearSurvey_Education_StatVarAgg
     stat_var_aggregation:
       aggregations:
-      # dc/g/Person_EducationalAttainment-5ThAnd6ThGrade
-      # Level 1
+        # dc/g/Person_EducationalAttainment-5ThAnd6ThGrade
+        # Level 1
         - ancestor_sv_id: Count_Person_Years25Onwards_EducationalAttainment_5ThAnd6ThGrade
           source_sv_ids:
             # Population: 5th And 6th Grade, Female
             - Count_Person_25OrMoreYears_EducationalAttainment5ThAnd6ThGrade_Female
             # Population: 5th And 6th Grade, Male
             - Count_Person_25OrMoreYears_EducationalAttainment5ThAnd6ThGrade_Male
-      # dc/g/Person_EducationalAttainment-7ThAnd8ThGrade
-      # Level 1
+        # dc/g/Person_EducationalAttainment-7ThAnd8ThGrade
+        # Level 1
         - ancestor_sv_id: Count_Person_Years25Onwards_EducationalAttainment_7ThAnd8ThGrade
           source_sv_ids:
             # Population: 7th And 8th Grade, Female
             - Count_Person_25OrMoreYears_EducationalAttainment7ThAnd8ThGrade_Female
             # Population: 7th And 8th Grade, Male
             - Count_Person_25OrMoreYears_EducationalAttainment7ThAnd8ThGrade_Male
-      # dc/g/Person_EducationalAttainment-9ThTo12ThGradeNoDiploma
-      # Level 3
+        # dc/g/Person_EducationalAttainment-9ThTo12ThGradeNoDiploma
+        # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_9ThTo12ThGradeNoDiploma
           source_sv_ids:
             # Population: 18 - 24 Years, 9th To 12th Grade No Diploma, Female
@@ -429,8 +426,8 @@ calculations:
             - dc/5sps7rmylm73b
             # Population: 65 Years or More, 9th To 12th Grade No Diploma, Male
             - dc/07hctc6f9e2k9
-      # dc/g/Person_EducationalAttainment-LessThan9ThGrade
-      # Level 3
+        # dc/g/Person_EducationalAttainment-LessThan9ThGrade
+        # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_LessThan9ThGrade
           source_sv_ids:
             # Population: 18 - 24 Years, Less Than 9th Grade, Female
@@ -453,8 +450,8 @@ calculations:
             - dc/292723k92k5tb
             # Population: 65 Years or More, Less Than 9th Grade, Male
             - dc/68pblb53csteb
-      # dc/g/Person_EducationalAttainment-LessThanHighSchoolDiploma
-      # Level 3
+        # dc/g/Person_EducationalAttainment-LessThanHighSchoolDiploma
+        # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_LessThanHighSchoolDiploma
           source_sv_ids:
             # Population: Less Than High School Diploma, Male, Two or More Races
@@ -493,16 +490,16 @@ calculations:
             - dc/yfrrvevrmyr74
             # Population: Less Than High School Diploma, Female, Two or More Races
             - dc/29l3m1z7d3n7c
-      # dc/g/Person_EducationalAttainment-NurseryTo4ThGrade
-      # Level 1
+        # dc/g/Person_EducationalAttainment-NurseryTo4ThGrade
+        # Level 1
         - ancestor_sv_id: Count_Person_Years25Onwards_EducationalAttainment_NurseryTo4ThGrade
           source_sv_ids:
             # Population: Nursery To 4th Grade, Female
             - Count_Person_25OrMoreYears_EducationalAttainmentNurseryTo4ThGrade_Female
             # Population: Nursery To 4th Grade, Male
             - Count_Person_25OrMoreYears_EducationalAttainmentNurseryTo4ThGrade_Male
-      # dc/g/Person_EducationalAttainment-SomeCollegeNoDegree
-      # Level 3
+        # dc/g/Person_EducationalAttainment-SomeCollegeNoDegree
+        # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_SomeCollegeNoDegree
           source_sv_ids:
             # Population: 18 - 24 Years, Some College No Degree, Female
@@ -540,7 +537,7 @@ calculations:
             - Count_Person_EducationalAttainment11ThGrade
             - Count_Person_EducationalAttainment12ThGradeNoDiploma
 
-      # The following 9 aggregations are: SomeCollegeOrAssociatesDegree, by race.
+        # The following 9 aggregations are: SomeCollegeOrAssociatesDegree, by race.
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_AmericanIndianOrAlaskaNativeAlone
           source_sv_ids:
             # Population: Some College or Associates Degree, Female, American Indian or Alaska Native Alone
@@ -596,7 +593,7 @@ calculations:
             # Population: Some College or Associates Degree, Male, White Alone Not Hispanic or Latino
             - dc/dc9v9h3q8l8n7
 
-      # Education - ACSED5YrSurvey
+  # Education - ACSED5YrSurvey
   - name: "CensusSAHIE_AggCountry: Health Insurance SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -625,7 +622,7 @@ calculations:
             # Count of Parent: 16 Years or More, Civilian, Public School, Employed, in Labor Force, Service Occupations
             - dc/bstxmnb4k1wrb
 
-      # Demographics
+  # Demographics
   - name: "CensusACS5YearSurvey: Demographics SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -643,7 +640,7 @@ calculations:
             - Count_Person_0To4Years_Male
             - Count_Person_0To4Years_Female
 
-      # Agriculture
+  # Agriculture
   - name: "USDA_AgricultureCensus: Agriculture Producer SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -662,9 +659,9 @@ calculations:
             - Count_Person_Producer_AsianAlone
           skip_all_sources_present_check: true
 
-      #
-      # Employment
-      # ------------------------
+  #
+  # Employment
+  # ------------------------
 
   - name: "CensusACS5YearSurvey: Employment & Industry SV Aggregation"
     type: STAT_VAR_AGGREGATION
@@ -795,68 +792,68 @@ calculations:
             # Population: 16 Years or More, Civilian, Employed, in Labor Force, Male, Public Administration (NAICS/92)
             - dc/589p0gc36qem5
 
-      # Census Table B23001 includes count of employed civilians broken down by gender
-      # and age. From that we aggregate over age to get count of employed civilians
-      # for each gender.
-      # (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B23001)
-      #
-#   - type: STAT_VAR_AGGREGATION
+  # Census Table B23001 includes count of employed civilians broken down by gender
+  # and age. From that we aggregate over age to get count of employed civilians
+  # for each gender.
+  # (https://data.census.gov/cedsci/table?tid=ACSDT5Y2019.B23001)
+  #
+  #   - type: STAT_VAR_AGGREGATION
   #   type: STAT_VAR_AGGREGATION
-#     output_import: CensusACS5YearSurvey_Employment_StatVarAgg
-#     input_imports:
-#       - CensusACS5YearSurvey
-#       - CensusACS5YearSurvey_AggCountry
-#     stat_var_aggregation:
-#       aggregations:
-      # # Women Employed
-      #
-      # # The ancestor has "armedForcesStatus: dcs:Civilian", but the following sources
-      # # don't have. Fix it before adding this to aggregation.
-      # # dc/kz49wc5n3lhpd
-      # # dc/qcpg8c533syd6
-      # # dc/zv26z833d7g3c
-#         - ancestor_sv_id: Count_Person_Female_Employed
-#           source_sv_ids:
-#             - dc/yt1fm72s1y7b7
-#             - dc/hj65vwnt5csr7
-#             - dc/0sd3x3bb4qet5
-#             - dc/j4mzcc63n5zq5
-#             - dc/56jhsezrzl049
-#             - dc/ggx918j9p5tnf
-#             - dc/8rw47nf3ngle7
-#             - dc/hplj99j7mbfsh
-#             - dc/ksmx7fwfkm8lb
-#             - dc/6706lc55kg5d
-#             - dc/qcpg8c533syd6
-#             - dc/zv26z833d7g3c
-#             - dc/kz49wc5n3lhpd
-            #   }
-            #
-            # # The ancestor has "armedForcesStatus: dcs:Civilian", but the following sources
-            # # don't have. Fix it before adding this to aggregation.
-            # # dc/5cxs4br0jz02c
-            # # dc/s909dd4r22fw
-            # # dc/xepldf55yq6s5
-            #
-            # # Men Employed
-#         - ancestor_sv_id: Count_Person_Male_Employed
-#           source_sv_ids:
-#             - dc/2s6hps4z1qced
-#             - dc/xvtk9180lme1h
-#             - dc/twdr4c500yev5
-#             - dc/n0btf3nglhqqc
-#             - dc/7qwvkhr4tsyt8
-#             - dc/pkpm179bbh822
-#             - dc/gyrw68q6x77l9
-#             - dc/ly0fvmlf4mtf5
-#             - dc/m020zpvzch2gd
-#             - dc/sgm602ncby3bf
-#             - dc/xepldf55yq6s5
-#             - dc/s909dd4r22fw
-#             - dc/5cxs4br0jz02c
-            #   }
+  #     output_import: CensusACS5YearSurvey_Employment_StatVarAgg
+  #     input_imports:
+  #       - CensusACS5YearSurvey
+  #       - CensusACS5YearSurvey_AggCountry
+  #     stat_var_aggregation:
+  #       aggregations:
+  # # Women Employed
+  #
+  # # The ancestor has "armedForcesStatus: dcs:Civilian", but the following sources
+  # # don't have. Fix it before adding this to aggregation.
+  # # dc/kz49wc5n3lhpd
+  # # dc/qcpg8c533syd6
+  # # dc/zv26z833d7g3c
+  #         - ancestor_sv_id: Count_Person_Female_Employed
+  #           source_sv_ids:
+  #             - dc/yt1fm72s1y7b7
+  #             - dc/hj65vwnt5csr7
+  #             - dc/0sd3x3bb4qet5
+  #             - dc/j4mzcc63n5zq5
+  #             - dc/56jhsezrzl049
+  #             - dc/ggx918j9p5tnf
+  #             - dc/8rw47nf3ngle7
+  #             - dc/hplj99j7mbfsh
+  #             - dc/ksmx7fwfkm8lb
+  #             - dc/6706lc55kg5d
+  #             - dc/qcpg8c533syd6
+  #             - dc/zv26z833d7g3c
+  #             - dc/kz49wc5n3lhpd
+  #   }
+  #
+  # # The ancestor has "armedForcesStatus: dcs:Civilian", but the following sources
+  # # don't have. Fix it before adding this to aggregation.
+  # # dc/5cxs4br0jz02c
+  # # dc/s909dd4r22fw
+  # # dc/xepldf55yq6s5
+  #
+  # # Men Employed
+  #         - ancestor_sv_id: Count_Person_Male_Employed
+  #           source_sv_ids:
+  #             - dc/2s6hps4z1qced
+  #             - dc/xvtk9180lme1h
+  #             - dc/twdr4c500yev5
+  #             - dc/n0btf3nglhqqc
+  #             - dc/7qwvkhr4tsyt8
+  #             - dc/pkpm179bbh822
+  #             - dc/gyrw68q6x77l9
+  #             - dc/ly0fvmlf4mtf5
+  #             - dc/m020zpvzch2gd
+  #             - dc/sgm602ncby3bf
+  #             - dc/xepldf55yq6s5
+  #             - dc/s909dd4r22fw
+  #             - dc/5cxs4br0jz02c
+  #   }
 
-      # Crime
+  # Crime
   - name: "USNationalPrisonerStatistics: Crime & Correctional Facility SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -869,7 +866,7 @@ calculations:
             - dc/qgv9d3frn35qc
             - dc/91vy0sf20wlg9
 
-      # WithOwnChildrenUnder18.
+  # WithOwnChildrenUnder18.
   - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -890,7 +887,7 @@ calculations:
             - Count_Person_WithOwnChildrenUnder18_Female
             - Count_Person_WithOwnChildrenUnder18_Male
 
-      # Marriage
+  # Marriage
   - name: "CensusACS5YearSurvey_SubjectTables_S1201: Marital Status SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -915,7 +912,7 @@ calculations:
             - Count_Person_InLaborForce_Female_Widowed
             - Count_Person_InLaborForce_Male_Widowed
 
-      # Employment by business ownership type.
+  # Employment by business ownership type.
   - name: "CensusACS5YearSurvey_SubjectTables_S2408: Business Ownership Employment SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -932,7 +929,7 @@ calculations:
             - Count_Person_PrivatelyOwnedForProfitEstablishment_Male_PaidWorker
             - Count_Person_PrivatelyOwnedForProfitEstablishment_Female_PaidWorker
 
-      # US Citizen by Naturalization
+  # US Citizen by Naturalization
   - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -1063,7 +1060,7 @@ calculations:
             - Count_Person_USCitizenByNaturalization_DateOfEntry2000OrLater_ForeignBorn
             - Count_Person_USCitizenByNaturalization_DateOfEntry2010OrLater_ForeignBorn
 
-      # HousingUnit HomeValue.
+  # HousingUnit HomeValue.
   - name: "CensusACS5YearSurvey: Home Value SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -1072,7 +1069,7 @@ calculations:
     output_import: CensusACS5YearSurvey_HousingUnit_HomeValue_StatVarAgg
     stat_var_aggregation:
       aggregations:
-      # Census ACS 5 year, Count_HousingUnit_HomeValue
+        # Census ACS 5 year, Count_HousingUnit_HomeValue
         - ancestor_sv_id: Count_HousingUnit_HomeValueUpto49999USDollar
           source_sv_ids:
             - Count_HousingUnit_HomeValueUpto10000USDollar
@@ -1123,7 +1120,7 @@ calculations:
     output_import: CensusACS5YearSurvey_Person_Age_StatVarAgg
     stat_var_aggregation:
       aggregations:
-      # Census ACS 5 year, Age group
+        # Census ACS 5 year, Age group
         - ancestor_sv_id: Count_Person_55To64Years
           source_sv_ids:
             - Count_Person_55To59Years
@@ -1139,7 +1136,7 @@ calculations:
     output_import: CensusACS5YearSurvey_Income_StatVarAgg
     stat_var_aggregation:
       aggregations:
-      # The following 9 aggregations are: High income (100,000 USD or More), by race.
+        # The following 9 aggregations are: High income (100,000 USD or More), by race.
         - ancestor_sv_id: Count_Person_16OrMoreYears_USDollar100000Onwards_WithIncome_AmericanIndianOrAlaskaNativeAlone
           source_sv_ids:
             # Population: Female, 100,000 USD or More, American Indian or Alaska Native Alone, Not Worked Full Time
@@ -1231,7 +1228,7 @@ calculations:
             # Population: Male, 100,000 USD or More, White Alone Not Hispanic or Latino, Worked Full Time
             - dc/ekh1g39v9sgj4
 
-      # The following 9 aggregations are: Low income (10,000 - 12,499 USD), by race.
+        # The following 9 aggregations are: Low income (10,000 - 12,499 USD), by race.
         - ancestor_sv_id: Count_Person_16OrMoreYears_USDollar10000To12499_WithIncome_AmericanIndianOrAlaskaNativeAlone
           source_sv_ids:
             # Population: Female, 10,000 - 12,499 USD, American Indian or Alaska Native Alone, Not Worked Full Time
@@ -1642,7 +1639,7 @@ calculations:
     output_import: OECDRegionalDemography_Person_Age_StatVarAgg
     stat_var_aggregation:
       aggregations:
-      # OECD, Age group
+        # OECD, Age group
         - ancestor_sv_id: Count_Person_Upto9Years
           source_sv_ids:
             - Count_Person_Upto4Years
@@ -1728,7 +1725,7 @@ calculations:
     output_import: CensusACS5YearSurvey_SubjectTables_S0801_StatVarAgg
     stat_var_aggregation:
       aggregations:
-      # Census ACS 5 year, Work Commute group
+        # Census ACS 5 year, Work Commute group
         - ancestor_sv_id: Count_Person_Years16Onwards_WorkCommute_Employed
           source_sv_ids:
             - Count_Person_Years16Onwards_CarTruckOrVan_WorkCommute_Employed
@@ -1774,7 +1771,7 @@ calculations:
             - Count_Person_Years16Onwards_WorkedAtHome_WorkCommute_Employed_Female
             - Count_Person_Years16Onwards_WorkedFromHome_WorkCommute_Employed_Female
           skip_all_sources_present_check: true
-      # Worked outside of Home
+        # Worked outside of Home
         - ancestor_sv_id: Count_Person_Years16Onwards_WorkCommute_Employed_WorkedOutsideOfHome
           source_sv_ids:
             - Count_Person_Years16Onwards_StartTimeHour0000To0459_WorkCommute_Employed_WorkedOutsideOfHome

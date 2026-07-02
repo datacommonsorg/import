@@ -1,6 +1,6 @@
 calculations:
 
-# Energy.
+  # Energy.
   - name: "EIA_Electricity: Annual Emissions Per Capita StatVar Calculation"
     type: STAT_VAR_CALCULATION
     input_imports:
@@ -30,16 +30,16 @@ calculations:
               unit: MetricTonCO2ePerGigawattHour
               observation_period: P1Y
 
-# Climate: Temperature modeling diffs from actual.
-# There are 30+ models. For each model, the output diffs are done for
-# Aggregations: Mean, Min, Max and also for SSP2 with RCP4.5 and SSP5 with
-# RCP8.5 (for each model).
-# This includes diffs for P1M, P1Y, P5Y and P10Y.
-# Note that the computations below use sv_regex and measurement_method_regex
-# instead of sv and measurement_method to allow more expressive matching. Also
-# note that the output uses sv_prefix and measurement_method_prefix which is not
-# the case above, for example. Whenever sv and measurement_method are set in the
-# output, they are preferred. Otherwise, the *_prefix is used.
+  # Climate: Temperature modeling diffs from actual.
+  # There are 30+ models. For each model, the output diffs are done for
+  # Aggregations: Mean, Min, Max and also for SSP2 with RCP4.5 and SSP5 with
+  # RCP8.5 (for each model).
+  # This includes diffs for P1M, P1Y, P5Y and P10Y.
+  # Note that the computations below use sv_regex and measurement_method_regex
+  # instead of sv and measurement_method to allow more expressive matching. Also
+  # note that the output uses sv_prefix and measurement_method_prefix which is not
+  # the case above, for example. Whenever sv and measurement_method are set in the
+  # output, they are preferred. Otherwise, the *_prefix is used.
   - name: "Climate: NASA CMIP6 Temperature Modeling Diffs Calculation"
     type: STAT_VAR_CALCULATION
     input_imports:
