@@ -80,6 +80,17 @@ class TestOrchestratorScanning(unittest.TestCase):
         stages = self.orchestrator.get_active_stages_for_import("OtherImport")
         self.assertEqual(stages, [])
 
+    def test_directory_config_loading(self, mock_executor):
+        """Tests that orchestrator correctly scans and loads config files from a directory."""
+        dir_orchestrator = AggregationOrchestrator(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_dir=self.tmpdir.name
+        )
+        self.assertEqual(len(dir_orchestrator.calculations), 2)
+
 
 @patch('aggregation.orchestrator.BigQueryExecutor')
 @patch('aggregation.orchestrator.PlaceAggregationGenerator')

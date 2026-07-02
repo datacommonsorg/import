@@ -14,6 +14,7 @@
 
 """Aggregation orchestrator for Data Commons ingestion workflow."""
 
+import glob
 import logging
 import os
 import time
@@ -70,7 +71,15 @@ class AggregationOrchestrator:
         schema_file_path = os.path.join(curr_dir, "schema.json")
 
         # Load and validate configuration
-        self.calculations = validate_config(target_config, schema_file_path)
+        self.calculations = []
+        if os.path.isdir(target_config):
+            yaml_files = sorted(
+                glob.glob(os.path.join(target_config, "*.yaml")) + glob.glob(os.path.join(target_config, "*.yml"))
+            )
+            for file_path in yaml_files:
+                self.calculations.extend(validate_config(file_path, schema_file_path))
+        else:
+            self.calculations = validate_config(target_config, schema_file_path)
 
     def run(self, active_imports: List[str]) -> None:
         """Executes aggregations independently for each active import.

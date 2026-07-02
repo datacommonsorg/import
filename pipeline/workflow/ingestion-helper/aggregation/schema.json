@@ -10,6 +10,7 @@
       "items": {
         "type": "object",
         "required": ["type", "input_imports"],
+        "additionalProperties": false,
         "properties": {
           "name": { "type": "string" },
           "type": {
@@ -37,7 +38,8 @@
           "stat_var_aggregation": { "type": "object" },
           "entity_aggregation": { "type": "object" },
           "stat_var_series_aggregation": { "type": "object" },
-          "stat_var_calculation": { "type": "object" }
+          "stat_var_calculation": { "type": "object" },
+          "disabled": { "type": "boolean" }
         },
         "allOf": [
           {
