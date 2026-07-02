@@ -1,6 +1,7 @@
 Node: dcid:Acre_MeasurementResult_StatVar
 populationType: dcid:Place
 dcid: "Acre_MeasurementResult_StatVar"
+definition: "st=measurementResult,mp=area,pt=Place"
 statType: dcid:measurementResult
 measuredProperty: dcid:area
 typeOf: dcid:StatisticalVariable

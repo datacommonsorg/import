@@ -17,15 +17,16 @@ package org.datacommons.util;
 import static org.datacommons.util.McfUtil.getPropVals;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
-// Does additional transformations on parsed MCF nodes, like expanding ComplexValues into nodes.
+// Does additional transformations on parsed MCF nodes
+// - expanding ComplexValues into nodes
+// - adding constraintProperties to StatVar nodes
 //
-// TODO: Attach provenance maybe (CPP Parity).
 // TODO: Pass in a separate SV nodes to clean SVObs double values.
 public class McfMutator {
   private Mcf.McfGraph.Builder graph;
@@ -107,17 +108,17 @@ public class McfMutator {
     }
 
     if (isStatVar) {
-      List<String> constraintProps = new ArrayList<>();
-      for (String prop : node.getPvsMap().keySet()) {
+      Map<String, Mcf.McfGraph.Values> constraintPvs = new TreeMap<>();
+      for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
+        String prop = pv.getKey();
         if (!Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
-          constraintProps.add(prop);
+          constraintPvs.put(prop, pv.getValue());
         }
       }
 
-      if (!constraintProps.isEmpty()) {
-        Collections.sort(constraintProps);
+      if (!constraintPvs.isEmpty()) {
         Mcf.McfGraph.Values.Builder valuesBuilder = Mcf.McfGraph.Values.newBuilder();
-        for (String propDcid : constraintProps) {
+        for (String propDcid : constraintPvs.keySet()) {
           valuesBuilder.addTypedValues(
               Mcf.McfGraph.TypedValue.newBuilder()
                   .setValue(propDcid)
@@ -125,6 +126,18 @@ public class McfMutator {
                   .build());
         }
         node.putPvs("constraintProperties", valuesBuilder.build());
+      }
+
+      if (!node.containsPvs(Vocabulary.DEFINITION)) {
+        String definition = McfUtil.generateSVDefinition(node, constraintPvs);
+        Mcf.McfGraph.Values.Builder valuesBuilder =
+            Mcf.McfGraph.Values.newBuilder()
+                .addTypedValues(
+                    Mcf.McfGraph.TypedValue.newBuilder()
+                        .setValue(definition)
+                        .setType(Mcf.ValueType.TEXT)
+                        .build());
+        node.putPvs(Vocabulary.DEFINITION, valuesBuilder.build());
       }
     }
 

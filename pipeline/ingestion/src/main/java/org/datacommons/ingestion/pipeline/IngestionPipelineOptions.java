@@ -84,8 +84,14 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   void setIsBaseDc(boolean isBaseDc);
 
   @Description("Whether to skip transformation step.")
-  @Default.Boolean(true)
+  @Default.Boolean(false)
   boolean getSkipTransformation();
 
   void setSkipTransformation(boolean skipTransformation);
+
+  @Description("Whether to skip wait operations between pipeline stages.")
+  @Default.Boolean(false)
+  boolean getSkipWait();
+
+  void setSkipWait(boolean skipWait);
 }

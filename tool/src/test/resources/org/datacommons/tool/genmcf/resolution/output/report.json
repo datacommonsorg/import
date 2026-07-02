@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "10",
         "NumPVSuccesses": "100",
-        "Existence_NumChecks": "155",
+        "Existence_NumChecks": "156",
         "NumNodeSuccesses": "29",
         "ReconClient_NumApiCalls": "2",
         "Existence_NumDcCalls": "2"

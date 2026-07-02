@@ -134,7 +134,7 @@ public class GraphReaderTest {
                 .value("Node Zero")
                 .build(),
             Node.builder()
-                .subjectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .subjectId("{   \"type\": \"Pol:EvbccRWWGibzhA4ntdF1bboIUsn4ThUiAZe3TV4hmB8=")
                 .bytes(
                     ByteArray.copyFrom(
                         PipelineUtils.compressString(
@@ -279,7 +279,7 @@ public class GraphReaderTest {
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("geoJsonCoordinates")
-                .objectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .objectId("{   \"type\": \"Pol:EvbccRWWGibzhA4ntdF1bboIUsn4ThUiAZe3TV4hmB8=")
                 .provenance("dc/base/Test")
                 .build(),
             Edge.builder()
@@ -289,7 +289,7 @@ public class GraphReaderTest {
                 .provenance("dc/base/Test")
                 .build());
 
-    List<Edge> actualEdges = GraphReader.graphToEdges(graph, "dc/base/Test");
+    List<Edge> actualEdges = GraphReader.graphToEdges(graph, "dc/base/Default");
 
     // Sort both lists for consistent comparison
     Comparator<Edge> edgeComparator =
@@ -462,6 +462,14 @@ public class GraphReaderTest {
                             .setType(ValueType.RESOLVED_REF)
                             .setValue("sourceCountry"))
                     .build())
+            .putPvs(
+                "provenance",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("provenance/TestImport"))
+                    .build())
             .build();
 
     TimeSeries expected =
@@ -469,7 +477,7 @@ public class GraphReaderTest {
             .entity1("country/USA")
             .extraEntities(List.of("country/FRA"))
             .variableMeasured("FinancialTrade")
-            .importName("test_import")
+            .importName("provenance/TestImport")
             .isBaseDc(true)
             .build();
 

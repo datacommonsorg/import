@@ -1,4 +1,5 @@
 Node: dcid:Some_StatVar
+definition: "pt=Place"
 populationType: dcid:Place
 dcid: "Some_StatVar"
 typeOf: dcid:StatisticalVariable
