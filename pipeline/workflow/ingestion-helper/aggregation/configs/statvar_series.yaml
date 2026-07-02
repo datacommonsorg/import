@@ -1,0 +1,449 @@
+calculations:
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXDCP30
+    round: 1
+    output_import: NASA_NEXDCP30_AggrDiffStats
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - max_diff_across_measurement_methods:
+        - diff_relative_to_base_date:
+          # TODO(b/220070731): Consider adding start_date/end_date spec.
+            date_specs:
+            # There are two series in this import:
+            # 1. Monthly historical data from 1950 to 2005.
+            # 2. Monthly projections from 2006 to 2099.
+            dates:
+              - 1990
+              - 2006
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_Subnational
+    round: 1
+    output_import: NASA_NEXGDDP_Subnational_AggrDiffStats
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - max_diff_across_measurement_methods:
+        - diff_relative_to_base_date:
+            date_specs:
+            start_date: 2006
+            end_date: 2020
+            date_specs:
+            # There are two series in this import:
+            # 1. Monthly historical data from 1950 to 2005.
+            # 2. Monthly projections from 2006 to 2099.
+            dates:
+              - 1990
+              - 2006
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_Country
+    round: 1
+    output_import: NASA_NEXGDDP_Country_AggrDiffStats
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - max_diff_across_measurement_methods:
+        - diff_relative_to_base_date:
+          # TODO(b/220070731): Consider adding start_date/end_date spec.
+            date_specs:
+            # There are two series in this import:
+            # 1. Monthly historical data from 1950 to 2005.
+            # 2. Monthly projections from 2006 to 2099.
+            dates:
+              - 1990
+              - 2006
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_CMIP6_Subnational
+    round: 1
+    output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrDiffStats
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - max_diff_across_measurement_methods:
+        - diff_relative_to_base_date:
+            date_specs:
+            start_date: 2015
+            end_date: 2020
+            date_specs:
+            # There are four series in this import:
+            # 1. Monthly historical data from 1950 to 2014.
+            # 2. Yearly historical data from 1950 to 2014
+            # 3. Monthly projections from 2015 to 2100.
+            # 4. Yearly projections from 2015 to 2100.
+            dates:
+              - 1990
+              - 2015
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_CMIP6_IpccPlaces50
+    round: 1
+    output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrDiffStats
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - max_diff_across_measurement_methods:
+        - diff_relative_to_base_date:
+            date_specs:
+            start_date: 2015
+            end_date: 2020
+            date_specs:
+            # There are four series in this import:
+            # 1. Monthly historical data from 1950 to 2014.
+            # 2. Yearly historical data from 1950 to 2014
+            # 3. Monthly projections from 2015 to 2100.
+            # 4. Yearly projections from 2015 to 2100.
+            dates:
+              - 1990
+              - 2015
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_Subnational_AggrDiffStats
+    round: 2
+    output_import: NASA_NEXGDDP_Subnational_AggrStatsAcrossModels
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - stats_across_models:
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_CMIP6_Subnational_AggrDiffStats
+    round: 2
+    output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - stats_across_models:
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrDiffStats
+    round: 2
+    output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - stats_across_models:
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
+    round: 3
+    output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrOverTimeOnStatsAcrossModels
+    stat_var_series_aggregation:
+      aggr_funcs:
+        # Config for future 10-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P10Y
+            output_obs_date: 2030
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate((?!Max|Min).)*_Temperature.*"
+            aggregation_op: OPERATOR_MEAN
+        # Config for future 30-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P30Y
+            output_obs_date: 2050
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate((?!Max|Min).)*_Temperature.*"
+            aggregation_op: OPERATOR_MEAN
+        # Config for future 80-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P80Y
+            output_obs_date: 2100
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate((?!Max|Min).)*_Temperature.*"
+            aggregation_op: OPERATOR_MEAN
+        # Config for future 10-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P10Y
+            output_obs_date: 2030
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+        # Config for future 30-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P30Y
+            output_obs_date: 2050
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+        # Config for future 80-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P80Y
+            output_obs_date: 2100
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_Subnational_AggrStatsAcrossModels
+    round: 3
+    output_import: NASA_NEXGDDP_Subnational_AggrOverTimeOnStatsAcrossModels
+    stat_var_series_aggregation:
+      aggr_funcs:
+        # Config for future 10-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P10Y
+            output_obs_date: 2030
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+        # Config for future 30-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P30Y
+            output_obs_date: 2050
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+        # Config for future 80-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P80Y
+            output_obs_date: 2100
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+        # Config for future 10-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P10Y
+            output_obs_date: 2030
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+        # Config for future 30-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P30Y
+            output_obs_date: 2050
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+        # Config for future 80-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P80Y
+            output_obs_date: 2100
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
+    round: 3
+    output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrOverTimeOnStatsAcrossModels
+    stat_var_series_aggregation:
+      aggr_funcs:
+        # Config for future 10-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P10Y
+            output_obs_date: 2030
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate((?!Max|Min).)*_Temperature.*"
+            aggregation_op: OPERATOR_MEAN
+        # Config for future 30-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P30Y
+            output_obs_date: 2050
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate((?!Max|Min).)*_Temperature.*"
+            aggregation_op: OPERATOR_MEAN
+        # Config for future 80-year max/min aggregate
+        - aggr_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P80Y
+            output_obs_date: 2100
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            aggregation_op: OPERATOR_MAX
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            aggregation_op: OPERATOR_MIN
+            sv_configs
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate((?!Max|Min).)*_Temperature.*"
+            aggregation_op: OPERATOR_MEAN
+        # Config for future 10-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P10Y
+            output_obs_date: 2030
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+        # Config for future 30-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P30Y
+            output_obs_date: 2050
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+        # Config for future 80-year period of num-months with max/min temp above/below threshold
+        - count_threshold_exception_over_time
+            time_range
+            input_obs_period: P1M
+            output_obs_period: P80Y
+            output_obs_date: 2100
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Max_Temperature.*"
+            threshold_value: 5
+            unit: Celsius
+            comparison: OPERATOR_GE
+            output_cprop: maxTemperature
+            thresholds
+            sv_regex: "^(Median|Percentile90|Percentile10)AcrossModels_DifferenceRelativeToBaseDate.*_Min_Temperature.*"
+            threshold_value: -5
+            unit: Celsius
+            comparison: OPERATOR_LE
+            output_cprop: minTemperature
+  - type: STAT_VAR_SERIES_AGGREGATION
+    input_imports:
+      - NASA_NEXGDDP_IpccPlaces50
+    round: 1
+    output_import: NASA_NEXGDDP_IpccPlaces50_AggrDiffStats
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - max_diff_across_measurement_methods:
+        - diff_relative_to_base_date:
+            date_specs:
+            start_date: 2015
+            end_date: 2020
+            date_specs:
+            # There are two series in this import:
+            # 1. Monthly historical data from 1950 to 2005.
+            # 2. Monthly projections from 2006 to 2099.
+            dates:
+              - 1990
+              - 2006
+

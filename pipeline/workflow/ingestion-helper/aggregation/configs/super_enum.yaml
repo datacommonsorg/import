@@ -1,0 +1,25 @@
+calculations:
+  - type: SUPER_ENUM_AGGREGATION
+    input_imports:
+      - CensusACS5YearSurvey
+    output_import: CensusACS5YearSurvey_SuperEnum
+
+  - type: SUPER_ENUM_AGGREGATION
+    input_imports:
+      - CensusACS5YearSurvey_AggCountry
+    output_import: CensusACS5YearSurvey_AggCountry_SuperEnum
+
+  - type: SUPER_ENUM_AGGREGATION
+    input_imports:
+      - NCES_PrivateSchoolStats
+    output_import: NCES_PrivateSchoolStats_SuperEnum
+
+  - type: SUPER_ENUM_AGGREGATION
+    input_imports:
+      - NCES_PublicSchoolStats
+    output_import: NCES_PublicSchoolStats_SuperEnum
+
+  - type: SUPER_ENUM_AGGREGATION
+    input_imports:
+      - NCES_SchoolDistrictStats
+    output_import: NCES_SchoolDistrictStats_SuperEnum

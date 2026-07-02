@@ -1,0 +1,188 @@
+calculations:
+
+  # Earthquakes
+  - type: ENTITY_AGGREGATION
+    output_import: EarthquakeUSGS_Agg
+    input_imports:
+      - EarthquakeUSGS
+    entity_aggregation:
+      entity_types:
+        - EarthquakeEvent
+      location_props:
+        - affectedPlace
+      date_prop: occurrenceTime
+      agg_date_formats:
+        - YYYY
+        - YYYY-MM
+      constraints:
+        - "magnitude: [3 - M]"
+        - "magnitude: [4 - M]"
+        - "magnitude: [5 - M]"
+        - "magnitude: [6 - M]"
+        - "magnitude: [7 - M]"
+        - "magnitude: [8 - M]"
+        - "magnitude: [9 - M]"
+        - "magnitude: [3 4 M]"
+        - "magnitude: [4 5 M]"
+        - "magnitude: [5 6 M]"
+        - "magnitude: [6 7 M]"
+        - "magnitude: [7 8 M]"
+        - "magnitude: [8 9 M]"
+
+  # Fires
+  - type: ENTITY_AGGREGATION
+    output_import: FireFAMWEB_Agg
+    input_imports:
+      - FireFAMWEB
+    entity_aggregation:
+      entity_types:
+        - WildlandFireEvent
+      location_props:
+        - location
+      date_prop: discoveryDate
+      agg_date_formats:
+        - YYYY
+
+  - type: ENTITY_AGGREGATION
+    output_import: FireWFIGS_Agg
+    input_imports:
+      - FireWFIGS
+    entity_aggregation:
+      entity_types:
+        - FireIncidentComplexEvent
+        - PrescribedFireEvent
+        - WildlandFireEvent
+      location_props:
+        - location
+      date_prop: discoveryDate
+      agg_date_formats:
+        - YYYY-MM
+        - YYYY
+
+  - type: ENTITY_AGGREGATION
+    output_import: NASA_VIIRSActiveFiresEvents_Agg
+    # Aggregate event counts for S2-cells of level 13
+    input_imports:
+      - NASA_VIIRSActiveFiresEvents
+    entity_aggregation:
+      entity_types:
+        - FireEvent
+      location_props:
+        - affectedPlace
+      date_prop: startDate
+      agg_date_formats:
+        - YYYY
+        - YYYY-MM
+
+  # Storms
+  - type: ENTITY_AGGREGATION
+    output_import: StormNOAA_Agg
+    input_imports:
+      - StormNOAA
+    entity_aggregation:
+      location_props:
+        - affectedPlace
+      date_prop: startDate
+      agg_date_formats:
+        - YYYY
+        - YYYY-MM
+      # The following query is used to get all the types:
+      #
+      # SELECT DISTINCT object_id
+      # FROM `datcom-store.dc_kg_latest.Triple`
+      # WHERE prov_id='dc/svnv9g3' AND predicate = 'typeOf'
+      entity_types:
+        - MarineHighWindEvent
+        - HighWindEvent
+        - HeavyRainEvent
+        - DebrisFlowEvent
+        - DenseSmokeEvent
+        - TropicalDepressionEvent
+        - LandslideEvent
+        - DustDevilEvent
+        - WinterStormEvent
+        - MarineHailEvent
+        - TsunamiEvent
+        - BlizzardEvent
+        - RipCurrentEvent
+        - HeavySnowEvent
+        - ExtremeColdWindChillEvent
+        - MarineDenseFogEvent
+        - TropicalStormEvent
+        - StormSurgeTideEvent
+        - NorthernLightsEvent
+        - FrostFreezeEvent
+        - WildfireEvent
+        - SleetEvent
+        - ColdWindChillEvent
+        - MarineStrongWindEvent
+        - LightningEvent
+        - SneakerwaveEvent
+        - AstronomicalLowTideEvent
+        - MarineTropicalStormEvent
+        - VolcanicAshEvent
+        - CoastalFloodEvent
+        - GeoCoordinates
+        - HeavyWindEvent
+        - IceStormEvent
+        - StrongWindEvent
+        - WinterWeatherEvent
+        - VolcanicAshfallEvent
+        - ThunderstormWindEvent
+        - FlashFloodEvent
+        - HeatEvent
+        - DustStormEvent
+        - ExcessiveHeatEvent
+        - HailEvent
+        - AvalancheEvent
+        - MarineThunderstormWindEvent
+        - LakeshoreFloodEvent
+        - DroughtEvent
+        - HighSurfEvent
+        - HurricaneTyphoonEvent
+        - LakeEffectSnowEvent
+        - WaterspoutEvent
+        - MarineTropicalDepressionEvent
+        - SeicheEvent
+        - HighSnowEvent
+        - DenseFogEvent
+        - HurricaneEvent
+        - MarineHurricaneTyphoonEvent
+        - FloodEvent
+        - FunnelCloudEvent
+        - FreezingFogEvent
+        - TornadoEvent
+        - MarineLightningEvent
+        - StormEpisode
+
+  # Floods
+  - type: ENTITY_AGGREGATION
+    output_import: DynamicWorld_FloodEvents_Agg
+    # Aggregate event counts for S2-cells of level 13
+    input_imports:
+      - DynamicWorld_FloodEvents
+    entity_aggregation:
+      entity_types:
+        - FloodEvent
+      location_props:
+        - affectedPlace
+      date_prop: startDate
+      agg_date_formats:
+        - YYYY
+        - YYYY-MM
+
+  # Heat/Cold Temperature Events counts
+  - type: ENTITY_AGGREGATION
+    output_import: TemperatureEvents_Agg
+    input_imports:
+      - TemperatureEvents
+    entity_aggregation:
+      entity_types:
+        - HeatTemperatureEvent
+        - ColdTemperatureEvent
+      location_props:
+        - affectedPlace
+      date_prop: startDate
+      agg_date_formats:
+        - YYYY
+        - YYYY-MM
