@@ -122,6 +122,10 @@ main:
 run_aggregation_job:
   params: [import_list, project_id, location]
   steps:
+    - check_if_empty:
+        switch:
+          - condition: ${import_list == null or len(import_list) == 0}
+            return: 'SKIPPED'
     - run_aggregation:
         call: googleapis.run.v1.namespaces.jobs.run
         args:
@@ -133,6 +137,8 @@ run_aggregation_job:
                 - args:
                     - "--import_list"
                     - ${json.encode_to_string(import_list)}
+        connector_params:
+          timeout: 3600
         result: aggregation_response
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.

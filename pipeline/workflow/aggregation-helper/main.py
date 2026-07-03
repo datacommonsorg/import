@@ -58,6 +58,10 @@ def main():
         logging.error(f"Failed to parse import_list JSON: {e}")
         sys.exit(1)
 
+    if not isinstance(import_list, list):
+        logging.error("Parsed import_list is not a list")
+        sys.exit(1)
+
     connection_id = os.environ.get("BQ_SPANNER_CONN_ID")
     project_id = os.environ.get("PROJECT_ID")
     instance_id = os.environ.get("SPANNER_INSTANCE_ID")
@@ -82,7 +86,6 @@ def main():
     logging.info(f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}) for imports: {import_list}")
     orchestrator.run(active_imports=import_list, dry_run=args.dry_run)
     logging.info("Aggregation Helper Cloud Run Job completed successfully.")
-
 
 if __name__ == "__main__":
     main()
