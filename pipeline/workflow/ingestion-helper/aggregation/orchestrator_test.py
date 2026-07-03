@@ -95,6 +95,7 @@ class TestOrchestratorScanning(unittest.TestCase):
 @patch('aggregation.orchestrator.BigQueryExecutor')
 @patch('aggregation.orchestrator.PlaceAggregationGenerator')
 @patch('aggregation.orchestrator.StatVarAggregator')
+@patch('aggregation.orchestrator.StatVarCalculationGenerator')
 class TestOrchestratorExecution(unittest.TestCase):
     """Tests stage execution, verifying job submission and synchronization."""
 
@@ -115,7 +116,7 @@ class TestOrchestratorExecution(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
 
-    def test_run_synchronized_pipeline(self, mock_sv_agg, mock_place_gen, mock_executor_cls):
+    def test_run_synchronized_pipeline(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests complete synchronized run pipeline for an import across stages."""
         mock_job1 = MagicMock()
         mock_job1.job_id = "job-place-1"

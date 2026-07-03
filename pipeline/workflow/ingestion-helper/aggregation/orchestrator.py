@@ -25,6 +25,7 @@ from .linked_edge_generator import LinkedEdgeGenerator
 from .place_aggregation_generator import PlaceAggregationGenerator
 from .provenance_summary_generator import ProvenanceSummaryGenerator
 from .stat_var_aggregator import StatVarAggregator
+from .stat_var_calculation_generator import StatVarCalculationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
 from .validator import validate_config
 
@@ -176,6 +177,8 @@ class AggregationOrchestrator:
                 step_jobs = self._trigger_place(calc, [single_import])
             elif step_type == "STAT_VAR_AGGREGATION":
                 step_jobs = self._trigger_stat_var(calc, [single_import])
+            elif step_type == "STAT_VAR_CALCULATION":
+                step_jobs = self._trigger_stat_var_calculation(calc, [single_import])
             elif step_type == "LINKED_EDGES":
                 step_jobs = self._trigger_linked_edges(calc, [single_import])
             elif step_type == "PROVENANCE_SUMMARY":
@@ -221,8 +224,8 @@ class AggregationOrchestrator:
     def _trigger_place(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers place-level rollup aggregations."""
         place_cfg = config.get("place_aggregation", {})
-        from_type = place_cfg.get("from_place_types") or config.get("source_type")
-        to_type = place_cfg.get("to_place_types") or config.get("destination_type")
+        from_type = place_cfg["from_place_types"]
+        to_type = place_cfg["to_place_types"]
 
         logging.info(f"  -> Place Rollup: {from_type} -> {to_type} for imports {applicable_imports}")
         generator = PlaceAggregationGenerator(self.executor, self.is_base_dc)
@@ -238,15 +241,7 @@ class AggregationOrchestrator:
         """Triggers statistical variable aggregations."""
         stat_cfg = config.get("stat_var_aggregation", {})
         aggregations = stat_cfg.get("aggregations", [])
-        output_import_name = config.get("output_import") or config.get("output_import_name")
-
-        # Backwards compatibility fallback for single item config
-        if not aggregations and "ancestor_sv_id" in config:
-            aggregations = [{
-                "ancestor_sv_id": config["ancestor_sv_id"],
-                "source_sv_ids": config["source_sv_ids"],
-                "skip_all_sources_present_check": config.get("skip_all_sources_present_check", False)
-            }]
+        output_import_name = config.get("output_import")
 
         generator = StatVarAggregator(self.executor, self.is_base_dc)
         jobs = []
@@ -267,6 +262,20 @@ class AggregationOrchestrator:
             jobs.extend(item_jobs)
 
         return jobs
+
+    def _trigger_stat_var_calculation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers statistical variable calculations."""
+        calc_cfg = config.get("stat_var_calculation", {})
+        calculations = calc_cfg.get("calculations", [])
+        output_import_name = config.get("output_import")
+
+        logging.info(f"  -> Stat Var Calculation for imports {applicable_imports}")
+        generator = StatVarCalculationGenerator(self.executor, self.is_base_dc)
+        return generator.calculate_stat_vars(
+            calculations=calculations,
+            import_names=applicable_imports,
+            output_import_name=output_import_name
+        )
 
     def _trigger_linked_edges(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers linked edge aggregations."""
