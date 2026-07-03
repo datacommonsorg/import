@@ -39,6 +39,10 @@ def main():
         logging.error(f"Failed to parse import_list JSON: {e}")
         sys.exit(1)
 
+    if not isinstance(import_list, list):
+        logging.error("Parsed import_list is not a list")
+        sys.exit(1)
+
     # Dummy logic
     logging.info("Processing aggregation (dummy)...")
     for imp in import_list:
