@@ -136,8 +136,8 @@ run_aggregation_job:
                 - args:
                     - "--import_list"
                     - ${json.encode_to_string(import_list)}
-        connector_params:
-          timeout: 3600
+          connector_params:
+            timeout: 21600
         result: aggregation_response
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.
