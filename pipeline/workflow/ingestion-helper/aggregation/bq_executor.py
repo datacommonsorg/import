@@ -37,8 +37,14 @@ class BigQueryExecutor:
         self.location = location
         # TODO: Remove run_sequential logic once DCP migrates to async execution.
         self.run_sequential = run_sequential
-        self.client = bigquery.Client(project=self.project_id,
-                                      location=self.location)
+        self._client: Optional[bigquery.Client] = None
+
+    @property
+    def client(self) -> bigquery.Client:
+        """Lazily initializes and returns the BigQuery client."""
+        if self._client is None:
+            self._client = bigquery.Client(project=self.project_id, location=self.location)
+        return self._client
 
     def get_spanner_destination_uri(self) -> str:
         """Returns the Spanner destination URI for EXPORT DATA."""

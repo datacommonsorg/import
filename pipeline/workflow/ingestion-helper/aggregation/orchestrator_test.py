@@ -116,8 +116,14 @@ class TestOrchestratorExecution(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
 
-    def test_run_synchronized_pipeline(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
-        """Tests complete synchronized run pipeline for an import across stages."""
+    def test_run_dry_run_true(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+        """Tests that run with dry_run=True logs imports and skips job submission."""
+        self.orchestrator.run(active_imports=["USFed_Census"], dry_run=True)
+        mock_place_gen.return_value.aggregate_places.assert_not_called()
+        mock_sv_agg.return_value.aggregate_stat_vars.assert_not_called()
+
+    def test_run_dry_run_false(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+        """Tests that run with dry_run=False submits BigQuery jobs across stages."""
         mock_job1 = MagicMock()
         mock_job1.job_id = "job-place-1"
         mock_place_gen.return_value.aggregate_places.return_value = mock_job1
@@ -129,7 +135,7 @@ class TestOrchestratorExecution(unittest.TestCase):
         self.orchestrator.executor = MagicMock()
         self.orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
 
-        self.orchestrator.run(active_imports=["USFed_Census"])
+        self.orchestrator.run(active_imports=["USFed_Census"], dry_run=False)
 
         mock_place_gen.return_value.aggregate_places.assert_called_once_with(
             import_names=["USFed_Census"],
@@ -145,6 +151,22 @@ class TestOrchestratorExecution(unittest.TestCase):
             output_import_name="USFed_Census_StatVarAgg",
             skip_all_sources_present_check=True
         )
+
+    def test_execute_stage(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+        """Tests manual execution of a specific stage."""
+        mock_job1 = MagicMock()
+        mock_job1.job_id = "job-place-1"
+        mock_place_gen.return_value.aggregate_places.return_value = mock_job1
+
+        job_ids = self.orchestrator.execute_stage(1, ["USFed_Census"])
+
+        mock_place_gen.return_value.aggregate_places.assert_called_once_with(
+            import_names=["USFed_Census"],
+            source_type="County",
+            destination_type="State",
+            allow_multiple_to_places=False
+        )
+        self.assertEqual(job_ids, ["job-place-1"])
 
 
 if __name__ == '__main__':

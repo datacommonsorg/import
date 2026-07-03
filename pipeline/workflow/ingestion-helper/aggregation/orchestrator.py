@@ -82,7 +82,7 @@ class AggregationOrchestrator:
         else:
             self.calculations = validate_config(target_config, schema_file_path)
 
-    def run(self, active_imports: List[str]) -> None:
+    def run(self, active_imports: List[str], dry_run: bool = True) -> None:
         """Executes aggregations independently for each active import.
 
         Blocks and synchronizes stage progression for each import:
@@ -90,8 +90,11 @@ class AggregationOrchestrator:
 
         Args:
             active_imports: List of active import dataset names to process.
+            dry_run: If True, logs imports and active stages without executing BigQuery jobs.
         """
-        logging.info(f"Starting Aggregation Orchestrator run for active imports: {active_imports}")
+        logging.info(
+            f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports}"
+        )
 
         for single_import in active_imports:
             logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
@@ -99,6 +102,12 @@ class AggregationOrchestrator:
 
             if not active_stages:
                 logging.info(f"No aggregation steps configured for import '{single_import}'. Skipping.")
+                continue
+
+            if dry_run:
+                logging.info(
+                    f"Detected active stage(s) {active_stages} for import '{single_import}'. Skipping execution because dry_run=True."
+                )
                 continue
 
             for stage_num in active_stages:
