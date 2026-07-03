@@ -72,12 +72,12 @@ class TestOrchestratorScanning(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
 
-    def test_get_active_stages_for_import(self, mock_executor):
+    def test_get_active_stages(self, mock_executor):
         """Tests getting active stages for matching and non-matching imports."""
-        stages = self.orchestrator.get_active_stages_for_import("USFed_Census")
+        stages = self.orchestrator.get_active_stages(["USFed_Census"])
         self.assertEqual(stages, [1, 2])
 
-        stages = self.orchestrator.get_active_stages_for_import("OtherImport")
+        stages = self.orchestrator.get_active_stages(["OtherImport"])
         self.assertEqual(stages, [])
 
     def test_directory_config_loading(self, mock_executor):

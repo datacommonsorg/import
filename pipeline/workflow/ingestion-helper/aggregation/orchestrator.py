@@ -95,7 +95,7 @@ class AggregationOrchestrator:
 
         for single_import in active_imports:
             logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
-            active_stages = self.get_active_stages_for_import(single_import)
+            active_stages = self._get_active_stages_for_import(single_import)
 
             if not active_stages:
                 logging.info(f"No aggregation steps configured for import '{single_import}'. Skipping.")
@@ -107,7 +107,7 @@ class AggregationOrchestrator:
 
             logging.info(f"=== Successfully completed all aggregation stages for Import: '{single_import}' ===")
 
-    def get_active_stages_for_import(self, single_import: str) -> List[int]:
+    def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.
 
         Args:
@@ -126,7 +126,7 @@ class AggregationOrchestrator:
         """Returns a sorted list of unique active stage numbers across active imports."""
         stages = set()
         for single_import in active_imports:
-            stages.update(self.get_active_stages_for_import(single_import))
+            stages.update(self._get_active_stages_for_import(single_import))
         return sorted(list(stages))
 
     def execute_stage(self, stage_num: int, active_imports: List[str]) -> List[str]:
