@@ -127,18 +127,17 @@ run_aggregation_job:
           - condition: ${import_list == null or len(import_list) == 0}
             return: 'SKIPPED'
     - run_aggregation:
-        call: googleapis.run.v1.namespaces.jobs.run
+        call: googleapis.run.v2.projects.locations.jobs.run
         args:
-          name: ${"namespaces/" + project_id + "/jobs/aggregation-helper-job"}
-          location: ${location}
+          name: ${"projects/" + project_id + "/locations/" + location + "/jobs/aggregation-helper-job"}
           body:
             overrides:
               containerOverrides:
                 - args:
                     - "--import_list"
                     - ${json.encode_to_string(import_list)}
-        connector_params:
-          timeout: 3600
+          connector_params:
+            timeout: 21600
         result: aggregation_response
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.
