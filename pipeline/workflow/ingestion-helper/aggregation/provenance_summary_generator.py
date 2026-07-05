@@ -174,8 +174,8 @@ class ProvenanceSummaryGenerator:
               STRUCT(dcid, names.name)
               ORDER BY dcid
             ) as top_places
-          FROM top_place_dcids tp,
-          UNNEST(tp.top_dcids) as dcid
+          FROM top_place_dcids tp
+          CROSS JOIN UNNEST(tp.top_dcids) as dcid
           LEFT JOIN `temp_node_names_filtered` names ON dcid = names.subject_id
           GROUP BY tp.variable_measured, tp.provenance, tp.facet_id, tp.place_type
         )
