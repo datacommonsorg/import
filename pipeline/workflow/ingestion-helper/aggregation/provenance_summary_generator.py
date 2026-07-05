@@ -129,7 +129,7 @@ class ProvenanceSummaryGenerator:
         FROM `temp_obs_flat` raw
         LEFT JOIN `temp_type_edges_filtered` edges ON raw.observation_about = edges.subject_id;
 
-        -- Step 6: Aggregate Place Type Summaries and attach names to top 3 sample places
+        -- Step 7: Aggregate Place Type Summaries and attach names to top 3 sample places
         CREATE OR REPLACE TEMPORARY TABLE `temp_place_type_summary` AS
         WITH place_stats AS (
           SELECT
@@ -191,7 +191,7 @@ class ProvenanceSummaryGenerator:
         FROM place_stats ps
         JOIN aggregated_places ap USING (variable_measured, provenance, facet_id, place_type);
 
-        -- Step 6: Final aggregation and export to Cache
+        -- Step 8: Final aggregation and export to Cache
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
