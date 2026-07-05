@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration E2E tests for Data Commons aggregations.
+r"""Integration E2E tests for Data Commons aggregations.
 
 Covers:
 - LinkedEdgeGenerator (Linked Edges)
@@ -35,7 +35,7 @@ How to run:
 1. Ensure your local environment is authenticated (gcloud auth application-default login).
 2. Set the environment variables or edit the config below.
 3. Run the following command from the `import/pipeline/workflow/ingestion-helper` directory:
-   uv run pytest aggregation/e2e_tests/aggregation_e2e_test.py -s
+    GOOGLE_API_USE_CLIENT_CERTIFICATE=false UV_NO_CONFIG=1 UV_INDEX_URL=https://pypi.org/simple \uv run pytest aggregation/e2e_tests/aggregation_e2e_test.py -s
 """
 
 import os
@@ -717,6 +717,46 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             # geoId/99 (Dangling: name should be None or empty, but must not crash)
             self.assertEqual(top_places[1]['dcid'], 'geoId/99')
             self.assertIsNone(top_places[1]['name']) # BigQuery LEFT JOIN returns NULL for missing name
+
+    def test_provenance_summary_aggregation_multiple_imports(self):
+        """Tests run_all with multiple imports at once."""
+        import_1 = 'Import_Alpha'
+        import_2 = 'Import_Beta'
+        
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_1)
+        self.add_edge('geoId/06', 'typeOf', 'State', import_2)
+        
+        self.add_timeseries('Count_Person', 'geoId/06', 'Census', 'P1Y', '1', '1', import_1)
+        self.add_observation('Count_Person', 'geoId/06', '2020', 100.0, import_name=import_1)
+        
+        self.add_timeseries('Count_HousingUnit', 'geoId/06', 'Census', 'P1Y', '1', '1', import_2)
+        self.add_observation('Count_HousingUnit', 'geoId/06', '2020', 50.0, import_name=import_2)
+        
+        self.flush_to_spanner()
+        
+        generator = self.get_generator()
+        jobs = generator.run_all([import_1, import_2])
+        self.assertEqual(len(jobs), 1)
+        
+        with self.database.snapshot() as snapshot:
+            query = """
+                SELECT type, key, provenance, value
+                FROM Cache
+                WHERE type = 'ProvenanceSummary'
+                ORDER BY provenance, key
+            """
+            results = list(snapshot.execute_sql(query))
+            self.assertEqual(len(results), 2)
+            
+            prov_1 = f'dc/base/{import_1}' if self.is_base_dc else import_1
+            prov_2 = f'dc/base/{import_2}' if self.is_base_dc else import_2
+            
+            self.assertEqual(results[0][2], prov_1)
+            self.assertEqual(results[0][1], 'Count_Person')
+            
+            self.assertEqual(results[1][2], prov_2)
+            self.assertEqual(results[1][1], 'Count_HousingUnit')
 
 
 class ProvenanceSummaryGeneratorCustomDcTest(ProvenanceSummaryGeneratorIntegrationTest):
