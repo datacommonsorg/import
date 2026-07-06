@@ -41,5 +41,16 @@ class TestSqlUtils(unittest.TestCase):
         statements = parse_sql_to_statements(sql)
         self.assertEqual(statements, [])
 
+    def test_parse_sql_to_statements_with_trailing_comments(self):
+        sql = """
+        CREATE TABLE A; -- comment with semicolon; inside
+        CREATE TABLE B (col INT64); -- another trailing comment
+        """
+        statements = parse_sql_to_statements(sql)
+        self.assertEqual(statements, [
+            "CREATE TABLE A",
+            "CREATE TABLE B (col INT64)"
+        ])
+
 if __name__ == '__main__':
     unittest.main()

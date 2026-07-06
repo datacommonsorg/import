@@ -16,20 +16,19 @@
 def parse_sql_to_statements(sql_content: str) -> list[str]:
     """Parses a SQL script string into a list of individual DDL statements.
 
-    It filters out lines that are comments (starting with '--') to prevent
-    semicolons inside comments from interfering with statement splitting.
+    It filters out comments (starting with '--') to prevent semicolons
+    inside comments from interfering with statement splitting.
     """
     clean_lines = []
     for line in sql_content.splitlines():
-        if line.strip().startswith('--'):
-            continue
-        clean_lines.append(line)
+        clean_line = line.split('--')[0]
+        if clean_line.strip():
+            clean_lines.append(clean_line.rstrip())
     clean_sql = "\n".join(clean_lines)
-    
+
     statements = []
     for s in clean_sql.split(';'):
         s_stripped = s.strip()
-        if not s_stripped or s_stripped.startswith('--'):
-            continue
-        statements.append(s_stripped)
+        if s_stripped:
+            statements.append(s_stripped)
     return statements

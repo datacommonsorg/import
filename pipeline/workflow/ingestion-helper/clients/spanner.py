@@ -315,16 +315,11 @@ class SpannerClient:
 
         def _insert(transaction: Transaction):
             columns = [
-                "CompletionTimestamp", "IngestionFailure",
-                "WorkflowExecutionID", "DataflowJobID", "IngestedImports",
-                "ExecutionTime", "NodeCount", "EdgeCount", "ObservationCount"
+                "WorkflowExecutionID", "Timestamp", "ObservationCount"
             ]
             values = [[
+                workflow_id,
                 spanner.COMMIT_TIMESTAMP,
-                self.check_failed_imports(), workflow_id, job_id,
-                ingested_imports, metrics.get('execution_time', 0) if metrics else 0,
-                metrics.get('node_count', 0) if metrics else 0,
-                metrics.get('edge_count', 0) if metrics else 0,
                 metrics.get('obs_count', 0) if metrics else 0
             ]]
             transaction.insert_or_update(table="IngestionHistory",
@@ -364,12 +359,14 @@ class SpannerClient:
             f"Updating IngestionHistory table (v2) for workflow {workflow_id} with status {status}, stage {stage}")
 
         def _update(transaction: Transaction):
+            status_str = status.value if hasattr(status, 'value') else status
             columns = ["WorkflowExecutionID", "Status"]
-            values = [workflow_id, status.value]
+            values = [workflow_id, status_str]
 
             if stage:
+                stage_str = stage.value if hasattr(stage, 'value') else stage
                 columns.append("Stage")
-                values.append(stage.value)
+                values.append(stage_str)
 
             if status == IngestionState.PENDING:
                 columns.append("CreationTimestamp")

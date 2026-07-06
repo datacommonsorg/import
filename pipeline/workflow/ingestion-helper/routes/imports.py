@@ -94,11 +94,12 @@ def _extract_import_names(import_list: Optional[List[ImportItem]]) -> Optional[L
 def update_ingestion_status(req: UpdateIngestionStatusRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Updates the status of imports after ingestion."""
     ingested_imports = _extract_import_names(req.importList)
-    spanner.update_ingestion_status(ingested_imports, req.workflowId, req.status.value)
+    status_str = req.status.value if hasattr(req.status, 'value') else req.status
+    spanner.update_ingestion_status(ingested_imports, req.workflowId, status_str)
 
     if not config.ENABLE_UNIQUE_INGESTION_RUNS:
         metrics = None
-        if req.jobId:
+        if req.jobId and req.jobId != "N/A":
             try:
                 metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
             except Exception as e:
@@ -121,7 +122,7 @@ def update_ingestion_history(req: UpdateIngestionHistoryRequest, spanner: Spanne
     ingested_imports = _extract_import_names(req.importList)
     
     metrics = None
-    if req.status in (IngestionState.SUCCESS, IngestionState.FAILURE, IngestionState.RETRY) and req.stage == IngestionStage.DATAFLOW and req.jobId:
+    if req.status in (IngestionState.SUCCESS, IngestionState.RETRY) and req.stage == IngestionStage.DATAFLOW and req.jobId and req.jobId != "N/A":
         try:
             metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
         except Exception as e:
