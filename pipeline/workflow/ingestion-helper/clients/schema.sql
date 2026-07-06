@@ -186,7 +186,7 @@ CREATE TABLE {{ embedding_table }} (
 INTERLEAVE IN PARENT Node ON DELETE CASCADE;
 
 CREATE VECTOR INDEX {{ embedding_index }}
-ON {{ embedding_table }}(embeddings)
+ON {{ embedding_table }}(embeddings, embedding_label)
 WHERE embeddings IS NOT NULL
 OPTIONS (
   distance_type = 'COSINE'
