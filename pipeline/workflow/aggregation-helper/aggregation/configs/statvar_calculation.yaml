@@ -1,0 +1,315 @@
+calculations:
+
+  # Energy.
+  - name: "EIA_Electricity: Annual Emissions Per Capita StatVar Calculation"
+    type: STAT_VAR_CALCULATION
+    input_imports:
+      - EPA_GHGRP_AggCounty
+      - EPA_GHGRP_AggCensusZipCodeTabulationArea
+      - EPA_GHGRP_AggCounty_AggState
+      - EIA_Electricity
+      - UNEnergy
+    output_import: Energy_StatVarCalculation
+    stat_var_calculation:
+      calculations:
+        - input1:
+            sv_regex: Annual_Emissions_GreenhouseGas_NonBiogenic
+            measurement_method_regex: dcAggregate/EPA_GHGRP
+            facet_info:
+              unit: MetricTonCO2e
+              observation_period: P1Y
+          input2:
+            sv_regex: Annual_Generation_Electricity
+            facet_info:
+              unit: GigawattHour
+          operation: DIVIDE
+          output:
+            sv: Annual_Emissions_GreenhouseGas_NonBiogenic_Per_Annual_Generation_Electricity
+            measurement_method: EPA_GHGRP_EIA_Electricity
+            facet_info:
+              unit: MetricTonCO2ePerGigawattHour
+              observation_period: P1Y
+
+  # Climate: Temperature modeling diffs from actual.
+  # There are 30+ models. For each model, the output diffs are done for
+  # Aggregations: Mean, Min, Max and also for SSP2 with RCP4.5 and SSP5 with
+  # RCP8.5 (for each model).
+  # This includes diffs for P1M, P1Y, P5Y and P10Y.
+  # Note that the computations below use sv_regex and measurement_method_regex
+  # instead of sv and measurement_method to allow more expressive matching. Also
+  # note that the output uses sv_prefix and measurement_method_prefix which is not
+  # the case above, for example. Whenever sv and measurement_method are set in the
+  # output, they are preferred. Otherwise, the *_prefix is used.
+  - name: "Climate: NASA CMIP6 Temperature Modeling Diffs Calculation"
+    type: STAT_VAR_CALCULATION
+    input_imports:
+      - NASA_NEXGDDP_CMIP6_Subnational
+      - NASA_NEXGDDP_CMIP6_IpccPlaces50
+      - NOAA_EPA_Observed_Historical_Weather
+      - NASA_NEXDCP30
+      - Copernicus_ECMWF_ERA5_Monthly
+      - Copernicus_ECMWF_ERA5_Monthly_AggrYearsStats
+      - NASA_NEXDCP30_AggrYearsStats
+      - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrYearsStats
+      - NASA_NEXGDDP_CMIP6_Subnational_AggrYearsStats
+      - NOAA_EPA_Observed_Historical_Weather_AggrYearsStats
+    output_import: Climate_StatVarCalculation
+    stat_var_calculation:
+      calculations:
+        - input1:
+            sv_regex: "^Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+          input2:
+            sv_regex: "^Mean_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+
+        - input1:
+            sv_regex: "^Min_Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+          input2:
+            sv_regex: "^Min_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+
+        - input1:
+            sv_regex: "^Max_Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+          input2:
+            sv_regex: "^Max_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P1M
+
+        - input1:
+            sv_regex: "^Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Mean_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+
+        - input1:
+            sv_regex: "^Min_Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Min_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+
+        - input1:
+            sv_regex: "^Max_Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Max_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P1Y
+
+        - input1:
+            sv_regex: "^Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Mean_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+
+        - input1:
+            sv_regex: "^Min_Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Min_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+
+        - input1:
+            sv_regex: "^Max_Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Max_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P5Y
+
+        - input1:
+            sv_regex: "^Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Mean_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y
+
+        - input1:
+            sv_regex: "^Min_Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Min_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y
+
+        - input1:
+            sv_regex: "^Max_Temperature(_SSP[0-9]+)*$"
+            measurement_method_regex: "^dcAggregate/NASA_Mean_CMIP6_.*"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y
+              import_name_regex: ".*AggrYearsStats$"
+          input2:
+            sv_regex: "^Max_Temperature$"
+            measurement_method_regex: "dcAggregate/NASAGSOD_NASAGHCN_EPA"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y
+              import_name_regex: ".*AggrYearsStats$"
+          operation: SUBTRACT
+          output:
+            sv_prefix: "DifferenceRelativeToObservationalData_"
+            measurement_method_prefix: "dcAggregate/NASA_Mean_CMIP6_WithBaseAs_"
+            facet_info:
+              unit: Celsius
+              observation_period: P10Y

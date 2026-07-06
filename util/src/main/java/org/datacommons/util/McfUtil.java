@@ -214,4 +214,59 @@ public class McfUtil {
     }
     return false;
   }
+
+  // Return the first value of a TypedValue for a property, or null if none.
+  public static String getFirstPropertyValue(
+      Mcf.McfGraph.PropertyValuesOrBuilder pvBuilder, String prop) {
+    Mcf.McfGraph.Values values = pvBuilder.getPvsMap().get(prop);
+    if (values != null && values.getTypedValuesCount() > 0) {
+      return stripNamespace(values.getTypedValues(0).getValue());
+    }
+    return null;
+  }
+
+  // Generate SV definition.
+  public static String generateSVDefinition(
+      Mcf.McfGraph.PropertyValuesOrBuilder pvBuilder,
+      Map<String, Mcf.McfGraph.Values> constraintPvs) {
+    List<String> parts = new ArrayList<>();
+
+    addCoreProperties(parts, pvBuilder);
+    addConstraints(parts, constraintPvs);
+
+    return String.join(",", parts);
+  }
+
+  private static void addCoreProperties(
+      List<String> parts, Mcf.McfGraph.PropertyValuesOrBuilder pvBuilder) {
+
+    String md = getFirstPropertyValue(pvBuilder, Vocabulary.MEASUREMENT_DENOMINATOR);
+    if (md != null) parts.add("md=" + md);
+
+    String mq = getFirstPropertyValue(pvBuilder, Vocabulary.MEASUREMENT_QUALIFIER);
+    if (mq != null) parts.add("mq=" + mq);
+
+    String st = getFirstPropertyValue(pvBuilder, Vocabulary.STAT_TYPE);
+    if (st != null && !st.equals(Vocabulary.MEASURED_VALUE)) parts.add("st=" + st);
+
+    String mp = getFirstPropertyValue(pvBuilder, Vocabulary.MEASURED_PROP);
+    if (mp != null) parts.add("mp=" + mp);
+
+    String pt = getFirstPropertyValue(pvBuilder, Vocabulary.POPULATION_TYPE);
+    if (pt != null) parts.add("pt=" + pt);
+  }
+
+  private static void addConstraints(
+      List<String> parts, Map<String, Mcf.McfGraph.Values> constraintPvs) {
+
+    List<String> sortedKeys = new ArrayList<>(constraintPvs.keySet());
+    Collections.sort(sortedKeys);
+
+    for (String key : sortedKeys) {
+      Mcf.McfGraph.Values value = constraintPvs.get(key);
+      if (value != null && value.getTypedValuesCount() > 0) {
+        parts.add(key + "=" + stripNamespace(value.getTypedValues(0).getValue()));
+      }
+    }
+  }
 }
