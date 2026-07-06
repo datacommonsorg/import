@@ -1845,6 +1845,53 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(obs_results), 1)
             self.assertAlmostEqual(float(obs_results[0][0]), 1.0, msg="Duplicate edges should not cause double counting")
 
+    def test_aggregate_multiple_location_props(self):
+        """Tests aggregation when config specifies multiple location properties (affectedPlace and location)."""
+        import_name = 'EarthquakeUSGS_MultiLoc'
+        output_import = 'EarthquakeUSGS_MultiLoc_Agg'
+
+        # 1. Setup mock data
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_1: uses affectedPlace
+        self.add_node('eq_1', 'Earthquake 1', types=['EarthquakeEvent'])
+        self.add_edge('eq_1', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_1', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+
+        # eq_2: uses location
+        self.add_node('eq_2', 'Earthquake 2', types=['EarthquakeEvent'])
+        self.add_edge('eq_2', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_2', 'location', 'geoId/06', import_name)
+        self.add_edge('eq_2', 'occurrenceTime', '2023-06-20T12:00:00Z', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator with multiple location_props
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent'],
+            location_props=['affectedPlace', 'location'],
+            date_prop='occurrenceTime',
+            agg_date_formats=['YYYY'],
+            constraints=[],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify Observation count is 2.0
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_results = list(snapshot.execute_sql(
+                "SELECT value FROM Observation WHERE entity1 = 'geoId/06' AND date = '2023'"
+            ))
+            self.assertEqual(len(obs_results), 1)
+            self.assertAlmostEqual(float(obs_results[0][0]), 2.0, msg="Both affectedPlace and location events should be aggregated")
+
 
 class EntityAggregationGeneratorCustomDcTest(EntityAggregationGeneratorIntegrationTest):
     is_base_dc = False

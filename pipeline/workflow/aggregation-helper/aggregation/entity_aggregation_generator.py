@@ -134,6 +134,7 @@ class EntityAggregationGenerator:
         
         # Parse constraints
         parsed_constraints = self._parse_constraints(config.constraints)
+        location_props_str = ", ".join([f'"{_escape_sql_literal(p)}"' for p in config.location_props])
         
         # 1. Step 1: Extract Raw Entities and Properties
         sql_parts = []
@@ -147,12 +148,12 @@ class EntityAggregationGenerator:
                AND object_id IN ({entity_types_str}) 
                AND provenance IN ({input_provenances_str})''');
 
-        -- Extract locations (using the first location property, filtering out latLong/ nodes)
+        -- Extract locations (supporting multiple location_props, filtering out latLong/ nodes)
         CREATE OR REPLACE TEMPORARY TABLE `temp_locations` AS
         SELECT DISTINCT subject_id AS entity_id, object_id AS location_id
         FROM EXTERNAL_QUERY("{connection_id}",
           '''SELECT subject_id, object_id FROM Edge 
-             WHERE predicate = "{config.location_props[0]}"''')
+             WHERE predicate IN ({location_props_str})''')
         WHERE subject_id IN (SELECT entity_id FROM `temp_entities`)
           AND NOT STARTS_WITH(object_id, 'latLong/');
         """)
