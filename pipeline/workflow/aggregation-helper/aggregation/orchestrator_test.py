@@ -63,7 +63,9 @@ VALID_CONFIG_YAML = textwrap.dedent("""\
           agg_date_formats:
             - YYYY
           constraints:
-            - "magnitude: [7 - M]"
+            - property: magnitude
+              min: 7
+              unit: M
 """)
 
 
