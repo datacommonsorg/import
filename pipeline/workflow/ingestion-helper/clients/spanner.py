@@ -315,12 +315,21 @@ class SpannerClient:
 
         def _insert(transaction: Transaction):
             columns = [
-                "WorkflowExecutionID", "Timestamp", "ObservationCount"
+                "CompletionTimestamp", "IngestionFailure",
+                "WorkflowExecutionID", "DataflowJobID", "IngestedImports",
+                "ExecutionTime", "NodeCount", "EdgeCount", "ObservationCount"
             ]
+            m = metrics if metrics else {}
             values = [[
-                workflow_id,
                 spanner.COMMIT_TIMESTAMP,
-                metrics.get('obs_count', 0) if metrics else 0
+                self.check_failed_imports(),
+                workflow_id,
+                job_id if job_id else "",
+                ingested_imports if ingested_imports else [],
+                m.get('execution_time', 0),
+                m.get('node_count', 0),
+                m.get('edge_count', 0),
+                m.get('obs_count', 0)
             ]]
             transaction.insert_or_update(table="IngestionHistory",
                                          columns=columns,

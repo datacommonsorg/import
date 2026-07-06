@@ -452,11 +452,19 @@ class TestSpannerClient(unittest.TestCase):
         _, kwargs = mock_transaction.insert_or_update.call_args
         self.assertEqual(kwargs['table'], 'IngestionHistory')
         self.assertEqual(kwargs['columns'], [
-            "WorkflowExecutionID", "Timestamp", "ObservationCount"
+            "CompletionTimestamp", "IngestionFailure",
+            "WorkflowExecutionID", "DataflowJobID", "IngestedImports",
+            "ExecutionTime", "NodeCount", "EdgeCount", "ObservationCount"
         ])
         self.assertEqual(kwargs['values'], [[
-            "wf-123",
             spanner.COMMIT_TIMESTAMP,
+            False,
+            "wf-123",
+            "job-456",
+            ["import1", "import2"],
+            120,
+            1000,
+            2000,
             500
         ]])
 

@@ -431,16 +431,14 @@ class TestMain(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
-        mock_get_ingestion_metrics.assert_called_once_with(
-            config.PROJECT_ID, config.LOCATION, "job-456"
-        )
+        mock_get_ingestion_metrics.assert_not_called()
         mock_spanner_client.update_ingestion_history_v2.assert_called_once_with(
             workflow_id="wf-123",
             status="FAILURE",
             stage="dataflow",
             job_id="job-456",
             ingested_imports=["import1"],
-            metrics=mock_metrics
+            metrics=None
         )
 
     @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', True)
