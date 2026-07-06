@@ -44,12 +44,12 @@ CREATE INDEX EdgeByProvenance ON Edge(provenance) OPTIONS (
 -- Foreign key constraints on Edge table
 
 -- Optimization - helps Spanner's query optimizer plan efficient joins from Edge.object_id to Node.subject_id for multi-hop graph traversals
--- CONSTRAINT FKObject FOREIGN KEY(object_id) REFERENCES Node(subject_id)
+-- CONSTRAINT FKObject FOREIGN KEY(object_id) REFERENCES Node(subject_id);
 
 -- For edge-node consistency
--- ALTER TABLE Edge SET INTERLEAVE IN PARENT Node
--- CONSTRAINT FKPredicate FOREIGN KEY(predicate) REFERENCES Node(subject_id)
--- CONSTRAINT FKProvenance FOREIGN KEY(provenance) REFERENCES Node(subject_id)
+-- ALTER TABLE Edge SET INTERLEAVE IN PARENT Node;
+-- CONSTRAINT FKPredicate FOREIGN KEY(predicate) REFERENCES Node(subject_id);
+-- CONSTRAINT FKProvenance FOREIGN KEY(provenance) REFERENCES Node(subject_id);
 
 
 CREATE TABLE TimeSeries (
