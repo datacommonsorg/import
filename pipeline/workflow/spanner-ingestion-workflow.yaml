@@ -70,7 +70,8 @@ main:
                 call: run_aggregation_job
                 args:
                   import_list: ${import_info.body}
-                  helper_url: ${helper_url}
+                  project_id: ${project_id}
+                  location: ${location}
             - update_ingestion_status:
                 call: http.post
                 args:
@@ -119,40 +120,25 @@ main:
 
 # This sub-workflow runs aggregation jobs and waits for them to complete.
 run_aggregation_job:
-  params: [import_list, helper_url]
+  params: [import_list, project_id, location]
   steps:
+    - check_if_empty:
+        switch:
+          - condition: ${import_list == null or len(import_list) == 0}
+            return: 'SKIPPED'
     - run_aggregation:
-        call: http.post
+        call: googleapis.run.v2.projects.locations.jobs.run
         args:
-          url: ${helper_url + "/aggregation/run"}
-          timeout: 300
-          auth:
-            type: OIDC
+          name: ${"projects/" + project_id + "/locations/" + location + "/jobs/aggregation-helper-job"}
           body:
-            importList: ${import_list}
+            overrides:
+              containerOverrides:
+                - args:
+                    - "--import_list"
+                    - ${json.encode_to_string(import_list)}
+          connector_params:
+            timeout: 21600
         result: aggregation_response
-    - check_aggregation_status_loop:
-        steps:
-          - wait_for_aggregation:
-              call: sys.sleep
-              args:
-                seconds: 300
-          - check_aggregation_status:
-              call: http.post
-              args:
-                url: ${helper_url + "/aggregation/status"}
-                auth:
-                  type: OIDC
-                body:
-                  jobIds: ${aggregation_response.body.jobIds}
-              result: aggregation_status_response
-          - evaluate_aggregation_status:
-              switch:
-                - condition: ${aggregation_status_response.body.status == "DONE"}
-                  return: 'OK'
-                - condition: ${aggregation_status_response.body.status == "FAILED"}
-                  raise: ${aggregation_status_response.body.error}
-              next: check_aggregation_status_loop
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.
 run_dataflow_job:
@@ -205,6 +191,8 @@ run_dataflow_job:
           location: '${location}'
           jobId: '${launch_result.job.id}'
           view: 'JOB_VIEW_SUMMARY'
+          query:
+            fields: 'currentState'
         result: job_status
         next: check_if_done
     - check_if_done:
