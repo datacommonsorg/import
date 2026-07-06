@@ -34,15 +34,9 @@ def main():
     )
     parser.add_argument(
         "--dry_run",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
-        help="Run in dry-run mode without executing jobs (default: True)."
-    )
-    parser.add_argument(
-        "--execute",
-        action="store_false",
-        dest="dry_run",
-        help="Disable dry-run mode and execute BigQuery aggregation jobs."
+        help="Run in dry-run mode without executing jobs (use --no-dry_run to execute)."
     )
 
     args = parser.parse_args()
@@ -65,13 +59,13 @@ def main():
     connection_id = os.environ.get("BQ_SPANNER_CONN_ID")
     project_id = os.environ.get("PROJECT_ID")
     instance_id = os.environ.get("SPANNER_INSTANCE_ID")
-    database_id = os.environ.get("SPANNER_GRAPH_DATABASE_ID") or os.environ.get("SPANNER_DATABASE_ID")
+    database_id = os.environ.get("SPANNER_GRAPH_DATABASE_ID")
     location = os.environ.get("LOCATION")
 
     if not all([connection_id, project_id, instance_id, database_id]):
         logging.error(
             f"Missing required environment variables. connection_id={connection_id}, "
-            f"project_id={project_id}, instance_id={instance_id}, database_id={database_id}"
+            f"project_id={project_id}, instance_id={instance_id}, database_id (SPANNER_GRAPH_DATABASE_ID)={database_id}"
         )
         sys.exit(1)
 
@@ -84,7 +78,14 @@ def main():
     )
 
     logging.info(f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}) for imports: {import_list}")
-    orchestrator.run(active_imports=import_list, dry_run=args.dry_run)
+    run_result = orchestrator.run(active_imports=import_list, dry_run=args.dry_run)
+
+    if not run_result.success:
+        logging.error(
+            f"Aggregation Helper Cloud Run Job finished with failures for import(s): {run_result.failed_imports}"
+        )
+        sys.exit(1)
+
     logging.info("Aggregation Helper Cloud Run Job completed successfully.")
 
 if __name__ == "__main__":

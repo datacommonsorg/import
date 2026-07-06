@@ -117,8 +117,12 @@ class TestOrchestratorExecution(unittest.TestCase):
         self.tmpdir.cleanup()
 
     def test_run_dry_run_true(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
-        """Tests that run with dry_run=True logs imports and skips job submission."""
-        self.orchestrator.run(active_imports=["USFed_Census"], dry_run=True)
+        """Tests that run with dry_run=True logs stages without submitting BigQuery jobs."""
+        result = self.orchestrator.run(active_imports=["USFed_Census"], dry_run=True)
+        self.assertTrue(result.success)
+        self.assertIn("USFed_Census", result.import_results)
+        self.assertTrue(result.import_results["USFed_Census"].success)
+
         mock_place_gen.return_value.aggregate_places.assert_not_called()
         mock_sv_agg.return_value.aggregate_stat_vars.assert_not_called()
 
@@ -135,7 +139,10 @@ class TestOrchestratorExecution(unittest.TestCase):
         self.orchestrator.executor = MagicMock()
         self.orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
 
-        self.orchestrator.run(active_imports=["USFed_Census"], dry_run=False)
+        result = self.orchestrator.run(active_imports=["USFed_Census"], dry_run=False)
+        self.assertTrue(result.success)
+        self.assertIn("USFed_Census", result.import_results)
+        self.assertTrue(result.import_results["USFed_Census"].success)
 
         mock_place_gen.return_value.aggregate_places.assert_called_once_with(
             import_names=["USFed_Census"],

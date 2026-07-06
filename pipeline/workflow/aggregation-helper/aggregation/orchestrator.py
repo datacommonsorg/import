@@ -18,6 +18,7 @@ import glob
 import logging
 import os
 import time
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -29,6 +30,31 @@ from .stat_var_aggregator import StatVarAggregator
 from .stat_var_calculation_generator import StatVarCalculationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
 from .validator import validate_config
+
+
+@dataclass
+class ImportExecutionResult:
+    """Execution status and metadata for a single import dataset."""
+    import_name: str
+    success: bool
+    stages_executed: List[int] = field(default_factory=list)
+    error_message: Optional[str] = None
+
+
+@dataclass
+class AggregationRunResult:
+    """Summary result of an overall AggregationOrchestrator run across imports."""
+    import_results: Dict[str, ImportExecutionResult] = field(default_factory=dict)
+
+    @property
+    def success(self) -> bool:
+        """Returns True if all processed imports succeeded."""
+        return all(res.success for res in self.import_results.values())
+
+    @property
+    def failed_imports(self) -> List[str]:
+        """Returns the list of import names that failed."""
+        return [name for name, res in self.import_results.items() if not res.success]
 
 
 class CalculationType(str, Enum):
@@ -92,7 +118,7 @@ class AggregationOrchestrator:
         else:
             self.calculations = validate_config(target_config, schema_file_path)
 
-    def run(self, active_imports: List[str], dry_run: bool = True) -> None:
+    def run(self, active_imports: List[str], dry_run: bool = True) -> AggregationRunResult:
         """Executes aggregations independently for each active import.
 
         Blocks and synchronizes stage progression for each import:
@@ -101,10 +127,14 @@ class AggregationOrchestrator:
         Args:
             active_imports: List of active import dataset names to process.
             dry_run: If True, logs imports and active stages without executing BigQuery jobs.
+
+        Returns:
+            AggregationRunResult containing status per import.
         """
         logging.info(
             f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports}"
         )
+        run_result = AggregationRunResult()
 
         for single_import in active_imports:
             logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
@@ -112,19 +142,45 @@ class AggregationOrchestrator:
 
             if not active_stages:
                 logging.info(f"No aggregation steps configured for import '{single_import}'. Skipping.")
+                run_result.import_results[single_import] = ImportExecutionResult(
+                    import_name=single_import,
+                    success=True,
+                    stages_executed=[]
+                )
                 continue
 
             if dry_run:
                 logging.info(
                     f"Detected active stage(s) {active_stages} for import '{single_import}'. Skipping execution because dry_run=True."
                 )
+                run_result.import_results[single_import] = ImportExecutionResult(
+                    import_name=single_import,
+                    success=True,
+                    stages_executed=active_stages
+                )
                 continue
 
-            for stage_num in active_stages:
-                logging.info(f"--- Triggering Stage {stage_num} for import '{single_import}' ---")
-                self._execute_and_synchronize_stage(single_import, stage_num)
+            try:
+                for stage_num in active_stages:
+                    logging.info(f"--- Triggering Stage {stage_num} for import '{single_import}' ---")
+                    self._execute_and_synchronize_stage(single_import, stage_num)
 
-            logging.info(f"=== Successfully completed all aggregation stages for Import: '{single_import}' ===")
+                logging.info(f"=== Successfully completed all aggregation stages for Import: '{single_import}' ===")
+                run_result.import_results[single_import] = ImportExecutionResult(
+                    import_name=single_import,
+                    success=True,
+                    stages_executed=active_stages
+                )
+            except Exception as e:
+                logging.error(f"Aggregation pipeline failed for import '{single_import}': {e}")
+                run_result.import_results[single_import] = ImportExecutionResult(
+                    import_name=single_import,
+                    success=False,
+                    stages_executed=active_stages,
+                    error_message=str(e)
+                )
+
+        return run_result
 
     def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.
@@ -221,7 +277,7 @@ class AggregationOrchestrator:
     def _wait_for_jobs(
         self,
         job_ids: List[str],
-        poll_interval: int = 15,
+        poll_interval: int = 30,
         step_name: str = "Aggregation",
         single_import: str = ""
     ) -> None:
@@ -229,7 +285,7 @@ class AggregationOrchestrator:
 
         Args:
             job_ids: List of BigQuery job IDs to wait for.
-            poll_interval: Seconds between polling checks (default: 15s).
+            poll_interval: Seconds between polling checks (default: 30s).
             step_name: Name of the step for debug logging.
             single_import: Name of the import dataset for debug logging.
 
@@ -260,7 +316,7 @@ class AggregationOrchestrator:
             time.sleep(poll_interval)
             elapsed += poll_interval
             logging.info(
-                f"[Heartbeat] Waiting for {len(job_ids)} BigQuery job(s) for step '{step_name}' (import: '{single_import}') - elapsed: {elapsed}s..."
+                f"Waiting for {len(job_ids)} BigQuery job(s) for step '{step_name}' (import: '{single_import}') - elapsed: {elapsed}s..."
             )
 
     def _trigger_place(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
