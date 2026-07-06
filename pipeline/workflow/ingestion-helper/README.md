@@ -27,7 +27,6 @@ ingestion-helper/
 │
 ├── utils/                     # Layer 2: Core Processing & Calculations
 │   ├── __init__.py
-│   ├── aggregation.py         # BigQuery async aggregation polling logic
 │   ├── embeddings.py          # Vertex AI text embedding generation
 │   ├── imports.py             # General metadata metrics extractor
 │   └── embeddings_test.py     # Embedding calculation unit tests
@@ -37,7 +36,6 @@ ingestion-helper/
     ├── imports.py             # /imports/*
     ├── database.py            # /database/*
     ├── embeddings.py          # /embeddings/*
-    ├── aggregation.py         # /aggregation/*
     └── cache.py               # /cache/*
 ```
 
@@ -62,8 +60,6 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
 | `/imports/status` | `POST` | `UpdateImportStatusRequest` | `BaseResponse` | Updates status and refresh windows for multiple imports. |
 | `/imports/version` | `POST` | `UpdateImportVersionRequest` | `BaseResponse` | Updates the version and status of multiple imports. |
 | `/imports/ingestion-status` | `POST` | `UpdateIngestionStatusRequest` | `BaseResponse` | Records final pipeline statuses and Dataflow metrics. |
-| `/aggregation/run` | `POST` | `AggregationRequest` | `AggregationResponse` | Submits BigQuery aggregation queries asynchronously. |
-| `/aggregation/status` | `POST` | `AggregationStatusRequest` | `AggregationStatusResponse` | Polls active BigQuery aggregation job statuses. |
 | `/cache/clear` | `POST` | *None* | `BaseResponse` | Flushes the Redis cache (if configured). |
 
 ---
@@ -81,7 +77,6 @@ All application configurations are centralized inside **[config.py](config.py)**
 | `SPANNER_INSTANCE_ID` | `str` | *None* | Cloud Spanner Instance ID. |
 | `SPANNER_DATABASE_ID` | `str` | *None* | Cloud Spanner Metadata Database ID (tracks jobs). |
 | `SPANNER_GRAPH_DATABASE_ID` | `str` | *None* | Cloud Spanner Graph Database ID (stores triples). |
-| `BQ_SPANNER_CONN_ID` | `str` | *None* | BigQuery connection ID used to query Spanner in aggregations. |
 | `GCS_BUCKET_ID` | `str` | *None* | GCS Bucket ID used for staging and versioning imports. |
 | `LOCATION` / `REGION` | `str` | `us-central1` | GCP region where resources are deployed. |
 | `ENABLE_EMBEDDINGS` | `bool` | `false` | Enables/disables Vertex AI embedding generation. |
