@@ -1801,6 +1801,50 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(obs_results[0][0], '2023')
             self.assertAlmostEqual(float(obs_results[0][1]), 1.0)
 
+    def test_aggregate_duplicate_edge_resilience(self):
+        """Tests that duplicate edges in Spanner do not cause event double counting."""
+        import_name = 'EarthquakeUSGS_Dup'
+        output_import = 'EarthquakeUSGS_Dup_Agg'
+
+        # 1. Setup mock data
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_1: single earthquake node
+        self.add_node('eq_1', 'Earthquake 1', types=['EarthquakeEvent'])
+        self.add_edge('eq_1', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_1', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+        
+        # Add DUPLICATE location edges for eq_1
+        self.add_edge('eq_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_1', 'affectedPlace', 'geoId/06', 'EarthquakeUSGS_OtherProvenance')
+
+        self.flush_to_spanner()
+
+        # 2. Run generator
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent'],
+            location_props=['affectedPlace'],
+            date_prop='occurrenceTime',
+            agg_date_formats=['YYYY'],
+            constraints=[],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify count is 1.0 (NOT 2.0)
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_results = list(snapshot.execute_sql(
+                "SELECT value FROM Observation WHERE entity1 = 'geoId/06' AND date = '2023'"
+            ))
+            self.assertEqual(len(obs_results), 1)
+            self.assertAlmostEqual(float(obs_results[0][0]), 1.0, msg="Duplicate edges should not cause double counting")
+
 
 class EntityAggregationGeneratorCustomDcTest(EntityAggregationGeneratorIntegrationTest):
     is_base_dc = False

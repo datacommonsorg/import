@@ -140,7 +140,7 @@ class EntityAggregationGenerator:
         sql_parts.append(f"""
         -- Step 1: Extract raw entity IDs of the target types
         CREATE OR REPLACE TEMPORARY TABLE `temp_entities` AS
-        SELECT subject_id AS entity_id
+        SELECT DISTINCT subject_id AS entity_id
         FROM EXTERNAL_QUERY("{connection_id}",
           '''SELECT subject_id FROM Edge 
              WHERE predicate = "typeOf" 
@@ -149,7 +149,7 @@ class EntityAggregationGenerator:
 
         -- Extract locations (using the first location property, filtering out latLong/ nodes)
         CREATE OR REPLACE TEMPORARY TABLE `temp_locations` AS
-        SELECT subject_id AS entity_id, object_id AS location_id
+        SELECT DISTINCT subject_id AS entity_id, object_id AS location_id
         FROM EXTERNAL_QUERY("{connection_id}",
           '''SELECT subject_id, object_id FROM Edge 
              WHERE predicate = "{config.location_props[0]}"''')
@@ -161,7 +161,7 @@ class EntityAggregationGenerator:
             sql_parts.append(f"""
             -- Extract dates
             CREATE OR REPLACE TEMPORARY TABLE `temp_dates` AS
-            SELECT subject_id AS entity_id, object_id AS raw_date
+            SELECT DISTINCT subject_id AS entity_id, object_id AS raw_date
             FROM EXTERNAL_QUERY("{connection_id}",
               '''SELECT subject_id, object_id FROM Edge 
                  WHERE predicate = "{config.date_prop}"''')
@@ -173,7 +173,7 @@ class EntityAggregationGenerator:
             sql_parts.append(f"""
             -- Extract constraint: {c['prop']}
             CREATE OR REPLACE TEMPORARY TABLE `temp_constraint_{c['prop']}` AS
-            SELECT subject_id AS entity_id, object_id AS {c['prop']}_val
+            SELECT DISTINCT subject_id AS entity_id, object_id AS {c['prop']}_val
             FROM EXTERNAL_QUERY("{connection_id}",
               '''SELECT subject_id, object_id FROM Edge 
                  WHERE predicate = "{c['prop']}"''')
