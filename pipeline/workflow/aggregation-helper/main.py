@@ -65,7 +65,7 @@ def main():
     connection_id = os.environ.get("BQ_SPANNER_CONN_ID")
     project_id = os.environ.get("PROJECT_ID")
     instance_id = os.environ.get("SPANNER_INSTANCE_ID")
-    database_id = os.environ.get("SPANNER_DATABASE_ID") or os.environ.get("SPANNER_GRAPH_DATABASE_ID")
+    database_id = os.environ.get("SPANNER_GRAPH_DATABASE_ID") or os.environ.get("SPANNER_DATABASE_ID")
     location = os.environ.get("LOCATION")
 
     if not all([connection_id, project_id, instance_id, database_id]):

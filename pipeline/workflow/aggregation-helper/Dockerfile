@@ -18,19 +18,18 @@ FROM python:3.12-slim
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Allow statements and log messages to immediately appear in the logs
-ENV PYTHONUNBUFFERED True
+ENV PYTHONUNBUFFERED=True
 
 WORKDIR /app
 
 # Copy dependency definition files to leverage Docker layer caching
-COPY ingestion-helper/pyproject.toml ingestion-helper/uv.lock ingestion-helper/__init__.py ./
+COPY pyproject.toml uv.lock __init__.py ./
 
 # Install production dependencies (without the project itself)
 RUN uv sync --no-dev --no-install-project
 
-# Copy ingestion-helper code (includes aggregation package) and main.py
-COPY ingestion-helper/ .
-COPY aggregation-helper/main.py .
+# Copy local code to the container image
+COPY . .
 
 # Install the project itself
 RUN uv sync --no-dev

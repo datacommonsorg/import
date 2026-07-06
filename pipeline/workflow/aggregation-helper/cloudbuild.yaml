@@ -17,7 +17,6 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '-f', 'aggregation-helper/Dockerfile',
       '-t', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_TAG}',
       '-t', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_VERSION}',
       '.'
