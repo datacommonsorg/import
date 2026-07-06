@@ -264,6 +264,97 @@ class TestMain(unittest.TestCase):
         # Verify get_caller_identity was called exactly once outside of the loop
         mock_get_caller_identity.assert_called_once()
 
+    @patch("routes.ingestion.requests.post")
+    def test_start_ingestion_success(self, mock_requests_post):
+        mock_storage_client = MagicMock()
+        mock_storage_client.check_bucket_exists.return_value = True
+        mock_storage_client.check_file_exists.return_value = True
+
+        app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
+
+        mock_val_resp = MagicMock()
+        mock_val_resp.status_code = 200
+        mock_requests_post.return_value = mock_val_resp
+
+        os.environ["DC_API_KEY"] = "mock-valid-key"
+        os.environ["STORAGE_EMULATOR_HOST"] = "localhost:9099"
+
+        try:
+            payload = {
+                "jobName": "projects/test-project/locations/us-central1/jobs/test-job",
+                "gcsBucket": "test-bucket",
+                "inputDirectory": "ingestion/input"
+            }
+            response = client.post("/ingestion/start", json=payload)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["status"], "SUBMITTED")
+            self.assertEqual(response.json()["operationName"], "projects/test-project/locations/us-central1/operations/mock-operation")
+
+            mock_storage_client.check_bucket_exists.assert_called_once_with("test-bucket")
+            mock_storage_client.check_file_exists.assert_called_once_with("test-bucket", "ingestion/input/config.json")
+            mock_requests_post.assert_called_once_with(
+                "https://api.datacommons.org/v2/node",
+                json={"nodes": ["country/USA"], "property": "->name"},
+                headers={"x-api-key": "mock-valid-key"},
+                timeout=5
+            )
+        finally:
+            os.environ.pop("DC_API_KEY", None)
+            os.environ.pop("STORAGE_EMULATOR_HOST", None)
+
+    @patch("routes.ingestion.requests.post")
+    def test_start_ingestion_api_key_403_failure(self, mock_requests_post):
+        mock_storage_client = MagicMock()
+        mock_storage_client.check_bucket_exists.return_value = True
+        mock_storage_client.check_file_exists.return_value = True
+
+        app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
+
+        mock_val_resp = MagicMock()
+        mock_val_resp.status_code = 403
+        mock_requests_post.return_value = mock_val_resp
+
+        os.environ["DC_API_KEY"] = "mock-invalid-key"
+        os.environ["STORAGE_EMULATOR_HOST"] = "localhost:9099"
+
+        try:
+            payload = {
+                "jobName": "projects/test-project/locations/us-central1/jobs/test-job",
+                "gcsBucket": "test-bucket",
+                "inputDirectory": "ingestion/input"
+            }
+            response = client.post("/ingestion/start", json=payload)
+            self.assertEqual(response.status_code, 400)
+            self.assertIn("rejected by api.datacommons.org (HTTP 403)", response.json()["detail"])
+        finally:
+            os.environ.pop("DC_API_KEY", None)
+            os.environ.pop("STORAGE_EMULATOR_HOST", None)
+
+    def test_get_job_config_success(self):
+        # Set environment variables for the test
+        os.environ["STORAGE_EMULATOR_HOST"] = "localhost:9099" # trigger emulator stubbed code path
+        
+        try:
+            # Call endpoint with explicit jobName
+            payload = {
+                "jobName": "projects/test-project/locations/us-central1/jobs/test-job"
+            }
+            response = client.post("/ingestion/config", json=payload)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["status"], "SUCCESS")
+            self.assertEqual(response.json()["config"][0]["name"], "DATA_RUN_MODE")
+
+            # Call endpoint without jobName, using env var fallback
+            os.environ["INGESTION_JOB_NAME"] = "projects/test-project/locations/us-central1/jobs/test-job-env"
+            response = client.post("/ingestion/config", json={})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["status"], "SUCCESS")
+            self.assertEqual(response.json()["config"][0]["name"], "DATA_RUN_MODE")
+        finally:
+            os.environ.pop("STORAGE_EMULATOR_HOST", None)
+            os.environ.pop("INGESTION_JOB_NAME", None)
+
 
     @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', False)
     @patch('routes.imports.import_utils.get_ingestion_metrics')

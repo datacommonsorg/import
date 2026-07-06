@@ -163,3 +163,22 @@ class StorageClient:
         logging.info(
             f'Updated provenance file for import {import_name} to add {version}'
         )
+
+    def check_bucket_exists(self, bucket_name: str) -> bool:
+        """Checks if the given GCS bucket exists."""
+        try:
+            bucket = self.storage.bucket(bucket_name)
+            return bucket.exists()
+        except Exception as e:
+            logging.error(f"Failed to check bucket existence for {bucket_name}: {e}")
+            return False
+
+    def check_file_exists(self, bucket_name: str, path: str) -> bool:
+        """Checks if the given file exists in the bucket."""
+        try:
+            bucket = self.storage.bucket(bucket_name)
+            blob = bucket.blob(path)
+            return blob.exists()
+        except Exception as e:
+            logging.error(f"Failed to check file existence for gs://{bucket_name}/{path}: {e}")
+            return False

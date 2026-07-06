@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from fastapi import FastAPI
-from routes import imports, database, embeddings, aggregation, cache
+from routes import imports, database, embeddings, aggregation, cache, ingestion
 from utils.logging import log_requests
 from __init__ import __version__
 
@@ -32,3 +32,4 @@ app.include_router(database.router)
 app.include_router(embeddings.router)
 app.include_router(aggregation.router)
 app.include_router(cache.router)
+app.include_router(ingestion.router)

@@ -29,7 +29,8 @@ from utils.aggregation import AggregationUtils
 @patch('utils.aggregation.StatVarGroupGenerator')
 class TestAggregationUtils(unittest.TestCase):
 
-    def test_run_aggregation(self, mock_prov_gen, mock_edge_gen, mock_executor):
+    def test_run_aggregation(self, mock_svg_gen, mock_prov_gen, mock_edge_gen,
+                             mock_executor):
         # Setup mocks
         mock_executor_instance = MagicMock()
         mock_executor.return_value = mock_executor_instance
@@ -66,7 +67,7 @@ class TestAggregationUtils(unittest.TestCase):
 
         self.assertEqual(job_ids, ["job1", "job2"])
 
-    def test_check_aggregation_status(self, mock_prov_gen, mock_edge_gen,
+    def test_check_aggregation_status(self, mock_svg_gen, mock_prov_gen, mock_edge_gen,
                                       mock_executor):
         mock_executor_instance = MagicMock()
         mock_executor.return_value = mock_executor_instance

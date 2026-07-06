@@ -414,6 +414,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "redis" },
+    { name = "requests" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -438,6 +439,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pyyaml" },
     { name = "redis" },
+    { name = "requests" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.28.0" },
 ]
 
