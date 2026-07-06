@@ -14,6 +14,7 @@
 
 import logging
 import os
+from enum import Enum
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
 from google.cloud.spanner_admin_database_v1.types import UpdateDatabaseDdlRequest
@@ -23,6 +24,19 @@ from datetime import datetime, timezone
 from jinja2 import Template
 
 logging.getLogger().setLevel(logging.INFO)
+
+
+class IngestionState(str, Enum):
+    SUCCESS = "SUCCESS"
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    FAILURE = "FAILURE"
+    RETRY = "RETRY"
+
+
+class IngestionStage(str, Enum):
+    DATAFLOW = "dataflow"
+    POSTPROCESSING = "postprocessing"
 
 
 class SpannerClient:
@@ -282,14 +296,57 @@ class SpannerClient:
             logging.error(f'Error updating ImportStatus table: {e}')
             raise
 
-    def update_ingestion_history(self,
-                                 workflow_id: str,
-                                 status: str,
-                                 stage: str,
-                                 job_id: str = None,
-                                 ingested_imports: list = None,
-                                 metrics: dict = None):
-        """Updates the IngestionHistory table.
+    def update_ingestion_history_v1(self, workflow_id: str, job_id: str,
+                                    ingested_imports: list, metrics: dict):
+        """Updates the IngestionHistory table (v1 schema).
+
+        Args:
+            workflow_id: The ID of the workflow.
+            job_id: The Dataflow job ID.
+            ingested_imports: List of ingested import names.
+            metrics: A dictionary containing metrics about the ingestion.
+        """
+
+        logging.info(
+            f"Updating IngestionHistory table (v1) for workflow {workflow_id}")
+
+        def _insert(transaction: Transaction):
+            columns = [
+                "CompletionTimestamp", "IngestionFailure",
+                "WorkflowExecutionID", "DataflowJobID", "IngestedImports",
+                "ExecutionTime", "NodeCount", "EdgeCount", "ObservationCount"
+            ]
+            values = [[
+                spanner.COMMIT_TIMESTAMP,
+                self.check_failed_imports(), workflow_id, job_id,
+                ingested_imports, metrics.get('execution_time', 0) if metrics else 0,
+                metrics.get('node_count', 0) if metrics else 0,
+                metrics.get('edge_count', 0) if metrics else 0,
+                metrics.get('obs_count', 0) if metrics else 0
+            ]]
+            transaction.insert_or_update(table="IngestionHistory",
+                                         columns=columns,
+                                         values=values)
+
+        try:
+            self.database.run_in_transaction(_insert)
+            # TODO: remove dual writes after switching to the prod setup.
+            if self.graph_database and self.graph_database.name != self.database.name:
+                self.graph_database.run_in_transaction(_insert)
+            logging.info(
+                f"Updated IngestionHistory table (v1) for workflow {workflow_id}")
+        except Exception as e:
+            logging.error(f'Error updating IngestionHistory table (v1): {e}')
+            raise
+
+    def update_ingestion_history_v2(self,
+                                    workflow_id: str,
+                                    status: IngestionState,
+                                    stage: IngestionStage = None,
+                                    job_id: str = None,
+                                    ingested_imports: list = None,
+                                    metrics: dict = None):
+        """Updates the IngestionHistory table (v2 schema).
 
         Args:
             workflow_id: The ID of the workflow.
@@ -301,15 +358,22 @@ class SpannerClient:
         """
 
         logging.info(
-            f"Updating IngestionHistory table for workflow {workflow_id} with status {status}, stage {stage}")
+            f"Updating IngestionHistory table (v2) for workflow {workflow_id} with status {status}, stage {stage}")
 
         def _update(transaction: Transaction):
-            columns = ["WorkflowExecutionID", "Status", "Stage", "Timestamp"]
-            values = [workflow_id, status, stage, spanner.COMMIT_TIMESTAMP]
+            columns = ["WorkflowExecutionID", "Status", "Stage"]
+            values = [workflow_id, status.value, stage.value if stage else None]
 
-            if status in ('SUCCESS', 'FAILURE'):
+            if status == IngestionState.PENDING:
+                columns.append("CreationTimestamp")
+                values.append(spanner.COMMIT_TIMESTAMP)
+
+            # The statements below allow us to construct a partial update, only for the fields that are set.
+            if status in (IngestionState.SUCCESS, IngestionState.FAILURE):
+                columns.append("CompletionTimestamp")
+                values.append(spanner.COMMIT_TIMESTAMP)
                 columns.append("IngestionFailure")
-                values.append(status == 'FAILURE')
+                values.append(status == IngestionState.FAILURE)
 
             if job_id:
                 columns.append("DataflowJobID")
@@ -341,9 +405,9 @@ class SpannerClient:
             if self.graph_database and self.graph_database.name != self.database.name:
                 self.graph_database.run_in_transaction(_update)
             logging.info(
-                f"Updated IngestionHistory table for workflow {workflow_id}")
+                f"Updated IngestionHistory table (v2) for workflow {workflow_id}")
         except Exception as e:
-            logging.error(f'Error updating IngestionHistory table: {e}')
+            logging.error(f'Error updating IngestionHistory table (v2): {e}')
             raise
 
     def update_import_version_history(self, import_list_json: list,

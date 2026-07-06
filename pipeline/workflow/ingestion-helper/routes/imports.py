@@ -16,7 +16,7 @@ import os
 import logging
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
-from clients.spanner import SpannerClient
+from clients.spanner import SpannerClient, IngestionState, IngestionStage
 from clients.storage import StorageClient
 from dependencies import get_spanner_client, get_storage_client
 import config
@@ -25,17 +25,6 @@ from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
 from routes.models import BaseResponse, ResponseStatus
-
-class IngestionState(str, Enum):
-    SUCCESS = "SUCCESS"
-    PENDING = "PENDING"
-    RUNNING = "RUNNING"
-    FAILURE = "FAILURE"
-    RETRY = "RETRY"
-
-class IngestionStage(str, Enum):
-    DATAFLOW = "dataflow"
-    POSTPROCESSING = "postprocessing"
 
 class ImportState(str, Enum):
     STAGING = "STAGING"
@@ -106,6 +95,21 @@ def update_ingestion_status(req: UpdateIngestionStatusRequest, spanner: SpannerC
     """Updates the status of imports after ingestion."""
     ingested_imports = _extract_import_names(req.importList)
     spanner.update_ingestion_status(ingested_imports, req.workflowId, req.status.value)
+
+    if not config.ENABLE_UNIQUE_INGESTION_RUNS:
+        metrics = None
+        if req.jobId:
+            try:
+                metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
+            except Exception as e:
+                logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
+                metrics = {
+                    'execution_time': 0,
+                    'node_count': 0,
+                    'edge_count': 0,
+                    'obs_count': 0
+                }
+        spanner.update_ingestion_history_v1(req.workflowId, req.jobId, ingested_imports, metrics)
     
     if req.status == IngestionState.SUCCESS:
         import_list_dicts = [item.model_dump() for item in req.importList]
@@ -115,6 +119,10 @@ def update_ingestion_status(req: UpdateIngestionStatusRequest, spanner: SpannerC
 @router.post("/ingestion-history", response_model=BaseResponse)
 def update_ingestion_history(req: UpdateIngestionHistoryRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Updates the ingestion history record for the workflow execution."""
+    if not config.ENABLE_UNIQUE_INGESTION_RUNS:
+        logging.warning("Received update_ingestion_history request but ENABLE_UNIQUE_INGESTION_RUNS is disabled. No-op.")
+        return BaseResponse(status=ResponseStatus.OK)
+
     ingested_imports = _extract_import_names(req.importList)
     
     metrics = None
@@ -130,10 +138,10 @@ def update_ingestion_history(req: UpdateIngestionHistoryRequest, spanner: Spanne
                 'obs_count': 0
             }
 
-    spanner.update_ingestion_history(
+    spanner.update_ingestion_history_v2(
         workflow_id=req.workflowId,
-        status=req.status.value,
-        stage=req.stage.value if req.stage else None,
+        status=req.status,
+        stage=req.stage,
         job_id=req.jobId,
         ingested_imports=ingested_imports,
         metrics=metrics

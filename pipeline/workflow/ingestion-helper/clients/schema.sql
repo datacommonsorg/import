@@ -115,7 +115,8 @@ CREATE TABLE ImportStatus (
 
 CREATE TABLE IngestionHistory (
   WorkflowExecutionID STRING(1024) NOT NULL,
-  Timestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+  CreationTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+  CompletionTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
   IngestionFailure Bool,
   Status STRING(1024),
   Stage STRING(1024),
