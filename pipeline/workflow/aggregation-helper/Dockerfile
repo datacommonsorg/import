@@ -14,13 +14,28 @@
 
 FROM python:3.12-slim
 
+# Copy uv binary
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 # Allow statements and log messages to immediately appear in the logs
-ENV PYTHONUNBUFFERED True
+ENV PYTHONUNBUFFERED=True
 
 WORKDIR /app
 
-# Copy local code to the container image
-COPY main.py .
+# Copy dependency definition files to leverage Docker layer caching
+COPY pyproject.toml uv.lock __init__.py ./
 
-# Run the script
+# Install production dependencies (without the project itself)
+RUN uv sync --no-dev --no-install-project
+
+# Copy local code to the container image
+COPY . .
+
+# Install the project itself
+RUN uv sync --no-dev
+
+# Place the virtual environment's bin directory on the PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Run the Cloud Run Job script
 ENTRYPOINT ["python", "main.py"]

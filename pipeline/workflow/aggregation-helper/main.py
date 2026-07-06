@@ -12,20 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Aggregation Helper Cloud Run Job skeleton."""
+"""Aggregation Helper Cloud Run Job execution entry point."""
 
 import argparse
 import json
 import logging
+import os
 import sys
+
+from aggregation import AggregationOrchestrator
+
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    logging.info("Starting Aggregation Helper Job")
+    logging.info("Starting Aggregation Helper Cloud Run Job...")
 
     parser = argparse.ArgumentParser(description="Run aggregation helper job.")
-    parser.add_argument("--import_list", help="JSON string representing the list of imports to process.")
-    
+    parser.add_argument(
+        "--import_list",
+        help="JSON string representing the list of imports to process."
+    )
+    parser.add_argument(
+        "--dry_run",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run in dry-run mode without executing jobs (use --no-dry_run to execute)."
+    )
+
     args = parser.parse_args()
 
     if not args.import_list:
@@ -34,7 +47,7 @@ def main():
 
     try:
         import_list = json.loads(args.import_list)
-        logging.info(f"Received import list: {import_list}")
+        logging.info(f"Received active imports to process: {import_list}")
     except json.JSONDecodeError as e:
         logging.error(f"Failed to parse import_list JSON: {e}")
         sys.exit(1)
@@ -43,12 +56,37 @@ def main():
         logging.error("Parsed import_list is not a list")
         sys.exit(1)
 
-    # Dummy logic
-    logging.info("Processing aggregation (dummy)...")
-    for imp in import_list:
-        logging.info(f"Processing import: {imp}")
-    
-    logging.info("Aggregation Helper Job completed successfully.")
+    connection_id = os.environ.get("BQ_SPANNER_CONN_ID")
+    project_id = os.environ.get("PROJECT_ID")
+    instance_id = os.environ.get("SPANNER_INSTANCE_ID")
+    database_id = os.environ.get("SPANNER_GRAPH_DATABASE_ID")
+    location = os.environ.get("LOCATION")
+
+    if not all([connection_id, project_id, instance_id, database_id]):
+        logging.error(
+            f"Missing required environment variables. connection_id={connection_id}, "
+            f"project_id={project_id}, instance_id={instance_id}, database_id (SPANNER_GRAPH_DATABASE_ID)={database_id}"
+        )
+        sys.exit(1)
+
+    orchestrator = AggregationOrchestrator(
+        connection_id=connection_id,
+        project_id=project_id,
+        instance_id=instance_id,
+        database_id=database_id,
+        location=location,
+    )
+
+    logging.info(f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}) for imports: {import_list}")
+    run_result = orchestrator.run(active_imports=import_list, dry_run=args.dry_run)
+
+    if not run_result.success:
+        logging.error(
+            f"Aggregation Helper Cloud Run Job finished with failures for import(s): {run_result.failed_imports}"
+        )
+        sys.exit(1)
+
+    logging.info("Aggregation Helper Cloud Run Job completed successfully.")
 
 if __name__ == "__main__":
     main()
