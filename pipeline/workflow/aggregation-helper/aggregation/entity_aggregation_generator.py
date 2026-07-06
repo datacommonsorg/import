@@ -141,9 +141,9 @@ class EntityAggregationGenerator:
         sql_parts.append(f"""
         -- Step 1: Extract raw entity IDs of the target types
         CREATE OR REPLACE TEMPORARY TABLE `temp_entities` AS
-        SELECT DISTINCT subject_id AS entity_id
+        SELECT DISTINCT subject_id AS entity_id, object_id AS entity_type
         FROM EXTERNAL_QUERY("{connection_id}",
-          '''SELECT subject_id FROM Edge 
+          '''SELECT subject_id, object_id FROM Edge 
              WHERE predicate = "typeOf" 
                AND object_id IN ({entity_types_str}) 
                AND provenance IN ({input_provenances_str})''');
@@ -219,6 +219,7 @@ class EntityAggregationGenerator:
         WITH RawEvents AS (
           SELECT 
             e.entity_id,
+            e.entity_type,
             l.location_id,
             {date_select_raw} AS raw_date
             {cte_cons_selects}
@@ -231,6 +232,7 @@ class EntityAggregationGenerator:
         )
         SELECT 
           entity_id,
+          entity_type,
           location_id,
           raw_date,
           {date_bucket_select}
@@ -248,13 +250,14 @@ class EntityAggregationGenerator:
             if wildcard_select:
                 wildcard_select = ", " + wildcard_select
                 
-            group_by_cols = f"location_id, date_{fmt_clean}, period_{fmt_clean}"
+            group_by_cols = f"location_id, entity_type, date_{fmt_clean}, period_{fmt_clean}"
             if wildcard_cols:
                 group_by_cols += ", " + ", ".join(wildcard_cols)
 
             group_parts.append(f"""
             SELECT 
               location_id,
+              entity_type,
               date_{fmt_clean} AS obs_date,
               period_{fmt_clean} AS obs_period,
               COUNT(entity_id) AS event_count
@@ -273,11 +276,10 @@ class EntityAggregationGenerator:
 
         # 4. Step 4: Deterministic SV DCID Generation
         # We need to construct the serialization key for the SV.
-        # Static SV properties: populationType, measuredProperty=count, statType=measuredValue
-        # Plus static constraints and wildcard values.
+        # Static SV properties: measuredProperty=count, statType=measuredValue
+        # Plus populationType (from column), static constraints, and wildcard values.
         # We must sort all keys to ensure determinism.
         sv_props = {
-            'populationType': config.entity_types[0], # Use the first type as primary
             'measuredProperty': 'count',
             'statType': 'measuredValue'
         }
@@ -287,41 +289,17 @@ class EntityAggregationGenerator:
                 sv_props[c['prop']] = c['val_str']
                 
         # Build the serialization parts
-        # For static properties: we can pre-format them in Python
-        # For wildcard properties: we must use CONCAT in SQL to append them dynamically
-        # Let's sort all keys (both static and wildcard)
-        all_keys = list(sv_props.keys()) + [c['prop'] for c in parsed_constraints if c['is_wildcard']]
+        all_keys = ['populationType'] + list(sv_props.keys()) + [c['prop'] for c in parsed_constraints if c['is_wildcard']]
         sorted_keys = sorted(all_keys)
         
-        concat_args = []
-        for key in sorted_keys:
-            if key in sv_props:
-                # Static property
-                concat_args.append(f"'{key}={sv_props[key]}'")
-            else:
-                # Wildcard property (dynamic from column)
-                concat_args.append(f"'{key}='")
-                concat_args.append(f"COALESCE({key}_val, '')")
-                
-        # Join with comma
-        # To do this in SQL CONCAT, we need to interleave commas between the key=value pairs.
-        # e.g., CONCAT('key1=val1', ',', 'key2=', col2, ',', 'key3=val3')
-        sql_concat_args = []
-        for i, arg in enumerate(concat_args):
-            if i > 0 and not (i % 2 == 1 and concat_args[i-1].startswith("'") and not concat_args[i-1].endswith("=")):
-                # Add comma before next pair (only if we are not appending the value to its key)
-                # Wait, the logic is: we want commas BETWEEN pairs.
-                # A pair is either a single static string `'key=val'` or a split `'key='`, `col`.
-                # Let's simplify: build a list of "pair expressions" in SQL, then join them with CONCAT using a separator,
-                # or just construct the flat list of arguments for CONCAT in Python.
-                pass
-        
-        # Let's construct the flat list of arguments for CONCAT in Python:
         flat_args = []
         for i, key in enumerate(sorted_keys):
             if i > 0:
                 flat_args.append("','") # Add comma separator between pairs
-            if key in sv_props:
+            if key == 'populationType':
+                flat_args.append("'populationType='")
+                flat_args.append("entity_type")
+            elif key in sv_props:
                 flat_args.append(f"'{key}={sv_props[key]}'")
             else:
                 flat_args.append(f"'{key}='")
@@ -329,21 +307,8 @@ class EntityAggregationGenerator:
                 
         concat_expr = f"CONCAT({', '.join(flat_args)})"
         
-        # Now we can generate the SV DCID dynamically in a temp table
-        # We also generate the SV Name
-        name_parts = [f"Count of {config.entity_types[0]}"]
-        for c in parsed_constraints:
-            if not c['is_wildcard']:
-                name_parts.append(f"{c['prop']}={c['val_str']}")
-            else:
-                # For wildcards, we will append the dynamic value in SQL
-                # we can handle name generation in SQL if needed, but a simple name is fine,
-                # or we can just use the DCID as name if it's too complex.
-                # Let's construct a decent name in SQL.
-                pass
-        
-        # Let's build the SV Name SQL expression
-        name_flat_args = [f"'Count of {config.entity_types[0]}'"]
+        # Build the SV Name SQL expression
+        name_flat_args = ["'Count of '", "entity_type"]
         static_cons_desc = " and ".join([f"{c['prop']} {c['val_str']}" for c in parsed_constraints if not c['is_wildcard']])
         if static_cons_desc:
             name_flat_args.append(f"' with {static_cons_desc}'")
@@ -384,13 +349,11 @@ class EntityAggregationGenerator:
         """)
 
         # 5.2 Export SV Edges
-        # We need to write the defining properties for each unique SV.
-        # Since we can have dynamic wildcards, we construct the edges dynamically.
-        # For each static property, we write a SELECT.
-        # For each wildcard property, we write a SELECT that pulls the value from the column.
         edge_selects = []
         # Static typeOf
         edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'typeOf' AS predicate, 'StatisticalVariable' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
+        # Dynamic populationType
+        edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'populationType' AS predicate, entity_type AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
         # Static SV props
         for k, v in sv_props.items():
             edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, '{k}' AS predicate, '{_escape_sql_literal(v)}' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")

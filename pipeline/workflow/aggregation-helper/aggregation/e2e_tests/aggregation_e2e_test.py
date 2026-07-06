@@ -1892,6 +1892,63 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(obs_results), 1)
             self.assertAlmostEqual(float(obs_results[0][0]), 2.0, msg="Both affectedPlace and location events should be aggregated")
 
+    def test_aggregate_multiple_entity_types(self):
+        """Tests aggregation when config specifies multiple entity_types (EarthquakeEvent and SeismicEvent)."""
+        import_name = 'EarthquakeUSGS_MultiType'
+        output_import = 'EarthquakeUSGS_MultiType_Agg'
+
+        # 1. Setup mock data
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_1: typeOf = EarthquakeEvent
+        self.add_node('eq_1', 'Earthquake 1', types=['EarthquakeEvent'])
+        self.add_edge('eq_1', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_1', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+
+        # seismic_1: typeOf = SeismicEvent
+        self.add_node('seismic_1', 'Seismic Event 1', types=['SeismicEvent'])
+        self.add_edge('seismic_1', 'typeOf', 'SeismicEvent', import_name)
+        self.add_edge('seismic_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('seismic_1', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator with multiple entity_types
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent', 'SeismicEvent'],
+            location_props=['affectedPlace'],
+            date_prop='occurrenceTime',
+            agg_date_formats=['YYYY'],
+            constraints=[],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify two distinct SVs were created with respective populationTypes
+        with self.database.snapshot(multi_use=True) as snapshot:
+            sv_pop_types = list(snapshot.execute_sql(
+                "SELECT subject_id, object_id FROM Edge WHERE predicate = 'populationType' AND provenance = '" + 
+                ("dc/base/" if self.is_base_dc else "") + output_import + "' ORDER BY object_id"
+            ))
+            self.assertEqual(len(sv_pop_types), 2, "Should generate 2 SVs with distinct populationTypes")
+            self.assertEqual(sv_pop_types[0][1], 'EarthquakeEvent')
+            self.assertEqual(sv_pop_types[1][1], 'SeismicEvent')
+
+            # Verify Observations exist for both SVs
+            for sv_dcid, pop_type in sv_pop_types:
+                obs = list(snapshot.execute_sql(
+                    f"SELECT value FROM Observation WHERE variable_measured = '{sv_dcid}' AND entity1 = 'geoId/06' AND date = '2023'"
+                ))
+                self.assertEqual(len(obs), 1, f"Should have observation for SV with populationType {pop_type}")
+                self.assertAlmostEqual(float(obs[0][0]), 1.0)
+
 
 class EntityAggregationGeneratorCustomDcTest(EntityAggregationGeneratorIntegrationTest):
     is_base_dc = False
