@@ -29,7 +29,7 @@ class EntityAggregationConfig:
                  location_props: List[str],
                  date_prop: str,
                  agg_date_formats: List[str],
-                 constraints: List[str],
+                 constraints: List[Dict],
                  output_import: str,
                  input_imports: List[str]):
         self.entity_types = entity_types
@@ -66,56 +66,54 @@ class EntityAggregationGenerator:
                 jobs.append(job)
         return jobs
 
-    def _parse_constraints(self, constraints: List[str]) -> List[Dict]:
-        """Parses MCF-style constraints into structured metadata and SQL clauses."""
+    def _parse_constraints(self, constraints: List[Dict]) -> List[Dict]:
+        """Parses structured constraint dictionaries into metadata and SQL clauses."""
         parsed = []
         for c in constraints:
-            if not c or ':' not in c:
+            if not isinstance(c, dict) or 'property' not in c:
                 continue
-            prop, val_str = [part.strip() for part in c.split(':', 1)]
-            
-            # 1. Wildcard constraint
-            if val_str == '*':
+            prop = c['property']
+            unit_suffix = f" {c['unit']}" if c.get('unit') else ""
+
+            if c.get('wildcard'):
                 parsed.append({
                     'prop': prop,
                     'is_wildcard': True,
                     'sql_filter': None,
-                    'val_str': val_str
+                    'val_str': '*'
                 })
-                continue
-
-            # 2. Range constraint [Low - Unit] (e.g., [7 - M])
-            range_low_match = re.match(r'^\[\s*([\d\.]+)\s*-\s*(\w+)\s*\]$', val_str)
-            if range_low_match:
-                low = range_low_match.group(1)
+            elif 'min' in c and 'max' in c:
+                val_str = f"[{c['min']} {c['max']}{unit_suffix}]"
                 parsed.append({
                     'prop': prop,
                     'is_wildcard': False,
-                    'sql_filter': f"SAFE_CAST({prop}_val AS FLOAT64) >= {low}",
+                    'sql_filter': f"SAFE_CAST({prop}_val AS FLOAT64) >= {c['min']} AND SAFE_CAST({prop}_val AS FLOAT64) <= {c['max']}",
                     'val_str': val_str
                 })
-                continue
-
-            # 3. Range constraint [Low High Unit] (e.g., [3 4 M])
-            range_bounds_match = re.match(r'^\[\s*([\d\.]+)\s+([\d\.]+)\s+(\w+)\s*\]$', val_str)
-            if range_bounds_match:
-                low = range_bounds_match.group(1)
-                high = range_bounds_match.group(2)
+            elif 'min' in c:
+                val_str = f"[{c['min']} -{unit_suffix}]"
                 parsed.append({
                     'prop': prop,
                     'is_wildcard': False,
-                    'sql_filter': f"SAFE_CAST({prop}_val AS FLOAT64) >= {low} AND SAFE_CAST({prop}_val AS FLOAT64) <= {high}",
+                    'sql_filter': f"SAFE_CAST({prop}_val AS FLOAT64) >= {c['min']}",
                     'val_str': val_str
                 })
-                continue
-
-            # 4. Simple literal value constraint (e.g., magnitudeType: MagnitudeMl)
-            parsed.append({
-                'prop': prop,
-                'is_wildcard': False,
-                'sql_filter': f"{prop}_val = '{_escape_sql_literal(val_str)}'",
-                'val_str': val_str
-            })
+            elif 'max' in c:
+                val_str = f"[- {c['max']}{unit_suffix}]"
+                parsed.append({
+                    'prop': prop,
+                    'is_wildcard': False,
+                    'sql_filter': f"SAFE_CAST({prop}_val AS FLOAT64) <= {c['max']}",
+                    'val_str': val_str
+                })
+            elif 'value' in c:
+                val_str = str(c['value'])
+                parsed.append({
+                    'prop': prop,
+                    'is_wildcard': False,
+                    'sql_filter': f"{prop}_val = '{_escape_sql_literal(val_str)}'",
+                    'val_str': val_str
+                })
         return parsed
 
     def _generate_sql(self, config: EntityAggregationConfig) -> str:

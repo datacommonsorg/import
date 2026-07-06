@@ -1390,7 +1390,7 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             location_props=['affectedPlace'],
             date_prop='occurrenceTime',
             agg_date_formats=['YYYY', 'YYYY-MM'],
-            constraints=['magnitude: [7 - M]'],
+            constraints=[{'property': 'magnitude', 'min': 7, 'unit': 'M'}],
             output_import=output_import,
             input_imports=[import_name]
         )
@@ -1525,7 +1525,7 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             location_props=['affectedPlace'],
             date_prop='', 
             agg_date_formats=['YYYY', 'YYYY-MM'],
-            constraints=['cause: *'],
+            constraints=[{'property': 'cause', 'wildcard': True}],
             output_import=output_import,
             input_imports=[import_name]
         )
@@ -1658,7 +1658,10 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             location_props=['affectedPlace'],
             date_prop='occurrenceTime',
             agg_date_formats=['YYYY'],
-            constraints=['magnitude: [3 5 M]', 'magnitudeType: MagnitudeMl'],
+            constraints=[
+                {'property': 'magnitude', 'min': 3, 'max': 5, 'unit': 'M'},
+                {'property': 'magnitudeType', 'value': 'MagnitudeMl'}
+            ],
             output_import=output_import,
             input_imports=[import_name]
         )
@@ -1948,6 +1951,60 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 ))
                 self.assertEqual(len(obs), 1, f"Should have observation for SV with populationType {pop_type}")
                 self.assertAlmostEqual(float(obs[0][0]), 1.0)
+
+    def test_aggregate_negative_upper_and_unitless_bounds(self):
+        """Tests negative bounds, upper bounds (max only), and unitless range constraints."""
+        import_name = 'TempDepth_Test'
+        output_import = 'TempDepth_Test_Agg'
+
+        # 1. Setup mock data
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # event_1: temp = -5.0, depth = 30.0 (Matches both)
+        self.add_node('event_1', 'Event 1', types=['ColdTemperatureEvent'])
+        self.add_edge('event_1', 'typeOf', 'ColdTemperatureEvent', import_name)
+        self.add_edge('event_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('event_1', 'startDate', '2023-05-14T12:00:00Z', import_name)
+        self.add_edge('event_1', 'temperature', '-5.0', import_name)
+        self.add_edge('event_1', 'depth', '30.0', import_name)
+
+        # event_2: temp = -15.0, depth = 80.0 (Filtered out by both)
+        self.add_node('event_2', 'Event 2', types=['ColdTemperatureEvent'])
+        self.add_edge('event_2', 'typeOf', 'ColdTemperatureEvent', import_name)
+        self.add_edge('event_2', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('event_2', 'startDate', '2023-05-14T12:00:00Z', import_name)
+        self.add_edge('event_2', 'temperature', '-15.0', import_name)
+        self.add_edge('event_2', 'depth', '80.0', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator with negative range, upper bound, and unitless constraints
+        config = EntityAggregationConfig(
+            entity_types=['ColdTemperatureEvent'],
+            location_props=['affectedPlace'],
+            date_prop='startDate',
+            agg_date_formats=['YYYY'],
+            constraints=[
+                {'property': 'temperature', 'min': -10, 'max': 40, 'unit': 'Celsius'},
+                {'property': 'depth', 'max': 50, 'unit': 'Kilometer'}
+            ],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify count is 1.0 (event_1 matched, event_2 excluded)
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_results = list(snapshot.execute_sql(
+                "SELECT value FROM Observation WHERE entity1 = 'geoId/06' AND date = '2023'"
+            ))
+            self.assertEqual(len(obs_results), 1)
+            self.assertAlmostEqual(float(obs_results[0][0]), 1.0, msg="Only event_1 should satisfy negative and upper bound constraints")
 
 
 class EntityAggregationGeneratorCustomDcTest(EntityAggregationGeneratorIntegrationTest):
