@@ -36,7 +36,7 @@ steps:
 
 - id: 'build-aggregation-helper'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['builds', 'submit', '.', '--config', 'aggregation-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
+  args: ['builds', 'submit', 'aggregation-helper', '--config', 'aggregation-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
   dir: 'pipeline/workflow'
   waitFor: ['-']
 
