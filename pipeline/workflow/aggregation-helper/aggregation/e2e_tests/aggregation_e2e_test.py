@@ -1753,6 +1753,54 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(valid_obs), 1)
             self.assertAlmostEqual(float(valid_obs[0][0]), 1.0)
 
+    def test_aggregate_missing_date_safeguard(self):
+        """Tests that entities missing date_prop when date_prop is set are cleanly skipped."""
+        import_name = 'EarthquakeUSGS_NoDate'
+        output_import = 'EarthquakeUSGS_NoDate_Agg'
+
+        # 1. Setup mock data
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_valid: has occurrenceTime (Included)
+        self.add_node('eq_valid', 'Valid Earthquake', types=['EarthquakeEvent'])
+        self.add_edge('eq_valid', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_valid', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_valid', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+
+        # eq_nodate: missing occurrenceTime (Should be skipped when date_prop is set)
+        self.add_node('eq_nodate', 'No Date Earthquake', types=['EarthquakeEvent'])
+        self.add_edge('eq_nodate', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_nodate', 'affectedPlace', 'geoId/06', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent'],
+            location_props=['affectedPlace'],
+            date_prop='occurrenceTime',
+            agg_date_formats=['YYYY'],
+            constraints=[],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify exactly 1 observation exists for 2023 with count 1
+            obs_results = list(snapshot.execute_sql(
+                "SELECT date, value FROM Observation WHERE entity1 = 'geoId/06'"
+            ))
+            self.assertEqual(len(obs_results), 1)
+            self.assertEqual(obs_results[0][0], '2023')
+            self.assertAlmostEqual(float(obs_results[0][1]), 1.0)
+
 
 class EntityAggregationGeneratorCustomDcTest(EntityAggregationGeneratorIntegrationTest):
     is_base_dc = False

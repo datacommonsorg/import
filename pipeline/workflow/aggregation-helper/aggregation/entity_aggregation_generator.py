@@ -210,6 +210,7 @@ class EntityAggregationGenerator:
         # Constraint filters (only for non-wildcard constraints)
         filters = [c['sql_filter'] for c in parsed_constraints if c['sql_filter']]
         filter_clause = "AND " + " AND ".join(filters) if filters else ""
+        date_null_filter = "\n            AND d.raw_date IS NOT NULL" if config.date_prop else ""
 
         sql_parts.append(f"""
         -- Step 2: Apply Constraints and Buckets
@@ -225,7 +226,7 @@ class EntityAggregationGenerator:
           {date_join}
           {cons_joins}
           WHERE TRUE
-            {filter_clause}
+            {filter_clause}{date_null_filter}
         )
         SELECT 
           entity_id,
