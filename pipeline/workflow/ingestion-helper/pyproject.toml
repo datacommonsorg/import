@@ -46,7 +46,7 @@ bypass-selection = true
 
 [tool.hatch.build.targets.wheel.force-include]
 "clients/schema.sql" = "clients/schema.sql"
-"base_dc_spanner.yaml" = "base_dc_spanner.yaml"
+"spanner_embedding_settings_dev.yaml" = "spanner_embedding_settings_dev.yaml"
 
 [dependency-groups]
 dev = [

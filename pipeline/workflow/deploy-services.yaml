@@ -32,7 +32,7 @@ substitutions:
   _VERSION: '${SHORT_SHA}'
   _DATAFLOW_TEMPLATE_PATH: 'gs://datcom-templates/templates/flex/'
   _ENABLE_EMBEDDINGS: 'true'
-  _EMBEDDING_SPEC_PATH: 'base_dc_spanner.yaml'
+  _EMBEDDING_SPEC_PATH: 'spanner_embedding_settings_dev.yaml'
 
 steps:
 - id: 'ingestion-helper-service'

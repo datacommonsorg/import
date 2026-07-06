@@ -53,7 +53,29 @@ class TestConfig(unittest.TestCase):
         try:
             os.environ['EMBEDDING_SPEC_PATH'] = temp_path
             importlib.reload(config)
-            self.assertEqual(config.EMBEDDING_SPECS, valid_specs)
+            expected = [config.EmbeddingSpec(**s) for s in valid_specs]
+            self.assertEqual(config.EMBEDDING_SPECS, expected)
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+    def test_single_yaml_spec(self):
+        single_spec = {
+            "embedding_label": "single_embedding",
+            "model_name": "SingleModel",
+            "task_type": "SINGLE_TASK",
+            "node_types": ["StatVar"],
+            "node_filter_type": "NoFilter"
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            yaml.dump(single_spec, f)
+            temp_path = f.name
+
+        try:
+            os.environ['EMBEDDING_SPEC_PATH'] = temp_path
+            importlib.reload(config)
+            expected = [config.EmbeddingSpec(**single_spec)]
+            self.assertEqual(config.EMBEDDING_SPECS, expected)
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
@@ -78,17 +100,17 @@ class TestConfig(unittest.TestCase):
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
-    def test_base_dc_spanner_yaml(self):
-        os.environ['EMBEDDING_SPEC_PATH'] = 'base_dc_spanner.yaml'
+    def test_spanner_embedding_settings_dev_yaml(self):
+        os.environ['EMBEDDING_SPEC_PATH'] = 'spanner_embedding_settings_dev.yaml'
         importlib.reload(config)
         expected = [
-            {
-                "embedding_label": "base_text_embedding",
-                "model_name": "NodeEmbeddingModel",
-                "task_type": "RETRIEVAL_QUERY",
-                "node_types": ["StatisticalVariable", "Topic"],
-                "node_filter_type": "NLStatisticalVariable"
-            }
+            config.EmbeddingSpec(
+                embedding_label="base_text_embedding",
+                model_name="NodeEmbeddingModel",
+                task_type="RETRIEVAL_QUERY",
+                node_types=["StatisticalVariable", "Topic"],
+                node_filter_type="NLStatisticalVariable"
+            )
         ]
         self.assertEqual(config.EMBEDDING_SPECS, expected)
 
