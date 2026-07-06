@@ -305,6 +305,8 @@ class SpannerClient:
             job_id: The Dataflow job ID.
             ingested_imports: List of ingested import names.
             metrics: A dictionary containing metrics about the ingestion.
+
+        TODO(gmechali): Deprecate V1 when are done migrating to v2. See update_ingestion_history_v2.
         """
 
         logging.info(
@@ -342,10 +344,10 @@ class SpannerClient:
     def update_ingestion_history_v2(self,
                                     workflow_id: str,
                                     status: IngestionState,
-                                    stage: IngestionStage = None,
-                                    job_id: str = None,
-                                    ingested_imports: list = None,
-                                    metrics: dict = None):
+                                    stage: IngestionStage | None = None,
+                                    job_id: str | None = None,
+                                    ingested_imports: list | None = None,
+                                    metrics: dict | None = None):
         """Updates the IngestionHistory table (v2 schema).
 
         Args:
@@ -361,19 +363,23 @@ class SpannerClient:
             f"Updating IngestionHistory table (v2) for workflow {workflow_id} with status {status}, stage {stage}")
 
         def _update(transaction: Transaction):
-            columns = ["WorkflowExecutionID", "Status", "Stage"]
-            values = [workflow_id, status.value, stage.value if stage else None]
+            columns = ["WorkflowExecutionID", "Status"]
+            values = [workflow_id, status.value]
+
+            if stage:
+                columns.append("Stage")
+                values.append(stage.value)
 
             if status == IngestionState.PENDING:
                 columns.append("CreationTimestamp")
                 values.append(spanner.COMMIT_TIMESTAMP)
 
             # The statements below allow us to construct a partial update, only for the fields that are set.
-            if status in (IngestionState.SUCCESS, IngestionState.FAILURE):
+            if status in (IngestionState.SUCCESS, IngestionState.FAILURE, IngestionState.RETRY):
                 columns.append("CompletionTimestamp")
                 values.append(spanner.COMMIT_TIMESTAMP)
                 columns.append("IngestionFailure")
-                values.append(status == IngestionState.FAILURE)
+                values.append(status in (IngestionState.FAILURE, IngestionState.RETRY))
 
             if job_id:
                 columns.append("DataflowJobID")

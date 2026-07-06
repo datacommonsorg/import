@@ -443,5 +443,43 @@ class TestMain(unittest.TestCase):
             metrics=mock_metrics
         )
 
+    @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', True)
+    @patch('routes.imports.import_utils.get_ingestion_metrics')
+    def test_update_ingestion_history_retry(self, mock_get_ingestion_metrics):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        mock_metrics = {
+            'execution_time': 120,
+            'node_count': 1000,
+            'edge_count': 2000,
+            'obs_count': 500
+        }
+        mock_get_ingestion_metrics.return_value = mock_metrics
+
+        payload = {
+            "workflowId": "wf-123",
+            "status": "RETRY",
+            "stage": "dataflow",
+            "jobId": "job-456",
+            "importList": [{"importName": "import1"}]
+        }
+
+        response = client.post("/imports/ingestion-history", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+        mock_get_ingestion_metrics.assert_called_once_with(
+            config.PROJECT_ID, config.LOCATION, "job-456"
+        )
+        mock_spanner_client.update_ingestion_history_v2.assert_called_once_with(
+            workflow_id="wf-123",
+            status="RETRY",
+            stage="dataflow",
+            job_id="job-456",
+            ingested_imports=["import1"],
+            metrics=mock_metrics
+        )
+
 if __name__ == '__main__':
     unittest.main()

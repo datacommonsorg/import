@@ -560,6 +560,71 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(values[failure_idx], True)
         self.assertEqual(values[comp_time_idx], spanner.COMMIT_TIMESTAMP)
 
+    @patch('google.cloud.spanner.Client')
+    def test_update_ingestion_history_no_stage(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+        client.update_ingestion_history_v2(
+            workflow_id="wf-123",
+            status=IngestionState.RUNNING,
+            job_id="job-456"
+        )
+
+        mock_transaction.insert_or_update.assert_called_once()
+        _, kwargs = mock_transaction.insert_or_update.call_args
+        self.assertEqual(kwargs['table'], 'IngestionHistory')
+        self.assertNotIn("Stage", kwargs['columns'])
+        self.assertEqual(kwargs['columns'], ["WorkflowExecutionID", "Status", "DataflowJobID"])
+        self.assertEqual(kwargs['values'], [["wf-123", "RUNNING", "job-456"]])
+
+    @patch('google.cloud.spanner.Client')
+    def test_update_ingestion_history_retry(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+        client.update_ingestion_history_v2(
+            workflow_id="wf-123",
+            status=IngestionState.RETRY,
+            stage=IngestionStage.DATAFLOW,
+            job_id="job-456",
+            metrics={
+                'execution_time': 120,
+                'node_count': 1000,
+                'edge_count': 2000,
+                'obs_count': 500
+            }
+        )
+
+        mock_transaction.insert_or_update.assert_called_once()
+        _, kwargs = mock_transaction.insert_or_update.call_args
+        self.assertEqual(kwargs['table'], 'IngestionHistory')
+
+        self.assertIn("CompletionTimestamp", kwargs['columns'])
+        self.assertNotIn("CreationTimestamp", kwargs['columns'])
+        self.assertIn("IngestionFailure", kwargs['columns'])
+        failure_idx = kwargs['columns'].index("IngestionFailure")
+        comp_time_idx = kwargs['columns'].index("CompletionTimestamp")
+        values = kwargs['values'][0]
+        self.assertEqual(values[failure_idx], True)
+        self.assertEqual(values[comp_time_idx], spanner.COMMIT_TIMESTAMP)
+
 if __name__ == '__main__':
     unittest.main()
 

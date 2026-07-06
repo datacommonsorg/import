@@ -103,12 +103,7 @@ def update_ingestion_status(req: UpdateIngestionStatusRequest, spanner: SpannerC
                 metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
             except Exception as e:
                 logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
-                metrics = {
-                    'execution_time': 0,
-                    'node_count': 0,
-                    'edge_count': 0,
-                    'obs_count': 0
-                }
+                metrics = None
         spanner.update_ingestion_history_v1(req.workflowId, req.jobId, ingested_imports, metrics)
     
     if req.status == IngestionState.SUCCESS:
@@ -126,17 +121,12 @@ def update_ingestion_history(req: UpdateIngestionHistoryRequest, spanner: Spanne
     ingested_imports = _extract_import_names(req.importList)
     
     metrics = None
-    if req.status in (IngestionState.SUCCESS, IngestionState.FAILURE) and req.stage == IngestionStage.DATAFLOW and req.jobId:
+    if req.status in (IngestionState.SUCCESS, IngestionState.FAILURE, IngestionState.RETRY) and req.stage == IngestionStage.DATAFLOW and req.jobId:
         try:
             metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
         except Exception as e:
             logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
-            metrics = {
-                'execution_time': 0,
-                'node_count': 0,
-                'edge_count': 0,
-                'obs_count': 0
-            }
+            metrics = None
 
     spanner.update_ingestion_history_v2(
         workflow_id=req.workflowId,
