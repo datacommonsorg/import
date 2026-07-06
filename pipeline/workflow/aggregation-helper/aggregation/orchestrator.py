@@ -277,7 +277,7 @@ class AggregationOrchestrator:
     def _wait_for_jobs(
         self,
         job_ids: List[str],
-        poll_interval: int = 30,
+        poll_interval: int = 60,
         step_name: str = "Aggregation",
         single_import: str = ""
     ) -> None:
@@ -285,7 +285,7 @@ class AggregationOrchestrator:
 
         Args:
             job_ids: List of BigQuery job IDs to wait for.
-            poll_interval: Seconds between polling checks (default: 30s).
+            poll_interval: Seconds between polling checks (default: 60s).
             step_name: Name of the step for debug logging.
             single_import: Name of the import dataset for debug logging.
 
