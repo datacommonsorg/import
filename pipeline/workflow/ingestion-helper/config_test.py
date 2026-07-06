@@ -44,6 +44,13 @@ class TestConfig(unittest.TestCase):
                 "task_type": "CUSTOM_TASK",
                 "node_types": ["StatVar"],
                 "node_filter_type": "NoFilter"
+            },
+            {
+                "embedding_label": "another_embedding",
+                "model_name": "AnotherModel",
+                "task_type": "ANOTHER_TASK",
+                "node_types": ["StatisticalVariable"],
+                "node_filter_type": "NLStatisticalVariable"
             }
         ]
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
