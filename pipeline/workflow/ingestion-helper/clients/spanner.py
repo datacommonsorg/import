@@ -22,6 +22,7 @@ from google.cloud.spanner_v1 import Transaction
 from google.cloud.spanner_v1.param_types import STRING, TIMESTAMP, Array, INT64
 from datetime import datetime, timezone
 from jinja2 import Template
+from utils.sql import parse_sql_to_statements
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -631,9 +632,7 @@ class SpannerClient:
                     embedding_table=self.embedding_table,
                     embedding_index=self.embedding_index)
 
-            ddl_statements = [
-                s.strip() for s in schema_content.split(';') if s.strip()
-            ]
+            ddl_statements = parse_sql_to_statements(schema_content)
         except Exception as e:
             logging.error(f"Failed to read schema file: {e}")
             raise

@@ -310,6 +310,55 @@ class TestSpannerClient(unittest.TestCase):
 
     @patch('clients.spanner.DatabaseAdminClient')
     @patch('google.cloud.spanner.Client')
+    def test_initialize_database_with_comments(self, mock_spanner_client,
+                                               mock_admin_client):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_db.name = "projects/test-project/instances/test-instance/databases/test-db"
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        # Mock DatabaseAdminClient
+        mock_admin_instance = MagicMock()
+        mock_admin_client.return_value = mock_admin_instance
+        mock_operation = MagicMock()
+        mock_admin_instance.update_database_ddl.return_value = mock_operation
+
+        client = SpannerClient("project", "instance", "database")
+        client.check_database_initialized = MagicMock(
+            return_value=(
+                [], # Missing tables
+                ["EdgeByProvenance"], # Missing indexes (forces initialization)
+                [] # Missing models
+            )
+        )
+
+        schema_ddl = """
+        -- Comment with semicolon;
+        CREATE TABLE Node;
+        -- Another comment; with semicolon inside
+        CREATE TABLE NodeEmbedding (embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }}));
+        """
+
+        def open_side_effect(file_path, mode='r', *args, **kwargs):
+            m = MagicMock()
+            m.__enter__.return_value.read.return_value = schema_ddl
+            return m
+
+        with patch('builtins.open', side_effect=open_side_effect):
+            client.initialize_database()
+
+        mock_admin_instance.update_database_ddl.assert_called_once()
+        args, kwargs = mock_admin_instance.update_database_ddl.call_args
+        request = kwargs.get('request') if kwargs else args[0]
+        statements = request.statements
+        self.assertEqual(len(statements), 2)
+        self.assertEqual(statements[0], "CREATE TABLE Node")
+        self.assertEqual(statements[1], "CREATE TABLE NodeEmbedding (embeddings ARRAY<FLOAT64>(vector_length=>768))")
+
+    @patch('clients.spanner.DatabaseAdminClient')
+    @patch('google.cloud.spanner.Client')
     def test_initialize_database_custom_table_and_index(self, mock_spanner_client,
                                                        mock_admin_client):
         # Setup mock
