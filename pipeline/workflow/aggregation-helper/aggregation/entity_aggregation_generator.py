@@ -423,14 +423,14 @@ class EntityAggregationGenerator:
         PreparedTS AS (
           SELECT
             sv_dcid AS variable_measured,
-            SAFE.PARSE_JSON(TO_JSON_STRING(JSON_OBJECT('entity1', location_id))) AS entities,
+            JSON_OBJECT('entity1', location_id) AS entities,
             '' AS extra_entities_id,
-            SAFE.PARSE_JSON(TO_JSON_STRING(JSON_OBJECT(
+            JSON_OBJECT(
               'measurementMethod', 'DataCommonsAggregate',
               'observationPeriod', obs_period,
               'provenance', '{output_provenance}',
               'isDcAggregate', true
-            ))) AS facet,
+            ) AS facet,
             obs_period
           FROM UniqueTimeSeries
         )
