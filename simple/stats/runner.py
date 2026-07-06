@@ -663,10 +663,6 @@ class Runner:
     input_files: list[File] = []
     for input_store in self.input_stores:
       if input_store.isdir():
-        if not self.include_input_subdirs:
-          logging.warning(
-              "You have specified subdirectories as part of this import, but you have not set includeInputSubdirs = true. If this is unintentional, you may incur errors. To fix this, if you want the subdirectories to be included, set this option in your config.json file. Otherwise, remove the subdirectories from your inputFiles list."
-          )
         input_files.extend(input_store.as_dir().all_files(
             self.include_input_subdirs))
       else:
@@ -789,6 +785,12 @@ class Runner:
     if import_type == ImportType.OBSERVATIONS:
       input_file_format = self.config.format(input_file)
       if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
+        # Fail immediately if column mappings are missing from config
+        mappings = self.config.column_mappings(input_file)
+        if not mappings and self.mode == RunMode.DCP_BRIDGE:
+          raise ValueError(
+              f"Missing column mappings for file '{input_file.path}' in config.json"
+          )
         return VariablePerRowImporter(
             input_file=input_file,
             db=self.db,

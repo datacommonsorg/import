@@ -25,6 +25,7 @@ import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
+import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
@@ -374,6 +375,46 @@ public class GraphReader implements Serializable {
         .isDcAggregate(isDcAggregate)
         .provenanceUrl(provenanceUrl)
         .build();
+  }
+
+  public static PCollection<TimeSeries> extractSeriesFromOptimized(
+      PCollection<McfOptimizedGraph> graph,
+      String importName,
+      boolean isBaseDc,
+      Counter tsCounter) {
+    return graph.apply(
+        "SeriesToTimeSeriesObservations-" + importName,
+        ParDo.of(
+            new DoFn<McfOptimizedGraph, TimeSeries>() {
+              @ProcessElement
+              public void processElement(
+                  @Element McfOptimizedGraph g, OutputReceiver<TimeSeries> receiver) {
+                receiver.output(toTimeSeries(g.getSvObsSeries().getKey(), importName, isBaseDc));
+                tsCounter.inc();
+              }
+            }));
+  }
+
+  public static PCollection<Observation> extractObservationsFromOptimized(
+      PCollection<McfOptimizedGraph> graph,
+      String importName,
+      boolean isBaseDc,
+      Counter obsCounter) {
+    return graph.apply(
+        "ExtractObservationDataPoints-" + importName,
+        ParDo.of(
+            new DoFn<McfOptimizedGraph, Observation>() {
+              @ProcessElement
+              public void processElement(
+                  @Element McfOptimizedGraph g, OutputReceiver<Observation> receiver) {
+                McfStatVarObsSeries svoSeries = g.getSvObsSeries();
+                TimeSeriesKey seriesKey = toTimeSeriesKey(svoSeries.getKey(), importName);
+                for (StatVarObs obs : svoSeries.getSvObsListList()) {
+                  receiver.output(toObservation(seriesKey, obs));
+                  obsCounter.inc();
+                }
+              }
+            }));
   }
 
   static TimeSeries toTimeSeries(McfStatVarObsSeries.Key key, String importName, boolean isBaseDc) {
