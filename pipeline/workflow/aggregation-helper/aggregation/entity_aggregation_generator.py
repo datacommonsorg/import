@@ -147,13 +147,14 @@ class EntityAggregationGenerator:
                AND object_id IN ({entity_types_str}) 
                AND provenance IN ({input_provenances_str})''');
 
-        -- Extract locations (using the first location property)
+        -- Extract locations (using the first location property, filtering out latLong/ nodes)
         CREATE OR REPLACE TEMPORARY TABLE `temp_locations` AS
         SELECT subject_id AS entity_id, object_id AS location_id
         FROM EXTERNAL_QUERY("{connection_id}",
           '''SELECT subject_id, object_id FROM Edge 
              WHERE predicate = "{config.location_props[0]}"''')
-        WHERE subject_id IN (SELECT entity_id FROM `temp_entities`);
+        WHERE subject_id IN (SELECT entity_id FROM `temp_entities`)
+          AND NOT STARTS_WITH(object_id, 'latLong/');
         """)
 
         if config.date_prop:

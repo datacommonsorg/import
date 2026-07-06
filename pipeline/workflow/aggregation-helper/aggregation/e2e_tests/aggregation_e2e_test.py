@@ -35,7 +35,7 @@ How to run:
 1. Ensure your local environment is authenticated (gcloud auth application-default login).
 2. Set the environment variables or edit the config below.
 3. Run the following command from the `import/pipeline/workflow/ingestion-helper` directory:
-    uv run pytest aggregation/e2e_tests/aggregation_e2e_test.py -s
+    GOOGLE_API_USE_CLIENT_CERTIFICATE=false UV_NO_CONFIG=1 UV_INDEX_URL=https://pypi.org/simple uv run pytest aggregation/e2e_tests/aggregation_e2e_test.py -s
 """
 
 import os
@@ -1697,6 +1697,61 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             obs_results = list(snapshot.execute_sql(obs_query))
             self.assertEqual(len(obs_results), 1)
             self.assertAlmostEqual(float(obs_results[0][0]), 1.0)
+
+    def test_aggregate_filters_latlong(self):
+        """Tests that entities with latLong/ location objects are filtered out."""
+        import_name = 'EarthquakeUSGS_LatLong'
+        output_import = 'EarthquakeUSGS_LatLong_Agg'
+
+        # 1. Setup mock data
+        # Valid place location (California)
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_valid: affectedPlace is geoId/06 (Included)
+        self.add_node('eq_valid', 'Valid Earthquake', types=['EarthquakeEvent'])
+        self.add_edge('eq_valid', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_valid', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_valid', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+
+        # eq_latlong: affectedPlace is latLong/37.77_-122.41 (Should be filtered out)
+        self.add_node('eq_latlong', 'LatLong Earthquake', types=['EarthquakeEvent'])
+        self.add_edge('eq_latlong', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_latlong', 'affectedPlace', 'latLong/37.77_-122.41', import_name)
+        self.add_edge('eq_latlong', 'occurrenceTime', '2023-05-14T12:00:00Z', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent'],
+            location_props=['affectedPlace'],
+            date_prop='occurrenceTime',
+            agg_date_formats=['YYYY'],
+            constraints=[],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify NO observations exist for latLong/37.77_-122.41
+            latlong_obs = list(snapshot.execute_sql(
+                "SELECT value FROM Observation WHERE entity1 = 'latLong/37.77_-122.41'"
+            ))
+            self.assertEqual(len(latlong_obs), 0, "latLong/ locations should be filtered out")
+
+            # Verify geoId/06 observation exists with count 1
+            valid_obs = list(snapshot.execute_sql(
+                "SELECT value FROM Observation WHERE entity1 = 'geoId/06' AND date = '2023'"
+            ))
+            self.assertEqual(len(valid_obs), 1)
+            self.assertAlmostEqual(float(valid_obs[0][0]), 1.0)
 
 
 class EntityAggregationGeneratorCustomDcTest(EntityAggregationGeneratorIntegrationTest):
