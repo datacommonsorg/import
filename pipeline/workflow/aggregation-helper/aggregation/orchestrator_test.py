@@ -48,6 +48,24 @@ VALID_CONFIG_YAML = textwrap.dedent("""\
                 - Count_Person_Male
                 - Count_Person_Female
               skip_all_sources_present_check: true
+
+      - type: ENTITY_AGGREGATION
+        input_imports:
+          - EarthquakeUSGS
+        output_import: EarthquakeUSGS_Agg
+        stage: 3
+        entity_aggregation:
+          entity_types:
+            - EarthquakeEvent
+          location_props:
+            - affectedPlace
+          date_prop: occurrenceTime
+          agg_date_formats:
+            - YYYY
+          constraints:
+            - property: magnitude
+              min: 7
+              unit: M
 """)
 
 
@@ -89,13 +107,14 @@ class TestOrchestratorScanning(unittest.TestCase):
             database_id="db",
             config_dir=self.tmpdir.name
         )
-        self.assertEqual(len(dir_orchestrator.calculations), 2)
+        self.assertEqual(len(dir_orchestrator.calculations), 3)
 
 
 @patch('aggregation.orchestrator.BigQueryExecutor')
 @patch('aggregation.orchestrator.PlaceAggregationGenerator')
 @patch('aggregation.orchestrator.StatVarAggregator')
 @patch('aggregation.orchestrator.StatVarCalculationGenerator')
+@patch('aggregation.orchestrator.EntityAggregationGenerator')
 class TestOrchestratorExecution(unittest.TestCase):
     """Tests stage execution, verifying job submission and synchronization."""
 
@@ -116,7 +135,7 @@ class TestOrchestratorExecution(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
 
-    def test_run_dry_run_true(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+    def test_run_dry_run_true(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=True logs stages without submitting BigQuery jobs."""
         result = self.orchestrator.run(active_imports=["USFed_Census"], dry_run=True)
         self.assertTrue(result.success)
@@ -126,7 +145,7 @@ class TestOrchestratorExecution(unittest.TestCase):
         mock_place_gen.return_value.aggregate_places.assert_not_called()
         mock_sv_agg.return_value.aggregate_stat_vars.assert_not_called()
 
-    def test_run_dry_run_false(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+    def test_run_dry_run_false(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=False submits BigQuery jobs across stages."""
         mock_job1 = MagicMock()
         mock_job1.job_id = "job-place-1"
@@ -159,7 +178,7 @@ class TestOrchestratorExecution(unittest.TestCase):
             skip_all_sources_present_check=True
         )
 
-    def test_execute_stage(self, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+    def test_execute_stage(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests manual execution of a specific stage."""
         mock_job1 = MagicMock()
         mock_job1.job_id = "job-place-1"
@@ -174,6 +193,16 @@ class TestOrchestratorExecution(unittest.TestCase):
             allow_multiple_to_places=False
         )
         self.assertEqual(jobs, [mock_job1])
+
+    def test_execute_stage_entity_aggregation(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+        """Tests manual execution of ENTITY_AGGREGATION stage."""
+        mock_job = MagicMock()
+        mock_job.job_id = "job-entity-1"
+        mock_entity_gen.return_value.aggregate_entities.return_value = [mock_job]
+
+        jobs = self.orchestrator.execute_stage(3, ["EarthquakeUSGS"])
+        self.assertEqual(jobs, [mock_job])
+        mock_entity_gen.return_value.aggregate_entities.assert_called_once()
 
 
 if __name__ == '__main__':

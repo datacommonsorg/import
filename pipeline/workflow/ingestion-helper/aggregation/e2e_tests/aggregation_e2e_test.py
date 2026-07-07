@@ -42,6 +42,8 @@ import os
 import unittest
 import logging
 import json
+import random
+from typing import Any
 from collections.abc import Mapping
 from google.cloud import spanner
 from google.cloud import bigquery
@@ -49,7 +51,14 @@ from google.cloud import bigquery
 import sys
 # Add ingestion-helper to sys.path (two levels up from this file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from aggregation import BigQueryExecutor, LinkedEdgeGenerator, ProvenanceSummaryGenerator, StatVarAggregator, PlaceAggregationGenerator, StatVarGroupGenerator
+from aggregation import (
+    BigQueryExecutor,
+    LinkedEdgeGenerator,
+    ProvenanceSummaryGenerator,
+    StatVarAggregator,
+    PlaceAggregationGenerator,
+    StatVarGroupGenerator,
+)
 
 # Configuration
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
@@ -1773,6 +1782,10 @@ class StatVarGroupGeneratorCustomDcTest(StatVarGroupGeneratorIntegrationTest):
     is_base_dc = False
 
 
+
+
+
+
 class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for StatVarCalculationGenerator."""
 
@@ -1786,6 +1799,7 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             location=BQ_LOCATION,
             run_sequential=True
         )
+
         return StatVarCalculationGenerator(executor, is_base_dc=self.is_base_dc)
 
     def test_calculate_divide_and_multiply(self):
