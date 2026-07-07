@@ -50,6 +50,7 @@ class UpdateIngestionHistoryRequest(BaseModel):
     status: IngestionState
     stage: Optional[IngestionStage] = None
     importList: Optional[List[ImportItem]] = Field(default_factory=list)
+    importName: Optional[str] = None
     jobId: Optional[str] = None
 
 
@@ -120,9 +121,12 @@ def update_ingestion_history(req: UpdateIngestionHistoryRequest, spanner: Spanne
         return BaseResponse(status=ResponseStatus.OK)
 
     ingested_imports = _extract_import_names(req.importList)
+    if req.importName:
+        ingested_imports.append(req.importName)
     
     metrics = None
     if req.status in (IngestionState.SUCCESS, IngestionState.RETRY) and req.stage == IngestionStage.DATAFLOW and req.jobId and req.jobId != "N/A":
+        # Only update metrics for successful or retried jobs running after the dataflow stage.
         try:
             metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
         except Exception as e:
