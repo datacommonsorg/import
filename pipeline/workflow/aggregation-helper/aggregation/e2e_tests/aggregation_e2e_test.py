@@ -3143,6 +3143,9 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
         self.add_observation('Max_Temperature', place_id, '2050-07', 36.0, method='Model_B', import_name=import_name, facet_id='facet_b')
         self.add_observation('Max_Temperature', place_id, '2050-07', 30.0, method='Model_C', import_name=import_name, facet_id='facet_c')
 
+        # Pre-base-date observation: 2010-07 (should NOT produce DifferenceRelativeToBaseDate201507 due to C++ parity filtering year > base_date_year)
+        self.add_observation('Max_Temperature', place_id, '2010-07', 29.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+
         self.flush_to_spanner()
 
         # 2. Run aggregator with both Round 1 and Round 2 configs
@@ -3222,6 +3225,16 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(float(obs_rel_results[0][1]), 2.0) # Model C
             self.assertEqual(float(obs_rel_results[1][1]), 3.0) # Model A
             self.assertEqual(float(obs_rel_results[2][1]), 4.0) # Model B
+
+            # Verify that pre-base-date observation (2010-07) was cleanly filtered out per C++ parity
+            obs_pre_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'DifferenceRelativeToBaseDate201507_Max_Temperature'
+                  AND date = '2010-07'
+            """
+            obs_pre_results = list(snapshot.execute_sql(obs_pre_query))
+            self.assertEqual(len(obs_pre_results), 0)
 
             # 4. Verify Round 2 (Ensemble) Results in Spanner
             ts_ensemble_query = """

@@ -185,135 +185,143 @@ class StatVarSeriesAggregator:
 
     def _add_diff_relative_fragments(self, ts_ctes: List[str], obs_ctes: List[str], func_config: Dict[str, Any], output_provenance: str):
         """Adds SQL fragments for diff_relative_to_base_date."""
-        dates = func_config.get("dates", [])
-        start_date = func_config.get("start_date")
-        end_date = func_config.get("end_date")
+        date_specs = func_config.get("date_specs", [func_config])
+        
+        for spec_idx, spec in enumerate(date_specs):
+            dates = spec.get("dates", [])
+            start_date = spec.get("start_date")
+            end_date = spec.get("end_date")
 
-        if not dates and (not start_date or not end_date):
-            logging.warning("diff_relative_to_base_date missing dates or start_date/end_date. Skipping.")
-            return
+            if not dates and (not start_date or not end_date):
+                logging.warning("diff_relative_to_base_date missing dates or start_date/end_date. Skipping spec.")
+                continue
 
-        # Case 1: Specific base dates
-        for idx, base_date in enumerate(dates):
-            safe_base_date = _escape_sql_literal(base_date)
-            clean_date_suffix = safe_base_date.replace("-", "")
-            
-            ts_cte = f"""
-            DiffRelTS_{idx} AS (
-              SELECT DISTINCT
-                CONCAT('DifferenceRelativeToBaseDate', '{clean_date_suffix}', '_', variable_measured) AS variable_measured,
-                entity1,
-                extra_entities_id,
-                TO_JSON_STRING(JSON_SET(
-                  JSON_SET(
-                    JSON_SET(facet, '$.provenance', '{output_provenance}'),
-                    '$.measurementMethod', CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), ''))
-                  ),
-                  '$.isDcAggregate', true
-                )) AS facet_str
-              FROM SourceTS
-            )
-            """
-            ts_ctes.append(ts_cte)
+            # Case 1: Specific base dates
+            for base_date in dates:
+                cte_idx = len(ts_ctes)
+                safe_base_date = _escape_sql_literal(base_date)
+                clean_date_suffix = safe_base_date.replace("-", "")
+                
+                ts_cte = f"""
+                DiffRelTS_{cte_idx} AS (
+                  SELECT DISTINCT
+                    CONCAT('DifferenceRelativeToBaseDate', '{clean_date_suffix}', '_', variable_measured) AS variable_measured,
+                    entity1,
+                    extra_entities_id,
+                    TO_JSON_STRING(JSON_SET(
+                      JSON_SET(
+                        JSON_SET(facet, '$.provenance', '{output_provenance}'),
+                        '$.measurementMethod', CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), ''))
+                      ),
+                      '$.isDcAggregate', true
+                    )) AS facet_str
+                  FROM SourceTS
+                )
+                """
+                ts_ctes.append(ts_cte)
 
-            obs_cte = f"""
-            Baseline_{idx} AS (
-              SELECT
-                variable_measured,
-                entity1,
-                extra_entities_id,
-                model,
-                val_num AS base_val,
-                SUBSTR(date, 6, 2) AS base_month
-              FROM RawObs
-              WHERE date = '{safe_base_date}'
-            ),
-            DiffRelObs_{idx} AS (
-              SELECT
-                CONCAT('DifferenceRelativeToBaseDate', '{clean_date_suffix}', '_', r.variable_measured) AS variable_measured,
-                r.entity1,
-                r.extra_entities_id,
-                r.date,
-                r.val_num - b.base_val AS val,
-                CAST(FARM_FINGERPRINT(CONCAT(
-                  '{output_provenance}', '^',
-                  CONCAT('dcAggregate/', r.model), '^',
-                  COALESCE(JSON_VALUE(r.facet, '$.observationPeriod'), ''), '^',
-                  COALESCE(JSON_VALUE(r.facet, '$.scalingFactor'), ''), '^',
-                  COALESCE(JSON_VALUE(r.facet, '$.unit'), ''), '^',
-                  'true'
-                )) AS STRING) AS facet_id
-              FROM RawObs r
-              JOIN Baseline_{idx} b ON r.entity1 = b.entity1 
-                AND r.extra_entities_id = b.extra_entities_id 
-                AND r.variable_measured = b.variable_measured 
-                AND r.model = b.model
-                AND SUBSTR(r.date, 6, 2) = b.base_month
-            )
-            """
-            obs_ctes.append(obs_cte)
+                obs_cte = f"""
+                Baseline_{cte_idx} AS (
+                  SELECT
+                    variable_measured,
+                    entity1,
+                    extra_entities_id,
+                    model,
+                    val_num AS base_val,
+                    date AS base_date,
+                    SUBSTR(date, 6, 2) AS base_month
+                  FROM RawObs
+                  WHERE date = '{safe_base_date}'
+                ),
+                DiffRelObs_{cte_idx} AS (
+                  SELECT
+                    CONCAT('DifferenceRelativeToBaseDate', '{clean_date_suffix}', '_', r.variable_measured) AS variable_measured,
+                    r.entity1,
+                    r.extra_entities_id,
+                    r.date,
+                    r.val_num - b.base_val AS val,
+                    CAST(FARM_FINGERPRINT(CONCAT(
+                      '{output_provenance}', '^',
+                      CONCAT('dcAggregate/', r.model), '^',
+                      COALESCE(JSON_VALUE(r.facet, '$.observationPeriod'), ''), '^',
+                      COALESCE(JSON_VALUE(r.facet, '$.scalingFactor'), ''), '^',
+                      COALESCE(JSON_VALUE(r.facet, '$.unit'), ''), '^',
+                      'true'
+                    )) AS STRING) AS facet_id
+                  FROM RawObs r
+                  JOIN Baseline_{cte_idx} b ON r.entity1 = b.entity1 
+                    AND r.extra_entities_id = b.extra_entities_id 
+                    AND r.variable_measured = b.variable_measured 
+                    AND r.model = b.model
+                    AND SUBSTR(r.date, 6, 2) = b.base_month
+                    AND SUBSTR(r.date, 1, 4) > SUBSTR(b.base_date, 1, 4)
+                )
+                """
+                obs_ctes.append(obs_cte)
 
-        # Case 2: Base date range (average over range)
-        if start_date and end_date:
-            safe_start = _escape_sql_literal(start_date)
-            safe_end = _escape_sql_literal(end_date)
-            range_suffix = f"{safe_start.replace('-', '')}to{safe_end.replace('-', '')}"
+            # Case 2: Base date range (average over range)
+            if start_date and end_date:
+                cte_idx = len(ts_ctes)
+                safe_start = _escape_sql_literal(start_date)
+                safe_end = _escape_sql_literal(end_date)
+                range_suffix = f"{safe_start.replace('-', '')}to{safe_end.replace('-', '')}"
 
-            ts_cte = f"""
-            DiffRelRangeTS AS (
-              SELECT DISTINCT
-                CONCAT('DifferenceRelativeToBaseDate', '{range_suffix}', '_', variable_measured) AS variable_measured,
-                entity1,
-                extra_entities_id,
-                TO_JSON_STRING(JSON_SET(
-                  JSON_SET(
-                    JSON_SET(facet, '$.provenance', '{output_provenance}'),
-                    '$.measurementMethod', CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), ''))
-                  ),
-                  '$.isDcAggregate', true
-                )) AS facet_str
-              FROM SourceTS
-            )
-            """
-            ts_ctes.append(ts_cte)
+                ts_cte = f"""
+                DiffRelRangeTS_{cte_idx} AS (
+                  SELECT DISTINCT
+                    CONCAT('DifferenceRelativeToBaseDate', '{range_suffix}', '_', variable_measured) AS variable_measured,
+                    entity1,
+                    extra_entities_id,
+                    TO_JSON_STRING(JSON_SET(
+                      JSON_SET(
+                        JSON_SET(facet, '$.provenance', '{output_provenance}'),
+                        '$.measurementMethod', CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), ''))
+                      ),
+                      '$.isDcAggregate', true
+                    )) AS facet_str
+                  FROM SourceTS
+                )
+                """
+                ts_ctes.append(ts_cte)
 
-            obs_cte = f"""
-            BaselineRange AS (
-              SELECT
-                variable_measured,
-                entity1,
-                extra_entities_id,
-                model,
-                AVG(val_num) AS base_val,
-                SUBSTR(date, 6, 2) AS base_month
-              FROM RawObs
-              WHERE date BETWEEN '{safe_start}' AND '{safe_end}'
-              GROUP BY variable_measured, entity1, extra_entities_id, model, base_month
-            ),
-            DiffRelRangeObs AS (
-              SELECT
-                CONCAT('DifferenceRelativeToBaseDate', '{range_suffix}', '_', r.variable_measured) AS variable_measured,
-                r.entity1,
-                r.extra_entities_id,
-                r.date,
-                r.val_num - b.base_val AS val,
-                CAST(FARM_FINGERPRINT(CONCAT(
-                  '{output_provenance}', '^',
-                  CONCAT('dcAggregate/', r.model), '^',
-                  COALESCE(JSON_VALUE(r.facet, '$.observationPeriod'), ''), '^',
-                  COALESCE(JSON_VALUE(r.facet, '$.scalingFactor'), ''), '^',
-                  COALESCE(JSON_VALUE(r.facet, '$.unit'), ''), '^',
-                  'true'
-                )) AS STRING) AS facet_id
-              FROM RawObs r
-              JOIN BaselineRange b ON r.entity1 = b.entity1 
-                AND r.extra_entities_id = b.extra_entities_id 
-                AND r.variable_measured = b.variable_measured 
-                AND r.model = b.model
-                AND SUBSTR(r.date, 6, 2) = b.base_month
-            )
-            """
-            obs_ctes.append(obs_cte)
+                obs_cte = f"""
+                BaselineRange_{cte_idx} AS (
+                  SELECT
+                    variable_measured,
+                    entity1,
+                    extra_entities_id,
+                    model,
+                    AVG(val_num) AS base_val,
+                    SUBSTR(date, 6, 2) AS base_month
+                  FROM RawObs
+                  WHERE date BETWEEN '{safe_start}' AND '{safe_end}'
+                  GROUP BY variable_measured, entity1, extra_entities_id, model, base_month
+                ),
+                DiffRelRangeObs_{cte_idx} AS (
+                  SELECT
+                    CONCAT('DifferenceRelativeToBaseDate', '{range_suffix}', '_', r.variable_measured) AS variable_measured,
+                    r.entity1,
+                    r.extra_entities_id,
+                    r.date,
+                    r.val_num - b.base_val AS val,
+                    CAST(FARM_FINGERPRINT(CONCAT(
+                      '{output_provenance}', '^',
+                      CONCAT('dcAggregate/', r.model), '^',
+                      COALESCE(JSON_VALUE(r.facet, '$.observationPeriod'), ''), '^',
+                      COALESCE(JSON_VALUE(r.facet, '$.scalingFactor'), ''), '^',
+                      COALESCE(JSON_VALUE(r.facet, '$.unit'), ''), '^',
+                      'true'
+                    )) AS STRING) AS facet_id
+                  FROM RawObs r
+                  JOIN BaselineRange_{cte_idx} b ON r.entity1 = b.entity1 
+                    AND r.extra_entities_id = b.extra_entities_id 
+                    AND r.variable_measured = b.variable_measured 
+                    AND r.model = b.model
+                    AND SUBSTR(r.date, 6, 2) = b.base_month
+                    AND SUBSTR(r.date, 1, 4) > SUBSTR('{safe_end}', 1, 4)
+                )
+                """
+                obs_ctes.append(obs_cte)
 
     def _add_stats_across_models_fragments(self, ts_ctes: List[str], obs_ctes: List[str], output_provenance: str):
         """Adds SQL fragments for stats_across_models (Ensembles)."""
@@ -555,16 +563,18 @@ class StatVarSeriesAggregator:
         if has_max_diff:
             ts_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_str FROM DiffAcrossModelsTS")
         
-        # Dynamically add branches for indexed CTEs by scanning the combined CTE string
+        # Dynamically add branches for indexed CTEs by checking exact table definition strings
         for idx in range(len(ts_ctes)):
-            if f"DiffRelTS_{idx}" in ts_ctes_combined:
+            if f"DiffRelTS_{idx} AS (" in ts_ctes_combined:
                 ts_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_str FROM DiffRelTS_{idx}")
-            if f"AggrOverTimeTS_{idx}" in ts_ctes_combined:
+            if f"DiffRelRangeTS_{idx} AS (" in ts_ctes_combined:
+                ts_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_str FROM DiffRelRangeTS_{idx}")
+            if f"AggrOverTimeTS_{idx} AS (" in ts_ctes_combined:
                 ts_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_str FROM AggrOverTimeTS_{idx}")
-            if f"CountThresholdTS_{idx}" in ts_ctes_combined:
+            if f"CountThresholdTS_{idx} AS (" in ts_ctes_combined:
                 ts_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_str FROM CountThresholdTS_{idx}")
 
-        if "DiffRelRangeTS" in ts_ctes_combined:
+        if "DiffRelRangeTS AS (" in ts_ctes_combined:
             ts_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_str FROM DiffRelRangeTS")
             
         if has_stats_models:
@@ -635,14 +645,16 @@ class StatVarSeriesAggregator:
             obs_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM MaxDiffObs")
             
         for idx in range(len(obs_ctes)):
-            if f"DiffRelObs_{idx}" in obs_ctes_combined:
+            if f"DiffRelObs_{idx} AS (" in obs_ctes_combined:
                 obs_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM DiffRelObs_{idx}")
-            if f"AggrOverTimeObs_{idx}" in obs_ctes_combined:
+            if f"DiffRelRangeObs_{idx} AS (" in obs_ctes_combined:
+                obs_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM DiffRelRangeObs_{idx}")
+            if f"AggrOverTimeObs_{idx} AS (" in obs_ctes_combined:
                 obs_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM AggrOverTimeObs_{idx}")
-            if f"CountThresholdObs_{idx}" in obs_ctes_combined:
+            if f"CountThresholdObs_{idx} AS (" in obs_ctes_combined:
                 obs_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM CountThresholdObs_{idx}")
 
-        if "DiffRelRangeObs" in obs_ctes_combined:
+        if "DiffRelRangeObs AS (" in obs_ctes_combined:
             obs_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM DiffRelRangeObs")
 
         if has_stats_models:

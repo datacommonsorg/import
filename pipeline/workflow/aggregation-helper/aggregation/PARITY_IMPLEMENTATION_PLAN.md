@@ -31,7 +31,7 @@ To make this process manageable, items are ordered from **Least Complex (Item 1)
 
 ---
 
-### [ ] Item 3: `diff_relative_to_base_date` `date_specs` Unwrapping & Post-Base-Date Filtering (Moderate Complexity)
+### [x] Item 3: `diff_relative_to_base_date` `date_specs` Unwrapping & Post-Base-Date Filtering (Moderate Complexity)
 - **Problem**:
   1. **`date_specs` Unwrapping**: In protobuf and `statvar_series.yaml`, base dates are specified inside a nested `date_specs` list (`date_specs: [{dates: [...]}, {start_date: ..., end_date: ...}]`). Currently, `_add_diff_relative_fragments()` directly checks `func_config.get("dates", [])` and ignores `date_specs`.
   2. **Post-Base-Date Filtering (`year > base_date_year`)**: In C++ `ProcessDiffRelativeToBaseDate()` (`processor.cc` line 907: `if (year <= base_date_year) continue;`), relative anomalies are **only** emitted for observation dates strictly after the base date year. Currently, Python computes differences across all available observation dates (including those before or on the base date).
