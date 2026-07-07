@@ -29,6 +29,7 @@ from .provenance_summary_generator import ProvenanceSummaryGenerator
 from .stat_var_aggregator import StatVarAggregator
 from .stat_var_calculation_generator import StatVarCalculationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
+from .stat_var_series_aggregator import StatVarSeriesAggregator
 from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
 from .validator import validate_config
 
@@ -67,6 +68,7 @@ class CalculationType(str, Enum):
     LINKED_EDGES = "LINKED_EDGES"
     PROVENANCE_SUMMARY = "PROVENANCE_SUMMARY"
     STAT_VAR_GROUPS = "STAT_VAR_GROUPS"
+    STAT_VAR_SERIES_AGGREGATION = "STAT_VAR_SERIES_AGGREGATION"
 
 
 class AggregationOrchestrator:
@@ -272,6 +274,8 @@ class AggregationOrchestrator:
             return self._trigger_provenance_summary(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_GROUPS:
             return self._trigger_stat_var_groups(calc, applicable_imports)
+        elif step_type == CalculationType.STAT_VAR_SERIES_AGGREGATION:
+            return self._trigger_stat_var_series_aggregation(calc, applicable_imports)
         else:
             logging.warning(
                 f"Calculation type '{step_type}' configured for imports '{applicable_imports}' has no active generator handler."
@@ -396,6 +400,14 @@ class AggregationOrchestrator:
         logging.info(f"  -> Stat Var Groups Aggregation for imports {applicable_imports}")
         generator = StatVarGroupGenerator(self.executor, self.is_base_dc)
         return generator.run_all(applicable_imports)
+
+    def _trigger_stat_var_series_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers statistical variable series aggregations."""
+        logging.info(f"  -> Stat Var Series Aggregation for imports {applicable_imports}")
+        calc = config.copy()
+        calc["input_imports"] = applicable_imports
+        generator = StatVarSeriesAggregator(self.executor, self.is_base_dc)
+        return generator.aggregate_series([calc])
 
     def _trigger_entity(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers entity aggregations."""
