@@ -181,13 +181,15 @@ class SuperEnumAggregationGenerator:
         -- STEP 2: Get All Edges for StatVars that have whitelisted properties
         -- =========================================================================
         CREATE OR REPLACE TEMP TABLE TargetStatVarEdges AS
-        SELECT subject_id, predicate, object_id
+        SELECT subject_id, predicate, object_id, provenance AS source_provenance
         FROM EXTERNAL_QUERY("{connection_id}",
-          '''SELECT subject_id, predicate, object_id FROM Edge
-             WHERE subject_id IN (
-               SELECT DISTINCT subject_id FROM Edge
-               WHERE predicate IN ("age", "detailedLevelOfSchool", "schoolGradeLevel", "educationalAttainment")
-             )''');
+          '''SELECT subject_id, predicate, object_id, provenance FROM Edge
+             WHERE provenance IN ({provenance_str})
+               AND subject_id IN (
+                 SELECT DISTINCT subject_id FROM Edge
+                 WHERE predicate IN ("age", "detailedLevelOfSchool", "schoolGradeLevel", "educationalAttainment")
+                   AND provenance IN ({provenance_str})
+               )''');
 
         -- =========================================================================
         -- STEP 3: Identify Eligible StatVars
@@ -195,6 +197,7 @@ class SuperEnumAggregationGenerator:
         CREATE OR REPLACE TEMP TABLE EligibleSVs AS
         SELECT 
           subject_id,
+          ANY_VALUE(source_provenance) AS source_provenance,
           MAX(IF(predicate = 'measuredProperty', object_id, NULL)) AS measured_property,
           MAX(IF(predicate = 'statType', object_id, NULL)) AS stat_type,
           MAX(IF(predicate = 'measurementDenominator', object_id, NULL)) AS denominator
@@ -211,9 +214,9 @@ class SuperEnumAggregationGenerator:
         -- =========================================================================
         CREATE OR REPLACE TEMP TABLE GeneratedTargetSVs AS
         WITH RawSVProps AS (
-          SELECT subject_id, predicate, object_id
-          FROM TargetStatVarEdges
-          WHERE subject_id IN (SELECT subject_id FROM EligibleSVs)
+          SELECT p.subject_id, p.predicate, p.object_id, e.source_provenance
+          FROM TargetStatVarEdges p
+          JOIN EligibleSVs e ON p.subject_id = e.subject_id
         ),
         SVWhitelistedProp AS (
           SELECT subject_id, predicate AS whitelisted_pred, object_id AS child_enum
@@ -228,6 +231,7 @@ class SuperEnumAggregationGenerator:
         TargetSVProperties AS (
           SELECT 
             p.subject_id AS source_sv,
+            p.source_provenance,
             m.parent_enum,
             p.predicate,
             IF(p.predicate = m.whitelisted_pred, m.parent_enum, p.object_id) AS object_id
@@ -235,7 +239,7 @@ class SuperEnumAggregationGenerator:
           JOIN SVToParent m ON p.subject_id = m.subject_id
         ),
         FilteredTargetProps AS (
-          SELECT source_sv, parent_enum, predicate, object_id
+          SELECT source_sv, source_provenance, parent_enum, predicate, object_id
           FROM TargetSVProperties
           WHERE predicate NOT IN (
             'name', 'description', 'provenance', 'isPublic', 'url', 'memberOf', 
@@ -246,13 +250,15 @@ class SuperEnumAggregationGenerator:
         TargetSVKeyStr AS (
           SELECT 
             source_sv,
+            source_provenance,
             parent_enum,
             STRING_AGG(CONCAT(predicate, '=', object_id), '' ORDER BY predicate) AS key_str
           FROM FilteredTargetProps
-          GROUP BY source_sv, parent_enum
+          GROUP BY source_sv, source_provenance, parent_enum
         )
         SELECT 
           source_sv,
+          source_provenance,
           parent_enum,
           key_str,
           CONCAT('dc/', DC_BASE32_ENCODE(FARM_FINGERPRINT(key_str))) AS target_sv
@@ -284,7 +290,8 @@ class SuperEnumAggregationGenerator:
           SELECT 
             g.target_sv AS subject_id,
             p.predicate,
-            IF(p.predicate = m.whitelisted_pred, r.parent, p.object_id) AS object_id
+            IF(p.predicate = m.whitelisted_pred, r.parent, p.object_id) AS object_id,
+            CONCAT(g.source_provenance, '_SuperEnum') AS provenance
           FROM TargetStatVarEdges p
           JOIN (
             SELECT subject_id, predicate AS whitelisted_pred, object_id AS child_enum
@@ -298,7 +305,7 @@ class SuperEnumAggregationGenerator:
           subject_id,
           predicate,
           object_id,
-          CONCAT('{prefix}', '{safe_names[0]}', '_SuperEnum') AS provenance
+          provenance
         FROM ReconstructedEdges;
 
         -- =========================================================================

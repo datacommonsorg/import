@@ -3967,6 +3967,85 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
             self.assertEqual(results[0][0], 'geoId/06')
             self.assertEqual(results[0][1], 'geoId/36')
 
+    def test_super_enum_aggregation_multi_import_provenance_filtering(self):
+        """Verifies dynamic provenance attribution across multiple imports"""
+        import_alpha = 'CensusACS_Alpha_Test'
+        import_beta = 'CensusACS_Beta_Test'
+        import_ignored = 'Unrelated_Ignored_Test'
+        
+        # --- 1. SETUP SCHEMA ACROSS ALL IMPORTS ---
+        self.add_node('SchoolGradeLevelEnum', 'School Grade Level', types=['Class'])
+        self.add_node('Grade1', 'Grade 1', types=['SchoolGradeLevelEnum'])
+        self.add_node('PrimarySchool', 'Primary School', types=['SchoolGradeLevelEnum'])
+        
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_alpha)
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_beta)
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_ignored)
+        
+        # --- 2. SETUP STATVARS ---
+        # Alpha StatVar
+        self.add_node('SV_Alpha', 'Students in Grade 1 Alpha', types=['StatisticalVariable'])
+        self.add_edge('SV_Alpha', 'typeOf', 'StatisticalVariable', import_alpha)
+        self.add_edge('SV_Alpha', 'schoolGradeLevel', 'Grade1', import_alpha)
+        self.add_edge('SV_Alpha', 'populationType', 'Person', import_alpha)
+        self.add_edge('SV_Alpha', 'measuredProperty', 'count', import_alpha)
+        self.add_edge('SV_Alpha', 'statType', 'measuredValue', import_alpha)
+        
+        # Beta StatVar
+        self.add_node('SV_Beta', 'Students in Grade 1 Beta', types=['StatisticalVariable'])
+        self.add_edge('SV_Beta', 'typeOf', 'StatisticalVariable', import_beta)
+        self.add_edge('SV_Beta', 'schoolGradeLevel', 'Grade1', import_beta)
+        self.add_edge('SV_Beta', 'populationType', 'Household', import_beta)
+        self.add_edge('SV_Beta', 'measuredProperty', 'count', import_beta)
+        self.add_edge('SV_Beta', 'statType', 'measuredValue', import_beta)
+        
+        # Ignored StatVar (from Unrelated_Ignored_Test)
+        self.add_node('SV_Ignored', 'Students in Grade 1 Ignored', types=['StatisticalVariable'])
+        self.add_edge('SV_Ignored', 'typeOf', 'StatisticalVariable', import_ignored)
+        self.add_edge('SV_Ignored', 'schoolGradeLevel', 'Grade1', import_ignored)
+        self.add_edge('SV_Ignored', 'populationType', 'Person', import_ignored)
+        self.add_edge('SV_Ignored', 'measuredProperty', 'count', import_ignored)
+        self.add_edge('SV_Ignored', 'statType', 'measuredValue', import_ignored)
+        
+        # --- 3. SETUP OBSERVATIONS ---
+        self.add_observation('SV_Alpha', 'geoId/06', '2020', 10.0, method='CensusACS5yrSurvey', import_name=import_alpha, facet_id='facet_alpha')
+        self.add_observation('SV_Beta', 'geoId/06', '2020', 20.0, method='CensusACS5yrSurvey', import_name=import_beta, facet_id='facet_beta')
+        self.add_observation('SV_Ignored', 'geoId/06', '2020', 500.0, method='CensusACS5yrSurvey', import_name=import_ignored, facet_id='facet_ignored')
+        
+        self.flush_to_spanner()
+        
+        # --- 4. RUN GENERATOR FOR ONLY ALPHA AND BETA (Excluding Ignored) ---
+        generator = self.get_generator()
+        jobs = generator.run(import_names=[import_alpha, import_beta])
+        for job in jobs:
+            job.result()
+            
+        # --- 5. VERIFY RESULTS ---
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify Item #4: Zero generated edges for Unrelated_Ignored_Test
+            prefix = "dc/base/" if self.is_base_dc else ""
+            query_ignored = f"SELECT COUNT(*) FROM Edge WHERE provenance = '{prefix}{import_ignored}_SuperEnum'"
+            self.assertEqual(list(snapshot.execute_sql(query_ignored))[0][0], 0)
+            
+            # Verify Item #5: Alpha generated edges get Alpha_SuperEnum provenance
+            query_alpha = f"SELECT subject_id FROM Edge WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool' AND provenance = '{prefix}{import_alpha}_SuperEnum'"
+            alpha_results = list(snapshot.execute_sql(query_alpha))
+            self.assertEqual(len(alpha_results), 1)
+            target_sv_alpha = alpha_results[0][0]
+            
+            # Verify Item #5: Beta generated edges get Beta_SuperEnum provenance
+            query_beta = f"SELECT subject_id FROM Edge WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool' AND provenance = '{prefix}{import_beta}_SuperEnum'"
+            beta_results = list(snapshot.execute_sql(query_beta))
+            self.assertEqual(len(beta_results), 1)
+            target_sv_beta = beta_results[0][0]
+            
+            # Verify observations are correctly separated under each target StatVar
+            query_obs_alpha = f"SELECT value FROM Observation WHERE variable_measured = '{target_sv_alpha}' AND entity1 = 'geoId/06'"
+            self.assertAlmostEqual(float(list(snapshot.execute_sql(query_obs_alpha))[0][0]), 10.0)
+            
+            query_obs_beta = f"SELECT value FROM Observation WHERE variable_measured = '{target_sv_beta}' AND entity1 = 'geoId/06'"
+            self.assertAlmostEqual(float(list(snapshot.execute_sql(query_obs_beta))[0][0]), 20.0)
+
 
 class SuperEnumAggregationGeneratorCustomDcTest(SuperEnumAggregationGeneratorIntegrationTest):
     is_base_dc = False
