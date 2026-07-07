@@ -232,6 +232,7 @@ class SuperEnumAggregationGenerator:
           SELECT 
             p.subject_id AS source_sv,
             p.source_provenance,
+            m.whitelisted_pred,
             m.parent_enum,
             p.predicate,
             IF(p.predicate = m.whitelisted_pred, m.parent_enum, p.object_id) AS object_id
@@ -239,7 +240,7 @@ class SuperEnumAggregationGenerator:
           JOIN SVToParent m ON p.subject_id = m.subject_id
         ),
         FilteredTargetProps AS (
-          SELECT source_sv, source_provenance, parent_enum, predicate, object_id
+          SELECT source_sv, source_provenance, whitelisted_pred, parent_enum, predicate, object_id
           FROM TargetSVProperties
           WHERE predicate NOT IN (
             'name', 'description', 'provenance', 'isPublic', 'url', 'memberOf', 
@@ -251,14 +252,16 @@ class SuperEnumAggregationGenerator:
           SELECT 
             source_sv,
             source_provenance,
+            whitelisted_pred,
             parent_enum,
             STRING_AGG(CONCAT(predicate, '=', object_id), '' ORDER BY predicate) AS key_str
           FROM FilteredTargetProps
-          GROUP BY source_sv, source_provenance, parent_enum
+          GROUP BY source_sv, source_provenance, whitelisted_pred, parent_enum
         )
         SELECT 
           source_sv,
           source_provenance,
+          whitelisted_pred,
           parent_enum,
           key_str,
           CONCAT('dc/', DC_BASE32_ENCODE(FARM_FINGERPRINT(key_str))) AS target_sv
@@ -299,7 +302,7 @@ class SuperEnumAggregationGenerator:
             WHERE predicate IN ('age', 'detailedLevelOfSchool', 'schoolGradeLevel', 'educationalAttainment')
           ) m ON p.subject_id = m.subject_id
           JOIN SpecializationOfRelations r ON m.child_enum = r.child
-          JOIN GeneratedTargetSVs g ON p.subject_id = g.source_sv AND r.parent = g.parent_enum
+          JOIN GeneratedTargetSVs g ON p.subject_id = g.source_sv AND m.whitelisted_pred = g.whitelisted_pred AND r.parent = g.parent_enum
         )
         SELECT DISTINCT
           subject_id,

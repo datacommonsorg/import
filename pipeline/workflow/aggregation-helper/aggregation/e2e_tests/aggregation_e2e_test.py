@@ -4046,6 +4046,68 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
             query_obs_beta = f"SELECT value FROM Observation WHERE variable_measured = '{target_sv_beta}' AND entity1 = 'geoId/06'"
             self.assertAlmostEqual(float(list(snapshot.execute_sql(query_obs_beta))[0][0]), 20.0)
 
+    def test_super_enum_aggregation_multi_whitelisted_properties(self):
+        """Verifies Item #6: StatVars with multiple whitelisted properties create distinct target StatVars independently."""
+        import_name = 'CensusACS_MultiProp_Test'
+        
+        # 1. Setup two whitelisted hierarchy structures
+        self.add_node('SchoolGradeLevelEnum', 'School Grade Level', types=['Class'])
+        self.add_node('Grade1', 'Grade 1', types=['SchoolGradeLevelEnum'])
+        self.add_node('PrimarySchool', 'Primary School', types=['SchoolGradeLevelEnum'])
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_name)
+        
+        self.add_node('DetailedLevelOfSchoolEnum', 'Detailed Level', types=['Class'])
+        self.add_node('MiddleSchool_6', 'Grade 6 Middle', types=['DetailedLevelOfSchoolEnum'])
+        self.add_node('MiddleSchool', 'Middle School General', types=['DetailedLevelOfSchoolEnum'])
+        self.add_edge('MiddleSchool_6', 'specializationOf', 'MiddleSchool', import_name)
+        
+        # 2. Setup a single StatVar with BOTH whitelisted properties
+        self.add_node('SV_MultiProp', 'Students in Grade 1 and Middle School 6', types=['StatisticalVariable'])
+        self.add_edge('SV_MultiProp', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_MultiProp', 'schoolGradeLevel', 'Grade1', import_name)
+        self.add_edge('SV_MultiProp', 'detailedLevelOfSchool', 'MiddleSchool_6', import_name)
+        self.add_edge('SV_MultiProp', 'populationType', 'Person', import_name)
+        self.add_edge('SV_MultiProp', 'measuredProperty', 'count', import_name)
+        self.add_edge('SV_MultiProp', 'statType', 'measuredValue', import_name)
+        
+        # 3. Setup observation
+        self.add_observation('SV_MultiProp', 'geoId/06', '2020', 100.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_multi')
+        self.flush_to_spanner()
+        
+        # 4. Run generator
+        generator = self.get_generator()
+        jobs = generator.run(import_names=[import_name])
+        for job in jobs:
+            job.result()
+            
+        # 5. Verify results
+        with self.database.snapshot(multi_use=True) as snapshot:
+            prefix = "dc/base/" if self.is_base_dc else ""
+            prov = f"{prefix}{import_name}_SuperEnum"
+            
+            # Target 1: schoolGradeLevel aggregated to PrimarySchool (detailedLevelOfSchool remains MiddleSchool_6)
+            q1 = f"SELECT subject_id FROM Edge WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool' AND provenance = '{prov}'"
+            res1 = list(snapshot.execute_sql(q1))
+            self.assertEqual(len(res1), 1)
+            target_1 = res1[0][0]
+            
+            # Verify Target 1 kept original detailedLevelOfSchool
+            q1_other = f"SELECT object_id FROM Edge WHERE subject_id = '{target_1}' AND predicate = 'detailedLevelOfSchool'"
+            self.assertEqual(list(snapshot.execute_sql(q1_other))[0][0], 'MiddleSchool_6')
+            
+            # Target 2: detailedLevelOfSchool aggregated to MiddleSchool (schoolGradeLevel remains Grade1)
+            q2 = f"SELECT subject_id FROM Edge WHERE predicate = 'detailedLevelOfSchool' AND object_id = 'MiddleSchool' AND provenance = '{prov}'"
+            res2 = list(snapshot.execute_sql(q2))
+            self.assertEqual(len(res2), 1)
+            target_2 = res2[0][0]
+            
+            # Verify Target 2 kept original schoolGradeLevel
+            q2_other = f"SELECT object_id FROM Edge WHERE subject_id = '{target_2}' AND predicate = 'schoolGradeLevel'"
+            self.assertEqual(list(snapshot.execute_sql(q2_other))[0][0], 'Grade1')
+            
+            # Verify Target 1 and Target 2 are distinct nodes
+            self.assertNotEqual(target_1, target_2)
+
 
 class SuperEnumAggregationGeneratorCustomDcTest(SuperEnumAggregationGeneratorIntegrationTest):
     is_base_dc = False
