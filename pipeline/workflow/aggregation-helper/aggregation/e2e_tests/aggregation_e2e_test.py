@@ -1701,6 +1701,116 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(obs_results), 1)
             self.assertAlmostEqual(float(obs_results[0][0]), 1.0)
 
+    def test_aggregate_multiple_slices_same_property(self):
+        """Tests aggregation when config has multiple alternative brackets on the same property (Slice 0 + Slice 1)."""
+        import_name = 'EarthquakeUSGS_MultiSlice'
+        output_import = 'EarthquakeUSGS_MultiSlice_Agg'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import}"
+
+        # 1. Setup mock data
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_edge('geoId/06', 'typeOf', 'State', import_name)
+
+        # eq_1: Mag 3.5 (Included in Slice 0: [3 4 M])
+        self.add_node('eq_1', 'Earthquake 1', types=['EarthquakeEvent'])
+        self.add_edge('eq_1', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_1', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_1', 'occurrenceTime', '2023-08-10T12:00:00Z', import_name)
+        self.add_edge('eq_1', 'magnitude', '3.5', import_name)
+
+        # eq_2: Mag 4.5 (Included in Slice 1: [4 5 M])
+        self.add_node('eq_2', 'Earthquake 2', types=['EarthquakeEvent'])
+        self.add_edge('eq_2', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_2', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_2', 'occurrenceTime', '2023-08-15T12:00:00Z', import_name)
+        self.add_edge('eq_2', 'magnitude', '4.5', import_name)
+
+        # eq_3: Mag 3.8 (Included in Slice 0: [3 4 M])
+        self.add_node('eq_3', 'Earthquake 3', types=['EarthquakeEvent'])
+        self.add_edge('eq_3', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_3', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_3', 'occurrenceTime', '2023-08-20T12:00:00Z', import_name)
+        self.add_edge('eq_3', 'magnitude', '3.8', import_name)
+
+        # eq_4: Mag 2.0 (Filtered out by both slices)
+        self.add_node('eq_4', 'Earthquake 4', types=['EarthquakeEvent'])
+        self.add_edge('eq_4', 'typeOf', 'EarthquakeEvent', import_name)
+        self.add_edge('eq_4', 'affectedPlace', 'geoId/06', import_name)
+        self.add_edge('eq_4', 'occurrenceTime', '2023-08-25T12:00:00Z', import_name)
+        self.add_edge('eq_4', 'magnitude', '2.0', import_name)
+
+        self.flush_to_spanner()
+
+        # 2. Run generator with two alternative brackets on the same property `magnitude`
+        config = EntityAggregationConfig(
+            entity_types=['EarthquakeEvent'],
+            location_props=['affectedPlace'],
+            date_prop='occurrenceTime',
+            agg_date_formats=['YYYY'],
+            constraints=[
+                {'property': 'magnitude', 'min': 3, 'max': 4, 'unit': 'M'},
+                {'property': 'magnitude', 'min': 4, 'max': 5, 'unit': 'M'}
+            ],
+            output_import=output_import,
+            input_imports=[import_name]
+        )
+
+        generator = self.get_generator()
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        jobs[0].result()
+
+        # 3. Verify both slices in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Find SV for Slice 0: [3 4 M]
+            sv_0_query = """
+                SELECT subject_id FROM Edge 
+                WHERE predicate = 'populationType' AND object_id = 'EarthquakeEvent'
+                  AND subject_id IN (
+                    SELECT subject_id FROM Edge 
+                    WHERE predicate = 'magnitude' AND object_id = '[3 4 M]'
+                  )
+            """
+            sv_0_results = list(snapshot.execute_sql(sv_0_query))
+            self.assertEqual(len(sv_0_results), 1)
+            sv_0_dcid = sv_0_results[0][0]
+
+            # Verify count for Slice 0 is 2 (eq_1 + eq_3)
+            obs_0_query = f"""
+                SELECT value FROM Observation 
+                WHERE variable_measured = '{sv_0_dcid}' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2023'
+            """
+            obs_0_results = list(snapshot.execute_sql(obs_0_query))
+            self.assertEqual(len(obs_0_results), 1)
+            self.assertAlmostEqual(float(obs_0_results[0][0]), 2.0)
+
+            # Find SV for Slice 1: [4 5 M]
+            sv_1_query = """
+                SELECT subject_id FROM Edge 
+                WHERE predicate = 'populationType' AND object_id = 'EarthquakeEvent'
+                  AND subject_id IN (
+                    SELECT subject_id FROM Edge 
+                    WHERE predicate = 'magnitude' AND object_id = '[4 5 M]'
+                  )
+            """
+            sv_1_results = list(snapshot.execute_sql(sv_1_query))
+            self.assertEqual(len(sv_1_results), 1)
+            sv_1_dcid = sv_1_results[0][0]
+
+            # Verify count for Slice 1 is 1 (eq_2)
+            obs_1_query = f"""
+                SELECT value FROM Observation 
+                WHERE variable_measured = '{sv_1_dcid}' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2023'
+            """
+            obs_1_results = list(snapshot.execute_sql(obs_1_query))
+            self.assertEqual(len(obs_1_results), 1)
+            self.assertAlmostEqual(float(obs_1_results[0][0]), 1.0)
+
     def test_aggregate_filters_latlong(self):
         """Tests that entities with latLong/ location objects are filtered out."""
         import_name = 'EarthquakeUSGS_LatLong'

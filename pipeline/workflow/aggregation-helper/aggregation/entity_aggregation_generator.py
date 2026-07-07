@@ -69,15 +69,22 @@ class EntityAggregationGenerator:
     def _parse_constraints(self, constraints: List[Dict]) -> List[Dict]:
         """Parses structured constraint dictionaries into metadata and SQL clauses."""
         parsed = []
-        for c in constraints:
+        for i, c in enumerate(constraints):
             if not isinstance(c, dict) or 'property' not in c:
                 continue
             prop = c['property']
             unit_suffix = f" {c['unit']}" if c.get('unit') else ""
+            val_col = f"{prop}_{i}_val"
+            table_alias = f"c_{i}"
+            temp_table = f"temp_constraint_{i}_{prop}"
 
             if c.get('wildcard'):
                 parsed.append({
                     'prop': prop,
+                    'index': i,
+                    'val_col': val_col,
+                    'table_alias': table_alias,
+                    'temp_table': temp_table,
                     'is_wildcard': True,
                     'sql_filter': None,
                     'val_str': '*'
@@ -86,32 +93,48 @@ class EntityAggregationGenerator:
                 val_str = f"[{c['min']} {c['max']}{unit_suffix}]"
                 parsed.append({
                     'prop': prop,
+                    'index': i,
+                    'val_col': val_col,
+                    'table_alias': table_alias,
+                    'temp_table': temp_table,
                     'is_wildcard': False,
-                    'sql_filter': f"SAFE_CAST({prop}_val AS FLOAT64) >= {c['min']} AND SAFE_CAST({prop}_val AS FLOAT64) <= {c['max']}",
+                    'sql_filter': f"SAFE_CAST({val_col} AS FLOAT64) >= {c['min']} AND SAFE_CAST({val_col} AS FLOAT64) <= {c['max']}",
                     'val_str': val_str
                 })
             elif 'min' in c:
                 val_str = f"[{c['min']} -{unit_suffix}]"
                 parsed.append({
                     'prop': prop,
+                    'index': i,
+                    'val_col': val_col,
+                    'table_alias': table_alias,
+                    'temp_table': temp_table,
                     'is_wildcard': False,
-                    'sql_filter': f"SAFE_CAST({prop}_val AS FLOAT64) >= {c['min']}",
+                    'sql_filter': f"SAFE_CAST({val_col} AS FLOAT64) >= {c['min']}",
                     'val_str': val_str
                 })
             elif 'max' in c:
                 val_str = f"[- {c['max']}{unit_suffix}]"
                 parsed.append({
                     'prop': prop,
+                    'index': i,
+                    'val_col': val_col,
+                    'table_alias': table_alias,
+                    'temp_table': temp_table,
                     'is_wildcard': False,
-                    'sql_filter': f"SAFE_CAST({prop}_val AS FLOAT64) <= {c['max']}",
+                    'sql_filter': f"SAFE_CAST({val_col} AS FLOAT64) <= {c['max']}",
                     'val_str': val_str
                 })
             elif 'value' in c:
                 val_str = str(c['value'])
                 parsed.append({
                     'prop': prop,
+                    'index': i,
+                    'val_col': val_col,
+                    'table_alias': table_alias,
+                    'temp_table': temp_table,
                     'is_wildcard': False,
-                    'sql_filter': f"{prop}_val = '{_escape_sql_literal(val_str)}'",
+                    'sql_filter': f"{val_col} = '{_escape_sql_literal(val_str)}'",
                     'val_str': val_str
                 })
         return parsed
@@ -134,6 +157,23 @@ class EntityAggregationGenerator:
         parsed_constraints = self._parse_constraints(config.constraints)
         location_props_str = ", ".join([f'"{_escape_sql_literal(p)}"' for p in config.location_props])
         
+        # Group constraints into independent slices
+        # Multiple range/value conditions on the same property belong to separate slices,
+        # while conditions on distinct properties are combined in the same slice.
+        slices: List[List[Dict]] = []
+        if not parsed_constraints:
+            slices = [[]]
+        else:
+            for c in parsed_constraints:
+                placed = False
+                for s in slices:
+                    if not any(sc['prop'] == c['prop'] and not sc['is_wildcard'] for sc in s):
+                        s.append(c)
+                        placed = True
+                        break
+                if not placed:
+                    slices.append([c])
+
         # 1. Step 1: Extract Raw Entities and Properties
         sql_parts = []
         sql_parts.append(f"""
@@ -163,27 +203,28 @@ class EntityAggregationGenerator:
             SELECT DISTINCT subject_id AS entity_id, object_id AS raw_date
             FROM EXTERNAL_QUERY("{connection_id}",
               '''SELECT subject_id, object_id FROM Edge 
-                 WHERE predicate = "{config.date_prop}"''')
+                 WHERE predicate = "{_escape_sql_literal(config.date_prop)}"''')
             WHERE subject_id IN (SELECT entity_id FROM `temp_entities`);
             """)
 
-        # Extract constraint values
+        # Extract constraint values for all unique constraint conditions
         for c in parsed_constraints:
             sql_parts.append(f"""
-            -- Extract constraint: {c['prop']}
-            CREATE OR REPLACE TEMPORARY TABLE `temp_constraint_{c['prop']}` AS
-            SELECT DISTINCT subject_id AS entity_id, object_id AS {c['prop']}_val
+            -- Extract constraint: {c['prop']} (index {c['index']})
+            CREATE OR REPLACE TEMPORARY TABLE `{c['temp_table']}` AS
+            SELECT DISTINCT subject_id AS entity_id, object_id AS {c['val_col']}
             FROM EXTERNAL_QUERY("{connection_id}",
               '''SELECT subject_id, object_id FROM Edge 
-                 WHERE predicate = "{c['prop']}"''')
+                 WHERE predicate = "{_escape_sql_literal(c['prop'])}"''')
             WHERE subject_id IN (SELECT entity_id FROM `temp_entities`);
             """)
 
         # 2. Step 2: Apply Constraints and Buckets
         date_select_raw = "d.raw_date" if config.date_prop else "FORMAT_DATE('%Y-%m-%d', CURRENT_DATE())"
         date_join = "LEFT JOIN `temp_dates` d ON e.entity_id = d.entity_id" if config.date_prop else ""
+        date_null_filter = "\n            AND d.raw_date IS NOT NULL" if config.date_prop else ""
         
-        # Format date buckets and periods (using raw_date from CTE)
+        # Format date buckets and periods
         date_bucket_cols = []
         for fmt in config.agg_date_formats:
             if fmt == 'YYYY':
@@ -192,147 +233,148 @@ class EntityAggregationGenerator:
                 date_bucket_cols.append("LEFT(raw_date, 7) AS date_YYYY_MM, 'P1M' AS period_YYYY_MM")
             elif fmt == 'YYYY-MM-DD':
                 date_bucket_cols.append("LEFT(raw_date, 10) AS date_YYYY_MM_DD, 'P1D' AS period_YYYY_MM_DD")
-        
         date_bucket_select = ", ".join(date_bucket_cols)
-        
-        # Constraint selects and joins
-        cte_cons_selects = ", ".join([f"c_{c['prop']}.{c['prop']}_val" for c in parsed_constraints])
-        if cte_cons_selects:
-            cte_cons_selects = ", " + cte_cons_selects
-            
-        outer_cons_selects = ", ".join([f"{c['prop']}_val" for c in parsed_constraints])
-        if outer_cons_selects:
-            outer_cons_selects = ", " + outer_cons_selects
 
-        cons_joins = "\n".join([f"JOIN `temp_constraint_{c['prop']}` c_{c['prop']} ON e.entity_id = c_{c['prop']}.entity_id" for c in parsed_constraints])
-        
-        # Constraint filters (only for non-wildcard constraints)
-        filters = [c['sql_filter'] for c in parsed_constraints if c['sql_filter']]
-        filter_clause = "AND " + " AND ".join(filters) if filters else ""
-        date_null_filter = "\n            AND d.raw_date IS NOT NULL" if config.date_prop else ""
-
-        sql_parts.append(f"""
-        -- Step 2: Apply Constraints and Buckets
-        CREATE OR REPLACE TEMPORARY TABLE `temp_filtered_events` AS
-        WITH RawEvents AS (
-          SELECT 
-            e.entity_id,
-            e.entity_type,
-            l.location_id,
-            {date_select_raw} AS raw_date
-            {cte_cons_selects}
-          FROM `temp_entities` e
-          JOIN `temp_locations` l ON e.entity_id = l.entity_id
-          {date_join}
-          {cons_joins}
-          WHERE TRUE
-            {filter_clause}{date_null_filter}
-        )
-        SELECT 
-          entity_id,
-          entity_type,
-          location_id,
-          raw_date,
-          {date_bucket_select}
-          {outer_cons_selects}
-        FROM RawEvents;
-        """)
-
-        # 3. Step 3: Group and Count (UNION ALL for multiple formats)
-        group_parts = []
-        for fmt in config.agg_date_formats:
-            fmt_clean = fmt.replace('-', '_')
-            period = 'P1Y' if fmt == 'YYYY' else ('P1M' if fmt == 'YYYY-MM' else 'P1D')
-            wildcard_cols = [f"{c['prop']}_val" for c in parsed_constraints if c['is_wildcard']]
-            wildcard_select = ", ".join(wildcard_cols)
-            if wildcard_select:
-                wildcard_select = ", " + wildcard_select
+        slice_sv_tables = []
+        for s_idx, slice_cons in enumerate(slices):
+            # Constraint selects and joins for this slice
+            cte_cons_selects = ", ".join([f"{c['table_alias']}.{c['val_col']}" for c in slice_cons])
+            if cte_cons_selects:
+                cte_cons_selects = ", " + cte_cons_selects
                 
-            group_by_cols = f"location_id, entity_type, date_{fmt_clean}, period_{fmt_clean}"
-            if wildcard_cols:
-                group_by_cols += ", " + ", ".join(wildcard_cols)
+            outer_cons_selects = ", ".join([f"{c['val_col']}" for c in slice_cons])
+            if outer_cons_selects:
+                outer_cons_selects = ", " + outer_cons_selects
 
-            group_parts.append(f"""
+            cons_joins = "\n".join([f"JOIN `{c['temp_table']}` {c['table_alias']} ON e.entity_id = {c['table_alias']}.entity_id" for c in slice_cons])
+            
+            # Constraint filters for non-wildcard constraints in this slice
+            filters = [c['sql_filter'] for c in slice_cons if c['sql_filter']]
+            filter_clause = "AND " + " AND ".join(filters) if filters else ""
+
+            sql_parts.append(f"""
+            -- Step 2: Apply Constraints and Buckets (Slice {s_idx})
+            CREATE OR REPLACE TEMPORARY TABLE `temp_filtered_events_{s_idx}` AS
+            WITH RawEvents AS (
+              SELECT 
+                e.entity_id,
+                e.entity_type,
+                l.location_id,
+                {date_select_raw} AS raw_date
+                {cte_cons_selects}
+              FROM `temp_entities` e
+              JOIN `temp_locations` l ON e.entity_id = l.entity_id
+              {date_join}
+              {cons_joins}
+              WHERE TRUE
+                {filter_clause}{date_null_filter}
+            )
             SELECT 
-              location_id,
+              entity_id,
               entity_type,
-              date_{fmt_clean} AS obs_date,
-              period_{fmt_clean} AS obs_period,
-              COUNT(entity_id) AS event_count
-              {wildcard_select}
-            FROM `temp_filtered_events`
-            GROUP BY {group_by_cols}
+              location_id,
+              raw_date,
+              {date_bucket_select}
+              {outer_cons_selects}
+            FROM RawEvents;
             """)
-            
-        union_groups_query = "\nUNION ALL\n".join(group_parts)
-        
-        sql_parts.append(f"""
-        -- Step 3: Group and Count
-        CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_counts` AS
-        {union_groups_query};
-        """)
 
-        # 4. Step 4: Deterministic SV DCID Generation
-        # We need to construct the serialization key for the SV.
-        # Static SV properties: measuredProperty=count, statType=measuredValue
-        # Plus populationType (from column), static constraints, and wildcard values.
-        # We must sort all keys to ensure determinism.
-        sv_props = {
-            'measuredProperty': 'count',
-            'statType': 'measuredValue'
-        }
-        # Add static constraints
-        for c in parsed_constraints:
-            if not c['is_wildcard']:
-                sv_props[c['prop']] = c['val_str']
-                
-        # Build the serialization parts
-        all_keys = ['populationType'] + list(sv_props.keys()) + [c['prop'] for c in parsed_constraints if c['is_wildcard']]
-        sorted_keys = sorted(all_keys)
-        
-        flat_args = []
-        for i, key in enumerate(sorted_keys):
-            if i > 0:
-                flat_args.append("','") # Add comma separator between pairs
-            if key == 'populationType':
-                flat_args.append("'populationType='")
-                flat_args.append("entity_type")
-            elif key in sv_props:
-                flat_args.append(f"'{key}={sv_props[key]}'")
-            else:
-                flat_args.append(f"'{key}='")
-                flat_args.append(f"COALESCE({key}_val, '')")
-                
-        concat_expr = f"CONCAT({', '.join(flat_args)})"
-        
-        # Build the SV Name SQL expression
-        name_flat_args = ["'Count of '", "entity_type"]
-        static_cons_desc = " and ".join([f"{c['prop']} {c['val_str']}" for c in parsed_constraints if not c['is_wildcard']])
-        if static_cons_desc:
-            name_flat_args.append(f"' with {static_cons_desc}'")
-            
-        # Add wildcards to name
-        wildcard_constraints = [c for c in parsed_constraints if c['is_wildcard']]
-        for c in wildcard_constraints:
-            name_flat_args.append(f"', {c['prop']}='")
-            name_flat_args.append(f"COALESCE({c['prop']}_val, 'unknown')")
-            
-        name_expr = f"CONCAT({', '.join(name_flat_args)})"
+            # Step 3: Group and Count for Slice s_idx
+            group_parts = []
+            for fmt in config.agg_date_formats:
+                fmt_clean = fmt.replace('-', '_')
+                wildcard_cols = [f"{c['val_col']}" for c in slice_cons if c['is_wildcard']]
+                wildcard_select = ", ".join(wildcard_cols)
+                if wildcard_select:
+                    wildcard_select = ", " + wildcard_select
+                    
+                group_by_cols = f"location_id, entity_type, date_{fmt_clean}, period_{fmt_clean}"
+                if wildcard_cols:
+                    group_by_cols += ", " + ", ".join(wildcard_cols)
 
-        # We create a temp table that contains the aggregated counts AND the generated SV DCID/Name
+                group_parts.append(f"""
+                SELECT 
+                  location_id,
+                  entity_type,
+                  date_{fmt_clean} AS obs_date,
+                  period_{fmt_clean} AS obs_period,
+                  COUNT(entity_id) AS event_count
+                  {wildcard_select}
+                FROM `temp_filtered_events_{s_idx}`
+                GROUP BY {group_by_cols}
+                """)
+                
+            union_groups_query = "\nUNION ALL\n".join(group_parts)
+            
+            sql_parts.append(f"""
+            -- Step 3: Group and Count (Slice {s_idx})
+            CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_counts_{s_idx}` AS
+            {union_groups_query};
+            """)
+
+            # Step 4: Deterministic SV DCID Generation for Slice s_idx
+            sv_props = {
+                'measuredProperty': 'count',
+                'statType': 'measuredValue'
+            }
+            for c in slice_cons:
+                if not c['is_wildcard']:
+                    sv_props[c['prop']] = c['val_str']
+                    
+            all_keys = ['populationType'] + list(sv_props.keys()) + [c['prop'] for c in slice_cons if c['is_wildcard']]
+            sorted_keys = sorted(all_keys)
+            
+            flat_args = []
+            for i, key in enumerate(sorted_keys):
+                if i > 0:
+                    flat_args.append("','")
+                if key == 'populationType':
+                    flat_args.append("'populationType='")
+                    flat_args.append("entity_type")
+                elif key in sv_props:
+                    flat_args.append(f"'{key}={sv_props[key]}'")
+                else:
+                    # Match wildcard property using its val_col
+                    wc = next(c for c in slice_cons if c['prop'] == key)
+                    flat_args.append(f"'{key}='")
+                    flat_args.append(f"COALESCE({wc['val_col']}, '')")
+                    
+            concat_expr = f"CONCAT({', '.join(flat_args)})"
+            
+            # SV Name SQL expression
+            name_flat_args = ["'Count of '", "entity_type"]
+            static_cons_desc = " and ".join([f"{c['prop']} {c['val_str']}" for c in slice_cons if not c['is_wildcard']])
+            if static_cons_desc:
+                name_flat_args.append(f"' with {static_cons_desc}'")
+                
+            wildcard_constraints = [c for c in slice_cons if c['is_wildcard']]
+            for c in wildcard_constraints:
+                name_flat_args.append(f"', {c['prop']}='")
+                name_flat_args.append(f"COALESCE({c['val_col']}, 'unknown')")
+                
+            name_expr = f"CONCAT({', '.join(name_flat_args)})"
+
+            sql_parts.append(f"""
+            -- Step 4: Generate SV DCIDs and Names (Slice {s_idx})
+            CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_with_sv_{s_idx}` AS
+            SELECT 
+              *,
+              CONCAT('dc/sv/gp/', CAST(FARM_FINGERPRINT({concat_expr}) AS STRING)) AS sv_dcid,
+              {name_expr} AS sv_name
+            FROM `temp_aggregated_counts_{s_idx}`;
+            """)
+            slice_sv_tables.append(f"SELECT * FROM `temp_aggregated_with_sv_{s_idx}`")
+
+        union_slice_sv_query = "\nUNION ALL\n".join(slice_sv_tables)
         sql_parts.append(f"""
-        -- Step 4: Generate SV DCIDs and Names
+        -- Combine all constraint slices into temp_aggregated_with_sv
         CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_with_sv` AS
-        SELECT 
-          *,
-          CONCAT('dc/sv/gp/', CAST(FARM_FINGERPRINT({concat_expr}) AS STRING)) AS sv_dcid,
-          {name_expr} AS sv_name
-        FROM `temp_aggregated_counts`;
+        {union_slice_sv_query};
         """)
 
         # 5. Step 5: Export to Spanner
         
-        # 5.1 Export SV Nodes (Only unique SVs)
+        # 5.1 Export SV Nodes
         sql_parts.append(f"""
         -- Export SV Nodes to Spanner Node table
         EXPORT DATA
@@ -348,16 +390,18 @@ class EntityAggregationGenerator:
 
         # 5.2 Export SV Edges
         edge_selects = []
-        # Static typeOf
         edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'typeOf' AS predicate, 'StatisticalVariable' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
-        # Dynamic populationType
         edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'populationType' AS predicate, entity_type AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
-        # Static SV props
-        for k, v in sv_props.items():
-            edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, '{k}' AS predicate, '{_escape_sql_literal(v)}' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
-        # Wildcard props
-        for c in wildcard_constraints:
-            edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, '{c['prop']}' AS predicate, {c['prop']}_val AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv` WHERE {c['prop']}_val IS NOT NULL")
+        edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'measuredProperty' AS predicate, 'count' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
+        edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'statType' AS predicate, 'measuredValue' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
+        
+        # For each constraint slice, export its exact static/wildcard edges from its slice temp table
+        for s_idx, slice_cons in enumerate(slices):
+            for c in slice_cons:
+                if not c['is_wildcard']:
+                    edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, '{c['prop']}' AS predicate, '{_escape_sql_literal(c['val_str'])}' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv_{s_idx}`")
+                else:
+                    edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, '{c['prop']}' AS predicate, {c['val_col']} AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv_{s_idx}` WHERE {c['val_col']} IS NOT NULL")
             
         union_edges_query = "\nUNION ALL\n".join(edge_selects)
 
@@ -369,8 +413,6 @@ class EntityAggregationGenerator:
         """)
 
         # 5.3 Export TimeSeries
-        # We calculate the facet_id using the standard Farm Fingerprint of the facet fields.
-        # We need to ensure we only export unique TimeSeries (sv_dcid, location_id, obs_period)
         sql_parts.append(f"""
         -- Export TimeSeries to Spanner TimeSeries table
         EXPORT DATA
@@ -385,8 +427,9 @@ class EntityAggregationGenerator:
         PreparedTS AS (
           SELECT
             sv_dcid AS variable_measured,
-            JSON_OBJECT('entity1', location_id) AS entities,
+            location_id AS entity1,
             '' AS extra_entities_id,
+            JSON_OBJECT('entity1', location_id) AS entities,
             JSON_OBJECT(
               'measurementMethod', 'DataCommonsAggregate',
               'observationPeriod', obs_period,
@@ -398,7 +441,7 @@ class EntityAggregationGenerator:
         )
         SELECT
           variable_measured,
-          entities,
+          entity1,
           extra_entities_id,
           CAST(FARM_FINGERPRINT(CONCAT(
             '{output_provenance}', '^',
@@ -408,6 +451,7 @@ class EntityAggregationGenerator:
             '', '^', -- unit
             'true'   -- isDcAggregate
           )) AS STRING) AS facet_id,
+          entities,
           facet
         FROM PreparedTS;
         """)
