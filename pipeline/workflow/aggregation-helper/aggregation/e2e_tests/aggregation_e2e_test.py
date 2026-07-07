@@ -3169,7 +3169,16 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                 "input_imports": [round1_output_import],
                 "output_import": round2_output_import,
                 "aggr_funcs": [
-                    {"stats_across_models": {}}
+                    {
+                        "stats_across_models": {
+                            "sv_regex": "^DifferenceRelativeToBaseDate.*",
+                            "aggregation_ops": [
+                                "OPERATOR_MEDIAN",
+                                "OPERATOR_PERCENTILE10",
+                                "OPERATOR_PERCENTILE90"
+                            ]
+                        }
+                    }
                 ]
             }
         ]
@@ -3296,16 +3305,32 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                 "aggr_funcs": [
                     {
                         "aggr_over_time": {
-                            "output_period": "P1M",
-                            "operator": "MEAN",
-                            "use_input_sv_for_output": True
+                            "time_range": {
+                                "input_obs_period": "P1D",
+                                "output_obs_period": "P1M"
+                            },
+                            "sv_configs": [
+                                {
+                                    "sv_regex": "^Max_Temperature$",
+                                    "aggregation_op": "OPERATOR_MEAN",
+                                    "use_input_sv_for_output": True
+                                }
+                            ]
                         }
                     },
                     {
                         "aggr_over_time": {
-                            "output_period": "P1Y",
-                            "operator": "MAX",
-                            "use_input_sv_for_output": False
+                            "time_range": {
+                                "input_obs_period": "P1D",
+                                "output_obs_period": "P1Y"
+                            },
+                            "sv_configs": [
+                                {
+                                    "sv_regex": "^Max_Temperature$",
+                                    "aggregation_op": "OPERATOR_MAX",
+                                    "use_input_sv_for_output": False
+                                }
+                            ]
                         }
                     }
                 ]

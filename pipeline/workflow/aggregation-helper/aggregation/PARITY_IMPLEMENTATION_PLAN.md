@@ -57,7 +57,7 @@ To make this process manageable, items are ordered from **Least Complex (Item 1)
 
 ---
 
-### [ ] Item 5: `aggr_over_time` & `stats_across_models` `sv_regex` Filtering, `input_obs_period` Filtering, and Dynamic Operations (Most Complex)
+### [x] Item 5: `aggr_over_time` & `stats_across_models` (`aggr_stats_across_models`) `sv_regex` Filtering, `input_obs_period` Filtering, and Dynamic Operations (Most Complex)
 - **Problem**:
   1. **`aggr_over_time` (`time_range` & `sv_configs`)**:
      Real configs structure temporal aggregations using `time_range` and a list of `sv_configs`, where each `sv_config` specifies an `sv_regex` and `aggregation_op` (`OPERATOR_MAX`, `OPERATOR_MIN`, `OPERATOR_MEAN`). Currently, Python reads flat `operator` and applies it across all input SVs without `sv_regex` filtering.

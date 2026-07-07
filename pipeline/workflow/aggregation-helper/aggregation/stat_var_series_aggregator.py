@@ -119,7 +119,7 @@ class StatVarSeriesAggregator:
                 self._add_diff_relative_fragments(ts_ctes, obs_ctes, func_config, safe_output_provenance)
             elif func_type == "stats_across_models":
                 has_stats_models = True
-                self._add_stats_across_models_fragments(ts_ctes, obs_ctes, safe_output_provenance)
+                self._add_stats_across_models_fragments(ts_ctes, obs_ctes, func_config, safe_output_provenance)
             elif func_type == "aggr_over_time":
                 self._add_aggr_over_time_fragments(ts_ctes, obs_ctes, func_config, safe_output_provenance)
             elif func_type == "count_threshold_exception_over_time" or func_type == "count_threshold":
@@ -323,8 +323,36 @@ class StatVarSeriesAggregator:
                 """
                 obs_ctes.append(obs_cte)
 
-    def _add_stats_across_models_fragments(self, ts_ctes: List[str], obs_ctes: List[str], output_provenance: str):
+    def _add_stats_across_models_fragments(self, ts_ctes: List[str], obs_ctes: List[str], func_config: Dict[str, Any], output_provenance: str):
         """Adds SQL fragments for stats_across_models (Ensembles)."""
+        sv_regex = func_config.get("sv_regex")
+        if sv_regex:
+            sv_regex = sv_regex.lstrip('^').rstrip('$')
+        aggregation_ops = func_config.get("aggregation_ops", ["OPERATOR_MEDIAN", "OPERATOR_PERCENTILE10", "OPERATOR_PERCENTILE90"])
+
+        # Map aggregation ops to stat names and quantile offsets
+        stat_specs = []
+        for op in aggregation_ops:
+            if op in ("OPERATOR_MEDIAN", "MEDIAN", "MedianAcrossModels"):
+                stat_specs.append(("MedianAcrossModels", 50))
+            elif op in ("OPERATOR_PERCENTILE10", "PERCENTILE10", "Percentile10AcrossModels"):
+                stat_specs.append(("Percentile10AcrossModels", 10))
+            elif op in ("OPERATOR_PERCENTILE90", "PERCENTILE90", "Percentile90AcrossModels"):
+                stat_specs.append(("Percentile90AcrossModels", 90))
+
+        if not stat_specs:
+            logging.warning(f"stats_across_models found no valid aggregation_ops in {aggregation_ops}. Defaulting to MedianAcrossModels.")
+            stat_specs.append(("MedianAcrossModels", 50))
+
+        stat_names_sql = ", ".join([f"'{s[0]}'" for s in stat_specs])
+        regex_filter_ts = f"WHERE REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
+        regex_filter_obs = f"WHERE REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
+
+        unrolled_union = "\n          UNION ALL\n          ".join([
+            f"SELECT entity1, extra_entities_id, variable_measured, date, '{s[0]}' AS stat_type, quantiles[OFFSET({s[1]})] AS val, base_facet FROM EnsembleQuantiles"
+            for s in stat_specs
+        ])
+
         ts_cte = f"""
         EnsembleTS AS (
           SELECT DISTINCT
@@ -334,7 +362,8 @@ class StatVarSeriesAggregator:
             TO_JSON_STRING(facet) AS facet_str,
             stat_type
           FROM SourceTS
-          CROSS JOIN UNNEST(['MedianAcrossModels', 'Percentile10AcrossModels', 'Percentile90AcrossModels']) AS stat_type
+          CROSS JOIN UNNEST([{stat_names_sql}]) AS stat_type
+          {regex_filter_ts}
         ),
         EnsembleUnrolledTS AS (
           SELECT
@@ -353,7 +382,7 @@ class StatVarSeriesAggregator:
         """
         ts_ctes.append(ts_cte)
 
-        obs_cte = """
+        obs_cte = f"""
         EnsembleQuantiles AS (
           SELECT 
             entity1,
@@ -363,96 +392,113 @@ class StatVarSeriesAggregator:
             APPROX_QUANTILES(val_num, 100) AS quantiles,
             ANY_VALUE(facet) AS base_facet
           FROM RawObs
+          {regex_filter_obs}
           GROUP BY entity1, extra_entities_id, variable_measured, date
         ),
         UnrolledStats AS (
-          SELECT entity1, extra_entities_id, variable_measured, date, 'MedianAcrossModels' AS stat_type, quantiles[OFFSET(50)] AS val, base_facet FROM EnsembleQuantiles
-          UNION ALL
-          SELECT entity1, extra_entities_id, variable_measured, date, 'Percentile10AcrossModels' AS stat_type, quantiles[OFFSET(10)] AS val, base_facet FROM EnsembleQuantiles
-          UNION ALL
-          SELECT entity1, extra_entities_id, variable_measured, date, 'Percentile90AcrossModels' AS stat_type, quantiles[OFFSET(90)] AS val, base_facet FROM EnsembleQuantiles
+          {unrolled_union}
         )
         """
         obs_ctes.append(obs_cte)
 
     def _add_aggr_over_time_fragments(self, ts_ctes: List[str], obs_ctes: List[str], func_config: Dict[str, Any], output_provenance: str):
         """Adds SQL fragments for aggr_over_time (Temporal Aggregation)."""
-        output_period = func_config.get("output_period", "P1Y")
-        operator = func_config.get("operator", "MEAN")
-        use_input_sv = func_config.get("use_input_sv_for_output", True)
-        sv_prefix = func_config.get("output_sv_prefix", "")
+        time_range = func_config.get("time_range", func_config)
+        input_period = time_range.get("input_obs_period", time_range.get("input_period"))
+        output_period = time_range.get("output_obs_period", time_range.get("output_period", "P1Y"))
+        output_obs_date = time_range.get("output_obs_date", time_range.get("output_date"))
 
-        # Map operator to SQL aggregate function and prefix
-        sql_op = "AVG"
-        op_name = "AggregateMean"
-        if operator == "MAX":
-            sql_op = "MAX"
-            op_name = "HighestValue"
-        elif operator == "MIN":
-            sql_op = "MIN"
-            op_name = "LowestValue"
-        elif operator == "SUM":
-            sql_op = "SUM"
-            op_name = "AggregateSum"
+        sv_configs = func_config.get("sv_configs", [func_config])
 
-        # Determine date binning expression based on target period
-        if output_period == "P1Y":
-            date_bin_expr = "SUBSTR(date, 1, 4)"
-        elif output_period == "P1M":
-            date_bin_expr = "SUBSTR(date, 1, 7)"
-        else:
-            logging.warning(f"Unsupported output period for aggr_over_time: {output_period}. Defaulting to YYYY.")
-            date_bin_expr = "SUBSTR(date, 1, 4)"
+        for svc in sv_configs:
+            operator = svc.get("aggregation_op", svc.get("operator", "MEAN"))
+            use_input_sv = svc.get("use_input_sv_for_output", func_config.get("use_input_sv_for_output", True))
+            sv_prefix = svc.get("output_sv_prefix", func_config.get("output_sv_prefix", ""))
+            sv_regex = svc.get("sv_regex")
+            if sv_regex:
+                sv_regex = sv_regex.lstrip('^').rstrip('$')
 
-        # Determine output SV name
-        if use_input_sv:
-            sv_expr = f"CONCAT('{sv_prefix}', variable_measured)"
-        else:
-            sv_expr = f"CONCAT('{op_name}_', variable_measured)"
+            # Map operator to SQL aggregate function and prefix
+            sql_op = "AVG"
+            op_name = "AggregateMean"
+            if operator in ("OPERATOR_MAX", "MAX"):
+                sql_op = "MAX"
+                op_name = "HighestValue"
+            elif operator in ("OPERATOR_MIN", "MIN"):
+                sql_op = "MIN"
+                op_name = "LowestValue"
+            elif operator in ("OPERATOR_SUM", "SUM"):
+                sql_op = "SUM"
+                op_name = "AggregateSum"
 
-        idx = len(ts_ctes)
+            # Determine date binning expression based on target period
+            if output_obs_date:
+                date_bin_expr = f"'{_escape_sql_literal(output_obs_date)}'"
+                group_by_date = ""
+            else:
+                if output_period == "P1Y":
+                    date_bin_expr = "SUBSTR(date, 1, 4)"
+                elif output_period == "P1M":
+                    date_bin_expr = "SUBSTR(date, 1, 7)"
+                else:
+                    logging.warning(f"Unsupported output period for aggr_over_time: {output_period}. Defaulting to YYYY.")
+                    date_bin_expr = "SUBSTR(date, 1, 4)"
+                group_by_date = f", {date_bin_expr}"
 
-        # TimeSeries Metadata CTE (sets new period and provenance)
-        ts_cte = f"""
-        AggrOverTimeTS_{idx} AS (
-          SELECT DISTINCT
-            {sv_expr} AS variable_measured,
-            entity1,
-            extra_entities_id,
-            TO_JSON_STRING(JSON_SET(
-              JSON_SET(
-                JSON_SET(facet, '$.provenance', '{output_provenance}'),
-                '$.observationPeriod', '{output_period}'
-              ),
-              '$.isDcAggregate', true
-            )) AS facet_str
-          FROM SourceTS
-        )
-        """
-        ts_ctes.append(ts_cte)
+            # Determine output SV name
+            if use_input_sv:
+                sv_expr = f"CONCAT('{sv_prefix}', variable_measured)"
+            else:
+                sv_expr = f"CONCAT('{op_name}_', variable_measured)"
 
-        # Observation Data CTE
-        obs_cte = f"""
-        AggrOverTimeObs_{idx} AS (
-          SELECT
-            {sv_expr} AS variable_measured,
-            entity1,
-            extra_entities_id,
-            {date_bin_expr} AS date,
-            {sql_op}(val_num) AS val,
-            CAST(FARM_FINGERPRINT(CONCAT(
-              '{output_provenance}', '^',
-              COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.measurementMethod'), ''), '^',
-              '{output_period}', '^',
-              COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.scalingFactor'), ''), '^',
-              COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.unit'), ''), '^',
-              'true'
-            )) AS STRING) AS facet_id
-          FROM RawObs
-          GROUP BY entity1, extra_entities_id, variable_measured, model, {date_bin_expr}
-        )
-        """
-        obs_ctes.append(obs_cte)
+            cte_idx = len(ts_ctes)
+            regex_filter_ts = f"AND REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
+            regex_filter_obs = f"AND REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
+            period_filter = f"COALESCE(JSON_VALUE(facet, '$.observationPeriod'), '') = '{input_period}'" if input_period else "1=1"
+
+            # TimeSeries Metadata CTE (sets new period and provenance)
+            ts_cte = f"""
+            AggrOverTimeTS_{cte_idx} AS (
+              SELECT DISTINCT
+                {sv_expr} AS variable_measured,
+                entity1,
+                extra_entities_id,
+                TO_JSON_STRING(JSON_SET(
+                  JSON_SET(
+                    JSON_SET(facet, '$.provenance', '{output_provenance}'),
+                    '$.observationPeriod', '{output_period}'
+                  ),
+                  '$.isDcAggregate', true
+                )) AS facet_str
+              FROM SourceTS
+              WHERE 1=1 {regex_filter_ts}
+            )
+            """
+            ts_ctes.append(ts_cte)
+
+            # Observation Data CTE
+            obs_cte = f"""
+            AggrOverTimeObs_{cte_idx} AS (
+              SELECT
+                {sv_expr} AS variable_measured,
+                entity1,
+                extra_entities_id,
+                {date_bin_expr} AS date,
+                {sql_op}(val_num) AS val,
+                CAST(FARM_FINGERPRINT(CONCAT(
+                  '{output_provenance}', '^',
+                  COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.measurementMethod'), ''), '^',
+                  '{output_period}', '^',
+                  COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.scalingFactor'), ''), '^',
+                  COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.unit'), ''), '^',
+                  'true'
+                )) AS STRING) AS facet_id
+              FROM RawObs
+              WHERE {period_filter} {regex_filter_obs}
+              GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
+            )
+            """
+            obs_ctes.append(obs_cte)
 
     def _add_count_threshold_fragments(self, ts_ctes: List[str], obs_ctes: List[str], func_config: Dict[str, Any], output_provenance: str):
         """Adds SQL fragments for count_threshold (Threshold Exception counting)."""
@@ -468,6 +514,8 @@ class StatVarSeriesAggregator:
             comparison = thres.get("comparison", "GE")
             unit = thres.get("unit", "")
             sv_regex = thres.get("sv_regex")
+            if sv_regex:
+                sv_regex = sv_regex.lstrip('^').rstrip('$')
 
             if threshold is None:
                 logging.warning("count_threshold missing threshold_value in threshold block. Skipping.")
