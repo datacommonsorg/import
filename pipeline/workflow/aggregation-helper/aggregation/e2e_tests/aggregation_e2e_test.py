@@ -122,11 +122,12 @@ class AggregationIntegrationTestBase(unittest.TestCase):
         provenance = f"{prefix}{import_name}"
         self.mock_edges.append((subject_id, predicate, object_id, provenance))
 
-    def add_timeseries(self, variable, entity_id, method='CensusACS5yrSurvey', period='P1Y', unit='1', scaling='1', import_name='USFed_ConstantMaturityRates_Test', facet_id='facet1', is_dc_aggregate=False, extra_entities_id=''):
+    def add_timeseries(self, variable, entity_id, method='CensusACS5yrSurvey', period='P1Y', unit='1', scaling='1', import_name='USFed_ConstantMaturityRates_Test', facet_id='facet1', is_dc_aggregate=False, extra_entities_id='', entities=None):
         """Adds a TimeSeries metadata row to mock list."""
         prefix = "dc/base/" if self.is_base_dc else ""
         provenance = f"{prefix}{import_name}"
-        entities_json = json.dumps({'entity1': entity_id})
+        entities_dict = entities if entities is not None else {'entity1': entity_id}
+        entities_json = json.dumps(entities_dict)
         facet_json = json.dumps({
             'measurementMethod': method,
             'observationPeriod': period,
@@ -145,9 +146,9 @@ class AggregationIntegrationTestBase(unittest.TestCase):
         if not exists:
             self.mock_timeseries.append((variable, entities_json, extra_entities_id, facet_id, facet_json))
 
-    def add_observation(self, variable, entity_id, date, value, method='CensusACS5yrSurvey', period='P1Y', unit='1', scaling='1', import_name='USFed_ConstantMaturityRates_Test', facet_id='facet1', is_dc_aggregate=False, extra_entities_id=''):
+    def add_observation(self, variable, entity_id, date, value, method='CensusACS5yrSurvey', period='P1Y', unit='1', scaling='1', import_name='USFed_ConstantMaturityRates_Test', facet_id='facet1', is_dc_aggregate=False, extra_entities_id='', entities=None):
         """Adds an Observation and ensures its parent TimeSeries exists."""
-        self.add_timeseries(variable, entity_id, method, period, unit, scaling, import_name, facet_id, is_dc_aggregate, extra_entities_id)
+        self.add_timeseries(variable, entity_id, method, period, unit, scaling, import_name, facet_id, is_dc_aggregate, extra_entities_id, entities=entities)
         self.mock_observations.append((variable, entity_id, extra_entities_id, facet_id, date, str(value)))
 
     def flush_to_spanner(self):
@@ -3920,6 +3921,51 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
             methods = [r[0] for r in snapshot.execute_sql(query_ts)]
             self.assertEqual(len(methods), 1)
             self.assertEqual(methods[0], 'dcAggregate/CensusACS5yrSurvey')
+
+    def test_super_enum_aggregation_multi_entity_timeseries(self):
+        """Verifies that entity2 and entity3 in TimeSeries.entities JSON are preserved during aggregation."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        
+        # --- 1. SETUP SCHEMA ---
+        self.add_node('SchoolGradeLevelEnum', 'School Grade Level', types=['Class'])
+        self.add_node('Grade1', 'Grade 1', types=['SchoolGradeLevelEnum'])
+        self.add_node('PrimarySchool', 'Primary School', types=['SchoolGradeLevelEnum'])
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_name)
+        
+        # --- 2. SETUP STATVARS ---
+        self.add_node('SV_G1', 'Students in Grade 1', types=['StatisticalVariable'])
+        self.add_edge('SV_G1', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_G1', 'schoolGradeLevel', 'Grade1', import_name)
+        self.add_edge('SV_G1', 'populationType', 'Person', import_name)
+        self.add_edge('SV_G1', 'measuredProperty', 'count', import_name)
+        self.add_edge('SV_G1', 'statType', 'measuredValue', import_name)
+        
+        # --- 3. SETUP OBSERVATIONS WITH MULTI-ENTITY TIMESERIES ---
+        multi_entities = {'entity1': 'geoId/06', 'entity2': 'geoId/36'}
+        self.add_observation('SV_G1', 'geoId/06', '2020', 100.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_multi', entities=multi_entities)
+        
+        self.flush_to_spanner()
+        
+        # --- 4. RUN GENERATOR ---
+        generator = self.get_generator()
+        jobs = generator.run(import_names=[import_name])
+        for job in jobs:
+            job.result()
+            
+        # --- 5. VERIFY RESULTS ---
+        with self.database.snapshot(multi_use=True) as snapshot:
+            query_sv = "SELECT subject_id FROM Edge WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool'"
+            target_sv = list(snapshot.execute_sql(query_sv))[0][0]
+            
+            query_ts = f"""
+                SELECT JSON_VALUE(entities, '$.entity1'), JSON_VALUE(entities, '$.entity2') 
+                FROM TimeSeries 
+                WHERE variable_measured = '{target_sv}' AND entity1 = 'geoId/06'
+            """
+            results = list(snapshot.execute_sql(query_ts))
+            self.assertEqual(len(results), 1)
+            self.assertEqual(results[0][0], 'geoId/06')
+            self.assertEqual(results[0][1], 'geoId/36')
 
 
 class SuperEnumAggregationGeneratorCustomDcTest(SuperEnumAggregationGeneratorIntegrationTest):

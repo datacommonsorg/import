@@ -311,12 +311,13 @@ class SuperEnumAggregationGenerator:
         WITH SourceTS AS (
           SELECT
             ts.variable_measured,
+            ts.entities,
             ts.entity1,
             ts.extra_entities_id,
             ts.facet,
             g.target_sv
           FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT variable_measured, entity1, extra_entities_id, facet
+            '''SELECT variable_measured, entities, entity1, extra_entities_id, facet
                FROM TimeSeries
                WHERE provenance IN ({provenance_str})''') ts
           JOIN GeneratedTargetSVs g ON ts.variable_measured = g.source_sv
@@ -324,6 +325,7 @@ class SuperEnumAggregationGenerator:
         NewTS AS (
           SELECT
             target_sv AS variable_measured,
+            entities,
             entity1,
             extra_entities_id,
             JSON_SET(
@@ -348,7 +350,7 @@ class SuperEnumAggregationGenerator:
             variable_measured,
             entity1,
             extra_entities_id,
-            TO_JSON_STRING(JSON_OBJECT('entity1', entity1)) as entities_str,
+            TO_JSON_STRING(entities) as entities_str,
             TO_JSON_STRING(facet) as facet_str
           FROM NewTS
         ),
