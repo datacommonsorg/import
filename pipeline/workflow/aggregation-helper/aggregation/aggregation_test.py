@@ -24,6 +24,8 @@ from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator
 from aggregation import ProvenanceSummaryGenerator
 from aggregation import PlaceAggregationGenerator
+from aggregation import EmbeddingGenerator
+from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.sql_utils import _escape_sql_literal
 
 
@@ -49,6 +51,7 @@ class TestBigQueryExecutor(unittest.TestCase):
                                     instance_id="inst",
                                     database_id="db",
                                     location="loc")
+        _ = executor.client
         mock_bq_client.assert_called_once_with(project="proj", location="loc")
         self.assertEqual(
             executor.get_spanner_destination_uri(),
@@ -58,10 +61,11 @@ class TestBigQueryExecutor(unittest.TestCase):
     def test_init_failure(self, mock_bq_client):
         mock_bq_client.side_effect = Exception("Auth error")
         with self.assertRaises(Exception):
-            BigQueryExecutor(connection_id="conn",
+            executor = BigQueryExecutor(connection_id="conn",
                              project_id="proj",
                              instance_id="inst",
                              database_id="db")
+            _ = executor.client
 
     def test_execute_sequential(self, mock_bq_client):
         mock_client_instance = MagicMock()
@@ -281,5 +285,67 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         query = self.mock_executor.execute.call_args[0][0]
         self.assertIsInstance(query, str)
         self.assertTrue(len(query) > 0)
+
+
+class TestEmbeddingGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    @patch.dict('os.environ', {'ENABLE_EMBEDDINGS': 'true'})
+    def test_run_all(self):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        specs = [
+            EmbeddingSpec(
+                embedding_label="test_embedding",
+                model_name="TestModel",
+                model_endpoint="text-embedding-005",
+                task_type="TEST_TASK",
+                node_types=["StatVar"],
+                node_filter_type="NoFilter"
+            )
+        ]
+        jobs = generator.run_all(specs=specs)
+
+        self.assertEqual(len(jobs), 1)
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("test-conn", query)
+        self.assertIn("spanner-uri", query)
+        self.assertIn("TestModel", query)
+        self.assertIn("test_embedding", query)
+        self.assertIn("TEST_TASK", query)
+
+    @patch.dict('os.environ', {'ENABLE_EMBEDDINGS': 'true'})
+    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value=['statVar1', 'statVar2'])
+    def test_run_all_nl_stat_var(self, mock_extract):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        specs = [
+            EmbeddingSpec(
+                embedding_label="test_embedding",
+                model_name="TestModel",
+                model_endpoint="text-embedding-005",
+                task_type="TEST_TASK",
+                node_types=["StatVar"],
+                node_filter_type="NLStatisticalVariable"
+            )
+        ]
+        jobs = generator.run_all(specs=specs)
+
+        self.assertEqual(len(jobs), 1)
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("statVar1", query)
+        self.assertIn("statVar2", query)
+
+
 if __name__ == '__main__':
     unittest.main()

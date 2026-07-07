@@ -24,6 +24,7 @@ from .stat_var_aggregator import StatVarAggregator
 from .place_aggregation_generator import PlaceAggregationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
 from .stat_var_calculation_generator import StatVarCalculationGenerator
+from .embedding_generator import EmbeddingGenerator
 from .orchestrator import AggregationOrchestrator, AggregationRunResult, ImportExecutionResult
 from .validator import validate_config
 
@@ -35,6 +36,7 @@ __all__ = [
     'PlaceAggregationGenerator',
     'StatVarGroupGenerator',
     'StatVarCalculationGenerator',
+    'EmbeddingGenerator',
     'AggregationOrchestrator',
     'AggregationRunResult',
     'ImportExecutionResult',

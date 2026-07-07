@@ -23,6 +23,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from .bq_executor import BigQueryExecutor
+from .embedding_generator import EmbeddingGenerator
 from .linked_edge_generator import LinkedEdgeGenerator
 from .place_aggregation_generator import PlaceAggregationGenerator
 from .provenance_summary_generator import ProvenanceSummaryGenerator
@@ -65,6 +66,7 @@ class CalculationType(str, Enum):
     LINKED_EDGES = "LINKED_EDGES"
     PROVENANCE_SUMMARY = "PROVENANCE_SUMMARY"
     STAT_VAR_GROUPS = "STAT_VAR_GROUPS"
+    EMBEDDING_GENERATION = "EMBEDDING_GENERATION"
 
 
 class AggregationOrchestrator:
@@ -268,6 +270,8 @@ class AggregationOrchestrator:
             return self._trigger_provenance_summary(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_GROUPS:
             return self._trigger_stat_var_groups(calc, applicable_imports)
+        elif step_type == CalculationType.EMBEDDING_GENERATION:
+            return self._trigger_embeddings(calc, applicable_imports)
         else:
             logging.warning(
                 f"Calculation type '{step_type}' configured for imports '{applicable_imports}' has no active generator handler."
@@ -392,6 +396,14 @@ class AggregationOrchestrator:
         logging.info(f"  -> Stat Var Groups Aggregation for imports {applicable_imports}")
         generator = StatVarGroupGenerator(self.executor, self.is_base_dc)
         return generator.run_all(applicable_imports)
+
+    def _trigger_embeddings(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers node embedding generation."""
+        embed_cfg = config.get("embedding_generation", {})
+        specs = embed_cfg.get("specs", [])
+        logging.info(f"  -> Node Embeddings Generation for imports {applicable_imports} (specs: {len(specs)})")
+        generator = EmbeddingGenerator(self.executor, self.is_base_dc)
+        return generator.run_all(specs=specs, import_names=applicable_imports)
 
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""

@@ -22,9 +22,12 @@ dynamic = ["version"]
 requires-python = ">=3.12"
 description = "Aggregation helper for Data Commons Spanner ingestion"
 dependencies = [
+    "gcsfs",
     "google-cloud-bigquery",
     "google-cloud-spanner",
+    "google-cloud-storage",
     "jsonschema>=4.26.0",
+    "pydantic>=2.0.0",
     "pyyaml>=6.0.3",
 ]
 
