@@ -24,6 +24,7 @@ from datetime import datetime
 import pandas as pd
 from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON
 from clients.spanner import SpannerClient
+import config
 
 
 _BATCH_SIZE = 1000
@@ -214,16 +215,14 @@ class EmbeddingUtils:
         Returns:
             The total number of affected rows.
         """
-        import config
-
         timestamp = self._get_latest_lock_timestamp()
         total_affected_rows = 0
         for spec in config.EMBEDDING_SPECS:
-            node_types = spec["node_types"]
-            model_name = spec["model_name"]
-            embedding_label = spec["embedding_label"]
-            task_type = spec["task_type"]
-            node_filter_type = spec["node_filter_type"]
+            node_types = spec.node_types
+            model_name = spec.model_name
+            embedding_label = spec.embedding_label
+            task_type = spec.task_type
+            node_filter_type = spec.node_filter_type
 
             logging.info(f"Job started for {embedding_label}. Fetching all nodes for types: {node_types}")
             nodes = self._get_updated_nodes(timestamp, node_types, node_filter_type, timeout=config.TIMEOUT)

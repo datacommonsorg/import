@@ -62,16 +62,16 @@ main:
                   helper_url: ${helper_url}
                   workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
                 result: dataflow_job_id
-            - check_skip_aggregation:
+            - run_aggregation_if_needed:
                 switch:
-                  - condition: ${skip_aggregation}
-                    next: update_ingestion_status
-            - run_aggregation_job:
-                call: run_aggregation_job
-                args:
-                  import_list: ${import_info.body}
-                  project_id: ${project_id}
-                  location: ${location}
+                  - condition: ${not skip_aggregation}
+                    steps:
+                      - run_aggregation_job:
+                          call: run_aggregation_job
+                          args:
+                            import_list: ${import_info.body}
+                            project_id: ${project_id}
+                            location: ${location}
             - update_ingestion_status:
                 call: http.post
                 args:
