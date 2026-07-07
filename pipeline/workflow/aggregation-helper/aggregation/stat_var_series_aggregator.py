@@ -456,98 +456,109 @@ class StatVarSeriesAggregator:
 
     def _add_count_threshold_fragments(self, ts_ctes: List[str], obs_ctes: List[str], func_config: Dict[str, Any], output_provenance: str):
         """Adds SQL fragments for count_threshold (Threshold Exception counting)."""
-        threshold = func_config.get("threshold_value")
-        comparison = func_config.get("comparison", "GE")
-        unit = func_config.get("unit", "")
-        input_period = func_config.get("input_period", "P1D")
-        output_period = func_config.get("output_period", "P1Y")
-        output_obs_date = func_config.get("output_obs_date")
+        time_range = func_config.get("time_range", func_config)
+        input_period = time_range.get("input_obs_period", time_range.get("input_period", "P1D"))
+        output_period = time_range.get("output_obs_period", time_range.get("output_period", "P1Y"))
+        output_obs_date = time_range.get("output_obs_date", time_range.get("output_date"))
 
-        if threshold is None:
-            logging.warning("count_threshold missing threshold_value. Skipping.")
-            return
+        thresholds = func_config.get("thresholds", [func_config])
 
-        # Determine SV prefix based on input period (replicating C++ logic)
-        if input_period == "P1D":
-            sv_prefix = "NumberOfDays_"
-        elif input_period == "P1M":
-            sv_prefix = "NumberOfMonths_"
-        else:
-            logging.warning(f"Unsupported input period for count_threshold: {input_period}. Defaulting to NumberOfDays_")
-            sv_prefix = "NumberOfDays_"
+        for thres in thresholds:
+            threshold = thres.get("threshold_value")
+            comparison = thres.get("comparison", "GE")
+            unit = thres.get("unit", "")
+            sv_regex = thres.get("sv_regex")
 
-        # Format threshold value (remove trailing .0 if integer to match DCID standard)
-        thres_str = str(threshold)
-        if thres_str.endswith(".0"):
-            thres_str = thres_str[:-2]
+            if threshold is None:
+                logging.warning("count_threshold missing threshold_value in threshold block. Skipping.")
+                continue
 
-        unit_str = unit if unit else "Units"
-        suffix = "OrMore_" if comparison == "GE" else "OrLess_"
-        
-        # New SV ID: e.g. NumberOfDays_35KelvinOrMore_Max_Temperature
-        new_sv_prefix = f"{sv_prefix}{thres_str}{unit_str}{suffix}"
-        sv_expr = f"CONCAT('{new_sv_prefix}', variable_measured)"
-
-        sql_comp = ">=" if comparison == "GE" else "<="
-
-        # Determine date binning and output date
-        if output_obs_date:
-            date_expr = f"'{_escape_sql_literal(output_obs_date)}'"
-            group_by_date = ""
-        else:
-            if output_period == "P1Y":
-                date_expr = "SUBSTR(date, 1, 4)"
-            elif output_period == "P1M":
-                date_expr = "SUBSTR(date, 1, 7)"
+            # Determine SV prefix based on input period (replicating C++ logic)
+            if input_period == "P1D":
+                sv_prefix = "NumberOfDays_"
+            elif input_period == "P1M":
+                sv_prefix = "NumberOfMonths_"
             else:
-                date_expr = "SUBSTR(date, 1, 4)"
-            group_by_date = f", {date_expr}"
+                logging.warning(f"Unsupported input period for count_threshold: {input_period}. Defaulting to NumberOfDays_")
+                sv_prefix = "NumberOfDays_"
 
-        idx = len(ts_ctes)
+            # Format threshold value (remove trailing .0 if integer to match DCID standard)
+            thres_str = str(threshold)
+            if thres_str.endswith(".0"):
+                thres_str = thres_str[:-2]
 
-        # TimeSeries Metadata CTE (removes unit, updates period and provenance)
-        ts_cte = f"""
-        CountThresholdTS_{idx} AS (
-          SELECT DISTINCT
-            {sv_expr} AS variable_measured,
-            entity1,
-            extra_entities_id,
-            TO_JSON_STRING(JSON_SET(
-              JSON_SET(
-                JSON_REMOVE(facet, '$.unit'),
-                '$.provenance', '{output_provenance}'
-              ),
-              '$.observationPeriod', '{output_period}'
-            )) AS facet_str
-          FROM SourceTS
-        )
-        """
-        ts_ctes.append(ts_cte)
+            unit_str = unit if unit else "Units"
+            is_ge = comparison in ("GE", "OPERATOR_GE")
+            suffix = "OrMore_" if is_ge else "OrLess_"
+            
+            # New SV ID: e.g. NumberOfDays_35KelvinOrMore_Max_Temperature
+            new_sv_prefix = f"{sv_prefix}{thres_str}{unit_str}{suffix}"
+            sv_expr = f"CONCAT('{new_sv_prefix}', variable_measured)"
 
-        # Observation Data CTE
-        obs_cte = f"""
-        CountThresholdObs_{idx} AS (
-          SELECT
-            {sv_expr} AS variable_measured,
-            entity1,
-            extra_entities_id,
-            {date_expr} AS date,
-            SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) AS val,
-            CAST(FARM_FINGERPRINT(CONCAT(
-              '{output_provenance}', '^',
-              COALESCE(model, ''), '^',
-              '{output_period}', '^',
-              COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.scalingFactor'), ''), '^',
-              '', '^',
-              'true'
-            )) AS STRING) AS facet_id
-          FROM RawObs
-          WHERE COALESCE(JSON_VALUE(facet, '$.observationPeriod'), '') = '{input_period}'
-          GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
-          HAVING SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) > 0
-        )
-        """
-        obs_ctes.append(obs_cte)
+            sql_comp = ">=" if is_ge else "<="
+
+            # Determine date binning and output date
+            if output_obs_date:
+                date_expr = f"'{_escape_sql_literal(output_obs_date)}'"
+                group_by_date = ""
+            else:
+                if output_period == "P1Y":
+                    date_expr = "SUBSTR(date, 1, 4)"
+                elif output_period == "P1M":
+                    date_expr = "SUBSTR(date, 1, 7)"
+                else:
+                    date_expr = "SUBSTR(date, 1, 4)"
+                group_by_date = f", {date_expr}"
+
+            cte_idx = len(ts_ctes)
+            regex_filter_ts = f"AND REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
+            regex_filter_obs = f"AND REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
+
+            # TimeSeries Metadata CTE (removes unit, updates period and provenance)
+            ts_cte = f"""
+            CountThresholdTS_{cte_idx} AS (
+              SELECT DISTINCT
+                {sv_expr} AS variable_measured,
+                entity1,
+                extra_entities_id,
+                TO_JSON_STRING(JSON_SET(
+                  JSON_SET(
+                    JSON_REMOVE(facet, '$.unit'),
+                    '$.provenance', '{output_provenance}'
+                  ),
+                  '$.observationPeriod', '{output_period}'
+                )) AS facet_str
+              FROM SourceTS
+              WHERE 1=1 {regex_filter_ts}
+            )
+            """
+            ts_ctes.append(ts_cte)
+
+            # Observation Data CTE
+            obs_cte = f"""
+            CountThresholdObs_{cte_idx} AS (
+              SELECT
+                {sv_expr} AS variable_measured,
+                entity1,
+                extra_entities_id,
+                {date_expr} AS date,
+                SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) AS val,
+                CAST(FARM_FINGERPRINT(CONCAT(
+                  '{output_provenance}', '^',
+                  COALESCE(model, ''), '^',
+                  '{output_period}', '^',
+                  COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.scalingFactor'), ''), '^',
+                  '', '^',
+                  'true'
+                )) AS STRING) AS facet_id
+              FROM RawObs
+              WHERE COALESCE(JSON_VALUE(facet, '$.observationPeriod'), '') = '{input_period}'
+                {regex_filter_obs}
+              GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
+              HAVING SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) > 0
+            )
+            """
+            obs_ctes.append(obs_cte)
 
     def _build_combined_query(
         self, connection_id: str, dest: str, input_provenance_str: str, output_provenance: str,

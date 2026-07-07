@@ -3385,11 +3385,18 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                 "aggr_funcs": [
                     {
                         "count_threshold_exception_over_time": {
-                            "threshold_value": 300.0,
-                            "comparison": "GE",
-                            "unit": "Kelvin",
-                            "input_period": "P1D",
-                            "output_period": "P1Y"
+                            "time_range": {
+                                "input_obs_period": "P1D",
+                                "output_obs_period": "P1Y"
+                            },
+                            "thresholds": [
+                                {
+                                    "sv_regex": "^Max_Temperature$",
+                                    "threshold_value": 300.0,
+                                    "comparison": "OPERATOR_GE",
+                                    "unit": "Kelvin"
+                                }
+                            ]
                         }
                     }
                 ]

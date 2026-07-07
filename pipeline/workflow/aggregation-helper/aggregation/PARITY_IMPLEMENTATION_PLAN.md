@@ -41,7 +41,7 @@ To make this process manageable, items are ordered from **Least Complex (Item 1)
 
 ---
 
-### [ ] Item 4: `count_threshold_exception_over_time` Nested `time_range` & `thresholds` Unwrapping (Moderate-High Complexity)
+### [x] Item 4: `count_threshold_exception_over_time` Nested `time_range` & `thresholds` Unwrapping (Moderate-High Complexity)
 - **Problem**:
   In protobuf and `statvar_series.yaml`, threshold counts are structured with nested blocks:
   ```yaml
