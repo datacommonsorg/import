@@ -124,13 +124,13 @@ class SuperEnumAggregationGenerator:
 
     def __init__(self,
                  executor: BigQueryExecutor,
-                 spanner_client: spanner.Client,
-                 spanner_database: Any,
-                 is_base_dc: bool = True) -> None:
+                 is_base_dc: bool = True,
+                 spanner_client: Optional[spanner.Client] = None,
+                 spanner_database: Optional[Any] = None) -> None:
         self.executor = executor
+        self.is_base_dc = is_base_dc
         self.spanner_client = spanner_client
         self.spanner_database = spanner_database
-        self.is_base_dc = is_base_dc
 
     def run(self, import_names: List[str]) -> List[bigquery.job.QueryJob]:
         """Runs the Super Enum aggregation.

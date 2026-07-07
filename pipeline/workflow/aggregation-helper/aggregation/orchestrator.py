@@ -31,6 +31,7 @@ from .stat_var_calculation_generator import StatVarCalculationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
 from .stat_var_series_aggregator import StatVarSeriesAggregator
 from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
+from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
 from .validator import validate_config
 
 
@@ -69,6 +70,7 @@ class CalculationType(str, Enum):
     PROVENANCE_SUMMARY = "PROVENANCE_SUMMARY"
     STAT_VAR_GROUPS = "STAT_VAR_GROUPS"
     STAT_VAR_SERIES_AGGREGATION = "STAT_VAR_SERIES_AGGREGATION"
+    SUPER_ENUM_AGGREGATION = "SUPER_ENUM_AGGREGATION"
 
 
 class AggregationOrchestrator:
@@ -276,6 +278,8 @@ class AggregationOrchestrator:
             return self._trigger_stat_var_groups(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_SERIES_AGGREGATION:
             return self._trigger_stat_var_series_aggregation(calc, applicable_imports)
+        elif step_type == CalculationType.SUPER_ENUM_AGGREGATION:
+            return self._trigger_super_enum_aggregation(calc, applicable_imports)
         else:
             logging.warning(
                 f"Calculation type '{step_type}' configured for imports '{applicable_imports}' has no active generator handler."
@@ -427,6 +431,12 @@ class AggregationOrchestrator:
         logging.info(f"  -> Entity Aggregation for imports {applicable_imports}")
         generator = EntityAggregationGenerator(self.executor, self.is_base_dc)
         return generator.aggregate_entities([cfg])
+
+    def _trigger_super_enum_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers super enum aggregations."""
+        logging.info(f"  -> Super Enum Aggregation for imports {applicable_imports}")
+        generator = SuperEnumAggregationGenerator(self.executor, self.is_base_dc)
+        return generator.run(applicable_imports)
 
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""
