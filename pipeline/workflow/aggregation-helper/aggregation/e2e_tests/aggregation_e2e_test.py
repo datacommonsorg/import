@@ -3153,10 +3153,11 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                 "input_imports": [import_name],
                 "output_import": round1_output_import,
                 "aggr_funcs": [
-                    {"type": "max_diff_across_measurement_methods"},
+                    {"max_diff_across_measurement_methods": {}},
                     {
-                        "type": "diff_relative_to_base_date",
-                        "dates": ["2015-07"]
+                        "diff_relative_to_base_date": {
+                            "dates": ["2015-07"]
+                        }
                     }
                 ]
             },
@@ -3165,7 +3166,7 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                 "input_imports": [round1_output_import],
                 "output_import": round2_output_import,
                 "aggr_funcs": [
-                    {"type": "stats_across_models"}
+                    {"stats_across_models": {}}
                 ]
             }
         ]
@@ -3281,16 +3282,18 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                 "output_import": output_import,
                 "aggr_funcs": [
                     {
-                        "type": "aggr_over_time",
-                        "output_period": "P1M",
-                        "operator": "MEAN",
-                        "use_input_sv_for_output": True
+                        "aggr_over_time": {
+                            "output_period": "P1M",
+                            "operator": "MEAN",
+                            "use_input_sv_for_output": True
+                        }
                     },
                     {
-                        "type": "aggr_over_time",
-                        "output_period": "P1Y",
-                        "operator": "MAX",
-                        "use_input_sv_for_output": False
+                        "aggr_over_time": {
+                            "output_period": "P1Y",
+                            "operator": "MAX",
+                            "use_input_sv_for_output": False
+                        }
                     }
                 ]
             }
@@ -3368,12 +3371,13 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                 "output_import": output_import,
                 "aggr_funcs": [
                     {
-                        "type": "count_threshold",
-                        "threshold_value": 300.0,
-                        "comparison": "GE",
-                        "unit": "Kelvin",
-                        "input_period": "P1D",
-                        "output_period": "P1Y"
+                        "count_threshold_exception_over_time": {
+                            "threshold_value": 300.0,
+                            "comparison": "GE",
+                            "unit": "Kelvin",
+                            "input_period": "P1D",
+                            "output_period": "P1Y"
+                        }
                     }
                 ]
             }

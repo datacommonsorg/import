@@ -96,20 +96,34 @@ class StatVarSeriesAggregator:
         has_stats_models = False
 
         for func in aggr_funcs:
+            if not isinstance(func, dict):
+                logging.warning(f"Invalid aggregation function config format: {func}")
+                continue
+
             func_type = func.get("type")
+            func_config = func
+
+            # Unwrap single-key wrapper dict from YAML/proto (e.g. {'max_diff_across_...': {...}})
+            if not func_type and len(func) == 1:
+                func_type, inner_config = next(iter(func.items()))
+                if isinstance(inner_config, dict):
+                    func_config = inner_config
+                else:
+                    func_config = {}
+
             if func_type == "max_diff_across_measurement_methods":
                 has_max_diff = True
                 self._add_max_diff_fragments(ts_ctes, obs_ctes, safe_output_provenance)
             elif func_type == "diff_relative_to_base_date":
                 has_diff_rel = True
-                self._add_diff_relative_fragments(ts_ctes, obs_ctes, func, safe_output_provenance)
+                self._add_diff_relative_fragments(ts_ctes, obs_ctes, func_config, safe_output_provenance)
             elif func_type == "stats_across_models":
                 has_stats_models = True
                 self._add_stats_across_models_fragments(ts_ctes, obs_ctes, safe_output_provenance)
             elif func_type == "aggr_over_time":
-                self._add_aggr_over_time_fragments(ts_ctes, obs_ctes, func, safe_output_provenance)
-            elif func_type == "count_threshold":
-                self._add_count_threshold_fragments(ts_ctes, obs_ctes, func, safe_output_provenance)
+                self._add_aggr_over_time_fragments(ts_ctes, obs_ctes, func_config, safe_output_provenance)
+            elif func_type == "count_threshold_exception_over_time" or func_type == "count_threshold":
+                self._add_count_threshold_fragments(ts_ctes, obs_ctes, func_config, safe_output_provenance)
             else:
                 logging.warning(f"Unsupported aggregation function type: {func_type}")
 
