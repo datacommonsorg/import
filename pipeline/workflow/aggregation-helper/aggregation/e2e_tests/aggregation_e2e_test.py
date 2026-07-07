@@ -3143,7 +3143,7 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
         self.add_observation('Max_Temperature', place_id, '2050-07', 36.0, method='Model_B', import_name=import_name, facet_id='facet_b')
         self.add_observation('Max_Temperature', place_id, '2050-07', 30.0, method='Model_C', import_name=import_name, facet_id='facet_c')
 
-        # Pre-base-date observation: 2010-07 (should NOT produce DifferenceRelativeToBaseDate201507 due to C++ parity filtering year > base_date_year)
+        # Pre-base-date observation: 2010-07 (should NOT produce DifferenceRelativeToBaseDate201507 filtering year > base_date_year)
         self.add_observation('Max_Temperature', place_id, '2010-07', 29.0, method='Model_A', import_name=import_name, facet_id='facet_a')
 
         self.flush_to_spanner()

@@ -764,7 +764,7 @@ class StatVarSeriesAggregator:
             '''SELECT variable_measured, entity1, extra_entities_id, facet_id, facet 
                FROM TimeSeries 
                WHERE provenance IN ({input_provenance_str})''') ts
-            ON o.variable_measured = ts.variable_measured AND o.entity1 = ts.entity1 AND o.facet_id = ts.facet_id
+            ON o.variable_measured = ts.variable_measured AND o.entity1 = ts.entity1 AND o.facet_id = ts.facet_id AND o.extra_entities_id = ts.extra_entities_id
         ),
         {obs_ctes_combined}
         {obs_final_select};
