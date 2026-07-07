@@ -223,6 +223,7 @@ class StatVarSeriesAggregator:
                 obs_cte = f"""
                 Baseline_{cte_idx} AS (
                   SELECT
+                    facet_id,
                     variable_measured,
                     entity1,
                     extra_entities_id,
@@ -253,6 +254,7 @@ class StatVarSeriesAggregator:
                     AND r.extra_entities_id = b.extra_entities_id 
                     AND r.variable_measured = b.variable_measured 
                     AND r.model = b.model
+                    AND r.facet_id = b.facet_id
                     AND SUBSTR(r.date, 6, 2) = b.base_month
                     AND SUBSTR(r.date, 1, 4) > SUBSTR(b.base_date, 1, 4)
                 )
@@ -287,6 +289,7 @@ class StatVarSeriesAggregator:
                 obs_cte = f"""
                 BaselineRange_{cte_idx} AS (
                   SELECT
+                    facet_id,
                     variable_measured,
                     entity1,
                     extra_entities_id,
@@ -295,7 +298,7 @@ class StatVarSeriesAggregator:
                     SUBSTR(date, 6, 2) AS base_month
                   FROM RawObs
                   WHERE date BETWEEN '{safe_start}' AND '{safe_end}'
-                  GROUP BY variable_measured, entity1, extra_entities_id, model, base_month
+                  GROUP BY facet_id, variable_measured, entity1, extra_entities_id, model, base_month
                 ),
                 DiffRelRangeObs_{cte_idx} AS (
                   SELECT
@@ -317,6 +320,7 @@ class StatVarSeriesAggregator:
                     AND r.extra_entities_id = b.extra_entities_id 
                     AND r.variable_measured = b.variable_measured 
                     AND r.model = b.model
+                    AND r.facet_id = b.facet_id
                     AND SUBSTR(r.date, 6, 2) = b.base_month
                     AND SUBSTR(r.date, 1, 4) > SUBSTR('{safe_end}', 1, 4)
                 )
@@ -349,7 +353,7 @@ class StatVarSeriesAggregator:
         regex_filter_obs = f"WHERE REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
 
         unrolled_union = "\n          UNION ALL\n          ".join([
-            f"SELECT entity1, extra_entities_id, variable_measured, date, '{s[0]}' AS stat_type, quantiles[OFFSET({s[1]})] AS val, base_facet FROM EnsembleQuantiles"
+            f"SELECT entity1, extra_entities_id, variable_measured, date, '{s[0]}' AS stat_type, quantiles[SAFE_OFFSET({s[1]})] AS val, base_facet FROM EnsembleQuantiles"
             for s in stat_specs
         ])
 
@@ -393,7 +397,7 @@ class StatVarSeriesAggregator:
             ANY_VALUE(facet) AS base_facet
           FROM RawObs
           {regex_filter_obs}
-          GROUP BY entity1, extra_entities_id, variable_measured, date
+          GROUP BY entity1, extra_entities_id, variable_measured, date, COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), COALESCE(JSON_VALUE(facet, '$.unit'), '')
         ),
         UnrolledStats AS (
           {unrolled_union}
@@ -633,9 +637,6 @@ class StatVarSeriesAggregator:
             if f"CountThresholdTS_{idx} AS (" in ts_ctes_combined:
                 ts_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_str FROM CountThresholdTS_{idx}")
 
-        if "DiffRelRangeTS AS (" in ts_ctes_combined:
-            ts_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_str FROM DiffRelRangeTS")
-            
         if has_stats_models:
             ts_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_str FROM EnsembleUnrolledTS")
 
@@ -713,9 +714,6 @@ class StatVarSeriesAggregator:
             if f"CountThresholdObs_{idx} AS (" in obs_ctes_combined:
                 obs_union_targets.append(f"SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM CountThresholdObs_{idx}")
 
-        if "DiffRelRangeObs AS (" in obs_ctes_combined:
-            obs_union_targets.append("SELECT variable_measured, entity1, extra_entities_id, facet_id, date, CAST(val AS STRING) AS value FROM DiffRelRangeObs")
-
         if has_stats_models:
             obs_ensemble_select = f"""
             SELECT
@@ -757,6 +755,7 @@ class StatVarSeriesAggregator:
             o.date, 
             SAFE_CAST(o.value AS FLOAT64) AS val_num,
             ts.facet,
+            ts.facet_id,
             COALESCE(JSON_VALUE(ts.facet, '$.measurementMethod'), '') AS model
           FROM EXTERNAL_QUERY("{connection_id}",
             '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value 
