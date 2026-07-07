@@ -3330,7 +3330,7 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             ts_yearly_query = f"""
                 SELECT facet
                 FROM TimeSeries
-                WHERE variable_measured = 'AggregateMax_Max_Temperature'
+                WHERE variable_measured = 'HighestValue_Max_Temperature'
                   AND facet_id = CAST(FARM_FINGERPRINT('{expected_provenance}^Model_A^P1Y^1^1^true') AS STRING)
             """
             ts_yearly = list(snapshot.execute_sql(ts_yearly_query))
@@ -3340,7 +3340,7 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             obs_yearly_query = """
                 SELECT value
                 FROM Observation
-                WHERE variable_measured = 'AggregateMax_Max_Temperature'
+                WHERE variable_measured = 'HighestValue_Max_Temperature'
                   AND date = '2050'
             """
             obs_yearly = list(snapshot.execute_sql(obs_yearly_query))

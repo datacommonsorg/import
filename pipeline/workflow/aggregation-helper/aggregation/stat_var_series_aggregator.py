@@ -379,10 +379,10 @@ class StatVarSeriesAggregator:
         op_name = "AggregateMean"
         if operator == "MAX":
             sql_op = "MAX"
-            op_name = "AggregateMax"
+            op_name = "HighestValue"
         elif operator == "MIN":
             sql_op = "MIN"
-            op_name = "AggregateMin"
+            op_name = "LowestValue"
         elif operator == "SUM":
             sql_op = "SUM"
             op_name = "AggregateSum"
