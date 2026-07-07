@@ -4108,6 +4108,59 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
             # Verify Target 1 and Target 2 are distinct nodes
             self.assertNotEqual(target_1, target_2)
 
+    def test_super_enum_aggregation_curated_statvar_mapping(self):
+        """Verifies Item #7: If a curated StatVar matches the target properties, map directly to it without creating dc/ nodes or edges."""
+        import_name = 'CensusACS_CuratedMap_Test'
+        
+        # 1. Setup hierarchy
+        self.add_node('SchoolGradeLevelEnum', 'School Grade Level', types=['Class'])
+        self.add_node('Grade1', 'Grade 1', types=['SchoolGradeLevelEnum'])
+        self.add_node('PrimarySchool', 'Primary School', types=['SchoolGradeLevelEnum'])
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_name)
+        
+        # 2. Setup a pre-existing CURATED StatVar in Spanner (no dc/ prefix)
+        curated_id = 'Curated_PrimarySchool_Count'
+        self.add_node(curated_id, 'Curated Primary School Count', types=['StatisticalVariable'])
+        self.add_edge(curated_id, 'typeOf', 'StatisticalVariable', 'dc/base/CuratedSchema')
+        self.add_edge(curated_id, 'schoolGradeLevel', 'PrimarySchool', 'dc/base/CuratedSchema')
+        self.add_edge(curated_id, 'populationType', 'Person', 'dc/base/CuratedSchema')
+        self.add_edge(curated_id, 'measuredProperty', 'count', 'dc/base/CuratedSchema')
+        self.add_edge(curated_id, 'statType', 'measuredValue', 'dc/base/CuratedSchema')
+        
+        # 3. Setup source StatVar that will aggregate exactly into PrimarySchool + Person + count + measuredValue
+        source_id = 'SV_Source_Grade1'
+        self.add_node(source_id, 'Source Grade 1 Count', types=['StatisticalVariable'])
+        self.add_edge(source_id, 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge(source_id, 'schoolGradeLevel', 'Grade1', import_name)
+        self.add_edge(source_id, 'populationType', 'Person', import_name)
+        self.add_edge(source_id, 'measuredProperty', 'count', import_name)
+        self.add_edge(source_id, 'statType', 'measuredValue', import_name)
+        
+        # 4. Setup observation on source StatVar
+        self.add_observation(source_id, 'geoId/06', '2020', 1234.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_curated')
+        self.flush_to_spanner()
+        
+        # 5. Run generator
+        generator = self.get_generator()
+        jobs = generator.run(import_names=[import_name])
+        for job in jobs:
+            job.result()
+            
+        # 6. Verify results
+        with self.database.snapshot(multi_use=True) as snapshot:
+            prefix = "dc/base/" if self.is_base_dc else ""
+            prov = f"{prefix}{import_name}_SuperEnum"
+            
+            # Verify NO auto-generated dc/... edges were created for this aggregation
+            query_dc_edges = f"SELECT COUNT(*) FROM Edge WHERE provenance = '{prov}'"
+            self.assertEqual(list(snapshot.execute_sql(query_dc_edges))[0][0], 0)
+            
+            # Verify Observation was mapped directly to the CURATED StatVar ID (`Curated_PrimarySchool_Count`)
+            query_obs = f"SELECT value FROM Observation WHERE variable_measured = '{curated_id}' AND entity1 = 'geoId/06'"
+            obs_results = list(snapshot.execute_sql(query_obs))
+            self.assertEqual(len(obs_results), 1)
+            self.assertAlmostEqual(float(obs_results[0][0]), 1234.0)
+
 
 class SuperEnumAggregationGeneratorCustomDcTest(SuperEnumAggregationGeneratorIntegrationTest):
     is_base_dc = False

@@ -257,15 +257,31 @@ class SuperEnumAggregationGenerator:
             STRING_AGG(CONCAT(predicate, '=', object_id), '' ORDER BY predicate) AS key_str
           FROM FilteredTargetProps
           GROUP BY source_sv, source_provenance, whitelisted_pred, parent_enum
+        ),
+        CuratedSVMatches AS (
+          SELECT subject_id AS curated_id, STRING_AGG(CONCAT(predicate, '=', object_id), '' ORDER BY predicate) AS curated_key_str
+          FROM EXTERNAL_QUERY("{connection_id}",
+            '''SELECT subject_id, predicate, object_id FROM Edge
+               WHERE subject_id IN (
+                 SELECT DISTINCT subject_id FROM Node
+                 WHERE types[SAFE_OFFSET(0)] = 'StatisticalVariable' AND NOT STARTS_WITH(subject_id, 'dc/')
+               ) AND predicate NOT IN (
+                 'name', 'description', 'provenance', 'isPublic', 'url', 'memberOf', 
+                 'label', 'alternateName', 'utteranceTemplate', 'dcid', 'keyStr',
+                 'differenceBaselineResolution', 'scalingFactor', 'unit'
+               )''')
+          GROUP BY subject_id
         )
         SELECT 
-          source_sv,
-          source_provenance,
-          whitelisted_pred,
-          parent_enum,
-          key_str,
-          CONCAT('dc/', DC_BASE32_ENCODE(FARM_FINGERPRINT(key_str))) AS target_sv
-        FROM TargetSVKeyStr;
+          t.source_sv,
+          t.source_provenance,
+          t.whitelisted_pred,
+          t.parent_enum,
+          t.key_str,
+          COALESCE(c.curated_id, CONCAT('dc/', DC_BASE32_ENCODE(FARM_FINGERPRINT(t.key_str)))) AS target_sv,
+          IF(c.curated_id IS NOT NULL, true, false) AS is_curated
+        FROM TargetSVKeyStr t
+        LEFT JOIN CuratedSVMatches c ON t.key_str = c.curated_key_str;
 
         -- =========================================================================
         -- STEP 5: Export New StatVar Nodes to Spanner
@@ -280,7 +296,8 @@ class SuperEnumAggregationGenerator:
           CAST(NULL AS BYTES) AS bytes,
           CAST(NULL AS STRING) AS name,
           ['StatisticalVariable'] AS types
-        FROM GeneratedTargetSVs;
+        FROM GeneratedTargetSVs
+        WHERE is_curated = false;
 
         -- =========================================================================
         -- STEP 6: Export New StatVar Edges to Spanner
@@ -302,7 +319,7 @@ class SuperEnumAggregationGenerator:
             WHERE predicate IN ('age', 'detailedLevelOfSchool', 'schoolGradeLevel', 'educationalAttainment')
           ) m ON p.subject_id = m.subject_id
           JOIN SpecializationOfRelations r ON m.child_enum = r.child
-          JOIN GeneratedTargetSVs g ON p.subject_id = g.source_sv AND m.whitelisted_pred = g.whitelisted_pred AND r.parent = g.parent_enum
+          JOIN GeneratedTargetSVs g ON p.subject_id = g.source_sv AND m.whitelisted_pred = g.whitelisted_pred AND r.parent = g.parent_enum AND g.is_curated = false
         )
         SELECT DISTINCT
           subject_id,
