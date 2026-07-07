@@ -3459,6 +3459,172 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(obs_results), 1)
             self.assertEqual(int(obs_results[0][0]), 2)
 
+    def test_base_date_range_aggregation(self):
+        """Tests diff_relative_to_base_date with a date range (start_date/end_date)."""
+        import_name = 'NASA_NEXGDDP_Test_Range'
+        output_import = f'{import_name}_AggrRange'
+        place_id = 'geoId/5363000'
+
+        # Baseline observations across 2015-01 to 2015-12 -> average (27 + 30 + 33) / 3 = 30.0
+        self.add_observation('Max_Temperature', place_id, '2015-01', 27.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2015-07', 30.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2015-08', 33.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+
+        # Projection observation in 2050-07 -> 33 - 30 = 3.0
+        self.add_observation('Max_Temperature', place_id, '2050-07', 33.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+
+        self.flush_to_spanner()
+
+        aggregator = self.get_aggregator()
+        calculations = [
+            {
+                "round": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "aggr_funcs": [
+                    {
+                        "diff_relative_to_base_date": {
+                            "date_specs": [
+                                {"start_date": "2015-01", "end_date": "2015-12"}
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+        aggregator.aggregate_series(calculations)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'DifferenceRelativeToBaseDate201501to201512_Max_Temperature'
+                  AND date = '2050-07'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            self.assertEqual(float(obs_results[0][0]), 3.0)
+
+    def test_temporal_aggregation_min_and_sum(self):
+        """Tests aggr_over_time with OPERATOR_MIN and OPERATOR_SUM."""
+        import_name = 'NASA_NEXGDDP_Test_MinSum'
+        output_import = f'{import_name}_AggrMinSum'
+        place_id = 'geoId/5363000'
+
+        # Daily observations for 2050-07
+        self.add_observation('Max_Temperature', place_id, '2050-07-01', 30.0, method='Model_A', period='P1D', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07-02', 32.0, method='Model_A', period='P1D', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07-03', 34.0, method='Model_A', period='P1D', import_name=import_name, facet_id='facet_a')
+
+        self.flush_to_spanner()
+
+        aggregator = self.get_aggregator()
+        calculations = [
+            {
+                "round": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "aggr_funcs": [
+                    {
+                        "aggr_over_time": {
+                            "time_range": {
+                                "input_obs_period": "P1D",
+                                "output_obs_period": "P1Y"
+                            },
+                            "sv_configs": [
+                                {
+                                    "sv_regex": "^Max_Temperature$",
+                                    "aggregation_op": "OPERATOR_MIN",
+                                    "use_input_sv_for_output": False
+                                },
+                                {
+                                    "sv_regex": "^Max_Temperature$",
+                                    "aggregation_op": "OPERATOR_SUM",
+                                    "use_input_sv_for_output": False
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+        aggregator.aggregate_series(calculations)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_min_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'LowestValue_Max_Temperature'
+                  AND date = '2050'
+            """
+            obs_min = list(snapshot.execute_sql(obs_min_query))
+            self.assertEqual(len(obs_min), 1)
+            self.assertEqual(float(obs_min[0][0]), 30.0)
+
+            obs_sum_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'AggregateSum_Max_Temperature'
+                  AND date = '2050'
+            """
+            obs_sum = list(snapshot.execute_sql(obs_sum_query))
+            self.assertEqual(len(obs_sum), 1)
+            self.assertEqual(float(obs_sum[0][0]), 96.0)
+
+    def test_threshold_exception_or_less(self):
+        """Tests count_threshold_exception_over_time with OPERATOR_LE (OrLess)."""
+        import_name = 'NASA_NEXGDDP_Test_ThresLE'
+        output_import = f'{import_name}_AggrThresLE'
+        place_id = 'geoId/5363000'
+
+        # 5 daily observations: 299.0, 301.0, 298.0, 302.0, 295.0 -> 2 are <= 298.0 (298.0 and 295.0)
+        self.add_observation('Max_Temperature', place_id, '2050-07-01', 299.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07-02', 301.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07-03', 298.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-08-01', 302.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-08-02', 295.0, method='Model_A', period='P1D', unit='Kelvin', import_name=import_name, facet_id='facet_a')
+
+        self.flush_to_spanner()
+
+        aggregator = self.get_aggregator()
+        calculations = [
+            {
+                "round": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "aggr_funcs": [
+                    {
+                        "count_threshold_exception_over_time": {
+                            "time_range": {
+                                "input_obs_period": "P1D",
+                                "output_obs_period": "P1Y"
+                            },
+                            "thresholds": [
+                                {
+                                    "sv_regex": "^Max_Temperature$",
+                                    "threshold_value": 298.0,
+                                    "comparison": "OPERATOR_LE",
+                                    "unit": "Kelvin"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+        aggregator.aggregate_series(calculations)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'NumberOfDays_298KelvinOrLess_Max_Temperature'
+                  AND date = '2050'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            self.assertEqual(int(obs_results[0][0]), 2)
+
 
 class StatVarSeriesAggregatorCustomDcTest(StatVarSeriesAggregatorIntegrationTest):
     is_base_dc = False
