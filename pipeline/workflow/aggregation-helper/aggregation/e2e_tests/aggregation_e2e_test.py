@@ -43,6 +43,7 @@ import unittest
 import logging
 import json
 from collections.abc import Mapping
+from typing import Any
 from google.cloud import spanner
 from google.cloud import bigquery
 
@@ -3875,6 +3876,50 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         with self.database.snapshot(multi_use=True) as snapshot:
             query_sv = "SELECT COUNT(DISTINCT subject_id) FROM Edge WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool'"
             self.assertEqual(list(snapshot.execute_sql(query_sv))[0][0], 0)
+
+    def test_super_enum_aggregation_existing_dc_aggregate_prefix(self):
+        """Verifies that an existing dcAggregate/ prefix on measurementMethod is preserved and not duplicated."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        
+        # --- 1. SETUP SCHEMA ---
+        self.add_node('SchoolGradeLevelEnum', 'School Grade Level', types=['Class'])
+        self.add_node('Grade1', 'Grade 1', types=['SchoolGradeLevelEnum'])
+        self.add_node('PrimarySchool', 'Primary School', types=['SchoolGradeLevelEnum'])
+        self.add_edge('Grade1', 'specializationOf', 'PrimarySchool', import_name)
+        
+        # --- 2. SETUP STATVARS ---
+        self.add_node('SV_G1', 'Students in Grade 1', types=['StatisticalVariable'])
+        self.add_edge('SV_G1', 'typeOf', 'StatisticalVariable', import_name)
+        self.add_edge('SV_G1', 'schoolGradeLevel', 'Grade1', import_name)
+        self.add_edge('SV_G1', 'populationType', 'Person', import_name)
+        self.add_edge('SV_G1', 'measuredProperty', 'count', import_name)
+        self.add_edge('SV_G1', 'statType', 'measuredValue', import_name)
+        
+        # --- 3. SETUP OBSERVATIONS WITH EXISTING dcAggregate/ PREFIX ---
+        self.add_observation('SV_G1', 'geoId/06', '2020', 10.0, method='dcAggregate/CensusACS5yrSurvey', import_name=import_name, facet_id='facet_census')
+        
+        self.flush_to_spanner()
+        
+        # --- 4. RUN GENERATOR ---
+        generator = self.get_generator()
+        jobs = generator.run(import_names=[import_name])
+        for job in jobs:
+            job.result()
+            
+        # --- 5. VERIFY RESULTS ---
+        with self.database.snapshot(multi_use=True) as snapshot:
+            query_sv = "SELECT subject_id FROM Edge WHERE predicate = 'schoolGradeLevel' AND object_id = 'PrimarySchool'"
+            target_sv = list(snapshot.execute_sql(query_sv))[0][0]
+            
+            # Verify that measurementMethod is 'dcAggregate/CensusACS5yrSurvey' (not 'dcAggregate/dcAggregate/...')
+            query_ts = f"""
+                SELECT JSON_VALUE(facet, '$.measurementMethod') 
+                FROM TimeSeries 
+                WHERE variable_measured = '{target_sv}' AND entity1 = 'geoId/06'
+            """
+            methods = [r[0] for r in snapshot.execute_sql(query_ts)]
+            self.assertEqual(len(methods), 1)
+            self.assertEqual(methods[0], 'dcAggregate/CensusACS5yrSurvey')
 
 
 class SuperEnumAggregationGeneratorCustomDcTest(SuperEnumAggregationGeneratorIntegrationTest):

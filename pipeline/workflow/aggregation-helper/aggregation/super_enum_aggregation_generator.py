@@ -332,7 +332,9 @@ class SuperEnumAggregationGenerator:
                   IF(
                     JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
                     'DataCommonsAggregate',
-                    CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+                    IF(STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
+                       JSON_VALUE(facet, '$.measurementMethod'),
+                       CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod')))
                   )
                 ),
                 '$.provenance', CONCAT(JSON_VALUE(facet, '$.provenance'), '_SuperEnum')
@@ -392,7 +394,9 @@ class SuperEnumAggregationGenerator:
               IF(
                 JSON_VALUE(ts.facet, '$.measurementMethod') IS NULL OR JSON_VALUE(ts.facet, '$.measurementMethod') = '' OR JSON_VALUE(ts.facet, '$.measurementMethod') = 'DataCommonsAggregate',
                 'DataCommonsAggregate',
-                CONCAT('dcAggregate/', JSON_VALUE(ts.facet, '$.measurementMethod'))
+                IF(STARTS_WITH(JSON_VALUE(ts.facet, '$.measurementMethod'), 'dcAggregate/'),
+                   JSON_VALUE(ts.facet, '$.measurementMethod'),
+                   CONCAT('dcAggregate/', JSON_VALUE(ts.facet, '$.measurementMethod')))
               ), '^',
               COALESCE(JSON_VALUE(ts.facet, '$.observationPeriod'), ''), '^',
               COALESCE(JSON_VALUE(ts.facet, '$.scalingFactor'), ''), '^',
