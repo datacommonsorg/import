@@ -24,6 +24,7 @@ from .stat_var_aggregator import StatVarAggregator
 from .place_aggregation_generator import PlaceAggregationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
 from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
+from .stat_var_calculation_generator import StatVarCalculationGenerator
 
 __all__ = [
     'BigQueryExecutor',
@@ -32,6 +33,7 @@ __all__ = [
     'StatVarAggregator',
     'PlaceAggregationGenerator',
     'StatVarGroupGenerator',
-    'SuperEnumAggregationGenerator'
+    'SuperEnumAggregationGenerator',
+    'StatVarCalculationGenerator'
 ]
 

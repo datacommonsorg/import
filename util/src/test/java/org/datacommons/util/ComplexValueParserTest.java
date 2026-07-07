@@ -66,7 +66,7 @@ public class ComplexValueParserTest {
             + "dcid: \"Years10\"\n"
             + "name: \"Years 10\"\n"
             + "typeOf: dcid:Quantity\n"
-            + "unit: dcid:Years\n"
+            + "unitOfMeasure: dcid:Years\n"
             + "value: 10\n\n";
     assertEquals(toComplexValueMcf("[10 Years]"), exp);
   }

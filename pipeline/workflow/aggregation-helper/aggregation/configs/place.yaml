@@ -1,0 +1,163 @@
+calculations:
+  - name: "CensusACS5YearSurvey: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - CensusACS5YearSurvey
+    output_import: CensusACS5YearSurvey_AggCountry
+    place_aggregation:
+      from_place_types: State
+      to_place_types: Country
+
+  - name: "CensusSAHIE: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - CensusSAHIE
+    output_import: CensusSAHIE_AggCountry
+    place_aggregation:
+      from_place_types: State
+      to_place_types: Country
+
+  - name: "CDCMortality: County -> State Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - CDCMortality
+    output_import: CDCMortality_AggState
+    place_aggregation:
+      from_place_types: County
+      to_place_types: State
+
+  - name: "CDCMortality: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 2
+    input_imports:
+      - CDCMortality_AggState
+    output_import: CDCMortality_AggState_AggCountry
+    place_aggregation:
+      from_place_types: State
+      to_place_types: Country
+
+  - name: "DEA_ARCOS: County -> State Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - DEA_ARCOS
+    output_import: DEA_ARCOS_AggState
+    place_aggregation:
+      from_place_types: County
+      to_place_types: State
+
+  - name: "DEA_ARCOS: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 2
+    input_imports:
+      - DEA_ARCOS_AggState
+    output_import: DEA_ARCOS_AggState_AggCountry
+    place_aggregation:
+      from_place_types: State
+      to_place_types: Country
+
+  - name: "EPA_EJSCREEN: CensusBlockGroup -> CensusTract Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - EPA_EJSCREEN
+    output_import: EPA_EJSCREEN_AggCensusTract
+    place_aggregation:
+      from_place_types: CensusBlockGroup
+      to_place_types: CensusTract
+
+  - name: "EPA_EJSCREEN: CensusTract -> County Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 2
+    input_imports:
+      - EPA_EJSCREEN_AggCensusTract
+    output_import: EPA_EJSCREEN_AggCensusTract_AggCounty
+    place_aggregation:
+      from_place_types: CensusTract
+      to_place_types: County
+
+  - name: "DeepSolar: CensusBlockGroup -> CensusTract Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - DeepSolar
+    output_import: DeepSolar_AggCensusTract
+    place_aggregation:
+      from_place_types: CensusBlockGroup
+      to_place_types: CensusTract
+
+  - name: "DeepSolar: CensusTract -> County Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 2
+    input_imports:
+      - DeepSolar_AggCensusTract
+    output_import: DeepSolar_AggCensusTract_AggCounty
+    place_aggregation:
+      from_place_types: CensusTract
+      to_place_types: County
+
+  - name: "EPA_GHGRP: EpaReportingFacility -> County Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - EPA_GHGRP
+    output_import: EPA_GHGRP_AggCounty
+    place_aggregation:
+      from_place_types: EpaReportingFacility
+      to_place_types: County
+
+  - name: "EPA_GHGRP: EpaReportingFacility -> CensusZipCodeTabulationArea Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - EPA_GHGRP
+    output_import: EPA_GHGRP_AggCensusZipCodeTabulationArea
+    place_aggregation:
+      from_place_types: EpaReportingFacility
+      to_place_types: CensusZipCodeTabulationArea
+
+  - name: "EPA_GHGRP: County -> State Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 2
+    input_imports:
+      - EPA_GHGRP_AggCounty
+    output_import: EPA_GHGRP_AggCounty_AggState
+    place_aggregation:
+      from_place_types: County
+      to_place_types: State
+
+  - name: "RFF_USGridGeo: GeoGrid -> County Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - RFF_USGridGeo_WeatherVariabilityForecast
+    output_import: RFF_USGridGeo_WeatherVariabilityForecast_AggCounty
+    place_aggregation:
+      from_place_types: GeoGridPlace_0.25Deg
+      to_place_types: County
+      allow_multiple_to_places: true
+
+  - name: "India_RBIStateDomesticProduct: State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - India_RBIStateDomesticProduct
+    output_import: India_RBIStateDomesticProduct_AggCountry
+    place_aggregation:
+      from_place_types: State
+      to_place_types: Country
+      allow_multiple_to_places: true
+
+  - name: "India_RBIStateDomesticProduct: StatVarAgg State -> Country Place Rollup"
+    type: PLACE_AGGREGATION
+    stage: 1
+    input_imports:
+      - India_RBIStateDomesticProduct_StatVarAgg
+    output_import: India_RBIStateDomesticProduct_StatVarAgg_AggCountry
+    place_aggregation:
+      from_place_types: State
+      to_place_types: Country
+      allow_multiple_to_places: true
