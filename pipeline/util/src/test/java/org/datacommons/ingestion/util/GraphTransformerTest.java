@@ -41,7 +41,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("[31.61 Kilometer]")
-                                    .setType(ValueType.TEXT))
+                                    .setType(ValueType.COMPLEX_VALUE))
                             .build())
                     .putPvs(
                         "provenance",
@@ -99,7 +99,7 @@ public class GraphTransformerTest {
                         "value",
                         Values.newBuilder()
                             .addTypedValues(
-                                TypedValue.newBuilder().setValue("31.61").setType(ValueType.TEXT))
+                                TypedValue.newBuilder().setValue("31.61").setType(ValueType.NUMBER))
                             .build())
                     .putPvs(
                         "unitOfMeasure",
@@ -150,6 +150,117 @@ public class GraphTransformerTest {
   }
 
   @Test
+  public void testQuantityRangeTransformation() {
+    McfGraph inputGraph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "farm1",
+                PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Farm")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "area",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("[Acre 1 9.9]")
+                                    .setType(ValueType.COMPLEX_VALUE))
+                            .build())
+                    .build())
+            .build();
+
+    McfGraph expectedGraph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "farm1",
+                PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Farm")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "area",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Acre1To9.9")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .build())
+            .putNodes(
+                "Acre1To9.9",
+                PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("QuantityRange")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "startValue",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder().setValue("1").setType(ValueType.NUMBER))
+                            .build())
+                    .putPvs(
+                        "endValue",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder().setValue("9.9").setType(ValueType.NUMBER))
+                            .build())
+                    .putPvs(
+                        "unit",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Acre")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "dcid",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Acre1To9.9")
+                                    .setType(ValueType.TEXT))
+                            .build())
+                    .putPvs(
+                        "name",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Acre 1 To 9.9")
+                                    .setType(ValueType.TEXT))
+                            .build())
+                    .build())
+            .build();
+
+    PCollection<McfGraph> output =
+        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+
+    PCollection<McfGraph> mergedOutput =
+        output.apply(
+            org.apache.beam.sdk.transforms.Combine.globally(
+                    new PipelineUtilsTest.MergeMcfGraphsCombineFn())
+                .withoutDefaults());
+
+    PAssert.that(mergedOutput).containsInAnyOrder(expectedGraph);
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void testLatLongTransformation() {
     McfGraph inputGraph =
         McfGraph.newBuilder()
@@ -157,12 +268,20 @@ public class GraphTransformerTest {
                 "node1",
                 PropertyValues.newBuilder()
                     .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Place")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
                         "location",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("[LatLong 33.1575 -116.0413333]")
-                                    .setType(ValueType.TEXT))
+                                    .setType(ValueType.COMPLEX_VALUE))
                             .build())
                     .build())
             .build();
@@ -172,6 +291,14 @@ public class GraphTransformerTest {
             .putNodes(
                 "node1",
                 PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Place")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
                     .putPvs(
                         "location",
                         Values.newBuilder()
@@ -211,7 +338,7 @@ public class GraphTransformerTest {
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
-                                    .setValue("33.1575,-116.0413333")
+                                    .setValue("33.15750,-116.04133")
                                     .setType(ValueType.TEXT))
                             .build())
                     .putPvs(
@@ -220,7 +347,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("latLong/3315750_-11604133")
-                                    .setType(ValueType.RESOLVED_REF))
+                                    .setType(ValueType.TEXT))
                             .build())
                     .build())
             .build();
@@ -246,12 +373,20 @@ public class GraphTransformerTest {
                 "node1",
                 PropertyValues.newBuilder()
                     .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Place")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
                         "depth",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("[10 Meter]")
-                                    .setType(ValueType.TEXT))
+                                    .setType(ValueType.COMPLEX_VALUE))
                             .build())
                     .putPvs(
                         "location",
@@ -259,7 +394,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("[LatLong 10.0 20.0]")
-                                    .setType(ValueType.TEXT))
+                                    .setType(ValueType.COMPLEX_VALUE))
                             .build())
                     .build())
             .build();
@@ -269,6 +404,14 @@ public class GraphTransformerTest {
             .putNodes(
                 "node1",
                 PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Place")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
                     .putPvs(
                         "depth",
                         Values.newBuilder()
@@ -301,7 +444,7 @@ public class GraphTransformerTest {
                         "value",
                         Values.newBuilder()
                             .addTypedValues(
-                                TypedValue.newBuilder().setValue("10").setType(ValueType.TEXT))
+                                TypedValue.newBuilder().setValue("10").setType(ValueType.NUMBER))
                             .build())
                     .putPvs(
                         "unitOfMeasure",
@@ -354,7 +497,7 @@ public class GraphTransformerTest {
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
-                                    .setValue("10.0,20.0")
+                                    .setValue("10.00000,20.00000")
                                     .setType(ValueType.TEXT))
                             .build())
                     .putPvs(
@@ -363,7 +506,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("latLong/1000000_2000000")
-                                    .setType(ValueType.RESOLVED_REF))
+                                    .setType(ValueType.TEXT))
                             .build())
                     .build())
             .build();
@@ -487,6 +630,15 @@ public class GraphTransformerTest {
                                 TypedValue.newBuilder()
                                     .setValue("medicalStatus")
                                     .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "definition",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue(
+                                        "mp=cumulativeCount,pt=MedicalConditionIncident,incidentType=COVID_19,medicalStatus=ConfirmedCase")
+                                    .setType(ValueType.TEXT))
                             .build())
                     .build())
             .build();
@@ -619,6 +771,15 @@ public class GraphTransformerTest {
                                     .setValue("medicalStatus")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
+                    .putPvs(
+                        "definition",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue(
+                                        "mp=cumulativeCount,pt=MedicalConditionIncident,incidentType=COVID_19,medicalStatus=ConfirmedCase")
+                                    .setType(ValueType.TEXT))
+                            .build())
                     .build())
             .build();
 
@@ -636,7 +797,7 @@ public class GraphTransformerTest {
   }
 
   @Test
-  public void testStatVarTransformationWithObservationPropertyAndEntityMapping() {
+  public void testStatVarTransformationWithObservationProperties() {
     McfGraph inputGraph =
         McfGraph.newBuilder()
             .putNodes(
@@ -667,19 +828,11 @@ public class GraphTransformerTest {
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
-                        "observationProperty",
+                        "observationProperties",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("dcid:destinationCountry")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .putPvs(
-                        "entityMapping",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:someMapping")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
@@ -723,19 +876,11 @@ public class GraphTransformerTest {
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
-                        "observationProperty",
+                        "observationProperties",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("dcid:destinationCountry")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .putPvs(
-                        "entityMapping",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:someMapping")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
@@ -754,135 +899,13 @@ public class GraphTransformerTest {
                                     .setValue("someActualConstraint")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
-                    .build())
-            .build();
-
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
-
-    PCollection<McfGraph> mergedOutput =
-        output.apply(
-            org.apache.beam.sdk.transforms.Combine.globally(
-                    new PipelineUtilsTest.MergeMcfGraphsCombineFn())
-                .withoutDefaults());
-
-    PAssert.that(mergedOutput).containsInAnyOrder(expectedGraph);
-    p.run().waitUntilFinish();
-  }
-
-  @Test
-  public void testQuantityTransformationNoOverwrite() {
-    McfGraph inputGraph =
-        McfGraph.newBuilder()
-            .putNodes(
-                "node1",
-                PropertyValues.newBuilder()
                     .putPvs(
-                        "depth",
+                        "definition",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
-                                    .setValue("[10 Meter]")
-                                    .setType(ValueType.TEXT))
-                            .build())
-                    .build())
-            .putNodes(
-                "Meter10",
-                PropertyValues.newBuilder()
-                    .putPvs(
-                        "typeOf",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:Quantity")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .putPvs(
-                        "value",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder().setValue("10").setType(ValueType.TEXT))
-                            .build())
-                    .putPvs(
-                        "unitOfMeasure",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:Meter")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .putPvs(
-                        "dcid",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:Meter10")
-                                    .setType(ValueType.TEXT))
-                            .build())
-                    .putPvs(
-                        "name",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("Curated Name for 10 Meter")
-                                    .setType(ValueType.TEXT))
-                            .build())
-                    .build())
-            .build();
-
-    McfGraph expectedGraph =
-        McfGraph.newBuilder()
-            .putNodes(
-                "node1",
-                PropertyValues.newBuilder()
-                    .putPvs(
-                        "depth",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("Meter10")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .build())
-            .putNodes(
-                "Meter10",
-                PropertyValues.newBuilder()
-                    .putPvs(
-                        "typeOf",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:Quantity")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .putPvs(
-                        "value",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder().setValue("10").setType(ValueType.TEXT))
-                            .build())
-                    .putPvs(
-                        "unitOfMeasure",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:Meter")
-                                    .setType(ValueType.RESOLVED_REF))
-                            .build())
-                    .putPvs(
-                        "dcid",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("dcid:Meter10")
-                                    .setType(ValueType.TEXT))
-                            .build())
-                    .putPvs(
-                        "name",
-                        Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("Curated Name for 10 Meter")
+                                    .setValue(
+                                        "mp=amount,pt=FinancialTransaction,someActualConstraint=someValue")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
@@ -909,12 +932,20 @@ public class GraphTransformerTest {
                 "node1",
                 PropertyValues.newBuilder()
                     .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Place")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
                         "temperature",
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue("[-5.5 DegreeCelsius]")
-                                    .setType(ValueType.TEXT))
+                                    .setType(ValueType.COMPLEX_VALUE))
                             .build())
                     .build())
             .build();
@@ -924,6 +955,14 @@ public class GraphTransformerTest {
             .putNodes(
                 "node1",
                 PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Place")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
                     .putPvs(
                         "temperature",
                         Values.newBuilder()
@@ -948,7 +987,7 @@ public class GraphTransformerTest {
                         "value",
                         Values.newBuilder()
                             .addTypedValues(
-                                TypedValue.newBuilder().setValue("-5.5").setType(ValueType.TEXT))
+                                TypedValue.newBuilder().setValue("-5.5").setType(ValueType.NUMBER))
                             .build())
                     .putPvs(
                         "unitOfMeasure",

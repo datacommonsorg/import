@@ -119,12 +119,15 @@ def update_import_status(import_name,
     logging.info(f"Updating {import_name} status: {import_status}")
     latest_version = 'gs://' + GCS_BUCKET_ID + '/' + import_name.replace(
         ':', '/') + '/' + import_version
-    request = {
+    import_item = {
         'importName': import_name,
         'status': import_status,
-        'jobId': job_id,
         'latestVersion': latest_version,
         'graphPath': graph_path
+    }
+    request = {
+        'imports': [import_item],
+        'jobId': job_id
     }
     if cron_schedule:
         try:

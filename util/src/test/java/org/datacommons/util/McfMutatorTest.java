@@ -48,7 +48,7 @@ public class McfMutatorTest {
             + "dcid: \"Year18\"\n"
             + "name: \"Year 18\"\n"
             + "typeOf: dcid:Quantity\n"
-            + "unit: dcid:Year\n"
+            + "unitOfMeasure: dcid:Year\n"
             + "value: 18\n"
             + "\n"
             + "Node: dcid:Count_Person_18Years_1000To2000USD\n"
@@ -56,6 +56,7 @@ public class McfMutatorTest {
             + "bogusProp: dcid:latLong/3738848_-12208344\n"
             + "constraintProperties: dcid:age, dcid:bogusProp, dcid:income\n"
             + "dcid: \"Count_Person_18Years_1000To2000USD\"\n"
+            + "definition: \"mp=count,pt=Person,age=Year18,bogusProp=latLong/3738848_-12208344,income=USDollar1000To2000\"\n"
             + "income: dcid:USDollar1000To2000\n"
             + "measuredProperty: dcid:count\n"
             + "populationType: dcid:Person\n"
@@ -113,8 +114,7 @@ public class McfMutatorTest {
             + "typeOf: schema:StatisticalVariable\n"
             + "populationType: dcs:FinancialTransaction\n"
             + "measuredProperty: dcs:amount\n"
-            + "observationProperty: dcs:destinationCountry\n"
-            + "entityMapping: dcs:someMapping\n"
+            + "observationProperties: dcs:destinationCountry\n"
             + "someActualConstraint: dcs:someValue\n";
     Mcf.McfGraph got =
         McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx());
@@ -123,9 +123,9 @@ public class McfMutatorTest {
         "Node: dcid:FinancialAid\n"
             + "constraintProperties: dcid:someActualConstraint\n"
             + "dcid: \"FinancialAid\"\n"
-            + "entityMapping: dcid:someMapping\n"
+            + "definition: \"mp=amount,pt=FinancialTransaction,someActualConstraint=someValue\"\n"
             + "measuredProperty: dcid:amount\n"
-            + "observationProperty: dcid:destinationCountry\n"
+            + "observationProperties: dcid:destinationCountry\n"
             + "populationType: dcid:FinancialTransaction\n"
             + "someActualConstraint: dcid:someValue\n"
             + "typeOf: dcid:StatisticalVariable\n"

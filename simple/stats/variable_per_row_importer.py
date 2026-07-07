@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 
 import numpy as np
@@ -38,13 +39,19 @@ _OBS_PROPERTY_COLUMNS = [
     sc.PREDICATE_MEASUREMENT_METHOD,
     sc.PREDICATE_OBSERVATION_PERIOD,
 ]
-_REQUIRED_COLUMNS = [
-    constants.COLUMN_ENTITY,
-    constants.COLUMN_VARIABLE,
-    constants.COLUMN_DATE,
-    constants.COLUMN_VALUE,
-]
-_DEFAULT_COLUMN_MAPPINGS = {x: x for x in _REQUIRED_COLUMNS}
+
+# Mapping from official DCID keys in config.json to internal importer columns.
+STANDARD_PROPERTY_MAPPING = {
+    "dcid:variableMeasured": constants.COLUMN_VARIABLE,  # "variable"
+    "dcid:observationDate": constants.COLUMN_DATE,  # "date"
+    "dcid:value": constants.COLUMN_VALUE,  # "value"
+    "dcid:unit": constants.COLUMN_UNIT,  # "unit"
+    "dcid:measurementMethod":
+        constants.COLUMN_MEASUREMENT_METHOD,  # "measurement_method"
+    "dcid:observationPeriod":
+        constants.COLUMN_OBSERVATION_PERIOD,  # "observation_period"
+    "dcid:scalingFactor": constants.COLUMN_SCALING_FACTOR,  # "scaling_factor"
+}
 
 
 def _convert_numeric_to_string(col: pd.Series,
@@ -86,9 +93,9 @@ def _apply_property_defaults(df: pd.DataFrame,
 
   for prop, col_name in property_mapping.items():
     default_value = getattr(obs_props, col_name, "")
-    if prop in df.columns:
+    if col_name in df.columns:
       # Replace empty strings with NaN for consistent handling
-      source_col = df[prop].replace("", pd.NA)
+      source_col = df[col_name].replace("", pd.NA)
 
       # Check if source is numeric before filling (to preserve int format for numeric columns)
       is_source_numeric = pd.api.types.is_numeric_dtype(source_col)
@@ -98,10 +105,6 @@ def _apply_property_defaults(df: pd.DataFrame,
                                                   default_for_na=default_value)
       else:
         df[col_name] = source_col.fillna(default_value).astype(str)
-
-        # Drop the original property column (if different from target)
-      if prop != col_name:
-        df = df.drop(columns=[prop])
     else:
       # If the column doesn't exist, use default for all rows
       df[col_name] = default_value
@@ -147,8 +150,8 @@ class VariablePerRowImporter(Importer):
     self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
-    # Reassign after reading CSV.
-    self.column_mappings = dict(_DEFAULT_COLUMN_MAPPINGS)
+    self.custom_dimensions = []
+    self.column_mappings = {}
     self.df = pd.DataFrame()
     # Unique entity IDs seen in this CSV.
     # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
@@ -172,17 +175,56 @@ class VariablePerRowImporter(Importer):
   def _map_columns(self):
     config_mappings = self.config.column_mappings(self.input_file)
 
-    # Required columns.
-    for key in self.column_mappings.keys():
-      if key in config_mappings:
-        self.column_mappings[key] = config_mappings[key]
+    if not config_mappings:
+      # Legacy fallback: if no column mappings are specified, assume standard headers
+      config_mappings = {
+          "dcid:observationAbout": "entity",
+          "dcid:variableMeasured": "variable",
+          "dcid:observationDate": "date",
+          "dcid:value": "value",
+      }
 
-    # Optional property column mappings.
-    for key in _OBS_PROPERTY_COLUMNS:
-      if key in config_mappings:
-        self.column_mappings[key] = config_mappings[key]
+    self.column_mappings = {}
+    self.custom_dimensions = []
 
-    # Ensure that the expected columns exist.
+    # Map column mappings to internal names and identify custom dimensions
+    for key, physical_col in config_mappings.items():
+      if key in STANDARD_PROPERTY_MAPPING:
+        internal_col = STANDARD_PROPERTY_MAPPING[key]
+        self.column_mappings[internal_col] = physical_col
+      else:
+        # It's a custom dimension!
+        self.custom_dimensions.append(key)
+        self.column_mappings[key] = physical_col
+
+    # 1. Validate strictly required columns
+    for req_col in [
+        constants.COLUMN_VARIABLE, constants.COLUMN_DATE, constants.COLUMN_VALUE
+    ]:
+      if req_col not in self.column_mappings:
+        # Find the official DCID key for the error message
+        official_key = [
+            k for k, v in STANDARD_PROPERTY_MAPPING.items() if v == req_col
+        ][0]
+        raise ValueError(
+            f"Missing required column mapping for: '{official_key}'")
+
+    # 2. Validate entity dimensions count (1 to 3 allowed)
+    # Since dcid:observationAbout is now treated as a custom dimension, all entity dimensions are in custom_dimensions
+    entity_dims_count = len(self.custom_dimensions)
+
+    if entity_dims_count < 1:
+      raise ValueError(
+          "Invalid configuration: An observation must have at least one entity dimension. "
+          "Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
+      )
+    if entity_dims_count > 3:
+      raise ValueError(
+          f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). "
+          "A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
+      )
+
+    # 3. Verify that the physical columns actually exist in the CSV DataFrame
     expected_column_names = set(self.column_mappings.values())
     actual_column_names = set(self.df.columns)
     difference = expected_column_names - actual_column_names
@@ -190,8 +232,8 @@ class VariablePerRowImporter(Importer):
       logging.info("Expected column names: %s", expected_column_names)
       logging.info("Actual column names: %s", actual_column_names)
       raise ValueError(
-          f"The following expected columns were not found: {difference}. You can specify column mappings using the columnMappings field."
-      )
+          f"The following expected columns were not found in the CSV: {difference}. "
+          f"Please check your 'columnMappings' and the CSV header.")
 
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file).id
@@ -201,12 +243,14 @@ class VariablePerRowImporter(Importer):
     # Prepare observations dataframe
     observations_df = (self._apply_column_mappings(self.df).pipe(
         self._track_entity_dcids).pipe(
-            _apply_property_defaults,
-            obs_props).pipe(_format_numeric_values).pipe(
-                filter_invalid_observation_values).pipe(_strip_namespaces,
-                                                        provenance))
+            _apply_property_defaults, obs_props).pipe(
+                self._serialize_custom_dimensions,
+                obs_props.properties).pipe(_format_numeric_values).pipe(
+                    filter_invalid_observation_values).pipe(
+                        self._ensure_entity_column).pipe(
+                            _strip_namespaces, provenance))
 
-    # Reorder columns to match database schema
+    # Reorder columns to match expected DataFrame structure
     observations_df = observations_df[constants.OBSERVATION_COLUMNS]
 
     self.db.insert_observations(observations_df, self.input_file)
@@ -217,10 +261,41 @@ class VariablePerRowImporter(Importer):
     return df.rename(columns=reverse_mappings)
 
   def _track_entity_dcids(self, df: pd.DataFrame) -> pd.DataFrame:
-    """Track unique entity DCIDs seen in this CSV."""
-    self.entity_dcids = {
-        dcid: True for dcid in df[constants.COLUMN_ENTITY].unique()
-    }
+    """Track unique entity DCIDs seen in all entity dimension columns in this CSV."""
+    for col in self.custom_dimensions:
+      if col in df.columns:
+        valid_dcids = df[col].dropna().unique()
+        for dcid in valid_dcids:
+          if dcid != "":
+            self.entity_dcids[dcid] = True
+    return df
+
+  def _serialize_custom_dimensions(
+      self, df: pd.DataFrame, static_props: dict[str, str]) -> pd.DataFrame:
+    """Serializes dynamic custom dimensions and merges them with static custom properties."""
+    custom_cols = [dim for dim in self.custom_dimensions if dim in df.columns]
+
+    def row_to_json(row):
+      # Start with static default custom properties
+      d = dict(static_props)
+      # Add/override with dynamic custom dimensions from the row
+      for col in custom_cols:
+        val = row[col]
+        if pd.notna(val) and val != "":
+          d[col] = strip_namespace(str(val))
+      return json.dumps(d) if d else ""
+
+    df[constants.COLUMN_PROPERTIES] = df.apply(row_to_json, axis=1)
+
+    # Drop the dynamic custom dimension columns from the DataFrame now that they are serialized
+    if custom_cols:
+      df = df.drop(columns=custom_cols)
+    return df
+
+  def _ensure_entity_column(self, df: pd.DataFrame) -> pd.DataFrame:
+    """Ensures the logical 'entity' column exists in the DataFrame, even if empty."""
+    if constants.COLUMN_ENTITY not in df.columns:
+      df[constants.COLUMN_ENTITY] = None
     return df
 
   def _add_entity_nodes(self) -> None:

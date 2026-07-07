@@ -138,7 +138,7 @@ public class McfResolverTest {
                     "dcid: \"FinancialAid\"",
                     "populationType: dcs:FinancialTransaction",
                     "measuredProperty: dcs:amount",
-                    "observationProperty: l:MyCustomProp",
+                    "observationProperties: l:MyCustomProp",
                     "")),
             true,
             null,
@@ -151,7 +151,7 @@ public class McfResolverTest {
     var resolvedGraph = resolver.resolvedGraph();
     var svNode = resolvedGraph.getNodesOrThrow("FinancialAid");
     assertEquals(
-        "customDestinationCountry", McfUtil.getPropVal(svNode, Vocabulary.OBSERVATION_PROPERTY));
+        "customDestinationCountry", McfUtil.getPropVal(svNode, Vocabulary.OBSERVATION_PROPERTIES));
   }
 
   private String getFile(String name) throws IOException {

@@ -120,8 +120,7 @@ public final class Vocabulary {
   public static final String VARIABLE_MEASURED = "variableMeasured";
   public static final String STAT_TYPE = "statType";
   public static final String CONSTRAINT_PROPS = "constraintProperties";
-  public static final String OBSERVATION_PROPERTY = "observationProperty";
-  public static final String ENTITY_MAPPING = "entityMapping";
+  public static final String OBSERVATION_PROPERTIES = "observationProperties";
   public static final String MEASUREMENT_DENOMINATOR = "measurementDenominator";
   public static final String MEASUREMENT_QUALIFIER = "measurementQualifier";
   public static final String SCALING_FACTOR = "scalingFactor";
@@ -132,8 +131,16 @@ public final class Vocabulary {
   public static final String GENERIC_VALUE = "value";
   public static final String OBSERVED_NODE = "observedNode"; // Deprecated
   public static final String LOCATION = "location"; // Deprecated
+  public static final String CHILDHOOD_LOCATION = "childhoodLocation";
   public static final String POPULATION_GROUP = "populationGroup";
   public static final String UTTERANCE_TEMPLATE = "utteranceTemplate";
+  public static final String SOURCE = "source";
+  public static final String FOOTNOTE = "footnote";
+  public static final String IS_NORMALIZABLE = "isNormalizable";
+  public static final String DENOMINATOR_FOR_NORMALIZATION = "denominatorForNormalization";
+  public static final String DEFINITION = "definition";
+  public static final String LINKED_MEMBER = "linkedMember";
+  public static final String LINKED_MEMBER_OF = "linkedMemberOf";
 
   // Values taken by statType.
   public static final String MEDIAN_VALUE = "medianValue";
@@ -249,24 +256,32 @@ public final class Vocabulary {
           DESCRIPTION,
           DESCRIPTION_URL,
           ALTERNATE_NAME,
+          UTTERANCE_TEMPLATE,
+          SOURCE,
+          FOOTNOTE,
           KEY_STRING,
           DBG_MCF_FILE,
           // StatPop / StatVar properties (current + past)
           POPULATION_TYPE,
           POPULATION_GROUP,
           LOCATION,
+          CHILDHOOD_LOCATION,
           CONSTRAINT_PROPS,
-          OBSERVATION_PROPERTY,
-          ENTITY_MAPPING,
           MEASURED_PROP,
           STAT_TYPE,
           MEASUREMENT_DENOMINATOR,
           MEASUREMENT_QUALIFIER,
+          CENSUS_ACS_TABLE_ID,
           MEASUREMENT_METHOD,
           SCALING_FACTOR,
           UNIT,
-          CENSUS_ACS_TABLE_ID,
-          UTTERANCE_TEMPLATE);
+          IS_NORMALIZABLE,
+          DENOMINATOR_FOR_NORMALIZATION,
+          OBSERVATION_PROPERTIES,
+          // Generated properties
+          DEFINITION,
+          LINKED_MEMBER,
+          LINKED_MEMBER_OF);
 
   // NOTE: This is an ordered list. When an entity has multiple properties in this
   // list, we prefer the one ordered first.
@@ -318,7 +333,7 @@ public final class Vocabulary {
         || prop.equals(MEASUREMENT_QUALIFIER)
         || prop.equals(STAT_TYPE)
         || prop.equals(UNIT)
-        || prop.equals(OBSERVATION_PROPERTY);
+        || prop.equals(OBSERVATION_PROPERTIES);
   }
 
   public static boolean isGlobalReference(String val) {

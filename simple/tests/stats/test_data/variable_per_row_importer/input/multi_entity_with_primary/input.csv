@@ -1,0 +1,3 @@
+GEOGRAPHY,SERIES,TIME_PERIOD,OBS_VALUE,SOURCE_COUNTRY
+dcid:geoId/06,custom:FinancialTrade,2024,100,dcid:country/FRA
+dcid:geoId/08,custom:FinancialTrade,2024,200,dcid:country/DEU

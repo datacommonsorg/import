@@ -25,6 +25,7 @@ import org.datacommons.ingestion.util.GraphReader;
 import org.datacommons.ingestion.util.GraphTransformer;
 import org.datacommons.ingestion.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,7 @@ public class GraphIngestionPipeline {
       Metrics.counter(GraphIngestionPipeline.class, "graph_timeseries_count");
 
   // List of imports that require node combination.
-  private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place");
+  private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place", "Provenance");
 
   private static boolean isJsonNullOrEmpty(JsonElement element) {
     return element == null || element.getAsString().isEmpty();
@@ -149,20 +150,29 @@ public class GraphIngestionPipeline {
               "CreateEmptyEdgesWait-" + importName, Create.empty(TypeDescriptor.of(Void.class)));
     }
 
+    PipelineUtils.InputFormat format = PipelineUtils.resolveFormat(graphPath);
+    if (format == PipelineUtils.InputFormat.TFRECORD) {
+      TfRecordProcessingResult result =
+          processTfRecordImport(pipeline, importName, graphPath, isBaseDc);
+      writeToSpanner(
+          pipeline,
+          spannerClient,
+          importName,
+          result.nodeMutations,
+          result.edgeMutations,
+          result.uniqueSeries,
+          result.obsDataPoints,
+          deleteObsWait,
+          deleteEdgesWait,
+          options);
+      return;
+    }
+
     PCollection<McfGraph> graph;
-    switch (PipelineUtils.resolveFormat(graphPath)) {
-      case TFRECORD:
-        graph = PipelineUtils.readMcfGraph(importName, graphPath, pipeline);
-        break;
-      case JSONLD:
-        graph = PipelineUtils.readJsonLdFiles(importName, graphPath, pipeline);
-        break;
-      case MCF:
-        graph = PipelineUtils.readMcfFiles(importName, graphPath, pipeline);
-        break;
-      default:
-        throw new IllegalArgumentException(
-            "Invalid import config: missing graphPath or template/csv paths");
+    if (format == PipelineUtils.InputFormat.JSONLD) {
+      graph = PipelineUtils.readJsonLdFiles(importName, graphPath, pipeline);
+    } else {
+      graph = PipelineUtils.readMcfFiles(importName, graphPath, pipeline);
     }
 
     PCollectionTuple graphNodes = PipelineUtils.splitGraph(importName, graph);
@@ -181,10 +191,16 @@ public class GraphIngestionPipeline {
     }
 
     // Transform schema nodes (handle quantities, etc.)
-    PCollection<McfGraph> transformedGraph =
-        combinedGraph.apply(
-            "TransformNodes-" + importName,
-            org.apache.beam.sdk.transforms.ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> transformedGraph;
+    if (options.getSkipTransformation()) {
+      LOGGER.info("Skipping transformation step for import: {}", importName);
+      transformedGraph = combinedGraph;
+    } else {
+      transformedGraph =
+          combinedGraph.apply(
+              "TransformNodes-" + importName,
+              org.apache.beam.sdk.transforms.ParDo.of(new GraphTransformer()));
+    }
 
     // Convert all nodes to mutations
     PCollection<Mutation> nodeMutations =
@@ -204,21 +220,49 @@ public class GraphIngestionPipeline {
                 edgeCounter)
             .apply("ExtractEdgeMutations-" + importName, Values.create());
 
+    PCollection<TimeSeries> uniqueSeries =
+        GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc, timeSeriesCounter);
+    PCollection<Observation> obsDataPoints =
+        GraphReader.extractObservations(observationNodes, importName, isBaseDc, obsCounter);
+
+    writeToSpanner(
+        pipeline,
+        spannerClient,
+        importName,
+        nodeMutations,
+        edgeMutations,
+        uniqueSeries,
+        obsDataPoints,
+        deleteObsWait,
+        deleteEdgesWait,
+        options);
+  }
+
+  private static void writeToSpanner(
+      Pipeline pipeline,
+      SpannerClient spannerClient,
+      String importName,
+      PCollection<Mutation> nodeMutations,
+      PCollection<Mutation> edgeMutations,
+      PCollection<TimeSeries> uniqueSeries,
+      PCollection<Observation> obsDataPoints,
+      PCollection<Void> deleteObsWait,
+      PCollection<Void> deleteEdgesWait,
+      IngestionPipelineOptions options) {
     // Write Nodes
     SpannerWriteResult writtenNodes =
         spannerClient.writeMutations(pipeline, "WriteNodesToSpanner-" + importName, nodeMutations);
 
     // Write Edges (wait for Nodes write and Edges delete)
-    PCollection<Mutation> waitingEdges =
-        edgeMutations.apply(
-            "EdgesWaitOn-" + importName,
-            Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
+    PCollection<Mutation> waitingEdges = edgeMutations;
+    if (!options.getSkipWait()) {
+      waitingEdges =
+          edgeMutations.apply(
+              "EdgesWaitOn-" + importName,
+              Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
+    }
     spannerClient.writeMutations(pipeline, "WriteEdgesToSpanner-" + importName, waitingEdges);
 
-    // Path 1: TimeSeries (Metadata)
-    // Extract unique series keys and convert to metadata-only TimeSeries
-    PCollection<TimeSeries> uniqueSeries =
-        GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc, timeSeriesCounter);
     // Convert unique TimeSeries to TimeSeries mutations
     PCollection<Mutation> timeSeriesMutations =
         uniqueSeries.apply(
@@ -226,10 +270,6 @@ public class GraphIngestionPipeline {
             MapElements.into(TypeDescriptor.of(Mutation.class))
                 .via(spannerClient::toTimeSeriesMutation));
 
-    // Path 2: Observations (Data Points)
-    // Extract all individual data points as Observations (one per date/value)
-    PCollection<Observation> obsDataPoints =
-        GraphReader.extractObservations(observationNodes, importName, isBaseDc, obsCounter);
     // Convert Observations to Observation mutations
     PCollection<Mutation> observationMutations =
         obsDataPoints.apply(
@@ -238,17 +278,58 @@ public class GraphIngestionPipeline {
                 .via(spannerClient::toObservationMutation));
 
     // Write TimeSeries (wait for Obs delete)
-    PCollection<Mutation> waitingTimeSeries =
-        timeSeriesMutations.apply("TimeSeriesWaitOn-" + importName, Wait.on(deleteObsWait));
+    PCollection<Mutation> waitingTimeSeries = timeSeriesMutations;
+    if (!options.getSkipWait()) {
+      waitingTimeSeries =
+          timeSeriesMutations.apply("TimeSeriesWaitOn-" + importName, Wait.on(deleteObsWait));
+    }
     SpannerWriteResult writtenTimeSeries =
         spannerClient.writeMutations(
             pipeline, "WriteTimeSeriesToSpanner-" + importName, waitingTimeSeries);
 
     // Write Observations (wait for TimeSeries write)
-    PCollection<Mutation> waitingObservations =
-        observationMutations.apply(
-            "ObservationWaitOn-" + importName, Wait.on(writtenTimeSeries.getOutput()));
+    PCollection<Mutation> waitingObservations = observationMutations;
+    if (!options.getSkipWait()) {
+      waitingObservations =
+          observationMutations.apply(
+              "ObservationWaitOn-" + importName, Wait.on(writtenTimeSeries.getOutput()));
+    }
     spannerClient.writeMutations(
         pipeline, "WriteObservationsToSpanner-" + importName, waitingObservations);
+  }
+
+  private static class TfRecordProcessingResult {
+    final PCollection<TimeSeries> uniqueSeries;
+    final PCollection<Observation> obsDataPoints;
+    final PCollection<Mutation> nodeMutations;
+    final PCollection<Mutation> edgeMutations;
+
+    TfRecordProcessingResult(
+        PCollection<TimeSeries> uniqueSeries,
+        PCollection<Observation> obsDataPoints,
+        PCollection<Mutation> nodeMutations,
+        PCollection<Mutation> edgeMutations) {
+      this.uniqueSeries = uniqueSeries;
+      this.obsDataPoints = obsDataPoints;
+      this.nodeMutations = nodeMutations;
+      this.edgeMutations = edgeMutations;
+    }
+  }
+
+  private static TfRecordProcessingResult processTfRecordImport(
+      Pipeline pipeline, String importName, String graphPath, boolean isBaseDc) {
+    PCollection<McfOptimizedGraph> optGraph =
+        PipelineUtils.readOptimizedMcfGraph(importName, graphPath, pipeline);
+    PCollection<TimeSeries> uniqueSeries =
+        GraphReader.extractSeriesFromOptimized(optGraph, importName, isBaseDc, timeSeriesCounter);
+    PCollection<Observation> obsDataPoints =
+        GraphReader.extractObservationsFromOptimized(optGraph, importName, isBaseDc, obsCounter);
+    PCollection<Mutation> nodeMutations =
+        pipeline.apply(
+            "EmptyNodeMutations-" + importName, Create.empty(TypeDescriptor.of(Mutation.class)));
+    PCollection<Mutation> edgeMutations =
+        pipeline.apply(
+            "EmptyEdgeMutations-" + importName, Create.empty(TypeDescriptor.of(Mutation.class)));
+    return new TfRecordProcessingResult(uniqueSeries, obsDataPoints, nodeMutations, edgeMutations);
   }
 }

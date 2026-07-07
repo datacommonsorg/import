@@ -22,13 +22,13 @@ CREATE TABLE observations (
     observation_period varchar(255),
     properties TEXT
 );
-INSERT INTO "observations" VALUES('country/FAKE1','sv_female','2019','1.2','observations.csv','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE1','sv_male','2019','13.4','observations.csv','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE1','sv','2019','7.5','observations.csv','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE2','sv_female','2016','1.8','observations.csv','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE2','sv_male','2016','14.3','observations.csv','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE3','sv_female','2018','4.5','observations.csv','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE3','sv_male','2018','35.7','observations.csv','','','','','');
+INSERT INTO "observations" VALUES(NULL,'sv_female','2019','1.2','observations.csv','','','','','{"dcid:observationAbout": "country/FAKE1"}');
+INSERT INTO "observations" VALUES(NULL,'sv_male','2019','13.4','observations.csv','','','','','{"dcid:observationAbout": "country/FAKE1"}');
+INSERT INTO "observations" VALUES(NULL,'sv','2019','7.5','observations.csv','','','','','{"dcid:observationAbout": "country/FAKE1"}');
+INSERT INTO "observations" VALUES(NULL,'sv_female','2016','1.8','observations.csv','','','','','{"dcid:observationAbout": "country/FAKE2"}');
+INSERT INTO "observations" VALUES(NULL,'sv_male','2016','14.3','observations.csv','','','','','{"dcid:observationAbout": "country/FAKE2"}');
+INSERT INTO "observations" VALUES(NULL,'sv_female','2018','4.5','observations.csv','','','','','{"dcid:observationAbout": "country/FAKE3"}');
+INSERT INTO "observations" VALUES(NULL,'sv_male','2018','35.7','observations.csv','','','','','{"dcid:observationAbout": "country/FAKE3"}');
 CREATE TABLE triples (
     subject_id varchar(255),
     predicate varchar(255),

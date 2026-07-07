@@ -246,6 +246,56 @@ resource "google_cloud_run_v2_service" "import_helper" {
   depends_on = [google_project_service.services]
 }
 
+resource "google_cloud_run_v2_job" "aggregation_helper" {
+  name     = "aggregation-helper-job"
+  location = var.region
+  project  = var.project_id
+  deletion_protection = false
+
+  template {
+    template {
+      service_account = google_service_account.automation_sa.email
+      containers {
+        image = "${var.artifact_registry_url}/datacommons-aggregation-helper:latest"
+        env {
+          name  = "PROJECT_ID"
+          value = var.project_id
+        }
+        env {
+          name  = "SPANNER_PROJECT_ID"
+          value = var.project_id
+        }
+        env {
+          name  = "SPANNER_INSTANCE_ID"
+          value = var.spanner_instance_id
+        }
+        env {
+          name  = "SPANNER_DATABASE_ID"
+          value = var.spanner_database_id
+        }
+        env {
+          name  = "SPANNER_GRAPH_DATABASE_ID"
+          value = var.spanner_graph_database_id
+        }
+        env {
+          name  = "GCS_BUCKET_ID"
+          value = google_storage_bucket.import_bucket.name
+        }
+        env {
+          name  = "LOCATION"
+          value = var.region
+        }
+        env {
+          name  = "BQ_DATASET_ID"
+          value = var.bq_dataset_id
+        }
+      }
+    }
+  }
+
+  depends_on = [google_project_service.services]
+}
+
 # --- Cloud Workflows ---
 
 resource "google_workflows_workflow" "import_automation_workflow" {

@@ -27,6 +27,10 @@ steps:
   name: 'gcr.io/cloud-builders/gcloud'
   args: ['container', 'images', 'add-tag', '${_AR_REPO_URL}/datacommons-import-helper:${_VERSION}', '${_AR_REPO_URL}/datacommons-import-helper:${_PROD_TAG}', '--quiet']
 
+- id: 'tag-aggregation-helper'
+  name: 'gcr.io/cloud-builders/gcloud'
+  args: ['container', 'images', 'add-tag', '${_AR_REPO_URL}/datacommons-aggregation-helper:${_VERSION}', '${_AR_REPO_URL}/datacommons-aggregation-helper:${_PROD_TAG}', '--quiet']
+
 - id: 'label-dataflow-template'
   name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: 'gsutil'

@@ -63,6 +63,20 @@
             "helpText": "Whether this is a base Data Commons ingestion run.",
             "paramType": "TEXT",
             "isOptional": true
+        },
+        {
+            "name": "skipTransformation",
+            "label": "Skip Transformation",
+            "helpText": "Whether to skip transformation step.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "skipWait",
+            "label": "Skip Wait Operations",
+            "helpText": "Whether to skip wait operations between pipeline stages.",
+            "paramType": "TEXT",
+            "isOptional": true
         }
     ]
 }

@@ -223,6 +223,7 @@ public class LogWrapper {
   }
 
   private void incrementCounterBy(Debug.Log.Level level, String counter, int incr) {
+    if (log == null) return;
     counterMaps
         .get(level.getNumber())
         .compute(
@@ -250,6 +251,7 @@ public class LogWrapper {
 
   public void addEntry(
       Debug.Log.Level level, String counter, String message, String file, long lno) {
+    if (log == null) return;
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
     incrementCounterBy(level, counterName, 1);
 
