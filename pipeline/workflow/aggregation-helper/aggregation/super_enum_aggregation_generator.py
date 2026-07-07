@@ -35,6 +35,9 @@ def get_dc_base32_encode_sql() -> str:
 CREATE TEMP FUNCTION DC_BASE32_ENCODE(fingerprint INT64)
 RETURNS STRING
 LANGUAGE js AS r"""
+  if (fingerprint === null || fingerprint === undefined) {
+    return null;
+  }
   const alphabet = "0123456789bcdfghjklmnpqrstvwxyze";
   let id = BigInt(fingerprint);
   if (id < 0n) {
@@ -264,7 +267,7 @@ class SuperEnumAggregationGenerator:
             '''SELECT subject_id, predicate, object_id FROM Edge
                WHERE subject_id IN (
                  SELECT DISTINCT subject_id FROM Node
-                 WHERE types[SAFE_OFFSET(0)] = 'StatisticalVariable' AND NOT STARTS_WITH(subject_id, 'dc/')
+                 WHERE 'StatisticalVariable' IN UNNEST(types) AND NOT STARTS_WITH(subject_id, 'dc/')
                ) AND predicate NOT IN (
                  'name', 'description', 'provenance', 'isPublic', 'url', 'memberOf', 
                  'label', 'alternateName', 'utteranceTemplate', 'dcid', 'keyStr',
@@ -356,18 +359,16 @@ class SuperEnumAggregationGenerator:
             entity1,
             extra_entities_id,
             JSON_SET(
-              JSON_SET(
-                JSON_SET(facet, '$.measurementMethod', 
-                  IF(
-                    JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
-                    'DataCommonsAggregate',
-                    IF(STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
-                       JSON_VALUE(facet, '$.measurementMethod'),
-                       CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod')))
-                  )
-                ),
-                '$.provenance', CONCAT(JSON_VALUE(facet, '$.provenance'), '_SuperEnum')
+              facet,
+              '$.measurementMethod', 
+              IF(
+                JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
+                'DataCommonsAggregate',
+                IF(STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
+                   JSON_VALUE(facet, '$.measurementMethod'),
+                   CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod')))
               ),
+              '$.provenance', CONCAT(JSON_VALUE(facet, '$.provenance'), '_SuperEnum'),
               '$.isDcAggregate', true
             ) AS facet
           FROM SourceTS
