@@ -49,6 +49,7 @@ class TestBigQueryExecutor(unittest.TestCase):
                                     instance_id="inst",
                                     database_id="db",
                                     location="loc")
+        _ = executor.client
         mock_bq_client.assert_called_once_with(project="proj", location="loc")
         self.assertEqual(
             executor.get_spanner_destination_uri(),
@@ -58,10 +59,11 @@ class TestBigQueryExecutor(unittest.TestCase):
     def test_init_failure(self, mock_bq_client):
         mock_bq_client.side_effect = Exception("Auth error")
         with self.assertRaises(Exception):
-            BigQueryExecutor(connection_id="conn",
+            executor = BigQueryExecutor(connection_id="conn",
                              project_id="proj",
                              instance_id="inst",
                              database_id="db")
+            _ = executor.client
 
     def test_execute_sequential(self, mock_bq_client):
         mock_client_instance = MagicMock()

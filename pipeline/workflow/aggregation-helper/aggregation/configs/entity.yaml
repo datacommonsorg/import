@@ -16,19 +16,51 @@ calculations:
         - YYYY
         - YYYY-MM
       constraints:
-        - "magnitude: [3 - M]"
-        - "magnitude: [4 - M]"
-        - "magnitude: [5 - M]"
-        - "magnitude: [6 - M]"
-        - "magnitude: [7 - M]"
-        - "magnitude: [8 - M]"
-        - "magnitude: [9 - M]"
-        - "magnitude: [3 4 M]"
-        - "magnitude: [4 5 M]"
-        - "magnitude: [5 6 M]"
-        - "magnitude: [6 7 M]"
-        - "magnitude: [7 8 M]"
-        - "magnitude: [8 9 M]"
+        - property: magnitude
+          min: 3
+          unit: M
+        - property: magnitude
+          min: 4
+          unit: M
+        - property: magnitude
+          min: 5
+          unit: M
+        - property: magnitude
+          min: 6
+          unit: M
+        - property: magnitude
+          min: 7
+          unit: M
+        - property: magnitude
+          min: 8
+          unit: M
+        - property: magnitude
+          min: 9
+          unit: M
+        - property: magnitude
+          min: 3
+          max: 4
+          unit: M
+        - property: magnitude
+          min: 4
+          max: 5
+          unit: M
+        - property: magnitude
+          min: 5
+          max: 6
+          unit: M
+        - property: magnitude
+          min: 6
+          max: 7
+          unit: M
+        - property: magnitude
+          min: 7
+          max: 8
+          unit: M
+        - property: magnitude
+          min: 8
+          max: 9
+          unit: M
 
   # Fires
   - name: "FireFAMWEB: Wildland Fire Event Aggregation"
