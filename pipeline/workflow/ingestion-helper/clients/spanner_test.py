@@ -706,7 +706,7 @@ class TestSpannerClient(unittest.TestCase):
         ])
         self.assertEqual(kwargs['values'], [[
             "test_import", "v1.2.3", spanner.COMMIT_TIMESTAMP, "wf-123",
-            None, 0, 0, 0, 0, "ingestion-workflow:wf-123"
+            None, None, None, None, None, "ingestion-workflow:wf-123"
         ]])
 
     @patch('google.cloud.spanner.Client')
@@ -734,7 +734,7 @@ class TestSpannerClient(unittest.TestCase):
         ])
         self.assertEqual(kwargs['values'], [[
             "test_import", "v1.2.3", spanner.COMMIT_TIMESTAMP, "wf-789",
-            None, 0, 0, 0, 0, "ingestion-workflow:wf-789"
+            None, None, None, None, None, "ingestion-workflow:wf-789"
         ]])
 
 if __name__ == '__main__':

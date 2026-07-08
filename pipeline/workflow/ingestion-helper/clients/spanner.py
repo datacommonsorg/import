@@ -326,10 +326,10 @@ class SpannerClient:
                 workflow_id,
                 job_id if job_id else "",
                 ingested_imports if ingested_imports else [],
-                m.get('execution_time', 0),
-                m.get('node_count', 0),
-                m.get('edge_count', 0),
-                m.get('obs_count', 0)
+                m.get('execution_time'),
+                m.get('node_count'),
+                m.get('edge_count'),
+                m.get('obs_count')
             ]]
             transaction.insert_or_update(table="IngestionHistory",
                                          columns=columns,
@@ -455,10 +455,10 @@ class SpannerClient:
                     import_json['importName'], import_json['latestVersion'],
                     spanner.COMMIT_TIMESTAMP, workflow_id,
                     status,
-                    m.get('execution_time', 0),
-                    m.get('node_count', 0),
-                    m.get('edge_count', 0),
-                    m.get('obs_count', 0),
+                    m.get('execution_time'),
+                    m.get('node_count'),
+                    m.get('edge_count'),
+                    m.get('obs_count'),
                     "ingestion-workflow:" + workflow_id
                 ])
 
@@ -564,10 +564,10 @@ class SpannerClient:
             values = [[
                 import_name, version, spanner.COMMIT_TIMESTAMP, workflow_id,
                 status,
-                m.get('execution_time', 0),
-                m.get('node_count', 0),
-                m.get('edge_count', 0),
-                m.get('obs_count', 0),
+                m.get('execution_time'),
+                m.get('node_count'),
+                m.get('edge_count'),
+                m.get('obs_count'),
                 comment
             ]]
             transaction.insert(table="ImportVersionHistory",
