@@ -523,8 +523,10 @@ class TestRunner(unittest.TestCase):
           return f"gs://my-bucket/jsonld/run_timestamp"
         return original_full_path(self, sub_path)
 
-      with mock.patch.dict(os.environ,
-                           {"INGESTION_WORKFLOW_NAME": "my-workflow"}):
+      with mock.patch.dict(os.environ, {
+          "INGESTION_WORKFLOW_NAME": "my-workflow",
+          "WORKFLOW_EXECUTION_ID": "my-execution"
+      }):
         with mock.patch.object(_StoreWrapper, "full_path", mock_full_path):
           runner = Runner(config_file_path=None,
                           input_dir_path=input_dir,

@@ -873,10 +873,10 @@ class Runner:
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.db).validate()
 
-    # Auto-trigger workflow if output is on GCS
+    # Populate trigger workflow info if running under ingestion workflow and output is GCS
     output_path = self.db.jsonld_dir.full_path()
     import_name = self.db.import_name
-    if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
+    if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
       processed_imports = list(self.db._processed_imports)
       if not processed_imports:
         processed_imports = [import_name]
@@ -887,7 +887,7 @@ class Runner:
       self.trigger_workflow_info = import_list
     else:
       logging.info(
-          "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
+          "Not running under ingestion workflow or output is local. Skipping handshake info."
       )
 
 
