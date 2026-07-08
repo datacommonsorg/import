@@ -30,6 +30,9 @@ from .provenance_summary_generator import ProvenanceSummaryGenerator
 from .stat_var_aggregator import StatVarAggregator
 from .stat_var_calculation_generator import StatVarCalculationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
+from .stat_var_series_aggregator import StatVarSeriesAggregator
+from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
+from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
 from .validator import validate_config
 
 
@@ -62,10 +65,13 @@ class CalculationType(str, Enum):
     """Supported aggregation calculation step types."""
     PLACE_AGGREGATION = "PLACE_AGGREGATION"
     STAT_VAR_AGGREGATION = "STAT_VAR_AGGREGATION"
+    ENTITY_AGGREGATION = "ENTITY_AGGREGATION"
     STAT_VAR_CALCULATION = "STAT_VAR_CALCULATION"
     LINKED_EDGES = "LINKED_EDGES"
     PROVENANCE_SUMMARY = "PROVENANCE_SUMMARY"
     STAT_VAR_GROUPS = "STAT_VAR_GROUPS"
+    STAT_VAR_SERIES_AGGREGATION = "STAT_VAR_SERIES_AGGREGATION"
+    SUPER_ENUM_AGGREGATION = "SUPER_ENUM_AGGREGATION"
     EMBEDDING_GENERATION = "EMBEDDING_GENERATION"
 
 
@@ -262,6 +268,8 @@ class AggregationOrchestrator:
             return self._trigger_place(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_AGGREGATION:
             return self._trigger_stat_var(calc, applicable_imports)
+        elif step_type == CalculationType.ENTITY_AGGREGATION:
+            return self._trigger_entity(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_CALCULATION:
             return self._trigger_stat_var_calculation(calc, applicable_imports)
         elif step_type == CalculationType.LINKED_EDGES:
@@ -270,6 +278,10 @@ class AggregationOrchestrator:
             return self._trigger_provenance_summary(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_GROUPS:
             return self._trigger_stat_var_groups(calc, applicable_imports)
+        elif step_type == CalculationType.STAT_VAR_SERIES_AGGREGATION:
+            return self._trigger_stat_var_series_aggregation(calc, applicable_imports)
+        elif step_type == CalculationType.SUPER_ENUM_AGGREGATION:
+            return self._trigger_super_enum_aggregation(calc, applicable_imports)
         elif step_type == CalculationType.EMBEDDING_GENERATION:
             return self._trigger_embeddings(calc, applicable_imports)
         else:
@@ -396,6 +408,39 @@ class AggregationOrchestrator:
         logging.info(f"  -> Stat Var Groups Aggregation for imports {applicable_imports}")
         generator = StatVarGroupGenerator(self.executor, self.is_base_dc)
         return generator.run_all(applicable_imports)
+
+    def _trigger_stat_var_series_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers statistical variable series aggregations."""
+        logging.info(f"  -> Stat Var Series Aggregation for imports {applicable_imports}")
+        calc = config.copy()
+        calc["input_imports"] = applicable_imports
+        generator = StatVarSeriesAggregator(self.executor, self.is_base_dc)
+        return generator.aggregate_series([calc])
+
+    def _trigger_entity(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers entity aggregations."""
+        entity_cfg = config.get("entity_aggregation", {})
+        output_import = config.get("output_import", "")
+
+        cfg = EntityAggregationConfig(
+            entity_types=entity_cfg.get("entity_types", []),
+            location_props=entity_cfg.get("location_props", []),
+            date_prop=entity_cfg.get("date_prop", ""),
+            agg_date_formats=entity_cfg.get("agg_date_formats", []),
+            constraints=entity_cfg.get("constraints", []),
+            output_import=output_import,
+            input_imports=applicable_imports
+        )
+
+        logging.info(f"  -> Entity Aggregation for imports {applicable_imports}")
+        generator = EntityAggregationGenerator(self.executor, self.is_base_dc)
+        return generator.aggregate_entities([cfg])
+
+    def _trigger_super_enum_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers super enum aggregations."""
+        logging.info(f"  -> Super Enum Aggregation for imports {applicable_imports}")
+        generator = SuperEnumAggregationGenerator(self.executor, self.is_base_dc)
+        return generator.run(applicable_imports)
 
     def _trigger_embeddings(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers node embedding generation."""

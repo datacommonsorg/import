@@ -88,7 +88,7 @@ calculations:
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
-        - aggr_stats_across_models:
+        - stats_across_models:
             sv_regex: "^DifferenceRelativeToObservationalData_.*"
             aggregation_ops:
               - OPERATOR_MEDIAN
@@ -103,7 +103,7 @@ calculations:
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
-        - aggr_stats_across_models:
+        - stats_across_models:
             sv_regex: "^DifferenceRelativeToObservationalData_.*"
             aggregation_ops:
               - OPERATOR_MEDIAN

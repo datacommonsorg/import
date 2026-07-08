@@ -16,7 +16,7 @@ import os
 import logging
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
-from clients.spanner import SpannerClient
+from clients.spanner import SpannerClient, IngestionState, IngestionStage
 from clients.storage import StorageClient
 from dependencies import get_spanner_client, get_storage_client
 import config
@@ -25,11 +25,6 @@ from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
 from routes.models import BaseResponse, ResponseStatus
-
-class IngestionState(str, Enum):
-    SUCCESS = "SUCCESS"
-    PENDING = "PENDING"
-    RETRY = "RETRY"
 
 class ImportState(str, Enum):
     STAGING = "STAGING"
@@ -46,8 +41,18 @@ class ImportInfoRequest(BaseModel):
 class UpdateIngestionStatusRequest(BaseModel):
     importList: List[ImportItem]
     workflowId: str
-    jobId: str
     status: IngestionState
+    jobId: Optional[str] = None
+
+
+class UpdateIngestionHistoryRequest(BaseModel):
+    workflowId: str
+    status: IngestionState
+    stage: Optional[IngestionStage] = None
+    importList: Optional[List[ImportItem]] = Field(default_factory=list)
+    importName: Optional[str] = None
+    jobId: Optional[str] = None
+
 
 class ImportStatusItem(BaseModel):
     importName: str
@@ -81,19 +86,63 @@ def get_import_info(req: ImportInfoRequest, spanner: SpannerClient = Depends(get
     """Gets the details of imports that are ready for ingestion."""
     return spanner.get_import_info(req.importList)
 
+def _extract_import_names(import_list: Optional[List[ImportItem]]) -> Optional[List[str]]:
+    if not import_list:
+        return None
+    return [item.importName for item in import_list]
+
 @router.post("/ingestion-status", response_model=BaseResponse)
 def update_ingestion_status(req: UpdateIngestionStatusRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Updates the status of imports after ingestion."""
-    ingested_imports = [item.importName for item in req.importList]
-    spanner.update_ingestion_status(ingested_imports, req.workflowId, req.status.value)
-    
-    metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
-    spanner.update_ingestion_history(req.workflowId, req.jobId, ingested_imports, metrics)
+    ingested_imports = _extract_import_names(req.importList)
+    status_str = req.status.value if hasattr(req.status, 'value') else req.status
+    spanner.update_ingestion_status(ingested_imports, req.workflowId, status_str)
+
+    if not config.ENABLE_UNIQUE_INGESTION_RUNS:
+        metrics = None
+        if req.jobId and req.jobId != "N/A":
+            try:
+                metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
+            except Exception as e:
+                logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
+                metrics = None
+        spanner.update_ingestion_history_v1(req.workflowId, req.jobId, ingested_imports, metrics)
     
     if req.status == IngestionState.SUCCESS:
         import_list_dicts = [item.model_dump() for item in req.importList]
         spanner.update_import_version_history(import_list_dicts, req.workflowId)
     return BaseResponse(status=ResponseStatus.OK)
+
+@router.post("/ingestion-history", response_model=BaseResponse)
+def update_ingestion_history(req: UpdateIngestionHistoryRequest, spanner: SpannerClient = Depends(get_spanner_client)):
+    """Updates the ingestion history record for the workflow execution."""
+    if not config.ENABLE_UNIQUE_INGESTION_RUNS:
+        logging.warning("Received update_ingestion_history request but ENABLE_UNIQUE_INGESTION_RUNS is disabled. No-op.")
+        return BaseResponse(status=ResponseStatus.OK)
+
+    ingested_imports = _extract_import_names(req.importList)
+    if req.importName:
+        ingested_imports.append(req.importName)
+    
+    metrics = None
+    if req.status in (IngestionState.SUCCESS, IngestionState.RETRY) and req.stage == IngestionStage.DATAFLOW and req.jobId and req.jobId != "N/A":
+        # Only update metrics for successful or retried jobs running after the dataflow stage.
+        try:
+            metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
+        except Exception as e:
+            logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
+            metrics = None
+
+    spanner.update_ingestion_history_v2(
+        workflow_id=req.workflowId,
+        status=req.status,
+        stage=req.stage,
+        job_id=req.jobId,
+        ingested_imports=ingested_imports,
+        metrics=metrics
+    )
+    return BaseResponse(status=ResponseStatus.OK)
+
 
 @router.post("/status", response_model=BaseResponse)
 def update_import_status(

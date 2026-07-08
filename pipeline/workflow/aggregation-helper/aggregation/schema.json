@@ -118,7 +118,18 @@
                     },
                     "constraints": {
                       "type": "array",
-                      "items": { "type": "string" }
+                      "items": {
+                        "type": "object",
+                        "required": ["property"],
+                        "properties": {
+                          "property": { "type": "string" },
+                          "min": { "type": "number" },
+                          "max": { "type": "number" },
+                          "unit": { "type": "string" },
+                          "value": { "type": ["string", "number"] },
+                          "wildcard": { "type": "boolean" }
+                        }
+                      }
                     }
                   }
                 }
