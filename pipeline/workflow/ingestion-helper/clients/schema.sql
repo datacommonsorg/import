@@ -139,7 +139,6 @@ CREATE TABLE ImportVersionHistory (
   EdgeCount INT64,
   ObservationCount INT64,
   Comment STRING(MAX),
-  CONSTRAINT FKIngestionHistory FOREIGN KEY (WorkflowExecutionID) REFERENCES IngestionHistory (WorkflowExecutionID),
 ) PRIMARY KEY (ImportName, UpdateTimestamp DESC);
 
 CREATE TABLE IngestionLock (
