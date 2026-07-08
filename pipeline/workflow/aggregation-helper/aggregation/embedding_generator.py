@@ -89,7 +89,7 @@ class EmbeddingGenerator:
         self.executor = executor
         self.is_base_dc = is_base_dc
 
-    def run_all(self, specs: Optional[List[Any]] = None, import_names: List[str] = None) -> List[bigquery.job.QueryJob]:
+    def run_all(self, specs: Optional[List[Any]] = None, embedding_table: str = "NodeEmbedding") -> List[bigquery.job.QueryJob]:
         """Runs all embedding generations asynchronously and returns their jobs."""
         enable_embeddings = os.environ.get('ENABLE_EMBEDDINGS', 'false').lower() == 'true'
         if not enable_embeddings or not self.is_base_dc:
@@ -102,23 +102,22 @@ class EmbeddingGenerator:
         logging.info(f"Running embedding generation aggregation for {len(specs)} spec(s)...")
         jobs = []
         for spec in specs:
-            job = self.run_embedding_spec(spec)
+            job = self.run_embedding_spec(spec, embedding_table=embedding_table)
             if job:
                 jobs.append(job)
         return jobs
 
-    def run_embedding_spec(self, spec: Any) -> Optional[bigquery.job.QueryJob]:
+    def run_embedding_spec(self, spec: Any, embedding_table: str = "NodeEmbedding") -> Optional[bigquery.job.QueryJob]:
         """Runs the embedding generation query for a single spec."""
         if isinstance(spec, dict):
             spec = EmbeddingSpec(**spec)
 
         dest = self.executor.get_spanner_destination_uri()
         conn_id = self.executor.connection_id
-        embedding_conn_id = 'embedding_vai_model_connection'
+        embedding_conn_id = os.environ.get('BQ_MODEL_CONNECTION')
         project_id = self.executor.project_id
         bq_dataset_id = os.environ.get('BQ_DATASET_ID', 'datacommons')
-        location = self.executor.location or os.environ.get('LOCATION') or os.environ.get('REGION', 'us-central1')
-        embedding_table = os.environ.get('EMBEDDING_TABLE', 'NodeEmbedding')
+        location = self.executor.location
 
         embedding_label = spec.embedding_label
         model_name = spec.model_name
@@ -131,13 +130,17 @@ class EmbeddingGenerator:
         safe_types = [f"'{nt.replace(chr(39), chr(92) + chr(39))}'" for nt in node_types]
         node_types_list_sql = f"[{', '.join(safe_types)}]"
 
-        # 2. Build the filter condition for Spanner
+        # 2. Build the filter condition and query parameters for BigQuery
+        job_config = None
         if node_filter_type == "NoFilter":
             filter_condition_sql = "TRUE"
         elif node_filter_type == "NLStatisticalVariable":
-            nl_stat_vars = _extract_nl_stat_var()
-            safe_vars = [f"'{var.replace(chr(39), chr(92) + chr(39))}'" for var in nl_stat_vars]
-            filter_condition_sql = f"subject_id IN UNNEST([{', '.join(safe_vars)}])"
+            filter_condition_sql = "subject_id IN UNNEST(@nl_stat_vars)"
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ArrayQueryParameter("nl_stat_vars", "STRING", _extract_nl_stat_var())
+                ]
+            )
         else:
             logging.error(f"Unknown node filter type: {node_filter_type}")
             return None
@@ -151,7 +154,6 @@ class EmbeddingGenerator:
             FROM Node
             WHERE name IS NOT NULL
               AND %s
-              AND {filter_condition_sql}
               AND EXISTS (
                 SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST({node_types_list_sql})
               )
@@ -161,12 +163,6 @@ class EmbeddingGenerator:
         query = f"""
         DECLARE latest_lock_timestamp TIMESTAMP;
         DECLARE timelock_condition STRING;
-
-        CREATE OR REPLACE MODEL `{project_id}.{bq_dataset_id}.{model_name}`
-        REMOTE WITH CONNECTION `{project_id}.{location}.{embedding_conn_id}`
-        OPTIONS (
-          ENDPOINT = "{model_endpoint}"
-        );
 
         SET latest_lock_timestamp = (
           SELECT MAX(CAST(val AS TIMESTAMP))
@@ -197,7 +193,7 @@ class EmbeddingGenerator:
           ml_generate_embedding_result AS embeddings
         FROM ML.GENERATE_EMBEDDING(
           MODEL `{project_id}.{bq_dataset_id}.{model_name}`,
-          (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types FROM raw_nodes),
+          (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types FROM raw_nodes WHERE {filter_condition_sql}),
           STRUCT("{task_type}" AS task_type)
         );
 
@@ -210,4 +206,4 @@ class EmbeddingGenerator:
         SELECT * FROM embedding_staging;
         """
         logging.info(f"Submitting embedding generation job for {embedding_label}...")
-        return self.executor.execute(query)
+        return self.executor.execute(query, job_config=job_config)

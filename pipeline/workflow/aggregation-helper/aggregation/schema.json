@@ -9,7 +9,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["type", "input_imports"],
+        "required": ["type"],
         "additionalProperties": false,
         "properties": {
           "name": { "type": "string" },
@@ -35,6 +35,7 @@
           },
           "output_import": { "type": "string" },
           "stage": { "type": "integer" },
+          "embedding_table": { "type": "string" },
           "place_aggregation": { "type": "object" },
           "stat_var_aggregation": { "type": "object" },
           "entity_aggregation": { "type": "object" },

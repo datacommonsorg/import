@@ -33,6 +33,10 @@ def main():
         help="JSON string representing the list of imports to process."
     )
     parser.add_argument(
+        "--config_path",
+        help="Optional path to a specific YAML config file or directory (e.g., aggregation/configs/embedding.yaml)."
+    )
+    parser.add_argument(
         "--dry_run",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -41,20 +45,20 @@ def main():
 
     args = parser.parse_args()
 
-    if not args.import_list:
-        logging.error("Missing required argument: --import_list")
-        sys.exit(1)
+    import_list = []
+    if args.import_list:
+        try:
+            import_list = json.loads(args.import_list)
+            logging.info(f"Received active imports to process: {import_list}")
+        except json.JSONDecodeError as e:
+            logging.error(f"Failed to parse import_list JSON: {e}")
+            sys.exit(1)
 
-    try:
-        import_list = json.loads(args.import_list)
-        logging.info(f"Received active imports to process: {import_list}")
-    except json.JSONDecodeError as e:
-        logging.error(f"Failed to parse import_list JSON: {e}")
-        sys.exit(1)
-
-    if not isinstance(import_list, list):
-        logging.error("Parsed import_list is not a list")
-        sys.exit(1)
+        if not isinstance(import_list, list):
+            logging.error("Parsed import_list is not a list")
+            sys.exit(1)
+    else:
+        logging.info("No --import_list provided. Proceeding with global import-independent calculations only.")
 
     connection_id = os.environ.get("BQ_SPANNER_CONN_ID")
     project_id = os.environ.get("PROJECT_ID")
@@ -69,12 +73,14 @@ def main():
         )
         sys.exit(1)
 
+    config_path = args.config_path or os.environ.get("CONFIG_PATH")
     orchestrator = AggregationOrchestrator(
         connection_id=connection_id,
         project_id=project_id,
         instance_id=instance_id,
         database_id=database_id,
         location=location,
+        config_file_path=config_path,
     )
 
     logging.info(f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}) for imports: {import_list}")

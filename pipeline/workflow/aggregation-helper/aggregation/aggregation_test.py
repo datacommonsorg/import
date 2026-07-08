@@ -310,7 +310,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 node_filter_type="NoFilter"
             )
         ]
-        jobs = generator.run_all(specs=specs)
+        jobs = generator.run_all(specs=specs, embedding_table="CustomEmbeddingTable")
 
         self.assertEqual(len(jobs), 1)
         self.mock_executor.execute.assert_called_once()
@@ -319,6 +319,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("spanner-uri", query)
         self.assertIn("TestModel", query)
         self.assertIn("test_embedding", query)
+        self.assertIn("CustomEmbeddingTable", query)
         self.assertIn("TEST_TASK", query)
 
     @patch.dict('os.environ', {'ENABLE_EMBEDDINGS': 'true'})
@@ -338,13 +339,17 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 node_filter_type="NLStatisticalVariable"
             )
         ]
-        jobs = generator.run_all(specs=specs)
+        jobs = generator.run_all(specs=specs, embedding_table="CustomEmbeddingTable")
 
         self.assertEqual(len(jobs), 1)
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
-        self.assertIn("statVar1", query)
-        self.assertIn("statVar2", query)
+        job_config = self.mock_executor.execute.call_args[1].get('job_config') or self.mock_executor.execute.call_args.kwargs.get('job_config')
+        self.assertIn("subject_id IN UNNEST(@nl_stat_vars)", query)
+        self.assertIsNotNone(job_config)
+        param_values = [p.values for p in job_config.query_parameters if p.name == 'nl_stat_vars'][0]
+        self.assertIn("statVar1", param_values)
+        self.assertIn("statVar2", param_values)
 
 
 if __name__ == '__main__':

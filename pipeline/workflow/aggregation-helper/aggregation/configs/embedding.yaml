@@ -3,8 +3,7 @@ calculations:
   - name: "Global: Node Embeddings Generation"
     type: EMBEDDING_GENERATION
     stage: 1
-    input_imports:
-      - "*"
+    embedding_table: "NodeEmbedding"
     embedding_generation:
       specs:
         - embedding_label: "base_text_embedding"
@@ -21,4 +20,5 @@ calculations:
           task_type: "RETRIEVAL_QUERY"
           node_types:
             - "StatisticalVariable"
+            - "Topic"
           node_filter_type: "NLStatisticalVariable"

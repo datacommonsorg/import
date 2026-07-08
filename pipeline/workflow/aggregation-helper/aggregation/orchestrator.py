@@ -126,19 +126,21 @@ class AggregationOrchestrator:
         else:
             self.calculations = validate_config(target_config, schema_file_path)
 
-    def run(self, active_imports: List[str], dry_run: bool = True) -> AggregationRunResult:
+    def run(self, active_imports: Optional[List[str]] = None, dry_run: bool = True) -> AggregationRunResult:
         """Executes aggregations independently for each active import.
 
         Blocks and synchronizes stage progression for each import:
         Stage 1 -> Wait -> Stage 2 -> Wait -> Stage 3 -> Wait.
+        After all imports finish (or if no active imports), runs global import-independent steps.
 
         Args:
-            active_imports: List of active import dataset names to process.
+            active_imports: Optional list of active import dataset names to process.
             dry_run: If True, logs imports and active stages without executing BigQuery jobs.
 
         Returns:
             AggregationRunResult containing status per import.
         """
+        active_imports = active_imports or []
         logging.info(
             f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports}"
         )
@@ -187,6 +189,30 @@ class AggregationOrchestrator:
                     stages_executed=active_stages,
                     error_message=str(e)
                 )
+
+        # Execute global, import-independent calculation steps (e.g., EMBEDDING_GENERATION) once
+        global_calcs = [
+            calc for calc in self.calculations
+            if calc.get("type") == CalculationType.EMBEDDING_GENERATION and not calc.get("disabled", False)
+        ]
+        if global_calcs:
+            logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} step(s)) ===")
+            for calc in global_calcs:
+                step_type = calc.get("type")
+                if dry_run:
+                    logging.info(f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}")
+                else:
+                    logging.info(f"Triggering global step: '{step_type}'...")
+                    step_jobs = self._dispatch_stage_steps(calc)
+                    if step_jobs:
+                        job_ids = [job.job_id for job in step_jobs if hasattr(job, "job_id")]
+                        logging.info(f"Submitted {len(job_ids)} global job(s): {job_ids}")
+                        self._wait_for_jobs(
+                            job_ids=job_ids,
+                            poll_interval=15,
+                            step_name=calc.get("name", str(step_type)),
+                            single_import="GLOBAL"
+                        )
 
         return run_result
 
@@ -260,8 +286,9 @@ class AggregationOrchestrator:
                     single_import=single_import
                 )
 
-    def _dispatch_stage_steps(self, calc: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _dispatch_stage_steps(self, calc: Dict[str, Any], applicable_imports: Optional[List[str]] = None) -> List[Any]:
         """Dispatches job execution based on step calculation type."""
+        applicable_imports = applicable_imports or []
         step_type = calc.get("type")
 
         if step_type == CalculationType.PLACE_AGGREGATION:
@@ -283,7 +310,7 @@ class AggregationOrchestrator:
         elif step_type == CalculationType.SUPER_ENUM_AGGREGATION:
             return self._trigger_super_enum_aggregation(calc, applicable_imports)
         elif step_type == CalculationType.EMBEDDING_GENERATION:
-            return self._trigger_embeddings(calc, applicable_imports)
+            return self._trigger_embeddings(calc)
         else:
             logging.warning(
                 f"Calculation type '{step_type}' configured for imports '{applicable_imports}' has no active generator handler."
@@ -442,17 +469,21 @@ class AggregationOrchestrator:
         generator = SuperEnumAggregationGenerator(self.executor, self.is_base_dc)
         return generator.run(applicable_imports)
 
-    def _trigger_embeddings(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_embeddings(self, config: Dict[str, Any]) -> List[Any]:
         """Triggers node embedding generation."""
         embed_cfg = config.get("embedding_generation", {})
         specs = embed_cfg.get("specs", [])
-        logging.info(f"  -> Node Embeddings Generation for imports {applicable_imports} (specs: {len(specs)})")
+        embedding_table = config.get("embedding_table", "NodeEmbedding")
+        logging.info(f"  -> Node Embeddings Generation (specs: {len(specs)}, table: {embedding_table})")
         generator = EmbeddingGenerator(self.executor, self.is_base_dc)
-        return generator.run_all(specs=specs, import_names=applicable_imports)
+        return generator.run_all(specs=specs, embedding_table=embedding_table)
 
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""
         if calc.get("disabled", False):
+            return False
+
+        if calc.get("type") == CalculationType.EMBEDDING_GENERATION:
             return False
 
         configured_imports = calc.get("input_imports") or calc.get("imports", [])
