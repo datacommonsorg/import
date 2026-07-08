@@ -132,7 +132,14 @@ CREATE TABLE ImportVersionHistory (
   ImportName STRING(MAX) NOT NULL,
   Version STRING(MAX) NOT NULL,
   UpdateTimestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+  WorkflowExecutionID STRING(1024),
+  Status STRING(1024),
+  ExecutionTime INT64,
+  NodeCount INT64,
+  EdgeCount INT64,
+  ObservationCount INT64,
   Comment STRING(MAX),
+  CONSTRAINT FKIngestionHistory FOREIGN KEY (WorkflowExecutionID) REFERENCES IngestionHistory (WorkflowExecutionID),
 ) PRIMARY KEY (ImportName, UpdateTimestamp DESC);
 
 CREATE TABLE IngestionLock (
