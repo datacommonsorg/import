@@ -326,10 +326,10 @@ class SpannerClient:
                 workflow_id,
                 job_id if job_id else "",
                 ingested_imports if ingested_imports else [],
-                m.get('execution_time', 0),
-                m.get('node_count', 0),
-                m.get('edge_count', 0),
-                m.get('obs_count', 0)
+                m.get('execution_time'),
+                m.get('node_count'),
+                m.get('edge_count'),
+                m.get('obs_count')
             ]]
             transaction.insert_or_update(table="IngestionHistory",
                                          columns=columns,
@@ -423,13 +423,18 @@ class SpannerClient:
             logging.error(f'Error updating IngestionHistory table (v2): {e}')
             raise
 
-    def update_import_version_history(self, import_list_json: list,
-                                      workflow_id: str):
+    def update_import_version_history(self,
+                                      import_list_json: list,
+                                      workflow_id: str,
+                                      status: str | None = None,
+                                      metrics: dict | None = None):
         """Updates the ImportVersionHistory table.
 
         Args:
             import_list_json: A list of dictionaries containing import details.
             workflow_id: The ID of the workflow.
+            status: The status of the import execution.
+            metrics: Optional dictionary containing execution metrics.
         """
         if not import_list_json:
             return
@@ -439,13 +444,21 @@ class SpannerClient:
 
         def _insert(transaction: Transaction):
             version_history_columns = [
-                "ImportName", "Version", "UpdateTimestamp", "Comment"
+                "ImportName", "Version", "UpdateTimestamp",
+                "WorkflowExecutionID", "Status", "ExecutionTime", "NodeCount",
+                "EdgeCount", "ObservationCount", "Comment"
             ]
+            m = metrics if metrics else {}
             version_history_values = []
             for import_json in import_list_json:
                 version_history_values.append([
                     import_json['importName'], import_json['latestVersion'],
-                    spanner.COMMIT_TIMESTAMP,
+                    spanner.COMMIT_TIMESTAMP, workflow_id,
+                    status,
+                    m.get('execution_time'),
+                    m.get('node_count'),
+                    m.get('edge_count'),
+                    m.get('obs_count'),
                     "ingestion-workflow:" + workflow_id
                 ])
 
@@ -521,21 +534,42 @@ class SpannerClient:
                 f'Error updating import status for {import_name}: {e}')
             raise
 
-    def update_version_history(self, import_name: str, version: str,
-                               comment: str):
+    def update_version_history(self,
+                               import_name: str,
+                               version: str,
+                               comment: str,
+                               workflow_id: str | None = None,
+                               status: str | None = None,
+                               metrics: dict | None = None):
         """Updates the version history table.
 
         Args:
             import_name: The name of the import.
             version: The version string.
             comment: The comment for the update.
+            workflow_id: The ID of the workflow execution if applicable.
+            status: The status of the import execution.
+            metrics: Optional dictionary containing execution metrics.
         """
         import_name = import_name.split(':')[-1]
         logging.info(f"Updating version history for {import_name} to {version}")
 
         def _record(transaction: Transaction):
-            columns = ["ImportName", "Version", "UpdateTimestamp", "Comment"]
-            values = [[import_name, version, spanner.COMMIT_TIMESTAMP, comment]]
+            columns = [
+                "ImportName", "Version", "UpdateTimestamp",
+                "WorkflowExecutionID", "Status", "ExecutionTime", "NodeCount",
+                "EdgeCount", "ObservationCount", "Comment"
+            ]
+            m = metrics if metrics else {}
+            values = [[
+                import_name, version, spanner.COMMIT_TIMESTAMP, workflow_id,
+                status,
+                m.get('execution_time'),
+                m.get('node_count'),
+                m.get('edge_count'),
+                m.get('obs_count'),
+                comment
+            ]]
             transaction.insert(table="ImportVersionHistory",
                                columns=columns,
                                values=values)
