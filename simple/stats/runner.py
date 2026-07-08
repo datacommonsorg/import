@@ -19,6 +19,7 @@ from enum import StrEnum
 import json
 import logging
 import os
+import re
 import threading
 from typing import Optional
 
@@ -57,7 +58,6 @@ from stats.observations_importer import ObservationsImporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.svg_cache import generate_svg_cache
-from stats.trigger_ingestion_workflow import trigger_ingestion_workflow
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
@@ -236,14 +236,49 @@ class Runner:
         store.close()
       logging.info("File storage closed.")
 
-      # Auto-trigger workflow now that all data is guaranteed to be exported and written to GCS
-      if self.trigger_workflow_info:
-        trigger_ingestion_workflow(import_list=self.trigger_workflow_info)
+      # Hand off processed import metadata to workflow or GCS
+      self._handle_workflow_handoff()
 
     except Exception as e:
       logging.exception("Error updating stats")
       self.reporter.report_failure(error=str(e))
       raise
+
+  def _handle_workflow_handoff(self) -> None:
+    """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
+    if not self.trigger_workflow_info:
+      return
+
+    workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
+    temp_location = os.getenv("TEMP_LOCATION", "")
+
+    if not workflow_id or not temp_location.startswith("gs://"):
+      logging.warning(
+          "WORKFLOW_EXECUTION_ID not set or TEMP_LOCATION (%s) is not a GCS path. Skipping GCS handshake.",
+          temp_location)
+      return
+
+    raw_import_name = "_".join(item["importName"] for item in self.trigger_workflow_info)
+    sanitized_import_name = re.sub(r'[^a-zA-Z0-9_-]', '_', raw_import_name)[:64]
+
+    handshake_payload = {
+        "spannerInstanceId": os.getenv("GCP_SPANNER_INSTANCE_ID", ""),
+        "spannerDatabaseId": os.getenv("GCP_SPANNER_DATABASE_NAME", ""),
+        "importName": sanitized_import_name,
+        "importList": json.dumps(self.trigger_workflow_info),
+        "tempLocation": temp_location,
+        "region": os.getenv("REGION", "")
+    }
+
+    output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
+    logging.info(
+        "WORKFLOW_EXECUTION_ID set. Writing preprocessor result to GCS handshake path: %s",
+        output_json_path)
+    with create_store(output_json_path, create_if_missing=True,
+                      treat_as_file=True) as store:
+      store.as_file().write(
+          json.dumps(handshake_payload, indent=2))
+    logging.info("Successfully wrote preprocessor result to GCS.")
 
   def _read_config_from_file(self,
                              config_file_path: str,
