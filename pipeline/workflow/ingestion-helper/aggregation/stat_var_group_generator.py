@@ -381,15 +381,15 @@ class StatVarGroupGenerator:
               node3 AS node1,
               -- Remove one PV from node1 to produce node2.
               CONCAT(namespace, 'g/', populationType, '_', ARRAY_TO_STRING(ARRAY(
-                SELECT IF(unnest_idx = target_idx, 
-                  REPLACE(SPLIT(unnested, ' = ')[OFFSET(0)], ' ', ''), 
-                  REPLACE(REPLACE(REPLACE(unnested, ' ', ''), '-', ''), '=', '-')
+                SELECT IF(a_idx = target_idx, 
+                  REPLACE(REPLACE(SPLIT(a, ' = ')[OFFSET(0)], ' ', ''), '-', ''),
+                  REPLACE(REPLACE(REPLACE(a, ' ', ''), '-', ''), '=', '-')
                 )
-                FROM UNNEST(attributes) AS unnested WITH OFFSET AS unnest_idx
+                FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx
               ), '_')) AS node2,
               CONCAT(FormatName(populationType), ' With ', ARRAY_TO_STRING(ARRAY(
-                SELECT IF(unnest_idx = target_idx, SPLIT(unnested, ' = ')[OFFSET(0)], unnested)
-                FROM UNNEST(attributes) AS unnested WITH OFFSET AS unnest_idx
+                SELECT IF(a_idx = target_idx, SPLIT(a, ' = ')[OFFSET(0)], a)
+                FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx
               ), ', ')) AS node2name,
               -- Remove corresponding P from node2 to produce node3.
               IF(ARRAY_LENGTH(attributes) > 1, 
