@@ -15,17 +15,19 @@
 
 import os
 import sys
+import tempfile
 import unittest
 import logging
 import json
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Dict, List
+import yaml
 from google.cloud import spanner
 from google.cloud import bigquery
 
 # Add aggregation-helper to sys.path (two levels up from this file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from aggregation import BigQueryExecutor
+from aggregation import BigQueryExecutor, AggregationOrchestrator, AggregationRunResult
 
 # Configuration
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
@@ -159,3 +161,38 @@ class AggregationIntegrationTestBase(unittest.TestCase):
                     values=self.mock_observations
                 )
             self.mock_observations = []
+
+    def run_orchestrator(
+        self,
+        calculations: List[Dict[str, Any]],
+        active_imports: List[str],
+        dry_run: bool = False,
+        run_sequential: bool = True,
+        poll_interval: int = 3
+    ) -> AggregationRunResult:
+        """Helper to run AggregationOrchestrator with the given calculation configuration.
+
+        Serializes the calculation definitions to a temporary YAML file so that validate_config()
+        verifies schema compliance when the orchestrator initializes, then runs the pipeline.
+        """
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as tmp_file:
+            yaml.dump({"calculations": calculations}, tmp_file)
+            tmp_path = tmp_file.name
+
+        try:
+            orchestrator = AggregationOrchestrator(
+                connection_id=BQ_CONNECTION_ID,
+                project_id=PROJECT_ID,
+                instance_id=SPANNER_INSTANCE_ID,
+                database_id=SPANNER_DATABASE_ID,
+                location=BQ_LOCATION,
+                is_base_dc=self.is_base_dc,
+                config_file_path=tmp_path,
+                run_sequential=run_sequential,
+                poll_interval=poll_interval
+            )
+            return orchestrator.run(active_imports=active_imports, dry_run=dry_run)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+

@@ -53,17 +53,6 @@ from aggregation import BigQueryExecutor, StatVarAggregator
 class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for StatVarAggregator."""
 
-    def get_aggregator(self) -> StatVarAggregator:
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return StatVarAggregator(executor, is_base_dc=self.is_base_dc)
-
     def test_aggregate_stat_vars_success(self):
         """Tests successful aggregation when all sources are present."""
         import_name = 'CensusACS5YearSurvey_Test'
@@ -80,16 +69,26 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run aggregator
-        aggregator = self.get_aggregator()
-        jobs = aggregator.aggregate_stat_vars(
-            ancestor_sv='SV_Parent',
-            source_svs=['SV_A', 'SV_B'],
-            import_names=[import_name],
-            output_import_name=output_import_name,
-            skip_all_sources_present_check=False
-        )
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "StatVar Aggregation Success",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Parent",
+                            "source_sv_ids": ["SV_A", "SV_B"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results in Spanner (using multi_use=True to allow multiple queries)
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -142,16 +141,26 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run aggregator (strict mode)
-        aggregator = self.get_aggregator()
-        jobs = aggregator.aggregate_stat_vars(
-            ancestor_sv='SV_Parent',
-            source_svs=['SV_A', 'SV_B'],
-            import_names=[import_name],
-            output_import_name=output_import_name,
-            skip_all_sources_present_check=False
-        )
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "StatVar Aggregation Strict Missing",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Parent",
+                            "source_sv_ids": ["SV_A", "SV_B"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify no observations are created
         with self.database.snapshot() as snapshot:
@@ -174,16 +183,26 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run aggregator (lenient mode)
-        aggregator = self.get_aggregator()
-        jobs = aggregator.aggregate_stat_vars(
-            ancestor_sv='SV_Parent',
-            source_svs=['SV_A', 'SV_B'],
-            import_names=[import_name],
-            output_import_name=output_import_name,
-            skip_all_sources_present_check=True
-        )
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "StatVar Aggregation Lenient Missing",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Parent",
+                            "source_svs": ["SV_A", "SV_B"],
+                            "skip_all_sources_present_check": True
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify observation is created with SV_A's value
         with self.database.snapshot() as snapshot:
@@ -217,16 +236,26 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run aggregator
-        aggregator = self.get_aggregator()
-        jobs = aggregator.aggregate_stat_vars(
-            ancestor_sv='SV_Parent',
-            source_svs=['SV_A', 'SV_B'],
-            import_names=[import_name],
-            output_import_name=output_import_name,
-            skip_all_sources_present_check=False
-        )
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "StatVar Aggregation Multiple Cohorts",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Parent",
+                            "source_sv_ids": ["SV_A", "SV_B"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results in Spanner: should have 2 distinct aggregated TimeSeries and Observations
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -269,16 +298,26 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run aggregator
-        aggregator = self.get_aggregator()
-        jobs = aggregator.aggregate_stat_vars(
-            ancestor_sv='SV_Parent',
-            source_svs=['SV_A', 'SV_B'],
-            import_names=[import_name],
-            output_import_name=output_import_name,
-            skip_all_sources_present_check=False
-        )
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "StatVar Aggregation Null Method",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Parent",
+                            "source_svs": ["SV_A", "SV_B"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:

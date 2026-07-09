@@ -64,22 +64,6 @@ from aggregation.super_enum_aggregation_generator import (
 class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for SuperEnumAggregationGenerator."""
 
-    def get_generator(self) -> SuperEnumAggregationGenerator:
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return SuperEnumAggregationGenerator(
-            executor=executor,
-            spanner_client=self.spanner_client,
-            spanner_database=self.database,
-            is_base_dc=self.is_base_dc
-        )
-
     def test_super_enum_aggregation_success(self):
         """Verifies successful aggregation of child enums into a parent enum."""
         import_name = 'CensusACS5YearSurvey_Test'
@@ -116,12 +100,16 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         
         self.flush_to_spanner()
         
-        # --- 4. RUN GENERATOR ---
-        generator = self.get_generator()
-        jobs = generator.run(import_names=[import_name])
-        self.assertIsNotNone(jobs)
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "Super Enum Aggregation Success",
+                "type": "SUPER_ENUM_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
             
         # --- 5. VERIFY RESULTS ---
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -220,11 +208,16 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         
         self.flush_to_spanner()
         
-        # --- 4. RUN GENERATOR ---
-        generator = self.get_generator()
-        jobs = generator.run(import_names=[import_name])
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "Super Enum Aggregation Multi-Facet",
+                "type": "SUPER_ENUM_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
             
         # --- 5. VERIFY RESULTS ---
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -291,11 +284,16 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         
         self.flush_to_spanner()
         
-        # --- 4. RUN GENERATOR ---
-        generator = self.get_generator()
-        jobs = generator.run(import_names=[import_name])
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "Super Enum Aggregation Ignored",
+                "type": "SUPER_ENUM_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
             
         # --- 5. VERIFY RESULTS (No target SV should be created)
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -325,11 +323,16 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         
         self.flush_to_spanner()
         
-        # --- 4. RUN GENERATOR ---
-        generator = self.get_generator()
-        jobs = generator.run(import_names=[import_name])
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "Super Enum Aggregation Existing Prefix",
+                "type": "SUPER_ENUM_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
             
         # --- 5. VERIFY RESULTS ---
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -370,11 +373,16 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         
         self.flush_to_spanner()
         
-        # --- 4. RUN GENERATOR ---
-        generator = self.get_generator()
-        jobs = generator.run(import_names=[import_name])
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "Super Enum Aggregation Multi-Entity TimeSeries",
+                "type": "SUPER_ENUM_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
             
         # --- 5. VERIFY RESULTS ---
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -438,11 +446,16 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         
         self.flush_to_spanner()
         
-        # --- 4. RUN GENERATOR FOR ONLY ALPHA AND BETA (Excluding Ignored) ---
-        generator = self.get_generator()
-        jobs = generator.run(import_names=[import_alpha, import_beta])
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "Super Enum Aggregation Multi-Import Provenance Filtering",
+                "type": "SUPER_ENUM_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_alpha, import_beta]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_alpha, import_beta])
+        self.assertTrue(res.success)
             
         # --- 5. VERIFY RESULTS ---
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -498,11 +511,16 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         self.add_observation('SV_MultiProp', 'geoId/06', '2020', 100.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_multi')
         self.flush_to_spanner()
         
-        # 4. Run generator
-        generator = self.get_generator()
-        jobs = generator.run(import_names=[import_name])
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "Super Enum Aggregation Multi-Whitelisted Properties",
+                "type": "SUPER_ENUM_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
             
         # 5. Verify results
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -564,11 +582,16 @@ class SuperEnumAggregationGeneratorIntegrationTest(AggregationIntegrationTestBas
         self.add_observation(source_id, 'geoId/06', '2020', 1234.0, method='CensusACS5yrSurvey', import_name=import_name, facet_id='facet_curated')
         self.flush_to_spanner()
         
-        # 5. Run generator
-        generator = self.get_generator()
-        jobs = generator.run(import_names=[import_name])
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "Super Enum Aggregation Curated StatVar Mapping",
+                "type": "SUPER_ENUM_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
             
         # 6. Verify results
         with self.database.snapshot(multi_use=True) as snapshot:
