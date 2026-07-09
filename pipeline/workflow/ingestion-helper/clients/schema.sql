@@ -137,6 +137,7 @@ CREATE TABLE IngestionHistory (
   NodeCount INT64,
   EdgeCount INT64,
   ObservationCount INT64,
+  TimeSeriesCount INT64,
 ) PRIMARY KEY(WorkflowExecutionID);
 
 CREATE TABLE ImportVersionHistory (
@@ -149,6 +150,7 @@ CREATE TABLE ImportVersionHistory (
   NodeCount INT64,
   EdgeCount INT64,
   ObservationCount INT64,
+  TimeSeriesCount INT64,
   Comment STRING(MAX),
 ) PRIMARY KEY (ImportName, UpdateTimestamp DESC);
 

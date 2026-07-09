@@ -47,9 +47,10 @@ class SpannerClient:
     """
     _LOCK_ID = "global_ingestion_lock"
     _EMBEDDING_MODEL_PATH = "//aiplatform.googleapis.com/projects/{project}/locations/{location}/publishers/google/models/{model}"
-    _DEFAULT_MODELS = [
-        {"name": "NodeEmbeddingModel", "endpoint": "text-embedding-005"}
-    ]
+    _DEFAULT_MODELS = [{
+        "name": "NodeEmbeddingModel",
+        "endpoint": "text-embedding-005"
+    }]
 
     def __init__(self,
                  project_id: str,
@@ -106,10 +107,7 @@ class SpannerClient:
         for model in models:
             name = model["name"]
             endpoint = self._get_embeddings_endpoint(model["endpoint"])
-            self.models.append({
-                "name": name,
-                "endpoint": endpoint
-            })
+            self.models.append({"name": name, "endpoint": endpoint})
 
     def _get_embeddings_endpoint(self, model: str) -> str:
         """Returns the parameterized embedding model endpoint."""
@@ -117,7 +115,6 @@ class SpannerClient:
                                                  location=self.location or
                                                  "us-central1",
                                                  model=model)
-
 
     def acquire_lock(self, workflow_id: str, timeout: int) -> bool:
         """Attempts to acquire the global ingestion lock.
@@ -312,63 +309,14 @@ class SpannerClient:
             logging.error(f'Error updating ImportStatus table: {e}')
             raise
 
-    def update_ingestion_history_v1(self, workflow_id: str, job_id: str,
-                                    ingested_imports: list, metrics: dict):
-        """Updates the IngestionHistory table (v1 schema).
-
-        Args:
-            workflow_id: The ID of the workflow.
-            job_id: The Dataflow job ID.
-            ingested_imports: List of ingested import names.
-            metrics: A dictionary containing metrics about the ingestion.
-
-        TODO(gmechali): Deprecate V1 when are done migrating to v2. See update_ingestion_history_v2.
-        """
-
-        logging.info(
-            f"Updating IngestionHistory table (v1) for workflow {workflow_id}")
-
-        def _insert(transaction: Transaction):
-            columns = [
-                "CompletionTimestamp", "IngestionFailure",
-                "WorkflowExecutionID", "DataflowJobID", "IngestedImports",
-                "ExecutionTime", "NodeCount", "EdgeCount", "ObservationCount"
-            ]
-            m = metrics if metrics else {}
-            values = [[
-                spanner.COMMIT_TIMESTAMP,
-                self.check_failed_imports(),
-                workflow_id,
-                job_id if job_id else "",
-                ingested_imports if ingested_imports else [],
-                m.get('execution_time'),
-                m.get('node_count'),
-                m.get('edge_count'),
-                m.get('obs_count')
-            ]]
-            transaction.insert_or_update(table="IngestionHistory",
-                                         columns=columns,
-                                         values=values)
-
-        try:
-            self.database.run_in_transaction(_insert)
-            # TODO: remove dual writes after switching to the prod setup.
-            if self.graph_database and self.graph_database.name != self.database.name:
-                self.graph_database.run_in_transaction(_insert)
-            logging.info(
-                f"Updated IngestionHistory table (v1) for workflow {workflow_id}")
-        except Exception as e:
-            logging.error(f'Error updating IngestionHistory table (v1): {e}')
-            raise
-
-    def update_ingestion_history_v2(self,
-                                    workflow_id: str,
-                                    status: IngestionState,
-                                    stage: IngestionStage | None = None,
-                                    job_id: str | None = None,
-                                    ingested_imports: list | None = None,
-                                    metrics: dict | None = None):
-        """Updates the IngestionHistory table (v2 schema).
+    def update_ingestion_history(self,
+                                 workflow_id: str,
+                                 status: IngestionState,
+                                 stage: IngestionStage | None = None,
+                                 job_id: str | None = None,
+                                 ingested_imports: list | None = None,
+                                 metrics: dict | None = None):
+        """Updates the IngestionHistory table.
 
         Args:
             workflow_id: The ID of the workflow.
@@ -380,7 +328,8 @@ class SpannerClient:
         """
 
         logging.info(
-            f"Updating IngestionHistory table (v2) for workflow {workflow_id} with status {status}, stage {stage}")
+            f"Updating IngestionHistory table for workflow {workflow_id} with status {status}, stage {stage}"
+        )
 
         def _update(transaction: Transaction):
             status_str = status.value if hasattr(status, 'value') else status
@@ -397,11 +346,13 @@ class SpannerClient:
                 values.append(spanner.COMMIT_TIMESTAMP)
 
             # The statements below allow us to construct a partial update, only for the fields that are set.
-            if status in (IngestionState.SUCCESS, IngestionState.FAILURE, IngestionState.RETRY):
+            if status in (IngestionState.SUCCESS, IngestionState.FAILURE,
+                          IngestionState.RETRY):
                 columns.append("CompletionTimestamp")
                 values.append(spanner.COMMIT_TIMESTAMP)
                 columns.append("IngestionFailure")
-                values.append(status in (IngestionState.FAILURE, IngestionState.RETRY))
+                values.append(status in (IngestionState.FAILURE,
+                                         IngestionState.RETRY))
 
             if job_id:
                 columns.append("DataflowJobID")
@@ -416,7 +367,8 @@ class SpannerClient:
                     'execution_time': 'ExecutionTime',
                     'node_count': 'NodeCount',
                     'edge_count': 'EdgeCount',
-                    'obs_count': 'ObservationCount'
+                    'obs_count': 'ObservationCount',
+                    'ts_count': 'TimeSeriesCount',
                 }
                 for key, column in metric_map.items():
                     if key in metrics:
@@ -433,9 +385,9 @@ class SpannerClient:
             if self.graph_database and self.graph_database.name != self.database.name:
                 self.graph_database.run_in_transaction(_update)
             logging.info(
-                f"Updated IngestionHistory table (v2) for workflow {workflow_id}")
+                f"Updated IngestionHistory table for workflow {workflow_id}")
         except Exception as e:
-            logging.error(f'Error updating IngestionHistory table (v2): {e}')
+            logging.error(f'Error updating IngestionHistory table: {e}')
             raise
 
     def update_import_version_history(self,
@@ -457,37 +409,40 @@ class SpannerClient:
         logging.info(
             f"Updating ImportVersionHistory table for workflow {workflow_id}")
 
-        enable_unique_version_schema = os.environ.get('ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
+        enable_unique_version_schema = os.environ.get(
+            'ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
 
         def _insert(transaction: Transaction):
             if enable_unique_version_schema:
-                # Schema from 7/10
                 columns = [
                     "ImportName", "Version", "UpdateTimestamp",
-                    "WorkflowExecutionID", "Status", "ExecutionTime", "NodeCount",
-                    "EdgeCount", "ObservationCount", "Comment"
+                    "WorkflowExecutionID", "Status", "ExecutionTime",
+                    "NodeCount", "EdgeCount", "ObservationCount",
+                    "TimeSeriesCount", "Comment"
                 ]
                 m = metrics if metrics else {}
                 version_history_values = []
                 for import_json in import_list_json:
                     version_history_values.append([
                         import_json['importName'], import_json['latestVersion'],
-                        spanner.COMMIT_TIMESTAMP, workflow_id,
-                        status,
+                        spanner.COMMIT_TIMESTAMP, workflow_id, status,
                         m.get('execution_time'),
                         m.get('node_count'),
                         m.get('edge_count'),
                         m.get('obs_count'),
-                        "ingestion-workflow:" + workflow_id
+                        m.get('ts_count'), "ingestion-workflow:" + workflow_id
                     ])
             else:
                 # TODO(gmechali): Delete this branch after schema is applied to prod.
-                columns = ["ImportName", "Version", "UpdateTimestamp", "Comment"]
+                columns = [
+                    "ImportName", "Version", "UpdateTimestamp", "Comment"
+                ]
                 version_history_values = []
                 for import_json in import_list_json:
                     version_history_values.append([
                         import_json['importName'], import_json['latestVersion'],
-                        spanner.COMMIT_TIMESTAMP, "ingestion-workflow:" + workflow_id
+                        spanner.COMMIT_TIMESTAMP,
+                        "ingestion-workflow:" + workflow_id
                     ])
 
             if version_history_values:
@@ -509,8 +464,7 @@ class SpannerClient:
         try:
             with self.database.snapshot() as snapshot:
                 results = snapshot.execute_sql(
-                    "SELECT 1 FROM ImportStatus WHERE State = 'RETRY' LIMIT 1"
-                )
+                    "SELECT 1 FROM ImportStatus WHERE State = 'RETRY' LIMIT 1")
                 return any(results)
         except Exception as e:
             logging.error(f'Error checking for retry imports: {e}')
@@ -582,14 +536,16 @@ class SpannerClient:
         import_name = import_name.split(':')[-1]
         logging.info(f"Updating version history for {import_name} to {version}")
 
-        enable_unique_version_schema = os.environ.get('ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
+        enable_unique_version_schema = os.environ.get(
+            'ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
 
         def _record(transaction: Transaction):
             if enable_unique_version_schema:
                 columns = [
                     "ImportName", "Version", "UpdateTimestamp",
-                    "WorkflowExecutionID", "Status", "ExecutionTime", "NodeCount",
-                    "EdgeCount", "ObservationCount", "Comment"
+                    "WorkflowExecutionID", "Status", "ExecutionTime",
+                    "NodeCount", "EdgeCount", "ObservationCount",
+                    "TimeSeriesCount", "Comment"
                 ]
                 m = metrics if metrics else {}
                 values = [[
@@ -599,13 +555,16 @@ class SpannerClient:
                     m.get('node_count'),
                     m.get('edge_count'),
                     m.get('obs_count'),
-                    comment
+                    m.get('ts_count'), comment
                 ]]
             else:
                 # TODO(gmechali): Delete this branch after schema is applied to prod.
-                columns = ["ImportName", "Version", "UpdateTimestamp", "Comment"]
-                values = [[import_name, version, spanner.COMMIT_TIMESTAMP, comment]]
-
+                columns = [
+                    "ImportName", "Version", "UpdateTimestamp", "Comment"
+                ]
+                values = [[
+                    import_name, version, spanner.COMMIT_TIMESTAMP, comment
+                ]]
             transaction.insert(table="ImportVersionHistory",
                                columns=columns,
                                values=values)
@@ -655,8 +614,9 @@ class SpannerClient:
         logging.info(f"Existing models: {existing_models}")
 
         required_tables = [
-            "Node", "Edge", "TimeSeries", "Observation", "ImportStatus", "IngestionHistory",
-            "ImportVersionHistory", "IngestionLock", "Cache", self.embedding_table
+            "Node", "Edge", "TimeSeries", "Observation", "ImportStatus",
+            "IngestionHistory", "ImportVersionHistory", "IngestionLock",
+            "Cache", self.embedding_table
         ]
         required_indexes = [
             "InEdge",
@@ -701,12 +661,11 @@ class SpannerClient:
             with open(schema_path, 'r') as f:
                 schema_content = f.read()
 
-            schema_content = Template(
-                schema_content).render(
-                    models=self.models,
-                    embedding_space=self.embedding_space,
-                    embedding_table=self.embedding_table,
-                    embedding_index=self.embedding_index)
+            schema_content = Template(schema_content).render(
+                models=self.models,
+                embedding_space=self.embedding_space,
+                embedding_table=self.embedding_table,
+                embedding_index=self.embedding_index)
 
             ddl_statements = parse_sql_to_statements(schema_content)
         except Exception as e:
@@ -718,9 +677,8 @@ class SpannerClient:
 
         try:
             admin_client = DatabaseAdminClient()
-            request = UpdateDatabaseDdlRequest(
-                database=database_path,
-                statements=ddl_statements)
+            request = UpdateDatabaseDdlRequest(database=database_path,
+                                               statements=ddl_statements)
             operation = admin_client.update_database_ddl(request=request)
             operation.result()
             logging.info("Database initialized successfully.")
@@ -734,11 +692,26 @@ class SpannerClient:
 
         def _seed(transaction: Transaction):
             candidates = {
-                "StatisticalVariable": ["StatisticalVariable", "StatisticalVariable", "StatisticalVariable", ["Class"], spanner.COMMIT_TIMESTAMP],
-                "StatVarGroup": ["StatVarGroup", "StatVarGroup", "StatVarGroup", ["Class"], spanner.COMMIT_TIMESTAMP],
-                "StatVarObservation": ["StatVarObservation", "StatVarObservation", "StatVarObservation", ["Class"], spanner.COMMIT_TIMESTAMP],
-                "Topic": ["Topic", "Topic", "Topic", ["Class"], spanner.COMMIT_TIMESTAMP],
-                "dc/g/Root": ["dc/g/Root", "Data Commons Variables", "dc/g/Root", ["StatVarGroup"], spanner.COMMIT_TIMESTAMP],
+                "StatisticalVariable": [
+                    "StatisticalVariable", "StatisticalVariable",
+                    "StatisticalVariable", ["Class"], spanner.COMMIT_TIMESTAMP
+                ],
+                "StatVarGroup": [
+                    "StatVarGroup", "StatVarGroup", "StatVarGroup", ["Class"],
+                    spanner.COMMIT_TIMESTAMP
+                ],
+                "StatVarObservation": [
+                    "StatVarObservation", "StatVarObservation",
+                    "StatVarObservation", ["Class"], spanner.COMMIT_TIMESTAMP
+                ],
+                "Topic": [
+                    "Topic", "Topic", "Topic", ["Class"],
+                    spanner.COMMIT_TIMESTAMP
+                ],
+                "dc/g/Root": [
+                    "dc/g/Root", "Data Commons Variables", "dc/g/Root",
+                    ["StatVarGroup"], spanner.COMMIT_TIMESTAMP
+                ],
             }
             subjects = list(candidates.keys())
             sql = "SELECT subject_id FROM Node WHERE subject_id IN UNNEST(@subjects)"
@@ -748,10 +721,15 @@ class SpannerClient:
             for row in transaction.execute_sql(sql, params, param_types):
                 existing.add(row[0])
 
-            values = [candidates[subj] for subj in subjects if subj not in existing]
+            values = [
+                candidates[subj] for subj in subjects if subj not in existing
+            ]
 
             if values:
-                columns = ["subject_id", "name", "value", "types", "last_update_timestamp"]
+                columns = [
+                    "subject_id", "name", "value", "types",
+                    "last_update_timestamp"
+                ]
                 transaction.insert(table="Node", columns=columns, values=values)
 
         try:
@@ -762,4 +740,3 @@ class SpannerClient:
         except Exception as e:
             logging.error(f"Error seeding database: {e}")
             raise
-
