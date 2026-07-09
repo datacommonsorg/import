@@ -94,4 +94,9 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   boolean getSkipWait();
 
   void setSkipWait(boolean skipWait);
+
+  @Description("Local Spanner emulator host override (e.g. localhost:15000)")
+  String getEmulatorHost();
+
+  void setEmulatorHost(String emulatorHost);
 }
