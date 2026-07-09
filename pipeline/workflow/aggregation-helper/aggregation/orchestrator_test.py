@@ -109,6 +109,20 @@ class TestOrchestratorScanning(unittest.TestCase):
         )
         self.assertEqual(len(dir_orchestrator.calculations), 3)
 
+    def test_init_options(self, mock_executor):
+        """Tests that run_sequential and poll_interval parameters are properly set and passed."""
+        custom_orchestrator = AggregationOrchestrator(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_dir=self.tmpdir.name,
+            run_sequential=True,
+            poll_interval=5
+        )
+        self.assertEqual(custom_orchestrator.poll_interval, 5)
+        self.assertTrue(custom_orchestrator.executor.run_sequential)
+
 
 @patch('aggregation.orchestrator.BigQueryExecutor')
 @patch('aggregation.orchestrator.PlaceAggregationGenerator')
