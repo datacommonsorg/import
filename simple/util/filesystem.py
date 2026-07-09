@@ -199,7 +199,7 @@ class File(_StoreWrapper):
       if create_if_missing:
         # Make parent dir if needed.
         if not self._store.root_path.startswith(_GCS_PATH_PREFIX):
-          parent_dir_path = fspath.dirname(path)
+          parent_dir_path = fspath.dirname(self.path)
           if not self.fs().isdir(parent_dir_path):
             self.fs().makedirs(parent_dir_path)
         # Make empty file.
