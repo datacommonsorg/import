@@ -171,7 +171,8 @@ class Dir(_StoreWrapper):
       if not self.fs().exists(new_path):
         self.fs().makedirs(new_path)
       if not self.fs().isdir(new_path):
-        raise ValueError(f"{self.full_path(path)} exists and is not a directory")
+        raise ValueError(
+            f"{self.full_path(path)} exists and is not a directory")
     return Dir(self._store, new_path)
 
   def open_file(self, path: str, create_if_missing: bool = True) -> "File":
