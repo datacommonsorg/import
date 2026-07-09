@@ -52,21 +52,6 @@ from aggregation import BigQueryExecutor, StatVarGroupGenerator
 class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for StatVarGroupGenerator."""
 
-    def get_generator(self) -> StatVarGroupGenerator:
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return StatVarGroupGenerator(
-            executor,
-            is_base_dc=self.is_base_dc,
-            max_iterations=2
-        )
-
     def test_stat_var_group_generation(self):
         """
         Tests the generation of StatVarGroups and hierarchical edges from SV specs.
@@ -79,9 +64,8 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           - A basic populationType SV 'Count_Person'.
           - An uncategorized basic SV 'Count_Thing'.
         """
-        generator = self.get_generator()
-        ns = generator.namespace
-        prov = generator.generated_provenance
+        ns = 'dc/' if self.is_base_dc else 'c/'
+        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
         
         # 1. Setup mock Vertical Node and Spec mappings
         self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
@@ -134,11 +118,16 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator
-        jobs = generator.run_all(import_names=['Schema'])
-        self.assertIsNotNone(jobs)
-        for job in jobs:
-            job.result()
+        calculations = [
+            {
+                "name": "StatVar Groups Generation",
+                "type": "STAT_VAR_GROUPS",
+                "stage": 1,
+                "input_imports": ["Schema"]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=["Schema"])
+        self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
