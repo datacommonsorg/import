@@ -105,7 +105,7 @@ CREATE TABLE Namespace (
     Uri STRING(2048) NOT NULL,        -- e.g., "https://example.org/browser/"
     IsLocal BOOL NOT NULL,            -- TRUE for local custom namespace, FALSE for remote
     ApiUrl STRING(2048),              -- HTTP endpoint of the remote Mixer (null if local)
-    ApiKey STRING(256),               -- Optional API key for authenticating with the remote Mixer
+    ApiKey STRING(2048),               -- Optional API key for authenticating with the remote Mixer
     Created TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE ), -- Creation timestamp
     Updated TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE )  -- Last updated timestamp
 ) PRIMARY KEY (NamespaceId);
