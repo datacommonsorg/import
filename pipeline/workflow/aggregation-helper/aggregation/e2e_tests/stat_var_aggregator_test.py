@@ -194,7 +194,7 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
                     "aggregations": [
                         {
                             "ancestor_sv_id": "SV_Parent",
-                            "source_svs": ["SV_A", "SV_B"],
+                            "source_sv_ids": ["SV_A", "SV_B"],
                             "skip_all_sources_present_check": True
                         }
                     ]
@@ -309,7 +309,7 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
                     "aggregations": [
                         {
                             "ancestor_sv_id": "SV_Parent",
-                            "source_svs": ["SV_A", "SV_B"],
+                            "source_sv_ids": ["SV_A", "SV_B"],
                             "skip_all_sources_present_check": False
                         }
                     ]
