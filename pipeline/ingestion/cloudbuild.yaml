@@ -40,6 +40,18 @@ steps:
       - '--env'
       - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.GraphIngestionPipeline'
     id: 'build-flex-template'
+    
+  # 3. Tag the image as latest
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'container'
+      - 'images'
+      - 'add-tag'
+      - '${_IMAGE_GCR_PATH}:${_VERSION}'
+      - '${_IMAGE_GCR_PATH}:latest'
+      - '--quiet'
+    id: 'tag-latest'
 
 availableSecrets:
   secretManager:
