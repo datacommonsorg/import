@@ -53,17 +53,6 @@ from aggregation import BigQueryExecutor, ProvenanceSummaryGenerator
 class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for ProvenanceSummaryGenerator."""
 
-    def get_generator(self) -> ProvenanceSummaryGenerator:
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return ProvenanceSummaryGenerator(executor, is_base_dc=self.is_base_dc)
-
     def test_provenance_summary_aggregation(self):
         """Tests run_provenance_summary_aggregation.
         
@@ -96,10 +85,16 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run generator
-        generator = self.get_generator()
-        jobs = generator.run_all([import_name])
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "Provenance Summary Aggregation",
+                "type": "PROVENANCE_SUMMARY",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results in Spanner Cache table
         with self.database.snapshot() as snapshot:
@@ -183,10 +178,16 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run generator
-        generator = self.get_generator()
-        jobs = generator.run_all([import_name])
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "Provenance Summary Duplicate Types",
+                "type": "PROVENANCE_SUMMARY",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results in Spanner Cache table
         with self.database.snapshot() as snapshot:
@@ -253,9 +254,16 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        generator = self.get_generator()
-        jobs = generator.run_all([import_name])
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "Provenance Summary Non-Numeric Values",
+                "type": "PROVENANCE_SUMMARY",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         with self.database.snapshot() as snapshot:
             query = """
@@ -328,9 +336,16 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        generator = self.get_generator()
-        jobs = generator.run_all([import_name])
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "Provenance Summary Dangling Observations",
+                "type": "PROVENANCE_SUMMARY",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         with self.database.snapshot() as snapshot:
             query = """
@@ -397,9 +412,16 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        generator = self.get_generator()
-        jobs = generator.run_all([import_1, import_2])
-        self.assertEqual(len(jobs), 1)
+        calculations = [
+            {
+                "name": "Provenance Summary Multiple Imports",
+                "type": "PROVENANCE_SUMMARY",
+                "stage": 1,
+                "input_imports": [import_1, import_2]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_1, import_2])
+        self.assertTrue(res.success)
         
         with self.database.snapshot() as snapshot:
             query = """
