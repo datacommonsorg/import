@@ -175,11 +175,12 @@ class AggregationIntegrationTestBase(unittest.TestCase):
         Serializes the calculation definitions to a temporary YAML file so that validate_config()
         verifies schema compliance when the orchestrator initializes, then runs the pipeline.
         """
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as tmp_file:
-            yaml.dump({"calculations": calculations}, tmp_file)
-            tmp_path = tmp_file.name
-
+        tmp_path = None
         try:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as tmp_file:
+                tmp_path = tmp_file.name
+                yaml.dump({"calculations": calculations}, tmp_file)
+
             orchestrator = AggregationOrchestrator(
                 connection_id=BQ_CONNECTION_ID,
                 project_id=PROJECT_ID,
@@ -193,6 +194,6 @@ class AggregationIntegrationTestBase(unittest.TestCase):
             )
             return orchestrator.run(active_imports=active_imports, dry_run=dry_run)
         finally:
-            if os.path.exists(tmp_path):
+            if tmp_path and os.path.exists(tmp_path):
                 os.remove(tmp_path)
 

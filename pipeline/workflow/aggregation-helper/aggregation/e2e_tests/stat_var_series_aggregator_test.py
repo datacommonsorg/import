@@ -81,19 +81,45 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run aggregator with both Round 1 and Round 2 configs
         calculations_config = [
             {
-                "name": f"Round {c['round']} Series Aggregation",
+                "name": "Round 1 Series Aggregation",
                 "type": "STAT_VAR_SERIES_AGGREGATION",
-                "stage": c["round"],
-                "input_imports": c["input_imports"],
-                "output_import": c["output_import"],
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": round1_output_import,
                 "stat_var_series_aggregation": {
-                    "aggr_funcs": c["aggr_funcs"]
+                    "aggr_funcs": [
+                        {"max_diff_across_measurement_methods": {}},
+                        {
+                            "diff_relative_to_base_date": {
+                                "dates": ["2015-07"]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Round 2 Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 2,
+                "input_imports": [round1_output_import],
+                "output_import": round2_output_import,
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "stats_across_models": {
+                                "sv_regex": "^DifferenceRelativeToBaseDate.*",
+                                "aggregation_ops": [
+                                    "OPERATOR_MEDIAN",
+                                    "OPERATOR_PERCENTILE10",
+                                    "OPERATOR_PERCENTILE90"
+                                ]
+                            }
+                        }
+                    ]
                 }
             }
-            for c in calculations
         ]
         res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name, round1_output_import])
         self.assertTrue(res.success)
