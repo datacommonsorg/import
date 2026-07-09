@@ -28,16 +28,16 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.apache.beam</groupId>
-                <artifactId>beam-sdks-java-google-cloud-platform-bom</artifactId>
-                <version>${beam.version}</version>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>libraries-bom-protobuf3</artifactId>
+                <version>26.74.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.google.cloud</groupId>
-                <artifactId>libraries-bom</artifactId>
-                <version>26.62.0</version>
+                <groupId>org.apache.beam</groupId>
+                <artifactId>beam-sdks-java-google-cloud-platform-bom</artifactId>
+                <version>${beam.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
