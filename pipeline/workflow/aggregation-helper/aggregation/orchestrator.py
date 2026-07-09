@@ -85,7 +85,9 @@ class AggregationOrchestrator:
         location: Optional[str] = None,
         is_base_dc: bool = True,
         config_dir: Optional[str] = None,
-        config_file_path: Optional[str] = None
+        config_file_path: Optional[str] = None,
+        run_sequential: bool = False,
+        poll_interval: int = 15
     ) -> None:
         """Initializes the orchestrator and loads/validates configuration files.
 
@@ -98,6 +100,8 @@ class AggregationOrchestrator:
             is_base_dc: Whether this is running in the base Data Commons environment.
             config_dir: Directory containing aggregation YAML configs (default: configs/).
             config_file_path: Optional path to single config file or directory.
+            run_sequential: Whether to run queries sequentially (default: False).
+            poll_interval: Polling interval in seconds when waiting for jobs (default: 15).
         """
         self.executor = BigQueryExecutor(
             connection_id=connection_id,
@@ -105,9 +109,10 @@ class AggregationOrchestrator:
             instance_id=instance_id,
             database_id=database_id,
             location=location,
-            run_sequential=False
+            run_sequential=run_sequential
         )
         self.is_base_dc = is_base_dc
+        self.poll_interval = poll_interval
 
         # Resolve paths for config directory and schema
         curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -253,7 +258,7 @@ class AggregationOrchestrator:
                 logging.info(f"Submitted {len(job_ids)} job(s) for Stage {stage_num} (import: '{single_import}'): {job_ids}")
                 self._wait_for_jobs(
                     job_ids=job_ids,
-                    poll_interval=15,
+                    poll_interval=self.poll_interval,
                     step_name=f"{step_type} (Stage {stage_num})",
                     single_import=single_import
                 )

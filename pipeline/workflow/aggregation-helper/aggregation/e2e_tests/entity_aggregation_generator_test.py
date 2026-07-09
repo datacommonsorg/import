@@ -55,17 +55,6 @@ from aggregation import BigQueryExecutor, EntityAggregationGenerator, EntityAggr
 class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for EntityAggregationGenerator."""
 
-    def get_generator(self) -> EntityAggregationGenerator:
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return EntityAggregationGenerator(executor, is_base_dc=self.is_base_dc)
-
     def test_aggregate_earthquakes(self):
         """Tests aggregation of EarthquakeEvents with magnitude constraint and multiple date formats."""
         import_name = 'EarthquakeUSGS'
@@ -101,21 +90,24 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent'],
-            location_props=['affectedPlace'],
-            date_prop='occurrenceTime',
-            agg_date_formats=['YYYY', 'YYYY-MM'],
-            constraints=[{'property': 'magnitude', 'min': 7, 'unit': 'M'}],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Earthquakes Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "occurrenceTime",
+                    "agg_date_formats": ["YYYY", "YYYY-MM"],
+                    "constraints": [{"property": "magnitude", "min": 7, "unit": "M"}],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -236,21 +228,24 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator (date_prop is omitted -> defaults to current date)
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent'],
-            location_props=['affectedPlace'],
-            date_prop='', 
-            agg_date_formats=['YYYY', 'YYYY-MM'],
-            constraints=[{'property': 'cause', 'wildcard': True}],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Wildcards and Default Date Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "",
+                    "agg_date_formats": ["YYYY", "YYYY-MM"],
+                    "constraints": [{"property": "cause", "wildcard": True}],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # Get current dates for assertion
         current_year = datetime.utcnow().strftime('%Y')
@@ -368,24 +363,27 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent'],
-            location_props=['affectedPlace'],
-            date_prop='occurrenceTime',
-            agg_date_formats=['YYYY'],
-            constraints=[
-                {'property': 'magnitude', 'min': 3, 'max': 5, 'unit': 'M'},
-                {'property': 'magnitudeType', 'value': 'MagnitudeMl'}
-            ],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Multiple Constraints and Bounds Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "occurrenceTime",
+                    "agg_date_formats": ["YYYY"],
+                    "constraints": [
+                        {"property": "magnitude", "min": 3, "max": 5, "unit": "M"},
+                        {"property": "magnitudeType", "value": "MagnitudeMl"}
+                    ],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -458,24 +456,27 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator with two alternative brackets on the same property `magnitude`
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent'],
-            location_props=['affectedPlace'],
-            date_prop='occurrenceTime',
-            agg_date_formats=['YYYY'],
-            constraints=[
-                {'property': 'magnitude', 'min': 3, 'max': 4, 'unit': 'M'},
-                {'property': 'magnitude', 'min': 4, 'max': 5, 'unit': 'M'}
-            ],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Multiple Slices Same Property Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "occurrenceTime",
+                    "agg_date_formats": ["YYYY"],
+                    "constraints": [
+                        {"property": "magnitude", "min": 3, "max": 4, "unit": "M"},
+                        {"property": "magnitude", "min": 4, "max": 5, "unit": "M"}
+                    ],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify both slices in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -551,21 +552,24 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent'],
-            location_props=['affectedPlace'],
-            date_prop='occurrenceTime',
-            agg_date_formats=['YYYY'],
-            constraints=[],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Filters LatLong Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "occurrenceTime",
+                    "agg_date_formats": ["YYYY"],
+                    "constraints": [],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -604,21 +608,24 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent'],
-            location_props=['affectedPlace'],
-            date_prop='occurrenceTime',
-            agg_date_formats=['YYYY'],
-            constraints=[],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Missing Date Safeguard Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "occurrenceTime",
+                    "agg_date_formats": ["YYYY"],
+                    "constraints": [],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -650,21 +657,24 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent'],
-            location_props=['affectedPlace'],
-            date_prop='occurrenceTime',
-            agg_date_formats=['YYYY'],
-            constraints=[],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Duplicate Edge Resilience Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "occurrenceTime",
+                    "agg_date_formats": ["YYYY"],
+                    "constraints": [],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify count is 1.0 (NOT 2.0)
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -697,21 +707,24 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator with multiple location_props
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent'],
-            location_props=['affectedPlace', 'location'],
-            date_prop='occurrenceTime',
-            agg_date_formats=['YYYY'],
-            constraints=[],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Multiple Location Props Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent"],
+                    "location_props": ["affectedPlace", "location"],
+                    "date_prop": "occurrenceTime",
+                    "agg_date_formats": ["YYYY"],
+                    "constraints": [],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify Observation count is 2.0
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -744,21 +757,24 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator with multiple entity_types
-        config = EntityAggregationConfig(
-            entity_types=['EarthquakeEvent', 'SeismicEvent'],
-            location_props=['affectedPlace'],
-            date_prop='occurrenceTime',
-            agg_date_formats=['YYYY'],
-            constraints=[],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Multiple Entity Types Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["EarthquakeEvent", "SeismicEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "occurrenceTime",
+                    "agg_date_formats": ["YYYY"],
+                    "constraints": [],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify two distinct SVs were created with respective populationTypes
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -805,24 +821,27 @@ class EntityAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run generator with negative range, upper bound, and unitless constraints
-        config = EntityAggregationConfig(
-            entity_types=['ColdTemperatureEvent'],
-            location_props=['affectedPlace'],
-            date_prop='startDate',
-            agg_date_formats=['YYYY'],
-            constraints=[
-                {'property': 'temperature', 'min': -10, 'max': 40, 'unit': 'Celsius'},
-                {'property': 'depth', 'max': 50, 'unit': 'Kilometer'}
-            ],
-            output_import=output_import,
-            input_imports=[import_name]
-        )
-
-        generator = self.get_generator()
-        jobs = generator.aggregate_entities([config])
-        self.assertEqual(len(jobs), 1)
-        jobs[0].result()
+        calculations = [
+            {
+                "name": "Negative Upper and Unitless Bounds Aggregation",
+                "type": "ENTITY_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "entity_aggregation": {
+                    "entity_types": ["ColdTemperatureEvent"],
+                    "location_props": ["affectedPlace"],
+                    "date_prop": "startDate",
+                    "agg_date_formats": ["YYYY"],
+                    "constraints": [
+                        {"property": "temperature", "min": -10, "max": 40, "unit": "Celsius"},
+                        {"property": "depth", "max": 50, "unit": "Kilometer"}
+                    ],
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify count is 1.0 (event_1 matched, event_2 excluded)
         with self.database.snapshot(multi_use=True) as snapshot:

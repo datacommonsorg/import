@@ -680,6 +680,63 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(values[failure_idx], True)
         self.assertEqual(values[comp_time_idx], spanner.COMMIT_TIMESTAMP)
 
+    @patch('google.cloud.spanner.Client')
+    def test_update_import_version_history(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+        import_list = [{"importName": "test_import", "latestVersion": "v1.2.3"}]
+        client.update_import_version_history(import_list, workflow_id="wf-123")
+
+        mock_transaction.insert.assert_called_once()
+        _, kwargs = mock_transaction.insert.call_args
+        self.assertEqual(kwargs['table'], 'ImportVersionHistory')
+        self.assertEqual(kwargs['columns'], [
+            "ImportName", "Version", "UpdateTimestamp",
+            "WorkflowExecutionID", "Status", "ExecutionTime", "NodeCount",
+            "EdgeCount", "ObservationCount", "Comment"
+        ])
+        self.assertEqual(kwargs['values'], [[
+            "test_import", "v1.2.3", spanner.COMMIT_TIMESTAMP, "wf-123",
+            None, None, None, None, None, "ingestion-workflow:wf-123"
+        ]])
+
+    @patch('google.cloud.spanner.Client')
+    def test_update_version_history(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+        client.update_version_history("test_import", "v1.2.3", "ingestion-workflow:wf-789", workflow_id="wf-789")
+
+        mock_transaction.insert.assert_called_once()
+        _, kwargs = mock_transaction.insert.call_args
+        self.assertEqual(kwargs['table'], 'ImportVersionHistory')
+        self.assertEqual(kwargs['columns'], [
+            "ImportName", "Version", "UpdateTimestamp",
+            "WorkflowExecutionID", "Status", "ExecutionTime", "NodeCount",
+            "EdgeCount", "ObservationCount", "Comment"
+        ])
+        self.assertEqual(kwargs['values'], [[
+            "test_import", "v1.2.3", spanner.COMMIT_TIMESTAMP, "wf-789",
+            None, None, None, None, None, "ingestion-workflow:wf-789"
+        ]])
+
 if __name__ == '__main__':
     unittest.main()
 

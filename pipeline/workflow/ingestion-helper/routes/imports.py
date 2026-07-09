@@ -63,6 +63,7 @@ class ImportStatusItem(BaseModel):
 class UpdateImportStatusRequest(BaseModel):
     imports: List[ImportStatusItem]
     jobId: Optional[str] = None
+    workflowId: Optional[str] = None
     executionTime: Optional[int] = None
     dataVolume: Optional[int] = None
     nextRefresh: Optional[str] = None
@@ -71,6 +72,8 @@ class UpdateImportVersionRequest(BaseModel):
     imports: List[str]
     version: str
     comment: str
+    workflowId: Optional[str] = None
+    jobId: Optional[str] = None
     override: Optional[bool] = False
     triggerIngestion: Optional[bool] = False
 
@@ -98,19 +101,20 @@ def update_ingestion_status(req: UpdateIngestionStatusRequest, spanner: SpannerC
     status_str = req.status.value if hasattr(req.status, 'value') else req.status
     spanner.update_ingestion_status(ingested_imports, req.workflowId, status_str)
 
+    metrics = None
+    if req.jobId and req.jobId != "N/A":
+        try:
+            metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
+        except Exception as e:
+            logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
+            metrics = None
+
     if not config.ENABLE_UNIQUE_INGESTION_RUNS:
-        metrics = None
-        if req.jobId and req.jobId != "N/A":
-            try:
-                metrics = import_utils.get_ingestion_metrics(config.PROJECT_ID, config.LOCATION, req.jobId)
-            except Exception as e:
-                logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
-                metrics = None
         spanner.update_ingestion_history_v1(req.workflowId, req.jobId, ingested_imports, metrics)
     
     if req.status == IngestionState.SUCCESS:
         import_list_dicts = [item.model_dump() for item in req.importList]
-        spanner.update_import_version_history(import_list_dicts, req.workflowId)
+        spanner.update_import_version_history(import_list_dicts, req.workflowId, status=status_str, metrics=metrics)
     return BaseResponse(status=ResponseStatus.OK)
 
 @router.post("/ingestion-history", response_model=BaseResponse)
@@ -183,8 +187,10 @@ def update_import_status(
             storage.update_provenance_file(item.importName, version)
             storage.update_import_summary(params)
             storage.update_version_file(item.importName, version, is_staging=False)
-            comment = f"import-workflow:{req.jobId or ''}"
-            spanner.update_version_history(item.importName, version, comment)
+            wf_id = req.workflowId or req.jobId
+            comment = f"import-workflow:{wf_id or ''}"
+            status_val = item.status.value if hasattr(item.status, 'value') else item.status
+            spanner.update_version_history(item.importName, version, comment, workflow_id=wf_id, status=status_val)
             
         spanner.update_import_status(params)
     return BaseResponse(status=ResponseStatus.OK)
@@ -217,7 +223,8 @@ def update_import_version(
         if params['status'] == 'STAGING':
             storage.update_provenance_file(import_name, version)
             storage.update_version_file(import_name, version, is_staging=False)
-            spanner.update_version_history(import_name, version, comment)
+            wf_id = req.workflowId or req.jobId
+            spanner.update_version_history(import_name, version, comment, workflow_id=wf_id, status="STAGING")
             logging.info(f"Updated import {import_name} to version {version}")
         else:
             logging.info(f"Skipping {import_name} version update")

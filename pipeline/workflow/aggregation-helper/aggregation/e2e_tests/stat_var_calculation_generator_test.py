@@ -54,18 +54,6 @@ from aggregation import BigQueryExecutor
 class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for StatVarCalculationGenerator."""
 
-    def get_generator(self):
-        from aggregation.stat_var_calculation_generator import StatVarCalculationGenerator
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return StatVarCalculationGenerator(executor, is_base_dc=self.is_base_dc)
-
     def test_calculate_divide_and_multiply(self):
         """Tests DIVIDE and MULTIPLY operations, and application of multipliers."""
         import_name = 'Energy_Import_Test'
@@ -131,13 +119,20 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             }
         ]
 
-        generator = self.get_generator()
-        jobs = generator.calculate_stat_vars(
-            calculations=calculations,
-            import_names=[import_name],
-            output_import_name=output_import_name
-        )
-        self.assertEqual(len(jobs), 1)
+        calculations_config = [
+            {
+                "name": "Divide and Multiply Calculation",
+                "type": "STAT_VAR_CALCULATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_calculation": {
+                    "calculations": calculations
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -232,9 +227,20 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             }
         ]
 
-        generator = self.get_generator()
-        jobs = generator.calculate_stat_vars(calculations, [import_name], output_import_name)
-        self.assertEqual(len(jobs), 1)
+        calculations_config = [
+            {
+                "name": "Add and Subtract Calculation",
+                "type": "STAT_VAR_CALCULATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_calculation": {
+                    "calculations": calculations
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -315,9 +321,20 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             }
         ]
 
-        generator = self.get_generator()
-        jobs = generator.calculate_stat_vars(calculations, [import_name], output_import_name)
-        self.assertEqual(len(jobs), 1)
+        calculations_config = [
+            {
+                "name": "Dynamic Name Resolution Calculation",
+                "type": "STAT_VAR_CALCULATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_calculation": {
+                    "calculations": calculations
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # Expected Dynamically Resolved Names:
         # SV: DifferenceRelativeToObservationalData_ + Mean_ (since SV1 starts with Temperature) + Temperature_SSP5 + _ + ModelX
@@ -374,9 +391,20 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             }
         ]
 
-        generator = self.get_generator()
-        jobs = generator.calculate_stat_vars(calculations, [import_name], output_import_name)
-        self.assertEqual(len(jobs), 1)
+        calculations_config = [
+            {
+                "name": "Facet Filtering Calculation",
+                "type": "STAT_VAR_CALCULATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_calculation": {
+                    "calculations": calculations
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results
         with self.database.snapshot() as snapshot:
@@ -418,9 +446,20 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             }
         ]
 
-        generator = self.get_generator()
-        jobs = generator.calculate_stat_vars(calculations, [import_name], output_import_name)
-        self.assertEqual(len(jobs), 1)
+        calculations_config = [
+            {
+                "name": "Zero Denominator Calculation",
+                "type": "STAT_VAR_CALCULATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_calculation": {
+                    "calculations": calculations
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -472,9 +511,20 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             }
         ]
 
-        generator = self.get_generator()
-        jobs = generator.calculate_stat_vars(calculations, [import_name], output_import_name)
-        self.assertEqual(len(jobs), 1)
+        calculations_config = [
+            {
+                "name": "Missing Inputs Alignment Calculation",
+                "type": "STAT_VAR_CALCULATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_calculation": {
+                    "calculations": calculations
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -517,9 +567,20 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             }
         ]
 
-        generator = self.get_generator()
-        jobs = generator.calculate_stat_vars(calculations, [import_name], output_import_name)
-        self.assertEqual(len(jobs), 1)
+        calculations_config = [
+            {
+                "name": "Extra Entities Alignment Calculation",
+                "type": "STAT_VAR_CALCULATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_calculation": {
+                    "calculations": calculations
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         # 3. Verify results
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -570,10 +631,20 @@ class StatVarCalculationGeneratorIntegrationTest(AggregationIntegrationTestBase)
             }
         ]
 
-        generator = self.get_generator()
-        # We pass both imports as active inputs to the run
-        jobs = generator.calculate_stat_vars(calculations, [import_alpha, import_beta], output_import_name)
-        self.assertEqual(len(jobs), 1)
+        calculations_config = [
+            {
+                "name": "Import Name Regex Filtering Calculation",
+                "type": "STAT_VAR_CALCULATION",
+                "stage": 1,
+                "input_imports": [import_alpha, import_beta],
+                "output_import": output_import_name,
+                "stat_var_calculation": {
+                    "calculations": calculations
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_alpha, import_beta])
+        self.assertTrue(res.success)
 
         # 3. Verify results
         with self.database.snapshot(multi_use=True) as snapshot:
