@@ -253,10 +253,10 @@ class TestMain(unittest.TestCase):
 
         # Verify spanner was called with the overridden comment containing caller
         mock_spanner_client.update_version_history.assert_any_call(
-            "import1", "ver_import1", "version-override:test-caller release-comment"
+            "import1", "ver_import1", "version-override:test-caller release-comment", workflow_id=None, status="STAGING"
         )
         mock_spanner_client.update_version_history.assert_any_call(
-            "import2", "ver_import2", "version-override:test-caller release-comment"
+            "import2", "ver_import2", "version-override:test-caller release-comment", workflow_id=None, status="STAGING"
         )
         self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
         self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)

@@ -53,17 +53,6 @@ from aggregation import BigQueryExecutor, StatVarSeriesAggregator
 class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for StatVarSeriesAggregator."""
 
-    def get_aggregator(self) -> StatVarSeriesAggregator:
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return StatVarSeriesAggregator(executor, is_base_dc=self.is_base_dc)
-
     def test_multiround_aggregation(self):
         """Tests multi-round aggregation: Round 1 (Anomalies) -> Round 2 (Ensembles)."""
         import_name = 'NASA_NEXGDDP_Test'
@@ -92,42 +81,48 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        # 2. Run aggregator with both Round 1 and Round 2 configs
-        aggregator = self.get_aggregator()
-        calculations = [
+        calculations_config = [
             {
-                "round": 1,
+                "name": "Round 1 Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
                 "input_imports": [import_name],
                 "output_import": round1_output_import,
-                "aggr_funcs": [
-                    {"max_diff_across_measurement_methods": {}},
-                    {
-                        "diff_relative_to_base_date": {
-                            "dates": ["2015-07"]
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {"max_diff_across_measurement_methods": {}},
+                        {
+                            "diff_relative_to_base_date": {
+                                "dates": ["2015-07"]
+                            }
                         }
-                    }
-                ]
+                    ]
+                }
             },
             {
-                "round": 2,
+                "name": "Round 2 Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 2,
                 "input_imports": [round1_output_import],
                 "output_import": round2_output_import,
-                "aggr_funcs": [
-                    {
-                        "stats_across_models": {
-                            "sv_regex": "^DifferenceRelativeToBaseDate.*",
-                            "aggregation_ops": [
-                                "OPERATOR_MEDIAN",
-                                "OPERATOR_PERCENTILE10",
-                                "OPERATOR_PERCENTILE90"
-                            ]
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "stats_across_models": {
+                                "sv_regex": "^DifferenceRelativeToBaseDate.*",
+                                "aggregation_ops": [
+                                    "OPERATOR_MEDIAN",
+                                    "OPERATOR_PERCENTILE10",
+                                    "OPERATOR_PERCENTILE90"
+                                ]
+                            }
                         }
-                    }
-                ]
+                    ]
+                }
             }
         ]
-        
-        aggregator.aggregate_series(calculations)
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name, round1_output_import])
+        self.assertTrue(res.success)
 
         # 3. Verify Round 1 Results in Spanner
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -240,47 +235,51 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
         self.flush_to_spanner()
         
         # 2. Run aggregator
-        aggregator = self.get_aggregator()
-        calculations = [
+        calculations_config = [
             {
-                "round": 1,
+                "name": "Round 1 Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
                 "input_imports": [import_name],
                 "output_import": output_import,
-                "aggr_funcs": [
-                    {
-                        "aggr_over_time": {
-                            "time_range": {
-                                "input_obs_period": "P1D",
-                                "output_obs_period": "P1M"
-                            },
-                            "sv_configs": [
-                                {
-                                    "sv_regex": "^Max_Temperature$",
-                                    "aggregation_op": "OPERATOR_MEAN",
-                                    "use_input_sv_for_output": True
-                                }
-                            ]
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "aggr_over_time": {
+                                "time_range": {
+                                    "input_obs_period": "P1D",
+                                    "output_obs_period": "P1M"
+                                },
+                                "sv_configs": [
+                                    {
+                                        "sv_regex": "^Max_Temperature$",
+                                        "aggregation_op": "OPERATOR_MEAN",
+                                        "use_input_sv_for_output": True
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "aggr_over_time": {
+                                "time_range": {
+                                    "input_obs_period": "P1D",
+                                    "output_obs_period": "P1Y"
+                                },
+                                "sv_configs": [
+                                    {
+                                        "sv_regex": "^Max_Temperature$",
+                                        "aggregation_op": "OPERATOR_MAX",
+                                        "use_input_sv_for_output": False
+                                    }
+                                ]
+                            }
                         }
-                    },
-                    {
-                        "aggr_over_time": {
-                            "time_range": {
-                                "input_obs_period": "P1D",
-                                "output_obs_period": "P1Y"
-                            },
-                            "sv_configs": [
-                                {
-                                    "sv_regex": "^Max_Temperature$",
-                                    "aggregation_op": "OPERATOR_MAX",
-                                    "use_input_sv_for_output": False
-                                }
-                            ]
-                        }
-                    }
-                ]
+                    ]
+                }
             }
         ]
-        aggregator.aggregate_series(calculations)
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify Results in Spanner
         prefix = "dc/base/" if self.is_base_dc else ""
@@ -344,34 +343,37 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run aggregator
-        aggregator = self.get_aggregator()
-        calculations = [
+        calculations_config = [
             {
-                "round": 1,
+                "name": "Threshold Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
                 "input_imports": [import_name],
                 "output_import": output_import,
-                "aggr_funcs": [
-                    {
-                        "count_threshold_exception_over_time": {
-                            "time_range": {
-                                "input_obs_period": "P1D",
-                                "output_obs_period": "P1Y"
-                            },
-                            "thresholds": [
-                                {
-                                    "sv_regex": "^Max_Temperature$",
-                                    "threshold_value": 300.0,
-                                    "comparison": "OPERATOR_GE",
-                                    "unit": "Kelvin"
-                                }
-                            ]
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "count_threshold_exception_over_time": {
+                                "time_range": {
+                                    "input_obs_period": "P1D",
+                                    "output_obs_period": "P1Y"
+                                },
+                                "thresholds": [
+                                    {
+                                        "sv_regex": "^Max_Temperature$",
+                                        "threshold_value": 300.0,
+                                        "comparison": "OPERATOR_GE",
+                                        "unit": "Kelvin"
+                                    }
+                                ]
+                            }
                         }
-                    }
-                ]
+                    ]
+                }
             }
         ]
-        aggregator.aggregate_series(calculations)
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify Results in Spanner
         prefix = "dc/base/" if self.is_base_dc else ""
@@ -419,24 +421,28 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        aggregator = self.get_aggregator()
-        calculations = [
+        calculations_config = [
             {
-                "round": 1,
+                "name": "Base Date Range Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
                 "input_imports": [import_name],
                 "output_import": output_import,
-                "aggr_funcs": [
-                    {
-                        "diff_relative_to_base_date": {
-                            "date_specs": [
-                                {"start_date": "2015-01", "end_date": "2015-12"}
-                            ]
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "diff_relative_to_base_date": {
+                                "date_specs": [
+                                    {"start_date": "2015-01", "end_date": "2015-12"}
+                                ]
+                            }
                         }
-                    }
-                ]
+                    ]
+                }
             }
         ]
-        aggregator.aggregate_series(calculations)
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             obs_query = """
@@ -462,37 +468,41 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        aggregator = self.get_aggregator()
-        calculations = [
+        calculations_config = [
             {
-                "round": 1,
+                "name": "Min and Sum Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
                 "input_imports": [import_name],
                 "output_import": output_import,
-                "aggr_funcs": [
-                    {
-                        "aggr_over_time": {
-                            "time_range": {
-                                "input_obs_period": "P1D",
-                                "output_obs_period": "P1Y"
-                            },
-                            "sv_configs": [
-                                {
-                                    "sv_regex": "^Max_Temperature$",
-                                    "aggregation_op": "OPERATOR_MIN",
-                                    "use_input_sv_for_output": False
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "aggr_over_time": {
+                                "time_range": {
+                                    "input_obs_period": "P1D",
+                                    "output_obs_period": "P1Y"
                                 },
-                                {
-                                    "sv_regex": "^Max_Temperature$",
-                                    "aggregation_op": "OPERATOR_SUM",
-                                    "use_input_sv_for_output": False
-                                }
-                            ]
+                                "sv_configs": [
+                                    {
+                                        "sv_regex": "^Max_Temperature$",
+                                        "aggregation_op": "OPERATOR_MIN",
+                                        "use_input_sv_for_output": False
+                                    },
+                                    {
+                                        "sv_regex": "^Max_Temperature$",
+                                        "aggregation_op": "OPERATOR_SUM",
+                                        "use_input_sv_for_output": False
+                                    }
+                                ]
+                            }
                         }
-                    }
-                ]
+                    ]
+                }
             }
         ]
-        aggregator.aggregate_series(calculations)
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             obs_min_query = """
@@ -530,33 +540,37 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        aggregator = self.get_aggregator()
-        calculations = [
+        calculations_config = [
             {
-                "round": 1,
+                "name": "Threshold Or Less Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
                 "input_imports": [import_name],
                 "output_import": output_import,
-                "aggr_funcs": [
-                    {
-                        "count_threshold_exception_over_time": {
-                            "time_range": {
-                                "input_obs_period": "P1D",
-                                "output_obs_period": "P1Y"
-                            },
-                            "thresholds": [
-                                {
-                                    "sv_regex": "^Max_Temperature$",
-                                    "threshold_value": 298.0,
-                                    "comparison": "OPERATOR_LE",
-                                    "unit": "Kelvin"
-                                }
-                            ]
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "count_threshold_exception_over_time": {
+                                "time_range": {
+                                    "input_obs_period": "P1D",
+                                    "output_obs_period": "P1Y"
+                                },
+                                "thresholds": [
+                                    {
+                                        "sv_regex": "^Max_Temperature$",
+                                        "threshold_value": 298.0,
+                                        "comparison": "OPERATOR_LE",
+                                        "unit": "Kelvin"
+                                    }
+                                ]
+                            }
                         }
-                    }
-                ]
+                    ]
+                }
             }
         ]
-        aggregator.aggregate_series(calculations)
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             obs_query = """
