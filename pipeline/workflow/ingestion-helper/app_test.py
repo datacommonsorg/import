@@ -268,7 +268,6 @@ class TestMain(unittest.TestCase):
     def test_start_ingestion_success(self, mock_requests_post):
         mock_storage_client = MagicMock()
         mock_storage_client.check_bucket_exists.return_value = True
-        mock_storage_client.check_file_exists.return_value = True
 
         app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
 
@@ -292,7 +291,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(response.json()["operationName"], "projects/test-project/locations/us-central1/operations/mock-operation")
 
             mock_storage_client.check_bucket_exists.assert_called_once_with("test-bucket")
-            mock_storage_client.check_file_exists.assert_called_once_with("test-bucket", "ingestion/input/config.json")
+
             mock_requests_post.assert_called_once_with(
                 "https://api.datacommons.org/v2/node",
                 json={"nodes": ["country/USA"], "property": "->name"},
@@ -307,7 +306,6 @@ class TestMain(unittest.TestCase):
     def test_start_ingestion_api_key_403_failure(self, mock_requests_post):
         mock_storage_client = MagicMock()
         mock_storage_client.check_bucket_exists.return_value = True
-        mock_storage_client.check_file_exists.return_value = True
 
         app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
 

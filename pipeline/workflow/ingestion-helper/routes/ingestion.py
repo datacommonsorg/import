@@ -47,7 +47,7 @@ class StartIngestionRequest(BaseModel):
         default=None,
         description=(
             "The GCS path/directory where config.json resides. If not provided, "
-            "it is auto-discovered from the job configuration."
+            "the job uses its own environment defaults."
         )
     )
     gcs_bucket: Optional[str] = Field(
@@ -135,54 +135,13 @@ def _resolve_job_name(job_name_in: Optional[str]) -> str:
     return job_name
 
 
-def _auto_discover_input_dir(full_job_name: str) -> Optional[str]:
-    """Queries Cloud Run configuration to extract GCS input directory folder."""
-    try:
-        logging.info(
-            f"Auto-discovering input directory from Cloud Run job: {full_job_name}"
-        )
-        base_credentials, _ = google.auth.default()
-        session = AuthorizedSession(base_credentials)
-        job_resp = session.get(
-            f"https://run.googleapis.com/v2/{full_job_name}",
-            timeout=10
-        )
-        if job_resp.status_code == 200:
-            job_data = job_resp.json()
-            containers = (
-                job_data.get("template", {})
-                .get("template", {})
-                .get("containers", [])
-            )
-            if containers:
-                env_vars = containers[0].get("env", [])
-                for env_var in env_vars:
-                    if env_var.get("name") == "GCS_INPUT_FOLDER":
-                        return env_var.get("value")
-                    elif env_var.get("name") == "INPUT_DIR":
-                        val = env_var.get("value")
-                        if val:
-                            parts = val.removeprefix("gs://").split("/", 1)
-                            if len(parts) > 1:
-                                return parts[1]
-        else:
-            logging.warning(
-                "Failed to fetch Cloud Run job details for auto-discovery "
-                f"(HTTP {job_resp.status_code}): {job_resp.text}"
-            )
-    except Exception as e:
-        logging.warning(
-            "Failed to auto-discover input directory from job config: "
-            f"{e}. Falling back to default."
-        )
-    return None
+
 
 
 def _resolve_gcs_input(
     req: StartIngestionRequest,
-    storage: StorageClient,
-    full_job_name: str
-) -> tuple[str, str]:
+    storage: StorageClient
+) -> tuple[str, Optional[str]]:
     """Resolves and validates the GCS bucket and input directory path."""
     bucket_name = req.gcs_bucket or os.environ.get("GCS_BUCKET_ID")
     if not bucket_name:
@@ -200,24 +159,7 @@ def _resolve_gcs_input(
             detail=f"GCS bucket '{bucket_name}' does not exist or is not accessible."
         )
 
-    input_dir = req.input_directory
-    if not input_dir and not is_emulator():
-        input_dir = _auto_discover_input_dir(full_job_name)
-
-    if not input_dir:
-        input_dir = "ingestion/input"
-
-    config_path = f"{input_dir.strip('/')}/config.json"
-    if not storage.check_file_exists(bucket_name, config_path):
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Required config file 'config.json' not found or not accessible "
-                f"at gs://{bucket_name}/{config_path}"
-            )
-        )
-
-    return bucket_name, input_dir
+    return bucket_name, req.input_directory
 
 
 def _validate_api_key(api_key: str, force: bool) -> None:
@@ -297,7 +239,7 @@ def _trigger_cloud_run_job(
     session: AuthorizedSession,
     full_job_name: str,
     bucket_name: str,
-    input_dir: str,
+    input_dir: Optional[str],
     imports: Optional[str]
 ) -> str:
     """Triggers job execution via Cloud Run Admin API and returns operation name."""
@@ -305,7 +247,8 @@ def _trigger_cloud_run_job(
     args = ["--mode=dcpbridge"]
     if imports:
         args.append(f"--imports={imports}")
-    args.append(f"--input_directory=gs://{bucket_name}/{input_dir}")
+    if input_dir is not None and input_dir.strip():
+        args.append(f"--input_directory=gs://{bucket_name}/{input_dir.strip('/')}")
 
     json_payload = {"overrides": {"containerOverrides": [{"args": args}]}}
     try:
@@ -333,7 +276,7 @@ def start_ingestion(
 ):
     """Validates parameters, checks pre-conditions, and triggers the Cloud Run job."""
     full_job_name = _resolve_job_name(req.job_name)
-    bucket_name, input_dir = _resolve_gcs_input(req, storage, full_job_name)
+    bucket_name, input_dir = _resolve_gcs_input(req, storage)
 
     api_key = (
         os.environ.get("DC_API_KEY") or
@@ -372,7 +315,6 @@ def start_ingestion(
             detail=f"Failed to load GCP credentials: {e}"
         )
 
-    _check_active_executions(session, full_job_name)
     operation_name = _trigger_cloud_run_job(
         session, full_job_name, bucket_name, input_dir, req.imports
     )
