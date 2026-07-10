@@ -19,7 +19,6 @@ from enum import StrEnum
 import json
 import logging
 import os
-import re
 import threading
 from typing import Optional
 
@@ -252,9 +251,13 @@ class Runner:
     workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
     temp_location = os.getenv("TEMP_LOCATION", "")
 
-    if not workflow_id or not temp_location.startswith("gs://"):
+    if not workflow_id:
+      logging.warning("WORKFLOW_EXECUTION_ID not set. Skipping GCS handshake.")
+      return
+
+    if not temp_location.startswith("gs://"):
       logging.warning(
-          "WORKFLOW_EXECUTION_ID not set or TEMP_LOCATION (%s) is not a GCS path. Skipping GCS handshake.",
+          "TEMP_LOCATION (%s) is not a GCS path. Skipping GCS handshake.",
           temp_location)
       return
 
