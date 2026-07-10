@@ -258,16 +258,8 @@ class Runner:
           temp_location)
       return
 
-    raw_import_name = "_".join(item["importName"] for item in self.trigger_workflow_info)
-    sanitized_import_name = re.sub(r'[^a-zA-Z0-9_-]', '_', raw_import_name)[:64]
-
     handshake_payload = {
-        "spannerInstanceId": os.getenv("GCP_SPANNER_INSTANCE_ID", ""),
-        "spannerDatabaseId": os.getenv("GCP_SPANNER_DATABASE_NAME", ""),
-        "importName": sanitized_import_name,
-        "importList": json.dumps(self.trigger_workflow_info),
-        "tempLocation": temp_location,
-        "region": os.getenv("REGION", "")
+        "importList": json.dumps(self.trigger_workflow_info)
     }
 
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
