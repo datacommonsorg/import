@@ -289,7 +289,7 @@ public class GraphReaderTest {
                 .provenance("dc/base/Test")
                 .build());
 
-    List<Edge> actualEdges = GraphReader.graphToEdges(graph, "dc/base/Default");
+    List<Edge> actualEdges = GraphReader.graphToEdges(graph, "dc/base/Test");
 
     // Sort both lists for consistent comparison
     Comparator<Edge> edgeComparator =
@@ -477,7 +477,7 @@ public class GraphReaderTest {
             .entity1("country/USA")
             .extraEntities(List.of("country/FRA"))
             .variableMeasured("FinancialTrade")
-            .importName("provenance/TestImport")
+            .importName("test_import")
             .isBaseDc(true)
             .build();
 

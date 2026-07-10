@@ -324,7 +324,13 @@ public class PipelineUtils {
                       OutputReceiver<KV<String, PropertyValues>> receiver) {
                     Map<String, PropertyValues> nodes = graph.getNodesMap();
                     for (Map.Entry<String, PropertyValues> node : nodes.entrySet()) {
-                      receiver.output(KV.of(node.getKey(), node.getValue()));
+                      String dcid =
+                          McfUtil.stripNamespace(
+                              GraphUtils.getPropVal(
+                                  node.getValue(), GraphUtils.Property.dcid.name()));
+                      String normalizedKey =
+                          !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(node.getKey());
+                      receiver.output(KV.of(normalizedKey, node.getValue()));
                     }
                   }
                 }));
@@ -362,18 +368,19 @@ public class PipelineUtils {
                     ListMultimap<String, TypedValue> allProps = ArrayListMultimap.create();
                     for (PropertyValues pv : accumulator) {
                       for (Map.Entry<String, Values> entry : pv.getPvsMap().entrySet()) {
-                        allProps.putAll(entry.getKey(), entry.getValue().getTypedValuesList());
+                        String propertyKey = McfUtil.stripNamespace(entry.getKey());
+                        allProps.putAll(propertyKey, entry.getValue().getTypedValuesList());
                       }
                     }
 
                     for (String property : allProps.keySet()) {
                       List<TypedValue> tvList = allProps.get(property);
 
-                      // Deduplicate values based on getValue()
+                      // Deduplicate values based on stripNamespace(getValue())
                       Set<String> seenValues = new HashSet<>();
                       List<TypedValue> dedupedList = new ArrayList<>();
                       for (TypedValue tv : tvList) {
-                        if (seenValues.add(tv.getValue())) {
+                        if (seenValues.add(McfUtil.stripNamespace(tv.getValue()))) {
                           dedupedList.add(tv);
                         }
                       }
