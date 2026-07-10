@@ -306,7 +306,7 @@ class StatVarGroupGenerator:
             CAST(NULL AS STRING) AS node2,
             '' AS node2name,
             IF(ARRAY_LENGTH(Constraints.pvs) > 0, 
-              CONCAT(namespace, 'g/', PopType.object_id, '_', REPLACE(REPLACE(ARRAY_TO_STRING(Constraints.pvs, '_'), ' ', ''), '=', '-')), 
+              CONCAT(namespace, 'g/', PopType.object_id, '_', REPLACE(REPLACE(REPLACE(ARRAY_TO_STRING(Constraints.pvs, '_'), ' ', ''), '-', ''), '=', '-')),
               IF(NOT (should_filter_basic_population_type AND IsBasicPopulationType(PopType.object_id)),
                 CONCAT(namespace, 'g/', PopType.object_id), CAST(NULL AS STRING))
             ) AS node3,
@@ -381,17 +381,20 @@ class StatVarGroupGenerator:
               node3 AS node1,
               -- Remove one PV from node1 to produce node2.
               CONCAT(namespace, 'g/', populationType, '_', ARRAY_TO_STRING(ARRAY(
-                SELECT IF(unnest_idx = target_idx, REPLACE(SPLIT(unnested, ' = ')[OFFSET(0)], ' ', ''), REPLACE(REPLACE(unnested, ' ', ''), '=', '-'))
-                FROM UNNEST(attributes) AS unnested WITH OFFSET AS unnest_idx
+                SELECT IF(a_idx = target_idx, 
+                  REPLACE(REPLACE(SPLIT(a, ' = ')[OFFSET(0)], ' ', ''), '-', ''),
+                  REPLACE(REPLACE(REPLACE(a, ' ', ''), '-', ''), '=', '-')
+                )
+                FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx
               ), '_')) AS node2,
               CONCAT(FormatName(populationType), ' With ', ARRAY_TO_STRING(ARRAY(
-                SELECT IF(unnest_idx = target_idx, SPLIT(unnested, ' = ')[OFFSET(0)], unnested)
-                FROM UNNEST(attributes) AS unnested WITH OFFSET AS unnest_idx
+                SELECT IF(a_idx = target_idx, SPLIT(a, ' = ')[OFFSET(0)], a)
+                FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx
               ), ', ')) AS node2name,
               -- Remove corresponding P from node2 to produce node3.
               IF(ARRAY_LENGTH(attributes) > 1, 
                 CONCAT(namespace, 'g/', populationType, '_', ARRAY_TO_STRING(ARRAY( 
-                  SELECT REPLACE(REPLACE(a, ' ', ''), '=', '-') 
+                  SELECT REPLACE(REPLACE(REPLACE(a, ' ', ''), '-', ''), '=', '-') 
                   FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx WHERE a_idx != target_idx 
                 ), '_')),
                 IF(NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType)), 

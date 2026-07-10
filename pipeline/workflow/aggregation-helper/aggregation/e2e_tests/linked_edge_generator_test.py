@@ -51,17 +51,6 @@ from aggregation import BigQueryExecutor, LinkedEdgeGenerator
 class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration tests for LinkedEdgeGenerator."""
 
-    def get_generator(self) -> LinkedEdgeGenerator:
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return LinkedEdgeGenerator(executor, is_base_dc=self.is_base_dc)
-
     def test_linked_contained_in_place(self):
         """Tests run_linked_contained_in_place.
         
@@ -79,10 +68,16 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run generator
-        generator = self.get_generator()
-        jobs = generator.run_linked_contained_in_place([import_name])
-        self.assertIsNotNone(jobs)
+        calculations = [
+            {
+                "name": "Linked Edges ContainedInPlace",
+                "type": "LINKED_EDGES",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results in Spanner
         with self.database.snapshot() as snapshot:
@@ -118,10 +113,16 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run generator
-        generator = self.get_generator()
-        job = generator.run_linked_member_of([import_name])
-        self.assertIsNotNone(job)
+        calculations = [
+            {
+                "name": "Linked Edges MemberOf",
+                "type": "LINKED_EDGES",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results
         with self.database.snapshot() as snapshot:
@@ -156,10 +157,16 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run generator
-        generator = self.get_generator()
-        job = generator.run_linked_member([import_name])
-        self.assertIsNotNone(job)
+        calculations = [
+            {
+                "name": "Linked Edges Member",
+                "type": "LINKED_EDGES",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results
         with self.database.snapshot() as snapshot:
@@ -191,10 +198,16 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 2. Run generator
-        generator = self.get_generator()
-        jobs = generator.run_linked_contained_in_place([import_name])
-        self.assertIsNotNone(jobs)
+        calculations = [
+            {
+                "name": "Linked Edges Cycle",
+                "type": "LINKED_EDGES",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 3. Verify results
         with self.database.snapshot() as snapshot:
@@ -228,10 +241,16 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
         
-        # 3. Run generator
-        generator = self.get_generator()
-        jobs = generator.run_linked_contained_in_place([import_name])
-        self.assertIsNotNone(jobs)
+        calculations = [
+            {
+                "name": "Linked Edges Idempotency",
+                "type": "LINKED_EDGES",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
         
         # 4. Verify no new edges were written (only the 1 pre-inserted edge exists)
         with self.database.snapshot() as snapshot:

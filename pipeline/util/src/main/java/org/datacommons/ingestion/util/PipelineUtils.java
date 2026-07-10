@@ -2,7 +2,9 @@ package org.datacommons.ingestion.util;
 
 import static org.apache.beam.sdk.io.Compression.GZIP;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ListMultimap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,7 +13,6 @@ import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,13 @@ import org.apache.beam.sdk.values.TupleTagList;
 import org.datacommons.ingestion.data.Encode;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
+import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.util.GraphUtils;
+import org.datacommons.util.McfUtil;
+import org.datacommons.util.Vocabulary;
 import org.datacommons.util.parser.jsonld.JsonLdParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -355,33 +359,50 @@ public class PipelineUtils {
                   @Override
                   public PropertyValues extractOutput(List<PropertyValues> accumulator) {
                     PropertyValues.Builder combined = PropertyValues.newBuilder();
-                    Map<String, Values> props = new HashMap<>();
+                    ListMultimap<String, TypedValue> allProps = ArrayListMultimap.create();
                     for (PropertyValues pv : accumulator) {
                       for (Map.Entry<String, Values> entry : pv.getPvsMap().entrySet()) {
-                        String property = entry.getKey();
-                        Values values = entry.getValue();
-                        if (!props.containsKey(property)) {
-                          props.put(property, values);
-                        } else {
-                          Values v = props.get(property);
-                          Values.Builder val = Values.newBuilder();
-                          val.addAllTypedValues(v.getTypedValuesList());
-                          val.addAllTypedValues(values.getTypedValuesList());
-                          // Add logic to remove duplicates from val
-                          Set<String> seenValues = new HashSet<>();
-                          Values.Builder uniqueVal = Values.newBuilder();
-                          for (org.datacommons.proto.Mcf.McfGraph.TypedValue tv :
-                              val.getTypedValuesList()) {
-                            if (!seenValues.contains(tv.getValue())) {
-                              uniqueVal.addTypedValues(tv);
-                              seenValues.add(tv.getValue());
-                            }
-                          }
-                          props.put(property, uniqueVal.build());
-                        }
+                        allProps.putAll(entry.getKey(), entry.getValue().getTypedValuesList());
                       }
                     }
-                    combined.putAllPvs(props);
+
+                    for (String property : allProps.keySet()) {
+                      List<TypedValue> tvList = allProps.get(property);
+
+                      // Deduplicate values based on getValue()
+                      Set<String> seenValues = new HashSet<>();
+                      List<TypedValue> dedupedList = new ArrayList<>();
+                      for (TypedValue tv : tvList) {
+                        if (seenValues.add(tv.getValue())) {
+                          dedupedList.add(tv);
+                        }
+                      }
+
+                      // Special logic for typeOf: if default value Place is present along with
+                      // other non-default values, drop Place.
+                      if (McfUtil.stripNamespace(property).equals(Vocabulary.TYPE_OF)) {
+                        boolean hasNonDefault = false;
+                        for (TypedValue tv : dedupedList) {
+                          if (!McfUtil.stripNamespace(tv.getValue())
+                              .equals(Vocabulary.PLACE_TYPE)) {
+                            hasNonDefault = true;
+                            break;
+                          }
+                        }
+                        if (hasNonDefault) {
+                          dedupedList.removeIf(
+                              tv ->
+                                  McfUtil.stripNamespace(tv.getValue())
+                                      .equals(Vocabulary.PLACE_TYPE));
+                        }
+                      }
+
+                      dedupedList.sort(Comparator.comparing(TypedValue::getValue));
+
+                      Values.Builder uniqueVal = Values.newBuilder();
+                      uniqueVal.addAllTypedValues(dedupedList);
+                      combined.putPvs(property, uniqueVal.build());
+                    }
                     return combined.build();
                   }
                 }));

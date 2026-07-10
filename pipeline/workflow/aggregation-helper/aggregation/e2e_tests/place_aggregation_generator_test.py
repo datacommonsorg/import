@@ -53,17 +53,6 @@ from aggregation import BigQueryExecutor, PlaceAggregationGenerator
 class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration tests for PlaceAggregationGenerator."""
 
-    def get_generator(self) -> PlaceAggregationGenerator:
-        executor = BigQueryExecutor(
-            BQ_CONNECTION_ID,
-            PROJECT_ID,
-            SPANNER_INSTANCE_ID,
-            SPANNER_DATABASE_ID,
-            location=BQ_LOCATION,
-            run_sequential=True
-        )
-        return PlaceAggregationGenerator(executor, is_base_dc=self.is_base_dc)
-
     def add_place(self, place_id, place_type, parent_id=None, name=None, import_name='USFed_ConstantMaturityRates_Test'):
         """Adds a place node and its basic topology (typeOf and containment) to mock lists."""
         self.add_node(place_id, name, types=[place_type])
@@ -101,9 +90,22 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        generator = self.get_generator()
-        job = generator.aggregate_places(import_names=[import_name], source_type='County', destination_type='State')
-        self.assertIsNotNone(job)
+        calculations = [
+            {
+                "name": "County to State Place Rollup",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggState",
+                "place_aggregation": {
+                    "from_place_types": "County",
+                    "to_place_types": "State",
+                    "allow_multiple_to_places": False
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # A. Verify the new parent TimeSeries was dynamically created for Count_Person!
@@ -192,9 +194,22 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        generator = self.get_generator()
-        job = generator.aggregate_places(import_names=[import_name], source_type='State', destination_type='Country')
-        self.assertIsNotNone(job)
+        calculations = [
+            {
+                "name": "State to Country Place Rollup",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggCountry",
+                "place_aggregation": {
+                    "from_place_types": "State",
+                    "to_place_types": "Country",
+                    "allow_multiple_to_places": False
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # A. Verify Country TimeSeries exists
@@ -242,9 +257,22 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        generator = self.get_generator()
-        job = generator.aggregate_places(import_names=[import_name], source_type='Commune', destination_type='Department')
-        self.assertIsNotNone(job)
+        calculations = [
+            {
+                "name": "Commune to Department Place Rollup",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggDepartment",
+                "place_aggregation": {
+                    "from_place_types": "Commune",
+                    "to_place_types": "Department",
+                    "allow_multiple_to_places": False
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # Verify Paris (place/FR_75)
@@ -295,9 +323,22 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        generator = self.get_generator()
-        job = generator.aggregate_places(import_names=[import_name], source_type='County', destination_type='State')
-        self.assertIsNotNone(job)
+        calculations = [
+            {
+                "name": "County to State Place Rollup Multi-Facet",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggState",
+                "place_aggregation": {
+                    "from_place_types": "County",
+                    "to_place_types": "State",
+                    "allow_multiple_to_places": False
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # A. Verify Facet 1 (5yr) was created
@@ -365,9 +406,22 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
-        generator = self.get_generator()
-        job = generator.aggregate_places(import_names=[import_name], source_type='County', destination_type='State')
-        self.assertIsNotNone(job)
+        calculations = [
+            {
+                "name": "County to State Place Rollup Missing Parent",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggState",
+                "place_aggregation": {
+                    "from_place_types": "County",
+                    "to_place_types": "State",
+                    "allow_multiple_to_places": False
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # California TimeSeries must exist
@@ -418,14 +472,22 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         # --- TEST 1: allow_multiple_to_places = False (DEFAULT) ---
         # SF (800k) should ONLY roll up to CA (first lexicographically: geoId/06).
         # CA should be 2.4M. NY (geoId/36) should get 0 (no TimeSeries/Observation written for NY).
-        generator = self.get_generator()
-        job1 = generator.aggregate_places(
-            import_names=[import_name], 
-            source_type='County', 
-            destination_type='State',
-            allow_multiple_to_places=False
-        )
-        self.assertIsNotNone(job1)
+        calculations1 = [
+            {
+                "name": "County to State Allow Multiple False",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggState",
+                "place_aggregation": {
+                    "from_place_types": "County",
+                    "to_place_types": "State",
+                    "allow_multiple_to_places": False
+                }
+            }
+        ]
+        res1 = self.run_orchestrator(calculations=calculations1, active_imports=[import_name])
+        self.assertTrue(res1.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # California TimeSeries and Observation must exist (2.4M)
@@ -479,13 +541,22 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         # SF (800k) should roll up to BOTH CA and NY.
         # CA should be 2.4M (SF 800k + Alameda 1.6M).
         # NY should be 800k (SF 800k).
-        job2 = generator.aggregate_places(
-            import_names=[import_name], 
-            source_type='County', 
-            destination_type='State',
-            allow_multiple_to_places=True
-        )
-        self.assertIsNotNone(job2)
+        calculations2 = [
+            {
+                "name": "County to State Allow Multiple True",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggState",
+                "place_aggregation": {
+                    "from_place_types": "County",
+                    "to_place_types": "State",
+                    "allow_multiple_to_places": True
+                }
+            }
+        ]
+        res2 = self.run_orchestrator(calculations=calculations2, active_imports=[import_name])
+        self.assertTrue(res2.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # California (should be 2.4M)
@@ -548,11 +619,37 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.flush_to_spanner()
 
-        generator = self.get_generator()
-        
-        # --- ROUND 1: County -> State ---
-        job1 = generator.aggregate_places(import_names=[import_name], source_type='County', destination_type='State')
-        self.assertIsNotNone(job1)
+        calculations = [
+            {
+                "name": "Round 1: County -> State",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggState",
+                "place_aggregation": {
+                    "from_place_types": "County",
+                    "to_place_types": "State",
+                    "allow_multiple_to_places": False
+                }
+            },
+            {
+                "name": "Round 2: State -> Country",
+                "type": "PLACE_AGGREGATION",
+                "stage": 2,
+                "input_imports": [f"{import_name}_AggState"],
+                "output_import": f"{import_name}_AggState_AggCountry",
+                "place_aggregation": {
+                    "from_place_types": "State",
+                    "to_place_types": "Country",
+                    "allow_multiple_to_places": False
+                }
+            }
+        ]
+        res = self.run_orchestrator(
+            calculations=calculations,
+            active_imports=[import_name, f"{import_name}_AggState"]
+        )
+        self.assertTrue(res.success)
 
         # Verify Round 1 output exists (California should now have a TimeSeries and a 2.4M Observation)
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -583,10 +680,7 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(res_ca), 1)
             self.assertAlmostEqual(float(res_ca[0][0]), 2400000.0)
 
-        # --- ROUND 2: State -> Country ---
-        # We must pass the output import name of Round 1 as the input to Round 2!
-        job2 = generator.aggregate_places(import_names=[f"{import_name}_AggState"], source_type='State', destination_type='Country')
-        self.assertIsNotNone(job2)
+        # --- ROUND 2 verification (both rounds were executed sequentially by orchestrator above) ---
 
         # Verify Round 2 output exists (USA should now have a TimeSeries and a 2.4M Observation)
         with self.database.snapshot(multi_use=True) as snapshot:
