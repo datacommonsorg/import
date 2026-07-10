@@ -261,18 +261,16 @@ class Runner:
           temp_location)
       return
 
-    handshake_payload = {
-        "importList": json.dumps(self.trigger_workflow_info)
-    }
+    handshake_payload = {"importList": json.dumps(self.trigger_workflow_info)}
 
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
     logging.info(
         "WORKFLOW_EXECUTION_ID set. Writing preprocessor result to GCS handshake path: %s",
         output_json_path)
-    with create_store(output_json_path, create_if_missing=True,
+    with create_store(output_json_path,
+                      create_if_missing=True,
                       treat_as_file=True) as store:
-      store.as_file().write(
-          json.dumps(handshake_payload, indent=2))
+      store.as_file().write(json.dumps(handshake_payload, indent=2))
     logging.info("Successfully wrote preprocessor result to GCS.")
 
   def _read_config_from_file(self,
