@@ -46,6 +46,7 @@ class TestSpannerClient(unittest.TestCase):
             ["table", "ImportVersionHistory"],
             ["table", "IngestionLock"],
             ["table", "Cache"],
+            ["table", "Namespace"],
             ["table", "VariableMetadata"],
             ["index", "NodeEmbeddingIndex"],
             ["index", "InEdge"],

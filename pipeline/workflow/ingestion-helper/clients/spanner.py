@@ -60,15 +60,29 @@ class SpannerClient:
                  models: list[dict] = None,
                  embedding_space: int = 768,
                  embedding_table: str = "NodeEmbedding",
-                 embedding_index: str = "NodeEmbeddingIndex"):
+                 embedding_index: str = "NodeEmbeddingIndex",
+                 emulator_host: str = None):
         """Initializes a Spanner client and connects to a specific database."""
+        client_options = {"api_endpoint": "spanner.googleapis.com"}
+        credentials = None
+        if emulator_host:
+            if os.environ.get("ENVIRONMENT", "").lower() == "production":
+                raise ValueError(
+                    "CRITICAL: Emulator settings detected in production environment!"
+                )
+            from google.auth.credentials import AnonymousCredentials
+
+            credentials = AnonymousCredentials()
+            client_options["api_endpoint"] = emulator_host
+        else:
+            client_options["quota_project_id"] = project_id
+
         spanner_client = spanner.Client(
             project=project_id,
-            client_options={
-                'quota_project_id': project_id,
-                'api_endpoint': 'spanner.googleapis.com'
-            },
-            disable_builtin_metrics=True)
+            credentials=credentials,
+            client_options=client_options,
+            disable_builtin_metrics=True,
+        )
         instance = spanner_client.instance(instance_id)
         database = instance.database(database_id)
         logging.info(f"Successfully initialized database: {database.name}")
