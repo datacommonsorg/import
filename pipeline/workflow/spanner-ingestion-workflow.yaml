@@ -136,6 +136,7 @@ run_aggregation_job:
                 - args:
                     - "--import_list"
                     - ${json.encode_to_string(import_list)}
+                    - "--no-dry_run"
           connector_params:
             timeout: 21600
         result: aggregation_response
