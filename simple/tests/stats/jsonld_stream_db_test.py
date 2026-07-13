@@ -14,6 +14,7 @@
 
 import json
 import os
+import shutil
 import tempfile
 import unittest
 from unittest import mock
@@ -60,22 +61,26 @@ class TestJsonLdStreamDb(unittest.TestCase):
                           import_names=["test_import"],
                           nodes=self.mock_nodes)
 
-      # Insert observations
-      df = pd.DataFrame([("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
-                        columns=[
-                            "entity", "variable", "date", "value", "provenance",
-                            "unit", "scaling_factor", "measurement_method",
-                            "observation_period", "properties"
-                        ])
-      mock_file = mock.Mock(path="test_import/data.csv")
-      db.insert_observations(df, mock_file)
-      self.assertEqual(len(db._obs_records["test_import"]), 1)
-      self.assertEqual(db._obs_records["test_import"][0][0], "e1")
+      try:
+        # Insert observations
+        df = pd.DataFrame([("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
+                          columns=[
+                              "entity", "variable", "date", "value", "provenance",
+                              "unit", "scaling_factor", "measurement_method",
+                              "observation_period", "properties"
+                          ])
+        mock_file = mock.Mock(path="test_import/data.csv")
+        db.insert_observations(df, mock_file)
+        self.assertEqual(len(db._obs_records["test_import"]), 1)
+        self.assertEqual(db._obs_records["test_import"][0][0], "e1")
 
-      # Insert triples
-      triples = [Triple("sub1", "pred1", object_value="val1")]
-      db.insert_triples(triples, mock_file)
-      self.assertEqual(len(db._triples["test_import"]), 1)
+        # Insert triples
+        triples = [Triple("sub1", "pred1", object_value="val1")]
+        db.insert_triples(triples, mock_file)
+        node_shard = os.path.join(db.temp_local_dir, "test_import", "node-00000.jsonld")
+        self.assertTrue(os.path.exists(node_shard))
+      finally:
+        shutil.rmtree(db.temp_local_dir, ignore_errors=True)
 
   def test_commit_and_close_local(self):
     with tempfile.TemporaryDirectory() as temp_dir:

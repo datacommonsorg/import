@@ -23,6 +23,7 @@ import json
 import logging
 import multiprocessing
 import os
+import shutil
 import tempfile
 import threading
 
@@ -284,6 +285,7 @@ class JsonLdStreamDb(Db):
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
     self.lock = threading.Lock()
+    self.temp_local_dir = tempfile.mkdtemp()
     self._obs_records = defaultdict(list)
     self._triples = defaultdict(list)
     self._processed_imports = set()
@@ -303,7 +305,14 @@ class JsonLdStreamDb(Db):
         if input_file:
           import_name = self.config.import_name(input_file)
           self._processed_imports.add(import_name)
-          self._triples[import_name].extend(triples)
+          import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+          os.makedirs(import_temp_dir, exist_ok=True)
+
+          # Write triples immediately in chunks of _CHUNK_SIZE
+          for i in range(0, len(triples), _CHUNK_SIZE):
+            chunk = triples[i:i + _CHUNK_SIZE]
+            _write_node_shard((chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+            self.node_shard_index += 1
         else:
           self._triples["_global"].extend(triples)
 
@@ -315,47 +324,49 @@ class JsonLdStreamDb(Db):
     global_triples = self._triples.pop("_global", [])
     if not self._processed_imports:
       self._processed_imports.add(self.import_name)
+
+    # Write global triples as node shards to the local temp directory for each import
     for import_name in self._processed_imports:
-      self._triples[import_name].extend(global_triples)
+      import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+      os.makedirs(import_temp_dir, exist_ok=True)
+      if global_triples:
+        for i in range(0, len(global_triples), _CHUNK_SIZE):
+          chunk = global_triples[i:i + _CHUNK_SIZE]
+          _write_node_shard((chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+          self.node_shard_index += 1
 
     num_processes = min(multiprocessing.cpu_count(), _EXPORT_PROCESSES_MAX)
 
-    with tempfile.TemporaryDirectory() as temp_local_dir:
-      logging.info("Using local temporary directory for export buffering: %s",
-                   temp_local_dir)
+    if self._obs_records or os.path.exists(self.temp_local_dir):
+      logging.info(
+          "Starting JSON-LD local export with %d processes in sequential-parallel mode",
+          num_processes)
 
-      if self._obs_records or self._triples:
-        logging.info(
-            "Starting JSON-LD local export with %d processes in sequential-parallel mode",
-            num_processes)
+      # Process observations (still buffered in memory)
+      for import_name in self._processed_imports:
+        import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+        os.makedirs(import_temp_dir, exist_ok=True)
 
-        # Process each import sequentially to minimize peak memory usage,
-        # but write shards in parallel within each import to maximize speed.
-        for import_name in self._processed_imports:
-          import_temp_dir = os.path.join(temp_local_dir, import_name)
-          os.makedirs(import_temp_dir, exist_ok=True)
+        if import_name in self._obs_records:
+          with multiprocessing.Pool(processes=num_processes) as pool:
+            logging.info("Streaming observations export for %s...",
+                         import_name)
+            obs_gen = self._generate_observation_chunks(
+                import_name, import_temp_dir)
+            for _ in pool.imap(_write_observation_shard, obs_gen):
+              pass
+            logging.info("Completed observations export for %s.",
+                         import_name)
 
-          if import_name in self._obs_records or import_name in self._triples:
-            with multiprocessing.Pool(processes=num_processes) as pool:
-              if import_name in self._obs_records:
-                logging.info("Streaming observations export for %s...",
-                             import_name)
-                obs_gen = self._generate_observation_chunks(
-                    import_name, import_temp_dir)
-                for _ in pool.imap(_write_observation_shard, obs_gen):
-                  pass
-                logging.info("Completed observations export for %s.",
-                             import_name)
+      self._upload_shards(self.temp_local_dir)
 
-              if import_name in self._triples:
-                logging.info("Streaming triples export for %s...", import_name)
-                node_gen = self._generate_node_chunks(import_name,
-                                                      import_temp_dir)
-                for _ in pool.imap(_write_node_shard, node_gen):
-                  pass
-                logging.info("Completed triples export for %s.", import_name)
-
-        self._upload_shards(temp_local_dir)
+    # Clean up local temporary directory
+    try:
+      shutil.rmtree(self.temp_local_dir)
+      logging.info("Cleaned up local temporary directory: %s", self.temp_local_dir)
+    except Exception as e:
+      logging.warning("Failed to clean up local temporary directory %s: %s",
+                      self.temp_local_dir, e)
 
   def _generate_observation_chunks(self, import_name: str,
                                    import_temp_dir: str):
