@@ -77,6 +77,40 @@ class TestJsonLdStreamDb(unittest.TestCase):
       db.insert_triples(triples, mock_file)
       self.assertEqual(len(db._triples["test_import"]), 1)
 
+  @mock.patch("stats.jsonld_stream_db._CHUNK_SIZE", 4)
+  def test_node_chunks_keep_boundary_subject_together(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      db = JsonLdStreamDb(output_dir=temp_store.as_dir(),
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
+
+      triples = [
+          Triple("head", "first", object_value="1"),
+          Triple("head", "second", object_value="2"),
+          Triple("boundary", "typeOf", object_id="Thing"),
+          Triple("boundary", "name", object_value="Boundary"),
+          Triple("tail", "first", object_value="1"),
+          Triple("tail", "second", object_value="2"),
+          Triple("tail", "third", object_value="3"),
+      ]
+      mock_file = mock.Mock(path="test_import/nodes.mcf")
+      db.insert_triples(triples, mock_file)
+
+      chunks = list(db._generate_node_chunks("test_import", temp_dir))
+
+      self.assertEqual([len(chunk[0]) for chunk in chunks], [5, 2])
+      self.assertEqual([chunk[1] for chunk in chunks], [0, 1])
+
+      first_chunk_boundary = [
+          triple for triple in chunks[0][0] if triple.subject_id == "boundary"
+      ]
+      second_chunk_subjects = {triple.subject_id for triple in chunks[1][0]}
+      self.assertEqual({triple.predicate for triple in first_chunk_boundary},
+                       {"typeOf", "name"})
+      self.assertNotIn("boundary", second_chunk_subjects)
+      self.assertEqual(db._triples["test_import"], [])
+
   def test_commit_and_close_local(self):
     with tempfile.TemporaryDirectory() as temp_dir:
       temp_store = create_store(temp_dir)
