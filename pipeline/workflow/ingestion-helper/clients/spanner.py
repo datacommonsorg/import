@@ -457,8 +457,9 @@ class SpannerClient:
         logging.info(
             f"Updating ImportVersionHistory table for workflow {workflow_id}")
 
+        enable_unique_version_schema = os.environ.get('ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
+
         def _insert(transaction: Transaction):
-            enable_unique_version_schema = os.environ.get('ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
             if enable_unique_version_schema:
                 # Schema from 7/10
                 columns = [
@@ -581,8 +582,9 @@ class SpannerClient:
         import_name = import_name.split(':')[-1]
         logging.info(f"Updating version history for {import_name} to {version}")
 
+        enable_unique_version_schema = os.environ.get('ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
+
         def _record(transaction: Transaction):
-            enable_unique_version_schema = os.environ.get('ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
             if enable_unique_version_schema:
                 columns = [
                     "ImportName", "Version", "UpdateTimestamp",
