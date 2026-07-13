@@ -151,7 +151,7 @@ def _write_observation_shard(args):
     output_dir = store.as_dir()
     output_dir.open_file(shard_name).write(
         json.dumps(compacted_jsonld, indent=4))
-  logging.info(f"Saved JSON-LD shard to {shard_name}")
+  logging.debug(f"Saved JSON-LD shard to {shard_name}")
 
 
 def _write_node_shard(args):
@@ -220,7 +220,7 @@ def _write_node_shard_fast(args):
     output_dir = store.as_dir()
     output_dir.open_file(shard_name).write(
         json.dumps(compacted_jsonld, indent=4))
-  logging.info(f"Saved JSON-LD shard to {shard_name} (fast path)")
+  logging.debug(f"Saved JSON-LD shard to {shard_name} (fast path)")
 
 
 def _write_node_shard_rdflib(args):
@@ -304,7 +304,9 @@ class JsonLdStreamDb(Db):
       with self.lock:
         if input_file:
           import_name = self.config.import_name(input_file)
-          self._processed_imports.add(import_name)
+          if import_name not in self._processed_imports:
+            logging.info("Streaming nodes export for %s...", import_name)
+            self._processed_imports.add(import_name)
           import_temp_dir = os.path.join(self.temp_local_dir, import_name)
           os.makedirs(import_temp_dir, exist_ok=True)
 
@@ -339,7 +341,7 @@ class JsonLdStreamDb(Db):
 
     if self._obs_records or os.path.exists(self.temp_local_dir):
       logging.info(
-          "Starting JSON-LD local export with %d processes in sequential-parallel mode",
+          "Finalizing JSON-LD local export with %d processes in sequential-parallel mode",
           num_processes)
 
       # Process observations (still buffered in memory)

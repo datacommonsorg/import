@@ -274,4 +274,4 @@ def write_shard(g: Graph,
 
   shard_name = f"{prefix}-{index:05d}.jsonld"
   output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
-  logging.info(f"Saved JSON-LD shard to {shard_name}")
+  logging.debug(f"Saved JSON-LD shard to {shard_name}")
