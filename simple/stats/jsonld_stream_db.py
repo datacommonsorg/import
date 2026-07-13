@@ -382,14 +382,14 @@ class JsonLdStreamDb(Db):
     """Generates node chunks targeting _CHUNK_SIZE without splitting subjects,  cleaning memory progressively."""
     triples = self._triples.get(import_name, [])
     shard_index = 0
+    # Keep subjects intact when chunking. A chunk may exceed the target size if
+    # a subject has triples on both sides of the boundary.
     while triples:
       chunk = []
       # Pop from the end to avoid O(N) list shifting overhead
       for _ in range(min(_CHUNK_SIZE, len(triples))):
         chunk.append(triples.pop())
 
-      # Keep the subject at the chunk boundary intact. A chunk may exceed the
-      # target size when a subject has triples on both sides of the boundary.
       boundary_subject = chunk[-1].subject_id
       while triples and triples[-1].subject_id == boundary_subject:
         chunk.append(triples.pop())
