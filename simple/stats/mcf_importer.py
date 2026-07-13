@@ -63,14 +63,58 @@ class McfImporter(Importer):
       if self.is_main_dc:
         self.output_file.write(self.input_file.read())
       else:
-        triples = self._mcf_to_triples()
+        local2dcid = {}
+        current_node_triples = []
+        current_node_id = None
+        chunk = []
 
-        # Extract and register Provenance / Source nodes in nodes registry
-        _register_metadata_nodes(triples, self.nodes)
-
-        logging.info("Inserting %s triples from %s", len(triples),
+        logging.info("Streaming MCF triples parsing and database writes for %s...",
                      self.input_file.full_path())
-        self.db.insert_triples(triples, self.input_file)
+
+        for parser_triple in mcf_to_triples(self.input_file.read_string_io()):
+          subject_id, predicate, value, value_type = parser_triple
+
+          if current_node_id is not None and subject_id != current_node_id:
+            # Process the completed node block
+            node_triples = [_to_triple(t, local2dcid) for t in current_node_triples]
+
+            # Check if this node is metadata (Provenance/Source)
+            is_metadata = any(
+                t.predicate == "typeOf" and strip_namespace(t.object_id or "") in ["Provenance", "Source"]
+                for t in node_triples
+            )
+            if is_metadata:
+              _register_metadata_nodes(node_triples, self.nodes)
+
+            chunk.extend(node_triples)
+            if len(chunk) >= 10000:
+              self.db.insert_triples(chunk, self.input_file)
+              chunk = []
+
+            current_node_triples = []
+            if len(local2dcid) > 100000:
+              local2dcid.clear()
+
+          current_node_id = subject_id
+          if predicate != _DCID:
+            current_node_triples.append(parser_triple)
+          else:
+            if value:
+              local2dcid[subject_id] = value
+
+        # Process the last node block
+        if current_node_triples:
+          node_triples = [_to_triple(t, local2dcid) for t in current_node_triples]
+          is_metadata = any(
+              t.predicate == "typeOf" and strip_namespace(t.object_id or "") in ["Provenance", "Source"]
+              for t in node_triples
+          )
+          if is_metadata:
+            _register_metadata_nodes(node_triples, self.nodes)
+          chunk.extend(node_triples)
+
+        if chunk:
+          self.db.insert_triples(chunk, self.input_file)
 
       self.reporter.report_success()
     except Exception as e:
