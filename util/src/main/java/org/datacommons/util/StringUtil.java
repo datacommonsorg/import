@@ -202,7 +202,7 @@ public class StringUtil {
       if (arg.includeEmpty || !ss.isEmpty()) {
         if (arg.stripEscapesBeforeQuotes) {
           // replace instances of \" with just "
-          results.add(ss.replaceAll("\\\\\"", "\""));
+          results.add(ss.replace("\\\"", "\""));
         } else {
           results.add(ss);
         }

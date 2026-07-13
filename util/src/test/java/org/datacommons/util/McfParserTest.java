@@ -50,6 +50,21 @@ public class McfParserTest {
     mcf = "Node: US2\n" + "typeOf: schema:State\n" + "description: \"Line with\nnewline\"\n";
     McfParser.parseInstanceMcfString(mcf, true, lw);
     assertTrue(TestUtil.checkLog(logCtx.build(), "StrSplit_BadQuotesInToken_description", "US2"));
+
+    // Valid escaped quotes in value.
+    mcf =
+        "Node: US3\n"
+            + "typeOf: schema:State\n"
+            + "description: \"Valid \\\"escaped\\\" quotes\"\n"
+            + "geoJsonCoordinates: \"{\\\"type\\\": \\\"MultiPolygon\\\"}\"\n";
+    Map<String, McfGraph.PropertyValues> nodes =
+        McfParser.parseInstanceMcfString(mcf, false, lw).getNodesMap();
+    assertEquals(
+        "Valid \"escaped\" quotes",
+        nodes.get("US3").getPvsMap().get("description").getTypedValues(0).getValue());
+    assertEquals(
+        "{\"type\": \"MultiPolygon\"}",
+        nodes.get("US3").getPvsMap().get("geoJsonCoordinates").getTypedValues(0).getValue());
   }
 
   @Test
