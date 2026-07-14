@@ -29,6 +29,7 @@ from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
 from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
 from .orchestrator import AggregationOrchestrator, AggregationRunResult, ImportExecutionResult
 from .validator import validate_config
+from .deleter import AggregationDeleter
 
 __all__ = [
     'BigQueryExecutor',
@@ -43,6 +44,7 @@ __all__ = [
     'EntityAggregationGenerator',
     'EntityAggregationConfig',
     'AggregationOrchestrator',
+    'AggregationDeleter',
     'AggregationRunResult',
     'ImportExecutionResult',
     'validate_config',

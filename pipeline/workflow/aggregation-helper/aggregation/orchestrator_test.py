@@ -133,6 +133,9 @@ class TestOrchestratorExecution(unittest.TestCase):
     """Tests stage execution, verifying job submission and synchronization."""
 
     def setUp(self):
+        self.deleter_patcher = patch('aggregation.orchestrator.AggregationDeleter')
+        self.mock_deleter = self.deleter_patcher.start()
+
         self.tmpdir = tempfile.TemporaryDirectory()
         config_path = os.path.join(self.tmpdir.name, "config.yaml")
         with open(config_path, "w") as f:
@@ -148,6 +151,7 @@ class TestOrchestratorExecution(unittest.TestCase):
 
     def tearDown(self):
         self.tmpdir.cleanup()
+        self.deleter_patcher.stop()
 
     def test_run_dry_run_true(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=True logs stages without submitting BigQuery jobs."""
@@ -158,6 +162,7 @@ class TestOrchestratorExecution(unittest.TestCase):
 
         mock_place_gen.return_value.aggregate_places.assert_not_called()
         mock_sv_agg.return_value.aggregate_stat_vars.assert_not_called()
+        self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
 
     def test_run_dry_run_false(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=False submits BigQuery jobs across stages."""
@@ -192,6 +197,30 @@ class TestOrchestratorExecution(unittest.TestCase):
             skip_all_sources_present_check=True
         )
 
+        # Verify deleter was called with expected outputs
+        self.mock_deleter.return_value.delete_aggregated_data.assert_called_once_with(
+            ["USFed_Census_AggState", "USFed_Census_StatVarAgg"]
+        )
+
+    def test_run_skip_deletions(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+        """Tests that run with skip_deletions=True does not call deleter."""
+        mock_job1 = MagicMock()
+        mock_job1.job_id = "job-place-1"
+        mock_place_gen.return_value.aggregate_places.return_value = mock_job1
+
+        mock_job2 = MagicMock()
+        mock_job2.job_id = "job-sv-1"
+        mock_sv_agg.return_value.aggregate_stat_vars.return_value = [mock_job2]
+
+        self.orchestrator.executor = MagicMock()
+        self.orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
+
+        result = self.orchestrator.run(active_imports=["USFed_Census"], dry_run=False, skip_deletions=True)
+        self.assertTrue(result.success)
+
+        # Verify deleter was NOT called
+        self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
+
     def test_execute_stage(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests manual execution of a specific stage."""
         mock_job1 = MagicMock()
@@ -207,6 +236,7 @@ class TestOrchestratorExecution(unittest.TestCase):
             allow_multiple_to_places=False
         )
         self.assertEqual(jobs, [mock_job1])
+        self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
 
     def test_execute_stage_entity_aggregation(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests manual execution of ENTITY_AGGREGATION stage."""
@@ -217,6 +247,7 @@ class TestOrchestratorExecution(unittest.TestCase):
         jobs = self.orchestrator.execute_stage(3, ["EarthquakeUSGS"])
         self.assertEqual(jobs, [mock_job])
         mock_entity_gen.return_value.aggregate_entities.assert_called_once()
+        self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
 
 
 CHAINED_CONFIG_YAML = textwrap.dedent("""\
@@ -247,6 +278,9 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
     """Tests chained stage execution, verifying job submission and synchronization."""
 
     def setUp(self):
+        self.deleter_patcher = patch('aggregation.orchestrator.AggregationDeleter')
+        self.mock_deleter = self.deleter_patcher.start()
+
         self.tmpdir = tempfile.TemporaryDirectory()
         config_path = os.path.join(self.tmpdir.name, "config.yaml")
         with open(config_path, "w") as f:
@@ -262,6 +296,7 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
 
     def tearDown(self):
         self.tmpdir.cleanup()
+        self.deleter_patcher.stop()
 
     def test_run_chained_dry_run_false(self, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=False submits BigQuery jobs across chained stages."""
@@ -289,6 +324,11 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
         
         # Verify that both stage 1 and stage 2 calculations are triggered (call_count = 2).
         self.assertEqual(mock_place_gen.return_value.aggregate_places.call_count, 2)
+
+        # Verify deleter was called with all expected outputs in the chain
+        self.mock_deleter.return_value.delete_aggregated_data.assert_called_once_with(
+            ["USFed_Census_AggState", "USFed_Census_AggState_AggCountry"]
+        )
 
 
 if __name__ == '__main__':
