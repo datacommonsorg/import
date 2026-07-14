@@ -146,7 +146,7 @@ class StatVarGroupGenerator:
             FROM Edge 
             WHERE predicate IN (
               'populationType', 
-              'observationProperties',
+              'statVarProperties',
               'constraintProperties', 
               'vertical', 
               'dependentPropertyValue'
@@ -196,15 +196,15 @@ class StatVarGroupGenerator:
             SELECT * FROM SpecValues
             PIVOT (
               ARRAY_AGG(value IGNORE NULLS ORDER BY value) 
-              FOR predicate IN ('populationType', 'observationProperties', 'constraintProperties', 'vertical')
+              FOR predicate IN ('populationType', 'statVarProperties', 'constraintProperties', 'vertical')
             )
           )
           SELECT 
             PivotSpec.subject_id,
             populationType[SAFE_OFFSET(0)] AS populationType,
             -- NOTE: Legacy vertical matching does not include measurementQualifier or measurementDenominator,
-            -- so filtering out from ObsProps.
-            SPLIT(observationProperties, ',')[SAFE_OFFSET(0)] AS observationProperties,
+            -- so filtering out from StatVarProps.
+            SPLIT(statVarProperties, ',')[SAFE_OFFSET(0)] AS statVarProperties,
             IFNULL(constraintProperties, []) AS constraintProperties,
             vertical,
             ARRAY(
@@ -213,7 +213,7 @@ class StatVarGroupGenerator:
               ORDER BY val
             ) AS linkedVertical
           FROM PivotSpec
-          LEFT JOIN UNNEST(IFNULL(PivotSpec.observationProperties, [])) AS observationProperties
+          LEFT JOIN UNNEST(IFNULL(PivotSpec.statVarProperties, [])) AS statVarProperties
           LEFT JOIN VerticalAncestors A ON A.subject_id IN UNNEST(PivotSpec.vertical)
           WHERE ARRAY_LENGTH(constraintProperties) <= 1 OR constraintProperties IS NULL
           ORDER BY subject_id
@@ -276,15 +276,15 @@ class StatVarGroupGenerator:
                 WHERE statvar = StatVarTriple.subject_id
               )
           ),
-          ObservationProps AS (
+          StatVarProps AS (
             SELECT
               subject_id,
-              CONCAT(predicate, '=', object_id) AS observationProperties
+              CONCAT(predicate, '=', object_id) AS statVarProperties
             FROM
               StatVarTriple
             WHERE
               -- NOTE: Legacy matching does not include measurementQualifier or measurementDenominator,
-              -- so filtering out from ObsProps.
+              -- so filtering out from StatVarProps.
               predicate = 'measuredProperty'
               AND object_id IS NOT NULL
           ),
@@ -317,13 +317,13 @@ class StatVarGroupGenerator:
             ) AS node3name,
             PopType.subject_id AS statvar,
             PopType.object_id AS populationType,
-            ObservationProps.observationProperties,
+            StatVarProps.statVarProperties,
             ARRAY<STRING>[] AS constraintProperties,
             IFNULL(Constraints.aligned_cps, ARRAY<STRING>[]) AS newConstraintProperties,
             IFNULL(Constraints.pvs, ARRAY<STRING>[]) AS attributes,
             0 AS iteration
           FROM PopType
-          LEFT JOIN ObservationProps ON ObservationProps.subject_id = PopType.subject_id
+          LEFT JOIN StatVarProps ON StatVarProps.subject_id = PopType.subject_id
           LEFT JOIN ConstraintProps ON ConstraintProps.subject_id = PopType.subject_id
           LEFT JOIN Constraints ON Constraints.subject_id = PopType.subject_id
         );
@@ -340,7 +340,7 @@ class StatVarGroupGenerator:
           FROM ZeroConstraintStatVars SV
           LEFT JOIN VerticalSpec VS 
             ON SV.populationType = VS.populationType 
-            AND (VS.observationProperties IS NULL OR SV.observationProperties = VS.observationProperties)
+            AND (VS.statVarProperties IS NULL OR SV.statVarProperties = VS.statVarProperties)
             AND IFNULL(ARRAY_LENGTH(VS.constraintProperties), 0) = 0
           CROSS JOIN UNNEST([
             STRUCT('memberOf' AS predicate, IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_sv_svg], VS.vertical) AS target_array),
@@ -361,7 +361,7 @@ class StatVarGroupGenerator:
         -- Create table to hold the results from the iteration.
         CREATE OR REPLACE TEMP TABLE AllResults ( 
           node1 STRING, node2 STRING, node2name STRING, node3 STRING, node3name STRING,
-          statvar STRING, populationType STRING, observationProperties STRING,
+          statvar STRING, populationType STRING, statVarProperties STRING,
           constraintProperties ARRAY<STRING>, newConstraintProperties ARRAY<STRING>,
           attributes ARRAY<STRING>, iteration INT64 
         );
@@ -403,7 +403,7 @@ class StatVarGroupGenerator:
                 ), ', ')),
                 IF(NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType)), FormatName(populationType), CAST(NULL AS STRING))
               ) AS node3name,
-              statvar, populationType, observationProperties, newConstraintProperties AS constraintProperties,
+              statvar, populationType, statVarProperties, newConstraintProperties AS constraintProperties,
               ARRAY(SELECT cp FROM UNNEST(newConstraintProperties) AS cp WITH OFFSET AS cp_idx WHERE cp_idx != target_idx) AS newConstraintProperties,
               ARRAY(SELECT a FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx WHERE a_idx != target_idx) AS attributes,
               iteration + 1 AS iteration
@@ -457,7 +457,7 @@ class StatVarGroupGenerator:
               IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg], VS.linkedVertical) AS statvar_targets
             FROM TopLevelSVGs SVG 
             LEFT JOIN VerticalSpec VS
-              -- NOTE: Currently excluding ObsProps.
+              -- NOTE: Currently excluding StatVarProps.
               -- This is because it can cause unexpected behavior when an SVG is attached to a vertical
               -- due to another SVG having a matching mprop.
               -- Instead, the SVG will get attached only based on popType and cprops, so the result is deterministic per SV

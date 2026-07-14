@@ -1662,7 +1662,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')
         self.add_edge('Spec_Person', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Person', 'populationType', 'Person', 'TestImport')
-        self.add_edge('Spec_Person', 'observationProperties', 'measuredProperty=count', 'TestImport')
+        self.add_edge('Spec_Person', 'statVarProperties', 'measuredProperty=count', 'TestImport')
         self.add_edge('Spec_Person', 'vertical', f'{ns}g/TestVertical', 'TestImport')
         self.add_edge(f'{ns}g/TestVertical', 'specializationOf', f'{ns}g/Root', 'TestImport')
         self.add_edge(f'{ns}g/TestCustomVertical', 'specializationOf', f'{ns}g/Root', 'TestCustomImport')
