@@ -135,8 +135,11 @@ class TestOrchestratorExecution(unittest.TestCase):
     def setUp(self):
         self.deleter_patcher = patch('aggregation.orchestrator.AggregationDeleter')
         self.mock_deleter = self.deleter_patcher.start()
+        self.addCleanup(self.deleter_patcher.stop)
 
         self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+
         config_path = os.path.join(self.tmpdir.name, "config.yaml")
         with open(config_path, "w") as f:
             f.write(VALID_CONFIG_YAML)
@@ -148,10 +151,6 @@ class TestOrchestratorExecution(unittest.TestCase):
             database_id="db",
             config_file_path=config_path
         )
-
-    def tearDown(self):
-        self.tmpdir.cleanup()
-        self.deleter_patcher.stop()
 
     def test_run_dry_run_true(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=True logs stages without submitting BigQuery jobs."""
@@ -280,8 +279,11 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
     def setUp(self):
         self.deleter_patcher = patch('aggregation.orchestrator.AggregationDeleter')
         self.mock_deleter = self.deleter_patcher.start()
+        self.addCleanup(self.deleter_patcher.stop)
 
         self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+
         config_path = os.path.join(self.tmpdir.name, "config.yaml")
         with open(config_path, "w") as f:
             f.write(CHAINED_CONFIG_YAML)
@@ -293,10 +295,6 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
             database_id="db",
             config_file_path=config_path
         )
-
-    def tearDown(self):
-        self.tmpdir.cleanup()
-        self.deleter_patcher.stop()
 
     def test_run_chained_dry_run_false(self, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=False submits BigQuery jobs across chained stages."""
