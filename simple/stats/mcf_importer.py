@@ -66,8 +66,8 @@ class McfImporter(Importer):
         # Pass 1: Resolve local ID mappings and identify metadata subject IDs
         local2dcid = {}
         metadata_subject_ids = set()
-        for subject_id, predicate, value, _ in mcf_to_triples(
-            self.input_file.read_string_io()):
+        triples_list = list(mcf_to_triples(self.input_file.read_string_io()))
+        for subject_id, predicate, value, _ in triples_list:
           if predicate == _DCID and value:
             local2dcid[subject_id] = value
           elif predicate == "typeOf" and strip_namespace(value) in [
@@ -82,7 +82,7 @@ class McfImporter(Importer):
         chunk = []
         all_metadata_triples = []
 
-        for parser_triple in mcf_to_triples(self.input_file.read_string_io()):
+        for parser_triple in triples_list:
           subject_id, predicate, value, value_type = parser_triple
           if predicate == _DCID:
             continue
@@ -93,10 +93,11 @@ class McfImporter(Importer):
           if subject_id in metadata_subject_ids or resolved_subject in metadata_subject_ids:
             all_metadata_triples.append(triple)
 
-          chunk.append(triple)
-          if len(chunk) >= 10000:
+          # Only flush at subject boundaries to prevent splitting a subject's triples
+          if chunk and triple.subject_id != chunk[-1].subject_id and len(chunk) >= 10000:
             self.db.insert_triples(chunk, self.input_file)
             chunk = []
+          chunk.append(triple)
 
         if chunk:
           self.db.insert_triples(chunk, self.input_file)
