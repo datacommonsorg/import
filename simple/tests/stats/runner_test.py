@@ -306,7 +306,7 @@ class TestRunner(unittest.TestCase):
                         "Node: dcid:Provenance1\n"
                         "typeOf: dcs:Provenance\n"
                         "url: \"http://source1.com/provenance1\"\n"
-                        "sourceLink: dcid:Source1\n")
+                        "source: dcid:Source1\n")
       with open(os.path.join(input_dir, "provenance.mcf"), "w") as f:
         f.write(provenance_mcf)
 
@@ -466,7 +466,7 @@ class TestRunner(unittest.TestCase):
                   "typeOf: dcs:Source\n\n"
                   "Node: dcid:oecd\n"
                   "typeOf: dcs:Provenance\n"
-                  "sourceLink: dcid:OecdSource\n")
+                  "source: dcid:OecdSource\n")
       with open(os.path.join(oecd_dir, "oecd.mcf"), "w") as f:
         f.write(oecd_mcf)
 
@@ -507,7 +507,7 @@ class TestRunner(unittest.TestCase):
                  "typeOf: dcs:Source\n\n"
                  "Node: dcid:ilo\n"
                  "typeOf: dcs:Provenance\n"
-                 "sourceLink: dcid:IloSource\n")
+                 "source: dcid:IloSource\n")
       with open(os.path.join(ilo_dir, "ilo.mcf"), "w") as f:
         f.write(ilo_mcf)
 

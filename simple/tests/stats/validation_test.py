@@ -42,7 +42,7 @@ class TestMetadataValidator(unittest.TestCase):
             # Define Provenance
             Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
             # Link Provenance to Source
-            Triple("dcid:MyProvenance", "sourceLink",
+            Triple("dcid:MyProvenance", "source",
                    object_id="dcid:MySource"),
         ]
     }
@@ -117,7 +117,7 @@ class TestMetadataValidator(unittest.TestCase):
     mock_db._triples = {
         "_global": [
             Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
-            Triple("dcid:MyProvenance", "sourceLink",
+            Triple("dcid:MyProvenance", "source",
                    object_id="dcid:MySource"),
         ]
     }
