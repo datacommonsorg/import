@@ -94,7 +94,8 @@ class McfImporter(Importer):
             all_metadata_triples.append(triple)
 
           # Only flush at subject boundaries to prevent splitting a subject's triples
-          if chunk and triple.subject_id != chunk[-1].subject_id and len(chunk) >= 10000:
+          if chunk and triple.subject_id != chunk[-1].subject_id and len(
+              chunk) >= 10000:
             self.db.insert_triples(chunk, self.input_file)
             chunk = []
           chunk.append(triple)

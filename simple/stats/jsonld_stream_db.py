@@ -367,7 +367,8 @@ class JsonLdStreamDb(Db):
 
     num_processes = min(multiprocessing.cpu_count(), _EXPORT_PROCESSES_MAX)
 
-    has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(self.temp_local_dir) else False
+    has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
+        self.temp_local_dir) else False
     if self._obs_records or has_local_files:
       logging.info(
           "Finalizing JSON-LD local export with %d processes in sequential-parallel mode",
