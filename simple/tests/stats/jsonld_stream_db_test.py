@@ -102,19 +102,29 @@ class TestJsonLdStreamDb(unittest.TestCase):
       mock_file = mock.Mock(path="test_import/nodes.mcf")
       db.insert_triples(triples, mock_file)
 
-      chunks = list(db._generate_node_chunks("test_import", temp_dir))
+      shard0 = os.path.join(db.temp_local_dir, "test_import", "node-00000.jsonld")
+      shard1 = os.path.join(db.temp_local_dir, "test_import", "node-00001.jsonld")
 
-      self.assertEqual([len(chunk[0]) for chunk in chunks], [5, 2])
-      self.assertEqual([chunk[1] for chunk in chunks], [0, 1])
+      self.assertTrue(os.path.exists(shard0))
+      self.assertTrue(os.path.exists(shard1))
 
-      first_chunk_boundary = [
-          triple for triple in chunks[0][0] if triple.subject_id == "boundary"
-      ]
-      second_chunk_subjects = {triple.subject_id for triple in chunks[1][0]}
-      self.assertEqual({triple.predicate for triple in first_chunk_boundary},
-                       {"typeOf", "name"})
-      self.assertNotIn("boundary", second_chunk_subjects)
-      self.assertEqual(db._triples["test_import"], [])
+      with open(shard0, "r") as f:
+        data = json.load(f)
+        self.assertIn("@graph", data)
+        graph = data["@graph"]
+        # Expect 2 subjects: "head" and "boundary"
+        self.assertEqual(len(graph), 2)
+        boundary_node = next(node for node in graph if node["@id"] == "dcid:boundary")
+        self.assertEqual(boundary_node["@type"], "dcid:Thing")
+        self.assertEqual(boundary_node["dcid:name"], "Boundary")
+
+      with open(shard1, "r") as f:
+        data = json.load(f)
+        self.assertIn("@graph", data)
+        graph = data["@graph"]
+        # Expect 1 subject: "tail"
+        self.assertEqual(len(graph), 1)
+        self.assertEqual(graph[0]["@id"], "dcid:tail")
 
   def test_commit_and_close_local(self):
     with tempfile.TemporaryDirectory() as temp_dir:

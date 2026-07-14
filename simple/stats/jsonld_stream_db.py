@@ -151,7 +151,7 @@ def _write_observation_shard(args):
     output_dir = store.as_dir()
     output_dir.open_file(shard_name).write(
         json.dumps(compacted_jsonld, indent=4))
-  logging.debug(f"Saved JSON-LD shard to {shard_name}")
+  logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
 def _write_node_shard(args):
@@ -220,7 +220,7 @@ def _write_node_shard_fast(args):
     output_dir = store.as_dir()
     output_dir.open_file(shard_name).write(
         json.dumps(compacted_jsonld, indent=4))
-  logging.debug(f"Saved JSON-LD shard to {shard_name} (fast path)")
+  logging.info(f"Saved JSON-LD shard to {shard_name} (fast path)")
 
 
 def _write_node_shard_rdflib(args):
@@ -289,6 +289,7 @@ class JsonLdStreamDb(Db):
     self._obs_records = defaultdict(list)
     self._triples = defaultdict(list)
     self._processed_imports = set()
+    self._node_streaming_started = set()
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
@@ -299,24 +300,48 @@ class JsonLdStreamDb(Db):
         self._processed_imports.add(import_name)
         self._obs_records[import_name].extend(records)
 
-  def insert_triples(self, triples: list[Triple], input_file: File = None):
-    if triples:
-      with self.lock:
-        if input_file:
-          import_name = self.config.import_name(input_file)
-          if import_name not in self._processed_imports:
-            logging.info("Streaming nodes export for %s...", import_name)
-            self._processed_imports.add(import_name)
-          import_temp_dir = os.path.join(self.temp_local_dir, import_name)
-          os.makedirs(import_temp_dir, exist_ok=True)
+  def _init_import_export_dir(self, import_name: str):
+    import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+    os.makedirs(import_temp_dir, exist_ok=True)
+    with self.lock:
+      self._processed_imports.add(import_name)
+      if import_name not in self._node_streaming_started:
+        logging.info("Streaming nodes export for %s...", import_name)
+        self._node_streaming_started.add(import_name)
 
-          # Write triples immediately in chunks of _CHUNK_SIZE
-          for i in range(0, len(triples), _CHUNK_SIZE):
-            chunk = triples[i:i + _CHUNK_SIZE]
-            _write_node_shard((chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-            self.node_shard_index += 1
-        else:
-          self._triples["_global"].extend(triples)
+  def _write_triples_to_disk(self, triples: list[Triple], import_name: str):
+    import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+    with self.lock:
+      i = 0
+      n = len(triples)
+      while i < n:
+        chunk = []
+        end = min(i + _CHUNK_SIZE, n)
+        chunk.extend(triples[i:end])
+        i = end
+
+        # Expand boundary to keep subject together
+        if i < n:
+          boundary_subject = chunk[-1].subject_id
+          while i < n and triples[i].subject_id == boundary_subject:
+            chunk.append(triples[i])
+            i += 1
+
+        _write_node_shard((chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+        self.node_shard_index += 1
+
+  def insert_triples(self, triples: list[Triple], input_file: File = None):
+    if not triples:
+      return
+
+    if not input_file:
+      with self.lock:
+        self._triples["_global"].extend(triples)
+      return
+
+    import_name = self.config.import_name(input_file)
+    self._init_import_export_dir(import_name)
+    self._write_triples_to_disk(triples, import_name)
 
   def commit(self):
     pass
