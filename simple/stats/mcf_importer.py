@@ -190,8 +190,8 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
     elif pred == "name":
       val = triple.object_value or triple.object_id or ""
       subject_properties[sub_id]["name"] = _clean_literal(val)
-    elif pred == "sourceLink":
-      # Map sourceLink to the source ID
+    elif pred in ["sourceLink", "source"]:
+      # Map sourceLink or source to the source ID
       subject_properties[sub_id]["sourceLink"] = triple.object_id
 
   for sub_id, props in subject_properties.items():
