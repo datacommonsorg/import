@@ -190,9 +190,9 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
     elif pred == "name":
       val = triple.object_value or triple.object_id or ""
       subject_properties[sub_id]["name"] = _clean_literal(val)
-    elif pred == "sourceLink":
-      # Map sourceLink to the source ID
-      subject_properties[sub_id]["sourceLink"] = triple.object_id
+    elif pred == "source":
+      # Map source to the source ID
+      subject_properties[sub_id]["source"] = triple.object_id
 
   for sub_id, props in subject_properties.items():
     node_type = props.get("typeOf")
@@ -200,7 +200,7 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
       nodes.register_provenance(id=sub_id,
                                 name=props.get("name", ""),
                                 url=props.get("url", ""),
-                                source_id=props.get("sourceLink", ""))
+                                source_id=props.get("source", ""))
     elif node_type == "Source":
       nodes.register_source(id=sub_id,
                             name=props.get("name", ""),

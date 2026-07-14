@@ -1,0 +1,10 @@
+Node: dcid:TestProvenance
+typeOf: dcs:Provenance
+name: "Test Dataset Provenance"
+source: dcid:TestSource
+url: "https://example.com/test-dataset"
+
+Node: dcid:TestSource
+typeOf: dcs:Source
+name: "Test Data Source"
+url: "https://example.com"
