@@ -287,7 +287,7 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
         result = self.orchestrator.run(active_imports=["USFed_Census"], dry_run=False)
         self.assertTrue(result.success)
         
-        # We assert 2, which should fail currently because call_count will be 1.
+        # Verify that both stage 1 and stage 2 calculations are triggered (call_count = 2).
         self.assertEqual(mock_place_gen.return_value.aggregate_places.call_count, 2)
 
 

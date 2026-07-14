@@ -220,23 +220,13 @@ class AggregationOrchestrator:
         """
         expanded = list(active_imports)
         queue = list(active_imports)
-        visited = set(active_imports)
 
         while queue:
             current_import = queue.pop(0)
             for calc in self.calculations:
-                inputs = calc.get("input_imports") or calc.get("imports", [])
-                
-                applies = False
-                if "*" in inputs:
-                    applies = True
-                elif current_import in inputs:
-                    applies = True
-                
-                if applies:
+                if self._calc_applies_to_import(calc, current_import):
                     output = calc.get("output_import")
-                    if output and output not in visited:
-                        visited.add(output)
+                    if output and output not in expanded:
                         queue.append(output)
                         expanded.append(output)
                         
