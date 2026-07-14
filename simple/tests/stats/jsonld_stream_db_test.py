@@ -80,7 +80,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
         node_shard = os.path.join(db.temp_local_dir, "test_import", "node-00000.jsonld")
         self.assertTrue(os.path.exists(node_shard))
       finally:
-        shutil.rmtree(db.temp_local_dir, ignore_errors=True)
+        db._temp_dir_obj.cleanup()
 
   @mock.patch("stats.jsonld_stream_db._CHUNK_SIZE", 4)
   def test_node_chunks_keep_boundary_subject_together(self):

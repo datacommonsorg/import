@@ -285,7 +285,8 @@ class JsonLdStreamDb(Db):
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
     self.lock = threading.Lock()
-    self.temp_local_dir = tempfile.mkdtemp()
+    self._temp_dir_obj = tempfile.TemporaryDirectory()
+    self.temp_local_dir = self._temp_dir_obj.name
     self._obs_records = defaultdict(list)
     self._triples = defaultdict(list)
     self._processed_imports = set()
@@ -389,7 +390,7 @@ class JsonLdStreamDb(Db):
 
     # Clean up local temporary directory
     try:
-      shutil.rmtree(self.temp_local_dir)
+      self._temp_dir_obj.cleanup()
       logging.info("Cleaned up local temporary directory: %s", self.temp_local_dir)
     except Exception as e:
       logging.warning("Failed to clean up local temporary directory %s: %s",
