@@ -217,7 +217,7 @@ public class PipelineUtilsTest {
                 "node2",
                 Map.of("typeOf", List.of("dcs:State")),
                 "node3",
-                Map.of("typeOf", List.of("dcs:Place", "schema:Place")),
+                Map.of("typeOf", List.of("schema:Place")),
                 "node4",
                 Map.of("typeOf", List.of("dcs:Country", "dcs:State"))));
 
