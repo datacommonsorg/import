@@ -142,12 +142,13 @@ class AggregationOrchestrator:
         Returns:
             AggregationRunResult containing status per import.
         """
+        expanded_imports = self._expand_active_imports(active_imports)
         logging.info(
-            f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports}"
+            f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports} (expanded: {expanded_imports})"
         )
         run_result = AggregationRunResult()
 
-        for single_import in active_imports:
+        for single_import in expanded_imports:
             logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
             active_stages = self._get_active_stages_for_import(single_import)
 
@@ -208,22 +209,58 @@ class AggregationOrchestrator:
                 stages.add(calc.get("stage", 1))
         return sorted(list(stages))
 
+    def _expand_active_imports(self, active_imports: List[str]) -> List[str]:
+        """Expands the list of active imports to include chained aggregated imports.
+
+        For example, if 'A' is active, and there is a calculation:
+          input_imports: ['A']
+          output_import: 'B'
+        Then 'B' should also be added to the active imports.
+        This process is repeated transitively.
+        """
+        expanded = list(active_imports)
+        queue = list(active_imports)
+        visited = set(active_imports)
+
+        while queue:
+            current_import = queue.pop(0)
+            for calc in self.calculations:
+                inputs = calc.get("input_imports") or calc.get("imports", [])
+                
+                applies = False
+                if "*" in inputs:
+                    applies = True
+                elif current_import in inputs:
+                    applies = True
+                
+                if applies:
+                    output = calc.get("output_import")
+                    if output and output not in visited:
+                        visited.add(output)
+                        queue.append(output)
+                        expanded.append(output)
+                        
+        return expanded
+
+
     def get_active_stages(self, active_imports: List[str]) -> List[int]:
         """Returns a sorted list of unique active stage numbers across active imports."""
+        expanded_imports = self._expand_active_imports(active_imports)
         stages = set()
-        for single_import in active_imports:
+        for single_import in expanded_imports:
             stages.update(self._get_active_stages_for_import(single_import))
         return sorted(list(stages))
 
     def execute_stage(self, stage_num: int, active_imports: List[str]) -> List[str]:
         """Executes a single stage for all active imports asynchronously."""
+        expanded_imports = self._expand_active_imports(active_imports)
         stage_jobs = []
         for calc in self.calculations:
             calc_stage = calc.get("stage", 1)
             if calc_stage != stage_num:
                 continue
 
-            applicable_imports = [imp for imp in active_imports if self._calc_applies_to_import(calc, imp)]
+            applicable_imports = [imp for imp in expanded_imports if self._calc_applies_to_import(calc, imp)]
             if not applicable_imports:
                 continue
 

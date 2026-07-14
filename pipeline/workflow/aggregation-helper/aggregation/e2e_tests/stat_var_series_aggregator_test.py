@@ -121,7 +121,7 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                 }
             }
         ]
-        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name, round1_output_import])
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
         self.assertTrue(res.success)
 
         # 3. Verify Round 1 Results in Spanner

@@ -219,5 +219,77 @@ class TestOrchestratorExecution(unittest.TestCase):
         mock_entity_gen.return_value.aggregate_entities.assert_called_once()
 
 
+CHAINED_CONFIG_YAML = textwrap.dedent("""\
+    calculations:
+      - type: PLACE_AGGREGATION
+        input_imports:
+          - USFed_Census
+        output_import: USFed_Census_AggState
+        stage: 1
+        place_aggregation:
+          from_place_types: County
+          to_place_types: State
+
+      - type: PLACE_AGGREGATION
+        input_imports:
+          - USFed_Census_AggState
+        output_import: USFed_Census_AggState_AggCountry
+        stage: 2
+        place_aggregation:
+          from_place_types: State
+          to_place_types: Country
+""")
+
+
+@patch('aggregation.orchestrator.BigQueryExecutor')
+@patch('aggregation.orchestrator.PlaceAggregationGenerator')
+class TestOrchestratorChainedExecution(unittest.TestCase):
+    """Tests chained stage execution, verifying job submission and synchronization."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        config_path = os.path.join(self.tmpdir.name, "config.yaml")
+        with open(config_path, "w") as f:
+            f.write(CHAINED_CONFIG_YAML)
+
+        self.orchestrator = AggregationOrchestrator(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=config_path
+        )
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
+    def test_run_chained_dry_run_false(self, mock_place_gen, mock_executor_cls):
+        """Tests that run with dry_run=False submits BigQuery jobs across chained stages."""
+        mock_job1 = MagicMock()
+        mock_job1.job_id = "job-place-1"
+        
+        mock_job2 = MagicMock()
+        mock_job2.job_id = "job-place-2"
+        
+        def aggregate_places_side_effect(import_names, source_type, destination_type, allow_multiple_to_places=False):
+            if import_names == ["USFed_Census"]:
+                return mock_job1
+            elif import_names == ["USFed_Census_AggState"]:
+                return mock_job2
+            return None
+            
+        mock_place_gen.return_value.aggregate_places.side_effect = aggregate_places_side_effect
+
+        self.orchestrator.executor = MagicMock()
+        self.orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
+
+        # We run with ONLY 'USFed_Census' active.
+        result = self.orchestrator.run(active_imports=["USFed_Census"], dry_run=False)
+        self.assertTrue(result.success)
+        
+        # We assert 2, which should fail currently because call_count will be 1.
+        self.assertEqual(mock_place_gen.return_value.aggregate_places.call_count, 2)
+
+
 if __name__ == '__main__':
     unittest.main()
