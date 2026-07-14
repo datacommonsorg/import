@@ -328,7 +328,8 @@ class JsonLdStreamDb(Db):
             chunk.append(triples[i])
             i += 1
 
-        _write_node_shard((chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+        _write_node_shard(
+            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
         self.node_shard_index += 1
 
   def insert_triples(self, triples: list[Triple], input_file: File = None):
@@ -360,7 +361,8 @@ class JsonLdStreamDb(Db):
       if global_triples:
         for i in range(0, len(global_triples), _CHUNK_SIZE):
           chunk = global_triples[i:i + _CHUNK_SIZE]
-          _write_node_shard((chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+          _write_node_shard(
+              (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
           self.node_shard_index += 1
 
     num_processes = min(multiprocessing.cpu_count(), _EXPORT_PROCESSES_MAX)
@@ -377,21 +379,20 @@ class JsonLdStreamDb(Db):
 
         if import_name in self._obs_records:
           with multiprocessing.Pool(processes=num_processes) as pool:
-            logging.info("Streaming observations export for %s...",
-                         import_name)
-            obs_gen = self._generate_observation_chunks(
-                import_name, import_temp_dir)
+            logging.info("Streaming observations export for %s...", import_name)
+            obs_gen = self._generate_observation_chunks(import_name,
+                                                        import_temp_dir)
             for _ in pool.imap(_write_observation_shard, obs_gen):
               pass
-            logging.info("Completed observations export for %s.",
-                         import_name)
+            logging.info("Completed observations export for %s.", import_name)
 
       self._upload_shards(self.temp_local_dir)
 
     # Clean up local temporary directory
     try:
       self._temp_dir_obj.cleanup()
-      logging.info("Cleaned up local temporary directory: %s", self.temp_local_dir)
+      logging.info("Cleaned up local temporary directory: %s",
+                   self.temp_local_dir)
     except Exception as e:
       logging.warning("Failed to clean up local temporary directory %s: %s",
                       self.temp_local_dir, e)

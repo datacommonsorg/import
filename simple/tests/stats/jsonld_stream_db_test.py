@@ -63,12 +63,13 @@ class TestJsonLdStreamDb(unittest.TestCase):
 
       try:
         # Insert observations
-        df = pd.DataFrame([("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
-                          columns=[
-                              "entity", "variable", "date", "value", "provenance",
-                              "unit", "scaling_factor", "measurement_method",
-                              "observation_period", "properties"
-                          ])
+        df = pd.DataFrame(
+            [("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
+            columns=[
+                "entity", "variable", "date", "value", "provenance", "unit",
+                "scaling_factor", "measurement_method", "observation_period",
+                "properties"
+            ])
         mock_file = mock.Mock(path="test_import/data.csv")
         db.insert_observations(df, mock_file)
         self.assertEqual(len(db._obs_records["test_import"]), 1)
@@ -77,7 +78,8 @@ class TestJsonLdStreamDb(unittest.TestCase):
         # Insert triples
         triples = [Triple("sub1", "pred1", object_value="val1")]
         db.insert_triples(triples, mock_file)
-        node_shard = os.path.join(db.temp_local_dir, "test_import", "node-00000.jsonld")
+        node_shard = os.path.join(db.temp_local_dir, "test_import",
+                                  "node-00000.jsonld")
         self.assertTrue(os.path.exists(node_shard))
       finally:
         db._temp_dir_obj.cleanup()
@@ -102,8 +104,10 @@ class TestJsonLdStreamDb(unittest.TestCase):
       mock_file = mock.Mock(path="test_import/nodes.mcf")
       db.insert_triples(triples, mock_file)
 
-      shard0 = os.path.join(db.temp_local_dir, "test_import", "node-00000.jsonld")
-      shard1 = os.path.join(db.temp_local_dir, "test_import", "node-00001.jsonld")
+      shard0 = os.path.join(db.temp_local_dir, "test_import",
+                            "node-00000.jsonld")
+      shard1 = os.path.join(db.temp_local_dir, "test_import",
+                            "node-00001.jsonld")
 
       self.assertTrue(os.path.exists(shard0))
       self.assertTrue(os.path.exists(shard1))
@@ -114,7 +118,8 @@ class TestJsonLdStreamDb(unittest.TestCase):
         graph = data["@graph"]
         # Expect 2 subjects: "head" and "boundary"
         self.assertEqual(len(graph), 2)
-        boundary_node = next(node for node in graph if node["@id"] == "dcid:boundary")
+        boundary_node = next(
+            node for node in graph if node["@id"] == "dcid:boundary")
         self.assertEqual(boundary_node["@type"], "dcid:Thing")
         self.assertEqual(boundary_node["dcid:name"], "Boundary")
 

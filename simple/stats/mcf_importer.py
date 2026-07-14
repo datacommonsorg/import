@@ -66,15 +66,19 @@ class McfImporter(Importer):
         # Pass 1: Resolve local ID mappings and identify metadata subject IDs
         local2dcid = {}
         metadata_subject_ids = set()
-        for subject_id, predicate, value, _ in mcf_to_triples(self.input_file.read_string_io()):
+        for subject_id, predicate, value, _ in mcf_to_triples(
+            self.input_file.read_string_io()):
           if predicate == _DCID and value:
             local2dcid[subject_id] = value
-          elif predicate == "typeOf" and strip_namespace(value) in ["Provenance", "Source"]:
+          elif predicate == "typeOf" and strip_namespace(value) in [
+              "Provenance", "Source"
+          ]:
             metadata_subject_ids.add(subject_id)
 
         # Pass 2: Map and stream triples to database in chunks
-        logging.info("Streaming MCF triples parsing and database writes for %s...",
-                     self.input_file.full_path())
+        logging.info(
+            "Streaming MCF triples parsing and database writes for %s...",
+            self.input_file.full_path())
         chunk = []
         all_metadata_triples = []
 
