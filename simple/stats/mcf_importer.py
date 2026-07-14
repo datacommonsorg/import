@@ -63,14 +63,49 @@ class McfImporter(Importer):
       if self.is_main_dc:
         self.output_file.write(self.input_file.read())
       else:
-        triples = self._mcf_to_triples()
+        # Pass 1: Resolve local ID mappings and identify metadata subject IDs
+        local2dcid = {}
+        metadata_subject_ids = set()
+        triples_list = list(mcf_to_triples(self.input_file.read_string_io()))
+        for subject_id, predicate, value, _ in triples_list:
+          if predicate == _DCID and value:
+            local2dcid[subject_id] = value
+          elif predicate == "typeOf" and strip_namespace(value) in [
+              "Provenance", "Source"
+          ]:
+            metadata_subject_ids.add(subject_id)
 
-        # Extract and register Provenance / Source nodes in nodes registry
-        _register_metadata_nodes(triples, self.nodes)
+        # Pass 2: Map and stream triples to database in chunks
+        logging.info(
+            "Streaming MCF triples parsing and database writes for %s...",
+            self.input_file.full_path())
+        chunk = []
+        all_metadata_triples = []
 
-        logging.info("Inserting %s triples from %s", len(triples),
-                     self.input_file.full_path())
-        self.db.insert_triples(triples, self.input_file)
+        for parser_triple in triples_list:
+          subject_id, predicate, value, value_type = parser_triple
+          if predicate == _DCID:
+            continue
+
+          triple = _to_triple(parser_triple, local2dcid)
+
+          resolved_subject = local2dcid.get(subject_id, subject_id)
+          if subject_id in metadata_subject_ids or resolved_subject in metadata_subject_ids:
+            all_metadata_triples.append(triple)
+
+          # Only flush at subject boundaries to prevent splitting a subject's triples
+          if chunk and triple.subject_id != chunk[-1].subject_id and len(
+              chunk) >= 10000:
+            self.db.insert_triples(chunk, self.input_file)
+            chunk = []
+          chunk.append(triple)
+
+        if chunk:
+          self.db.insert_triples(chunk, self.input_file)
+
+        # Register all collected metadata nodes at the end
+        if all_metadata_triples:
+          _register_metadata_nodes(all_metadata_triples, self.nodes)
 
       self.reporter.report_success()
     except Exception as e:

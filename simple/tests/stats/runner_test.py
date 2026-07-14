@@ -523,8 +523,21 @@ class TestRunner(unittest.TestCase):
           return f"gs://my-bucket/jsonld/run_timestamp"
         return original_full_path(self, sub_path)
 
-      with mock.patch.dict(os.environ,
-                           {"INGESTION_WORKFLOW_NAME": "my-workflow"}):
+      mock_store = mock.MagicMock()
+      from stats.runner import create_store as real_create_store
+
+      def side_effect(path, *args, **kwargs):
+        if "ingestion_records" in path:
+          return mock_store
+        return real_create_store(path, *args, **kwargs)
+
+      with (mock.patch("stats.runner.create_store", side_effect=side_effect),
+            mock.patch.dict(
+                os.environ, {
+                    "INGESTION_WORKFLOW_NAME": "my-workflow",
+                    "WORKFLOW_EXECUTION_ID": "my-execution",
+                    "TEMP_LOCATION": "gs://my-bucket/temp"
+                })):
         with mock.patch.object(_StoreWrapper, "full_path", mock_full_path):
           runner = Runner(config_file_path=None,
                           input_dir_path=input_dir,
@@ -558,10 +571,16 @@ class TestRunner(unittest.TestCase):
               b.startswith("jsonld/run_timestamp/ilo/node-")
               for b in called_blobs))
 
-      # Assert that trigger_workflow_info holds paths for both oecd and ilo
-      self.assertEqual(len(runner.trigger_workflow_info), 2)
-      trigger_names = sorted(
-          [t["importName"] for t in runner.trigger_workflow_info])
+      # Verify GCS Handshake payload was written correctly
+      entered_mock = mock_store.__enter__.return_value
+      entered_mock.as_file.return_value.write.assert_called_once()
+      written_str = entered_mock.as_file.return_value.write.call_args[0][0]
+      written_payload = json.loads(written_str)
+      self.assertIn("importList", written_payload)
+
+      decoded_import_list = json.loads(written_payload["importList"])
+      self.assertEqual(len(decoded_import_list), 2)
+      trigger_names = sorted([t["importName"] for t in decoded_import_list])
       self.assertEqual(trigger_names, ["ilo", "oecd"])
 
 

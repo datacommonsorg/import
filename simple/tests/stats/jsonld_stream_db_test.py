@@ -14,6 +14,7 @@
 
 import json
 import os
+import shutil
 import tempfile
 import unittest
 from unittest import mock
@@ -60,22 +61,78 @@ class TestJsonLdStreamDb(unittest.TestCase):
                           import_names=["test_import"],
                           nodes=self.mock_nodes)
 
-      # Insert observations
-      df = pd.DataFrame([("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
-                        columns=[
-                            "entity", "variable", "date", "value", "provenance",
-                            "unit", "scaling_factor", "measurement_method",
-                            "observation_period", "properties"
-                        ])
-      mock_file = mock.Mock(path="test_import/data.csv")
-      db.insert_observations(df, mock_file)
-      self.assertEqual(len(db._obs_records["test_import"]), 1)
-      self.assertEqual(db._obs_records["test_import"][0][0], "e1")
+      try:
+        # Insert observations
+        df = pd.DataFrame(
+            [("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
+            columns=[
+                "entity", "variable", "date", "value", "provenance", "unit",
+                "scaling_factor", "measurement_method", "observation_period",
+                "properties"
+            ])
+        mock_file = mock.Mock(path="test_import/data.csv")
+        db.insert_observations(df, mock_file)
+        self.assertEqual(len(db._obs_records["test_import"]), 1)
+        self.assertEqual(db._obs_records["test_import"][0][0], "e1")
 
-      # Insert triples
-      triples = [Triple("sub1", "pred1", object_value="val1")]
-      db.insert_triples(triples, mock_file)
-      self.assertEqual(len(db._triples["test_import"]), 1)
+        # Insert triples
+        triples = [Triple("sub1", "pred1", object_value="val1")]
+        db.insert_triples(triples, mock_file)
+        node_shard = os.path.join(db.temp_local_dir, "test_import",
+                                  "node-00000.jsonld")
+        self.assertTrue(os.path.exists(node_shard))
+      finally:
+        db._temp_dir_obj.cleanup()
+
+  @mock.patch("stats.jsonld_stream_db._CHUNK_SIZE", 4)
+  def test_node_chunks_keep_boundary_subject_together(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      db = JsonLdStreamDb(output_dir=temp_store.as_dir(),
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
+
+      try:
+        triples = [
+            Triple("head", "first", object_value="1"),
+            Triple("head", "second", object_value="2"),
+            Triple("boundary", "typeOf", object_id="Thing"),
+            Triple("boundary", "name", object_value="Boundary"),
+            Triple("tail", "first", object_value="1"),
+            Triple("tail", "second", object_value="2"),
+            Triple("tail", "third", object_value="3"),
+        ]
+        mock_file = mock.Mock(path="test_import/nodes.mcf")
+        db.insert_triples(triples, mock_file)
+
+        shard0 = os.path.join(db.temp_local_dir, "test_import",
+                              "node-00000.jsonld")
+        shard1 = os.path.join(db.temp_local_dir, "test_import",
+                              "node-00001.jsonld")
+
+        self.assertTrue(os.path.exists(shard0))
+        self.assertTrue(os.path.exists(shard1))
+
+        with open(shard0, "r") as f:
+          data = json.load(f)
+          self.assertIn("@graph", data)
+          graph = data["@graph"]
+          # Expect 2 subjects: "head" and "boundary"
+          self.assertEqual(len(graph), 2)
+          boundary_node = next(
+              node for node in graph if node["@id"] == "dcid:boundary")
+          self.assertEqual(boundary_node["@type"], "dcid:Thing")
+          self.assertEqual(boundary_node["dcid:name"], "Boundary")
+
+        with open(shard1, "r") as f:
+          data = json.load(f)
+          self.assertIn("@graph", data)
+          graph = data["@graph"]
+          # Expect 1 subject: "tail"
+          self.assertEqual(len(graph), 1)
+          self.assertEqual(graph[0]["@id"], "dcid:tail")
+      finally:
+        db._temp_dir_obj.cleanup()
 
   def test_commit_and_close_local(self):
     with tempfile.TemporaryDirectory() as temp_dir:

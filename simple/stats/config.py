@@ -312,7 +312,7 @@ class Config:
     """Returns the normalized import name associated with a given input file."""
     prov_id = self._per_file_config(input_file).get("provenance")
     if prov_id:
-      return strip_namespace(prov_id).lower()
+      return strip_namespace(prov_id)
     raise ValueError(
         f"Could not determine import name: missing 'provenance' configuration for file '{input_file.path}'."
     )
