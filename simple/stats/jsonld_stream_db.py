@@ -293,7 +293,8 @@ class JsonLdStreamDb(Db):
 
   def _get_prov_urls(self) -> dict[str, str]:
     prov_urls = {}
-    if hasattr(self, 'nodes') and self.nodes and hasattr(self.nodes, 'provenances'):
+    if hasattr(self, 'nodes') and self.nodes and hasattr(
+        self.nodes, 'provenances'):
       for prov in self.nodes.provenances.values():
         prov_id = strip_namespace(prov.id)
         prov_urls[prov_id] = prov.url
@@ -310,8 +311,8 @@ class JsonLdStreamDb(Db):
       for i in range(0, n, _CHUNK_SIZE):
         chunk_df = df.iloc[i:i + _CHUNK_SIZE]
         chunk_records = chunk_df.to_records(index=False).tolist()
-        _write_observation_shard(
-            (chunk_records, self.obs_shard_index, import_temp_dir, self.ns_map, prov_urls))
+        _write_observation_shard((chunk_records, self.obs_shard_index,
+                                  import_temp_dir, self.ns_map, prov_urls))
         self.obs_shard_index += 1
 
   def insert_observations(self, observations_df: pd.DataFrame,
@@ -389,7 +390,8 @@ class JsonLdStreamDb(Db):
     has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
         self.temp_local_dir) else False
     if has_local_files:
-      logging.info("Finalizing JSON-LD local export and bulk uploading shards...")
+      logging.info(
+          "Finalizing JSON-LD local export and bulk uploading shards...")
       self._upload_shards(self.temp_local_dir)
 
     # Clean up local temporary directory
@@ -400,8 +402,6 @@ class JsonLdStreamDb(Db):
     except Exception as e:
       logging.warning("Failed to clean up local temporary directory %s: %s",
                       self.temp_local_dir, e)
-
-
 
   def _upload_shards(self, temp_local_dir: str):
     """Uploads files in temp_local_dir to jsonld_dir, optimizing for GCS via native SDK."""

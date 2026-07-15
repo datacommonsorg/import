@@ -76,7 +76,10 @@ class ObservationsImporter(Importer):
         continue
 
       if self.ignore_columns:
-        chunk_df.drop(columns=self.ignore_columns, axis=1, errors="ignore", inplace=True)
+        chunk_df.drop(columns=self.ignore_columns,
+                      axis=1,
+                      errors="ignore",
+                      inplace=True)
 
       chunk_df = chunk_df.convert_dtypes()
       chunk_df = chunk_df.astype({chunk_df.columns[1]: str})
