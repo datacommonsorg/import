@@ -190,6 +190,12 @@ CREATE TABLE Cache (
   value JSON,
 ) PRIMARY KEY(type, key, provenance);
 
+CREATE TABLE KeyValueStore (
+  type STRING(1024) NOT NULL,
+  key STRING(1024) NOT NULL,
+  provenance STRING(1024) NOT NULL,
+  value JSON,
+) PRIMARY KEY(type, key, provenance);
 
 
 
