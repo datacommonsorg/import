@@ -34,6 +34,8 @@ from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggr
 from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
 from .validator import validate_config
 
+_OUTPUT_IMPORT_KEY = "output_import"
+
 
 @dataclass
 class ImportExecutionResult:
@@ -225,7 +227,7 @@ class AggregationOrchestrator:
             current_import = queue.pop(0)
             for calc in self.calculations:
                 if self._calc_applies_to_import(calc, current_import):
-                    output = calc.get("output_import")
+                    output = calc.get(_OUTPUT_IMPORT_KEY)
                     if output and output not in expanded:
                         queue.append(output)
                         expanded.append(output)
@@ -383,7 +385,7 @@ class AggregationOrchestrator:
         """Triggers statistical variable aggregations."""
         stat_cfg = config.get("stat_var_aggregation", {})
         aggregations = stat_cfg.get("aggregations", [])
-        output_import_name = config.get("output_import")
+        output_import_name = config.get(_OUTPUT_IMPORT_KEY)
 
         generator = StatVarAggregator(self.executor, self.is_base_dc)
         jobs = []
@@ -409,7 +411,7 @@ class AggregationOrchestrator:
         """Triggers statistical variable calculations."""
         calc_cfg = config.get("stat_var_calculation", {})
         calculations = calc_cfg.get("calculations", [])
-        output_import_name = config.get("output_import")
+        output_import_name = config.get(_OUTPUT_IMPORT_KEY)
 
         logging.info(f"  -> Stat Var Calculation for imports {applicable_imports}")
         generator = StatVarCalculationGenerator(self.executor, self.is_base_dc)
@@ -448,7 +450,7 @@ class AggregationOrchestrator:
     def _trigger_entity(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers entity aggregations."""
         entity_cfg = config.get("entity_aggregation", {})
-        output_import = config.get("output_import", "")
+        output_import = config.get(_OUTPUT_IMPORT_KEY, "")
 
         cfg = EntityAggregationConfig(
             entity_types=entity_cfg.get("entity_types", []),
