@@ -58,6 +58,14 @@ public class GraphIngestionPipeline {
       options.setIsBaseDc(Boolean.parseBoolean(isBaseDcEnv));
     }
 
+    String emulatorHost = options.getEmulatorHost();
+    if (emulatorHost != null && !emulatorHost.isEmpty()) {
+      if ("production".equalsIgnoreCase(System.getenv("ENVIRONMENT"))) {
+        throw new SecurityException(
+            "CRITICAL: Emulator settings detected in production environment!");
+      }
+    }
+
     SpannerClient spannerClient =
         SpannerClient.builder()
             .gcpProjectId(options.getProjectId())
@@ -68,6 +76,7 @@ public class GraphIngestionPipeline {
             .timeSeriesTableName(options.getSpannerTimeSeriesTableName())
             .observationTableName(options.getSpannerObservationTableName())
             .numShards(options.getNumShards())
+            .emulatorHost(emulatorHost)
             .build();
 
     Pipeline pipeline = Pipeline.create(options);

@@ -13,6 +13,7 @@ main:
           - spanner_instance_id: '${sys.get_env("SPANNER_INSTANCE_ID")}'
           - spanner_database_id: '${sys.get_env("SPANNER_DATABASE_ID")}'
           - helper_url: ${"https://ingestion-helper-service-" + sys.get_env("PROJECT_NUMBER") + "." + location + ".run.app"}
+          - workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
           - import_list: ${default(map.get(args, "importList"), [])}
           - skip_aggregation: ${default(map.get(args, "skipAggregation"), true)}
           - dataflow_job_id: null
@@ -25,7 +26,7 @@ main:
             auth:
               type: OIDC
             body:
-              workflowId: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
+              workflowId: '${workflow_id}'
               timeout: ${lock_timeout}
           result: lock_status
         retry:
@@ -39,14 +40,28 @@ main:
         try:
           steps:
             - get_import_info:
-                call: http.post
-                args:
-                  url: ${helper_url + "/imports/info"}
-                  auth:
-                    type: OIDC
-                  body:
-                    importList: ${import_list}
-                result: import_info
+                steps:
+                  - fetch_import_info:
+                      call: http.post
+                      args:
+                        url: ${helper_url + "/imports/info"}
+                        auth:
+                          type: OIDC
+                        body:
+                          importList: ${import_list}
+                      result: import_info
+                  - update_ingestion_history_pending:
+                      call: http.post
+                      args:
+                        url: ${helper_url + "/imports/ingestion-history"}
+                        auth:
+                          type: OIDC
+                        body:
+                          workflowId: '${workflow_id}'
+                          status: 'PENDING'
+                          stage: 'dataflow'
+                          importList: '${import_info.body}'
+                      result: pending_history_response
             - run_ingestion_job:
                 call: run_dataflow_job
                 args:
@@ -60,45 +75,75 @@ main:
                   spanner_database_id: ${spanner_database_id}
                   wait_period: ${wait_period}
                   helper_url: ${helper_url}
-                  workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
+                  workflow_id: ${workflow_id}
                 result: dataflow_job_id
-            - check_skip_aggregation:
+            - run_aggregation_if_needed:
                 switch:
-                  - condition: ${skip_aggregation}
-                    next: update_ingestion_status
-            - run_aggregation_job:
-                call: run_aggregation_job
-                args:
-                  import_list: ${import_info.body}
-                  project_id: ${project_id}
-                  location: ${location}
+                  - condition: ${not skip_aggregation}
+                    steps:
+                      - run_aggregation_job:
+                          call: run_aggregation_job
+                          args:
+                            import_list: ${import_info.body}
+                            project_id: ${project_id}
+                            location: ${location}
             - update_ingestion_status:
-                call: http.post
-                args:
-                  url: ${helper_url + "/imports/ingestion-status"}
-                  auth:
-                    type: OIDC
-                  body:
-                    workflowId: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
-                    jobId: '${dataflow_job_id}'
-                    importList: '${import_info.body}'
-                    status: 'SUCCESS'
-                result: function_response
+                steps:
+                  - update_status_success:
+                      call: http.post
+                      args:
+                        url: ${helper_url + "/imports/ingestion-status"}
+                        auth:
+                          type: OIDC
+                        body:
+                          workflowId: '${workflow_id}'
+                          jobId: '${dataflow_job_id}'
+                          importList: '${import_info.body}'
+                          status: 'SUCCESS'
+                      result: function_response
+                  - update_ingestion_history_success:
+                      call: http.post
+                      args:
+                        url: ${helper_url + "/imports/ingestion-history"}
+                        auth:
+                          type: OIDC
+                        body:
+                          workflowId: '${workflow_id}'
+                          jobId: '${dataflow_job_id}'
+                          importList: '${import_info.body}'
+                          status: 'SUCCESS'
+                          stage: 'dataflow'
+                      result: success_history_response
         except:
           as: e
           steps:
             - record_failure:
-                call: http.post
-                args:
-                  url: ${helper_url + "/imports/ingestion-status"}
-                  auth:
-                    type: OIDC
-                  body:
-                    workflowId: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
-                    jobId: ${default(dataflow_job_id, default(map.get(e, "job_id"), "N/A"))}
-                    importList: '${import_info.body}'
-                    status: 'RETRY'
-                result: retry_response
+                steps:
+                  - update_status_retry:
+                      call: http.post
+                      args:
+                        url: ${helper_url + "/imports/ingestion-status"}
+                        auth:
+                          type: OIDC
+                        body:
+                          workflowId: '${workflow_id}'
+                          jobId: ${default(dataflow_job_id, default(map.get(e, "job_id"), "N/A"))}
+                          importList: '${import_info.body}'
+                          status: 'RETRY'
+                      result: retry_response
+                  - update_ingestion_history_retry:
+                      call: http.post
+                      args:
+                        url: ${helper_url + "/imports/ingestion-history"}
+                        auth:
+                          type: OIDC
+                        body:
+                          workflowId: '${workflow_id}'
+                          jobId: ${default(dataflow_job_id, default(map.get(e, "job_id"), "N/A"))}
+                          importList: '${import_info.body}'
+                          status: 'RETRY'
+                          stage: 'dataflow'
+                      result: retry_history_response
             - capture_error:
                 assign:
                   - execution_error: ${e}
@@ -109,7 +154,7 @@ main:
           auth:
             type: OIDC
           body:
-            workflowId: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
+            workflowId: '${workflow_id}'
         result: function_response
     - fail_workflow:
         switch:
@@ -159,26 +204,40 @@ run_dataflow_job:
           - condition: ${import_list == "[]"}
             return: ''
     - launch_dataflow_job:
-        call: googleapis.dataflow.v1b3.projects.locations.flexTemplates.launch
-        args:
-          projectId: '${project_id}'
-          location: '${location}'
-          body:
-            launchParameter:
-              containerSpecGcsPath: '${template_gcs_path}'
-              jobName: '${jobName}'
-              parameters:
-                importList: '${import_list}'
-                projectId: '${spanner_project_id}'
-                spannerInstanceId: '${spanner_instance_id}'
-                spannerDatabaseId: '${spanner_database_id}'
-                # Revert this once switched to the new DB.
-                spannerObservationTableName: 'Observation_final_v3'
-                spannerTimeSeriesTableName: 'TimeSeries_final_v3'
-              environment:
-                numWorkers: ${numWorkers}
-                machineType: ${machineType}
-        result: launch_result
+        steps:
+          - launch_job:
+              call: googleapis.dataflow.v1b3.projects.locations.flexTemplates.launch
+              args:
+                projectId: '${project_id}'
+                location: '${location}'
+                body:
+                  launchParameter:
+                    containerSpecGcsPath: '${template_gcs_path}'
+                    jobName: '${jobName}'
+                    parameters:
+                      importList: '${import_list}'
+                      projectId: '${spanner_project_id}'
+                      spannerInstanceId: '${spanner_instance_id}'
+                      spannerDatabaseId: '${spanner_database_id}'
+                      # Revert this once switched to the new DB.
+                      spannerObservationTableName: 'Observation_final_v3'
+                      spannerTimeSeriesTableName: 'TimeSeries_final_v3'
+                    environment:
+                      numWorkers: ${numWorkers}
+                      machineType: ${machineType}
+              result: launch_result
+          - update_ingestion_history_running:
+              call: http.post
+              args:
+                url: ${helper_url + "/imports/ingestion-history"}
+                auth:
+                  type: OIDC
+                body:
+                  workflowId: '${workflow_id}'
+                  status: 'RUNNING'
+                  stage: 'dataflow'
+                  jobId: '${launch_result.job.id}'
+              result: running_history_response
     - wait_for_job_completion:
         call: sys.sleep
         args:

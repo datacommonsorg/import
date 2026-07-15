@@ -290,6 +290,7 @@ public class McfParser {
     ssArg.delimiter = Vocabulary.VALUE_SEPARATOR;
     ssArg.includeEmpty = false;
     ssArg.stripEnclosingQuotes = false;
+    ssArg.stripEscapesBeforeQuotes = true;
     LogCb logCb =
         getLogCb()
             .setDetail(LogCb.PROP_KEY, prop)

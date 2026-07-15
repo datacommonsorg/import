@@ -29,7 +29,13 @@ from .provenance_summary_generator import ProvenanceSummaryGenerator
 from .stat_var_aggregator import StatVarAggregator
 from .stat_var_calculation_generator import StatVarCalculationGenerator
 from .stat_var_group_generator import StatVarGroupGenerator
+from .stat_var_series_aggregator import StatVarSeriesAggregator
+from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
+from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
 from .validator import validate_config
+from .deleter import AggregationDeleter
+
+_OUTPUT_IMPORT_KEY = "output_import"
 
 
 @dataclass
@@ -61,10 +67,13 @@ class CalculationType(str, Enum):
     """Supported aggregation calculation step types."""
     PLACE_AGGREGATION = "PLACE_AGGREGATION"
     STAT_VAR_AGGREGATION = "STAT_VAR_AGGREGATION"
+    ENTITY_AGGREGATION = "ENTITY_AGGREGATION"
     STAT_VAR_CALCULATION = "STAT_VAR_CALCULATION"
     LINKED_EDGES = "LINKED_EDGES"
     PROVENANCE_SUMMARY = "PROVENANCE_SUMMARY"
     STAT_VAR_GROUPS = "STAT_VAR_GROUPS"
+    STAT_VAR_SERIES_AGGREGATION = "STAT_VAR_SERIES_AGGREGATION"
+    SUPER_ENUM_AGGREGATION = "SUPER_ENUM_AGGREGATION"
 
 
 class AggregationOrchestrator:
@@ -79,7 +88,9 @@ class AggregationOrchestrator:
         location: Optional[str] = None,
         is_base_dc: bool = True,
         config_dir: Optional[str] = None,
-        config_file_path: Optional[str] = None
+        config_file_path: Optional[str] = None,
+        run_sequential: bool = False,
+        poll_interval: int = 15
     ) -> None:
         """Initializes the orchestrator and loads/validates configuration files.
 
@@ -92,6 +103,8 @@ class AggregationOrchestrator:
             is_base_dc: Whether this is running in the base Data Commons environment.
             config_dir: Directory containing aggregation YAML configs (default: configs/).
             config_file_path: Optional path to single config file or directory.
+            run_sequential: Whether to run queries sequentially (default: False).
+            poll_interval: Polling interval in seconds when waiting for jobs (default: 15).
         """
         self.executor = BigQueryExecutor(
             connection_id=connection_id,
@@ -99,9 +112,16 @@ class AggregationOrchestrator:
             instance_id=instance_id,
             database_id=database_id,
             location=location,
-            run_sequential=False
+            run_sequential=run_sequential
         )
         self.is_base_dc = is_base_dc
+        self.poll_interval = poll_interval
+        self.deleter = AggregationDeleter(
+            project_id=project_id,
+            instance_id=instance_id,
+            database_id=database_id,
+            is_base_dc=is_base_dc
+        )
 
         # Resolve paths for config directory and schema
         curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -118,7 +138,7 @@ class AggregationOrchestrator:
         else:
             self.calculations = validate_config(target_config, schema_file_path)
 
-    def run(self, active_imports: List[str], dry_run: bool = True) -> AggregationRunResult:
+    def run(self, active_imports: List[str], dry_run: bool = True, skip_deletions: bool = False) -> AggregationRunResult:
         """Executes aggregations independently for each active import.
 
         Blocks and synchronizes stage progression for each import:
@@ -127,16 +147,27 @@ class AggregationOrchestrator:
         Args:
             active_imports: List of active import dataset names to process.
             dry_run: If True, logs imports and active stages without executing BigQuery jobs.
+            skip_deletions: If True, skips deleting existing aggregated data.
 
         Returns:
             AggregationRunResult containing status per import.
         """
+        expanded_imports = self._expand_active_imports(active_imports)
+        
+        if not skip_deletions:
+            self._delete_previous_aggregations(
+                imports=expanded_imports,
+                dry_run=dry_run
+            )
+        else:
+            logging.info("Skipping deletion of existing aggregated data as skip_deletions=True.")
+
         logging.info(
-            f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports}"
+            f"Starting Aggregation Orchestrator run (dry_run={dry_run}, skip_deletions={skip_deletions}) for active imports: {active_imports} (expanded: {expanded_imports})"
         )
         run_result = AggregationRunResult()
 
-        for single_import in active_imports:
+        for single_import in expanded_imports:
             logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
             active_stages = self._get_active_stages_for_import(single_import)
 
@@ -182,6 +213,36 @@ class AggregationOrchestrator:
 
         return run_result
 
+    def _delete_previous_aggregations(
+        self,
+        imports: List[str],
+        dry_run: bool = True
+    ) -> None:
+        """Deletes existing aggregated data for the specified imports before running aggregations.
+
+        Args:
+            imports: List of import names to process for deletion.
+            dry_run: If True, only logs what would be deleted.
+        """
+
+        to_delete = set()
+        for single_import in imports:
+            for calc in self.calculations:
+                if self._calc_applies_to_import(calc, single_import):
+                    output = calc.get("output_import")
+                    if output:
+                        to_delete.add(output)
+
+        if not to_delete:
+            logging.info("No existing aggregated data resolved for deletion.")
+            return
+
+        to_delete_list = sorted(list(to_delete))
+        if dry_run:
+            logging.info(f"[Dry Run] Would delete aggregated data for imports: {to_delete_list}")
+        else:
+            self.deleter.delete_aggregated_data(to_delete_list)
+
     def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.
 
@@ -197,22 +258,48 @@ class AggregationOrchestrator:
                 stages.add(calc.get("stage", 1))
         return sorted(list(stages))
 
+    def _expand_active_imports(self, active_imports: List[str]) -> List[str]:
+        """Expands the list of active imports to include chained aggregated imports.
+
+        For example, if 'A' is active, and there is a calculation:
+          input_imports: ['A']
+          output_import: 'B'
+        Then 'B' should also be added to the active imports.
+        This process is repeated transitively.
+        """
+        expanded = list(active_imports)
+        queue = list(active_imports)
+
+        while queue:
+            current_import = queue.pop(0)
+            for calc in self.calculations:
+                if self._calc_applies_to_import(calc, current_import):
+                    output = calc.get(_OUTPUT_IMPORT_KEY)
+                    if output and output not in expanded:
+                        queue.append(output)
+                        expanded.append(output)
+                        
+        return expanded
+
+
     def get_active_stages(self, active_imports: List[str]) -> List[int]:
         """Returns a sorted list of unique active stage numbers across active imports."""
+        expanded_imports = self._expand_active_imports(active_imports)
         stages = set()
-        for single_import in active_imports:
+        for single_import in expanded_imports:
             stages.update(self._get_active_stages_for_import(single_import))
         return sorted(list(stages))
 
     def execute_stage(self, stage_num: int, active_imports: List[str]) -> List[str]:
         """Executes a single stage for all active imports asynchronously."""
+        expanded_imports = self._expand_active_imports(active_imports)
         stage_jobs = []
         for calc in self.calculations:
             calc_stage = calc.get("stage", 1)
             if calc_stage != stage_num:
                 continue
 
-            applicable_imports = [imp for imp in active_imports if self._calc_applies_to_import(calc, imp)]
+            applicable_imports = [imp for imp in expanded_imports if self._calc_applies_to_import(calc, imp)]
             if not applicable_imports:
                 continue
 
@@ -247,7 +334,7 @@ class AggregationOrchestrator:
                 logging.info(f"Submitted {len(job_ids)} job(s) for Stage {stage_num} (import: '{single_import}'): {job_ids}")
                 self._wait_for_jobs(
                     job_ids=job_ids,
-                    poll_interval=15,
+                    poll_interval=self.poll_interval,
                     step_name=f"{step_type} (Stage {stage_num})",
                     single_import=single_import
                 )
@@ -260,6 +347,8 @@ class AggregationOrchestrator:
             return self._trigger_place(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_AGGREGATION:
             return self._trigger_stat_var(calc, applicable_imports)
+        elif step_type == CalculationType.ENTITY_AGGREGATION:
+            return self._trigger_entity(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_CALCULATION:
             return self._trigger_stat_var_calculation(calc, applicable_imports)
         elif step_type == CalculationType.LINKED_EDGES:
@@ -268,6 +357,10 @@ class AggregationOrchestrator:
             return self._trigger_provenance_summary(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_GROUPS:
             return self._trigger_stat_var_groups(calc, applicable_imports)
+        elif step_type == CalculationType.STAT_VAR_SERIES_AGGREGATION:
+            return self._trigger_stat_var_series_aggregation(calc, applicable_imports)
+        elif step_type == CalculationType.SUPER_ENUM_AGGREGATION:
+            return self._trigger_super_enum_aggregation(calc, applicable_imports)
         else:
             logging.warning(
                 f"Calculation type '{step_type}' configured for imports '{applicable_imports}' has no active generator handler."
@@ -339,7 +432,7 @@ class AggregationOrchestrator:
         """Triggers statistical variable aggregations."""
         stat_cfg = config.get("stat_var_aggregation", {})
         aggregations = stat_cfg.get("aggregations", [])
-        output_import_name = config.get("output_import")
+        output_import_name = config.get(_OUTPUT_IMPORT_KEY)
 
         generator = StatVarAggregator(self.executor, self.is_base_dc)
         jobs = []
@@ -365,7 +458,7 @@ class AggregationOrchestrator:
         """Triggers statistical variable calculations."""
         calc_cfg = config.get("stat_var_calculation", {})
         calculations = calc_cfg.get("calculations", [])
-        output_import_name = config.get("output_import")
+        output_import_name = config.get(_OUTPUT_IMPORT_KEY)
 
         logging.info(f"  -> Stat Var Calculation for imports {applicable_imports}")
         generator = StatVarCalculationGenerator(self.executor, self.is_base_dc)
@@ -392,6 +485,39 @@ class AggregationOrchestrator:
         logging.info(f"  -> Stat Var Groups Aggregation for imports {applicable_imports}")
         generator = StatVarGroupGenerator(self.executor, self.is_base_dc)
         return generator.run_all(applicable_imports)
+
+    def _trigger_stat_var_series_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers statistical variable series aggregations."""
+        logging.info(f"  -> Stat Var Series Aggregation for imports {applicable_imports}")
+        calc = config.copy()
+        calc["input_imports"] = applicable_imports
+        generator = StatVarSeriesAggregator(self.executor, self.is_base_dc)
+        return generator.aggregate_series([calc])
+
+    def _trigger_entity(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers entity aggregations."""
+        entity_cfg = config.get("entity_aggregation", {})
+        output_import = config.get(_OUTPUT_IMPORT_KEY, "")
+
+        cfg = EntityAggregationConfig(
+            entity_types=entity_cfg.get("entity_types", []),
+            location_props=entity_cfg.get("location_props", []),
+            date_prop=entity_cfg.get("date_prop", ""),
+            agg_date_formats=entity_cfg.get("agg_date_formats", []),
+            constraints=entity_cfg.get("constraints", []),
+            output_import=output_import,
+            input_imports=applicable_imports
+        )
+
+        logging.info(f"  -> Entity Aggregation for imports {applicable_imports}")
+        generator = EntityAggregationGenerator(self.executor, self.is_base_dc)
+        return generator.aggregate_entities([cfg])
+
+    def _trigger_super_enum_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers super enum aggregations."""
+        logging.info(f"  -> Super Enum Aggregation for imports {applicable_imports}")
+        generator = SuperEnumAggregationGenerator(self.executor, self.is_base_dc)
+        return generator.run(applicable_imports)
 
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""

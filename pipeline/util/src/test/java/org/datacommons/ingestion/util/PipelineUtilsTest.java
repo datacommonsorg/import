@@ -181,6 +181,59 @@ public class PipelineUtilsTest {
   }
 
   @Test
+  public void testCombineGraphNodesDeduplicationAndTypeOf() {
+    // Input Graph 1
+    McfGraph graph1 =
+        createGraph(
+            Map.of(
+                "node1",
+                Map.of("propA", List.of("val1", "val1")),
+                "node2",
+                Map.of("typeOf", List.of("schema:Place")),
+                "node3",
+                Map.of("typeOf", List.of("schema:Place", "dcs:Place")),
+                "node4",
+                Map.of("typeOf", List.of("Place", "dcs:State", "dcs:State"))));
+
+    // Input Graph 2
+    McfGraph graph2 =
+        createGraph(
+            Map.of(
+                "node1",
+                Map.of("propA", List.of("val1", "val2", "val2")),
+                "node2",
+                Map.of("typeOf", List.of("dcs:State")),
+                "node3",
+                Map.of("typeOf", List.of("schema:Place")),
+                "node4",
+                Map.of("typeOf", List.of("dcs:Country", "Place"))));
+
+    // Expected Combined Graph
+    McfGraph expectedCombinedGraph =
+        createGraph(
+            Map.of(
+                "node1",
+                Map.of("propA", List.of("val1", "val2")),
+                "node2",
+                Map.of("typeOf", List.of("dcs:State")),
+                "node3",
+                Map.of("typeOf", List.of("schema:Place")),
+                "node4",
+                Map.of("typeOf", List.of("dcs:Country", "dcs:State"))));
+
+    PCollection<McfGraph> input = p.apply("CreateInputDeduplication", Create.of(graph1, graph2));
+    PCollection<McfGraph> output = PipelineUtils.combineGraphNodes("testDeduplication", input);
+
+    PCollection<McfGraph> mergedOutput =
+        output.apply(
+            "MergeOutputGraphsDeduplication",
+            Combine.globally(new MergeMcfGraphsCombineFn()).withoutDefaults());
+    PAssert.thatSingleton(mergedOutput).isEqualTo(expectedCombinedGraph);
+    PipelineResult.State state = p.run().waitUntilFinish();
+    Assert.assertEquals(PipelineResult.State.DONE, state);
+  }
+
+  @Test
   public void testReadJsonLdFiles() throws java.io.IOException {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
 

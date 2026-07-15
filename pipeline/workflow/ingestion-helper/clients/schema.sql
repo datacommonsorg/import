@@ -51,6 +51,7 @@ CREATE INDEX EdgeByProvenance ON Edge(provenance) OPTIONS (
 -- CONSTRAINT FKPredicate FOREIGN KEY(predicate) REFERENCES Node(subject_id);
 -- CONSTRAINT FKProvenance FOREIGN KEY(provenance) REFERENCES Node(subject_id);
 
+
 CREATE TABLE TimeSeries (
   variable_measured STRING(1024) NOT NULL,
   entity1 STRING(1024) NOT NULL AS (JSON_VALUE(entities, '$.entity1')) STORED,
@@ -98,6 +99,17 @@ CREATE INDEX TimeSeriesByProvenance ON TimeSeries(provenance) OPTIONS (
   columnar_policy = 'enabled'
 );
 
+-- Namespace table for namespaces used by DCP instances
+CREATE TABLE Namespace (
+    NamespaceId STRING(64) NOT NULL,  -- e.g., "dcid", "schema", "myorg"
+    Uri STRING(2048) NOT NULL,        -- e.g., "https://example.org/browser/"
+    IsLocal BOOL NOT NULL,            -- TRUE for local custom namespace, FALSE for remote
+    ApiUrl STRING(2048),              -- HTTP endpoint of the remote Mixer (null if local)
+    ApiKey STRING(2048),               -- Optional API key for authenticating with the remote Mixer
+    Created TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE ), -- Creation timestamp
+    Updated TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE )  -- Last updated timestamp
+) PRIMARY KEY (NamespaceId);
+
 CREATE TABLE ImportStatus (
   ImportName STRING(MAX) NOT NULL,
   LatestVersion STRING(MAX),
@@ -113,21 +125,32 @@ CREATE TABLE ImportStatus (
 ) PRIMARY KEY(ImportName);
 
 CREATE TABLE IngestionHistory (
-  CompletionTimestamp TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE ),
-  IngestionFailure Bool NOT NULL,
   WorkflowExecutionID STRING(1024) NOT NULL,
+  CreationTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+  CompletionTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+  IngestionFailure Bool,
+  Status STRING(1024),
+  Stage STRING(1024),
   DataflowJobID STRING(1024),
   IngestedImports ARRAY<STRING(MAX)>,
   ExecutionTime INT64,
   NodeCount INT64,
   EdgeCount INT64,
   ObservationCount INT64,
-) PRIMARY KEY(CompletionTimestamp DESC);
+  TimeSeriesCount INT64,
+) PRIMARY KEY(WorkflowExecutionID);
 
 CREATE TABLE ImportVersionHistory (
   ImportName STRING(MAX) NOT NULL,
   Version STRING(MAX) NOT NULL,
   UpdateTimestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+  WorkflowExecutionID STRING(1024),
+  Status STRING(1024),
+  ExecutionTime INT64,
+  NodeCount INT64,
+  EdgeCount INT64,
+  ObservationCount INT64,
+  TimeSeriesCount INT64,
   Comment STRING(MAX),
 ) PRIMARY KEY (ImportName, UpdateTimestamp DESC);
 

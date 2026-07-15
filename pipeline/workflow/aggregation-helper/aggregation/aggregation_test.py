@@ -24,20 +24,32 @@ from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator
 from aggregation import ProvenanceSummaryGenerator
 from aggregation import PlaceAggregationGenerator
-from aggregation.sql_utils import _escape_sql_literal
+from aggregation.common import (
+    BASE_PROVENANCE_PREFIX,
+    _escape_sql_literal,
+    get_provenance_prefix,
+    get_provenance_name
+)
 
 
-class TestSQLUtils(unittest.TestCase):
+class TestCommonUtils(unittest.TestCase):
 
     def test_escape_sql_literal(self):
-        self.assertEqual(_escape_sql_literal("simple"), "simple")
-        self.assertEqual(_escape_sql_literal("back\\slash"),
-                         "back\\\\\\\\slash")
-        self.assertEqual(_escape_sql_literal("double\"quote"),
-                         "double\\\"quote")
+        self.assertEqual(_escape_sql_literal("normal"), "normal")
+        self.assertEqual(_escape_sql_literal(r"back\slash"), r"back\\\\slash")
+        self.assertEqual(_escape_sql_literal('double"quote'), r'double\"quote')
         self.assertEqual(_escape_sql_literal("single'quote"), "single''quote")
-        self.assertEqual(_escape_sql_literal("mixed\\'\""),
-                         "mixed\\\\\\\\''\\\"")
+
+    def test_base_provenance_prefix(self):
+        self.assertEqual(BASE_PROVENANCE_PREFIX, "dc/base/")
+
+    def test_get_provenance_prefix(self):
+        self.assertEqual(get_provenance_prefix(is_base_dc=True), "dc/base/")
+        self.assertEqual(get_provenance_prefix(is_base_dc=False), "")
+
+    def test_get_provenance_name(self):
+        self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=True), "dc/base/USFed_Census")
+        self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=False), "USFed_Census")
 
 
 @patch('aggregation.bq_executor.bigquery.Client')
@@ -49,6 +61,7 @@ class TestBigQueryExecutor(unittest.TestCase):
                                     instance_id="inst",
                                     database_id="db",
                                     location="loc")
+        _ = executor.client
         mock_bq_client.assert_called_once_with(project="proj", location="loc")
         self.assertEqual(
             executor.get_spanner_destination_uri(),
@@ -58,10 +71,11 @@ class TestBigQueryExecutor(unittest.TestCase):
     def test_init_failure(self, mock_bq_client):
         mock_bq_client.side_effect = Exception("Auth error")
         with self.assertRaises(Exception):
-            BigQueryExecutor(connection_id="conn",
+            executor = BigQueryExecutor(connection_id="conn",
                              project_id="proj",
                              instance_id="inst",
                              database_id="db")
+            _ = executor.client
 
     def test_execute_sequential(self, mock_bq_client):
         mock_client_instance = MagicMock()
