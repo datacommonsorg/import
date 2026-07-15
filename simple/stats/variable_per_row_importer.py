@@ -171,7 +171,7 @@ class VariablePerRowImporter(Importer):
 
   def _read_csv(self) -> None:
     # Read only the header row to extract column names for validation
-    self.df = pd.read_csv(self.input_file.read_string_io(), nrows=1)
+    self.df = pd.read_csv(self.input_file.open_stream(), nrows=1)
 
   def _map_columns(self):
     config_mappings = self.config.column_mappings(self.input_file)
@@ -241,7 +241,7 @@ class VariablePerRowImporter(Importer):
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
-    reader = pd.read_csv(self.input_file.read_string_io(), chunksize=10000)
+    reader = pd.read_csv(self.input_file.open_stream(), chunksize=10000)
 
     for chunk_df in reader:
       if chunk_df.empty:

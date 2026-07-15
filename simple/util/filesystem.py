@@ -227,6 +227,10 @@ class File(_StoreWrapper):
   def read_string_io(self) -> io.StringIO:
     return io.StringIO(self.read())
 
+  def open_stream(self):
+    """Returns an open text stream for streaming line-by-line without downloading full contents upfront."""
+    return self.fs().open(self.path, "r")
+
   def size(self) -> int:
     """Returns the size of the file in bytes."""
     return self.fs().getsize(self.path)

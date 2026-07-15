@@ -61,7 +61,7 @@ class ObservationsImporter(Importer):
 
   def _process_chunks(self) -> None:
     reader = pd.read_csv(
-        self.input_file.read_string_io(),
+        self.input_file.open_stream(),
         dtype={0: str},
         skipinitialspace=True,
         thousands=",",
@@ -69,6 +69,7 @@ class ObservationsImporter(Importer):
     )
     first_chunk = True
     renamed = {}
+    debug_dfs = []
 
     for chunk_df in reader:
       if chunk_df.empty:
@@ -96,9 +97,15 @@ class ObservationsImporter(Importer):
       chunk_df = chunk_df.rename(columns=renamed)
       self.df = chunk_df
       self._resolve_entities()
+      if self.debug_resolve_df is not None:
+        debug_dfs.append(self.debug_resolve_df)
+        self.debug_resolve_df = None
       self._add_entity_nodes()
       self._write_observations()
       self.df = pd.DataFrame()
+
+    if debug_dfs:
+      self.debug_resolve_df = pd.concat(debug_dfs, ignore_index=True)
 
   def _write_observations(self) -> None:
     observations_df = self.df.astype(str)
