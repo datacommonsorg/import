@@ -336,7 +336,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("TEST_TASK", query)
 
     @patch.dict('os.environ', {'ENABLE_EMBEDDINGS': 'true'})
-    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value=['statVar1', 'statVar2'])
+    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value={'statVar1': 'sentence1', 'statVar2': 'sentence2'})
     def test_run_all_nl_stat_var(self, mock_extract):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
@@ -358,11 +358,21 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
         job_config = self.mock_executor.execute.call_args[1].get('job_config') or self.mock_executor.execute.call_args.kwargs.get('job_config')
-        self.assertIn("subject_id IN UNNEST(@nl_stat_vars)", query)
+        self.assertIn("FROM UNNEST(@nl_stat_vars)", query)
+        self.assertIn("INNER JOIN raw_nodes", query)
         self.assertIsNotNone(job_config)
-        param_values = [p.values for p in job_config.query_parameters if p.name == 'nl_stat_vars'][0]
-        self.assertIn("statVar1", param_values)
-        self.assertIn("statVar2", param_values)
+        struct_params = [p.values for p in job_config.query_parameters if p.name == 'nl_stat_vars'][0]
+        
+        dcids = []
+        sentences = []
+        for sp in struct_params:
+            dcids.append(sp.struct_values.get("dcid"))
+            sentences.append(sp.struct_values.get("sentence"))
+                    
+        self.assertIn("statVar1", dcids)
+        self.assertIn("statVar2", dcids)
+        self.assertIn("sentence1", sentences)
+        self.assertIn("sentence2", sentences)
 
 
 if __name__ == '__main__':

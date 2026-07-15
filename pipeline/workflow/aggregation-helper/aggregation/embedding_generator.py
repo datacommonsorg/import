@@ -49,7 +49,7 @@ _DEFAULT_EMBEDDING_SPECS = [
 
 
 @lru_cache(maxsize=1)
-def _extract_nl_stat_var() -> List[str]:
+def _extract_nl_stat_var() -> dict[str, str]:
     path = _NL_STAT_VAR_FILE
     content = ""
     if path.startswith("gs://"):
@@ -67,16 +67,17 @@ def _extract_nl_stat_var() -> List[str]:
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
 
-    dcids = set()
+    dcids = dict()
     reader = csv.DictReader(io.StringIO(content))
     for row in reader:
         dcid_str = row.get("dcid")
+        sentence = row.get("sentence")
         if dcid_str:
             for item in dcid_str.split(";"):
                 item = item.strip()
                 if item:
-                    dcids.add(item)
-    return list(dcids)
+                    dcids[item] = sentence
+    return dcids
 
 
 class EmbeddingGenerator:
@@ -130,15 +131,42 @@ class EmbeddingGenerator:
         safe_types = [f"'{nt.replace(chr(39), chr(92) + chr(39))}'" for nt in node_types]
         node_types_list_sql = f"[{', '.join(safe_types)}]"
 
-        # 2. Build the filter condition and query parameters for BigQuery
+        # 2. Build the select query and query parameters for BigQuery
         job_config = None
         if node_filter_type == "NoFilter":
-            filter_condition_sql = "TRUE"
+            select_nodes_sql = """
+                SELECT 
+                  subject_id, 
+                  JSON_VALUE(embedding_content.name) AS content, 
+                  embedding_content, 
+                  node_types 
+                FROM raw_nodes
+            """
         elif node_filter_type == "NLStatisticalVariable":
-            filter_condition_sql = "subject_id IN UNNEST(@nl_stat_vars)"
+            select_nodes_sql = """
+                SELECT 
+                  r.subject_id, 
+                  m.sentence AS content, 
+                  JSON_OBJECT("title", r.subject_id, "name", m.sentence) AS embedding_content, 
+                  r.node_types 
+                FROM UNNEST(@nl_stat_vars) m
+                INNER JOIN raw_nodes r ON r.subject_id = m.dcid
+            """
+            nl_dict = _extract_nl_stat_var()
             job_config = bigquery.QueryJobConfig(
                 query_parameters=[
-                    bigquery.ArrayQueryParameter("nl_stat_vars", "STRING", _extract_nl_stat_var())
+                    bigquery.ArrayQueryParameter(
+                        "nl_stat_vars",
+                        "RECORD",
+                        [
+                            bigquery.StructQueryParameter(
+                                "",
+                                bigquery.ScalarQueryParameter("dcid", "STRING", k),
+                                bigquery.ScalarQueryParameter("sentence", "STRING", v)
+                            )
+                            for k, v in nl_dict.items()
+                        ]
+                    )
                 ]
             )
         else:
@@ -153,6 +181,7 @@ class EmbeddingGenerator:
               types AS node_types
             FROM Node
             WHERE name IS NOT NULL
+              AND name <> ''
               AND %s
               AND EXISTS (
                 SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST({node_types_list_sql})
@@ -193,7 +222,7 @@ class EmbeddingGenerator:
           ml_generate_embedding_result AS embeddings
         FROM ML.GENERATE_EMBEDDING(
           MODEL `{project_id}.{bq_dataset_id}.{model_name}`,
-          (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types FROM raw_nodes WHERE {filter_condition_sql}),
+          ({select_nodes_sql}),
           STRUCT("{task_type}" AS task_type)
         );
 
