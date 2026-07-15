@@ -14,6 +14,7 @@
 
 """Deletes aggregated data in Spanner using Partitioned DML."""
 
+import concurrent.futures
 import logging
 from typing import List
 from google.cloud import spanner
@@ -41,9 +42,10 @@ class AggregationDeleter:
         return self._spanner_database
 
     def delete_aggregated_data(self, imports_to_delete: List[str]) -> None:
-        """Deletes aggregated data for the specified imports from Spanner.
+        """Deletes aggregated data for the specified imports from Spanner concurrently.
 
         Uses Partitioned DML to execute deletions, which is safe for large volumes.
+        Runs deletions for Edge, TimeSeries, and Cache in parallel using ThreadPoolExecutor.
 
         Args:
             imports_to_delete: List of import names (without dc/base/ prefix) to delete.
@@ -56,32 +58,30 @@ class AggregationDeleter:
         provenance_names = [get_provenance_name(name, self.is_base_dc) for name in imports_to_delete]
         
         db = self.spanner_database
-        edge_params = {"provenances": provenance_names}
-        edge_param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
+        params = {"provenances": provenance_names}
+        param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
+
+        delete_queries = [
+            ("Edge", "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)", ""),
+            ("TimeSeries", "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)", " (and cascaded Observations)"),
+            ("Cache", "DELETE FROM Cache WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "")
+        ]
+
+        def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
+            rows = db.execute_partitioned_dml(
+                sql, params=params, param_types=param_types
+            )
+            logging.info(f"Deleted {rows} rows from {table_name} table{extra_desc}.")
+            return rows
 
         try:
-            # 1. Delete from Edge
-            edge_delete_sql = "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)"
-            edge_rows = db.execute_partitioned_dml(
-                edge_delete_sql, params=edge_params, param_types=edge_param_types
-            )
-            logging.info(f"Deleted {edge_rows} rows from Edge table.")
-
-            # 2. Delete from TimeSeries (cascades to Observation)
-            ts_delete_sql = "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)"
-            ts_rows = db.execute_partitioned_dml(
-                ts_delete_sql, params=edge_params, param_types=edge_param_types
-            )
-            logging.info(f"Deleted {ts_rows} rows from TimeSeries table (and cascaded Observations).")
-
-            # 3. Delete from Cache (type = 'ProvenanceSummary')
-            cache_delete_sql = (
-                "DELETE FROM Cache WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)"
-            )
-            cache_rows = db.execute_partitioned_dml(
-                cache_delete_sql, params=edge_params, param_types=edge_param_types
-            )
-            logging.info(f"Deleted {cache_rows} rows from Cache table.")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(delete_queries)) as executor:
+                futures = [
+                    executor.submit(_execute_delete, table, sql, desc)
+                    for table, sql, desc in delete_queries
+                ]
+                for future in concurrent.futures.as_completed(futures):
+                    future.result()  # Propagate any worker thread exceptions to main thread
         except Exception as e:
             logging.error(f"Failed to execute partitioned DML for deletions: {e}")
             raise
