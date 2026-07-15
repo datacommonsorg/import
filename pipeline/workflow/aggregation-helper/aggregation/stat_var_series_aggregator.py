@@ -19,7 +19,7 @@ from typing import Any, Dict, List
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import _escape_sql_literal, get_provenance_name
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -81,10 +81,9 @@ class StatVarSeriesAggregator:
         connection_id = self.executor.connection_id
         dest = self.executor.get_spanner_destination_uri()
 
-        prefix = "dc/base/" if self.is_base_dc else ""
         safe_inputs = [_escape_sql_literal(name) for name in input_imports]
-        input_provenance_str = ", ".join([f"'{prefix}{name}'" for name in safe_inputs])
-        output_provenance = f"{prefix}{output_import}"
+        input_provenance_str = ", ".join([f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_inputs])
+        output_provenance = get_provenance_name(output_import, self.is_base_dc)
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
         # Build SQL fragments for each active function

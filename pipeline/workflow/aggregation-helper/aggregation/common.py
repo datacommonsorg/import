@@ -12,6 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+BASE_PROVENANCE_PREFIX = "dc/base/"
+
+
+def get_provenance_prefix(is_base_dc: bool) -> str:
+    """Returns the provenance prefix ('dc/base/' if base DC, else empty string)."""
+    return BASE_PROVENANCE_PREFIX if is_base_dc else ""
+
+
+def get_provenance_name(import_name: str, is_base_dc: bool) -> str:
+    """Returns the full provenance name (e.g. 'dc/base/USFed_Census' or 'USFed_Census')."""
+    return f"{get_provenance_prefix(is_base_dc)}{import_name}"
+
 
 def _escape_sql_literal(val: str) -> str:
     r"""

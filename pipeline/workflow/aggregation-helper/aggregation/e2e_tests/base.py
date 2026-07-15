@@ -168,7 +168,8 @@ class AggregationIntegrationTestBase(unittest.TestCase):
         active_imports: List[str],
         dry_run: bool = False,
         run_sequential: bool = True,
-        poll_interval: int = 3
+        poll_interval: int = 3,
+        skip_deletions: bool = False
     ) -> AggregationRunResult:
         """Helper to run AggregationOrchestrator with the given calculation configuration.
 
@@ -192,7 +193,7 @@ class AggregationIntegrationTestBase(unittest.TestCase):
                 run_sequential=run_sequential,
                 poll_interval=poll_interval
             )
-            return orchestrator.run(active_imports=active_imports, dry_run=dry_run)
+            return orchestrator.run(active_imports=active_imports, dry_run=dry_run, skip_deletions=skip_deletions)
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 os.remove(tmp_path)

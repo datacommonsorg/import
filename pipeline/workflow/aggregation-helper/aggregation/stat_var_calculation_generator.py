@@ -19,7 +19,7 @@ from typing import List, Dict
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import _escape_sql_literal, get_provenance_name
 
 
 class StatVarCalculationGenerator:
@@ -67,12 +67,11 @@ class StatVarCalculationGenerator:
         dest = self.executor.get_spanner_destination_uri()
 
         # Format input provenances
-        prefix = "dc/base/" if self.is_base_dc else ""
         safe_imports = [_escape_sql_literal(name) for name in import_names]
-        provenance_names = [f"{prefix}{name}" for name in safe_imports]
+        provenance_names = [get_provenance_name(name, self.is_base_dc) for name in safe_imports]
         provenance_str = ", ".join([f"'{name}'" for name in provenance_names])
 
-        output_provenance = f"{prefix}{output_import_name}"
+        output_provenance = get_provenance_name(output_import_name, self.is_base_dc)
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
         # Collect all unique input SV patterns to filter Spanner Observations early.

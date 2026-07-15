@@ -19,7 +19,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import _escape_sql_literal, get_provenance_name
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -111,11 +111,10 @@ class StatVarAggregator:
         safe_sources = [_escape_sql_literal(sv) for sv in source_svs]
         safe_imports = [_escape_sql_literal(name) for name in import_names]
 
-        prefix = "dc/base/" if self.is_base_dc else ""
         sources_str = ", ".join([f"'{sv}'" for sv in safe_sources])
-        imports_str = ", ".join([f"'{prefix}{name}'" for name in safe_imports])
+        imports_str = ", ".join([f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_imports])
         
-        output_provenance = f"{prefix}{output_import_name}"
+        output_provenance = get_provenance_name(output_import_name, self.is_base_dc)
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
         new_method_sql = """
@@ -201,11 +200,10 @@ class StatVarAggregator:
         safe_sources = [_escape_sql_literal(sv) for sv in source_svs]
         safe_imports = [_escape_sql_literal(name) for name in import_names]
 
-        prefix = "dc/base/" if self.is_base_dc else ""
         sources_str = ", ".join([f"'{sv}'" for sv in safe_sources])
-        imports_str = ", ".join([f"'{prefix}{name}'" for name in safe_imports])
+        imports_str = ", ".join([f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_imports])
 
-        output_provenance = f"{prefix}{output_import_name}"
+        output_provenance = get_provenance_name(output_import_name, self.is_base_dc)
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
         # Filter condition for completeness check

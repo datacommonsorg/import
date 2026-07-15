@@ -33,6 +33,7 @@ from .stat_var_series_aggregator import StatVarSeriesAggregator
 from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
 from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
 from .validator import validate_config
+from .deleter import AggregationDeleter
 
 _OUTPUT_IMPORT_KEY = "output_import"
 
@@ -115,6 +116,12 @@ class AggregationOrchestrator:
         )
         self.is_base_dc = is_base_dc
         self.poll_interval = poll_interval
+        self.deleter = AggregationDeleter(
+            project_id=project_id,
+            instance_id=instance_id,
+            database_id=database_id,
+            is_base_dc=is_base_dc
+        )
 
         # Resolve paths for config directory and schema
         curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -131,7 +138,7 @@ class AggregationOrchestrator:
         else:
             self.calculations = validate_config(target_config, schema_file_path)
 
-    def run(self, active_imports: List[str], dry_run: bool = True) -> AggregationRunResult:
+    def run(self, active_imports: List[str], dry_run: bool = True, skip_deletions: bool = False) -> AggregationRunResult:
         """Executes aggregations independently for each active import.
 
         Blocks and synchronizes stage progression for each import:
@@ -140,13 +147,23 @@ class AggregationOrchestrator:
         Args:
             active_imports: List of active import dataset names to process.
             dry_run: If True, logs imports and active stages without executing BigQuery jobs.
+            skip_deletions: If True, skips deleting existing aggregated data.
 
         Returns:
             AggregationRunResult containing status per import.
         """
         expanded_imports = self._expand_active_imports(active_imports)
+        
+        if not skip_deletions:
+            self._delete_previous_aggregations(
+                imports=expanded_imports,
+                dry_run=dry_run
+            )
+        else:
+            logging.info("Skipping deletion of existing aggregated data as skip_deletions=True.")
+
         logging.info(
-            f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports} (expanded: {expanded_imports})"
+            f"Starting Aggregation Orchestrator run (dry_run={dry_run}, skip_deletions={skip_deletions}) for active imports: {active_imports} (expanded: {expanded_imports})"
         )
         run_result = AggregationRunResult()
 
@@ -195,6 +212,36 @@ class AggregationOrchestrator:
                 )
 
         return run_result
+
+    def _delete_previous_aggregations(
+        self,
+        imports: List[str],
+        dry_run: bool = True
+    ) -> None:
+        """Deletes existing aggregated data for the specified imports before running aggregations.
+
+        Args:
+            imports: List of import names to process for deletion.
+            dry_run: If True, only logs what would be deleted.
+        """
+
+        to_delete = set()
+        for single_import in imports:
+            for calc in self.calculations:
+                if self._calc_applies_to_import(calc, single_import):
+                    output = calc.get("output_import")
+                    if output:
+                        to_delete.add(output)
+
+        if not to_delete:
+            logging.info("No existing aggregated data resolved for deletion.")
+            return
+
+        to_delete_list = sorted(list(to_delete))
+        if dry_run:
+            logging.info(f"[Dry Run] Would delete aggregated data for imports: {to_delete_list}")
+        else:
+            self.deleter.delete_aggregated_data(to_delete_list)
 
     def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.
