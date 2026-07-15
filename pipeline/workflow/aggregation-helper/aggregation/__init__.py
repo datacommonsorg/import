@@ -27,6 +27,7 @@ from .stat_var_calculation_generator import StatVarCalculationGenerator
 from .stat_var_series_aggregator import StatVarSeriesAggregator
 from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
 from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
+from .embedding_generator import EmbeddingGenerator
 from .orchestrator import AggregationOrchestrator, AggregationRunResult, ImportExecutionResult
 from .validator import validate_config
 from .deleter import AggregationDeleter
@@ -43,6 +44,7 @@ __all__ = [
     'SuperEnumAggregationGenerator',
     'EntityAggregationGenerator',
     'EntityAggregationConfig',
+    'EmbeddingGenerator',
     'AggregationOrchestrator',
     'AggregationDeleter',
     'AggregationRunResult',

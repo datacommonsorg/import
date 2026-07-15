@@ -19,3 +19,4 @@ calculations:
     stage: 1
     input_imports:
       - "*"
+

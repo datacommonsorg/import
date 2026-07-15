@@ -211,6 +211,9 @@ OPTIONS (
   distance_type = 'COSINE'
 );
 
+CREATE INDEX {{ embedding_label_index }}
+ON {{ embedding_table }}(embedding_label) STORING (embedding_content, embeddings, node_types);
+
 {% for model in models %}
 CREATE MODEL {{ model.name }}
 INPUT(
