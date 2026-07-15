@@ -34,6 +34,8 @@ from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggr
 from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
 from .validator import validate_config
 
+_OUTPUT_IMPORT_KEY = "output_import"
+
 
 @dataclass
 class ImportExecutionResult:
@@ -142,12 +144,13 @@ class AggregationOrchestrator:
         Returns:
             AggregationRunResult containing status per import.
         """
+        expanded_imports = self._expand_active_imports(active_imports)
         logging.info(
-            f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports}"
+            f"Starting Aggregation Orchestrator run (dry_run={dry_run}) for active imports: {active_imports} (expanded: {expanded_imports})"
         )
         run_result = AggregationRunResult()
 
-        for single_import in active_imports:
+        for single_import in expanded_imports:
             logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
             active_stages = self._get_active_stages_for_import(single_import)
 
@@ -208,22 +211,48 @@ class AggregationOrchestrator:
                 stages.add(calc.get("stage", 1))
         return sorted(list(stages))
 
+    def _expand_active_imports(self, active_imports: List[str]) -> List[str]:
+        """Expands the list of active imports to include chained aggregated imports.
+
+        For example, if 'A' is active, and there is a calculation:
+          input_imports: ['A']
+          output_import: 'B'
+        Then 'B' should also be added to the active imports.
+        This process is repeated transitively.
+        """
+        expanded = list(active_imports)
+        queue = list(active_imports)
+
+        while queue:
+            current_import = queue.pop(0)
+            for calc in self.calculations:
+                if self._calc_applies_to_import(calc, current_import):
+                    output = calc.get(_OUTPUT_IMPORT_KEY)
+                    if output and output not in expanded:
+                        queue.append(output)
+                        expanded.append(output)
+                        
+        return expanded
+
+
     def get_active_stages(self, active_imports: List[str]) -> List[int]:
         """Returns a sorted list of unique active stage numbers across active imports."""
+        expanded_imports = self._expand_active_imports(active_imports)
         stages = set()
-        for single_import in active_imports:
+        for single_import in expanded_imports:
             stages.update(self._get_active_stages_for_import(single_import))
         return sorted(list(stages))
 
     def execute_stage(self, stage_num: int, active_imports: List[str]) -> List[str]:
         """Executes a single stage for all active imports asynchronously."""
+        expanded_imports = self._expand_active_imports(active_imports)
         stage_jobs = []
         for calc in self.calculations:
             calc_stage = calc.get("stage", 1)
             if calc_stage != stage_num:
                 continue
 
-            applicable_imports = [imp for imp in active_imports if self._calc_applies_to_import(calc, imp)]
+            applicable_imports = [imp for imp in expanded_imports if self._calc_applies_to_import(calc, imp)]
             if not applicable_imports:
                 continue
 
@@ -356,7 +385,7 @@ class AggregationOrchestrator:
         """Triggers statistical variable aggregations."""
         stat_cfg = config.get("stat_var_aggregation", {})
         aggregations = stat_cfg.get("aggregations", [])
-        output_import_name = config.get("output_import")
+        output_import_name = config.get(_OUTPUT_IMPORT_KEY)
 
         generator = StatVarAggregator(self.executor, self.is_base_dc)
         jobs = []
@@ -382,7 +411,7 @@ class AggregationOrchestrator:
         """Triggers statistical variable calculations."""
         calc_cfg = config.get("stat_var_calculation", {})
         calculations = calc_cfg.get("calculations", [])
-        output_import_name = config.get("output_import")
+        output_import_name = config.get(_OUTPUT_IMPORT_KEY)
 
         logging.info(f"  -> Stat Var Calculation for imports {applicable_imports}")
         generator = StatVarCalculationGenerator(self.executor, self.is_base_dc)
@@ -421,7 +450,7 @@ class AggregationOrchestrator:
     def _trigger_entity(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers entity aggregations."""
         entity_cfg = config.get("entity_aggregation", {})
-        output_import = config.get("output_import", "")
+        output_import = config.get(_OUTPUT_IMPORT_KEY, "")
 
         cfg = EntityAggregationConfig(
             entity_types=entity_cfg.get("entity_types", []),
