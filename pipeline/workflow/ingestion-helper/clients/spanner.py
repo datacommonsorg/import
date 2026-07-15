@@ -409,41 +409,25 @@ class SpannerClient:
         logging.info(
             f"Updating ImportVersionHistory table for workflow {workflow_id}")
 
-        enable_unique_version_schema = os.environ.get(
-            'ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
-
         def _insert(transaction: Transaction):
-            if enable_unique_version_schema:
-                columns = [
-                    "ImportName", "Version", "UpdateTimestamp",
-                    "WorkflowExecutionID", "Status", "ExecutionTime",
-                    "NodeCount", "EdgeCount", "ObservationCount",
-                    "TimeSeriesCount", "Comment"
-                ]
-                m = metrics if metrics else {}
-                version_history_values = []
-                for import_json in import_list_json:
-                    version_history_values.append([
-                        import_json['importName'], import_json['latestVersion'],
-                        spanner.COMMIT_TIMESTAMP, workflow_id, status,
-                        m.get('execution_time'),
-                        m.get('node_count'),
-                        m.get('edge_count'),
-                        m.get('obs_count'),
-                        m.get('ts_count'), "ingestion-workflow:" + workflow_id
-                    ])
-            else:
-                # TODO(gmechali): Delete this branch after schema is applied to prod.
-                columns = [
-                    "ImportName", "Version", "UpdateTimestamp", "Comment"
-                ]
-                version_history_values = []
-                for import_json in import_list_json:
-                    version_history_values.append([
-                        import_json['importName'], import_json['latestVersion'],
-                        spanner.COMMIT_TIMESTAMP,
-                        "ingestion-workflow:" + workflow_id
-                    ])
+            columns = [
+                "ImportName", "Version", "UpdateTimestamp",
+                "WorkflowExecutionID", "Status", "ExecutionTime",
+                "NodeCount", "EdgeCount", "ObservationCount",
+                "TimeSeriesCount", "Comment"
+            ]
+            m = metrics if metrics else {}
+            version_history_values = []
+            for import_json in import_list_json:
+                version_history_values.append([
+                    import_json['importName'], import_json['latestVersion'],
+                    spanner.COMMIT_TIMESTAMP, workflow_id, status,
+                    m.get('execution_time'),
+                    m.get('node_count'),
+                    m.get('edge_count'),
+                    m.get('obs_count'),
+                    m.get('ts_count'), "ingestion-workflow:" + workflow_id
+                ])
 
             if version_history_values:
                 transaction.insert(table="ImportVersionHistory",
@@ -536,35 +520,23 @@ class SpannerClient:
         import_name = import_name.split(':')[-1]
         logging.info(f"Updating version history for {import_name} to {version}")
 
-        enable_unique_version_schema = os.environ.get(
-            'ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
-
         def _record(transaction: Transaction):
-            if enable_unique_version_schema:
-                columns = [
-                    "ImportName", "Version", "UpdateTimestamp",
-                    "WorkflowExecutionID", "Status", "ExecutionTime",
-                    "NodeCount", "EdgeCount", "ObservationCount",
-                    "TimeSeriesCount", "Comment"
-                ]
-                m = metrics if metrics else {}
-                values = [[
-                    import_name, version, spanner.COMMIT_TIMESTAMP, workflow_id,
-                    status,
-                    m.get('execution_time'),
-                    m.get('node_count'),
-                    m.get('edge_count'),
-                    m.get('obs_count'),
-                    m.get('ts_count'), comment
-                ]]
-            else:
-                # TODO(gmechali): Delete this branch after schema is applied to prod.
-                columns = [
-                    "ImportName", "Version", "UpdateTimestamp", "Comment"
-                ]
-                values = [[
-                    import_name, version, spanner.COMMIT_TIMESTAMP, comment
-                ]]
+            columns = [
+                "ImportName", "Version", "UpdateTimestamp",
+                "WorkflowExecutionID", "Status", "ExecutionTime",
+                "NodeCount", "EdgeCount", "ObservationCount",
+                "TimeSeriesCount", "Comment"
+            ]
+            m = metrics if metrics else {}
+            values = [[
+                import_name, version, spanner.COMMIT_TIMESTAMP, workflow_id,
+                status,
+                m.get('execution_time'),
+                m.get('node_count'),
+                m.get('edge_count'),
+                m.get('obs_count'),
+                m.get('ts_count'), comment
+            ]]
             transaction.insert(table="ImportVersionHistory",
                                columns=columns,
                                values=values)
