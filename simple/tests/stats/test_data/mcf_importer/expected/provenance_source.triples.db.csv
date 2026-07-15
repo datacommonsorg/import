@@ -1,0 +1,8 @@
+subject_id,predicate,object_id,object_value
+TestProvenance,typeOf,Provenance,
+TestProvenance,name,,Test Dataset Provenance
+TestProvenance,source,TestSource,
+TestProvenance,url,,https://example.com/test-dataset
+TestSource,typeOf,Source,
+TestSource,name,,Test Data Source
+TestSource,url,,https://example.com

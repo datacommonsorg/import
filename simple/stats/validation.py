@@ -97,7 +97,7 @@ class MetadataValidator:
         if "Provenance" in obj:
           defined_provenances.add(sub)
 
-      elif pred in ["sourceLink", "source"]:
+      elif pred == "source":
         obj = triple.object_id or ""
         if obj:
           provenance_to_source[sub] = self._clean_dcid(obj)
@@ -126,14 +126,13 @@ class MetadataValidator:
 
     if missing_sources:
       details = [
-          f"  - Provenance '{p}' has no linked Source (sourceLink/source property is missing or empty)"
+          f"  - Provenance '{p}' has no linked Source (source property is missing or empty)"
           for p in missing_sources
       ]
       raise ValueError(
           f"Metadata Validation Failed: Linked sources are missing for "
           f"defined provenances:\n" + "\n".join(details) +
-          f"\nPlease specify a sourceLink or source property on these Provenance nodes."
-      )
+          f"\nPlease specify a source property on these Provenance nodes.")
 
   def _clean_dcid(self, val: str) -> str:
     """Normalizes a DCID value by ensuring it starts with 'dcid:' and has no prefix namespaces."""

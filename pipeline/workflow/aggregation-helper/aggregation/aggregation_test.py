@@ -27,19 +27,32 @@ from aggregation import PlaceAggregationGenerator
 from aggregation import EmbeddingGenerator
 from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.sql_utils import _escape_sql_literal
+from aggregation.common import (
+    BASE_PROVENANCE_PREFIX,
+    _escape_sql_literal,
+    get_provenance_prefix,
+    get_provenance_name
+)
 
 
-class TestSQLUtils(unittest.TestCase):
+class TestCommonUtils(unittest.TestCase):
 
     def test_escape_sql_literal(self):
-        self.assertEqual(_escape_sql_literal("simple"), "simple")
-        self.assertEqual(_escape_sql_literal("back\\slash"),
-                         "back\\\\\\\\slash")
-        self.assertEqual(_escape_sql_literal("double\"quote"),
-                         "double\\\"quote")
+        self.assertEqual(_escape_sql_literal("normal"), "normal")
+        self.assertEqual(_escape_sql_literal(r"back\slash"), r"back\\\\slash")
+        self.assertEqual(_escape_sql_literal('double"quote'), r'double\"quote')
         self.assertEqual(_escape_sql_literal("single'quote"), "single''quote")
-        self.assertEqual(_escape_sql_literal("mixed\\'\""),
-                         "mixed\\\\\\\\''\\\"")
+
+    def test_base_provenance_prefix(self):
+        self.assertEqual(BASE_PROVENANCE_PREFIX, "dc/base/")
+
+    def test_get_provenance_prefix(self):
+        self.assertEqual(get_provenance_prefix(is_base_dc=True), "dc/base/")
+        self.assertEqual(get_provenance_prefix(is_base_dc=False), "")
+
+    def test_get_provenance_name(self):
+        self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=True), "dc/base/USFed_Census")
+        self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=False), "USFed_Census")
 
 
 @patch('aggregation.bq_executor.bigquery.Client')

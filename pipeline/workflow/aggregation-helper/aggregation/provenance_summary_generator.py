@@ -18,7 +18,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import _escape_sql_literal, get_provenance_name
 
 
 class ProvenanceSummaryGenerator:
@@ -54,8 +54,7 @@ class ProvenanceSummaryGenerator:
 
         safe_names = [_escape_sql_literal(name) for name in import_names]
         # Format provenances for the SQL IN clause (matching TimeSeries.provenance)
-        prefix = "dc/base/" if self.is_base_dc else ""
-        provenances = [f"'{prefix}{name}'" for name in safe_names]
+        provenances = [f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_names]
         provenances_str = ", ".join(provenances)
 
         query = f"""  # nosec

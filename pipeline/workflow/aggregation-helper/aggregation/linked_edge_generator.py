@@ -18,7 +18,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
 
 
 class LinkedEdgeGenerator:
@@ -56,10 +56,10 @@ class LinkedEdgeGenerator:
 
         dest = self.executor.get_spanner_destination_uri()
         safe_names = [_escape_sql_literal(name) for name in import_names]
-        prefix = "dc/base/" if self.is_base_dc else ""
+        prefix = BASE_PROVENANCE_PREFIX if self.is_base_dc else ""
         provenances = [f"'{prefix}{name}'" for name in safe_names]
         provenance_filter = f" AND provenance IN ({', '.join(provenances)})"
-        gen_graphs_prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        gen_graphs_prov = f'{BASE_PROVENANCE_PREFIX}GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
 
         query = f"""  # nosec
         -- Pull base edges needed for memberOf aggregation

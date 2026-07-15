@@ -42,6 +42,12 @@ def main():
         default=True,
         help="Run in dry-run mode without executing jobs (use --no-dry_run to execute)."
     )
+    parser.add_argument(
+        "--skip_deletions",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Skip deleting existing aggregated data before running new aggregations."
+    )
 
     args = parser.parse_args()
 
@@ -83,8 +89,12 @@ def main():
         config_file_path=config_path,
     )
 
-    logging.info(f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}) for imports: {import_list}")
-    run_result = orchestrator.run(active_imports=import_list, dry_run=args.dry_run)
+    logging.info(f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}, skip_deletions={args.skip_deletions}) for imports: {import_list}")
+    run_result = orchestrator.run(
+        active_imports=import_list,
+        dry_run=args.dry_run,
+        skip_deletions=args.skip_deletions
+    )
 
     if not run_result.success:
         logging.error(

@@ -424,52 +424,6 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(statements[2].strip(), "CREATE VECTOR INDEX CustomEmbeddingIndex ON CustomEmbeddingTable(embeddings)")
 
     @patch('google.cloud.spanner.Client')
-    def test_update_ingestion_history_v1(self, mock_spanner_client):
-        mock_instance = MagicMock()
-        mock_db = MagicMock()
-        mock_spanner_client.return_value.instance.return_value = mock_instance
-        mock_instance.database.return_value = mock_db
-
-        mock_transaction = MagicMock()
-        def run_in_transaction_side_effect(callback, *args, **kwargs):
-            return callback(mock_transaction, *args, **kwargs)
-        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
-
-        client = SpannerClient("project", "instance", "database")
-        client.check_failed_imports = MagicMock(return_value=False)
-        client.update_ingestion_history_v1(
-            workflow_id="wf-123",
-            job_id="job-456",
-            ingested_imports=["import1", "import2"],
-            metrics={
-                'execution_time': 120,
-                'node_count': 1000,
-                'edge_count': 2000,
-                'obs_count': 500
-            }
-        )
-
-        mock_transaction.insert_or_update.assert_called_once()
-        _, kwargs = mock_transaction.insert_or_update.call_args
-        self.assertEqual(kwargs['table'], 'IngestionHistory')
-        self.assertEqual(kwargs['columns'], [
-            "CompletionTimestamp", "IngestionFailure",
-            "WorkflowExecutionID", "DataflowJobID", "IngestedImports",
-            "ExecutionTime", "NodeCount", "EdgeCount", "ObservationCount"
-        ])
-        self.assertEqual(kwargs['values'], [[
-            spanner.COMMIT_TIMESTAMP,
-            False,
-            "wf-123",
-            "job-456",
-            ["import1", "import2"],
-            120,
-            1000,
-            2000,
-            500
-        ]])
-
-    @patch('google.cloud.spanner.Client')
     def test_update_ingestion_history_pending(self, mock_spanner_client):
         mock_instance = MagicMock()
         mock_db = MagicMock()
@@ -482,7 +436,7 @@ class TestSpannerClient(unittest.TestCase):
         mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
 
         client = SpannerClient("project", "instance", "database")
-        client.update_ingestion_history_v2(
+        client.update_ingestion_history(
             workflow_id="wf-123",
             status=IngestionState.PENDING,
             stage=IngestionStage.DATAFLOW,
@@ -508,7 +462,7 @@ class TestSpannerClient(unittest.TestCase):
         mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
 
         client = SpannerClient("project", "instance", "database")
-        client.update_ingestion_history_v2(
+        client.update_ingestion_history(
             workflow_id="wf-123",
             status=IngestionState.RUNNING,
             stage=IngestionStage.DATAFLOW,
@@ -534,7 +488,7 @@ class TestSpannerClient(unittest.TestCase):
         mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
 
         client = SpannerClient("project", "instance", "database")
-        client.update_ingestion_history_v2(
+        client.update_ingestion_history(
             workflow_id="wf-123",
             status=IngestionState.SUCCESS,
             stage=IngestionStage.DATAFLOW,
@@ -543,7 +497,8 @@ class TestSpannerClient(unittest.TestCase):
                 'execution_time': 120,
                 'node_count': 1000,
                 'edge_count': 2000,
-                'obs_count': 500
+                'obs_count': 500,
+                'ts_count': 300,
             }
         )
 
@@ -560,6 +515,7 @@ class TestSpannerClient(unittest.TestCase):
         self.assertIn("DataflowJobID", kwargs['columns'])
         self.assertIn("ExecutionTime", kwargs['columns'])
         self.assertIn("NodeCount", kwargs['columns'])
+        self.assertIn("TimeSeriesCount", kwargs['columns'])
         
         # Verify the specific values
         wf_idx = kwargs['columns'].index("WorkflowExecutionID")
@@ -567,6 +523,7 @@ class TestSpannerClient(unittest.TestCase):
         failure_idx = kwargs['columns'].index("IngestionFailure")
         job_idx = kwargs['columns'].index("DataflowJobID")
         node_idx = kwargs['columns'].index("NodeCount")
+        ts_idx = kwargs['columns'].index("TimeSeriesCount")
         comp_time_idx = kwargs['columns'].index("CompletionTimestamp")
         
         values = kwargs['values'][0]
@@ -575,6 +532,7 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(values[failure_idx], False)
         self.assertEqual(values[job_idx], "job-456")
         self.assertEqual(values[node_idx], 1000)
+        self.assertEqual(values[ts_idx], 300)
         self.assertEqual(values[comp_time_idx], spanner.COMMIT_TIMESTAMP)
 
     @patch('google.cloud.spanner.Client')
@@ -590,7 +548,7 @@ class TestSpannerClient(unittest.TestCase):
         mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
 
         client = SpannerClient("project", "instance", "database")
-        client.update_ingestion_history_v2(
+        client.update_ingestion_history(
             workflow_id="wf-123",
             status=IngestionState.FAILURE,
             stage=IngestionStage.DATAFLOW,
@@ -599,7 +557,8 @@ class TestSpannerClient(unittest.TestCase):
                 'execution_time': 120,
                 'node_count': 1000,
                 'edge_count': 2000,
-                'obs_count': 500
+                'obs_count': 500,
+                'ts_count': 300,
             }
         )
 
@@ -629,7 +588,7 @@ class TestSpannerClient(unittest.TestCase):
         mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
 
         client = SpannerClient("project", "instance", "database")
-        client.update_ingestion_history_v2(
+        client.update_ingestion_history(
             workflow_id="wf-123",
             status=IngestionState.RUNNING,
             job_id="job-456"
@@ -655,7 +614,7 @@ class TestSpannerClient(unittest.TestCase):
         mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
 
         client = SpannerClient("project", "instance", "database")
-        client.update_ingestion_history_v2(
+        client.update_ingestion_history(
             workflow_id="wf-123",
             status=IngestionState.RETRY,
             stage=IngestionStage.DATAFLOW,
@@ -664,7 +623,8 @@ class TestSpannerClient(unittest.TestCase):
                 'execution_time': 120,
                 'node_count': 1000,
                 'edge_count': 2000,
-                'obs_count': 500
+                'obs_count': 500,
+                'ts_count': 300,
             }
         )
 
@@ -703,11 +663,11 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(kwargs['columns'], [
             "ImportName", "Version", "UpdateTimestamp",
             "WorkflowExecutionID", "Status", "ExecutionTime", "NodeCount",
-            "EdgeCount", "ObservationCount", "Comment"
+            "EdgeCount", "ObservationCount", "TimeSeriesCount", "Comment"
         ])
         self.assertEqual(kwargs['values'], [[
             "test_import", "v1.2.3", spanner.COMMIT_TIMESTAMP, "wf-123",
-            None, None, None, None, None, "ingestion-workflow:wf-123"
+            None, None, None, None, None, None, "ingestion-workflow:wf-123"
         ]])
 
     @patch('google.cloud.spanner.Client')
@@ -731,12 +691,13 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(kwargs['columns'], [
             "ImportName", "Version", "UpdateTimestamp",
             "WorkflowExecutionID", "Status", "ExecutionTime", "NodeCount",
-            "EdgeCount", "ObservationCount", "Comment"
+            "EdgeCount", "ObservationCount", "TimeSeriesCount", "Comment"
         ])
         self.assertEqual(kwargs['values'], [[
             "test_import", "v1.2.3", spanner.COMMIT_TIMESTAMP, "wf-789",
-            None, None, None, None, None, "ingestion-workflow:wf-789"
+            None, None, None, None, None, None, "ingestion-workflow:wf-789"
         ]])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -647,7 +647,7 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
         ]
         res = self.run_orchestrator(
             calculations=calculations,
-            active_imports=[import_name, f"{import_name}_AggState"]
+            active_imports=[import_name]
         )
         self.assertTrue(res.success)
 

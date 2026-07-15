@@ -18,7 +18,7 @@ import re
 from typing import Dict, List, Tuple
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import _escape_sql_literal, get_provenance_name
 
 
 class EntityAggregationConfig:
@@ -144,11 +144,10 @@ class EntityAggregationGenerator:
         connection_id = self.executor.connection_id
         dest = self.executor.get_spanner_destination_uri()
         
-        prefix = "dc/base/" if self.is_base_dc else ""
-        output_provenance = f"{prefix}{config.output_import}"
+        output_provenance = get_provenance_name(config.output_import, self.is_base_dc)
         
         safe_input_imports = [_escape_sql_literal(name) for name in config.input_imports]
-        input_provenances = [f"'{prefix}{name}'" for name in safe_input_imports]
+        input_provenances = [f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_input_imports]
         input_provenances_str = ", ".join(input_provenances)
 
         entity_types_str = ", ".join([f"'{_escape_sql_literal(t)}'" for t in config.entity_types])

@@ -30,6 +30,7 @@ from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggr
 from .embedding_generator import EmbeddingGenerator
 from .orchestrator import AggregationOrchestrator, AggregationRunResult, ImportExecutionResult
 from .validator import validate_config
+from .deleter import AggregationDeleter
 
 __all__ = [
     'BigQueryExecutor',
@@ -45,6 +46,7 @@ __all__ = [
     'EntityAggregationConfig',
     'EmbeddingGenerator',
     'AggregationOrchestrator',
+    'AggregationDeleter',
     'AggregationRunResult',
     'ImportExecutionResult',
     'validate_config',
