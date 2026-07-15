@@ -45,7 +45,8 @@ class SpannerClient:
                  models: list[dict] = None,
                  embedding_space: int = 768,
                  embedding_table: str = "NodeEmbedding",
-                 embedding_index: str = "NodeEmbeddingIndex"):
+                 embedding_index: str = "NodeEmbeddingIndex",
+                 embedding_label_index: str = "NodeEmbeddingLabelIndex"):
         """Initializes a Spanner client and connects to a specific database."""
         spanner_client = spanner.Client(
             project=project_id,
@@ -69,6 +70,7 @@ class SpannerClient:
         self.embedding_space = embedding_space
         self.embedding_table = embedding_table
         self.embedding_index = embedding_index
+        self.embedding_label_index = embedding_label_index
 
         if not models:
             models = self._DEFAULT_MODELS
@@ -497,6 +499,7 @@ class SpannerClient:
             "TimeSeriesByEntity2",
             "TimeSeriesByEntity3",
             self.embedding_index,
+            self.embedding_label_index,
         ]
         required_models = [m['name'] for m in self.models]
 
@@ -537,7 +540,8 @@ class SpannerClient:
                     models=self.models,
                     embedding_space=self.embedding_space,
                     embedding_table=self.embedding_table,
-                    embedding_index=self.embedding_index)
+                    embedding_index=self.embedding_index,
+                    embedding_label_index=self.embedding_label_index)
 
             ddl_statements = [
                 s.strip() for s in schema_content.split(';') if s.strip()

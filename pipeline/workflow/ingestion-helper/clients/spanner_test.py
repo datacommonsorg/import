@@ -47,6 +47,7 @@ class TestSpannerClient(unittest.TestCase):
             ["table", "Cache"],
             ["table", "VariableMetadata"],
             ["index", "NodeEmbeddingIndex"],
+            ["index", "NodeEmbeddingLabelIndex"],
             ["index", "InEdge"],
             ["index", "EdgeByProvenance"],
             ["index", "TimeSeriesByProvenance"],
@@ -332,7 +333,8 @@ class TestSpannerClient(unittest.TestCase):
         client = SpannerClient(
             "project", "instance", "database",
             embedding_table="CustomEmbeddingTable",
-            embedding_index="CustomEmbeddingIndex"
+            embedding_index="CustomEmbeddingIndex",
+            embedding_label_index="CustomEmbeddingLabelIndex"
         )
 
         schema_ddl = """
@@ -342,6 +344,7 @@ class TestSpannerClient(unittest.TestCase):
           embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }})
         ) PRIMARY KEY(subject_id);
         CREATE VECTOR INDEX {{ embedding_index }} ON {{ embedding_table }}(embeddings);
+        CREATE INDEX {{ embedding_label_index }} ON {{ embedding_table }}(embedding_label);
         """
 
         def open_side_effect(file_path, mode='r', *args, **kwargs):
@@ -361,7 +364,7 @@ class TestSpannerClient(unittest.TestCase):
         args, kwargs = mock_admin_instance.update_database_ddl.call_args
         request = kwargs.get('request') if kwargs else args[0]
         statements = request.statements
-        self.assertEqual(len(statements), 3)
+        self.assertEqual(len(statements), 4)
         self.assertEqual(statements[0], "CREATE TABLE Node")
         self.assertEqual(
             statements[1].strip(),
@@ -371,6 +374,7 @@ class TestSpannerClient(unittest.TestCase):
             "        ) PRIMARY KEY(subject_id)"
         )
         self.assertEqual(statements[2].strip(), "CREATE VECTOR INDEX CustomEmbeddingIndex ON CustomEmbeddingTable(embeddings)")
+        self.assertEqual(statements[3].strip(), "CREATE INDEX CustomEmbeddingLabelIndex ON CustomEmbeddingTable(embedding_label)")
 
 if __name__ == '__main__':
     unittest.main()
