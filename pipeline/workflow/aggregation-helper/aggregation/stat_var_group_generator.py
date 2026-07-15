@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
 
 class StatVarGroupGenerator:
     """Iteratively generates StatVarGroup nodes and hierarchical edges from MCF schemas."""
@@ -33,7 +33,7 @@ class StatVarGroupGenerator:
         self.generated_provenance = (
           generated_provenance
           if generated_provenance is not None
-          else ('dc/base/GeneratedGraphs' if is_base_dc else 'GeneratedGraphs')
+          else (f'{BASE_PROVENANCE_PREFIX}GeneratedGraphs' if is_base_dc else 'GeneratedGraphs')
         )
         self.should_filter_basic_population_type = should_filter_basic_population_type
 

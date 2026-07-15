@@ -18,6 +18,8 @@ import logging
 from typing import List
 from google.cloud import spanner
 
+from .common import get_provenance_name
+
 class AggregationDeleter:
     """Handles deletion of aggregated data in Spanner."""
 
@@ -51,8 +53,7 @@ class AggregationDeleter:
 
         logging.info(f"Deleting existing aggregated data for imports: {imports_to_delete}")
 
-        prefix = "dc/base/" if self.is_base_dc else ""
-        provenance_names = [f"{prefix}{name}" for name in imports_to_delete]
+        provenance_names = [get_provenance_name(name, self.is_base_dc) for name in imports_to_delete]
         
         db = self.spanner_database
         edge_params = {"provenances": provenance_names}

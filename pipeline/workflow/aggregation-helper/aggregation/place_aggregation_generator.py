@@ -19,7 +19,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import _escape_sql_literal, get_provenance_name
 
 
 class PlaceAggregationGenerator:
@@ -68,10 +68,7 @@ class PlaceAggregationGenerator:
         safe_names = [_escape_sql_literal(name) for name in import_names]
         
         # Filter TimeSeries by provenance (mapping to import names)
-        if self.is_base_dc:
-            provenance_names = [f"dc/base/{name}" for name in safe_names]
-        else:
-            provenance_names = safe_names
+        provenance_names = [get_provenance_name(name, self.is_base_dc) for name in safe_names]
         provenance_str = ", ".join([f"'{name}'" for name in provenance_names])
 
         # Escape types just in case

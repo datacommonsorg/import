@@ -18,7 +18,7 @@ from typing import Any, List, Optional
 from google.cloud import spanner
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
+from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
 
 def get_dc_base32_encode_sql() -> str:
     """Returns the SQL definition for the DC_BASE32_ENCODE UDF.
@@ -154,8 +154,8 @@ class SuperEnumAggregationGenerator:
 
         safe_names = [_escape_sql_literal(name) for name in import_names]
         if self.is_base_dc:
-            provenance_names = [f"dc/base/{name}" for name in safe_names]
-            prefix = "dc/base/"
+            provenance_names = [f"{BASE_PROVENANCE_PREFIX}{name}" for name in safe_names]
+            prefix = BASE_PROVENANCE_PREFIX
         else:
             provenance_names = safe_names
             prefix = ""
