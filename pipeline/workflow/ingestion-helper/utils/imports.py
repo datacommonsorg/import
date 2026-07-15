@@ -127,13 +127,14 @@ def get_ingestion_metrics(project_id, location, job_id):
         job_id: The Dataflow job ID.
 
     Returns:
-        A dictionary containing 'obs_count', 'node_count', 'edge_count', and 'execution_time'.
+        A dictionary containing 'obs_count', 'node_count', 'edge_count', 'ts_count', and 'execution_time'.
     """
     dataflow = build('dataflow', 'v1b3', cache_discovery=False)
     # Fetch Dataflow metrics
     node_count = 0
     edge_count = 0
     obs_count = 0
+    ts_count = 0
     execution_time = 0
     if project_id and job_id:
         try:
@@ -164,6 +165,8 @@ def get_ingestion_metrics(project_id, location, job_id):
                     edge_count += int(metric['scalar'])
                 elif name == 'graph_observation_count':
                     obs_count += int(metric['scalar'])
+                elif name == 'graph_timeseries_count':
+                    ts_count += int(metric['scalar'])
         except HttpError as e:
             logging.error(
                 f"Error fetching dataflow metrics for job {job_id}: {e}")
@@ -171,5 +174,6 @@ def get_ingestion_metrics(project_id, location, job_id):
         'obs_count': obs_count,
         'node_count': node_count,
         'edge_count': edge_count,
+        'ts_count': ts_count,
         'execution_time': execution_time
     }

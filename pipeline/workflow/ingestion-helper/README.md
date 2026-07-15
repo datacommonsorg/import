@@ -61,7 +61,8 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
 | `/imports/info` | `POST` | `ImportInfoRequest` | `List[ImportInfoItem]` | Returns all imports in `STAGING` state ready to ingest. |
 | `/imports/status` | `POST` | `UpdateImportStatusRequest` | `BaseResponse` | Updates status and refresh windows for multiple imports. |
 | `/imports/version` | `POST` | `UpdateImportVersionRequest` | `BaseResponse` | Updates the version and status of multiple imports. |
-| `/imports/ingestion-status` | `POST` | `UpdateIngestionStatusRequest` | `BaseResponse` | Records final pipeline statuses and Dataflow metrics. |
+| `/imports/ingestion-status` | `POST` | `UpdateIngestionStatusRequest` | `BaseResponse` | Records dataset ingestion status and version history upon completion/failure. |
+| `/imports/ingestion-history` | `POST` | `UpdateIngestionHistoryRequest` | `BaseResponse` | Records pipeline execution history, statuses, and Dataflow metrics. |
 | `/aggregation/run` | `POST` | `AggregationRequest` | `AggregationResponse` | Submits BigQuery aggregation queries asynchronously. |
 | `/aggregation/status` | `POST` | `AggregationStatusRequest` | `AggregationStatusResponse` | Polls active BigQuery aggregation job statuses. |
 | `/cache/clear` | `POST` | *None* | `BaseResponse` | Flushes the Redis cache (if configured). |

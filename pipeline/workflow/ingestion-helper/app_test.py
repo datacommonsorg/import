@@ -265,9 +265,8 @@ class TestMain(unittest.TestCase):
         mock_get_caller_identity.assert_called_once()
 
 
-    @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', False)
     @patch('routes.imports.import_utils.get_ingestion_metrics')
-    def test_update_ingestion_status_v1(self, mock_get_ingestion_metrics):
+    def test_update_ingestion_status(self, mock_get_ingestion_metrics):
         mock_spanner_client = MagicMock()
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -275,7 +274,8 @@ class TestMain(unittest.TestCase):
             'execution_time': 120,
             'node_count': 1000,
             'edge_count': 2000,
-            'obs_count': 500
+            'obs_count': 500,
+            'ts_count': 300,
         }
         mock_get_ingestion_metrics.return_value = mock_metrics
 
@@ -296,31 +296,9 @@ class TestMain(unittest.TestCase):
         mock_get_ingestion_metrics.assert_called_once_with(
             config.PROJECT_ID, config.LOCATION, "job-456"
         )
-        mock_spanner_client.update_ingestion_history_v1.assert_called_once_with(
-            "wf-123", "job-456", ["import1"], mock_metrics
+        mock_spanner_client.update_import_version_history.assert_called_once_with(
+            [{"importName": "import1", "latestVersion": None}], "wf-123", status="SUCCESS", metrics=mock_metrics
         )
-
-    @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', True)
-    def test_update_ingestion_status_v2(self):
-        mock_spanner_client = MagicMock()
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
-
-        payload = {
-            "importList": [{"importName": "import1"}],
-            "workflowId": "wf-123",
-            "status": "SUCCESS",
-            "jobId": "job-456"
-        }
-
-        response = client.post("/imports/ingestion-status", json=payload)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "OK")
-        mock_spanner_client.update_ingestion_status.assert_called_once_with(
-            ["import1"], "wf-123", "SUCCESS"
-        )
-        mock_spanner_client.update_ingestion_history_v1.assert_not_called()
-        mock_spanner_client.update_ingestion_history_v2.assert_not_called()
 
     @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', False)
     def test_update_ingestion_history_disabled(self):
@@ -338,7 +316,7 @@ class TestMain(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
-        mock_spanner_client.update_ingestion_history_v2.assert_not_called()
+        mock_spanner_client.update_ingestion_history.assert_not_called()
 
     @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', True)
     @patch('routes.imports.import_utils.get_ingestion_metrics')
@@ -357,7 +335,7 @@ class TestMain(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
-        mock_spanner_client.update_ingestion_history_v2.assert_called_once_with(
+        mock_spanner_client.update_ingestion_history.assert_called_once_with(
             workflow_id="wf-123",
             status="PENDING",
             stage="dataflow",
@@ -377,7 +355,8 @@ class TestMain(unittest.TestCase):
             'execution_time': 120,
             'node_count': 1000,
             'edge_count': 2000,
-            'obs_count': 500
+            'obs_count': 500,
+            'ts_count': 300,
         }
         mock_get_ingestion_metrics.return_value = mock_metrics
 
@@ -396,7 +375,7 @@ class TestMain(unittest.TestCase):
         mock_get_ingestion_metrics.assert_called_once_with(
             config.PROJECT_ID, config.LOCATION, "job-456"
         )
-        mock_spanner_client.update_ingestion_history_v2.assert_called_once_with(
+        mock_spanner_client.update_ingestion_history.assert_called_once_with(
             workflow_id="wf-123",
             status="SUCCESS",
             stage="dataflow",
@@ -415,7 +394,8 @@ class TestMain(unittest.TestCase):
             'execution_time': 120,
             'node_count': 1000,
             'edge_count': 2000,
-            'obs_count': 500
+            'obs_count': 500,
+            'ts_count': 300,
         }
         mock_get_ingestion_metrics.return_value = mock_metrics
 
@@ -432,7 +412,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
         mock_get_ingestion_metrics.assert_not_called()
-        mock_spanner_client.update_ingestion_history_v2.assert_called_once_with(
+        mock_spanner_client.update_ingestion_history.assert_called_once_with(
             workflow_id="wf-123",
             status="FAILURE",
             stage="dataflow",
@@ -451,7 +431,8 @@ class TestMain(unittest.TestCase):
             'execution_time': 120,
             'node_count': 1000,
             'edge_count': 2000,
-            'obs_count': 500
+            'obs_count': 500,
+            'ts_count': 300,
         }
         mock_get_ingestion_metrics.return_value = mock_metrics
 
@@ -470,7 +451,7 @@ class TestMain(unittest.TestCase):
         mock_get_ingestion_metrics.assert_called_once_with(
             config.PROJECT_ID, config.LOCATION, "job-456"
         )
-        mock_spanner_client.update_ingestion_history_v2.assert_called_once_with(
+        mock_spanner_client.update_ingestion_history.assert_called_once_with(
             workflow_id="wf-123",
             status="RETRY",
             stage="dataflow",
