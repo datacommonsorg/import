@@ -36,7 +36,7 @@ public class StatVarNameGeneratorTest {
   }
 
   @Test
-  public void testGenerateName_basicStatVar() {
+  public void testGenerateNameBasicStatVar() {
     PropertyValues pvs =
         PropertyValues.newBuilder()
             .putPvs("typeOf", Values.newBuilder().addTypedValues(tv("StatisticalVariable")).build())
@@ -47,12 +47,11 @@ public class StatVarNameGeneratorTest {
                 "measurementQualifier", Values.newBuilder().addTypedValues(tv("Annual")).build())
             .build();
 
-    assertEquals(
-        "Growth Rate Annual Count Of Person", StatVarNameGenerator.generateName("sv1", pvs));
+    assertEquals("Growth Rate Annual Count Of Person", StatVarNameGenerator.generateName(pvs));
   }
 
   @Test
-  public void testGenerateName_withConstraints() {
+  public void testGenerateNameWithConstraints() {
     PropertyValues pvs =
         PropertyValues.newBuilder()
             .putPvs("typeOf", Values.newBuilder().addTypedValues(tv("StatisticalVariable")).build())
@@ -69,11 +68,11 @@ public class StatVarNameGeneratorTest {
 
     assertEquals(
         "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case",
-        StatVarNameGenerator.generateName("sv2", pvs));
+        StatVarNameGenerator.generateName(pvs));
   }
 
   @Test
-  public void testGenerateName_withBooleanAndDenominator() {
+  public void testGenerateNameWithBooleanAndDenominator() {
     PropertyValues pvs =
         PropertyValues.newBuilder()
             .putPvs("typeOf", Values.newBuilder().addTypedValues(tv("StatisticalVariable")).build())
@@ -85,12 +84,11 @@ public class StatVarNameGeneratorTest {
                 Values.newBuilder().addTypedValues(tv("Count_Person")).build())
             .build();
 
-    assertEquals(
-        "Count Of Person: Is Urban (Per capita)", StatVarNameGenerator.generateName("sv3", pvs));
+    assertEquals("Count Of Person: Is Urban (Per capita)", StatVarNameGenerator.generateName(pvs));
   }
 
   @Test
-  public void testGenerateName_genericPopType() {
+  public void testGenerateNameGenericPopType() {
     PropertyValues pvs =
         PropertyValues.newBuilder()
             .putPvs("typeOf", Values.newBuilder().addTypedValues(tv("StatisticalVariable")).build())
@@ -101,11 +99,11 @@ public class StatVarNameGeneratorTest {
                 Values.newBuilder().addTypedValues(tv("UnemploymentRate")).build())
             .build();
 
-    assertEquals("Value: Unemployment Rate", StatVarNameGenerator.generateName("sv4", pvs));
+    assertEquals("Value: Unemployment Rate", StatVarNameGenerator.generateName(pvs));
   }
 
   @Test
-  public void testGenerateName_popTypeContainsMeasure() {
+  public void testGenerateNamePopTypeContainsMeasure() {
     PropertyValues pvs =
         PropertyValues.newBuilder()
             .putPvs("typeOf", Values.newBuilder().addTypedValues(tv("StatisticalVariable")).build())
@@ -114,7 +112,7 @@ public class StatVarNameGeneratorTest {
                 "populationType", Values.newBuilder().addTypedValues(tv("Count_Person")).build())
             .build();
 
-    assertEquals("Count Person", StatVarNameGenerator.generateName("sv5", pvs));
+    assertEquals("Count Person", StatVarNameGenerator.generateName(pvs));
   }
 
   private static TypedValue tv(String val) {

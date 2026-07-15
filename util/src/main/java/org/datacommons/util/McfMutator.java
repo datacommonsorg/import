@@ -141,7 +141,7 @@ public class McfMutator {
       }
 
       if (!node.containsPvs(Vocabulary.NAME)) {
-        String name = StatVarNameGenerator.generateName(nodeId, node.build());
+        String name = StatVarNameGenerator.generateName(node.build());
         if (!name.isEmpty()) {
           Mcf.McfGraph.Values.Builder valuesBuilder =
               Mcf.McfGraph.Values.newBuilder()
