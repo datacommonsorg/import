@@ -60,52 +60,54 @@ class ObservationsImporter(Importer):
     self._write_debug_csvs()
 
   def _process_chunks(self) -> None:
-    reader = pd.read_csv(
-        self.input_file.open_stream(),
-        dtype={0: str},
-        skipinitialspace=True,
-        thousands=",",
-        chunksize=10000,
-    )
     first_chunk = True
     renamed = {}
     debug_dfs = []
 
-    for chunk_df in reader:
-      if chunk_df.empty:
-        continue
+    with self.input_file.open_stream() as stream:
+      reader = pd.read_csv(
+          stream,
+          dtype={0: str},
+          skipinitialspace=True,
+          thousands=",",
+          chunksize=10000,
+      )
 
-      if self.ignore_columns:
-        chunk_df.drop(columns=self.ignore_columns,
-                      axis=1,
-                      errors="ignore",
-                      inplace=True)
+      for chunk_df in reader:
+        if chunk_df.empty:
+          continue
 
-      chunk_df = chunk_df.convert_dtypes()
-      chunk_df = chunk_df.astype({chunk_df.columns[1]: str})
+        if self.ignore_columns:
+          chunk_df.drop(columns=self.ignore_columns,
+                        axis=1,
+                        errors="ignore",
+                        inplace=True)
 
-      if first_chunk:
-        self.entity_column_name = chunk_df.columns[0]
-        logging.info("Entity column name: %s", self.entity_column_name)
-        renamed[chunk_df.columns[0]] = constants.COLUMN_DCID
-        renamed[chunk_df.columns[1]] = constants.COLUMN_DATE
-        sv_column_names = chunk_df.columns[2:]
-        sv_ids = [
-            self.nodes.variable(sv_column_name, self.input_file).id
-            for sv_column_name in sv_column_names
-        ]
-        renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
-        first_chunk = False
+        chunk_df = chunk_df.convert_dtypes()
+        chunk_df = chunk_df.astype({chunk_df.columns[1]: str})
 
-      chunk_df = chunk_df.rename(columns=renamed)
-      self.df = chunk_df
-      self._resolve_entities()
-      if self.debug_resolve_df is not None:
-        debug_dfs.append(self.debug_resolve_df)
-        self.debug_resolve_df = None
-      self._add_entity_nodes()
-      self._write_observations()
-      self.df = pd.DataFrame()
+        if first_chunk:
+          self.entity_column_name = chunk_df.columns[0]
+          logging.info("Entity column name: %s", self.entity_column_name)
+          renamed[chunk_df.columns[0]] = constants.COLUMN_DCID
+          renamed[chunk_df.columns[1]] = constants.COLUMN_DATE
+          sv_column_names = chunk_df.columns[2:]
+          sv_ids = [
+              self.nodes.variable(sv_column_name, self.input_file).id
+              for sv_column_name in sv_column_names
+          ]
+          renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
+          first_chunk = False
+
+        chunk_df = chunk_df.rename(columns=renamed)
+        self.df = chunk_df
+        self._resolve_entities()
+        if self.debug_resolve_df is not None:
+          debug_dfs.append(self.debug_resolve_df)
+          self.debug_resolve_df = None
+        self._add_entity_nodes()
+        self._write_observations()
+        self.df = pd.DataFrame()
 
     if debug_dfs:
       self.debug_resolve_df = pd.concat(debug_dfs, ignore_index=True)

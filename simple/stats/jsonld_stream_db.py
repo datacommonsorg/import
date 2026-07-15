@@ -306,14 +306,15 @@ class JsonLdStreamDb(Db):
   def _write_observations_df_to_disk(self, df: pd.DataFrame, import_name: str):
     import_temp_dir = os.path.join(self.temp_local_dir, import_name)
     prov_urls = self._get_prov_urls()
-    with self.lock:
-      n = len(df)
-      for i in range(0, n, _CHUNK_SIZE):
-        chunk_df = df.iloc[i:i + _CHUNK_SIZE]
-        chunk_records = chunk_df.to_records(index=False).tolist()
-        _write_observation_shard((chunk_records, self.obs_shard_index,
-                                  import_temp_dir, self.ns_map, prov_urls))
+    n = len(df)
+    for i in range(0, n, _CHUNK_SIZE):
+      chunk_df = df.iloc[i:i + _CHUNK_SIZE]
+      chunk_records = chunk_df.to_records(index=False).tolist()
+      with self.lock:
+        shard_index = self.obs_shard_index
         self.obs_shard_index += 1
+      _write_observation_shard(
+          (chunk_records, shard_index, import_temp_dir, self.ns_map, prov_urls))
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
