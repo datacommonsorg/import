@@ -109,8 +109,5 @@ REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
 GCS_OUTPUT_PREFIX = os.environ.get('GCS_OUTPUT_PREFIX', '')
 
-# Env variable to control the updated logic on IngestionHistory table.
-# To be deleted after Base DC workflow is migrated.
-ENABLE_UNIQUE_INGESTION_RUNS = os.environ.get('ENABLE_UNIQUE_INGESTION_RUNS', 'false').lower() == 'true'
 SPANNER_EMULATOR_HOST = os.environ.get('SPANNER_EMULATOR_HOST')
 
