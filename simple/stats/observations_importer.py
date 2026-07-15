@@ -47,6 +47,7 @@ class ObservationsImporter(Importer):
     self.entity_column_name = constants.COLUMN_DCID
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
+    self._resolved_entities_cache: dict[str, str | None] = {}
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -209,6 +210,23 @@ class ObservationsImporter(Importer):
     )
 
   def _resolve(self, entities: list[str]) -> dict[str, str]:
+    """Resolves entity strings to DCIDs, caching results across streaming chunks."""
+    unresolved = [e for e in entities if e not in self._resolved_entities_cache]
+
+    if unresolved:
+      new_resolved = self._do_resolve(unresolved)
+      self._resolved_entities_cache.update(new_resolved)
+      for e in unresolved:
+        if e not in new_resolved:
+          self._resolved_entities_cache[e] = None
+
+    return {
+        e: self._resolved_entities_cache[e]
+        for e in entities
+        if self._resolved_entities_cache.get(e) is not None
+    }
+
+  def _do_resolve(self, entities: list[str]) -> dict[str, str]:
     lower_case_entity_name = self.entity_column_name.lower()
 
     # Check if the entities can be resolved locally.
