@@ -300,25 +300,6 @@ class TestMain(unittest.TestCase):
             [{"importName": "import1", "latestVersion": None}], "wf-123", status="SUCCESS", metrics=mock_metrics
         )
 
-    @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', False)
-    def test_update_ingestion_history_disabled(self):
-        mock_spanner_client = MagicMock()
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
-
-        payload = {
-            "workflowId": "wf-123",
-            "status": "PENDING",
-            "stage": "dataflow",
-            "importList": [{"importName": "import1"}]
-        }
-
-        response = client.post("/imports/ingestion-history", json=payload)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "OK")
-        mock_spanner_client.update_ingestion_history.assert_not_called()
-
-    @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', True)
     @patch('routes.imports.import_utils.get_ingestion_metrics')
     def test_update_ingestion_history_pending(self, mock_get_ingestion_metrics):
         mock_spanner_client = MagicMock()
@@ -345,7 +326,6 @@ class TestMain(unittest.TestCase):
         )
         mock_get_ingestion_metrics.assert_not_called()
 
-    @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', True)
     @patch('routes.imports.import_utils.get_ingestion_metrics')
     def test_update_ingestion_history_success(self, mock_get_ingestion_metrics):
         mock_spanner_client = MagicMock()
@@ -384,7 +364,6 @@ class TestMain(unittest.TestCase):
             metrics=mock_metrics
         )
 
-    @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', True)
     @patch('routes.imports.import_utils.get_ingestion_metrics')
     def test_update_ingestion_history_failure(self, mock_get_ingestion_metrics):
         mock_spanner_client = MagicMock()
@@ -421,7 +400,6 @@ class TestMain(unittest.TestCase):
             metrics=None
         )
 
-    @patch('routes.imports.config.ENABLE_UNIQUE_INGESTION_RUNS', True)
     @patch('routes.imports.import_utils.get_ingestion_metrics')
     def test_update_ingestion_history_retry(self, mock_get_ingestion_metrics):
         mock_spanner_client = MagicMock()

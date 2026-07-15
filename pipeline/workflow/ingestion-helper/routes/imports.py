@@ -140,12 +140,6 @@ def update_ingestion_history(
     req: UpdateIngestionHistoryRequest,
     spanner: SpannerClient = Depends(get_spanner_client)):
     """Updates the ingestion history record for the workflow execution."""
-    if not config.ENABLE_UNIQUE_INGESTION_RUNS:
-        logging.warning(
-            "Received update_ingestion_history request but ENABLE_UNIQUE_INGESTION_RUNS is disabled. No-op."
-        )
-        return BaseResponse(status=ResponseStatus.OK)
-
     ingested_imports = _extract_import_names(req.importList)
     if req.importName:
         ingested_imports.append(req.importName)
