@@ -74,12 +74,12 @@ def verify_spanner_data(import_name):
                 f"Import {import_name} verified in ImportStatus with state: {state}"
             )
 
-            # Check IngestionHistory table (optional, but good for E2E)
-            # We look for a recent entry containing this import
+            # Check IngestionHistory table
             query_history = """
                 SELECT count(*) 
                 FROM IngestionHistory 
                 WHERE @import_name IN UNNEST(IngestedImports)
+                  AND Status = 'SUCCESS'
             """
             results_history = list(
                 snapshot.execute_sql(query_history,
@@ -89,7 +89,7 @@ def verify_spanner_data(import_name):
 
             if count == 0:
                 raise AssertionError(
-                    f"Import {import_name} not found in IngestionHistory table."
+                    f"Import {import_name} not found with Status='SUCCESS' in IngestionHistory table."
                 )
 
             logging.info(f"Import {import_name} verified in IngestionHistory.")
@@ -107,17 +107,25 @@ def cleanup_spanner(import_name):
     database = instance.database(SPANNER_DATABASE_ID)
 
     def _delete_import(transaction):
-        query = "DELETE FROM ImportStatus WHERE ImportName = @import_name"
+        query1 = "DELETE FROM ImportStatus WHERE ImportName = @import_name"
+        query2 = "DELETE FROM ImportVersionHistory WHERE ImportName = @import_name"
+        query3 = "DELETE FROM IngestionHistory WHERE @import_name IN UNNEST(IngestedImports)"
         params = {"import_name": import_name}
         param_types = {"import_name": spanner.param_types.STRING}
-        transaction.execute_update(query,
+        transaction.execute_update(query1,
+                                   params=params,
+                                   param_types=param_types)
+        transaction.execute_update(query2,
+                                   params=params,
+                                   param_types=param_types)
+        transaction.execute_update(query3,
                                    params=params,
                                    param_types=param_types)
 
     try:
         database.run_in_transaction(_delete_import)
         logging.info(
-            f"Successfully cleaned up {import_name} from ImportStatus table.")
+            f"Successfully cleaned up {import_name} from ImportStatus, ImportVersionHistory, and IngestionHistory tables.")
     except Exception as e:
         logging.warning(f"Error during Spanner cleanup: {e}")
 
