@@ -4,4 +4,4 @@
   node_types:
     - "StatisticalVariable"
     - "Topic"
-  node_filter_type: "NLStatisticalVariable"
+  node_filter_type: "NoFilter"

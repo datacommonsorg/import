@@ -112,7 +112,7 @@ class TestConfig(unittest.TestCase):
         importlib.reload(config)
         expected = [
             config.EmbeddingSpec(
-                embedding_label="base_text_embedding",
+                embedding_label="nl_stat_var_embedding",
                 model_name="NodeEmbeddingModel",
                 task_type="RETRIEVAL_QUERY",
                 node_types=["StatisticalVariable", "Topic"],

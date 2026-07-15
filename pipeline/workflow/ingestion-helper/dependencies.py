@@ -38,7 +38,8 @@ def get_spanner_client() -> SpannerClient:
             models=config.EMBEDDING_MODELS,
             embedding_space=config.EMBEDDING_SPACE,
             embedding_table=config.EMBEDDING_TABLE,
-            embedding_index=config.EMBEDDING_INDEX
+            embedding_index=config.EMBEDDING_INDEX,
+            embedding_label_index=config.EMBEDDING_LABEL_INDEX
         )
     return _spanner_client
 
