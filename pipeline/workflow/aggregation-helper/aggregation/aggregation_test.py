@@ -24,6 +24,8 @@ from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator
 from aggregation import ProvenanceSummaryGenerator
 from aggregation import PlaceAggregationGenerator
+from aggregation import EmbeddingGenerator
+from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.common import (
     BASE_PROVENANCE_PREFIX,
     _escape_sql_literal,
@@ -67,6 +69,9 @@ class TestBigQueryExecutor(unittest.TestCase):
             executor.get_spanner_destination_uri(),
             "https://spanner.googleapis.com/projects/proj/instances/inst/databases/db"
         )
+        self.assertFalse(executor.enable_embeddings)
+        self.assertIsNone(executor.embedding_conn_id)
+        self.assertEqual(executor.bq_dataset_id, "datacommons")
 
     def test_init_failure(self, mock_bq_client):
         mock_bq_client.side_effect = Exception("Auth error")
@@ -295,5 +300,83 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         query = self.mock_executor.execute.call_args[0][0]
         self.assertIsInstance(query, str)
         self.assertTrue(len(query) > 0)
+
+
+class TestEmbeddingGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+        self.mock_executor.enable_embeddings = True
+        self.mock_executor.embedding_conn_id = "test-conn"
+        self.mock_executor.bq_dataset_id = "datacommons"
+
+    def test_run_all(self):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        specs = [
+            EmbeddingSpec(
+                embedding_label="test_embedding",
+                model_name="TestModel",
+                model_endpoint="text-embedding-005",
+                task_type="TEST_TASK",
+                node_types=["StatVar"],
+                node_filter_type="NoFilter"
+            )
+        ]
+        jobs = generator.run_all(specs=specs, embedding_table="CustomEmbeddingTable")
+
+        self.assertEqual(len(jobs), 1)
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("test-conn", query)
+        self.assertIn("spanner-uri", query)
+        self.assertIn("TestModel", query)
+        self.assertIn("test_embedding", query)
+        self.assertIn("CustomEmbeddingTable", query)
+        self.assertIn("TEST_TASK", query)
+
+    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value={'statVar1': 'sentence1', 'statVar2': 'sentence2'})
+    def test_run_all_nl_stat_var(self, mock_extract):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        specs = [
+            EmbeddingSpec(
+                embedding_label="test_embedding",
+                model_name="TestModel",
+                model_endpoint="text-embedding-005",
+                task_type="TEST_TASK",
+                node_types=["StatVar"],
+                node_filter_type="NLStatisticalVariable"
+            )
+        ]
+        jobs = generator.run_all(specs=specs, embedding_table="CustomEmbeddingTable")
+
+        self.assertEqual(len(jobs), 1)
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        job_config = self.mock_executor.execute.call_args[1].get('job_config') or self.mock_executor.execute.call_args.kwargs.get('job_config')
+        self.assertIn("FROM UNNEST(@nl_stat_vars)", query)
+        self.assertIn("INNER JOIN raw_nodes", query)
+        self.assertIsNotNone(job_config)
+        struct_params = [p.values for p in job_config.query_parameters if p.name == 'nl_stat_vars'][0]
+        
+        dcids = []
+        sentences = []
+        for sp in struct_params:
+            dcids.append(sp.struct_values.get("dcid"))
+            sentences.append(sp.struct_values.get("sentence"))
+                    
+        self.assertIn("statVar1", dcids)
+        self.assertIn("statVar2", dcids)
+        self.assertIn("sentence1", sentences)
+        self.assertIn("sentence2", sentences)
+
+
 if __name__ == '__main__':
     unittest.main()

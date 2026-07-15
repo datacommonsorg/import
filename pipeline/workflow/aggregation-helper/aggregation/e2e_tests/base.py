@@ -38,6 +38,9 @@ BQ_CONNECTION_ID = os.environ.get(
     'projects/datcom-ci/locations/us-central1/connections/spanner_stuniki_test_conn'
 )
 BQ_LOCATION = os.environ.get('BQ_LOCATION', 'us-central1')
+ENABLE_EMBEDDINGS = os.environ.get('ENABLE_EMBEDDINGS', 'true').lower() == 'true'
+BQ_MODEL_CONNECTION = os.environ.get('BQ_MODEL_CONNECTION', 'test_vai_model_connection')
+BQ_DATASET_ID = os.environ.get('BQ_DATASET_ID', 'stuniki_test_dataset')
 
 logging.basicConfig(level=logging.INFO)
 
@@ -79,6 +82,7 @@ class AggregationIntegrationTestBase(unittest.TestCase):
             transaction.execute_update("DELETE FROM Observation WHERE TRUE")
             transaction.execute_update("DELETE FROM TimeSeries WHERE TRUE")
             transaction.execute_update("DELETE FROM Edge WHERE TRUE")
+            transaction.execute_update("DELETE FROM NodeEmbedding WHERE TRUE")
             transaction.execute_update("DELETE FROM Node WHERE TRUE")
         
         self.database.run_in_transaction(_clear)
@@ -191,7 +195,10 @@ class AggregationIntegrationTestBase(unittest.TestCase):
                 is_base_dc=self.is_base_dc,
                 config_file_path=tmp_path,
                 run_sequential=run_sequential,
-                poll_interval=poll_interval
+                poll_interval=poll_interval,
+                enable_embeddings=ENABLE_EMBEDDINGS,
+                embedding_conn_id=BQ_MODEL_CONNECTION,
+                bq_dataset_id=BQ_DATASET_ID
             )
             return orchestrator.run(active_imports=active_imports, dry_run=dry_run, skip_deletions=skip_deletions)
         finally:
