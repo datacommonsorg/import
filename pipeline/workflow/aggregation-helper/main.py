@@ -80,6 +80,10 @@ def main():
         sys.exit(1)
 
     config_path = args.config_path or os.environ.get("CONFIG_PATH")
+    enable_embeddings = os.environ.get("ENABLE_EMBEDDINGS", "false").lower() == "true"
+    embedding_conn_id = os.environ.get("BQ_MODEL_CONNECTION")
+    bq_dataset_id = os.environ.get("BQ_DATASET_ID", "datacommons")
+
     orchestrator = AggregationOrchestrator(
         connection_id=connection_id,
         project_id=project_id,
@@ -87,6 +91,9 @@ def main():
         database_id=database_id,
         location=location,
         config_file_path=config_path,
+        enable_embeddings=enable_embeddings,
+        embedding_conn_id=embedding_conn_id,
+        bq_dataset_id=bq_dataset_id
     )
 
     logging.info(f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}, skip_deletions={args.skip_deletions}) for imports: {import_list}")

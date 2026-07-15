@@ -92,7 +92,10 @@ class AggregationOrchestrator:
         config_dir: Optional[str] = None,
         config_file_path: Optional[str] = None,
         run_sequential: bool = False,
-        poll_interval: int = 15
+        poll_interval: int = 15,
+        enable_embeddings: bool = False,
+        embedding_conn_id: Optional[str] = None,
+        bq_dataset_id: str = "datacommons"
     ) -> None:
         """Initializes the orchestrator and loads/validates configuration files.
 
@@ -114,7 +117,10 @@ class AggregationOrchestrator:
             instance_id=instance_id,
             database_id=database_id,
             location=location,
-            run_sequential=run_sequential
+            run_sequential=run_sequential,
+            enable_embeddings=enable_embeddings,
+            embedding_conn_id=embedding_conn_id,
+            bq_dataset_id=bq_dataset_id
         )
         self.is_base_dc = is_base_dc
         self.poll_interval = poll_interval
@@ -226,17 +232,36 @@ class AggregationOrchestrator:
                 step_type = calc.get("type")
                 if dry_run:
                     logging.info(f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}")
+                    run_result.import_results["GLOBAL"] = ImportExecutionResult(
+                        import_name="GLOBAL",
+                        success=True,
+                        stages_executed=[]
+                    )
                 else:
                     logging.info(f"Triggering global step: '{step_type}'...")
-                    step_jobs = self._dispatch_stage_steps(calc)
-                    if step_jobs:
-                        job_ids = [job.job_id for job in step_jobs if hasattr(job, "job_id")]
-                        logging.info(f"Submitted {len(job_ids)} global job(s): {job_ids}")
-                        self._wait_for_jobs(
-                            job_ids=job_ids,
-                            poll_interval=15,
-                            step_name=calc.get("name", str(step_type)),
-                            single_import="GLOBAL"
+                    try:
+                        step_jobs = self._dispatch_stage_steps(calc)
+                        if step_jobs:
+                            job_ids = [job.job_id for job in step_jobs if hasattr(job, "job_id")]
+                            logging.info(f"Submitted {len(job_ids)} global job(s): {job_ids}")
+                            self._wait_for_jobs(
+                                job_ids=job_ids,
+                                poll_interval=15,
+                                step_name=calc.get("name", str(step_type)),
+                                single_import="GLOBAL"
+                            )
+                        run_result.import_results["GLOBAL"] = ImportExecutionResult(
+                            import_name="GLOBAL",
+                            success=True,
+                            stages_executed=[]
+                        )
+                    except Exception as e:
+                        logging.error(f"Global calculation step '{step_type}' failed: {e}")
+                        run_result.import_results["GLOBAL"] = ImportExecutionResult(
+                            import_name="GLOBAL",
+                            success=False,
+                            stages_executed=[],
+                            error_message=str(e)
                         )
 
         return run_result

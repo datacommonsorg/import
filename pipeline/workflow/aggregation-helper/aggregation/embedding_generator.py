@@ -17,14 +17,14 @@ from functools import lru_cache
 import io
 import json
 import logging
-import os
 from typing import Any, Dict, List, Optional
+import urllib.request
+import urllib.error
 
 from google.cloud import bigquery
 from google.cloud import storage
 from pydantic import BaseModel
 from .bq_executor import BigQueryExecutor
-from .sql_utils import _escape_sql_literal
 
 _NL_STAT_VAR_FILE = "gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
 
@@ -54,11 +54,10 @@ def _extract_nl_stat_var() -> dict[str, str]:
     content = ""
     if path.startswith("gs://"):
         try:
-            import urllib.request
             url = "https://storage.googleapis.com/" + path[5:]
             with urllib.request.urlopen(url) as resp:
                 content = resp.read().decode("utf-8")
-        except Exception as e:
+        except urllib.error.URLError as e:
             logging.info(f"HTTP fetch for NL stat var file failed ({e}), falling back to GCS client.")
             parts = path[5:].split("/", 1)
             client = storage.Client()
@@ -92,8 +91,7 @@ class EmbeddingGenerator:
 
     def run_all(self, specs: Optional[List[Any]] = None, embedding_table: str = "NodeEmbedding") -> List[bigquery.job.QueryJob]:
         """Runs all embedding generations asynchronously and returns their jobs."""
-        enable_embeddings = os.environ.get('ENABLE_EMBEDDINGS', 'false').lower() == 'true'
-        if not enable_embeddings or not self.is_base_dc:
+        if not self.executor.enable_embeddings or not self.is_base_dc:
             logging.info("Embeddings generation is disabled in config/env or not in base DC. Skipping.")
             return []
 
@@ -115,9 +113,9 @@ class EmbeddingGenerator:
 
         dest = self.executor.get_spanner_destination_uri()
         conn_id = self.executor.connection_id
-        embedding_conn_id = os.environ.get('BQ_MODEL_CONNECTION')
+        embedding_conn_id = self.executor.embedding_conn_id
         project_id = self.executor.project_id
-        bq_dataset_id = os.environ.get('BQ_DATASET_ID', 'datacommons')
+        bq_dataset_id = self.executor.bq_dataset_id
         location = self.executor.location
 
         embedding_label = spec.embedding_label

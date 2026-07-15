@@ -329,5 +329,97 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
         )
 
 
+GLOBAL_CALCS_CONFIG_YAML = textwrap.dedent("""\
+    calculations:
+      - type: EMBEDDING_GENERATION
+        embedding_generation:
+          specs: []
+""")
+
+
+@patch('aggregation.orchestrator.BigQueryExecutor')
+@patch('aggregation.orchestrator.EmbeddingGenerator')
+class TestOrchestratorGlobalCalculations(unittest.TestCase):
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+
+        self.config_path = os.path.join(self.tmpdir.name, "config.yaml")
+        with open(self.config_path, "w") as f:
+            f.write(GLOBAL_CALCS_CONFIG_YAML)
+
+    def test_run_global_calcs_dry_run(self, mock_embedding_gen, mock_executor_cls):
+        orchestrator = AggregationOrchestrator(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            enable_embeddings=True,
+            embedding_conn_id="test-conn-id",
+            bq_dataset_id="test-dataset"
+        )
+        result = orchestrator.run(active_imports=[], dry_run=True)
+        self.assertTrue(result.success)
+        self.assertIn("GLOBAL", result.import_results)
+        self.assertTrue(result.import_results["GLOBAL"].success)
+        mock_embedding_gen.return_value.run_all.assert_not_called()
+
+    def test_run_global_calcs_success(self, mock_embedding_gen, mock_executor_cls):
+        orchestrator = AggregationOrchestrator(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            enable_embeddings=True,
+            embedding_conn_id="test-conn-id",
+            bq_dataset_id="test-dataset"
+        )
+        mock_job = MagicMock()
+        mock_job.job_id = "global-job-1"
+        mock_embedding_gen.return_value.run_all.return_value = [mock_job]
+
+        orchestrator.executor = MagicMock()
+        orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
+
+        result = orchestrator.run(active_imports=[], dry_run=False)
+        self.assertTrue(result.success)
+        self.assertIn("GLOBAL", result.import_results)
+        self.assertTrue(result.import_results["GLOBAL"].success)
+        mock_embedding_gen.return_value.run_all.assert_called_once()
+        mock_executor_cls.assert_called_once_with(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            location=None,
+            run_sequential=False,
+            enable_embeddings=True,
+            embedding_conn_id="test-conn-id",
+            bq_dataset_id="test-dataset"
+        )
+
+    def test_run_global_calcs_failure(self, mock_embedding_gen, mock_executor_cls):
+        orchestrator = AggregationOrchestrator(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            enable_embeddings=True,
+            embedding_conn_id="test-conn-id",
+            bq_dataset_id="test-dataset"
+        )
+        mock_embedding_gen.return_value.run_all.side_effect = Exception("Vertex AI quota exceeded")
+
+        result = orchestrator.run(active_imports=[], dry_run=False)
+        self.assertFalse(result.success)
+        self.assertIn("GLOBAL", result.import_results)
+        self.assertFalse(result.import_results["GLOBAL"].success)
+        self.assertEqual(result.import_results["GLOBAL"].error_message, "Vertex AI quota exceeded")
+
+
 if __name__ == '__main__':
     unittest.main()
