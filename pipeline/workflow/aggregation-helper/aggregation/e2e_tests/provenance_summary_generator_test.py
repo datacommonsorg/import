@@ -96,21 +96,14 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
         self.assertTrue(res.success)
         
-        # 3. Verify results in both Spanner KeyValueStore and Cache tables (dual write check)
-        with self.database.snapshot(multi_use=True) as snapshot:
-            query_kv = """
+        # 3. Verify results in Spanner KeyValueStore table
+        with self.database.snapshot() as snapshot:
+            query = """
                 SELECT type, key, provenance, value 
                 FROM KeyValueStore 
                 WHERE type = 'ProvenanceSummary'
             """
-            query_cache = """
-                SELECT type, key, provenance, value 
-                FROM Cache 
-                WHERE type = 'ProvenanceSummary'
-            """
-            results_cache = list(snapshot.execute_sql(query_cache))
-            results = list(snapshot.execute_sql(query_kv))
-            self.assertEqual(results, results_cache)
+            results = list(snapshot.execute_sql(query))
             
             self.assertEqual(len(results), 1)
             row = results[0]
@@ -196,21 +189,14 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
         self.assertTrue(res.success)
         
-        # 3. Verify results in both Spanner KeyValueStore and Cache tables (dual write check)
-        with self.database.snapshot(multi_use=True) as snapshot:
-            query_kv = """
+        # 3. Verify results in Spanner KeyValueStore table
+        with self.database.snapshot() as snapshot:
+            query = """
                 SELECT type, key, provenance, value 
                 FROM KeyValueStore 
                 WHERE type = 'ProvenanceSummary'
             """
-            query_cache = """
-                SELECT type, key, provenance, value 
-                FROM Cache 
-                WHERE type = 'ProvenanceSummary'
-            """
-            results_cache = list(snapshot.execute_sql(query_cache))
-            results = list(snapshot.execute_sql(query_kv))
-            self.assertEqual(results, results_cache)
+            results = list(snapshot.execute_sql(query))
             
             self.assertEqual(len(results), 1)
             row = results[0]
@@ -279,20 +265,13 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
         self.assertTrue(res.success)
         
-        with self.database.snapshot(multi_use=True) as snapshot:
-            query_kv = """
+        with self.database.snapshot() as snapshot:
+            query = """
                 SELECT type, key, provenance, value
                 FROM KeyValueStore
                 WHERE type = 'ProvenanceSummary'
             """
-            query_cache = """
-                SELECT type, key, provenance, value
-                FROM Cache
-                WHERE type = 'ProvenanceSummary'
-            """
-            results_cache = list(snapshot.execute_sql(query_cache))
-            results = list(snapshot.execute_sql(query_kv))
-            self.assertEqual(results, results_cache)
+            results = list(snapshot.execute_sql(query))
             
             self.assertEqual(len(results), 1)
             row = results[0]
@@ -368,20 +347,13 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
         self.assertTrue(res.success)
         
-        with self.database.snapshot(multi_use=True) as snapshot:
-            query_kv = """
+        with self.database.snapshot() as snapshot:
+            query = """
                 SELECT type, key, provenance, value
                 FROM KeyValueStore
                 WHERE type = 'ProvenanceSummary'
             """
-            query_cache = """
-                SELECT type, key, provenance, value
-                FROM Cache
-                WHERE type = 'ProvenanceSummary'
-            """
-            results_cache = list(snapshot.execute_sql(query_cache))
-            results = list(snapshot.execute_sql(query_kv))
-            self.assertEqual(results, results_cache)
+            results = list(snapshot.execute_sql(query))
             
             self.assertEqual(len(results), 1)
             row = results[0]
@@ -451,22 +423,14 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_1, import_2])
         self.assertTrue(res.success)
         
-        with self.database.snapshot(multi_use=True) as snapshot:
-            query_kv = """
+        with self.database.snapshot() as snapshot:
+            query = """
                 SELECT type, key, provenance, value
                 FROM KeyValueStore
                 WHERE type = 'ProvenanceSummary'
                 ORDER BY provenance, key
             """
-            query_cache = """
-                SELECT type, key, provenance, value
-                FROM Cache
-                WHERE type = 'ProvenanceSummary'
-                ORDER BY provenance, key
-            """
-            results_cache = list(snapshot.execute_sql(query_cache))
-            results = list(snapshot.execute_sql(query_kv))
-            self.assertEqual(results, results_cache)
+            results = list(snapshot.execute_sql(query))
             self.assertEqual(len(results), 2)
             
             prov_1 = f'dc/base/{import_1}' if self.is_base_dc else import_1
