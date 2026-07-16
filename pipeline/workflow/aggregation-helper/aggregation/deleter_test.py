@@ -47,7 +47,7 @@ class TestAggregationDeleter(unittest.TestCase):
         
         self.assertTrue(any("DELETE FROM Edge" in sql for sql in executed_sqls))
         self.assertTrue(any("DELETE FROM TimeSeries" in sql for sql in executed_sqls))
-        self.assertTrue(any("DELETE FROM Cache" in sql for sql in executed_sqls))
+        self.assertTrue(any("DELETE FROM KeyValueStore" in sql for sql in executed_sqls))
         
         for c in calls:
             self.assertEqual(c[1]["params"], expected_params)

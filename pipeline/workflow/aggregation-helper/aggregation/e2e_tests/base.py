@@ -79,6 +79,7 @@ class AggregationIntegrationTestBase(unittest.TestCase):
         def _clear(transaction):
             # Delete in correct order due to constraints
             transaction.execute_update("DELETE FROM Cache WHERE TRUE")
+            transaction.execute_update("DELETE FROM KeyValueStore WHERE TRUE")
             transaction.execute_update("DELETE FROM Observation WHERE TRUE")
             transaction.execute_update("DELETE FROM TimeSeries WHERE TRUE")
             transaction.execute_update("DELETE FROM Edge WHERE TRUE")
