@@ -64,7 +64,8 @@ class AggregationDeleter:
         delete_queries = [
             ("Edge", "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)", ""),
             ("TimeSeries", "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)", " (and cascaded Observations)"),
-            ("KeyValueStore", "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "")
+            ("KeyValueStore", "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", ""),
+            ("Cache", "DELETE FROM Cache WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "")
         ]
 
         def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:

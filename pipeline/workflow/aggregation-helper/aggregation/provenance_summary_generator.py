@@ -209,11 +209,8 @@ class ProvenanceSummaryGenerator:
         FROM place_stats ps
         JOIN aggregated_places ap USING (variable_measured, provenance, facet_id, place_type);
 
-        -- Step 8: Final aggregation and export to KeyValueStore
-        EXPORT DATA
-          OPTIONS( uri="{dest}",
-            format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "KeyValueStore"}}' ) AS
+        -- Step 8: Final aggregation into temporary table
+        CREATE OR REPLACE TEMPORARY TABLE `temp_provenance_summary` AS
         WITH facet_base AS (
           SELECT 
             variable_measured, provenance as provenance_dcid, facet_id,
@@ -303,5 +300,19 @@ class ProvenanceSummaryGenerator:
           ) as value
         FROM facet_summaries
         GROUP BY variable_measured, provenance_dcid;
+
+        -- Step 9a: Export to KeyValueStore table
+        EXPORT DATA
+          OPTIONS( uri="{dest}",
+            format='CLOUD_SPANNER',
+            spanner_options = '{{"table": "KeyValueStore"}}' ) AS
+        SELECT type, key, provenance, value FROM `temp_provenance_summary`;
+
+        -- Step 9b: Dual export to legacy Cache table
+        EXPORT DATA
+          OPTIONS( uri="{dest}",
+            format='CLOUD_SPANNER',
+            spanner_options = '{{"table": "Cache"}}' ) AS
+        SELECT type, key, provenance, value FROM `temp_provenance_summary`;
         """
         return self.executor.execute(query)
