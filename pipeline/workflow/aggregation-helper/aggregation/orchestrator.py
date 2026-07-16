@@ -335,36 +335,6 @@ class AggregationOrchestrator:
         return expanded
 
 
-    def get_active_stages(self, active_imports: List[str]) -> List[int]:
-        """Returns a sorted list of unique active stage numbers across active imports."""
-        expanded_imports = self._expand_active_imports(active_imports)
-        stages = set()
-        for single_import in expanded_imports:
-            stages.update(self._get_active_stages_for_import(single_import))
-        return sorted(list(stages))
-
-    def execute_stage(self, stage_num: int, active_imports: List[str]) -> List[str]:
-        """Executes a single stage for all active imports asynchronously."""
-        expanded_imports = self._expand_active_imports(active_imports)
-        stage_jobs = []
-        for calc in self.calculations:
-            calc_stage = calc.get("stage", 1)
-            if calc_stage != stage_num:
-                continue
-
-            applicable_imports = [imp for imp in expanded_imports if self._calc_applies_to_import(calc, imp)]
-            if not applicable_imports:
-                continue
-
-            step_type = calc.get("type")
-            logging.info(
-                f"Triggering step: '{step_type}' (Stage {stage_num}) for imports {applicable_imports}..."
-            )
-            step_jobs = self._dispatch_stage_steps(calc, applicable_imports)
-            stage_jobs.extend(step_jobs)
-
-        return stage_jobs
-
     def _execute_and_synchronize_stage(self, single_import: str, stage_num: int) -> None:
         """Executes a single stage for a single import and blocks until all jobs complete."""
         stage_jobs = []
