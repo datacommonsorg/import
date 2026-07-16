@@ -21,9 +21,9 @@ import textwrap
 import unittest
 from unittest.mock import MagicMock, patch
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from aggregation.common import CALCULATION_TYPE_PRIORITY
+from aggregation.orchestrator import AggregationOrchestrator, CalculationType
 
-from aggregation import AggregationOrchestrator
 
 VALID_CONFIG_YAML = textwrap.dedent("""\
     calculations:
@@ -482,6 +482,22 @@ class TestOrchestratorOrdering(unittest.TestCase):
         self.assertEqual(types_in_order, expected_order)
 
 
+class TestConfigSanity(unittest.TestCase):
+    """Sanity checks for calculation configurations and metadata."""
+
+    def test_all_calculation_types_have_priority(self):
+        """Ensures all CalculationType enum members have a priority defined in CALCULATION_TYPE_PRIORITY."""
+        calc_type_values = {t.value for t in CalculationType}
+        priority_keys = set(CALCULATION_TYPE_PRIORITY.keys())
+        self.assertSetEqual(
+            calc_type_values,
+            priority_keys,
+            f"Mismatch between CalculationType and CALCULATION_TYPE_PRIORITY. "
+            f"Missing: {calc_type_values ^ priority_keys}"
+        )
+
+
 if __name__ == '__main__':
     unittest.main()
+
 
