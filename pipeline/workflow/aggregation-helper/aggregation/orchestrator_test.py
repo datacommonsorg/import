@@ -91,12 +91,12 @@ class TestOrchestratorScanning(unittest.TestCase):
         self.tmpdir.cleanup()
 
     def test_get_active_stages(self, mock_executor):
-        """Tests getting active stages for matching and non-matching imports."""
-        stages = self.orchestrator.get_active_stages(["USFed_Census"])
-        self.assertEqual(stages, [1, 2])
+        """Tests resolving active stages for matching and non-matching imports via dry_run execution."""
+        res_matching = self.orchestrator.run(active_imports=["USFed_Census"], dry_run=True)
+        self.assertEqual(res_matching.import_results["USFed_Census"].stages_executed, [1, 2])
 
-        stages = self.orchestrator.get_active_stages(["OtherImport"])
-        self.assertEqual(stages, [])
+        res_non_matching = self.orchestrator.run(active_imports=["OtherImport"], dry_run=True)
+        self.assertEqual(res_non_matching.import_results["OtherImport"].stages_executed, [])
 
     def test_directory_config_loading(self, mock_executor):
         """Tests that orchestrator correctly scans and loads config files from a directory."""
@@ -220,33 +220,38 @@ class TestOrchestratorExecution(unittest.TestCase):
         # Verify deleter was NOT called
         self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
 
-    def test_execute_stage(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
-        """Tests manual execution of a specific stage."""
-        mock_job1 = MagicMock()
-        mock_job1.job_id = "job-place-1"
-        mock_place_gen.return_value.aggregate_places.return_value = mock_job1
-
-        jobs = self.orchestrator.execute_stage(1, ["USFed_Census"])
-
-        mock_place_gen.return_value.aggregate_places.assert_called_once_with(
-            import_names=["USFed_Census"],
-            source_type="County",
-            destination_type="State",
-            allow_multiple_to_places=False
-        )
-        self.assertEqual(jobs, [mock_job1])
-        self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
-
-    def test_execute_stage_entity_aggregation(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
-        """Tests manual execution of ENTITY_AGGREGATION stage."""
+    def test_run_entity_aggregation(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+        """Tests execution of ENTITY_AGGREGATION stage through orchestrator run."""
         mock_job = MagicMock()
         mock_job.job_id = "job-entity-1"
         mock_entity_gen.return_value.aggregate_entities.return_value = [mock_job]
 
-        jobs = self.orchestrator.execute_stage(3, ["EarthquakeUSGS"])
-        self.assertEqual(jobs, [mock_job])
+        self.orchestrator.executor = MagicMock()
+        self.orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
+
+        result = self.orchestrator.run(active_imports=["EarthquakeUSGS"], dry_run=False)
+        self.assertTrue(result.success)
+        self.assertIn("EarthquakeUSGS", result.import_results)
+        self.assertEqual(result.import_results["EarthquakeUSGS"].stages_executed, [3])
+
+        # Verify that the entity generator was called with the correct configuration
         mock_entity_gen.return_value.aggregate_entities.assert_called_once()
-        self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
+        call_args = mock_entity_gen.return_value.aggregate_entities.call_args[0][0]
+        self.assertEqual(len(call_args), 1)
+        config = call_args[0]
+        self.assertEqual(config.entity_types, ["EarthquakeEvent"])
+        self.assertEqual(config.location_props, ["affectedPlace"])
+        self.assertEqual(config.date_prop, "occurrenceTime")
+        self.assertEqual(config.agg_date_formats, ["YYYY"])
+        self.assertEqual(config.constraints, [{"property": "magnitude", "min": 7, "unit": "M"}])
+        self.assertEqual(config.output_import, "EarthquakeUSGS_Agg")
+        self.assertEqual(config.input_imports, ["EarthquakeUSGS"])
+
+        # Verify deleter was called with expected outputs
+        self.mock_deleter.return_value.delete_aggregated_data.assert_called_once_with(
+            ["EarthquakeUSGS_Agg"]
+        )
+
 
 
 CHAINED_CONFIG_YAML = textwrap.dedent("""\
