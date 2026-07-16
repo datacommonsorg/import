@@ -21,9 +21,9 @@ import textwrap
 import unittest
 from unittest.mock import MagicMock, patch
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from aggregation.common import CALCULATION_TYPE_PRIORITY
+from aggregation.orchestrator import AggregationOrchestrator, CalculationType
 
-from aggregation import AggregationOrchestrator
 
 VALID_CONFIG_YAML = textwrap.dedent("""\
     calculations:
@@ -91,12 +91,12 @@ class TestOrchestratorScanning(unittest.TestCase):
         self.tmpdir.cleanup()
 
     def test_get_active_stages(self, mock_executor):
-        """Tests getting active stages for matching and non-matching imports."""
-        stages = self.orchestrator.get_active_stages(["USFed_Census"])
-        self.assertEqual(stages, [1, 2])
+        """Tests resolving active stages for matching and non-matching imports via dry_run execution."""
+        res_matching = self.orchestrator.run(active_imports=["USFed_Census"], dry_run=True)
+        self.assertEqual(res_matching.import_results["USFed_Census"].stages_executed, [1, 2])
 
-        stages = self.orchestrator.get_active_stages(["OtherImport"])
-        self.assertEqual(stages, [])
+        res_non_matching = self.orchestrator.run(active_imports=["OtherImport"], dry_run=True)
+        self.assertEqual(res_non_matching.import_results["OtherImport"].stages_executed, [])
 
     def test_directory_config_loading(self, mock_executor):
         """Tests that orchestrator correctly scans and loads config files from a directory."""
@@ -220,33 +220,38 @@ class TestOrchestratorExecution(unittest.TestCase):
         # Verify deleter was NOT called
         self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
 
-    def test_execute_stage(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
-        """Tests manual execution of a specific stage."""
-        mock_job1 = MagicMock()
-        mock_job1.job_id = "job-place-1"
-        mock_place_gen.return_value.aggregate_places.return_value = mock_job1
-
-        jobs = self.orchestrator.execute_stage(1, ["USFed_Census"])
-
-        mock_place_gen.return_value.aggregate_places.assert_called_once_with(
-            import_names=["USFed_Census"],
-            source_type="County",
-            destination_type="State",
-            allow_multiple_to_places=False
-        )
-        self.assertEqual(jobs, [mock_job1])
-        self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
-
-    def test_execute_stage_entity_aggregation(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
-        """Tests manual execution of ENTITY_AGGREGATION stage."""
+    def test_run_entity_aggregation(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+        """Tests execution of ENTITY_AGGREGATION stage through orchestrator run."""
         mock_job = MagicMock()
         mock_job.job_id = "job-entity-1"
         mock_entity_gen.return_value.aggregate_entities.return_value = [mock_job]
 
-        jobs = self.orchestrator.execute_stage(3, ["EarthquakeUSGS"])
-        self.assertEqual(jobs, [mock_job])
+        self.orchestrator.executor = MagicMock()
+        self.orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
+
+        result = self.orchestrator.run(active_imports=["EarthquakeUSGS"], dry_run=False)
+        self.assertTrue(result.success)
+        self.assertIn("EarthquakeUSGS", result.import_results)
+        self.assertEqual(result.import_results["EarthquakeUSGS"].stages_executed, [3])
+
+        # Verify that the entity generator was called with the correct configuration
         mock_entity_gen.return_value.aggregate_entities.assert_called_once()
-        self.mock_deleter.return_value.delete_aggregated_data.assert_not_called()
+        call_args = mock_entity_gen.return_value.aggregate_entities.call_args[0][0]
+        self.assertEqual(len(call_args), 1)
+        config = call_args[0]
+        self.assertEqual(config.entity_types, ["EarthquakeEvent"])
+        self.assertEqual(config.location_props, ["affectedPlace"])
+        self.assertEqual(config.date_prop, "occurrenceTime")
+        self.assertEqual(config.agg_date_formats, ["YYYY"])
+        self.assertEqual(config.constraints, [{"property": "magnitude", "min": 7, "unit": "M"}])
+        self.assertEqual(config.output_import, "EarthquakeUSGS_Agg")
+        self.assertEqual(config.input_imports, ["EarthquakeUSGS"])
+
+        # Verify deleter was called with expected outputs
+        self.mock_deleter.return_value.delete_aggregated_data.assert_called_once_with(
+            ["EarthquakeUSGS_Agg"]
+        )
+
 
 
 CHAINED_CONFIG_YAML = textwrap.dedent("""\
@@ -421,5 +426,83 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
         self.assertEqual(result.import_results["GLOBAL"].error_message, "Vertex AI quota exceeded")
 
 
+ORDERING_CONFIG_YAML = textwrap.dedent("""\
+    calculations:
+      - type: PLACE_AGGREGATION
+        input_imports: ["TestImport"]
+        output_import: "TestImport_Agg"
+        stage: 1
+        place_aggregation:
+          from_place_types: County
+          to_place_types: State
+
+      - type: PROVENANCE_SUMMARY
+        input_imports: ["*"]
+        stage: 0
+
+      - type: LINKED_EDGES
+        input_imports: ["*"]
+        stage: 0
+
+      - type: STAT_VAR_GROUPS
+        input_imports: ["*"]
+        stage: 0
+""")
+
+
+@patch('aggregation.orchestrator.BigQueryExecutor')
+class TestOrchestratorOrdering(unittest.TestCase):
+    """Tests for stage 0 prerequisite resolution and deterministic priority ordering."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+
+        self.config_path = os.path.join(self.tmpdir.name, "ordering_config.yaml")
+        with open(self.config_path, "w") as f:
+            f.write(ORDERING_CONFIG_YAML)
+
+        self.orchestrator = AggregationOrchestrator(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path
+        )
+
+    def test_active_stages_includes_stage_0(self, mock_executor):
+        """Verifies stage 0 is included in active stages for matching imports."""
+        active_stages = self.orchestrator.get_active_stages(["TestImport"])
+        self.assertEqual(active_stages, [0, 1])
+
+    def test_calculation_priority_sorting(self, mock_executor):
+        """Verifies calculations are sorted deterministically by (stage, priority)."""
+        types_in_order = [calc["type"] for calc in self.orchestrator.calculations]
+        expected_order = [
+            "LINKED_EDGES",
+            "STAT_VAR_GROUPS",
+            "PROVENANCE_SUMMARY",
+            "PLACE_AGGREGATION"
+        ]
+        self.assertEqual(types_in_order, expected_order)
+
+
+class TestConfigSanity(unittest.TestCase):
+    """Sanity checks for calculation configurations and metadata."""
+
+    def test_all_calculation_types_have_priority(self):
+        """Ensures all CalculationType enum members have a priority defined in CALCULATION_TYPE_PRIORITY."""
+        calc_type_values = {t.value for t in CalculationType}
+        priority_keys = set(CALCULATION_TYPE_PRIORITY.keys())
+        self.assertSetEqual(
+            calc_type_values,
+            priority_keys,
+            f"Mismatch between CalculationType and CALCULATION_TYPE_PRIORITY. "
+            f"Missing: {calc_type_values ^ priority_keys}"
+        )
+
+
 if __name__ == '__main__':
     unittest.main()
+
+
