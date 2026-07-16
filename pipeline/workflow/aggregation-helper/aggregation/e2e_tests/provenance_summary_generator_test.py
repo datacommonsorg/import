@@ -14,7 +14,7 @@
 """Integration E2E tests for Data Commons ProvenanceSummaryGenerator.
 
 Covers:
-- ProvenanceSummaryGenerator (generating summary statistics in Cache table for each
+- ProvenanceSummaryGenerator (generating summary statistics in KeyValueStore table for each
   provenance, including min/max values, place type summaries, top places,
   robustness to non-numeric values and dangling observations, and handling multiple imports).
 
@@ -22,7 +22,7 @@ NOTE: This script is intended for local testing purposes only and is NOT
 currently part of the CI pipeline.
 
 WARNING: Running these tests will DELETE all existing data in the target
-database tables (Cache, Observation, TimeSeries, Edge, and Node) as part of
+database tables (KeyValueStore, Observation, TimeSeries, Edge, and Node) as part of
 the setUp and tearDown phases. Do NOT run this against any database whose
 data you do not want to lose (e.g., production, staging, or active development databases)!
 
@@ -96,11 +96,11 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
         self.assertTrue(res.success)
         
-        # 3. Verify results in Spanner Cache table
+        # 3. Verify results in Spanner KeyValueStore table
         with self.database.snapshot() as snapshot:
             query = """
                 SELECT type, key, provenance, value 
-                FROM Cache 
+                FROM KeyValueStore 
                 WHERE type = 'ProvenanceSummary'
             """
             results = list(snapshot.execute_sql(query))
@@ -189,11 +189,11 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
         self.assertTrue(res.success)
         
-        # 3. Verify results in Spanner Cache table
+        # 3. Verify results in Spanner KeyValueStore table
         with self.database.snapshot() as snapshot:
             query = """
                 SELECT type, key, provenance, value 
-                FROM Cache 
+                FROM KeyValueStore 
                 WHERE type = 'ProvenanceSummary'
             """
             results = list(snapshot.execute_sql(query))
@@ -268,7 +268,7 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         with self.database.snapshot() as snapshot:
             query = """
                 SELECT type, key, provenance, value
-                FROM Cache
+                FROM KeyValueStore
                 WHERE type = 'ProvenanceSummary'
             """
             results = list(snapshot.execute_sql(query))
@@ -350,7 +350,7 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         with self.database.snapshot() as snapshot:
             query = """
                 SELECT type, key, provenance, value
-                FROM Cache
+                FROM KeyValueStore
                 WHERE type = 'ProvenanceSummary'
             """
             results = list(snapshot.execute_sql(query))
@@ -426,7 +426,7 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         with self.database.snapshot() as snapshot:
             query = """
                 SELECT type, key, provenance, value
-                FROM Cache
+                FROM KeyValueStore
                 WHERE type = 'ProvenanceSummary'
                 ORDER BY provenance, key
             """
