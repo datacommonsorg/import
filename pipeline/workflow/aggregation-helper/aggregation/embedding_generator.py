@@ -135,7 +135,7 @@ class EmbeddingGenerator:
             select_nodes_sql = """
                 SELECT 
                   subject_id, 
-                  JSON_VALUE(embedding_content.name) AS content, 
+                  TO_JSON_STRING(embedding_content) AS content, 
                   embedding_content, 
                   node_types 
                 FROM raw_nodes
