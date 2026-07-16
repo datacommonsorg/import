@@ -40,6 +40,7 @@ TIMEOUT = int(os.environ.get('TIMEOUT', 1700))
 EMBEDDING_SPACE = int(os.environ.get('EMBEDDING_SPACE', 768))
 EMBEDDING_TABLE = os.environ.get('EMBEDDING_TABLE', 'NodeEmbedding')
 EMBEDDING_INDEX = os.environ.get('EMBEDDING_INDEX', 'NodeEmbeddingIndex')
+EMBEDDING_LABEL_INDEX = os.environ.get('EMBEDDING_LABEL_INDEX', 'NodeEmbeddingLabelIndex')
 
 _DEFAULT_MODELS = [
     {"name": "NodeEmbeddingModel", "endpoint": "text-embedding-005"}
