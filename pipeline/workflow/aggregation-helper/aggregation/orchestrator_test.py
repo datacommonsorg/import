@@ -233,7 +233,25 @@ class TestOrchestratorExecution(unittest.TestCase):
         self.assertTrue(result.success)
         self.assertIn("EarthquakeUSGS", result.import_results)
         self.assertEqual(result.import_results["EarthquakeUSGS"].stages_executed, [3])
+
+        # Verify that the entity generator was called with the correct configuration
         mock_entity_gen.return_value.aggregate_entities.assert_called_once()
+        call_args = mock_entity_gen.return_value.aggregate_entities.call_args[0][0]
+        self.assertEqual(len(call_args), 1)
+        config = call_args[0]
+        self.assertEqual(config.entity_types, ["EarthquakeEvent"])
+        self.assertEqual(config.location_props, ["affectedPlace"])
+        self.assertEqual(config.date_prop, "occurrenceTime")
+        self.assertEqual(config.agg_date_formats, ["YYYY"])
+        self.assertEqual(config.constraints, [{"property": "magnitude", "min": 7, "unit": "M"}])
+        self.assertEqual(config.output_import, "EarthquakeUSGS_Agg")
+        self.assertEqual(config.input_imports, ["EarthquakeUSGS"])
+
+        # Verify deleter was called with expected outputs
+        self.mock_deleter.return_value.delete_aggregated_data.assert_called_once_with(
+            ["EarthquakeUSGS_Agg"]
+        )
+
 
 
 CHAINED_CONFIG_YAML = textwrap.dedent("""\
