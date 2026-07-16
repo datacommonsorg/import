@@ -33,6 +33,7 @@ from .stat_var_group_generator import StatVarGroupGenerator
 from .stat_var_series_aggregator import StatVarSeriesAggregator
 from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
 from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
+from .common import CALCULATION_TYPE_PRIORITY
 from .validator import validate_config
 from .deleter import AggregationDeleter
 
@@ -145,6 +146,15 @@ class AggregationOrchestrator:
                 self.calculations.extend(validate_config(file_path, schema_file_path))
         else:
             self.calculations = validate_config(target_config, schema_file_path)
+
+        # Deterministically sort calculations by stage and calculation priority tier
+        self.calculations.sort(
+            key=lambda c: (
+                c.get("stage", 1),
+                CALCULATION_TYPE_PRIORITY.get(c.get("type", ""), 99)
+            )
+        )
+
 
     def run(self, active_imports: Optional[List[str]] = None, dry_run: bool = True, skip_deletions: bool = False) -> AggregationRunResult:
         """Executes aggregations independently for each active import.

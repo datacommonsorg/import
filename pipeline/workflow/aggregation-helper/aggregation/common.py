@@ -41,3 +41,40 @@ def _escape_sql_literal(val: str) -> str:
     - Single quotes (') are escaped to '' to prevent terminating Spanner string.
     """
     return val.replace('\\', '\\\\\\\\').replace('"', '\\"').replace("'", "''")
+
+
+# Execution priority ranks for calculation types within a stage.
+# Deterministically resolves execution order when multiple calculation types exist in the same stage.
+#
+# Tier 0 (0-2): Graph Topology & Schema Prerequisite Generation
+#   - LINKED_EDGES (0): Computes transitive graph closures (linkedContainedInPlace, linkedMemberOf, linkedMember).
+#     Must run first as place rollups rely on containment graph edges to determine target places.
+#   - STAT_VAR_GROUPS (1): Constructs StatVarGroup nodes and hierarchy edges (specializationOf, memberOf).
+#     Queries specializationOf and curated memberOf edges.
+#   - PROVENANCE_SUMMARY (2): Generates summary statistics for observation tables in KeyValueStore.
+#     Summary over observation data and place type edges.
+#
+# Tier 1 (10-15): Data Rollups, Series, & Derived Calculations
+#   - PLACE_AGGREGATION (10): Primary spatial rollup aggregating raw observations up geographic containment trees.
+#   - STAT_VAR_AGGREGATION (11): Sums component variables into ancestor variables across spatial rollups.
+#   - ENTITY_AGGREGATION (12): Aggregates event occurrences across spatial/temporal bounds.
+#   - STAT_VAR_SERIES_AGGREGATION (13): Aggregates time series across temporal granularities (e.g. Daily -> Monthly).
+#   - STAT_VAR_CALCULATION (14): Computes derived metrics/formulas (e.g. per-capita ratios like Income / Population).
+#     Must run after rollups so numerators and denominators exist across all spatial and variable levels.
+#   - SUPER_ENUM_AGGREGATION (15): Aggregates across enumerated concept categories.
+#
+# Tier 2 (20): Global Post-Processing
+#   - EMBEDDING_GENERATION (20): Computes vector embeddings across finalized node properties.
+CALCULATION_TYPE_PRIORITY = {
+    "LINKED_EDGES": 0,
+    "STAT_VAR_GROUPS": 1,
+    "PROVENANCE_SUMMARY": 2,
+    "PLACE_AGGREGATION": 10,
+    "STAT_VAR_AGGREGATION": 11,
+    "ENTITY_AGGREGATION": 12,
+    "STAT_VAR_SERIES_AGGREGATION": 13,
+    "STAT_VAR_CALCULATION": 14,
+    "SUPER_ENUM_AGGREGATION": 15,
+    "EMBEDDING_GENERATION": 20,
+}
+
