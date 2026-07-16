@@ -22,7 +22,7 @@ from .common import _escape_sql_literal, get_provenance_name
 
 
 class ProvenanceSummaryGenerator:
-    """Contains the SQL queries to generate ProvenanceSummary in the Cache table."""
+    """Contains the SQL queries to generate ProvenanceSummary in the KeyValueStore table."""
 
     def __init__(self,
                  executor: BigQueryExecutor,
@@ -209,11 +209,11 @@ class ProvenanceSummaryGenerator:
         FROM place_stats ps
         JOIN aggregated_places ap USING (variable_measured, provenance, facet_id, place_type);
 
-        -- Step 8: Final aggregation and export to Cache
+        -- Step 8: Final aggregation and export to KeyValueStore
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Cache"}}' ) AS
+            spanner_options = '{{"table": "KeyValueStore"}}' ) AS
         WITH facet_base AS (
           SELECT 
             variable_measured, provenance as provenance_dcid, facet_id,

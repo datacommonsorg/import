@@ -6,8 +6,8 @@ calculations:
     input_imports:
       - "*"
 
-  # Generates summary statistics in the Cache table
-  - name: "Global: Cache Provenance & Lineage Summary"
+  # Generates summary statistics in the KeyValueStore table
+  - name: "Global: KeyValueStore Provenance & Lineage Summary"
     type: PROVENANCE_SUMMARY
     stage: 1
     input_imports:
