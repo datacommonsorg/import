@@ -19,6 +19,7 @@ Node: SVId
 definition: "mp=count,pt=Person"
 populationType: dcid:Person
 measuredProperty: dcid:count
+name: "Count Of Person"
 typeOf: dcid:StatisticalVariable
 
 # From misc.mcf:45

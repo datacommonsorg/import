@@ -640,6 +640,15 @@ public class GraphTransformerTest {
                                         "mp=cumulativeCount,pt=MedicalConditionIncident,incidentType=COVID_19,medicalStatus=ConfirmedCase")
                                     .setType(ValueType.TEXT))
                             .build())
+                    .putPvs(
+                        "name",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue(
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
+                                    .setType(ValueType.TEXT))
+                            .build())
                     .build())
             .build();
 
@@ -780,6 +789,15 @@ public class GraphTransformerTest {
                                         "mp=cumulativeCount,pt=MedicalConditionIncident,incidentType=COVID_19,medicalStatus=ConfirmedCase")
                                     .setType(ValueType.TEXT))
                             .build())
+                    .putPvs(
+                        "name",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue(
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
+                                    .setType(ValueType.TEXT))
+                            .build())
                     .build())
             .build();
 
@@ -906,6 +924,14 @@ public class GraphTransformerTest {
                                 TypedValue.newBuilder()
                                     .setValue(
                                         "mp=amount,pt=FinancialTransaction,someActualConstraint=someValue")
+                                    .setType(ValueType.TEXT))
+                            .build())
+                    .putPvs(
+                        "name",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("Amount Of Financial Transaction: Some Value")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
