@@ -21,9 +21,9 @@ import textwrap
 import unittest
 from unittest.mock import MagicMock, patch
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from aggregation.common import CALCULATION_TYPE_PRIORITY
+from aggregation.orchestrator import AggregationOrchestrator, CalculationType
 
-from aggregation import AggregationOrchestrator
 
 VALID_CONFIG_YAML = textwrap.dedent("""\
     calculations:
@@ -426,5 +426,83 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
         self.assertEqual(result.import_results["GLOBAL"].error_message, "Vertex AI quota exceeded")
 
 
+ORDERING_CONFIG_YAML = textwrap.dedent("""\
+    calculations:
+      - type: PLACE_AGGREGATION
+        input_imports: ["TestImport"]
+        output_import: "TestImport_Agg"
+        stage: 1
+        place_aggregation:
+          from_place_types: County
+          to_place_types: State
+
+      - type: PROVENANCE_SUMMARY
+        input_imports: ["*"]
+        stage: 0
+
+      - type: LINKED_EDGES
+        input_imports: ["*"]
+        stage: 0
+
+      - type: STAT_VAR_GROUPS
+        input_imports: ["*"]
+        stage: 0
+""")
+
+
+@patch('aggregation.orchestrator.BigQueryExecutor')
+class TestOrchestratorOrdering(unittest.TestCase):
+    """Tests for stage 0 prerequisite resolution and deterministic priority ordering."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+
+        self.config_path = os.path.join(self.tmpdir.name, "ordering_config.yaml")
+        with open(self.config_path, "w") as f:
+            f.write(ORDERING_CONFIG_YAML)
+
+        self.orchestrator = AggregationOrchestrator(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path
+        )
+
+    def test_active_stages_includes_stage_0(self, mock_executor):
+        """Verifies stage 0 is included in active stages for matching imports."""
+        active_stages = self.orchestrator.get_active_stages(["TestImport"])
+        self.assertEqual(active_stages, [0, 1])
+
+    def test_calculation_priority_sorting(self, mock_executor):
+        """Verifies calculations are sorted deterministically by (stage, priority)."""
+        types_in_order = [calc["type"] for calc in self.orchestrator.calculations]
+        expected_order = [
+            "LINKED_EDGES",
+            "STAT_VAR_GROUPS",
+            "PROVENANCE_SUMMARY",
+            "PLACE_AGGREGATION"
+        ]
+        self.assertEqual(types_in_order, expected_order)
+
+
+class TestConfigSanity(unittest.TestCase):
+    """Sanity checks for calculation configurations and metadata."""
+
+    def test_all_calculation_types_have_priority(self):
+        """Ensures all CalculationType enum members have a priority defined in CALCULATION_TYPE_PRIORITY."""
+        calc_type_values = {t.value for t in CalculationType}
+        priority_keys = set(CALCULATION_TYPE_PRIORITY.keys())
+        self.assertSetEqual(
+            calc_type_values,
+            priority_keys,
+            f"Mismatch between CalculationType and CALCULATION_TYPE_PRIORITY. "
+            f"Missing: {calc_type_values ^ priority_keys}"
+        )
+
+
 if __name__ == '__main__':
     unittest.main()
+
+
