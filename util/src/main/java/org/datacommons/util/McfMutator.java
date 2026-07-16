@@ -139,6 +139,20 @@ public class McfMutator {
                         .build());
         node.putPvs(Vocabulary.DEFINITION, valuesBuilder.build());
       }
+
+      if (!node.containsPvs(Vocabulary.NAME)) {
+        String name = StatVarNameGenerator.generateName(node.build());
+        if (!name.isEmpty()) {
+          Mcf.McfGraph.Values.Builder valuesBuilder =
+              Mcf.McfGraph.Values.newBuilder()
+                  .addTypedValues(
+                      Mcf.McfGraph.TypedValue.newBuilder()
+                          .setValue(name)
+                          .setType(Mcf.ValueType.TEXT)
+                          .build());
+          node.putPvs(Vocabulary.NAME, valuesBuilder.build());
+        }
+      }
     }
 
     return node.build();
