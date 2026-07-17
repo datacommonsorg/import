@@ -246,6 +246,7 @@ class VariablePerRowImporter(Importer):
 
     return column_mappings, custom_dimensions
 
+
   def _validate_mappings(
       self, column_mappings: dict[str, str],
       custom_dimensions: list[str]) -> list[FileValidationError]:
