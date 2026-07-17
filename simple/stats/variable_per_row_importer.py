@@ -66,20 +66,7 @@ def _convert_numeric_to_string(col: pd.Series,
   Returns:
       Series with all values converted to strings
   """
-
-  # If not numeric, just convert to string
-  if not pd.api.types.is_numeric_dtype(col):
-    return col.astype(str)
-
-    # For numeric columns, preserve integer format
-  is_int_value = col.notna() & (col == col.round())
-  is_na = col.isna()
-
-  return np.where(
-      is_int_value,
-      col.round().astype("Int64").astype(str),
-      np.where(is_na, default_for_na, col.astype(str)),
-  )
+  return col.fillna(default_for_na).astype(str)
 
 
 def _apply_property_defaults(df: pd.DataFrame,
@@ -315,7 +302,8 @@ class VariablePerRowImporter(Importer):
     with self.input_file.open_stream() as stream:
       reader = pd.read_csv(stream,
                            na_values=constants.STANDARD_NA_VALUES,
-                           chunksize=10000)
+                           chunksize=10000,
+                           dtype=str)
 
       for chunk_df in reader:
         if chunk_df.empty:
