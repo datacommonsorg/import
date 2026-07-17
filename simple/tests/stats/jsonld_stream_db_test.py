@@ -375,6 +375,49 @@ class TestJsonLdStreamDb(unittest.TestCase):
       self.assertEqual(obs3["dcid:value"], "Unavailable")
       self.assertEqual(obs3["dcid:observationDate"], "2026-06")
 
+  def test_custom_namespace_rewriting(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      db = JsonLdStreamDb(output_dir=temp_store.as_dir(),
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
+
+      try:
+        # Insert triples using custom namespace (e.g. undata:)
+        triples = [
+            Triple("undata:provenance/WHO", "typeOf", object_id="dcid:Provenance"),
+            Triple("undata:provenance/WHO", "dcid:name", object_value="WHO"),
+            Triple("undata:provenance/WHO", "schema:url", object_value="https://who.int"),
+            # Reference to another custom namespace node
+            Triple("undata:provenance/WHO", "dcid:source", object_id="undata:source/WHO_Org")
+        ]
+        mock_file = mock.Mock(path="test_import/data.csv")
+        db.insert_triples(triples, mock_file)
+
+        node_shard = os.path.join(db.temp_local_dir, "test_import",
+                                  "node-00000.jsonld")
+        self.assertTrue(os.path.exists(node_shard))
+
+        with open(node_shard, "r") as f:
+          data = json.load(f)
+
+        self.assertIn("@graph", data)
+        graph = data["@graph"]
+        self.assertEqual(len(graph), 1)
+
+        node = graph[0]
+        # Subject ID should be rewritten to dcid:
+        self.assertEqual(node["@id"], "dcid:provenance/WHO")
+
+        # Reference in dcid:source should be rewritten to dcid:
+        self.assertEqual(node["dcid:source"]["@id"], "dcid:source/WHO_Org")
+
+        # dcs:name should be dcid:name
+        self.assertEqual(node["dcid:name"], "WHO")
+
+      finally:
+        db._temp_dir_obj.cleanup()
+
 
 if __name__ == "__main__":
   unittest.main()
