@@ -68,6 +68,7 @@ class ProvenanceSummaryGenerator:
         SELECT 
           variable_measured, 
           entity1 as observation_about, 
+          extra_entities_id,
           facet_id, 
           provenance,
           observation_period,
@@ -81,6 +82,7 @@ class ProvenanceSummaryGenerator:
           '''SELECT 
                variable_measured, 
                entity1, 
+               extra_entities_id,
                facet_id, 
                provenance,
                observation_period,
@@ -228,7 +230,7 @@ class ProvenanceSummaryGenerator:
             MIN(value_num) as facet_min,
             MAX(value_num) as facet_max,
             COUNT(*) as facet_obs_count,
-            COUNT(DISTINCT observation_about) as facet_ts_count
+            COUNT(DISTINCT CONCAT(observation_about, '|', COALESCE(extra_entities_id, ''))) as facet_ts_count
           FROM `temp_obs_flat`
           GROUP BY variable_measured, provenance, facet_id
         ),
