@@ -37,73 +37,75 @@ def _test_import(test: unittest.TestCase,
                  test_name: str,
                  is_main_dc: bool,
                  raises_error: bool = False):
-  test.maxDiff = None
+    test.maxDiff = None
 
-  with tempfile.TemporaryDirectory() as temp_dir:
-    input_store = create_store(_INPUT_DIR)
-    temp_store = create_store(temp_dir)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        input_store = create_store(_INPUT_DIR)
+        temp_store = create_store(temp_dir)
 
-    input_file_name = f"{test_name}.mcf"
-    input_file = input_store.as_dir().open_file(input_file_name,
-                                                create_if_missing=False)
+        input_file_name = f"{test_name}.mcf"
+        input_file = input_store.as_dir().open_file(input_file_name,
+                                                    create_if_missing=False)
 
-    db_file_name = f"{test_name}.db"
-    db_path = os.path.join(temp_dir, db_file_name)
-    db_file = temp_store.as_dir().open_file(db_file_name)
+        db_file_name = f"{test_name}.db"
+        db_path = os.path.join(temp_dir, db_file_name)
+        db_file = temp_store.as_dir().open_file(db_file_name)
 
-    output_mcf_path = os.path.join(temp_dir, f"{test_name}.mcf")
-    output_triples_path = os.path.join(temp_dir, f"{test_name}.triples.db.csv")
-    expected_mcf_path = os.path.join(_EXPECTED_DIR, f"{test_name}.mcf")
-    expected_triples_path = os.path.join(_EXPECTED_DIR,
-                                         f"{test_name}.triples.db.csv")
+        output_mcf_path = os.path.join(temp_dir, f"{test_name}.mcf")
+        output_triples_path = os.path.join(temp_dir,
+                                           f"{test_name}.triples.db.csv")
+        expected_mcf_path = os.path.join(_EXPECTED_DIR, f"{test_name}.mcf")
+        expected_triples_path = os.path.join(_EXPECTED_DIR,
+                                             f"{test_name}.triples.db.csv")
 
-    db = create_and_update_db(create_sqlite_config(db_file))
-    report_file = temp_store.as_dir().open_file("report.json")
-    reporter = FileImportReporter(input_file.full_path(),
-                                  ImportReporter(report_file))
+        db = create_and_update_db(create_sqlite_config(db_file))
+        report_file = temp_store.as_dir().open_file("report.json")
+        reporter = FileImportReporter(input_file.full_path(),
+                                      ImportReporter(report_file))
 
-    output_store = create_store(output_mcf_path,
-                                create_if_missing=True,
-                                treat_as_file=True)
-    output_file = output_store.as_file()
-    importer = McfImporter(input_file=input_file,
-                           output_file=output_file,
-                           db=db,
-                           reporter=reporter,
-                           is_main_dc=is_main_dc)
+        output_store = create_store(output_mcf_path,
+                                    create_if_missing=True,
+                                    treat_as_file=True)
+        output_file = output_store.as_file()
+        importer = McfImporter(input_file=input_file,
+                               output_file=output_file,
+                               db=db,
+                               reporter=reporter,
+                               is_main_dc=is_main_dc)
 
-    if raises_error:
-      with test.assertRaises(ValueError):
+        if raises_error:
+            with test.assertRaises(ValueError):
+                importer.do_import()
+            return
+
         importer.do_import()
-      return
 
-    importer.do_import()
+        db.commit_and_close()
+        write_triples(db_path, output_triples_path)
 
-    db.commit_and_close()
-    write_triples(db_path, output_triples_path)
+        if not is_main_dc:
+            if is_write_mode():
+                shutil.copy(output_triples_path, expected_triples_path)
+                return
 
-    if not is_main_dc:
-      if is_write_mode():
-        shutil.copy(output_triples_path, expected_triples_path)
-        return
+            compare_files(test, output_triples_path, expected_triples_path)
+        else:
+            if is_write_mode():
+                shutil.copy(output_mcf_path, expected_mcf_path)
+                return
 
-      compare_files(test, output_triples_path, expected_triples_path)
-    else:
-      if is_write_mode():
-        shutil.copy(output_mcf_path, expected_mcf_path)
-        return
+            compare_files(test, output_mcf_path, expected_mcf_path)
 
-      compare_files(test, output_mcf_path, expected_mcf_path)
-
-    input_store.close()
-    output_store.close()
-    temp_store.close()
+        input_store.close()
+        output_store.close()
+        temp_store.close()
 
 
 class TestMcfImporter(unittest.TestCase):
 
-  def test_basic_mcf(self):
-    _test_import(self, "basic_mcf", is_main_dc=False)
-    _test_import(self, "basic_mcf_main_dc", is_main_dc=True)
-    _test_import(self, "invalid_mcf", is_main_dc=False, raises_error=True)
-    _test_import(self, "provenance_source", is_main_dc=False)
+    def test_basic_mcf(self):
+        _test_import(self, "basic_mcf", is_main_dc=False)
+        _test_import(self, "basic_mcf_main_dc", is_main_dc=True)
+        _test_import(self, "invalid_mcf", is_main_dc=False, raises_error=True)
+        _test_import(self, "provenance_source", is_main_dc=False)
+        _test_import(self, "custom_namespace_provenance", is_main_dc=False)

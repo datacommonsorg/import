@@ -24,260 +24,277 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
+from stats.util import is_uri_or_namespace
 from util.filesystem import File
 
 from util import dc_client as dc
 
 
 class ObservationsImporter(Importer):
-  """Imports a single observations input file.
+    """Imports a single observations input file.
     """
 
-  def __init__(self, input_file: File, db: Db, debug_resolve_file: File,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
-    self.input_file = input_file
-    self.db = db
-    self.debug_resolve_file = debug_resolve_file
-    self.reporter = reporter
-    self.nodes = nodes
-    self.config = nodes.config
-    self.entity_type = self.config.entity_type(self.input_file)
-    self.ignore_columns = self.config.ignore_columns(self.input_file)
-    # Reassign after reading CSV.
-    self.entity_column_name = constants.COLUMN_DCID
-    self.df = pd.DataFrame()
-    self.debug_resolve_df = None
-    self._resolved_entities_cache: dict[str, str | None] = {}
-
-  def do_import(self) -> None:
-    self.reporter.report_started()
-    try:
-      self._process_chunks()
-      self.reporter.report_success()
-    except Exception as e:
-      self.reporter.report_failure(str(e))
-      raise e
-
-    self._write_debug_csvs()
-
-  def _process_chunks(self) -> None:
-    first_chunk = True
-    renamed = {}
-    debug_dfs = []
-
-    with self.input_file.open_stream() as stream:
-      reader = pd.read_csv(
-          stream,
-          dtype={0: str},
-          skipinitialspace=True,
-          thousands=",",
-          chunksize=10000,
-      )
-
-      for chunk_df in reader:
-        if chunk_df.empty:
-          continue
-
-        if self.ignore_columns:
-          chunk_df.drop(columns=self.ignore_columns,
-                        axis=1,
-                        errors="ignore",
-                        inplace=True)
-
-        chunk_df = chunk_df.convert_dtypes()
-        chunk_df = chunk_df.astype({chunk_df.columns[1]: str})
-
-        if first_chunk:
-          self.entity_column_name = chunk_df.columns[0]
-          logging.info("Entity column name: %s", self.entity_column_name)
-          renamed[chunk_df.columns[0]] = constants.COLUMN_DCID
-          renamed[chunk_df.columns[1]] = constants.COLUMN_DATE
-          sv_column_names = chunk_df.columns[2:]
-          sv_ids = [
-              self.nodes.variable(sv_column_name, self.input_file).id
-              for sv_column_name in sv_column_names
-          ]
-          renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
-          first_chunk = False
-
-        chunk_df = chunk_df.rename(columns=renamed)
-        self.df = chunk_df
-        self._resolve_entities()
-        if self.debug_resolve_df is not None:
-          debug_dfs.append(self.debug_resolve_df)
-          self.debug_resolve_df = None
-        self._add_entity_nodes()
-        self._write_observations()
+    def __init__(self, input_file: File, db: Db, debug_resolve_file: File,
+                 reporter: FileImportReporter, nodes: Nodes) -> None:
+        self.input_file = input_file
+        self.db = db
+        self.debug_resolve_file = debug_resolve_file
+        self.reporter = reporter
+        self.nodes = nodes
+        self.config = nodes.config
+        self.entity_type = self.config.entity_type(self.input_file)
+        self.ignore_columns = self.config.ignore_columns(self.input_file)
+        # Reassign after reading CSV.
+        self.entity_column_name = constants.COLUMN_DCID
         self.df = pd.DataFrame()
+        self.debug_resolve_df = None
+        self._resolved_entities_cache: dict[str, str | None] = {}
 
-    if debug_dfs:
-      self.debug_resolve_df = pd.concat(debug_dfs, ignore_index=True)
+    def do_import(self) -> None:
+        self.reporter.report_started()
+        try:
+            self._process_chunks()
+            self.reporter.report_success()
+        except Exception as e:
+            self.reporter.report_failure(str(e))
+            raise e
 
-  def _write_observations(self) -> None:
-    observations_df = self.df.astype(str)
-    observations_df = observations_df.melt(
-        id_vars=[constants.COLUMN_DCID, constants.COLUMN_DATE],
-        var_name=constants.COLUMN_VARIABLE,
-        value_name=constants.COLUMN_VALUE,
-    )
-    observations_df = observations_df.rename(
-        columns={constants.COLUMN_DCID: constants.COLUMN_ENTITY})
+        self._write_debug_csvs()
 
-    provenance = self.nodes.provenance(self.input_file).id
-    obs_props = ObservationProperties.new(
-        self.config.observation_properties(self.input_file))
+    def _process_chunks(self) -> None:
+        first_chunk = True
+        renamed = {}
+        debug_dfs = []
 
-    observations_df = prepare_observations_df(observations_df, provenance,
-                                              obs_props)
-    self.db.insert_observations(observations_df, self.input_file)
+        with self.input_file.open_stream() as stream:
+            reader = pd.read_csv(
+                stream,
+                dtype={0: str},
+                skipinitialspace=True,
+                thousands=",",
+                chunksize=10000,
+            )
 
-  def _add_entity_nodes(self) -> None:
-    # Convert entity dcids to dict.
-    # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
-    entity_dcids: dict[str, bool] = {
-        strip_namespace(dcid): True for dcid in self.df.iloc[:, 0].tolist()
-    }
+            for chunk_df in reader:
+                if chunk_df.empty:
+                    continue
 
-    # Get entity nodes that are not already recorded.
-    new_entity_dcids = [
-        dcid for dcid in entity_dcids if dcid not in self.nodes.entities.keys()
-    ]
+                if self.ignore_columns:
+                    chunk_df.drop(columns=self.ignore_columns,
+                                  axis=1,
+                                  errors="ignore",
+                                  inplace=True)
 
-    logging.info("Found %s total entities, of which %s are already imported.",
-                 len(entity_dcids),
-                 len(entity_dcids) - len(new_entity_dcids))
+                chunk_df = chunk_df.convert_dtypes()
+                chunk_df = chunk_df.astype({chunk_df.columns[1]: str})
 
-    if not new_entity_dcids:
-      return
+                if first_chunk:
+                    self.entity_column_name = chunk_df.columns[0]
+                    logging.info("Entity column name: %s",
+                                 self.entity_column_name)
+                    renamed[chunk_df.columns[0]] = constants.COLUMN_DCID
+                    renamed[chunk_df.columns[1]] = constants.COLUMN_DATE
+                    sv_column_names = chunk_df.columns[2:]
+                    sv_ids = [
+                        self.nodes.variable(sv_column_name, self.input_file).id
+                        for sv_column_name in sv_column_names
+                    ]
+                    renamed.update({
+                        col: id
+                        for col, id in zip(sv_column_names, sv_ids)
+                    })
+                    first_chunk = False
 
-    # Get entity types
-    dcid2type: dict[str,
-                    str] = dc.get_property_of_entities(new_entity_dcids,
-                                                       sc.PREDICATE_TYPE_OF)
+                chunk_df = chunk_df.rename(columns=renamed)
+                self.df = chunk_df
+                self._resolve_entities()
+                if self.debug_resolve_df is not None:
+                    debug_dfs.append(self.debug_resolve_df)
+                    self.debug_resolve_df = None
+                self._add_entity_nodes()
+                self._write_observations()
+                self.df = pd.DataFrame()
 
-    if dcid2type:
-      logging.info("Importing %s of %s entities.", len(dcid2type),
-                   len(new_entity_dcids))
-      self.nodes.entities_with_types(dcid2type)
-    elif self.entity_type:
-      logging.info("Importing %s entities with type %s.", len(new_entity_dcids),
-                   self.entity_type)
-      self.nodes.entities_with_type(new_entity_dcids, self.entity_type)
+        if debug_dfs:
+            self.debug_resolve_df = pd.concat(debug_dfs, ignore_index=True)
 
-  def _resolve_entities(self) -> None:
-    df = self.df
-    # get entity column
-    column = df[constants.COLUMN_DCID]
+    def _write_observations(self) -> None:
+        observations_df = self.df.astype(str)
+        observations_df = observations_df.melt(
+            id_vars=[constants.COLUMN_DCID, constants.COLUMN_DATE],
+            var_name=constants.COLUMN_VARIABLE,
+            value_name=constants.COLUMN_VALUE,
+        )
+        observations_df = observations_df.rename(
+            columns={constants.COLUMN_DCID: constants.COLUMN_ENTITY})
 
-    pre_resolved_entities = {}
+        provenance = self.nodes.provenance(self.input_file).id
+        obs_props = ObservationProperties.new(
+            self.config.observation_properties(self.input_file))
 
-    def remove_pre_resolved(entity: str) -> bool:
-      if entity.startswith(constants.DCID_OVERRIDE_PREFIX):
-        pre_resolved_entities[entity] = entity[
-            len(constants.DCID_OVERRIDE_PREFIX):].strip()
-        return False
-      return True
+        observations_df = prepare_observations_df(observations_df, provenance,
+                                                  obs_props)
+        self.db.insert_observations(observations_df, self.input_file)
 
-    entities = list(filter(remove_pre_resolved, column.tolist()))
+    def _add_entity_nodes(self) -> None:
+        # Convert entity dcids to dict.
+        # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
+        entity_dcids: dict[str, bool] = {
+            strip_namespace(dcid): True
+            for dcid in self.df.iloc[:, 0].tolist()
+        }
 
-    logging.info("Found %s entities pre-resolved.", len(pre_resolved_entities))
+        # Get entity nodes that are not already recorded.
+        new_entity_dcids = [
+            dcid for dcid in entity_dcids
+            if dcid not in self.nodes.entities.keys()
+        ]
 
-    logging.info("Resolving %s entities of type %s.", len(entities),
-                 self.entity_type)
-    dcids = self._resolve(entities=entities)
-    logging.info("Resolved %s of %s entities.", len(dcids), len(entities))
+        logging.info(
+            "Found %s total entities, of which %s are already imported.",
+            len(entity_dcids),
+            len(entity_dcids) - len(new_entity_dcids))
 
-    # Replace resolved entities.
-    # NOTE: column.map performs much better than column.replace, hence using the former.
-    column = column.map(lambda x: dcids.get(x, x))
-    unresolved = set(entities).difference(set(dcids.keys()))
-    unresolved_list = sorted(list(unresolved))
+        if not new_entity_dcids:
+            return
 
-    # Replace pre-resolved entities without the "dcid:" prefix.
-    column = column.map(lambda x: pre_resolved_entities.get(x, x))
+        # Get entity types
+        dcid2type: dict[str, str] = dc.get_property_of_entities(
+            new_entity_dcids, sc.PREDICATE_TYPE_OF)
 
-    df[constants.COLUMN_DCID] = column
-    if unresolved_list:
-      logging.warning("# unresolved entities which will be dropped: %s",
-                      len(unresolved_list))
-      logging.warning("Dropped entities: %s", unresolved_list)
-      df.drop(df[df.iloc[:, 0].isin(values=unresolved_list)].index,
-              inplace=True)
-    self._create_debug_resolve_dataframe(
-        resolved=dcids,
-        pre_resolved=pre_resolved_entities,
-        unresolved=unresolved_list,
-    )
+        if dcid2type:
+            logging.info("Importing %s of %s entities.", len(dcid2type),
+                         len(new_entity_dcids))
+            self.nodes.entities_with_types(dcid2type)
+        elif self.entity_type:
+            logging.info("Importing %s entities with type %s.",
+                         len(new_entity_dcids), self.entity_type)
+            self.nodes.entities_with_type(new_entity_dcids, self.entity_type)
 
-  def _resolve(self, entities: list[str]) -> dict[str, str]:
-    """Resolves entity strings to DCIDs, caching results across streaming chunks."""
-    unresolved = [e for e in entities if e not in self._resolved_entities_cache]
+    def _resolve_entities(self) -> None:
+        df = self.df
+        # get entity column
+        column = df[constants.COLUMN_DCID]
 
-    if unresolved:
-      new_resolved = self._do_resolve(unresolved)
-      self._resolved_entities_cache.update(new_resolved)
-      for e in unresolved:
-        if e not in new_resolved:
-          self._resolved_entities_cache[e] = None
+        pre_resolved_entities = {}
 
-    return {
-        e: self._resolved_entities_cache[e]
-        for e in entities
-        if self._resolved_entities_cache.get(e) is not None
-    }
+        def remove_pre_resolved(entity: str) -> bool:
+            if is_uri_or_namespace(entity):
+                if entity.startswith(constants.DCID_OVERRIDE_PREFIX):
+                    pre_resolved_entities[entity] = entity[
+                        len(constants.DCID_OVERRIDE_PREFIX):].strip()
+                else:
+                    pre_resolved_entities[entity] = entity
+                return False
+            return True
 
-  def _do_resolve(self, entities: list[str]) -> dict[str, str]:
-    lower_case_entity_name = self.entity_column_name.lower()
+        entities = list(filter(remove_pre_resolved, column.tolist()))
 
-    # Check if the entities can be resolved locally.
-    # If so, return them by prefixing the values as appropriate.
-    if lower_case_entity_name in constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES:
-      prefix = constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES[
-          lower_case_entity_name]
-      return dict([(entity, f"{prefix}{entity}") for entity in entities])
+        logging.info("Found %s entities pre-resolved.",
+                     len(pre_resolved_entities))
 
-    # Resolve entities externally.
-    property_name = constants.EXTERNALLY_RESOLVED_INPUT_COLUMNS_TO_PREFIXES.get(
-        lower_case_entity_name, constants.PROPERTY_DESCRIPTION)
-    return dc.resolve_entities(entities=entities,
-                               entity_type=self.entity_type,
-                               property_name=property_name)
+        logging.info("Resolving %s entities of type %s.", len(entities),
+                     self.entity_type)
+        dcids = self._resolve(entities=entities)
+        logging.info("Resolved %s of %s entities.", len(dcids), len(entities))
 
-  def _create_debug_resolve_dataframe(
-      self,
-      resolved: dict[str, str],
-      pre_resolved: dict[str, str],
-      unresolved: list[str],
-  ):
-    # Add unresolved inputs first
-    inputs = unresolved[:]
-    dcids = [constants.DEBUG_UNRESOLVED_DCID] * len(unresolved)
+        # Replace resolved entities.
+        # NOTE: column.map performs much better than column.replace, hence using the former.
+        column = column.map(lambda x: dcids.get(x, x))
+        unresolved = set(entities).difference(set(dcids.keys()))
+        unresolved_list = sorted(list(unresolved))
 
-    # Add pre-resolved next.
-    inputs.extend(list(pre_resolved.keys()))
-    dcids.extend(list(pre_resolved.values()))
+        # Replace pre-resolved entities without the "dcid:" prefix.
+        column = column.map(lambda x: pre_resolved_entities.get(x, x))
 
-    # Add resolved inputs and dcids
-    inputs.extend(list(resolved.keys()))
-    dcids.extend(list(resolved.values()))
+        df[constants.COLUMN_DCID] = column
+        if unresolved_list:
+            logging.warning("# unresolved entities which will be dropped: %s",
+                            len(unresolved_list))
+            logging.warning("Dropped entities: %s", unresolved_list)
+            df.drop(df[df.iloc[:, 0].isin(values=unresolved_list)].index,
+                    inplace=True)
+        self._create_debug_resolve_dataframe(
+            resolved=dcids,
+            pre_resolved=pre_resolved_entities,
+            unresolved=unresolved_list,
+        )
 
-    # Create browser links
-    links = []
-    for dcid in dcids:
-      if dcid == constants.DEBUG_UNRESOLVED_DCID:
-        links.append("")
-      else:
-        links.append(f"{constants.DC_BROWSER}/{dcid}")
+    def _resolve(self, entities: list[str]) -> dict[str, str]:
+        """Resolves entity strings to DCIDs, caching results across streaming chunks."""
+        unresolved = [
+            e for e in entities if e not in self._resolved_entities_cache
+        ]
 
-    # Create dataframe
-    self.debug_resolve_df = pd.DataFrame({
-        constants.DEBUG_COLUMN_INPUT: inputs,
-        constants.DEBUG_COLUMN_DCID: dcids,
-        constants.DEBUG_COLUMN_LINK: links,
-    })
+        if unresolved:
+            new_resolved = self._do_resolve(unresolved)
+            self._resolved_entities_cache.update(new_resolved)
+            for e in unresolved:
+                if e not in new_resolved:
+                    self._resolved_entities_cache[e] = None
 
-  def _write_debug_csvs(self) -> None:
-    if self.debug_resolve_df is not None:
-      logging.info("Writing resolutions (for debugging) to: %s",
-                   self.debug_resolve_file.path)
-      self.debug_resolve_file.write(self.debug_resolve_df.to_csv(index=False))
+        return {
+            e: self._resolved_entities_cache[e]
+            for e in entities
+            if self._resolved_entities_cache.get(e) is not None
+        }
+
+    def _do_resolve(self, entities: list[str]) -> dict[str, str]:
+        lower_case_entity_name = self.entity_column_name.lower()
+
+        # Check if the entities can be resolved locally.
+        # If so, return them by prefixing the values as appropriate.
+        if lower_case_entity_name in constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES:
+            prefix = constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES[
+                lower_case_entity_name]
+            return dict([(entity, f"{prefix}{entity}") for entity in entities])
+
+        # Resolve entities externally.
+        property_name = constants.EXTERNALLY_RESOLVED_INPUT_COLUMNS_TO_PREFIXES.get(
+            lower_case_entity_name, constants.PROPERTY_DESCRIPTION)
+        return dc.resolve_entities(entities=entities,
+                                   entity_type=self.entity_type,
+                                   property_name=property_name)
+
+    def _create_debug_resolve_dataframe(
+        self,
+        resolved: dict[str, str],
+        pre_resolved: dict[str, str],
+        unresolved: list[str],
+    ):
+        # Add unresolved inputs first
+        inputs = unresolved[:]
+        dcids = [constants.DEBUG_UNRESOLVED_DCID] * len(unresolved)
+
+        # Add pre-resolved next.
+        inputs.extend(list(pre_resolved.keys()))
+        dcids.extend(list(pre_resolved.values()))
+
+        # Add resolved inputs and dcids
+        inputs.extend(list(resolved.keys()))
+        dcids.extend(list(resolved.values()))
+
+        # Create browser links
+        links = []
+        for dcid in dcids:
+            if dcid == constants.DEBUG_UNRESOLVED_DCID:
+                links.append("")
+            else:
+                links.append(f"{constants.DC_BROWSER}/{dcid}")
+
+        # Create dataframe
+        self.debug_resolve_df = pd.DataFrame({
+            constants.DEBUG_COLUMN_INPUT:
+            inputs,
+            constants.DEBUG_COLUMN_DCID:
+            dcids,
+            constants.DEBUG_COLUMN_LINK:
+            links,
+        })
+
+    def _write_debug_csvs(self) -> None:
+        if self.debug_resolve_df is not None:
+            logging.info("Writing resolutions (for debugging) to: %s",
+                         self.debug_resolve_file.path)
+            self.debug_resolve_file.write(
+                self.debug_resolve_df.to_csv(index=False))

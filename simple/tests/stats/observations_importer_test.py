@@ -44,64 +44,67 @@ use_fake_gzip_time()
 
 
 def _test_import(test: unittest.TestCase, test_name: str):
-  test.maxDiff = None
+    test.maxDiff = None
 
-  with tempfile.TemporaryDirectory() as temp_dir:
-    input_store = create_store(_INPUT_DIR)
-    temp_store = create_store(temp_dir)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        input_store = create_store(_INPUT_DIR)
+        temp_store = create_store(temp_dir)
 
-    input_dir = os.path.join(_INPUT_DIR, test_name)
-    expected_dir = os.path.join(_EXPECTED_DIR, test_name)
+        input_dir = os.path.join(_INPUT_DIR, test_name)
+        expected_dir = os.path.join(_EXPECTED_DIR, test_name)
 
-    input_file_name = "input.csv"
-    input_path = os.path.join(input_dir, input_file_name)
-    config_path = os.path.join(input_dir, "config.json")
-    db_file_name = f"{test_name}.db"
-    db_path = os.path.join(temp_dir, db_file_name)
-    db_file = temp_store.as_dir().open_file(db_file_name)
+        input_file_name = "input.csv"
+        input_path = os.path.join(input_dir, input_file_name)
+        config_path = os.path.join(input_dir, "config.json")
+        db_file_name = f"{test_name}.db"
+        db_path = os.path.join(temp_dir, db_file_name)
+        db_file = temp_store.as_dir().open_file(db_file_name)
 
-    output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
-    expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
-    output_path = os.path.join(temp_dir, "observations.db.csv")
-    expected_path = os.path.join(expected_dir, "observations.db.csv")
+        output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
+        expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
+        output_path = os.path.join(temp_dir, "observations.db.csv")
+        expected_path = os.path.join(expected_dir, "observations.db.csv")
 
-    input_file = input_store.as_dir().open_dir(test_name).open_file(
-        input_file_name)
+        input_file = input_store.as_dir().open_dir(test_name).open_file(
+            input_file_name)
 
-    with open(config_path) as config_file:
-      config = Config(json.load(config_file))
+        with open(config_path) as config_file:
+            config = Config(json.load(config_file))
 
-    db = create_and_update_db(create_sqlite_config(db_file))
-    debug_resolve_file = temp_store.as_dir().open_file("debug.csv")
-    report_file = temp_store.as_dir().open_file("report.json")
-    reporter = FileImportReporter(input_path, ImportReporter(report_file))
-    nodes = Nodes(config)
+        db = create_and_update_db(create_sqlite_config(db_file))
+        debug_resolve_file = temp_store.as_dir().open_file("debug.csv")
+        report_file = temp_store.as_dir().open_file("report.json")
+        reporter = FileImportReporter(input_path, ImportReporter(report_file))
+        nodes = Nodes(config)
 
-    dc_client.get_property_of_entities = MagicMock(return_value={})
+        dc_client.get_property_of_entities = MagicMock(return_value={})
 
-    ObservationsImporter(input_file=input_file,
-                         db=db,
-                         debug_resolve_file=debug_resolve_file,
-                         reporter=reporter,
-                         nodes=nodes).do_import()
-    db.commit_and_close()
+        ObservationsImporter(input_file=input_file,
+                             db=db,
+                             debug_resolve_file=debug_resolve_file,
+                             reporter=reporter,
+                             nodes=nodes).do_import()
+        db.commit_and_close()
 
-    write_observations(db_path, output_path)
+        write_observations(db_path, output_path)
 
-    if is_write_mode():
-      shutil.copy(output_path, expected_path)
-      return
+        if is_write_mode():
+            shutil.copy(output_path, expected_path)
+            return
 
-    compare_files(test, output_path, expected_path)
+        compare_files(test, output_path, expected_path)
 
-    input_store.close()
-    temp_store.close()
+        input_store.close()
+        temp_store.close()
 
 
 class TestObservationsImporter(unittest.TestCase):
 
-  def test_countryalpha3codes(self):
-    _test_import(self, "countryalpha3codes")
+    def test_countryalpha3codes(self):
+        _test_import(self, "countryalpha3codes")
 
-  def test_obs_props(self):
-    _test_import(self, "obs_props")
+    def test_obs_props(self):
+        _test_import(self, "obs_props")
+
+    def test_custom_namespace_observations(self):
+        _test_import(self, "custom_namespace_observations")
