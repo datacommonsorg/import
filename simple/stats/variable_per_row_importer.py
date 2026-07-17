@@ -183,6 +183,7 @@ class VariablePerRowImporter(Importer):
     config_mappings = self.config.column_mappings(self.input_file)
 
     if not config_mappings:
+      # TODO: Remove this default fallback and require explicit columnMappings in config.json.
       config_mappings = {
           "dcid:observationAbout": "entity",
           "dcid:variableMeasured": "variable",
@@ -294,7 +295,7 @@ class VariablePerRowImporter(Importer):
     config_mappings = self.config.column_mappings(self.input_file)
 
     if not config_mappings:
-      # Legacy fallback: if no column mappings are specified, assume standard headers
+      # TODO: Remove this default fallback and require explicit columnMappings in config.json.
       config_mappings = {
           "dcid:observationAbout": "entity",
           "dcid:variableMeasured": "variable",
