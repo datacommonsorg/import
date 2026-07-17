@@ -253,9 +253,8 @@ class VariablePerRowImporter(Importer):
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
-    custom_na = self.config.na_values(self.input_file)
     with self.input_file.open_stream() as stream:
-      reader = pd.read_csv(stream, na_values=custom_na, chunksize=10000)
+      reader = pd.read_csv(stream, na_values=constants.STANDARD_NA_VALUES, chunksize=10000)
 
       for chunk_df in reader:
         if chunk_df.empty:

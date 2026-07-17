@@ -68,14 +68,13 @@ class ObservationsImporter(Importer):
     renamed = {}
     debug_dfs = []
 
-    custom_na = self.config.na_values(self.input_file)
     with self.input_file.open_stream() as stream:
       reader = pd.read_csv(
           stream,
           dtype={0: str},
           skipinitialspace=True,
           thousands=",",
-          na_values=custom_na,
+          na_values=constants.STANDARD_NA_VALUES,
           chunksize=10000,
       )
 

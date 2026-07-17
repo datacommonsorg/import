@@ -199,9 +199,6 @@ class Config:
   def ignore_columns(self, input_file: File) -> list[str]:
     return self._per_file_config(input_file).get(_IGNORE_COLUMNS_FIELD, [])
 
-  def na_values(self, input_file: File) -> list[str]:
-    return self._per_file_config(input_file).get("naValues", [])
-
   def provenance_name(self, input_file: File) -> str:
     return self._per_file_config(input_file).get(_PROVENANCE_FIELD,
                                                  input_file.path)

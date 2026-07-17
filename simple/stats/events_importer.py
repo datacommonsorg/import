@@ -89,12 +89,11 @@ class EventsImporter(Importer):
     # - Set 1st column (i.e. the entity column) to type str (so that geoIds like "01" are not treated as ints and converted to 1)
     # - Strip leading whitespaces
     # - Treat comma as a thousands separator
-    custom_na = self.config.na_values(self.input_file)
     self.df = pd.read_csv(self.input_file.read_string_io(),
                           dtype={0: str},
                           skipinitialspace=True,
                           thousands=",",
-                          na_values=custom_na)
+                          na_values=constants.STANDARD_NA_VALUES)
     logging.info("Read %s rows.", self.df.index.size)
     self.entity_column_name = self.df.columns[0]
     logging.info("Entity column name: %s", self.entity_column_name)
