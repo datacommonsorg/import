@@ -16,10 +16,10 @@ import logging
 
 import pandas as pd
 from stats import constants
-from stats.data import ValidationErrorType
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
+from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -91,10 +91,13 @@ class EntitiesImporter(Importer):
       actual_columns = set(header_df.columns)
     except Exception as e:
       return [{
-          "file": self.input_file.path,
-          "errorType": ValidationErrorType.GENERIC_ERROR,
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.GENERIC_ERROR,
           "problemColumns": [],
-          "errorMessage": f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
+          "errorMessage":
+              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
       }]
 
     mapped_columns = set(self.reverse_mappings.keys())
@@ -104,10 +107,14 @@ class EntitiesImporter(Importer):
     unmapped_columns = actual_columns - all_allowed_columns
     if unmapped_columns:
       errors.append({
-          "file": self.input_file.path,
-          "errorType": ValidationErrorType.UNMAPPED_COLUMNS,
-          "problemColumns": sorted(list(unmapped_columns)),
-          "errorMessage": f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.UNMAPPED_COLUMNS,
+          "problemColumns":
+              sorted(list(unmapped_columns)),
+          "errorMessage":
+              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
       })
 
     return errors

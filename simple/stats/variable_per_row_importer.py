@@ -21,9 +21,9 @@ from stats import constants
 from stats import schema_constants as sc
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
-from stats.data import ValidationErrorType
 from stats.data import strip_namespace
 from stats.data import strip_namespace_series
+from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -209,27 +209,36 @@ class VariablePerRowImporter(Importer):
             k for k, v in STANDARD_PROPERTY_MAPPING.items() if v == req_col
         ][0]
         errors.append({
-            "file": self.input_file.path,
-            "errorType": ValidationErrorType.MISSING_REQUIRED_COLUMNS,
+            "file":
+                self.input_file.path,
+            "errorType":
+                ValidationErrorType.MISSING_REQUIRED_COLUMNS,
             "problemColumns": [official_key],
-            "errorMessage": f"Missing required column mapping for: '{official_key}'"
+            "errorMessage":
+                f"Missing required column mapping for: '{official_key}'"
         })
 
     entity_dims_count = len(custom_dimensions)
 
     if entity_dims_count < 1:
       errors.append({
-          "file": self.input_file.path,
-          "errorType": ValidationErrorType.INVALID_CONFIGURATION,
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.INVALID_CONFIGURATION,
           "problemColumns": [],
-          "errorMessage": "Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
+          "errorMessage":
+              "Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
       })
     if entity_dims_count > 3:
       errors.append({
-          "file": self.input_file.path,
-          "errorType": ValidationErrorType.INVALID_CONFIGURATION,
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.INVALID_CONFIGURATION,
           "problemColumns": [],
-          "errorMessage": f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
+          "errorMessage":
+              f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
       })
 
     if errors:
@@ -241,20 +250,27 @@ class VariablePerRowImporter(Importer):
       actual_column_names = set(header_df.columns)
     except Exception as e:
       return [{
-          "file": self.input_file.path,
-          "errorType": ValidationErrorType.GENERIC_ERROR,
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.GENERIC_ERROR,
           "problemColumns": [],
-          "errorMessage": f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
+          "errorMessage":
+              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
       }]
 
     expected_column_names = set(column_mappings.values())
     difference = expected_column_names - actual_column_names
     if difference:
       errors.append({
-          "file": self.input_file.path,
-          "errorType": ValidationErrorType.MISSING_REQUIRED_COLUMNS,
-          "problemColumns": sorted(list(difference)),
-          "errorMessage": f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.MISSING_REQUIRED_COLUMNS,
+          "problemColumns":
+              sorted(list(difference)),
+          "errorMessage":
+              f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
       })
 
     ignored_column_names = set(self.config.ignore_columns(self.input_file))
@@ -262,10 +278,14 @@ class VariablePerRowImporter(Importer):
     unmapped_columns = actual_column_names - all_allowed_columns
     if unmapped_columns:
       errors.append({
-          "file": self.input_file.path,
-          "errorType": ValidationErrorType.UNMAPPED_COLUMNS,
-          "problemColumns": sorted(list(unmapped_columns)),
-          "errorMessage": f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.UNMAPPED_COLUMNS,
+          "problemColumns":
+              sorted(list(unmapped_columns)),
+          "errorMessage":
+              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
       })
 
     return errors
@@ -322,15 +342,15 @@ class VariablePerRowImporter(Importer):
           "A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
       )
 
-
-
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file).id
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
     with self.input_file.open_stream() as stream:
-      reader = pd.read_csv(stream, na_values=constants.STANDARD_NA_VALUES, chunksize=10000)
+      reader = pd.read_csv(stream,
+                           na_values=constants.STANDARD_NA_VALUES,
+                           chunksize=10000)
 
       for chunk_df in reader:
         if chunk_df.empty:

@@ -470,6 +470,8 @@ class ValidationErrorType(StrEnum):
   MISSING_REQUIRED_COLUMNS = "MISSING_REQUIRED_COLUMNS"
   INVALID_CONFIGURATION = "INVALID_CONFIGURATION"
   ENTITY_RESOLUTION = "ENTITY_RESOLUTION"
+  MISSING_SOURCE = "MISSING_SOURCE"
+  MISSING_PROVENANCE = "MISSING_PROVENANCE"
   GENERIC_ERROR = "GENERIC_ERROR"
 
 
@@ -611,20 +613,19 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
   converted = pd.to_numeric(df[constants.COLUMN_VALUE], errors='coerce')
   # Find rows where conversion returned NaN but the original was not a standard null representation
   val_series = df[constants.COLUMN_VALUE].astype(str).str.strip().str.lower()
-  standard_nulls = {"nan", "<na>", "none", "", "null"}
-  
-  invalid_mask = (
-      converted.isna() & 
-      df[constants.COLUMN_VALUE].notna() & 
-      (~val_series.isin(standard_nulls))
-  )
+  standard_nulls = {val.lower() for val in constants.STANDARD_NA_VALUES
+                   } | {"nan", ""}
+
+  invalid_mask = (converted.isna() & df[constants.COLUMN_VALUE].notna() &
+                  (~val_series.isin(standard_nulls)))
   if invalid_mask.any():
     invalid_examples = df.loc[invalid_mask, constants.COLUMN_VALUE].unique()
-    raise ValueError(
+    ex = ValueError(
         f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
         f"{list(invalid_examples)[:10]}. If these represent missing values, please configure "
-        f"them under 'naValues' in config.json."
-    )
+        f"them under 'naValues' in config.json.")
+    ex.file_path = file_path
+    raise ex
 
 
 def prepare_observations_df(df: pd.DataFrame, provenance: str,
