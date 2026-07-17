@@ -16,6 +16,7 @@ import logging
 
 import pandas as pd
 from stats import constants
+from stats.data import ValidationErrorType
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
@@ -91,7 +92,7 @@ class EntitiesImporter(Importer):
     except Exception as e:
       return [{
           "file": self.input_file.path,
-          "errorType": "CSV_HEADER_VALIDATION",
+          "errorType": ValidationErrorType.GENERIC_ERROR,
           "problemColumns": [],
           "errorMessage": f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
       }]
@@ -104,7 +105,7 @@ class EntitiesImporter(Importer):
     if unmapped_columns:
       errors.append({
           "file": self.input_file.path,
-          "errorType": "CSV_HEADER_VALIDATION",
+          "errorType": ValidationErrorType.UNMAPPED_COLUMNS,
           "problemColumns": sorted(list(unmapped_columns)),
           "errorMessage": f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
       })

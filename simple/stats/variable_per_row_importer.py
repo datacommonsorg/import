@@ -21,6 +21,7 @@ from stats import constants
 from stats import schema_constants as sc
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
+from stats.data import ValidationErrorType
 from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.db import Db
@@ -209,7 +210,7 @@ class VariablePerRowImporter(Importer):
         ][0]
         errors.append({
             "file": self.input_file.path,
-            "errorType": "CSV_HEADER_VALIDATION",
+            "errorType": ValidationErrorType.MISSING_REQUIRED_COLUMNS,
             "problemColumns": [official_key],
             "errorMessage": f"Missing required column mapping for: '{official_key}'"
         })
@@ -219,14 +220,14 @@ class VariablePerRowImporter(Importer):
     if entity_dims_count < 1:
       errors.append({
           "file": self.input_file.path,
-          "errorType": "CSV_HEADER_VALIDATION",
+          "errorType": ValidationErrorType.INVALID_CONFIGURATION,
           "problemColumns": [],
           "errorMessage": "Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
       })
     if entity_dims_count > 3:
       errors.append({
           "file": self.input_file.path,
-          "errorType": "CSV_HEADER_VALIDATION",
+          "errorType": ValidationErrorType.INVALID_CONFIGURATION,
           "problemColumns": [],
           "errorMessage": f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
       })
@@ -241,7 +242,7 @@ class VariablePerRowImporter(Importer):
     except Exception as e:
       return [{
           "file": self.input_file.path,
-          "errorType": "CSV_HEADER_VALIDATION",
+          "errorType": ValidationErrorType.GENERIC_ERROR,
           "problemColumns": [],
           "errorMessage": f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
       }]
@@ -251,7 +252,7 @@ class VariablePerRowImporter(Importer):
     if difference:
       errors.append({
           "file": self.input_file.path,
-          "errorType": "CSV_HEADER_VALIDATION",
+          "errorType": ValidationErrorType.MISSING_REQUIRED_COLUMNS,
           "problemColumns": sorted(list(difference)),
           "errorMessage": f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
       })
@@ -262,7 +263,7 @@ class VariablePerRowImporter(Importer):
     if unmapped_columns:
       errors.append({
           "file": self.input_file.path,
-          "errorType": "CSV_HEADER_VALIDATION",
+          "errorType": ValidationErrorType.UNMAPPED_COLUMNS,
           "problemColumns": sorted(list(unmapped_columns)),
           "errorMessage": f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
       })

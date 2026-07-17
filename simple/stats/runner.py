@@ -29,6 +29,7 @@ from stats import stat_var_hierarchy_generator
 from stats.config import Config
 from stats.data import ImportType
 from stats.data import InputFileFormat
+from stats.data import ValidationErrorType
 from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import Triple
 from stats.data import VerticalSpec
@@ -247,7 +248,7 @@ class Runner:
         if isinstance(e, EntityResolutionError):
           self._failure_errors = [{
               "file": e.file_path,
-              "errorType": "ENTITY_RESOLUTION",
+              "errorType": ValidationErrorType.ENTITY_RESOLUTION,
               "problemColumns": ["entity"],
               "errorMessage": str(e)
           }]
@@ -255,7 +256,7 @@ class Runner:
           file_path = getattr(e, "file_path", "")
           self._failure_errors = [{
               "file": file_path,
-              "errorType": "GENERIC_ERROR",
+              "errorType": ValidationErrorType.GENERIC_ERROR,
               "problemColumns": [],
               "errorMessage": str(e)
           }]
@@ -267,6 +268,8 @@ class Runner:
           pass
 
       self._handle_workflow_handoff()
+      logging.error(
+          "Preprocessor execution failed! Diagnostic error details were written to the GCS handshake path.")
       raise
 
   def _handle_workflow_handoff(self) -> None:
@@ -303,7 +306,14 @@ class Runner:
                       create_if_missing=True,
                       treat_as_file=True) as store:
       store.as_file().write(json.dumps(handshake_payload, indent=2))
-    logging.info("Successfully wrote preprocessor result to GCS.")
+    
+    if hasattr(self, "_failure_errors"):
+      logging.info(
+          "Successfully wrote preprocessor error report to GCS handshake path: %s. "
+          "Structured error details are available in this file for diagnostic parsing.",
+          output_json_path)
+    else:
+      logging.info("Successfully wrote preprocessor result to GCS.")
 
   def _read_config_from_file(self,
                              config_file_path: str,
@@ -779,7 +789,7 @@ class Runner:
       except Exception as e:
         return [{
             "file": file.path,
-            "errorType": "CSV_HEADER_VALIDATION",
+            "errorType": ValidationErrorType.GENERIC_ERROR,
             "problemColumns": [],
             "errorMessage": f"Failed to validate headers: {str(e)}"
         }]
@@ -819,27 +829,39 @@ class Runner:
     self._total_files_count = len(csv_files) + len(mcf_files)
     self._counter_lock = threading.Lock()
 
-    if self.mode == RunMode.DCP_BRIDGE:
-      num_threads = min(32, self._total_files_count or 1)
-      logging.info("Starting parallel ingestion of data files with %d threads",
-                   num_threads)
-
-      with concurrent.futures.ThreadPoolExecutor(
-          max_workers=num_threads) as executor:
-        futures = []
-        for file in csv_files:
-          futures.append(executor.submit(self._run_single_import, file))
+    # 1. Process MCF files first (contains schema/provenances)
+    if mcf_files:
+      logging.info("Importing %d MCF files first...", len(mcf_files))
+      if self.mode == RunMode.DCP_BRIDGE:
+        num_mcf_threads = min(32, len(mcf_files))
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=num_mcf_threads) as executor:
+          futures = [
+              executor.submit(self._run_single_mcf_import, file)
+              for file in mcf_files
+          ]
+          for future in concurrent.futures.as_completed(futures):
+            future.result()
+      else:
         for file in mcf_files:
-          futures.append(executor.submit(self._run_single_mcf_import, file))
+          self._run_single_mcf_import(file)
 
-        # Wait for completion and raise any thread exceptions
-        for future in concurrent.futures.as_completed(futures):
-          future.result()
-    else:
-      for file in csv_files:
-        self._run_single_import(file)
-      for file in mcf_files:
-        self._run_single_mcf_import(file)
+    # 2. Process CSV files next (contains data observations/entities)
+    if csv_files:
+      logging.info("Importing %d CSV files next...", len(csv_files))
+      if self.mode == RunMode.DCP_BRIDGE:
+        num_csv_threads = min(32, len(csv_files))
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=num_csv_threads) as executor:
+          futures = [
+              executor.submit(self._run_single_import, file)
+              for file in csv_files
+          ]
+          for future in concurrent.futures.as_completed(futures):
+            future.result()
+      else:
+        for file in csv_files:
+          self._run_single_import(file)
 
   def _log_file_progress(self, file_prefix: str, file: File):
     """Increments file progress counter thread-safely and logs standard progress line."""
