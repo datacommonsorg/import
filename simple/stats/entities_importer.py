@@ -44,7 +44,7 @@ class EntitiesImporter(Importer):
     self.nodes = nodes
     self.config = nodes.config
     self.ignore_columns = self.config.ignore_columns(self.input_file)
-    self.provenance = self.nodes.provenance(self.input_file).id
+    self.provenance_id = ""
 
     self.row_entity_type = self.config.row_entity_type(self.input_file)
     assert self.row_entity_type, f"Row entity type must be specified: {self.input_file.full_path()}"
@@ -68,6 +68,7 @@ class EntitiesImporter(Importer):
       errors = self.validate_headers()
       if errors:
         raise ValueError("\n".join(errors))
+      self.provenance_id = self.nodes.provenance(self.input_file).id
       self._read_csv()
       self._drop_ignored_columns()
       self._sanitize_values()
@@ -191,7 +192,7 @@ class EntitiesImporter(Importer):
 
       row_entity = RowEntity(dcid,
                              strip_namespace(self.row_entity_type),
-                             provenance_id=self.provenance,
+                             provenance_id=self.provenance_id,
                              prop_object_values=prop_object_values,
                              prop_object_ids=prop_object_ids)
       triples.extend(row_entity.triples())
