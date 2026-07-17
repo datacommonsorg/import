@@ -472,7 +472,7 @@ class TestOrchestratorOrdering(unittest.TestCase):
 
     def test_active_stages_includes_stage_0(self, mock_executor):
         """Verifies stage 0 is included in active stages for matching imports."""
-        active_stages = self.orchestrator.get_active_stages(["TestImport"])
+        active_stages = self.orchestrator._get_active_stages_for_import("TestImport")
         self.assertEqual(active_stages, [0, 1])
 
     def test_calculation_priority_sorting(self, mock_executor):

@@ -48,6 +48,12 @@ def main():
         default=False,
         help="Skip deleting existing aggregated data before running new aggregations."
     )
+    parser.add_argument(
+        "--is_base_dc",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Whether running in base Data Commons environment (default: True, use --no-is_base_dc for DCP)."
+    )
 
     args = parser.parse_args()
 
@@ -90,6 +96,7 @@ def main():
         instance_id=instance_id,
         database_id=database_id,
         location=location,
+        is_base_dc=args.is_base_dc,
         config_file_path=config_path,
         enable_embeddings=enable_embeddings,
         embedding_conn_id=embedding_conn_id,
