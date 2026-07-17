@@ -771,18 +771,24 @@ class Runner:
       return
 
     all_errors = []
-    for file in csv_files:
+
+    def validate_single_file(file: File) -> list[dict]:
       try:
         importer = self._create_importer(file)
-        errors = importer.validate_headers()
-        all_errors.extend(errors)
+        return importer.validate_headers()
       except Exception as e:
-        all_errors.append({
+        return [{
             "file": file.path,
             "errorType": "CSV_HEADER_VALIDATION",
             "problemColumns": [],
             "errorMessage": f"Failed to validate headers: {str(e)}"
-        })
+        }]
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(32, len(csv_files) or 1)) as executor:
+      results = executor.map(validate_single_file, csv_files)
+      for errors in results:
+        all_errors.extend(errors)
 
     if all_errors:
       self._failure_errors = all_errors

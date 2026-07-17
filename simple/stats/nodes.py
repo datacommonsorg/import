@@ -378,25 +378,25 @@ class Nodes:
   @thread_safe
   def triples(self, triples_file: File | None = None) -> list[Triple]:
     triples: list[Triple] = []
-    for source in self.sources.values():
+    for source in sorted(self.sources.values(), key=lambda x: x.id):
       if self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and _DEFAULT_SOURCE.id not in self._used_source_ids:
         continue
       triples.extend(source.triples())
-    for provenance in self.provenances.values():
+    for provenance in sorted(self.provenances.values(), key=lambda x: x.id):
       if self.has_custom_mcf_nodes and provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
         continue
       triples.extend(provenance.triples())
-    for group in self.groups.values():
+    for group in sorted(self.groups.values(), key=lambda x: x.id):
       triples.extend(group.triples())
-    for variable in self.variables.values():
+    for variable in sorted(self.variables.values(), key=lambda x: x.id):
       triples.extend(variable.triples())
-    for event_type in self.event_types.values():
+    for event_type in sorted(self.event_types.values(), key=lambda x: x.id):
       triples.extend(event_type.triples())
-    for entity_type in self.entity_types.values():
+    for entity_type in sorted(self.entity_types.values(), key=lambda x: x.id):
       triples.extend(entity_type.triples())
-    for property in self.properties.values():
+    for property in sorted(self.properties.values(), key=lambda x: x.dcid):
       triples.extend(property.triples())
-    for entities in self.entities.values():
+    for entities in sorted(self.entities.values(), key=lambda x: x.entity_dcid):
       triples.extend(entities.triples())
 
     if triples_file:
