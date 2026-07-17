@@ -63,7 +63,8 @@ class SpannerClient:
                  embedding_table: str = "NodeEmbedding",
                  embedding_index: str = "NodeEmbeddingIndex",
                  embedding_label_index: str = "NodeEmbeddingLabelIndex",
-                 emulator_host: str = None):
+                 emulator_host: str = None,
+                 is_base_dc: bool = True):
         """Initializes a Spanner client and connects to a specific database."""
         client_options = {"api_endpoint": "spanner.googleapis.com"}
         credentials = None
@@ -101,6 +102,7 @@ class SpannerClient:
         self.embedding_table = embedding_table
         self.embedding_index = embedding_index
         self.embedding_label_index = embedding_label_index
+        self.is_base_dc = is_base_dc
 
         if not models:
             models = self._DEFAULT_MODELS
@@ -411,6 +413,9 @@ class SpannerClient:
         logging.info(
             f"Updating ImportVersionHistory table for workflow {workflow_id}")
 
+        m = metrics if metrics else {}
+        import_metrics = m.get('import_metrics', {})
+
         def _insert(transaction: Transaction):
             columns = [
                 "ImportName", "Version", "UpdateTimestamp",
@@ -418,17 +423,29 @@ class SpannerClient:
                 "NodeCount", "EdgeCount", "ObservationCount",
                 "TimeSeriesCount", "Comment"
             ]
-            m = metrics if metrics else {}
             version_history_values = []
             for import_json in import_list_json:
+                import_name = import_json.get('importName')
+                if not import_name:
+                    continue
+
+                short_name = import_name.split(':')[-1]
+                counts = (
+                    import_metrics.get(short_name) or
+                    import_metrics.get(import_name) or
+                    (import_json if all(k in import_json and import_json[k] is not None for k in ('node_count', 'edge_count', 'obs_count', 'ts_count')) else {}) or
+                    (import_json if all(k in import_json and import_json[k] is not None for k in ('nodeCount', 'edgeCount', 'obsCount', 'tsCount')) else {})
+                )
+
                 version_history_values.append([
-                    import_json['importName'], import_json['latestVersion'],
+                    import_name, import_json.get('latestVersion'),
                     spanner.COMMIT_TIMESTAMP, workflow_id, status,
                     m.get('execution_time'),
-                    m.get('node_count'),
-                    m.get('edge_count'),
-                    m.get('obs_count'),
-                    m.get('ts_count'), "ingestion-workflow:" + workflow_id
+                    counts.get('node_count') or counts.get('nodeCount'),
+                    counts.get('edge_count') or counts.get('edgeCount'),
+                    counts.get('obs_count') or counts.get('obsCount'),
+                    counts.get('ts_count') or counts.get('tsCount'),
+                    "ingestion-workflow:" + workflow_id
                 ])
 
             if version_history_values:
@@ -522,6 +539,12 @@ class SpannerClient:
         import_name = import_name.split(':')[-1]
         logging.info(f"Updating version history for {import_name} to {version}")
 
+        m = metrics if metrics else {}
+        node_count = m.get('node_count')
+        edge_count = m.get('edge_count')
+        obs_count = m.get('obs_count')
+        ts_count = m.get('ts_count')
+
         def _record(transaction: Transaction):
             columns = [
                 "ImportName", "Version", "UpdateTimestamp",
@@ -529,15 +552,14 @@ class SpannerClient:
                 "NodeCount", "EdgeCount", "ObservationCount",
                 "TimeSeriesCount", "Comment"
             ]
-            m = metrics if metrics else {}
             values = [[
                 import_name, version, spanner.COMMIT_TIMESTAMP, workflow_id,
                 status,
                 m.get('execution_time'),
-                m.get('node_count'),
-                m.get('edge_count'),
-                m.get('obs_count'),
-                m.get('ts_count'), comment
+                node_count,
+                edge_count,
+                obs_count,
+                ts_count, comment
             ]]
             transaction.insert(table="ImportVersionHistory",
                                columns=columns,
