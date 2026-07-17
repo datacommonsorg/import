@@ -230,7 +230,7 @@ class ProvenanceSummaryGenerator:
             MIN(value_num) as facet_min,
             MAX(value_num) as facet_max,
             COUNT(*) as facet_obs_count,
-            COUNT(DISTINCT CONCAT(observation_about, '|', COALESCE(extra_entities_id, ''))) as facet_ts_count
+            COUNT(DISTINCT CONCAT(observation_about, '|', extra_entities_id)) as facet_ts_count
           FROM `temp_obs_flat`
           GROUP BY variable_measured, provenance, facet_id
         ),
