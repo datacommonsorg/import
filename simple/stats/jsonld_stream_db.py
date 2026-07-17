@@ -37,6 +37,7 @@ import requests
 from stats import constants
 from stats.data import strip_namespace
 from stats.data import Triple
+from stats.data import validate_numeric_values
 from stats.db import Db
 from stats.jsonld_exporter import DCID_URL
 from stats.jsonld_exporter import expand_id
@@ -320,7 +321,6 @@ class JsonLdStreamDb(Db):
                           input_file: File):
     if observations_df.empty:
       return
-    from stats.data import validate_numeric_values
     validate_numeric_values(observations_df, input_file.path)
 
     import_name = self.config.import_name(input_file)
