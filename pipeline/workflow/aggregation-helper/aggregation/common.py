@@ -25,6 +25,15 @@ def get_provenance_name(import_name: str, is_base_dc: bool) -> str:
     return f"{get_provenance_prefix(is_base_dc)}{import_name}"
 
 
+def get_generated_provenance_sql_expr(is_base_dc: bool) -> str:
+    """Returns the SQL expression to generate the provenance for derived graphs."""
+    import_name_expr = "REGEXP_REPLACE(provenance, r'^dc/base/', '')"
+    if is_base_dc:
+        return f"CONCAT('dc/base/generated/', {import_name_expr})"
+    else:
+        return f"CONCAT('generated/', {import_name_expr})"
+
+
 def _escape_sql_literal(val: str) -> str:
     r"""
     Escapes a string literal for use in nested BigQuery/Spanner queries.

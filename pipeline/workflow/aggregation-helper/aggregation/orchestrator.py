@@ -281,7 +281,7 @@ class AggregationOrchestrator:
         imports: List[str],
         dry_run: bool = True
     ) -> None:
-        """Deletes existing aggregated data for the specified imports before running aggregations.
+        """Deletes existing aggregated data and generated graphs for the specified imports before running aggregations.
 
         Args:
             imports: List of import names to process for deletion.
@@ -296,15 +296,21 @@ class AggregationOrchestrator:
                     if output:
                         to_delete.add(output)
 
-        if not to_delete:
+        if not to_delete and not imports:
             logging.info("No existing aggregated data resolved for deletion.")
             return
 
         to_delete_list = sorted(list(to_delete))
+        imports_list = sorted(list(imports))
+        
         if dry_run:
             logging.info(f"[Dry Run] Would delete aggregated data for imports: {to_delete_list}")
+            logging.info(f"[Dry Run] Would delete generated graphs for imports: {imports_list}")
         else:
-            self.deleter.delete_aggregated_data(to_delete_list)
+            self.deleter.delete_aggregated_data(
+                imports_to_delete=to_delete_list,
+                imports_to_delete_generated=imports_list
+            )
 
     def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.

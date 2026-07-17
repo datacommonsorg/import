@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
+from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_generated_provenance_sql_expr
 
 class StatVarGroupGenerator:
     """Iteratively generates StatVarGroup nodes and hierarchical edges from MCF schemas."""
@@ -28,6 +28,7 @@ class StatVarGroupGenerator:
         
         """
         self.executor = executor
+        self.is_base_dc = is_base_dc
         self.max_iterations = max_iterations
         self.namespace = namespace if namespace is not None else ('dc/' if is_base_dc else 'c/')
         self.generated_provenance = (
@@ -78,6 +79,15 @@ class StatVarGroupGenerator:
         sv_predicates_sql = ", ".join(sv_predicates)
         logging.info(f"Optimizing Spanner fetch. Pulling {len(sv_predicates)} specific predicates.")
         # =====================================================================
+
+        # Always use dynamic provenance based on source SV provenance
+        prov_expr = get_generated_provenance_sql_expr(self.is_base_dc).replace("provenance", "E.provenance")
+        select_provenance_sql = f"{prov_expr} AS provenance"
+        curated_prov_expr = get_generated_provenance_sql_expr(self.is_base_dc)
+        
+        # Run globally without filtering by active imports
+        active_sv_sql = ""
+        stat_var_triple_join_sql = ""
 
         # Using rf-string to safely pass SQL regex backslashes while enabling variable injection
         query = rf"""  # nosec
@@ -221,18 +231,18 @@ class StatVarGroupGenerator:
 
         -- Fetch curated memberOf edges to identify which SVs to skip during generation.
         CREATE OR REPLACE TEMP TABLE CuratedMemberOf AS (
-          SELECT subject_id AS statvar, object_id AS parent_svg
+          SELECT subject_id AS statvar, object_id AS parent_svg, provenance
           FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, object_id, provenance FROM Edge WHERE predicate = 'memberOf'")
           WHERE provenance != generated_provenance
         );
-        
+         
         -- Find all recursive ancestors for curated SVs to generate linkedMemberOf edges
         CREATE OR REPLACE TEMP TABLE CuratedLinkedEdges AS (
           WITH RECURSIVE Ancestors AS (
-            SELECT statvar, parent_svg AS ancestor_svg, 1 AS level
+            SELECT statvar, parent_svg AS ancestor_svg, 1 AS level, provenance
             FROM CuratedMemberOf
             UNION ALL
-            SELECT A.statvar, H.object_id AS ancestor_svg, A.level + 1
+            SELECT A.statvar, H.object_id AS ancestor_svg, A.level + 1, A.provenance
             FROM Ancestors A
             JOIN VerticalHierarchy H ON A.ancestor_svg = H.subject_id
             WHERE A.level <= 10
@@ -241,10 +251,12 @@ class StatVarGroupGenerator:
             statvar AS subject_id, 
             'linkedMemberOf' AS predicate, 
             ancestor_svg AS object_id, 
-            generated_provenance AS provenance
+            {curated_prov_expr} AS provenance
           FROM Ancestors
         );
 
+        {active_sv_sql}
+ 
         -- Fetch all StatisticalVariable nodes.
         CREATE OR REPLACE TEMP TABLE StatVar AS (
           SELECT subject_id
@@ -256,17 +268,18 @@ class StatVarGroupGenerator:
         -- This is to avoid generating improper groups.
         -- TODO: Ensure all Quantities are properly resolved in ingestion.
         CREATE OR REPLACE TEMP TABLE StatVarTriple AS (
-          SELECT DISTINCT E.subject_id, E.predicate, E.object_id
+          SELECT DISTINCT E.subject_id, E.predicate, E.object_id, {select_provenance_sql}
           FROM EXTERNAL_QUERY("{conn_id}",
-            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}]) AND object_id NOT LIKE '[%'"
+            "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}]) AND object_id NOT LIKE '[%'"
           ) E
           JOIN StatVar SV ON SV.subject_id = E.subject_id
+          {stat_var_triple_join_sql}
         );
 
         -- Seed the intial data for iteratively generating SVGs.
         CREATE OR REPLACE TEMPORARY TABLE InitialData AS (
           WITH PopType AS (
-            SELECT subject_id, object_id 
+            SELECT subject_id, object_id, provenance
             FROM StatVarTriple 
             WHERE predicate = 'populationType'
               -- Exclude curated SVs from the auto-generation pipeline
@@ -321,7 +334,8 @@ class StatVarGroupGenerator:
             ARRAY<STRING>[] AS constraintProperties,
             IFNULL(Constraints.aligned_cps, ARRAY<STRING>[]) AS newConstraintProperties,
             IFNULL(Constraints.pvs, ARRAY<STRING>[]) AS attributes,
-            0 AS iteration
+            0 AS iteration,
+            PopType.provenance
           FROM PopType
           LEFT JOIN StatVarProps ON StatVarProps.subject_id = PopType.subject_id
           LEFT JOIN ConstraintProps ON ConstraintProps.subject_id = PopType.subject_id
@@ -336,7 +350,7 @@ class StatVarGroupGenerator:
             AND (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
           )
           SELECT DISTINCT
-            SV.statvar AS subject_id, map.predicate, v AS object_id, generated_provenance AS provenance 
+            SV.statvar AS subject_id, map.predicate, v AS object_id, SV.provenance 
           FROM ZeroConstraintStatVars SV
           LEFT JOIN VerticalSpec VS 
             ON SV.populationType = VS.populationType 
@@ -363,12 +377,13 @@ class StatVarGroupGenerator:
           node1 STRING, node2 STRING, node2name STRING, node3 STRING, node3name STRING,
           statvar STRING, populationType STRING, statVarProperties STRING,
           constraintProperties ARRAY<STRING>, newConstraintProperties ARRAY<STRING>,
-          attributes ARRAY<STRING>, iteration INT64 
+          attributes ARRAY<STRING>, iteration INT64,
+          provenance STRING
         );
-
+ 
         INSERT INTO AllResults
         SELECT * FROM InitialData;
-
+ 
         WHILE new_rows_found AND iteration_count < max_iterations DO
           SET iteration_count = iteration_count + 1;
           SET new_rows_found = FALSE;
@@ -406,7 +421,8 @@ class StatVarGroupGenerator:
               statvar, populationType, statVarProperties, newConstraintProperties AS constraintProperties,
               ARRAY(SELECT cp FROM UNNEST(newConstraintProperties) AS cp WITH OFFSET AS cp_idx WHERE cp_idx != target_idx) AS newConstraintProperties,
               ARRAY(SELECT a FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx WHERE a_idx != target_idx) AS attributes,
-              iteration + 1 AS iteration
+              iteration + 1 AS iteration,
+              T.provenance
             FROM InitialData AS T, UNNEST(T.attributes) AS attr WITH OFFSET AS target_idx
             WHERE T.iteration = iteration_count - 1
               AND ARRAY_LENGTH(T.attributes) >= 1
@@ -421,7 +437,7 @@ class StatVarGroupGenerator:
             WHERE AR.statvar IS NULL
           )
           SELECT * FROM NewDistinctRows;
-
+ 
           -- If new rows were inserted, continue the loop and update InitialData
           IF @@row_count > 0 THEN
             SET new_rows_found = TRUE;
@@ -437,14 +453,14 @@ class StatVarGroupGenerator:
         CREATE OR REPLACE TEMP TABLE SVGVerticalEdges AS (
           WITH TopLevelSVGs AS (
             -- Basic PopTypes: Attach the 1-constraint group (node2) to the vertical.
-            SELECT DISTINCT node2 AS svg_id, statvar, constraintProperties, populationType
+            SELECT DISTINCT node2 AS svg_id, statvar, constraintProperties, populationType, provenance
             FROM AllResults
             WHERE iteration > 0
               AND (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
               AND ARRAY_LENGTH(constraintProperties) = 1
             UNION ALL
             -- Non-basic PopTypes: Attach the 0-constraint group (node3) to the vertical.
-            SELECT DISTINCT node3 AS svg_id, statvar, ARRAY<STRING>[] AS constraintProperties, populationType
+            SELECT DISTINCT node3 AS svg_id, statvar, ARRAY<STRING>[] AS constraintProperties, populationType, provenance
             FROM AllResults
             WHERE node3 IS NOT NULL
               AND NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
@@ -452,7 +468,7 @@ class StatVarGroupGenerator:
           ),
           BaseJoined AS (
             SELECT
-              SVG.statvar, SVG.svg_id, generated_provenance AS provenance,
+              SVG.statvar, SVG.svg_id, SVG.provenance,
               IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS svg_targets,
               IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg], VS.linkedVertical) AS statvar_targets
             FROM TopLevelSVGs SVG 
@@ -508,18 +524,18 @@ class StatVarGroupGenerator:
 
         -- Generate Spanner Edge rows.
         CREATE OR REPLACE TEMP TABLE Edge AS (
-          SELECT DISTINCT edge_data.subject_id, edge_data.predicate, edge_data.object_id, generated_provenance AS provenance
+          SELECT DISTINCT edge_data.subject_id, edge_data.predicate, edge_data.object_id, edge_data.provenance
           FROM AllResults
           CROSS JOIN UNNEST([
-            STRUCT(statvar AS subject_id, 'memberOf' AS predicate, node3 AS object_id, iteration = 0 AND node3 IS NOT NULL AS keep),
-            STRUCT(node2, 'typeOf', 'StatVarGroup', node2 IS NOT NULL),
-            STRUCT(node2, 'name', CONCAT(SUBSTR(node2name, 1, 16), ':', TO_BASE64(SHA256(node2name))), node2 IS NOT NULL),
-            STRUCT(node3, 'typeOf', 'StatVarGroup', node3 IS NOT NULL),
-            STRUCT(node3, 'name', CONCAT(SUBSTR(node3name, 1, 16), ':', TO_BASE64(SHA256(node3name))), node3 IS NOT NULL),
-            STRUCT(node1, 'specializationOf', node2, node1 IS NOT NULL AND node2 IS NOT NULL),
-            STRUCT(node2, 'specializationOf', node3, node2 IS NOT NULL AND node3 IS NOT NULL),
-            STRUCT(statvar, 'linkedMemberOf', node2, node2 IS NOT NULL),
-            STRUCT(statvar, 'linkedMemberOf', node3, node3 IS NOT NULL)
+            STRUCT(statvar AS subject_id, 'memberOf' AS predicate, node3 AS object_id, iteration = 0 AND node3 IS NOT NULL AS keep, provenance),
+            STRUCT(node2, 'typeOf', 'StatVarGroup', node2 IS NOT NULL, provenance),
+            STRUCT(node2, 'name', CONCAT(SUBSTR(node2name, 1, 16), ':', TO_BASE64(SHA256(node2name))), node2 IS NOT NULL, provenance),
+            STRUCT(node3, 'typeOf', 'StatVarGroup', node3 IS NOT NULL, provenance),
+            STRUCT(node3, 'name', CONCAT(SUBSTR(node3name, 1, 16), ':', TO_BASE64(SHA256(node3name))), node3 IS NOT NULL, provenance),
+            STRUCT(node1, 'specializationOf', node2, node1 IS NOT NULL AND node2 IS NOT NULL, provenance),
+            STRUCT(node2, 'specializationOf', node3, node2 IS NOT NULL AND node3 IS NOT NULL, provenance),
+            STRUCT(statvar, 'linkedMemberOf', node2, node2 IS NOT NULL, provenance),
+            STRUCT(statvar, 'linkedMemberOf', node3, node3 IS NOT NULL, provenance)
           ]) AS edge_data
           WHERE edge_data.keep = TRUE
           UNION ALL SELECT * FROM SVVerticalEdges

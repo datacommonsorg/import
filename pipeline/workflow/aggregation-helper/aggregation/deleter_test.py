@@ -33,24 +33,29 @@ class TestAggregationDeleter(unittest.TestCase):
             is_base_dc=True
         )
         
-        imports = ["ImportA", "ImportB"]
-        deleter.delete_aggregated_data(imports)
+        imports_data = ["ImportA", "ImportB"]
+        imports_gen = ["ImportA", "ImportC"] # Use different list to verify they are separated
+        deleter.delete_aggregated_data(
+            imports_to_delete=imports_data,
+            imports_to_delete_generated=imports_gen
+        )
         
         # Verify execute_partitioned_dml calls (order-independent due to parallel execution)
         self.assertEqual(mock_db.execute_partitioned_dml.call_count, 3)
         
-        expected_provenances = ["dc/base/ImportA", "dc/base/ImportB"]
-        expected_params = {"provenances": expected_provenances}
+        expected_data_provs = ["dc/base/ImportA", "dc/base/ImportB"]
+        expected_edge_provs = ["dc/base/ImportA", "dc/base/ImportB", "dc/base/generated/ImportA", "dc/base/generated/ImportC"]
         
         calls = mock_db.execute_partitioned_dml.call_args_list
-        executed_sqls = [c[0][0] for c in calls]
-        
-        self.assertTrue(any("DELETE FROM Edge" in sql for sql in executed_sqls))
-        self.assertTrue(any("DELETE FROM TimeSeries" in sql for sql in executed_sqls))
-        self.assertTrue(any("DELETE FROM KeyValueStore" in sql for sql in executed_sqls))
-        
-        for c in calls:
-            self.assertEqual(c[1]["params"], expected_params)
+        for args, kwargs in calls:
+            sql = args[0]
+            params = kwargs.get("params", {})
+            if "DELETE FROM Edge" in sql:
+                self.assertEqual(params.get("provenances"), expected_edge_provs)
+            elif "DELETE FROM TimeSeries" in sql or "DELETE FROM KeyValueStore" in sql:
+                self.assertEqual(params.get("provenances"), expected_data_provs)
+            else:
+                self.fail(f"Unexpected SQL: {sql}")
 
     @patch('aggregation.deleter.spanner.Client')
     def test_delete_aggregated_data_empty(self, mock_spanner_client):
@@ -58,7 +63,7 @@ class TestAggregationDeleter(unittest.TestCase):
         mock_spanner_client.return_value.instance.return_value.database.return_value = mock_db
         
         deleter = AggregationDeleter("proj", "inst", "db")
-        deleter.delete_aggregated_data([])
+        deleter.delete_aggregated_data([], [])
         
         mock_db.execute_partitioned_dml.assert_not_called()
 
@@ -75,15 +80,26 @@ class TestAggregationDeleter(unittest.TestCase):
             is_base_dc=False
         )
         
-        imports = ["ImportA"]
-        deleter.delete_aggregated_data(imports)
+        imports_data = ["ImportA"]
+        imports_gen = ["ImportB"]
+        deleter.delete_aggregated_data(
+            imports_to_delete=imports_data,
+            imports_to_delete_generated=imports_gen
+        )
         
-        expected_provenances = ["ImportA"]
-        expected_params = {"provenances": expected_provenances}
+        expected_data_provs = ["ImportA"]
+        expected_edge_provs = ["ImportA", "generated/ImportB"]
         
         calls = mock_db.execute_partitioned_dml.call_args_list
-        for c in calls:
-            self.assertEqual(c[1]["params"], expected_params)
+        for args, kwargs in calls:
+            sql = args[0]
+            params = kwargs.get("params", {})
+            if "DELETE FROM Edge" in sql:
+                self.assertEqual(params.get("provenances"), expected_edge_provs)
+            elif "DELETE FROM TimeSeries" in sql or "DELETE FROM KeyValueStore" in sql:
+                self.assertEqual(params.get("provenances"), expected_data_provs)
+            else:
+                self.fail(f"Unexpected SQL: {sql}")
 
     @patch('aggregation.deleter.spanner.Client')
     def test_delete_aggregated_data_exception_propagates(self, mock_spanner_client):
@@ -95,7 +111,7 @@ class TestAggregationDeleter(unittest.TestCase):
         deleter = AggregationDeleter("proj", "inst", "db")
 
         with self.assertRaises(RuntimeError):
-            deleter.delete_aggregated_data(["ImportA"])
+            deleter.delete_aggregated_data(["ImportA"], [])
 
 
 if __name__ == '__main__':
