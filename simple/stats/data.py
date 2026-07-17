@@ -591,6 +591,34 @@ def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
             (df[constants.COLUMN_VALUE] != "")].copy()
 
 
+def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
+  """Validates that all values in the 'value' column are numeric or NaN.
+
+  Raises:
+      ValueError: If any non-numeric value is found.
+  """
+  if constants.COLUMN_VALUE not in df.columns:
+    return
+  # Convert values to numeric, coercion will map invalid strings to NaN
+  converted = pd.to_numeric(df[constants.COLUMN_VALUE], errors='coerce')
+  # Find rows where conversion returned NaN but the original was not a standard null representation
+  val_series = df[constants.COLUMN_VALUE].astype(str).str.strip().str.lower()
+  standard_nulls = {"nan", "<na>", "none", "", "null"}
+  
+  invalid_mask = (
+      converted.isna() & 
+      df[constants.COLUMN_VALUE].notna() & 
+      (~val_series.isin(standard_nulls))
+  )
+  if invalid_mask.any():
+    invalid_examples = df.loc[invalid_mask, constants.COLUMN_VALUE].unique()
+    raise ValueError(
+        f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
+        f"{list(invalid_examples)[:10]}. If these represent missing values, please configure "
+        f"them under 'naValues' in config.json."
+    )
+
+
 def prepare_observations_df(df: pd.DataFrame, provenance: str,
                             obs_props: "ObservationProperties") -> pd.DataFrame:
   """

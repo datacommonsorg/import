@@ -237,13 +237,25 @@ class VariablePerRowImporter(Importer):
           f"The following expected columns were not found in the CSV: {difference}. "
           f"Please check your 'columnMappings' and the CSV header.")
 
+    # 4. Verify that all physical columns in the CSV are mapped or explicitly ignored
+    ignored_column_names = set(self.config.ignore_columns(self.input_file))
+    all_allowed_columns = expected_column_names | ignored_column_names
+    unmapped_columns = actual_column_names - all_allowed_columns
+    if unmapped_columns:
+      raise ValueError(
+          f"The CSV file '{self.input_file.path}' contains unmapped columns: "
+          f"{sorted(list(unmapped_columns))}. Please map them in 'columnMappings' "
+          f"or list them in 'ignoreColumns' in config.json."
+      )
+
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file).id
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
+    custom_na = self.config.na_values(self.input_file)
     with self.input_file.open_stream() as stream:
-      reader = pd.read_csv(stream, chunksize=10000)
+      reader = pd.read_csv(stream, na_values=custom_na, chunksize=10000)
 
       for chunk_df in reader:
         if chunk_df.empty:

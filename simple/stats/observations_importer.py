@@ -48,13 +48,16 @@ class ObservationsImporter(Importer):
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
     self._resolved_entities_cache: dict[str, str | None] = {}
+    self.all_unresolved_entities: set[str] = set()
 
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
       self._process_chunks()
+      self.check_and_report_unresolved_entities(self.all_unresolved_entities)
       self.reporter.report_success()
     except Exception as e:
+      self._write_debug_csvs()
       self.reporter.report_failure(str(e))
       raise e
 
@@ -65,12 +68,14 @@ class ObservationsImporter(Importer):
     renamed = {}
     debug_dfs = []
 
+    custom_na = self.config.na_values(self.input_file)
     with self.input_file.open_stream() as stream:
       reader = pd.read_csv(
           stream,
           dtype={0: str},
           skipinitialspace=True,
           thousands=",",
+          na_values=custom_na,
           chunksize=10000,
       )
 
@@ -198,6 +203,7 @@ class ObservationsImporter(Importer):
 
     df[constants.COLUMN_DCID] = column
     if unresolved_list:
+      self.all_unresolved_entities.update(unresolved_list)
       logging.warning("# unresolved entities which will be dropped: %s",
                       len(unresolved_list))
       logging.warning("Dropped entities: %s", unresolved_list)

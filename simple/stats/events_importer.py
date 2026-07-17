@@ -61,6 +61,7 @@ class EventsImporter(Importer):
 
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
+    self.all_unresolved_entities: set[str] = set()
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -70,10 +71,14 @@ class EventsImporter(Importer):
       self._sanitize_values()
       self._rename_columns()
       self._resolve_entities()
+
+      self.check_and_report_unresolved_entities(self.all_unresolved_entities)
+
       self._write_event_triples()
       self._write_observations()
       self.reporter.report_success()
     except Exception as e:
+      self._write_debug_csvs()
       self.reporter.report_failure(str(e))
       raise e
 
@@ -84,10 +89,12 @@ class EventsImporter(Importer):
     # - Set 1st column (i.e. the entity column) to type str (so that geoIds like "01" are not treated as ints and converted to 1)
     # - Strip leading whitespaces
     # - Treat comma as a thousands separator
+    custom_na = self.config.na_values(self.input_file)
     self.df = pd.read_csv(self.input_file.read_string_io(),
                           dtype={0: str},
                           skipinitialspace=True,
-                          thousands=",")
+                          thousands=",",
+                          na_values=custom_na)
     logging.info("Read %s rows.", self.df.index.size)
     self.entity_column_name = self.df.columns[0]
     logging.info("Entity column name: %s", self.entity_column_name)
@@ -251,6 +258,7 @@ class EventsImporter(Importer):
 
     df[constants.COLUMN_DCID] = column
     if unresolved_list:
+      self.all_unresolved_entities.update(unresolved_list)
       logging.warning("# unresolved entities which will be dropped: %s",
                       len(unresolved_list))
       logging.warning("Dropped entities: %s", unresolved_list)

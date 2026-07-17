@@ -286,6 +286,9 @@ class MainDcDb(Db):
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
+    from stats.data import validate_numeric_values
+    validate_numeric_values(observations_df, input_file.path)
+
     # Only keep basic observation columns.
     # Provenance is specified differently for main dc.
     # TODO: Include obs properties in main DC output.
@@ -356,6 +359,9 @@ class SqlDb(Db):
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
+    from stats.data import validate_numeric_values
+    validate_numeric_values(observations_df, input_file.path)
+
     logging.info("Writing %s observations to [%s]", len(observations_df),
                  self.engine)
     self.num_observations += len(observations_df)

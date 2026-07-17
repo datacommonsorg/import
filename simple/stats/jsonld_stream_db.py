@@ -320,6 +320,9 @@ class JsonLdStreamDb(Db):
                           input_file: File):
     if observations_df.empty:
       return
+    from stats.data import validate_numeric_values
+    validate_numeric_values(observations_df, input_file.path)
+
     import_name = self.config.import_name(input_file)
     self._init_import_export_dir(import_name)
     self._write_observations_df_to_disk(observations_df, import_name)

@@ -177,16 +177,20 @@ class FileImportReporter:
     self.status = Status.FAILURE
     self.data["error"] = error
 
+  def report_unresolved_entities(self, unresolved_list: list[str]):
+    self.data["unresolvedEntities"] = unresolved_list
+
   def json(self) -> dict:
     report = {}
 
     def _maybe_report(field: str, func=None):
       value = self.data.get(field)
-      if value:
+      if value is not None:
         report[field] = value if not func else func(value)
 
     report["status"] = self.status.name
     _maybe_report("error")
+    _maybe_report("unresolvedEntities")
 
     if self.start_time:
       report["startTime"] = str(self.start_time)

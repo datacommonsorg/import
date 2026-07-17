@@ -55,6 +55,7 @@ class EntitiesImporter(Importer):
 
     # Initialize reverse column mappings from config
     column_mappings = self.config.column_mappings(self.input_file)
+    self.has_column_mappings = bool(column_mappings)
     self.reverse_mappings = {
         v: strip_namespace(k) for k, v in column_mappings.items()
     }
@@ -94,6 +95,21 @@ class EntitiesImporter(Importer):
     self.df = self.df.convert_dtypes()
 
   def _rename_columns(self) -> None:
+    # Verify that all physical columns in the CSV are mapped, ignored, or the ID column
+    if self.has_column_mappings:
+      actual_columns = set(self.df.columns)
+      mapped_columns = set(self.reverse_mappings.keys())
+      ignored_columns = set(self.ignore_columns)
+      id_col = {self.id_column} if self.id_column else set()
+      all_allowed_columns = mapped_columns | ignored_columns | id_col
+      unmapped_columns = actual_columns - all_allowed_columns
+      if unmapped_columns:
+        raise ValueError(
+            f"The CSV file '{self.input_file.path}' contains unmapped columns: "
+            f"{sorted(list(unmapped_columns))}. Please map them in 'columnMappings' "
+            f"or list them in 'ignoreColumns' in config.json."
+        )
+
     renamed = {}
 
     # Rename property columns to their IDs (using custom mappings if defined)
