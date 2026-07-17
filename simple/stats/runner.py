@@ -27,6 +27,7 @@ from stats import constants
 from stats import schema
 from stats import stat_var_hierarchy_generator
 from stats.config import Config
+from stats.data import FileValidationError
 from stats.data import ImportType
 from stats.data import InputFileFormat
 from stats.data import ParentSVG2ChildSpecializedNames
@@ -246,20 +247,21 @@ class Runner:
 
       if not hasattr(self, "_failure_errors"):
         if isinstance(e, EntityResolutionError):
-          self._failure_errors = [{
-              "file": e.file_path,
-              "errorType": ValidationErrorType.ENTITY_RESOLUTION,
-              "problemColumns": ["entity"],
-              "errorMessage": str(e)
-          }]
+          self._failure_errors = [
+              FileValidationError(
+                  file=e.file_path,
+                  error_type=ValidationErrorType.ENTITY_RESOLUTION,
+                  problem_columns=["entity"],
+                  error_message=str(e))
+          ]
         else:
           file_path = getattr(e, "file_path", "")
-          self._failure_errors = [{
-              "file": file_path,
-              "errorType": ValidationErrorType.GENERIC_ERROR,
-              "problemColumns": [],
-              "errorMessage": str(e)
-          }]
+          self._failure_errors = [
+              FileValidationError(
+                  file=file_path,
+                  error_type=ValidationErrorType.GENERIC_ERROR,
+                  error_message=str(e))
+          ]
 
       for store in self.all_stores:
         try:
@@ -292,7 +294,11 @@ class Runner:
       return
 
     if hasattr(self, "_failure_errors"):
-      handshake_payload = {"status": "FAILURE", "errors": self._failure_errors}
+      errors_dict = [
+          err.to_dict() if hasattr(err, "to_dict") else err
+          for err in self._failure_errors
+      ]
+      handshake_payload = {"status": "FAILURE", "errors": errors_dict}
     else:
       handshake_payload = {"importList": json.dumps(self.trigger_workflow_info)}
 
@@ -780,17 +786,17 @@ class Runner:
 
     all_errors = []
 
-    def validate_single_file(file: File) -> list[dict]:
+    def validate_single_file(file: File) -> list[FileValidationError]:
       try:
         importer = self._create_importer(file)
         return importer.validate_headers()
       except Exception as e:
-        return [{
-            "file": file.path,
-            "errorType": ValidationErrorType.GENERIC_ERROR,
-            "problemColumns": [],
-            "errorMessage": f"Failed to validate headers: {str(e)}"
-        }]
+        return [
+            FileValidationError(
+                file=file.path,
+                error_type=ValidationErrorType.GENERIC_ERROR,
+                error_message=f"Failed to validate headers: {str(e)}")
+        ]
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=min(32,
@@ -802,7 +808,7 @@ class Runner:
     if all_errors:
       self._failure_errors = all_errors
       formatted_errors = [
-          f"File '{err['file']}': {err['errorMessage']}" for err in all_errors
+          f"File '{err.file}': {err.error_message}" for err in all_errors
       ]
       consolidated_msg = (
           "CSV Header Validation Failed! The following errors were found:\n" +

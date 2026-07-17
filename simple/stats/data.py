@@ -475,6 +475,22 @@ class ValidationErrorType(StrEnum):
   GENERIC_ERROR = "GENERIC_ERROR"
 
 
+@dataclass
+class FileValidationError:
+  file: str
+  error_type: ValidationErrorType
+  problem_columns: list[str] = field(default_factory=list)
+  error_message: str = ""
+
+  def to_dict(self) -> dict:
+    return {
+        "file": self.file,
+        "errorType": self.error_type,
+        "problemColumns": self.problem_columns,
+        "errorMessage": self.error_message,
+    }
+
+
 class ImportType(StrEnum):
   OBSERVATIONS = "observations"
   EVENTS = "events"
