@@ -9,7 +9,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["type", "input_imports"],
+        "required": ["type"],
         "additionalProperties": false,
         "properties": {
           "name": { "type": "string" },
@@ -24,7 +24,8 @@
               "SUPER_ENUM_AGGREGATION",
               "LINKED_EDGES",
               "PROVENANCE_SUMMARY",
-              "STAT_VAR_GROUPS"
+              "STAT_VAR_GROUPS",
+              "EMBEDDING_GENERATION"
             ]
           },
           "input_imports": {
@@ -34,14 +35,26 @@
           },
           "output_import": { "type": "string" },
           "stage": { "type": "integer" },
+          "embedding_table": { "type": "string" },
           "place_aggregation": { "type": "object" },
           "stat_var_aggregation": { "type": "object" },
           "entity_aggregation": { "type": "object" },
           "stat_var_series_aggregation": { "type": "object" },
           "stat_var_calculation": { "type": "object" },
+          "embedding_generation": { "type": "object" },
           "disabled": { "type": "boolean" }
         },
         "allOf": [
+          {
+            "if": {
+              "not": {
+                "properties": { "type": { "const": "EMBEDDING_GENERATION" } }
+              }
+            },
+            "then": {
+              "required": ["input_imports"]
+            }
+          },
           {
             "if": { "properties": { "type": { "const": "PLACE_AGGREGATION" } } },
             "then": {
@@ -159,6 +172,39 @@
                   "required": ["calculations"],
                   "properties": {
                     "calculations": { "type": "array" }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "type": { "const": "EMBEDDING_GENERATION" } } },
+            "then": {
+              "required": ["embedding_generation"],
+              "properties": {
+                "embedding_generation": {
+                  "type": "object",
+                  "required": ["specs"],
+                  "properties": {
+                    "specs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["embedding_label", "model_name", "task_type", "node_types", "node_filter_type"],
+                        "properties": {
+                          "embedding_label": { "type": "string" },
+                          "model_name": { "type": "string" },
+                          "model_endpoint": { "type": "string" },
+                          "task_type": { "type": "string" },
+                          "node_types": {
+                            "type": "array",
+                            "items": { "type": "string" },
+                            "minItems": 1
+                          },
+                          "node_filter_type": { "type": "string" }
+                        }
+                      }
+                    }
                   }
                 }
               }

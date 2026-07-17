@@ -52,21 +52,7 @@ from aggregation import BigQueryExecutor, StatVarGroupGenerator
 class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
     """Integration E2E tests for StatVarGroupGenerator."""
 
-    def test_stat_var_group_generation(self):
-        """
-        Tests the generation of StatVarGroups and hierarchical edges from SV specs.
-        
-        Setup:
-          - A vertical spec mapping 'Student' population type to a 'TestVertical' SVG.
-          - An unconstrained SV 'Count_Student'.
-          - A constrained SV 'Count_Student_Female' (gender=Female).
-          - A curated SV 'Median_Age_Student'.
-          - A basic populationType SV 'Count_Person'.
-          - An uncategorized basic SV 'Count_Thing'.
-        """
-        ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
-        
+    def _setup_mock_data(self, ns):
         # 1. Setup mock Vertical Node and Spec mappings
         self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
         self.add_node(f'{ns}g/TestCustomVertical', 'Test Custom Vertical', types=['StatVarGroup'])
@@ -118,15 +104,32 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         self.flush_to_spanner()
 
+    def test_stat_var_group_generation(self):
+        """
+        Tests the generation of StatVarGroups and hierarchical edges from SV specs.
+        
+        Setup:
+          - A vertical spec mapping 'Student' population type to a 'TestVertical' SVG.
+          - An unconstrained SV 'Count_Student'.
+          - A constrained SV 'Count_Student_Female' (gender=Female).
+          - A curated SV 'Median_Age_Student'.
+          - A basic populationType SV 'Count_Person'.
+          - An uncategorized basic SV 'Count_Thing'.
+        """
+        ns = 'dc/' if self.is_base_dc else 'c/'
+        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        
+        self._setup_mock_data(ns)
+
         calculations = [
             {
                 "name": "StatVar Groups Generation",
                 "type": "STAT_VAR_GROUPS",
                 "stage": 1,
-                "input_imports": ["Schema"]
+                "input_imports": ["TestImport"]
             }
         ]
-        res = self.run_orchestrator(calculations=calculations, active_imports=["Schema"])
+        res = self.run_orchestrator(calculations=calculations, active_imports=["TestImport"])
         self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
@@ -193,12 +196,66 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             # Verify the root SVG attached to the Vertical declared in the Spec
             self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov), edges)
 
-            # Verify curated SVs attached to ancestor SVs based on curated hierarchy
+            # Verify curated SVs from OTHER imports are NOT processed
             self.assertNotIn(('Median_Age_Student', 'memberOf', f'{ns}g/Student', prov), edges)
             self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
             self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov), edges)
+            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+
+
+    def test_stat_var_group_generation_only_custom_import(self):
+        """
+        Tests that running for TestCustomImport only processes its data.
+        """
+        ns = 'dc/' if self.is_base_dc else 'c/'
+        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        
+        self._setup_mock_data(ns)
+
+        calculations = [
+            {
+                "name": "StatVar Groups Generation",
+                "type": "STAT_VAR_GROUPS",
+                "stage": 1,
+                "input_imports": ["TestCustomImport"]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=["TestCustomImport"])
+        self.assertTrue(res.success)
+
+        # Verify results in Spanner
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Check newly created SVG nodes (Should NOT generate 'Student' groups as they are in TestImport)
+            node_query = """
+                SELECT subject_id 
+                FROM Node 
+                WHERE 'StatVarGroup' IN UNNEST(types) 
+                  AND subject_id LIKE '%/g/Student%'
+                ORDER BY subject_id
+            """
+            nodes = [r[0] for r in snapshot.execute_sql(node_query)]
+            self.assertEqual(len(nodes), 0)
+
+            # Check linkedMemberOf/memberOf attachments
+            edge_query = """
+                SELECT subject_id, predicate, object_id, provenance
+                FROM Edge 
+                WHERE predicate IN ('memberOf', 'specializationOf', 'linkedMemberOf')
+                ORDER BY subject_id, predicate, object_id
+            """
+            edges = [(r[0], r[1], r[2], r[3]) for r in snapshot.execute_sql(edge_query)]
+
+            # Verify curated SVs from TestCustomImport ARE processed
             self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov), edges)
             self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+
+            # Verify TestImport SVs are NOT processed (no generated edges for them)
+            self.assertNotIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov), edges)
+            self.assertNotIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
+            self.assertNotIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov), edges)
+            self.assertNotIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertNotIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
 
 
 class StatVarGroupGeneratorCustomDcTest(StatVarGroupGeneratorIntegrationTest):

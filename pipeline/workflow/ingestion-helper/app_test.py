@@ -42,6 +42,7 @@ class TestMain(unittest.TestCase):
         mock_spanner_client.database = mock_database
         mock_spanner_client.embedding_table = "NodeEmbedding"
         mock_spanner_client.embedding_index = "NodeEmbeddingIndex"
+        mock_spanner_client.embedding_label_index = "NodeEmbeddingLabelIndex"
 
         # Mock snapshot and execute_sql
         mock_snapshot = MagicMock()

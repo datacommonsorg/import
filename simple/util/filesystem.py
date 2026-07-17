@@ -30,6 +30,7 @@ have been tested. In-memory (mem://) and temp (temp://) paths are also built in.
 
 import io
 import logging
+import time
 
 from fs import open_fs
 import fs.errors as fserrors
@@ -227,9 +228,21 @@ class File(_StoreWrapper):
   def read_string_io(self) -> io.StringIO:
     return io.StringIO(self.read())
 
-  def open_stream(self):
-    """Returns an open text stream for streaming line-by-line without downloading full contents upfront."""
-    return self.fs().open(self.path, "r")
+  def open_stream(self, max_retries: int = 3):
+    """Returns an open text stream for streaming line-by-line without downloading full contents upfront.
+
+    Includes retries for transient network drops.
+    """
+    for attempt in range(max_retries):
+      try:
+        return self.fs().open(self.path, "r")
+      except Exception as e:
+        if attempt == max_retries - 1:
+          raise e
+        logging.warning(
+            "Transient error opening stream for %s (attempt %d/%d): %s. Retrying...",
+            self.path, attempt + 1, max_retries, e)
+        time.sleep(1)
 
   def size(self) -> int:
     """Returns the size of the file in bytes."""

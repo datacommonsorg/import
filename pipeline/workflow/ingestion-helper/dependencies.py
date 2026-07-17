@@ -39,6 +39,7 @@ def get_spanner_client() -> SpannerClient:
             embedding_space=config.EMBEDDING_SPACE,
             embedding_table=config.EMBEDDING_TABLE,
             embedding_index=config.EMBEDDING_INDEX,
+            embedding_label_index=config.EMBEDDING_LABEL_INDEX,
             emulator_host=config.SPANNER_EMULATOR_HOST
         )
     return _spanner_client

@@ -62,6 +62,7 @@ class SpannerClient:
                  embedding_space: int = 768,
                  embedding_table: str = "NodeEmbedding",
                  embedding_index: str = "NodeEmbeddingIndex",
+                 embedding_label_index: str = "NodeEmbeddingLabelIndex",
                  emulator_host: str = None):
         """Initializes a Spanner client and connects to a specific database."""
         client_options = {"api_endpoint": "spanner.googleapis.com"}
@@ -99,6 +100,7 @@ class SpannerClient:
         self.embedding_space = embedding_space
         self.embedding_table = embedding_table
         self.embedding_index = embedding_index
+        self.embedding_label_index = embedding_label_index
 
         if not models:
             models = self._DEFAULT_MODELS
@@ -588,7 +590,7 @@ class SpannerClient:
         required_tables = [
             "Node", "Edge", "TimeSeries", "Observation", "ImportStatus",
             "IngestionHistory", "ImportVersionHistory", "IngestionLock",
-            "Cache", self.embedding_table
+            "Cache", "KeyValueStore", self.embedding_table
         ]
         required_indexes = [
             "InEdge",
@@ -598,6 +600,7 @@ class SpannerClient:
             "TimeSeriesByEntity2",
             "TimeSeriesByEntity3",
             self.embedding_index,
+            self.embedding_label_index,
         ]
         required_models = [m['name'] for m in self.models]
 
@@ -637,7 +640,8 @@ class SpannerClient:
                 models=self.models,
                 embedding_space=self.embedding_space,
                 embedding_table=self.embedding_table,
-                embedding_index=self.embedding_index)
+                embedding_index=self.embedding_index,
+                embedding_label_index=self.embedding_label_index)
 
             ddl_statements = parse_sql_to_statements(schema_content)
         except Exception as e:
