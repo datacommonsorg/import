@@ -75,7 +75,7 @@ class StatVarGroupGenerator:
         logging.info("Fetching distinct constraint properties...")
         prep_query = f"""
             SELECT DISTINCT object_id
-            FROM EXTERNAL_QUERY("{conn_id}", "SELECT object_id FROM Edge WHERE predicate = 'constraintProperties'")
+            FROM EXTERNAL_QUERY("{conn_id}", "SELECT object_id FROM Edge WHERE predicate = 'constraintProperties' {provenance_filter}")
         """
         prep_sv_job = self.executor.execute(prep_query, job_config=no_cache_config)
         constraint_props = [row.object_id for row in prep_sv_job]
