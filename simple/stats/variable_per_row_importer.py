@@ -233,7 +233,8 @@ class VariablePerRowImporter(Importer):
 
   def _map_columns(self):
     self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
-    errors = self._validate_mappings(self.column_mappings, self.custom_dimensions)
+    errors = self._validate_mappings(self.column_mappings,
+                                     self.custom_dimensions)
     if errors:
       raise ValueError(errors[0]["errorMessage"])
 
@@ -263,7 +264,7 @@ class VariablePerRowImporter(Importer):
     return column_mappings, custom_dimensions
 
   def _validate_mappings(self, column_mappings: dict[str, str],
-                          custom_dimensions: list[str]) -> list[dict]:
+                         custom_dimensions: list[str]) -> list[dict]:
     errors = []
     for req_col in [
         constants.COLUMN_VARIABLE, constants.COLUMN_DATE, constants.COLUMN_VALUE

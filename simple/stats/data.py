@@ -614,11 +614,14 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
   # Only perform expensive string operations on non-numeric candidates
   na_mask = converted.isna() & df[constants.COLUMN_VALUE].notna()
   if na_mask.any():
-    val_series = df.loc[na_mask, constants.COLUMN_VALUE].astype(str).str.strip().str.lower()
-    standard_nulls = {val.lower() for val in constants.STANDARD_NA_VALUES} | {"nan", ""}
+    val_series = df.loc[na_mask, constants.COLUMN_VALUE].astype(
+        str).str.strip().str.lower()
+    standard_nulls = {val.lower() for val in constants.STANDARD_NA_VALUES
+                     } | {"nan", ""}
     invalid_mask = ~val_series.isin(standard_nulls)
     if invalid_mask.any():
-      invalid_examples = df.loc[na_mask].loc[invalid_mask, constants.COLUMN_VALUE].unique()
+      invalid_examples = df.loc[na_mask].loc[invalid_mask,
+                                             constants.COLUMN_VALUE].unique()
       ex = ValueError(
           f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
           f"{list(invalid_examples)[:10]}. If these represent missing values, please configure "
