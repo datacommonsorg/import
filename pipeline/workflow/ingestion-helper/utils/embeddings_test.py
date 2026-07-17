@@ -210,18 +210,32 @@ class TestEmbeddingUtils(unittest.TestCase):
             ("dc/8", json.dumps({"title": "dc/8", "text": {"description": "Node 8"}}), ["Topic"])
         ]
 
+        mock_snapshot = MagicMock()
+        self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
+
+        def mock_execute_sql(sql, params=None, param_types=None, timeout=None):
+            results = []
+            for node in params["nodes"]:
+                results.append((
+                    node[0],  # subject_id
+                    node[1],  # embedding_content
+                    [0.1, 0.2, 0.3],  # dummy embeddings vector
+                    node[2]   # node_types
+                ))
+            return results
+
+        mock_snapshot.execute_sql.side_effect = mock_execute_sql
+
         transactions = []
         def side_effect(func):
             mock_transaction = MagicMock()
             
             def mock_execute_update(*args, **kwargs):
                 params = kwargs.get("params", {})
-                self.assertIn("nodes", params)
+                self.assertIn("rows", params)
                 self.assertIn("embedding_label", params)
-                self.assertIn("task_type", params)
                 self.assertEqual(params["embedding_label"], "base_text_embedding")
-                self.assertEqual(params["task_type"], "RETRIEVAL_QUERY")
-                return 2
+                return len(params["rows"])
 
             mock_transaction.execute_update.side_effect = mock_execute_update
             transactions.append(mock_transaction)
@@ -248,10 +262,10 @@ class TestEmbeddingUtils(unittest.TestCase):
             self.assertIn("INSERT OR UPDATE INTO NodeEmbedding", args[0])
             
             # Verify batch content
-            batch = kwargs["params"]["nodes"]
-            self.assertEqual(len(batch), 2)
-            self.assertEqual(batch[0][0], f"dc/{i*2 + 1}")
-            self.assertEqual(batch[1][0], f"dc/{i*2 + 2}")
+            rows = kwargs["params"]["rows"]
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0][0], f"dc/{i*2 + 1}")
+            self.assertEqual(rows[1][0], f"dc/{i*2 + 2}")
 
 if __name__ == '__main__':
     unittest.main()

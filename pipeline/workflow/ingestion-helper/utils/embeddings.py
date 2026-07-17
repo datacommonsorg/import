@@ -22,7 +22,7 @@ import logging
 import time
 from datetime import datetime
 import pandas as pd
-from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON
+from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON, FLOAT64
 from clients.spanner import SpannerClient
 import config
 
@@ -159,18 +159,30 @@ class EmbeddingUtils:
 
         logging.info(f"Generating embeddings in batches of {_BATCH_SIZE}.")
 
-        embeddings_sql = f"""
-            INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content, embeddings, node_types)
-            SELECT subject_id, @embedding_label, embedding_content, embeddings.values, node_types
+        predict_sql = f"""
+            SELECT subject_id, embedding_content, embeddings.values AS embeddings, node_types
             FROM ML.PREDICT(
                 MODEL {model_name},
                 (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
             )
         """
 
+        insert_sql = f"""
+            INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content, embeddings, node_types)
+            SELECT subject_id, @embedding_label, embedding_content, embeddings, node_types
+            FROM UNNEST(@rows)
+        """
+
         struct_type = Struct([
             StructField("subject_id", STRING),
             StructField("embedding_content", JSON),
+            StructField("node_types", Array(STRING))
+        ])
+
+        write_struct_type = Struct([
+            StructField("subject_id", STRING),
+            StructField("embedding_content", JSON),
+            StructField("embeddings", Array(FLOAT64)),
             StructField("node_types", Array(STRING))
         ])
 
@@ -185,25 +197,59 @@ class EmbeddingUtils:
         for batch in chunked(nodes_generator, _BATCH_SIZE):
             params = {
                 "nodes": batch,
-                "embedding_label": embedding_label,
                 "task_type": task_type
             }
             param_types = {
                 "nodes": Array(struct_type),
-                "embedding_label": STRING,
                 "task_type": STRING
             }
 
+            # 1. Run ML.PREDICT as a read-only query outside read-write transaction
+            predictions = []
+            try:
+                logging.info(f"Invoking remote ML.PREDICT for batch of {len(batch)} nodes...")
+                with self.spanner.database.snapshot() as snapshot:
+                    results = snapshot.execute_sql(predict_sql, params=params, param_types=param_types, timeout=timeout)
+                    for row in results:
+                        # Row structure: subject_id, embedding_content, embeddings, node_types
+                        content = row[1]
+                        if isinstance(content, (dict, list)):
+                            content = json.dumps(content)
+                        predictions.append((
+                            row[0],  # subject_id
+                            content,  # embedding_content
+                            row[2],  # embeddings
+                            row[3]   # node_types
+                        ))
+                logging.info(f"Received {len(predictions)} predictions from ML.PREDICT.")
+            except Exception as e:
+                logging.error(f"Error during ML.PREDICT execution: {e}")
+                raise
+
+            if not predictions:
+                continue
+
+            # 2. Write the generated embeddings in a short read-write transaction
+            write_params = {
+                "rows": predictions,
+                "embedding_label": embedding_label
+            }
+            write_param_types = {
+                "rows": Array(write_struct_type),
+                "embedding_label": STRING
+            }
+
             def _execute_dml(transaction):
-                return transaction.execute_update(embeddings_sql, params=params, param_types=param_types, timeout=timeout)
+                return transaction.execute_update(insert_sql, params=write_params, param_types=write_param_types, timeout=timeout)
 
             try:
+                logging.info(f"Writing {len(predictions)} embeddings to Spanner in a transaction...")
                 row_count = self.spanner.database.run_in_transaction(_execute_dml)
                 total_rows_affected += row_count
-                logging.info(f"Processed batch of {len(batch)} nodes. Affected total {total_rows_affected} rows.")
+                logging.info(f"Successfully committed batch. Affected total {total_rows_affected} rows.")
                 time.sleep(0.5)
             except Exception as e:
-                logging.error(f"Error executing batch transaction: {e}")
+                logging.error(f"Error executing write transaction: {e}")
                 raise
 
         logging.info(f"Completed batch processing. Total affected rows: {total_rows_affected}")
