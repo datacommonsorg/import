@@ -198,7 +198,8 @@ class TestOrchestratorExecution(unittest.TestCase):
 
         # Verify deleter was called with expected outputs
         self.mock_deleter.return_value.delete_aggregated_data.assert_called_once_with(
-            ["USFed_Census_AggState", "USFed_Census_StatVarAgg"]
+            imports_to_delete=["USFed_Census_AggState", "USFed_Census_StatVarAgg"],
+            imports_to_delete_generated=["USFed_Census", "USFed_Census_AggState", "USFed_Census_StatVarAgg"]
         )
 
     def test_run_skip_deletions(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
@@ -249,7 +250,8 @@ class TestOrchestratorExecution(unittest.TestCase):
 
         # Verify deleter was called with expected outputs
         self.mock_deleter.return_value.delete_aggregated_data.assert_called_once_with(
-            ["EarthquakeUSGS_Agg"]
+            imports_to_delete=["EarthquakeUSGS_Agg"],
+            imports_to_delete_generated=["EarthquakeUSGS", "EarthquakeUSGS_Agg"]
         )
 
 
@@ -330,7 +332,8 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
 
         # Verify deleter was called with all expected outputs in the chain
         self.mock_deleter.return_value.delete_aggregated_data.assert_called_once_with(
-            ["USFed_Census_AggState", "USFed_Census_AggState_AggCountry"]
+            imports_to_delete=["USFed_Census_AggState", "USFed_Census_AggState_AggCountry"],
+            imports_to_delete_generated=["USFed_Census", "USFed_Census_AggState", "USFed_Census_AggState_AggCountry"]
         )
 
 
@@ -472,7 +475,8 @@ class TestOrchestratorOrdering(unittest.TestCase):
 
     def test_active_stages_includes_stage_0(self, mock_executor):
         """Verifies stage 0 is included in active stages for matching imports."""
-        active_stages = self.orchestrator.get_active_stages(["TestImport"])
+        res = self.orchestrator.run(active_imports=["TestImport"], dry_run=True)
+        active_stages = res.import_results["TestImport"].stages_executed
         self.assertEqual(active_stages, [0, 1])
 
     def test_calculation_priority_sorting(self, mock_executor):

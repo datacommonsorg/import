@@ -65,7 +65,8 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           - An uncategorized basic SV 'Count_Thing'.
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        prov_test = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
+        prov_custom = 'dc/base/generated/TestCustomImport' if self.is_base_dc else 'generated/TestCustomImport'
         
         # 1. Setup mock Vertical Node and Spec mappings
         self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
@@ -154,51 +155,51 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             edges = [(r[0], r[1], r[2], r[3]) for r in snapshot.execute_sql(edge_query)]
 
             # Verify unconstrained SV attached directly to the Student Root SVG
-            self.assertIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov), edges)
+            self.assertIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov_test), edges)
 
             # Verify unconstrained SV attached to ancestor SVGs
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov_test), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
             
             # Verify constrained SV attached to the constrained SVG
-            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov), edges)
+            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov_test), edges)
 
             # Verify constrained SV attached to ancestor SVGs
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender-Female', prov), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender-Female', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
 
             # Verify basic populationType SV attached to SVG by mprop
-            self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov_test), edges)
 
             # Verify basic populationType SV attached to ancestor SVGs
-            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
 
             # Verify uncategorized basic populationType SV attached to Uncategorized_Variables SVG
-            self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+            self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov_test), edges)
 
             # Verify uncategorized basic populationType SV attached to ancestor SVGs
-            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
-            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized', prov), edges)
-            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized_Variables', prov_test), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized', prov_test), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
             
             # Verify hierarchical specialization of generated SVGs
-            self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov), edges)
-            self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov), edges)
+            self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov_test), edges)
+            self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov_test), edges)
 
             # Verify the root SVG attached to the Vertical declared in the Spec
-            self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov_test), edges)
 
             # Verify curated SVs attached to ancestor SVs based on curated hierarchy
-            self.assertNotIn(('Median_Age_Student', 'memberOf', f'{ns}g/Student', prov), edges)
-            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
-            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov), edges)
-            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            self.assertNotIn(('Median_Age_Student', 'memberOf', f'{ns}g/Student', prov_custom), edges)
+            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Student', prov_custom), edges)
+            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov_custom), edges)
+            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov_custom), edges)
+            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Root', prov_custom), edges)
 
 
 class StatVarGroupGeneratorCustomDcTest(StatVarGroupGeneratorIntegrationTest):

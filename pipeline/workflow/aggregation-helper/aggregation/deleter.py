@@ -41,33 +41,60 @@ class AggregationDeleter:
             logging.info(f"Initialized Spanner client for deleter: {self._spanner_database.name}")
         return self._spanner_database
 
-    def delete_aggregated_data(self, imports_to_delete: List[str]) -> None:
-        """Deletes aggregated data for the specified imports from Spanner concurrently.
+    def delete_aggregated_data(
+        self,
+        imports_to_delete: List[str],
+        imports_to_delete_generated: List[str]
+    ) -> None:
+        """Deletes aggregated data and generated graphs from Spanner concurrently.
 
         Uses Partitioned DML to execute deletions, which is safe for large volumes.
         Runs deletions for Edge, TimeSeries, and KeyValueStore in parallel using ThreadPoolExecutor.
 
         Args:
-            imports_to_delete: List of import names (without dc/base/ prefix) to delete.
+            imports_to_delete: List of import names to delete all data for (TimeSeries, Obs, KeyValueStore, Edge).
+            imports_to_delete_generated: List of import names to delete generated graphs for (Edge only).
         """
-        if not imports_to_delete:
+        if not imports_to_delete and not imports_to_delete_generated:
             return
 
-        logging.info(f"Deleting existing aggregated data for imports: {imports_to_delete}")
+        logging.info(
+            f"Deleting aggregated data for: {imports_to_delete}, "
+            f"and generated graphs for: {imports_to_delete_generated}"
+        )
 
-        provenance_names = [get_provenance_name(name, self.is_base_dc) for name in imports_to_delete]
-        
         db = self.spanner_database
-        params = {"provenances": provenance_names}
-        param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
+        
+        # 1. Resolve standard provenances for data deletion
+        data_provenances = [get_provenance_name(name, self.is_base_dc) for name in imports_to_delete]
+        
+        # 2. Resolve generated provenances for generated graph deletion
+        gen_prefix = "dc/base/generated/" if self.is_base_dc else "generated/"
+        generated_provenances = [f"{gen_prefix}{name}" for name in imports_to_delete_generated]
 
-        delete_queries = [
-            ("Edge", "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)", ""),
-            ("TimeSeries", "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)", " (and cascaded Observations)"),
-            ("KeyValueStore", "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "")
-        ]
+        # We need to delete from Edge table if provenance is in data_provenances OR generated_provenances
+        edge_provenances = data_provenances + generated_provenances
 
-        def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
+        # Setup parameters for partitioned DML
+        params_data = {"provenances": data_provenances}
+        param_types_data = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
+
+        params_edge = {"provenances": edge_provenances}
+        param_types_edge = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
+
+        delete_queries = []
+        if data_provenances:
+            delete_queries.extend([
+                ("TimeSeries", "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)", " (and cascaded Observations)", params_data, param_types_data),
+                ("KeyValueStore", "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "", params_data, param_types_data)
+            ])
+        
+        if edge_provenances:
+            delete_queries.append(
+                ("Edge", "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)", "", params_edge, param_types_edge)
+            )
+
+        def _execute_delete(table_name: str, sql: str, extra_desc: str, params, param_types) -> int:
             rows = db.execute_partitioned_dml(
                 sql, params=params, param_types=param_types
             )
@@ -75,10 +102,10 @@ class AggregationDeleter:
             return rows
 
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(delete_queries)) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, len(delete_queries))) as executor:
                 futures = [
-                    executor.submit(_execute_delete, table, sql, desc)
-                    for table, sql, desc in delete_queries
+                    executor.submit(_execute_delete, table, sql, desc, params, param_types)
+                    for table, sql, desc, params, param_types in delete_queries
                 ]
                 for future in concurrent.futures.as_completed(futures):
                     future.result()  # Propagate any worker thread exceptions to main thread
