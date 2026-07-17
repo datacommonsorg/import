@@ -54,10 +54,9 @@ _EXPORT_PROCESSES_MAX = 8
 
 
 def _rewrite_custom_ns_to_dcid(val: str) -> str:
-  """Rewrites custom namespaces (e.g. 'undata:...') to 'dcid:' namespace.
+  """Rewrites custom namespaces to 'dcid:' as a temporary workaround until the ingestion loader natively supports custom namespaces.
 
-  This is a temporary workaround until the Java ingestion pipeline supports
-  custom namespaces in the JSON-LD context.
+  This allows users to author schemas with their custom namespaces today, which will be fully preserved when we re-ingest after backend support is added.
   """
   if not isinstance(val, str) or not val:
     return val
