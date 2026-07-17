@@ -293,16 +293,10 @@ class JsonLdStreamDb(Db):
     self._node_streaming_started = set()
 
   def _get_prov_urls(self) -> dict[str, str]:
-    prov_urls = {}
     if hasattr(self, 'nodes') and self.nodes and hasattr(
-        self.nodes, 'provenances'):
-      for prov in self.nodes.provenances.values():
-        prov_id = strip_namespace(prov.id)
-        prov_urls[prov_id] = prov.url
-        prov_urls[prov.id] = prov.url
-        if hasattr(prov, 'name') and prov.name:
-          prov_urls[prov.name] = prov.url
-    return prov_urls
+        self.nodes, 'get_provenance_urls'):
+      return self.nodes.get_provenance_urls()
+    return {}
 
   def _write_observations_df_to_disk(self, df: pd.DataFrame, import_name: str):
     import_temp_dir = os.path.join(self.temp_local_dir, import_name)

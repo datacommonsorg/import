@@ -179,68 +179,8 @@ class VariablePerRowImporter(Importer):
       self.df = pd.read_csv(stream, nrows=1)
 
   def validate_headers(self) -> list[dict]:
-    errors = []
-    config_mappings = self.config.column_mappings(self.input_file)
-
-    if not config_mappings:
-      # TODO: Remove this default fallback and require explicit columnMappings in config.json.
-      config_mappings = {
-          "dcid:observationAbout": "entity",
-          "dcid:variableMeasured": "variable",
-          "dcid:observationDate": "date",
-          "dcid:value": "value",
-      }
-
-    column_mappings = {}
-    custom_dimensions = []
-
-    for key, physical_col in config_mappings.items():
-      if key in STANDARD_PROPERTY_MAPPING:
-        internal_col = STANDARD_PROPERTY_MAPPING[key]
-        column_mappings[internal_col] = physical_col
-      else:
-        custom_dimensions.append(key)
-        column_mappings[key] = physical_col
-
-    for req_col in [
-        constants.COLUMN_VARIABLE, constants.COLUMN_DATE, constants.COLUMN_VALUE
-    ]:
-      if req_col not in column_mappings:
-        official_key = [
-            k for k, v in STANDARD_PROPERTY_MAPPING.items() if v == req_col
-        ][0]
-        errors.append({
-            "file":
-                self.input_file.path,
-            "errorType":
-                ValidationErrorType.MISSING_REQUIRED_COLUMNS,
-            "problemColumns": [official_key],
-            "errorMessage":
-                f"Missing required column mapping for: '{official_key}'"
-        })
-
-    entity_dims_count = len(custom_dimensions)
-
-    if entity_dims_count < 1:
-      errors.append({
-          "file":
-              self.input_file.path,
-          "errorType":
-              ValidationErrorType.INVALID_CONFIGURATION,
-          "problemColumns": [],
-          "errorMessage":
-              "Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
-      })
-    if entity_dims_count > 3:
-      errors.append({
-          "file":
-              self.input_file.path,
-          "errorType":
-              ValidationErrorType.INVALID_CONFIGURATION,
-          "problemColumns": [],
-          "errorMessage":
-              f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
-      })
+    column_mappings, custom_dimensions = self._parse_column_mappings()
+    errors = self._validate_mappings(column_mappings, custom_dimensions)
 
     if errors:
       return errors
@@ -292,6 +232,12 @@ class VariablePerRowImporter(Importer):
     return errors
 
   def _map_columns(self):
+    self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
+    errors = self._validate_mappings(self.column_mappings, self.custom_dimensions)
+    if errors:
+      raise ValueError(errors[0]["errorMessage"])
+
+  def _parse_column_mappings(self) -> tuple[dict[str, str], list[str]]:
     config_mappings = self.config.column_mappings(self.input_file)
 
     if not config_mappings:
@@ -303,45 +249,62 @@ class VariablePerRowImporter(Importer):
           "dcid:value": "value",
       }
 
-    self.column_mappings = {}
-    self.custom_dimensions = []
+    column_mappings = {}
+    custom_dimensions = []
 
-    # Map column mappings to internal names and identify custom dimensions
     for key, physical_col in config_mappings.items():
       if key in STANDARD_PROPERTY_MAPPING:
         internal_col = STANDARD_PROPERTY_MAPPING[key]
-        self.column_mappings[internal_col] = physical_col
+        column_mappings[internal_col] = physical_col
       else:
-        # It's a custom dimension!
-        self.custom_dimensions.append(key)
-        self.column_mappings[key] = physical_col
+        custom_dimensions.append(key)
+        column_mappings[key] = physical_col
 
-    # 1. Validate strictly required columns
+    return column_mappings, custom_dimensions
+
+  def _validate_mappings(self, column_mappings: dict[str, str],
+                          custom_dimensions: list[str]) -> list[dict]:
+    errors = []
     for req_col in [
         constants.COLUMN_VARIABLE, constants.COLUMN_DATE, constants.COLUMN_VALUE
     ]:
-      if req_col not in self.column_mappings:
-        # Find the official DCID key for the error message
+      if req_col not in column_mappings:
         official_key = [
             k for k, v in STANDARD_PROPERTY_MAPPING.items() if v == req_col
         ][0]
-        raise ValueError(
-            f"Missing required column mapping for: '{official_key}'")
+        errors.append({
+            "file":
+                self.input_file.path,
+            "errorType":
+                ValidationErrorType.MISSING_REQUIRED_COLUMNS,
+            "problemColumns": [official_key],
+            "errorMessage":
+                f"Missing required column mapping for: '{official_key}'"
+        })
 
-    # 2. Validate entity dimensions count (1 to 3 allowed)
-    # Since dcid:observationAbout is now treated as a custom dimension, all entity dimensions are in custom_dimensions
-    entity_dims_count = len(self.custom_dimensions)
+    entity_dims_count = len(custom_dimensions)
 
     if entity_dims_count < 1:
-      raise ValueError(
-          "Invalid configuration: An observation must have at least one entity dimension. "
-          "Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
-      )
+      errors.append({
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.INVALID_CONFIGURATION,
+          "problemColumns": [],
+          "errorMessage":
+              "Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
+      })
     if entity_dims_count > 3:
-      raise ValueError(
-          f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). "
-          "A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
-      )
+      errors.append({
+          "file":
+              self.input_file.path,
+          "errorType":
+              ValidationErrorType.INVALID_CONFIGURATION,
+          "problemColumns": [],
+          "errorMessage":
+              f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
+      })
+    return errors
 
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file).id
@@ -415,7 +378,7 @@ class VariablePerRowImporter(Importer):
     new_entity_dcids = [
         strip_namespace(dcid)
         for dcid in self.entity_dcids
-        if dcid not in self.nodes.entities.keys()
+        if not self.nodes.has_entity(dcid)
     ]
 
     logging.info("Found %s total entities, of which %s are already imported.",

@@ -144,7 +144,7 @@ class ObservationsImporter(Importer):
 
     # Get entity nodes that are not already recorded.
     new_entity_dcids = [
-        dcid for dcid in entity_dcids if dcid not in self.nodes.entities.keys()
+        dcid for dcid in entity_dcids if not self.nodes.has_entity(dcid)
     ]
 
     logging.info("Found %s total entities, of which %s are already imported.",
