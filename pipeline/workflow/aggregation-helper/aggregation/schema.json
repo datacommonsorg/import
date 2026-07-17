@@ -46,6 +46,16 @@
         },
         "allOf": [
           {
+            "if": {
+              "not": {
+                "properties": { "type": { "const": "EMBEDDING_GENERATION" } }
+              }
+            },
+            "then": {
+              "required": ["input_imports"]
+            }
+          },
+          {
             "if": { "properties": { "type": { "const": "PLACE_AGGREGATION" } } },
             "then": {
               "required": ["place_aggregation"],

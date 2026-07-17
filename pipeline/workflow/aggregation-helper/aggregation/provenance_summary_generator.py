@@ -22,7 +22,7 @@ from .common import _escape_sql_literal, get_provenance_name
 
 
 class ProvenanceSummaryGenerator:
-    """Contains the SQL queries to generate ProvenanceSummary in the Cache table."""
+    """Contains the SQL queries to generate ProvenanceSummary in the KeyValueStore table."""
 
     def __init__(self,
                  executor: BigQueryExecutor,
@@ -68,6 +68,7 @@ class ProvenanceSummaryGenerator:
         SELECT 
           variable_measured, 
           entity1 as observation_about, 
+          extra_entities_id,
           facet_id, 
           provenance,
           observation_period,
@@ -81,6 +82,7 @@ class ProvenanceSummaryGenerator:
           '''SELECT 
                variable_measured, 
                entity1, 
+               extra_entities_id,
                facet_id, 
                provenance,
                observation_period,
@@ -209,11 +211,11 @@ class ProvenanceSummaryGenerator:
         FROM place_stats ps
         JOIN aggregated_places ap USING (variable_measured, provenance, facet_id, place_type);
 
-        -- Step 8: Final aggregation and export to Cache
+        -- Step 8: Final aggregation and export to KeyValueStore
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Cache"}}' ) AS
+            spanner_options = '{{"table": "KeyValueStore"}}' ) AS
         WITH facet_base AS (
           SELECT 
             variable_measured, provenance as provenance_dcid, facet_id,
@@ -228,7 +230,7 @@ class ProvenanceSummaryGenerator:
             MIN(value_num) as facet_min,
             MAX(value_num) as facet_max,
             COUNT(*) as facet_obs_count,
-            COUNT(DISTINCT observation_about) as facet_ts_count
+            COUNT(DISTINCT CONCAT(observation_about, '|', extra_entities_id)) as facet_ts_count
           FROM `temp_obs_flat`
           GROUP BY variable_measured, provenance, facet_id
         ),

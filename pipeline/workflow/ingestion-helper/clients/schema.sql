@@ -99,17 +99,6 @@ CREATE INDEX TimeSeriesByProvenance ON TimeSeries(provenance) OPTIONS (
   columnar_policy = 'enabled'
 );
 
--- Namespace table for namespaces used by DCP instances
-CREATE TABLE Namespace (
-    NamespaceId STRING(64) NOT NULL,  -- e.g., "dcid", "schema", "myorg"
-    Uri STRING(2048) NOT NULL,        -- e.g., "https://example.org/browser/"
-    IsLocal BOOL NOT NULL,            -- TRUE for local custom namespace, FALSE for remote
-    ApiUrl STRING(2048),              -- HTTP endpoint of the remote Mixer (null if local)
-    ApiKey STRING(2048),               -- Optional API key for authenticating with the remote Mixer
-    Created TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE ), -- Creation timestamp
-    Updated TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE )  -- Last updated timestamp
-) PRIMARY KEY (NamespaceId);
-
 CREATE TABLE ImportStatus (
   ImportName STRING(MAX) NOT NULL,
   LatestVersion STRING(MAX),
@@ -190,6 +179,12 @@ CREATE TABLE Cache (
   value JSON,
 ) PRIMARY KEY(type, key, provenance);
 
+CREATE TABLE KeyValueStore (
+  type STRING(1024) NOT NULL,
+  key STRING(1024) NOT NULL,
+  provenance STRING(1024) NOT NULL,
+  value JSON,
+) PRIMARY KEY(type, key, provenance);
 
 
 

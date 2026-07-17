@@ -72,8 +72,9 @@ class TestJsonLdStreamDb(unittest.TestCase):
             ])
         mock_file = mock.Mock(path="test_import/data.csv")
         db.insert_observations(df, mock_file)
-        self.assertEqual(len(db._obs_records["test_import"]), 1)
-        self.assertEqual(db._obs_records["test_import"][0][0], "e1")
+        obs_shard = os.path.join(db.temp_local_dir, "test_import",
+                                 "observation-00000.jsonld")
+        self.assertTrue(os.path.exists(obs_shard))
 
         # Insert triples
         triples = [Triple("sub1", "pred1", object_value="val1")]

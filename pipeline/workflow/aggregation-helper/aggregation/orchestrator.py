@@ -33,6 +33,7 @@ from .stat_var_group_generator import StatVarGroupGenerator
 from .stat_var_series_aggregator import StatVarSeriesAggregator
 from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
 from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
+from .common import CALCULATION_TYPE_PRIORITY
 from .validator import validate_config
 from .deleter import AggregationDeleter
 
@@ -145,6 +146,15 @@ class AggregationOrchestrator:
                 self.calculations.extend(validate_config(file_path, schema_file_path))
         else:
             self.calculations = validate_config(target_config, schema_file_path)
+
+        # Deterministically sort calculations by stage and calculation priority tier
+        self.calculations.sort(
+            key=lambda c: (
+                c.get("stage", 1),
+                CALCULATION_TYPE_PRIORITY.get(c.get("type", ""), 99)
+            )
+        )
+
 
     def run(self, active_imports: Optional[List[str]] = None, dry_run: bool = True, skip_deletions: bool = False) -> AggregationRunResult:
         """Executes aggregations independently for each active import.
@@ -334,36 +344,6 @@ class AggregationOrchestrator:
                         
         return expanded
 
-
-    def get_active_stages(self, active_imports: List[str]) -> List[int]:
-        """Returns a sorted list of unique active stage numbers across active imports."""
-        expanded_imports = self._expand_active_imports(active_imports)
-        stages = set()
-        for single_import in expanded_imports:
-            stages.update(self._get_active_stages_for_import(single_import))
-        return sorted(list(stages))
-
-    def execute_stage(self, stage_num: int, active_imports: List[str]) -> List[str]:
-        """Executes a single stage for all active imports asynchronously."""
-        expanded_imports = self._expand_active_imports(active_imports)
-        stage_jobs = []
-        for calc in self.calculations:
-            calc_stage = calc.get("stage", 1)
-            if calc_stage != stage_num:
-                continue
-
-            applicable_imports = [imp for imp in expanded_imports if self._calc_applies_to_import(calc, imp)]
-            if not applicable_imports:
-                continue
-
-            step_type = calc.get("type")
-            logging.info(
-                f"Triggering step: '{step_type}' (Stage {stage_num}) for imports {applicable_imports}..."
-            )
-            step_jobs = self._dispatch_stage_steps(calc, applicable_imports)
-            stage_jobs.extend(step_jobs)
-
-        return stage_jobs
 
     def _execute_and_synchronize_stage(self, single_import: str, stage_num: int) -> None:
         """Executes a single stage for a single import and blocks until all jobs complete."""

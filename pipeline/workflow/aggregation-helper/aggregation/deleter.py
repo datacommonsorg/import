@@ -45,7 +45,7 @@ class AggregationDeleter:
         """Deletes aggregated data for the specified imports from Spanner concurrently.
 
         Uses Partitioned DML to execute deletions, which is safe for large volumes.
-        Runs deletions for Edge, TimeSeries, and Cache in parallel using ThreadPoolExecutor.
+        Runs deletions for Edge, TimeSeries, and KeyValueStore in parallel using ThreadPoolExecutor.
 
         Args:
             imports_to_delete: List of import names (without dc/base/ prefix) to delete.
@@ -64,7 +64,7 @@ class AggregationDeleter:
         delete_queries = [
             ("Edge", "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)", ""),
             ("TimeSeries", "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)", " (and cascaded Observations)"),
-            ("Cache", "DELETE FROM Cache WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "")
+            ("KeyValueStore", "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "")
         ]
 
         def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
