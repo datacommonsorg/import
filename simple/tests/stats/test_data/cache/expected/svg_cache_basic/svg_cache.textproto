@@ -21,9 +21,9 @@ stat_var_groups {
     absolute_name: "SVG11"
     child_stat_vars {
       id: "sv1"
-      display_name: "SV1 desc"
       search_names: "SV1 name"
       search_names: "SV1 desc"
+      display_name: "SV1 desc"
     }
   }
 }
