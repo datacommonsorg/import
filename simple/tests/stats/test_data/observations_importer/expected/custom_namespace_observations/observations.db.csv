@@ -1,0 +1,3 @@
+entity,variable,date,value,provenance,unit,scaling_factor,measurement_method,observation_period,properties
+country/BRA,var1,2023,0.19,custom_namespace_observations/input.csv,,,,,{}
+country/JPN,var1,2023,0.21,custom_namespace_observations/input.csv,,,,,{}

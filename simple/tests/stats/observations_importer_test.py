@@ -17,6 +17,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -77,13 +78,12 @@ def _test_import(test: unittest.TestCase, test_name: str):
     reporter = FileImportReporter(input_path, ImportReporter(report_file))
     nodes = Nodes(config)
 
-    dc_client.get_property_of_entities = MagicMock(return_value={})
-
-    ObservationsImporter(input_file=input_file,
-                         db=db,
-                         debug_resolve_file=debug_resolve_file,
-                         reporter=reporter,
-                         nodes=nodes).do_import()
+    with mock.patch.object(dc_client, "get_property_of_entities", return_value={}):
+      ObservationsImporter(input_file=input_file,
+                           db=db,
+                           debug_resolve_file=debug_resolve_file,
+                           reporter=reporter,
+                           nodes=nodes).do_import()
     db.commit_and_close()
 
     write_observations(db_path, output_path)
@@ -105,3 +105,6 @@ class TestObservationsImporter(unittest.TestCase):
 
   def test_obs_props(self):
     _test_import(self, "obs_props")
+
+  def test_custom_namespace_observations(self):
+    _test_import(self, "custom_namespace_observations")

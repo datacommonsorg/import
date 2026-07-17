@@ -50,6 +50,43 @@ class TestMetadataValidator(unittest.TestCase):
     # Should complete without raising an error
     validator.validate()
 
+  def test_validation_custom_namespace_success(self):
+    # Setup mock config with referenced provenance using custom namespace
+    mock_config = mock.MagicMock(spec=Config)
+    mock_config.data = {
+        "inputFiles": [{
+            "pattern":
+                "data.csv",
+            "provenance":
+                "undata:provenance/GlobalSustainableDevelopmentGoalsDatabase"
+        }]
+    }
+
+    # Setup mock database with matching MCF definitions using custom namespace
+    mock_db = mock.MagicMock(spec=Db)
+    mock_db._triples = {
+        "_global": [
+            # Define Source
+            Triple("undata:source/UnitedNationsStatisticsDivision",
+                   "typeOf",
+                   object_id="Source"),
+            # Define Provenance
+            Triple(
+                "undata:provenance/GlobalSustainableDevelopmentGoalsDatabase",
+                "typeOf",
+                object_id="Provenance"),
+            # Link Provenance to Source
+            Triple(
+                "undata:provenance/GlobalSustainableDevelopmentGoalsDatabase",
+                "source",
+                object_id="undata:source/UnitedNationsStatisticsDivision"),
+        ]
+    }
+
+    validator = MetadataValidator(mock_config, mock_db)
+    # Should complete without raising an error
+    validator.validate()
+
   def test_validation_missing_provenance(self):
     # Setup mock config with referenced provenance
     mock_config = mock.MagicMock(spec=Config)
