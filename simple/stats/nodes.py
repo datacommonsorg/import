@@ -362,6 +362,21 @@ class Nodes:
       self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
 
   @thread_safe
+  def has_entity(self, entity_dcid: str) -> bool:
+    return entity_dcid in self.entities
+
+  @thread_safe
+  def get_provenance_urls(self) -> dict[str, str]:
+    prov_urls = {}
+    for prov in self.provenances.values():
+      prov_id = strip_namespace(prov.id)
+      prov_urls[prov_id] = prov.url
+      prov_urls[prov.id] = prov.url
+      if hasattr(prov, 'name') and prov.name:
+        prov_urls[prov.name] = prov.url
+    return prov_urls
+
+  @thread_safe
   def entities_with_type(self, entity_dcids: list[str], entity_type: str):
     for entity_dcid in entity_dcids:
       self.entity_with_type(entity_dcid, entity_type)
