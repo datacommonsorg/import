@@ -65,6 +65,9 @@ class EntitiesImporter(Importer):
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
+      errors = self.validate_headers()
+      if errors:
+        raise ValueError("\n".join(errors))
       self._read_csv()
       self._drop_ignored_columns()
       self._sanitize_values()
@@ -74,6 +77,38 @@ class EntitiesImporter(Importer):
     except Exception as e:
       self.reporter.report_failure(str(e))
       raise e
+
+  def validate_headers(self) -> list[dict]:
+    errors = []
+    if not self.has_column_mappings:
+      return []
+
+    try:
+      with self.input_file.open_stream() as stream:
+        header_df = pd.read_csv(stream, nrows=0)
+      actual_columns = set(header_df.columns)
+    except Exception as e:
+      return [{
+          "file": self.input_file.path,
+          "errorType": "CSV_HEADER_VALIDATION",
+          "problemColumns": [],
+          "errorMessage": f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
+      }]
+
+    mapped_columns = set(self.reverse_mappings.keys())
+    ignored_columns = set(self.ignore_columns)
+    id_col = {self.id_column} if self.id_column else set()
+    all_allowed_columns = mapped_columns | ignored_columns | id_col
+    unmapped_columns = actual_columns - all_allowed_columns
+    if unmapped_columns:
+      errors.append({
+          "file": self.input_file.path,
+          "errorType": "CSV_HEADER_VALIDATION",
+          "problemColumns": sorted(list(unmapped_columns)),
+          "errorMessage": f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+      })
+
+    return errors
 
   def _read_csv(self) -> None:
     # Read CSVs with the following behaviors:
@@ -95,21 +130,6 @@ class EntitiesImporter(Importer):
     self.df = self.df.convert_dtypes()
 
   def _rename_columns(self) -> None:
-    # Verify that all physical columns in the CSV are mapped, ignored, or the ID column
-    if self.has_column_mappings:
-      actual_columns = set(self.df.columns)
-      mapped_columns = set(self.reverse_mappings.keys())
-      ignored_columns = set(self.ignore_columns)
-      id_col = {self.id_column} if self.id_column else set()
-      all_allowed_columns = mapped_columns | ignored_columns | id_col
-      unmapped_columns = actual_columns - all_allowed_columns
-      if unmapped_columns:
-        raise ValueError(
-            f"The CSV file '{self.input_file.path}' contains unmapped columns: "
-            f"{sorted(list(unmapped_columns))}. Please map them in 'columnMappings' "
-            f"or list them in 'ignoreColumns' in config.json."
-        )
-
     renamed = {}
 
     # Rename property columns to their IDs (using custom mappings if defined)

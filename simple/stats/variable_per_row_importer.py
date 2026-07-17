@@ -160,6 +160,9 @@ class VariablePerRowImporter(Importer):
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
+      errors = self.validate_headers()
+      if errors:
+        raise ValueError("\n".join(errors))
       self._read_csv()
       self._map_columns()
       self._write_observations()
@@ -173,6 +176,98 @@ class VariablePerRowImporter(Importer):
     # Read only the header row to extract column names for validation
     with self.input_file.open_stream() as stream:
       self.df = pd.read_csv(stream, nrows=1)
+
+  def validate_headers(self) -> list[dict]:
+    errors = []
+    config_mappings = self.config.column_mappings(self.input_file)
+
+    if not config_mappings:
+      config_mappings = {
+          "dcid:observationAbout": "entity",
+          "dcid:variableMeasured": "variable",
+          "dcid:observationDate": "date",
+          "dcid:value": "value",
+      }
+
+    column_mappings = {}
+    custom_dimensions = []
+
+    for key, physical_col in config_mappings.items():
+      if key in STANDARD_PROPERTY_MAPPING:
+        internal_col = STANDARD_PROPERTY_MAPPING[key]
+        column_mappings[internal_col] = physical_col
+      else:
+        custom_dimensions.append(key)
+        column_mappings[key] = physical_col
+
+    for req_col in [
+        constants.COLUMN_VARIABLE, constants.COLUMN_DATE, constants.COLUMN_VALUE
+    ]:
+      if req_col not in column_mappings:
+        official_key = [
+            k for k, v in STANDARD_PROPERTY_MAPPING.items() if v == req_col
+        ][0]
+        errors.append({
+            "file": self.input_file.path,
+            "errorType": "CSV_HEADER_VALIDATION",
+            "problemColumns": [official_key],
+            "errorMessage": f"Missing required column mapping for: '{official_key}'"
+        })
+
+    entity_dims_count = len(custom_dimensions)
+
+    if entity_dims_count < 1:
+      errors.append({
+          "file": self.input_file.path,
+          "errorType": "CSV_HEADER_VALIDATION",
+          "problemColumns": [],
+          "errorMessage": "Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
+      })
+    if entity_dims_count > 3:
+      errors.append({
+          "file": self.input_file.path,
+          "errorType": "CSV_HEADER_VALIDATION",
+          "problemColumns": [],
+          "errorMessage": f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
+      })
+
+    if errors:
+      return errors
+
+    try:
+      with self.input_file.open_stream() as stream:
+        header_df = pd.read_csv(stream, nrows=0)
+      actual_column_names = set(header_df.columns)
+    except Exception as e:
+      return [{
+          "file": self.input_file.path,
+          "errorType": "CSV_HEADER_VALIDATION",
+          "problemColumns": [],
+          "errorMessage": f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
+      }]
+
+    expected_column_names = set(column_mappings.values())
+    difference = expected_column_names - actual_column_names
+    if difference:
+      errors.append({
+          "file": self.input_file.path,
+          "errorType": "CSV_HEADER_VALIDATION",
+          "problemColumns": sorted(list(difference)),
+          "errorMessage": f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
+      })
+
+    ignored_column_names = set(self.config.ignore_columns(self.input_file))
+    all_allowed_columns = expected_column_names | ignored_column_names
+    unmapped_columns = actual_column_names - all_allowed_columns
+    if unmapped_columns:
+      errors.append({
+          "file": self.input_file.path,
+          "errorType": "CSV_HEADER_VALIDATION",
+          "problemColumns": sorted(list(unmapped_columns)),
+          "errorMessage": f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+      })
+
+    return errors
 
   def _map_columns(self):
     config_mappings = self.config.column_mappings(self.input_file)
@@ -226,27 +321,7 @@ class VariablePerRowImporter(Importer):
           "A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
       )
 
-    # 3. Verify that the physical columns actually exist in the CSV DataFrame
-    expected_column_names = set(self.column_mappings.values())
-    actual_column_names = set(self.df.columns)
-    difference = expected_column_names - actual_column_names
-    if difference:
-      logging.info("Expected column names: %s", expected_column_names)
-      logging.info("Actual column names: %s", actual_column_names)
-      raise ValueError(
-          f"The following expected columns were not found in the CSV: {difference}. "
-          f"Please check your 'columnMappings' and the CSV header.")
 
-    # 4. Verify that all physical columns in the CSV are mapped or explicitly ignored
-    ignored_column_names = set(self.config.ignore_columns(self.input_file))
-    all_allowed_columns = expected_column_names | ignored_column_names
-    unmapped_columns = actual_column_names - all_allowed_columns
-    if unmapped_columns:
-      raise ValueError(
-          f"The CSV file '{self.input_file.path}' contains unmapped columns: "
-          f"{sorted(list(unmapped_columns))}. Please map them in 'columnMappings' "
-          f"or list them in 'ignoreColumns' in config.json."
-      )
 
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file).id

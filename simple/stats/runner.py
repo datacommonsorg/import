@@ -48,6 +48,7 @@ from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
+from stats.importer import EntityResolutionError
 from stats.jsonld_exporter import export_to_jsonld
 from stats.jsonld_stream_db import JsonLdStreamDb
 from stats.mcf_importer import McfImporter
@@ -241,11 +242,36 @@ class Runner:
     except Exception as e:
       logging.exception("Error updating stats")
       self.reporter.report_failure(error=str(e))
+      
+      if not hasattr(self, "_failure_errors"):
+        if isinstance(e, EntityResolutionError):
+          self._failure_errors = [{
+              "file": e.file_path,
+              "errorType": "ENTITY_RESOLUTION",
+              "problemColumns": ["entity"],
+              "errorMessage": str(e)
+          }]
+        else:
+          file_path = getattr(e, "file_path", "")
+          self._failure_errors = [{
+              "file": file_path,
+              "errorType": "GENERIC_ERROR",
+              "problemColumns": [],
+              "errorMessage": str(e)
+          }]
+
+      for store in self.all_stores:
+        try:
+          store.close()
+        except:
+          pass
+
+      self._handle_workflow_handoff()
       raise
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
-    if not self.trigger_workflow_info:
+    if not self.trigger_workflow_info and not hasattr(self, "_failure_errors"):
       return
 
     workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
@@ -261,7 +287,13 @@ class Runner:
           temp_location)
       return
 
-    handshake_payload = {"importList": json.dumps(self.trigger_workflow_info)}
+    if hasattr(self, "_failure_errors"):
+      handshake_payload = {
+          "status": "FAILURE",
+          "errors": self._failure_errors
+      }
+    else:
+      handshake_payload = {"importList": json.dumps(self.trigger_workflow_info)}
 
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
     logging.info(
@@ -733,6 +765,36 @@ class Runner:
     mcf_files.sort(key=lambda f: f.full_path())
     return csv_files, mcf_files
 
+  def _validate_all_headers(self, csv_files: list[File]) -> None:
+    """Validates all CSV headers upfront and raises ValueError if any validation fails."""
+    if not csv_files:
+      return
+
+    all_errors = []
+    for file in csv_files:
+      try:
+        importer = self._create_importer(file)
+        errors = importer.validate_headers()
+        all_errors.extend(errors)
+      except Exception as e:
+        all_errors.append({
+            "file": file.path,
+            "errorType": "CSV_HEADER_VALIDATION",
+            "problemColumns": [],
+            "errorMessage": f"Failed to validate headers: {str(e)}"
+        })
+
+    if all_errors:
+      self._failure_errors = all_errors
+      formatted_errors = [
+          f"File '{err['file']}': {err['errorMessage']}" for err in all_errors
+      ]
+      consolidated_msg = (
+          "CSV Header Validation Failed! The following errors were found:\n" +
+          "\n".join(formatted_errors)
+      )
+      raise ValueError(consolidated_msg)
+
   def _run_all_data_imports(self):
     """Orchestrates file scanning, thread-pool configuration, and file ingestion."""
     csv_files, mcf_files = self._find_and_filter_input_files()
@@ -741,6 +803,9 @@ class Runner:
     logging.info("Found %d MCF files to import", len(mcf_files))
     logging.info("Matched files to process: %s",
                  [f.full_path() for f in csv_files + mcf_files])
+
+    # Validate all CSV headers upfront
+    self._validate_all_headers(csv_files)
 
     self.reporter.report_started(import_files=list(csv_files + mcf_files))
 

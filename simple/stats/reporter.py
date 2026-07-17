@@ -87,7 +87,10 @@ class ImportReporter:
     self.data["error"] = error
 
   def get_file_reporter(self, import_file: File):
-    return self.file_reporters_by_full_path[import_file.full_path()]
+    full_path = import_file.full_path()
+    if full_path not in self.file_reporters_by_full_path:
+      return FileImportReporter(full_path, self)
+    return self.file_reporters_by_full_path[full_path]
 
   def recompute_progress(self):
     with self.lock:
