@@ -25,9 +25,9 @@ from freezegun import freeze_time
 from stats import constants
 from stats.data import ValidationErrorType
 from stats.db_cache import ENV_REDIS_HOST
+from stats.runner import create_store as real_create_store
 from stats.runner import RunMode
 from stats.runner import Runner
-from stats.runner import create_store as real_create_store
 from tests.stats.test_util import compare_csv_files
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
