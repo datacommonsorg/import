@@ -273,6 +273,7 @@ class EmbeddingUtils:
             logging.info(f"Job started for {embedding_label}. Fetching all nodes for types: {node_types}")
             nodes = self._get_updated_nodes(timestamp, node_types, node_filter_type, timeout=config.TIMEOUT)
             converted_nodes = list(self._filter_and_convert_nodes(nodes))
+            logging.info(f"Retrieved {len(converted_nodes)} nodes to be inserted for embedding_label: {embedding_label}")
 
             logging.info(f"Generating embeddings for model {model_name} (embedding_label: {embedding_label})")
             affected_rows = self._generate_embeddings_partitioned(
