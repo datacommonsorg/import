@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
+from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_provenance_name
 
 class StatVarGroupGenerator:
     """Iteratively generates StatVarGroup nodes and hierarchical edges from MCF schemas."""
@@ -30,6 +30,7 @@ class StatVarGroupGenerator:
         self.executor = executor
         self.max_iterations = max_iterations
         self.namespace = namespace if namespace is not None else ('dc/' if is_base_dc else 'c/')
+        self.is_base_dc = is_base_dc
         self.generated_provenance = (
           generated_provenance
           if generated_provenance is not None
@@ -47,17 +48,26 @@ class StatVarGroupGenerator:
         logging.info(f"Running global aggregations for imports: {import_names}")
 
         jobs = [
-            self.run_stat_var_group(),
+            self.run_stat_var_group(import_names),
         ]
         return [job for job in jobs if job]
 
-    def run_stat_var_group(self) -> List[Optional[bigquery.job.QueryJob]]:
+    def run_stat_var_group(self, import_names: List[str]) -> Optional[bigquery.job.QueryJob]:
         """Compiles and executes the StatVarGroup generation script."""
+        if not import_names:
+            logging.info("No imports specified. Skipping StatVarGroup generation.")
+            return None
+
         logging.info("Starting StatVarGroup generation script...")
 
         dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
         conn_id = _escape_sql_literal(self.executor.connection_id)
         no_cache_config = bigquery.QueryJobConfig(use_query_cache=False)
+
+        # Handle import filtering
+        safe_imports = [_escape_sql_literal(name) for name in import_names]
+        imports_str = ", ".join([f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_imports])
+        provenance_filter = f"AND provenance IN ({imports_str})"
 
         # =====================================================================
         # OPTIMIZATION: Two-Stage Fetch for StatVar Triples
@@ -133,7 +143,7 @@ class StatVarGroupGenerator:
         -- Fetch all StatVarGroupSpec nodes.
         CREATE OR REPLACE TEMP TABLE StatVarGroupSpec AS (
           SELECT DISTINCT subject_id
-          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatVarGroupSpec'")
+          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatVarGroupSpec' {provenance_filter}")
         );
 
         -- Fetch StatVarGroupSpec edges for relevant properties.
@@ -150,7 +160,7 @@ class StatVarGroupGenerator:
               'constraintProperties', 
               'vertical', 
               'dependentPropertyValue'
-            )''') E
+            ) {provenance_filter}''') E
           JOIN StatVarGroupSpec S ON E.subject_id = S.subject_id
         );
 
@@ -222,7 +232,7 @@ class StatVarGroupGenerator:
         -- Fetch curated memberOf edges to identify which SVs to skip during generation.
         CREATE OR REPLACE TEMP TABLE CuratedMemberOf AS (
           SELECT subject_id AS statvar, object_id AS parent_svg
-          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, object_id, provenance FROM Edge WHERE predicate = 'memberOf'")
+          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, object_id, provenance FROM Edge WHERE predicate = 'memberOf' {provenance_filter}")
           WHERE provenance != generated_provenance
         );
         
@@ -248,7 +258,7 @@ class StatVarGroupGenerator:
         -- Fetch all StatisticalVariable nodes.
         CREATE OR REPLACE TEMP TABLE StatVar AS (
           SELECT subject_id
-          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatisticalVariable'")
+          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatisticalVariable' {provenance_filter}")
         );
 
         -- Fetch relevant StatisticalVariable triples.
@@ -258,7 +268,7 @@ class StatVarGroupGenerator:
         CREATE OR REPLACE TEMP TABLE StatVarTriple AS (
           SELECT DISTINCT E.subject_id, E.predicate, E.object_id
           FROM EXTERNAL_QUERY("{conn_id}",
-            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}]) AND object_id NOT LIKE '[%'"
+            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}]) AND object_id NOT LIKE '[%' {provenance_filter}"
           ) E
           JOIN StatVar SV ON SV.subject_id = E.subject_id
         );
