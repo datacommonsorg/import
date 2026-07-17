@@ -19,6 +19,7 @@ from stats import constants
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
+from stats.data import FileValidationError
 from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.importer import Importer
@@ -80,7 +81,7 @@ class EntitiesImporter(Importer):
       self.reporter.report_failure(str(e))
       raise e
 
-  def validate_headers(self) -> list[dict]:
+  def validate_headers(self) -> list[FileValidationError]:
     errors = []
     if not self.has_column_mappings:
       return []
@@ -90,15 +91,12 @@ class EntitiesImporter(Importer):
         header_df = pd.read_csv(stream, nrows=0)
       actual_columns = set(header_df.columns)
     except Exception as e:
-      return [{
-          "file":
-              self.input_file.path,
-          "errorType":
-              ValidationErrorType.GENERIC_ERROR,
-          "problemColumns": [],
-          "errorMessage":
-              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
-      }]
+      return [
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.GENERIC_ERROR,
+              error_message=f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}")
+      ]
 
     mapped_columns = set(self.reverse_mappings.keys())
     ignored_columns = set(self.ignore_columns)
@@ -106,16 +104,13 @@ class EntitiesImporter(Importer):
     all_allowed_columns = mapped_columns | ignored_columns | id_col
     unmapped_columns = actual_columns - all_allowed_columns
     if unmapped_columns:
-      errors.append({
-          "file":
-              self.input_file.path,
-          "errorType":
-              ValidationErrorType.UNMAPPED_COLUMNS,
-          "problemColumns":
-              sorted(list(unmapped_columns)),
-          "errorMessage":
-              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
-      })
+      errors.append(
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.UNMAPPED_COLUMNS,
+              problem_columns=sorted(list(unmapped_columns)),
+              error_message=f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+          ))
 
     return errors
 
