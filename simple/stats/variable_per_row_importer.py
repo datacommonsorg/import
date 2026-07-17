@@ -19,11 +19,11 @@ import numpy as np
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
+from stats.data import FileValidationError
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
 from stats.data import strip_namespace
 from stats.data import strip_namespace_series
-from stats.data import FileValidationError
 from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.importer import Importer
@@ -195,7 +195,9 @@ class VariablePerRowImporter(Importer):
           FileValidationError(
               file=self.input_file.path,
               error_type=ValidationErrorType.GENERIC_ERROR,
-              error_message=f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}")
+              error_message=
+              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
+          )
       ]
 
     expected_column_names = set(column_mappings.values())
@@ -206,7 +208,8 @@ class VariablePerRowImporter(Importer):
               file=self.input_file.path,
               error_type=ValidationErrorType.MISSING_REQUIRED_COLUMNS,
               problem_columns=sorted(list(difference)),
-              error_message=f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
+              error_message=
+              f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
           ))
 
     ignored_column_names = set(self.config.ignore_columns(self.input_file))
@@ -218,7 +221,8 @@ class VariablePerRowImporter(Importer):
               file=self.input_file.path,
               error_type=ValidationErrorType.UNMAPPED_COLUMNS,
               problem_columns=sorted(list(unmapped_columns)),
-              error_message=f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+              error_message=
+              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
           ))
 
     return errors
@@ -255,8 +259,9 @@ class VariablePerRowImporter(Importer):
 
     return column_mappings, custom_dimensions
 
-  def _validate_mappings(self, column_mappings: dict[str, str],
-                         custom_dimensions: list[str]) -> list[FileValidationError]:
+  def _validate_mappings(
+      self, column_mappings: dict[str, str],
+      custom_dimensions: list[str]) -> list[FileValidationError]:
     errors = []
     for req_col in [
         constants.COLUMN_VARIABLE, constants.COLUMN_DATE, constants.COLUMN_VALUE
@@ -270,8 +275,8 @@ class VariablePerRowImporter(Importer):
                 file=self.input_file.path,
                 error_type=ValidationErrorType.MISSING_REQUIRED_COLUMNS,
                 problem_columns=[official_key],
-                error_message=f"Missing required column mapping for: '{official_key}'"
-            ))
+                error_message=
+                f"Missing required column mapping for: '{official_key}'"))
 
     entity_dims_count = len(custom_dimensions)
 
@@ -280,14 +285,16 @@ class VariablePerRowImporter(Importer):
           FileValidationError(
               file=self.input_file.path,
               error_type=ValidationErrorType.INVALID_CONFIGURATION,
-              error_message="Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
+              error_message=
+              "Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
           ))
     if entity_dims_count > 3:
       errors.append(
           FileValidationError(
               file=self.input_file.path,
               error_type=ValidationErrorType.INVALID_CONFIGURATION,
-              error_message=f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
+              error_message=
+              f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
           ))
     return errors
 

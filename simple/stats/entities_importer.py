@@ -16,10 +16,10 @@ import logging
 
 import pandas as pd
 from stats import constants
+from stats.data import FileValidationError
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
-from stats.data import FileValidationError
 from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.importer import Importer
@@ -95,7 +95,9 @@ class EntitiesImporter(Importer):
           FileValidationError(
               file=self.input_file.path,
               error_type=ValidationErrorType.GENERIC_ERROR,
-              error_message=f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}")
+              error_message=
+              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
+          )
       ]
 
     mapped_columns = set(self.reverse_mappings.keys())
@@ -109,7 +111,8 @@ class EntitiesImporter(Importer):
               file=self.input_file.path,
               error_type=ValidationErrorType.UNMAPPED_COLUMNS,
               problem_columns=sorted(list(unmapped_columns)),
-              error_message=f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+              error_message=
+              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
           ))
 
     return errors

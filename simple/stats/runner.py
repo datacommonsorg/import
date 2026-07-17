@@ -250,17 +250,16 @@ class Runner:
           self._failure_errors = [
               FileValidationError(
                   file=e.file_path,
-                  error_type=ValidationErrorType.ENTITY_RESOLUTION,
+                  error_type=ValidationErrorType.UNRESOLVED_ENTITY,
                   problem_columns=["entity"],
                   error_message=str(e))
           ]
         else:
           file_path = getattr(e, "file_path", "")
           self._failure_errors = [
-              FileValidationError(
-                  file=file_path,
-                  error_type=ValidationErrorType.GENERIC_ERROR,
-                  error_message=str(e))
+              FileValidationError(file=file_path,
+                                  error_type=ValidationErrorType.GENERIC_ERROR,
+                                  error_message=str(e))
           ]
 
       for store in self.all_stores:
