@@ -33,6 +33,7 @@ dependencies = [
     "google-cloud-bigquery",
     "redis",
     "jinja2",
+    "requests",
     "pandas~=3.0.3",
     "pyyaml",
     "gcsfs",
