@@ -42,7 +42,8 @@
           "stat_var_series_aggregation": { "type": "object" },
           "stat_var_calculation": { "type": "object" },
           "embedding_generation": { "type": "object" },
-          "disabled": { "type": "boolean" }
+          "disabled": { "type": "boolean" },
+          "should_prune_single_child_svgs": { "type": "boolean" }
         },
         "allOf": [
           {
@@ -53,6 +54,18 @@
             },
             "then": {
               "required": ["input_imports"]
+            }
+          },
+          {
+            "if": {
+              "not": {
+                "properties": { "type": { "const": "STAT_VAR_GROUPS" } }
+              }
+            },
+            "then": {
+              "properties": {
+                "should_prune_single_child_svgs": { "type": "boolean", "enum": [false] }
+              }
             }
           },
           {
