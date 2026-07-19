@@ -212,7 +212,8 @@ class PlaceAggregationGenerator:
           FROM EXTERNAL_QUERY("{connection_id}",
             '''SELECT entity1, variable_measured, facet_id, extra_entities_id, entities, facet
                FROM TimeSeries
-               WHERE provenance IN ({provenance_str})''') ts
+               WHERE provenance IN ({provenance_str})
+                 AND COALESCE(JSON_VALUE(facet, '$.measurementMethod'), '') != 'CensusACS5yrSurveySubjectTable' ''') ts
           JOIN (
             -- Source Type Check (Edge where predicate = 'typeOf' and object_id = source_type)
             SELECT subject_id
@@ -280,7 +281,8 @@ class PlaceAggregationGenerator:
                  AND o.entity1 = ts.entity1
                  AND o.extra_entities_id = ts.extra_entities_id
                  AND o.facet_id = ts.facet_id
-               WHERE ts.provenance IN ({provenance_str})''') AS obs
+               WHERE ts.provenance IN ({provenance_str})
+                 AND COALESCE(JSON_VALUE(ts.facet, '$.measurementMethod'), '') != 'CensusACS5yrSurveySubjectTable' ''') AS obs
           JOIN (
             -- Source Type Check
             SELECT subject_id
