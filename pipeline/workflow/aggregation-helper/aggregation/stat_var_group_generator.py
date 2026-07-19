@@ -264,9 +264,6 @@ class StatVarGroupGenerator:
         );
 
         -- Generate vertical spec.
-        -- Specs with 2+ constraintProperties are unnested into individual 1-cprop rows
-        -- so each cprop maps to its vertical separately. This is needed for DPV specs
-        -- where multiple cprops remain after DPV stripping.
         CREATE OR REPLACE TEMPORARY TABLE VerticalSpec AS (
           WITH PivotSpec AS (
             SELECT * FROM SpecValues

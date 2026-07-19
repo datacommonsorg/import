@@ -236,6 +236,7 @@ class StatVarGroupGenerator:
           WHERE ARRAY_LENGTH(IFNULL(dependentPropertyValue, [])) > 0
         );
 
+
         -- Fetch all specializationOf edges.
         -- NOTE: specializationOf edges will be generated in this script. We only need the edges for the verticals here.
         CREATE OR REPLACE TEMP TABLE VerticalHierarchy AS (
@@ -293,8 +294,6 @@ class StatVarGroupGenerator:
             populationType,
             statVarProperties,
             constraintProperties,
-
-
             vertical,
             ARRAY(
               SELECT DISTINCT val
@@ -303,8 +302,6 @@ class StatVarGroupGenerator:
             ) AS linkedVertical
           FROM AllSpecs
           LEFT JOIN VerticalAncestors A ON A.subject_id IN UNNEST(AllSpecs.vertical)
-
-
           ORDER BY subject_id
         );
 
@@ -359,16 +356,9 @@ class StatVarGroupGenerator:
             SELECT DISTINCT subject_id, object_id AS populationType
             FROM StatVarTriple
             WHERE predicate = 'populationType'
-
-
-
-
-
-
           ),
           SVStatVarProps AS (
             SELECT subject_id,
-
               CONCAT(predicate, '=', object_id) AS statVarProperties
             FROM StatVarTriple
             WHERE predicate = 'measuredProperty' AND object_id IS NOT NULL
