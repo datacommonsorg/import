@@ -341,12 +341,12 @@ class JsonLdStreamDb(Db):
         self.obs_collision_count += 1
         if len(self.obs_sample_collisions) < 10:
           sample_info = (
-              f"entity='{entity}', variable='{variable}', date='{date}', provenance='{provenance}'"
+              f"@id='dcid:obs_{obs_hash}' [entity='{entity}', variable='{variable}', date='{date}', provenance='{provenance}']"
           )
           self.obs_sample_collisions.append(sample_info)
           logging.warning(
-              "Observation @id collision detected! Duplicate metadata key produces identical @id 'dcid:obs_%s'. Sample metadata: %s",
-              obs_hash, sample_info
+              "Observation @id collision detected! Duplicate metadata key produces identical %s",
+              sample_info
           )
         elif self.obs_collision_count % 1000 == 0:
           logging.warning(
@@ -462,10 +462,12 @@ class JsonLdStreamDb(Db):
       self._upload_shards(self.temp_local_dir)
 
     if self.obs_collision_count > 0:
+      sample_str = "\n  - ".join(self.obs_sample_collisions)
       logging.warning(
-          "Observation @ID Collision Summary: Total of %d observation @id collisions detected during export. "
-          "Rows sharing identical metadata keys produce colliding @ids and overwrite each other in graph storage.",
-          self.obs_collision_count
+          "Observation @ID Collision Summary: Total of %d observation @id collisions detected during export.\n"
+          "Sample colliding @IDs and metadata:\n  - %s",
+          self.obs_collision_count,
+          sample_str
       )
 
     # Clean up local temporary directory
