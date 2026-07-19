@@ -145,7 +145,11 @@ class PlaceAggregationGenerator:
             IF(
               JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
               'DataCommonsAggregate',
-              CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+              IF(
+                STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
+                JSON_VALUE(facet, '$.measurementMethod'),
+                CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+              )
             )
         """
         

@@ -694,7 +694,7 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(res_ts_usa), 1)
             facet_id_agg_usa = res_ts_usa[0][0]
             facet_json_usa = res_ts_usa[0][1]
-            self.assertEqual(facet_json_usa['measurementMethod'], 'dcAggregate/dcAggregate/CensusACS5yrSurvey') # Double aggregated!
+            self.assertEqual(facet_json_usa['measurementMethod'], 'dcAggregate/CensusACS5yrSurvey')
             
             expected_prov_usa = f"dc/base/{import_name}_AggState_AggCountry" if self.is_base_dc else f"{import_name}_AggState_AggCountry"
             self.assertEqual(facet_json_usa['provenance'], expected_prov_usa)
