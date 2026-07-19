@@ -201,12 +201,12 @@ class PlaceAggregationGenerator:
           SELECT
             ts.variable_measured,
             parent.parent_id,
-            '' AS extra_entities_id,
+            ts.extra_entities_id,
             -- Stringify JSON columns because BigQuery does not support SELECT DISTINCT on JSON
-            TO_JSON_STRING(JSON_OBJECT('entity1', parent.parent_id)) as entities_str,
+            TO_JSON_STRING(JSON_SET(ts.entities, '$.entity1', parent.parent_id)) as entities_str,
             TO_JSON_STRING({facet_expr}) as facet_str
           FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
+            '''SELECT entity1, variable_measured, facet_id, extra_entities_id, entities, facet
                FROM TimeSeries
                WHERE provenance IN ({provenance_str})''') ts
           JOIN (
@@ -262,46 +262,31 @@ class PlaceAggregationGenerator:
             spanner_options = '{{"table": "Observation"}}' ) AS
         WITH MappedObservations AS (
           SELECT
-            ts.variable_measured,
+            obs.variable_measured,
             parent.parent_id AS entity1,
-            ts.extra_entities_id,
+            obs.extra_entities_id,
             obs.date,
             SAFE_CAST(obs.value AS FLOAT64) as val_num,
             -- Calculate the new facet JSON first to preserve all fields
             {facet_expr} AS new_facet
-          FROM (
-            -- Source TimeSeries (filtered by provenance)
-            SELECT 
-                entity1, 
-                variable_measured, 
-                facet_id, 
-                extra_entities_id,
-                facet
-            FROM EXTERNAL_QUERY("{connection_id}",
-              '''SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
-                 FROM TimeSeries
-                 WHERE provenance IN ({provenance_str})''')
-          ) ts
+          FROM EXTERNAL_QUERY("{connection_id}",
+            '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value, ts.facet
+               FROM Observation o
+               JOIN TimeSeries ts ON o.variable_measured = ts.variable_measured
+                 AND o.entity1 = ts.entity1
+                 AND o.extra_entities_id = ts.extra_entities_id
+                 AND o.facet_id = ts.facet_id
+               WHERE ts.provenance IN ({provenance_str})''') AS obs
           JOIN (
             -- Source Type Check
             SELECT subject_id
             FROM EXTERNAL_QUERY("{connection_id}",
               '''SELECT subject_id FROM Edge WHERE predicate = "typeOf" AND object_id = "{source_type}"''')
-          ) src_type ON ts.entity1 = src_type.subject_id
-          JOIN (
-            -- Source Observations
-            SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value
-            FROM EXTERNAL_QUERY("{connection_id}",
-              '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''')
-          ) obs ON 
-              ts.variable_measured = obs.variable_measured AND 
-              ts.entity1 = obs.entity1 AND 
-              ts.extra_entities_id = obs.extra_entities_id AND 
-              ts.facet_id = obs.facet_id
+          ) src_type ON obs.entity1 = src_type.subject_id
           JOIN (
             -- Containment (child -> parent)
             {containment_sql}
-          ) parent ON ts.entity1 = parent.child_id
+          ) parent ON obs.entity1 = parent.child_id
           JOIN (
             -- Destination Type Check
             SELECT subject_id
