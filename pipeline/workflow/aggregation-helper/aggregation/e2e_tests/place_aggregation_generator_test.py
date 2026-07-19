@@ -711,6 +711,77 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(res_usa), 1)
             self.assertAlmostEqual(float(res_usa[0][0]), 2400000.0)
 
+    def test_aggregate_places_single_parent_multi_type_containment(self):
+        """Pattern: allow_multiple_to_places = False when child is contained in multiple parent types.
+
+        A County is contained in both a Country ('country/USA') and a State ('geoId/06').
+        Alphabetically: 'country/USA' < 'geoId/06'.
+        When running County -> State place aggregation with allow_multiple_to_places = False,
+        the aggregator must filter candidate parents to type State FIRST before selecting
+        the minimum parent, rather than computing MIN() across all containedInPlace edges.
+        """
+        import_name = 'USFed_ConstantMaturityRates_Test'
+
+        self.add_place('geoId/06075', 'County', parent_id='geoId/06')
+        self.add_place('geoId/06001', 'County', parent_id='geoId/06')
+        self.add_place('geoId/06', 'State')
+        self.add_place('country/USA', 'Country')
+        self.add_place('State', 'Class')
+        self.add_place('County', 'Class')
+        self.add_place('Country', 'Class')
+
+        # Also add containment to country/USA which sorts lexicographically BEFORE geoId/06
+        self.add_containment('geoId/06075', 'country/USA')
+        self.add_containment('geoId/06001', 'country/USA')
+
+        # Add observations for Counties
+        self.add_observation('Count_Person', 'geoId/06075', '2020', 800000.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('Count_Person', 'geoId/06001', '2020', 1600000.0, method='CensusACS5yrSurvey', import_name=import_name)
+
+        self.flush_to_spanner()
+
+        calculations = [
+            {
+                "name": "County to State Multi-Type Containment Test",
+                "type": "PLACE_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": f"{import_name}_AggState",
+                "place_aggregation": {
+                    "from_place_types": "County",
+                    "to_place_types": "State",
+                    "allow_multiple_to_places": False
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify State (geoId/06) TimeSeries and Observation exist and have 2.4M
+            query_ts = """
+                SELECT facet_id, facet 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'
+            """
+            res_ts = list(snapshot.execute_sql(query_ts))
+            self.assertEqual(len(res_ts), 1)
+            facet_id_agg = res_ts[0][0]
+
+            query_obs = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg}'
+            """
+            res_obs = list(snapshot.execute_sql(query_obs))
+            self.assertEqual(len(res_obs), 1)
+            self.assertAlmostEqual(float(res_obs[0][0]), 2400000.0)
+
 
 class PlaceAggregationGeneratorCustomDcTest(PlaceAggregationGeneratorIntegrationTest):
     is_base_dc = False
+

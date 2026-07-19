@@ -79,22 +79,10 @@ class PlaceAggregationGenerator:
             f"Running dynamic place aggregation: {source_type} -> {destination_type} (allow_multiple={allow_multiple_to_places}) for imports: {import_names}"
         )
 
-        # If allow_multiple_to_places is False, use MIN() to select only one parent per child.
+        # If allow_multiple_to_places is False, filter candidate parents by destination_type in BigQuery first, then use MIN().
         if allow_multiple_to_places:
             containment_sql = f"""
-            SELECT subject_id AS child_id, object_id AS parent_id
-            FROM EXTERNAL_QUERY(
-              "{connection_id}",
-              '''
-              SELECT subject_id, object_id
-              FROM Edge
-              WHERE predicate = "containedInPlace"
-              '''
-            )
-            """
-        else:
-            containment_sql = f"""
-            SELECT child_id, MIN(parent_id) AS parent_id
+            SELECT c.child_id, c.parent_id
             FROM (
               SELECT subject_id AS child_id, object_id AS parent_id
               FROM EXTERNAL_QUERY(
@@ -105,6 +93,46 @@ class PlaceAggregationGenerator:
                 WHERE predicate = "containedInPlace"
                 '''
               )
+            ) c
+            JOIN (
+              SELECT subject_id AS parent_id
+              FROM EXTERNAL_QUERY(
+                "{connection_id}",
+                '''
+                SELECT subject_id
+                FROM Edge
+                WHERE predicate = "typeOf" AND object_id = "{destination_type}"
+                '''
+              )
+            ) d ON c.parent_id = d.parent_id
+            """
+        else:
+            containment_sql = f"""
+            SELECT child_id, MIN(parent_id) AS parent_id
+            FROM (
+              SELECT c.child_id, c.parent_id
+              FROM (
+                SELECT subject_id AS child_id, object_id AS parent_id
+                FROM EXTERNAL_QUERY(
+                  "{connection_id}",
+                  '''
+                  SELECT subject_id, object_id
+                  FROM Edge
+                  WHERE predicate = "containedInPlace"
+                  '''
+                )
+              ) c
+              JOIN (
+                SELECT subject_id AS parent_id
+                FROM EXTERNAL_QUERY(
+                  "{connection_id}",
+                  '''
+                  SELECT subject_id
+                  FROM Edge
+                  WHERE predicate = "typeOf" AND object_id = "{destination_type}"
+                  '''
+                )
+              ) d ON c.parent_id = d.parent_id
             )
             GROUP BY child_id
             """
