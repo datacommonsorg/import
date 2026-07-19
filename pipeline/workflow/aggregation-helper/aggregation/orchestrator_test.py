@@ -185,6 +185,7 @@ class TestOrchestratorExecution(unittest.TestCase):
             import_names=["USFed_Census"],
             source_type="County",
             destination_type="State",
+            output_import_name="USFed_Census_AggState",
             allow_multiple_to_places=False
         )
 
@@ -309,7 +310,7 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
         mock_job2 = MagicMock()
         mock_job2.job_id = "job-place-2"
         
-        def aggregate_places_side_effect(import_names, source_type, destination_type, allow_multiple_to_places=False):
+        def aggregate_places_side_effect(import_names, source_type, destination_type, output_import_name=None, allow_multiple_to_places=False):
             if import_names == ["USFed_Census"]:
                 return mock_job1
             elif import_names == ["USFed_Census_AggState"]:

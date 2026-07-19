@@ -274,7 +274,8 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         job = generator.aggregate_places(
             import_names=[],
             source_type="County",
-            destination_type="State"
+            destination_type="State",
+            output_import_name="import1_AggState"
         )
         self.assertIsNone(job)
         self.mock_executor.execute.assert_not_called()
@@ -289,7 +290,8 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         job = generator.aggregate_places(
             import_names=["import1"],
             source_type="County",
-            destination_type="State"
+            destination_type="State",
+            output_import_name="import1_AggState"
         )
         
         # Should return the job returned by the executor

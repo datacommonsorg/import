@@ -22,6 +22,39 @@ from .bq_executor import BigQueryExecutor
 from .common import _escape_sql_literal, get_provenance_name
 
 
+def get_is_measured_prop_aggregatable_sql() -> str:
+    """Returns the SQL definition for IS_MEASURED_PROP_AGGREGATABLE."""
+    return r'''
+CREATE TEMP FUNCTION IS_MEASURED_PROP_AGGREGATABLE(prop STRING) AS (
+  prop IN ('amount', 'area', 'coverageArea', 'generation', 'reserves', 'retailDrugDistribution')
+  OR ENDS_WITH(prop, 'Count')
+  OR prop = 'count'
+);
+'''
+
+
+def get_aggr_strategy_sql() -> str:
+    """Returns the SQL definition for GET_AGGR_STRATEGY."""
+    return r'''
+CREATE TEMP FUNCTION GET_AGGR_STRATEGY(stat_type STRING, prop STRING) AS (
+  IF(IS_MEASURED_PROP_AGGREGATABLE(prop),
+    CASE 
+      WHEN stat_type = 'measuredValue' THEN 'SUM'
+      WHEN stat_type = 'minValue' THEN 'MIN'
+      WHEN stat_type = 'maxValue' THEN 'MAX'
+      ELSE 'NONE'
+    END,
+    IF(
+      (stat_type = 'meanValue' AND prop = 'concentration') OR
+      (stat_type = 'measuredValue' AND prop IN ('lifetimeContractionProbability', 'heavyPrecipitationIndex', 'consecutiveDryDays')),
+      'MEAN',
+      'NONE'
+    )
+  )
+);
+'''
+
+
 class PlaceAggregationGenerator:
     """Generates and runs place-based aggregations using BigQuery Federation.
 
@@ -43,12 +76,13 @@ class PlaceAggregationGenerator:
             import_names: List[str],
             source_type: str,
             destination_type: str,
+            output_import_name: str,
             allow_multiple_to_places: bool = False) -> Optional[bigquery.job.QueryJob]:
         """Generates and runs place-based aggregations using BigQuery Federation.
 
         This is a multi-statement SQL script that:
         1. Calculates the new aggregated TimeSeries metadata (with dcAggregate/
-           measurementMethod and _Agg<Type> provenance) and exports it to Spanner first.
+           measurementMethod and output_import_name provenance) and exports it to Spanner first.
         2. Aggregates all variables, facets, and dates in parallel, calculates
            the facet_id via Farm Fingerprint, and exports the Observations.
 
@@ -56,6 +90,7 @@ class PlaceAggregationGenerator:
             import_names: List of import names to filter by.
             source_type: The source place type (e.g., 'County').
             destination_type: The destination place type (e.g., 'State').
+            output_import_name: The mandatory output import name from orchestration config.
             allow_multiple_to_places: If False, each child place is aggregated into
               at most one parent place (lexicographically first) to prevent double-counting.
               If True, a child place can roll up to multiple parents (useful for grids/ZIPs).
@@ -70,6 +105,10 @@ class PlaceAggregationGenerator:
         # Filter TimeSeries by provenance (mapping to import names)
         provenance_names = [get_provenance_name(name, self.is_base_dc) for name in safe_names]
         provenance_str = ", ".join([f"'{name}'" for name in provenance_names])
+
+        # Output provenance is derived directly from mandatory output_import_name
+        safe_output_prov = _escape_sql_literal(get_provenance_name(output_import_name, self.is_base_dc))
+        new_prov_sql = f"'{safe_output_prov}'"
 
         # Escape types just in case
         source_type = _escape_sql_literal(source_type)
@@ -138,8 +177,9 @@ class PlaceAggregationGenerator:
             """
 
         # SQL helper fragments for dynamic lineage and hashing
-        # Target provenance and method expressions working directly on the JSON 'facet' column
-        new_prov_sql = f"CONCAT(JSON_VALUE(facet, '$.provenance'), '_Agg', '{destination_type}')"
+        # Target provenance derived directly from mandatory output_import_name
+        safe_output_prov = _escape_sql_literal(get_provenance_name(output_import_name, self.is_base_dc))
+        new_prov_sql = f"'{safe_output_prov}'"
         
         new_method_sql = f"""
             IF(
@@ -191,9 +231,51 @@ class PlaceAggregationGenerator:
         """
 
         # Multi-Statement SQL Script:
-        # 1. Calculates and exports the new TimeSeries parent rows.
-        # 2. Calculates and exports the aggregated Observation child rows.
+        # 1. Calculates the StatVar eligibility and aggregation strategy.
+        # 2. Calculates and exports the new TimeSeries parent rows.
+        # 3. Calculates and exports the aggregated Observation child rows.
         query = f"""
+        -- =========================================================================
+        -- DEFINE HELPERS
+        -- =========================================================================
+        {get_is_measured_prop_aggregatable_sql()}
+        {get_aggr_strategy_sql()}
+
+        -- Identify eligible StatVars from Spanner Edge table or fallback to default
+        CREATE OR REPLACE TEMP TABLE StatVarMetadata AS
+        SELECT 
+          subject_id AS stat_var,
+          MAX(IF(predicate = 'measuredProperty', object_id, NULL)) AS measured_property,
+          COALESCE(MAX(IF(predicate = 'statType', object_id, NULL)), 'measuredValue') AS stat_type,
+          MAX(IF(predicate = 'measurementDenominator', object_id, NULL)) AS denominator
+        FROM EXTERNAL_QUERY("{connection_id}",
+          '''SELECT subject_id, predicate, object_id FROM Edge 
+             WHERE predicate IN ("measuredProperty", "statType", "measurementDenominator")''')
+        GROUP BY subject_id;
+
+        CREATE OR REPLACE TEMP TABLE EligibleSVs AS
+        SELECT 
+          ts_vars.variable_measured AS stat_var,
+          IF(
+            sv.stat_var IS NOT NULL,
+            IF(sv.denominator IS NOT NULL, 'NONE', GET_AGGR_STRATEGY(COALESCE(sv.stat_type, 'measuredValue'), sv.measured_property)),
+            'SUM'
+          ) AS aggr_strategy
+        FROM (
+          SELECT DISTINCT variable_measured 
+          FROM (
+            SELECT variable_measured 
+            FROM EXTERNAL_QUERY("{connection_id}", 
+              '''SELECT variable_measured FROM TimeSeries WHERE provenance IN ({provenance_str})''')
+          )
+        ) ts_vars
+        LEFT JOIN StatVarMetadata sv ON ts_vars.variable_measured = sv.stat_var
+        WHERE IF(
+            sv.stat_var IS NOT NULL,
+            IF(sv.denominator IS NOT NULL, 'NONE', GET_AGGR_STRATEGY(COALESCE(sv.stat_type, 'measuredValue'), sv.measured_property)),
+            'SUM'
+          ) != 'NONE';
+
         -- =========================================================================
         -- STEP 1: Export Parent TimeSeries Metadata (The Parent Rows)
         -- =========================================================================
@@ -214,6 +296,7 @@ class PlaceAggregationGenerator:
                FROM TimeSeries
                WHERE provenance IN ({provenance_str})
                  AND COALESCE(JSON_VALUE(facet, '$.measurementMethod'), '') != 'CensusACS5yrSurveySubjectTable' ''') ts
+          JOIN EligibleSVs sv ON ts.variable_measured = sv.stat_var
           JOIN (
             -- Source Type Check (Edge where predicate = 'typeOf' and object_id = source_type)
             SELECT subject_id
@@ -313,14 +396,21 @@ class PlaceAggregationGenerator:
         ),
         AggregatedObs AS (
           SELECT
-            entity1,
-            variable_measured,
-            extra_entities_id,
-            new_facet_id AS facet_id,
-            date,
-            SUM(val_num) as total_val
-          FROM ObservationsWithFingerprint
-          GROUP BY entity1, variable_measured, extra_entities_id, new_facet_id, date
+            obs.entity1,
+            obs.variable_measured,
+            obs.extra_entities_id,
+            obs.new_facet_id AS facet_id,
+            obs.date,
+            CASE 
+              WHEN ANY_VALUE(sv.aggr_strategy) = 'SUM' THEN SUM(obs.val_num)
+              WHEN ANY_VALUE(sv.aggr_strategy) = 'MIN' THEN MIN(obs.val_num)
+              WHEN ANY_VALUE(sv.aggr_strategy) = 'MAX' THEN MAX(obs.val_num)
+              WHEN ANY_VALUE(sv.aggr_strategy) = 'MEAN' THEN AVG(obs.val_num)
+            END as total_val
+          FROM ObservationsWithFingerprint obs
+          JOIN EligibleSVs sv ON obs.variable_measured = sv.stat_var
+          GROUP BY obs.entity1, obs.variable_measured, obs.extra_entities_id, obs.new_facet_id, obs.date
+          HAVING total_val IS NOT NULL
         )
         SELECT 
             entity1, 
