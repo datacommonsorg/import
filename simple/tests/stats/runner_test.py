@@ -23,7 +23,9 @@ from unittest import mock
 from fakeredis import FakeRedis
 from freezegun import freeze_time
 from stats import constants
+from stats.data import ValidationErrorType
 from stats.db_cache import ENV_REDIS_HOST
+from stats.runner import create_store as real_create_store
 from stats.runner import RunMode
 from stats.runner import Runner
 from tests.stats.test_util import compare_csv_files
@@ -582,6 +584,97 @@ class TestRunner(unittest.TestCase):
       self.assertEqual(len(decoded_import_list), 2)
       trigger_names = sorted([t["importName"] for t in decoded_import_list])
       self.assertEqual(trigger_names, ["ilo", "oecd"])
+
+  @mock.patch.dict(
+      os.environ, {
+          "WORKFLOW_EXECUTION_ID": "test_wf_id_fail",
+          "TEMP_LOCATION": "gs://test_bucket_fail/temp"
+      })
+  def test_dcp_bridge_header_validation_failure_handshake(self):
+    self.maxDiff = None
+
+    mock_file_store = mock.MagicMock()
+    mock_store_ctx = mock.MagicMock()
+    mock_store_ctx.__enter__.return_value = mock_file_store
+
+    def side_effect(path, *args, **kwargs):
+      if "ingestion_records" in path:
+        return mock_store_ctx
+      return real_create_store(path, *args, **kwargs)
+
+    with mock.patch("stats.runner.create_store",
+                    side_effect=side_effect) as mock_create_store:
+      with tempfile.TemporaryDirectory() as temp_dir:
+        input_dir = os.path.join(temp_dir, "input_fail")
+        os.makedirs(input_dir)
+
+        csv_content = (
+            "country_code,metric_name,year,metric_value,unmapped_metadata\n"
+            "country/USA,var1,2023,123.4,some_metadata_value\n")
+        with open(os.path.join(input_dir, "input.csv"), "w") as f:
+          f.write(csv_content)
+
+        config_data = {
+            "inputFiles": [{
+                "pattern": "input.csv",
+                "importType": "observations",
+                "format": "variablePerRow",
+                "entityType": "Country",
+                "provenance": "dcid:provenance/FailTest",
+                "columnMappings": {
+                    "dcid:observationAbout": "country_code",
+                    "dcid:variableMeasured": "metric_name",
+                    "dcid:observationDate": "year",
+                    "dcid:value": "metric_value"
+                }
+            }, {
+                "pattern": "provenance.mcf"
+            }]
+        }
+        with open(os.path.join(input_dir, "config.json"), "w") as f:
+          json.dump(config_data, f)
+
+        provenance_mcf = ("Node: dcid:source/FailSource\n"
+                          "typeOf: dcs:Source\n"
+                          "url: \"https://fail.com\"\n\n"
+                          "Node: dcid:provenance/FailTest\n"
+                          "typeOf: dcs:Provenance\n"
+                          "url: \"https://fail.com/provenance\"\n"
+                          "source: dcid:source/FailSource\n")
+        with open(os.path.join(input_dir, "provenance.mcf"), "w") as f:
+          f.write(provenance_mcf)
+
+        runner = Runner(
+            config_file_path=None,
+            input_dir_path=input_dir,
+            output_dir_path=temp_dir,
+            mode=RunMode.DCP_BRIDGE,
+        )
+
+        with self.assertRaises(ValueError) as context:
+          runner.run()
+
+        self.assertIn("CSV Header Validation Failed", str(context.exception))
+
+        expected_handshake_path = "gs://test_bucket_fail/temp/datacommons/ingestion_records/test_wf_id_fail.json"
+        mock_create_store.assert_called_with(expected_handshake_path,
+                                             create_if_missing=True,
+                                             treat_as_file=True)
+
+        entered_mock = mock_store_ctx.__enter__.return_value
+        write_mock = entered_mock.as_file.return_value.write
+        write_mock.assert_called_once()
+        written_str = write_mock.call_args[0][0]
+        written_payload = json.loads(written_str)
+
+        self.assertEqual(written_payload["status"], "FAILURE")
+        self.assertEqual(len(written_payload["errors"]), 1)
+
+        err = written_payload["errors"][0]
+        self.assertEqual(err["file"], "input.csv")
+        self.assertEqual(err["errorType"], ValidationErrorType.UNMAPPED_COLUMNS)
+        self.assertEqual(err["problemColumns"], ["unmapped_metadata"])
+        self.assertIn("contains unmapped columns", err["errorMessage"])
 
 
 class TestMain(unittest.TestCase):

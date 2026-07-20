@@ -47,74 +47,83 @@ class ObservationsImporter(Importer):
     self.entity_column_name = constants.COLUMN_DCID
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
+    self._resolved_entities_cache: dict[str, str | None] = {}
+    self.all_unresolved_entities: set[str] = set()
 
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
-      self._read_csv()
-      self._drop_ignored_columns()
-      self._sanitize_values()
-      self._rename_columns()
-      self._resolve_entities()
-      self._add_entity_nodes()
-      self._write_observations()
+      self._process_chunks()
+      self.check_and_report_unresolved_entities(self.all_unresolved_entities)
       self.reporter.report_success()
     except Exception as e:
+      self._write_debug_csvs()
       self.reporter.report_failure(str(e))
       raise e
 
     self._write_debug_csvs()
 
-  def _read_csv(self) -> None:
-    # Read CSVs with the following behaviors:
-    # - Set 1st column (i.e. the entity column) to type str (so that geoIds like "01" are not treated as ints and converted to 1)
-    # - Strip leading whitespaces
-    # - Treat comma as a thousands separator
-    self.df = pd.read_csv(self.input_file.read_string_io(),
-                          dtype={0: str},
-                          skipinitialspace=True,
-                          thousands=",")
-    logging.info("Read %s rows.", self.df.index.size)
-    self.entity_column_name = self.df.columns[0]
-    logging.info("Entity column name: %s", self.entity_column_name)
-
-  def _drop_ignored_columns(self):
-    if self.ignore_columns:
-      self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
-
-  def _sanitize_values(self):
-    # Convert to best possible dtypes (i.e. keep ints as ints even when some values are NaN)
-    self.df = self.df.convert_dtypes()
-    # Set date field to type str.
-    self.df = self.df.astype({self.df.columns[1]: str})
-
-  def _rename_columns(self) -> None:
+  def _process_chunks(self) -> None:
+    first_chunk = True
     renamed = {}
-    # Rename dcid and date columns
-    renamed[self.df.columns[0]] = constants.COLUMN_DCID
-    renamed[self.df.columns[1]] = constants.COLUMN_DATE
+    debug_dfs = []
 
-    # Rename SV columns to their IDs
-    sv_column_names = self.df.columns[2:]
-    sv_ids = [
-        self.nodes.variable(sv_column_name, self.input_file).id
-        for sv_column_name in sv_column_names
-    ]
-    renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
+    with self.input_file.open_stream() as stream:
+      reader = pd.read_csv(
+          stream,
+          dtype={0: str},
+          skipinitialspace=True,
+          thousands=",",
+          na_values=constants.STANDARD_NA_VALUES,
+          chunksize=10000,
+      )
 
-    self.df = self.df.rename(columns=renamed)
+      for chunk_df in reader:
+        if chunk_df.empty:
+          continue
+
+        if self.ignore_columns:
+          chunk_df.drop(columns=self.ignore_columns,
+                        axis=1,
+                        errors="ignore",
+                        inplace=True)
+
+        chunk_df = chunk_df.convert_dtypes()
+        chunk_df = chunk_df.astype({chunk_df.columns[1]: str})
+
+        if first_chunk:
+          self.entity_column_name = chunk_df.columns[0]
+          logging.info("Entity column name: %s", self.entity_column_name)
+          renamed[chunk_df.columns[0]] = constants.COLUMN_DCID
+          renamed[chunk_df.columns[1]] = constants.COLUMN_DATE
+          sv_column_names = chunk_df.columns[2:]
+          sv_ids = [
+              self.nodes.variable(sv_column_name, self.input_file).id
+              for sv_column_name in sv_column_names
+          ]
+          renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
+          first_chunk = False
+
+        chunk_df = chunk_df.rename(columns=renamed)
+        self.df = chunk_df
+        self._resolve_entities()
+        if self.debug_resolve_df is not None:
+          debug_dfs.append(self.debug_resolve_df)
+          self.debug_resolve_df = None
+        self._add_entity_nodes()
+        self._write_observations()
+        self.df = pd.DataFrame()
+
+    if debug_dfs:
+      self.debug_resolve_df = pd.concat(debug_dfs, ignore_index=True)
 
   def _write_observations(self) -> None:
-    # Melt dataframe so shape it similar to the observations table.
-    # Convert all values to str first, otherwise it inserts ints as floats.
     observations_df = self.df.astype(str)
     observations_df = observations_df.melt(
         id_vars=[constants.COLUMN_DCID, constants.COLUMN_DATE],
         var_name=constants.COLUMN_VARIABLE,
         value_name=constants.COLUMN_VALUE,
     )
-
-    # Rename columns to standard names expected by prepare_observations_df
     observations_df = observations_df.rename(
         columns={constants.COLUMN_DCID: constants.COLUMN_ENTITY})
 
@@ -122,11 +131,8 @@ class ObservationsImporter(Importer):
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
-    # Apply all transformations in pandas (this means Observation objects are not needed)
     observations_df = prepare_observations_df(observations_df, provenance,
                                               obs_props)
-
-    # Pass DataFrame directly to database
     self.db.insert_observations(observations_df, self.input_file)
 
   def _add_entity_nodes(self) -> None:
@@ -138,7 +144,7 @@ class ObservationsImporter(Importer):
 
     # Get entity nodes that are not already recorded.
     new_entity_dcids = [
-        dcid for dcid in entity_dcids if dcid not in self.nodes.entities.keys()
+        dcid for dcid in entity_dcids if not self.nodes.has_entity(dcid)
     ]
 
     logging.info("Found %s total entities, of which %s are already imported.",
@@ -196,6 +202,7 @@ class ObservationsImporter(Importer):
 
     df[constants.COLUMN_DCID] = column
     if unresolved_list:
+      self.all_unresolved_entities.update(unresolved_list)
       logging.warning("# unresolved entities which will be dropped: %s",
                       len(unresolved_list))
       logging.warning("Dropped entities: %s", unresolved_list)
@@ -208,6 +215,23 @@ class ObservationsImporter(Importer):
     )
 
   def _resolve(self, entities: list[str]) -> dict[str, str]:
+    """Resolves entity strings to DCIDs, caching results across streaming chunks."""
+    unresolved = [e for e in entities if e not in self._resolved_entities_cache]
+
+    if unresolved:
+      new_resolved = self._do_resolve(unresolved)
+      self._resolved_entities_cache.update(new_resolved)
+      for e in unresolved:
+        if e not in new_resolved:
+          self._resolved_entities_cache[e] = None
+
+    return {
+        e: self._resolved_entities_cache[e]
+        for e in entities
+        if self._resolved_entities_cache.get(e) is not None
+    }
+
+  def _do_resolve(self, entities: list[str]) -> dict[str, str]:
     lower_case_entity_name = self.entity_column_name.lower()
 
     # Check if the entities can be resolved locally.

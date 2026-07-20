@@ -27,10 +27,12 @@ from stats import constants
 from stats import schema
 from stats import stat_var_hierarchy_generator
 from stats.config import Config
+from stats.data import FileValidationError
 from stats.data import ImportType
 from stats.data import InputFileFormat
 from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import Triple
+from stats.data import ValidationErrorType
 from stats.data import VerticalSpec
 from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
@@ -47,6 +49,7 @@ from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
+from stats.importer import EntityResolutionError
 from stats.importer import Importer
 from stats.jsonld_exporter import export_to_jsonld
 from stats.jsonld_stream_db import JsonLdStreamDb
@@ -241,11 +244,39 @@ class Runner:
     except Exception as e:
       logging.exception("Error updating stats")
       self.reporter.report_failure(error=str(e))
+
+      if not hasattr(self, "_failure_errors"):
+        if isinstance(e, EntityResolutionError):
+          self._failure_errors = [
+              FileValidationError(
+                  file=e.file_path,
+                  error_type=ValidationErrorType.UNRESOLVED_ENTITY,
+                  problem_columns=["entity"],
+                  error_message=str(e))
+          ]
+        else:
+          file_path = getattr(e, "file_path", "")
+          self._failure_errors = [
+              FileValidationError(file=file_path,
+                                  error_type=ValidationErrorType.GENERIC_ERROR,
+                                  error_message=str(e))
+          ]
+
+      for store in self.all_stores:
+        try:
+          store.close()
+        except Exception:
+          pass
+
+      self._handle_workflow_handoff()
+      logging.error(
+          "Preprocessor execution failed! Diagnostic error details were written to the GCS handshake path."
+      )
       raise
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
-    if not self.trigger_workflow_info:
+    if not self.trigger_workflow_info and not hasattr(self, "_failure_errors"):
       return
 
     workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
@@ -261,7 +292,14 @@ class Runner:
           temp_location)
       return
 
-    handshake_payload = {"importList": json.dumps(self.trigger_workflow_info)}
+    if hasattr(self, "_failure_errors"):
+      errors_dict = [
+          err.to_dict() if hasattr(err, "to_dict") else err
+          for err in self._failure_errors
+      ]
+      handshake_payload = {"status": "FAILURE", "errors": errors_dict}
+    else:
+      handshake_payload = {"importList": json.dumps(self.trigger_workflow_info)}
 
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
     logging.info(
@@ -271,7 +309,14 @@ class Runner:
                       create_if_missing=True,
                       treat_as_file=True) as store:
       store.as_file().write(json.dumps(handshake_payload, indent=2))
-    logging.info("Successfully wrote preprocessor result to GCS.")
+
+    if hasattr(self, "_failure_errors"):
+      logging.info(
+          "Successfully wrote preprocessor error report to GCS handshake path: %s. "
+          "Structured error details are available in this file for diagnostic parsing.",
+          output_json_path)
+    else:
+      logging.info("Successfully wrote preprocessor result to GCS.")
 
   def _read_config_from_file(self,
                              config_file_path: str,
@@ -733,6 +778,42 @@ class Runner:
     mcf_files.sort(key=lambda f: f.full_path())
     return csv_files, mcf_files
 
+  def _validate_all_headers(self, csv_files: list[File]) -> None:
+    """Validates all CSV headers upfront and raises ValueError if any validation fails."""
+    if not csv_files:
+      return
+
+    all_errors = []
+
+    def validate_single_file(file: File) -> list[FileValidationError]:
+      try:
+        importer = self._create_importer(file)
+        return importer.validate_headers()
+      except Exception as e:
+        return [
+            FileValidationError(
+                file=file.path,
+                error_type=ValidationErrorType.GENERIC_ERROR,
+                error_message=f"Failed to validate headers: {str(e)}")
+        ]
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(32,
+                        len(csv_files) or 1)) as executor:
+      results = executor.map(validate_single_file, csv_files)
+      for errors in results:
+        all_errors.extend(errors)
+
+    if all_errors:
+      self._failure_errors = all_errors
+      formatted_errors = [
+          f"File '{err.file}': {err.error_message}" for err in all_errors
+      ]
+      consolidated_msg = (
+          "CSV Header Validation Failed! The following errors were found:\n" +
+          "\n".join(formatted_errors))
+      raise ValueError(consolidated_msg)
+
   def _run_all_data_imports(self):
     """Orchestrates file scanning, thread-pool configuration, and file ingestion."""
     csv_files, mcf_files = self._find_and_filter_input_files()
@@ -742,33 +823,48 @@ class Runner:
     logging.info("Matched files to process: %s",
                  [f.full_path() for f in csv_files + mcf_files])
 
+    # Validate all CSV headers upfront
+    self._validate_all_headers(csv_files)
+
     self.reporter.report_started(import_files=list(csv_files + mcf_files))
 
     self._completed_files_count = 0
     self._total_files_count = len(csv_files) + len(mcf_files)
     self._counter_lock = threading.Lock()
 
-    if self.mode == RunMode.DCP_BRIDGE:
-      num_threads = min(32, self._total_files_count or 1)
-      logging.info("Starting parallel ingestion of data files with %d threads",
-                   num_threads)
-
-      with concurrent.futures.ThreadPoolExecutor(
-          max_workers=num_threads) as executor:
-        futures = []
-        for file in csv_files:
-          futures.append(executor.submit(self._run_single_import, file))
+    # 1. Process MCF files first (contains schema/provenances)
+    if mcf_files:
+      logging.info("Importing %d MCF files first...", len(mcf_files))
+      if self.mode == RunMode.DCP_BRIDGE:
+        num_mcf_threads = min(32, len(mcf_files))
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=num_mcf_threads) as executor:
+          futures = [
+              executor.submit(self._run_single_mcf_import, file)
+              for file in mcf_files
+          ]
+          for future in concurrent.futures.as_completed(futures):
+            future.result()
+      else:
         for file in mcf_files:
-          futures.append(executor.submit(self._run_single_mcf_import, file))
+          self._run_single_mcf_import(file)
 
-        # Wait for completion and raise any thread exceptions
-        for future in concurrent.futures.as_completed(futures):
-          future.result()
-    else:
-      for file in csv_files:
-        self._run_single_import(file)
-      for file in mcf_files:
-        self._run_single_mcf_import(file)
+    # 2. Process CSV files next (contains data observations/entities)
+    if csv_files:
+      logging.info("Importing %d CSV files next...", len(csv_files))
+      if self.mode == RunMode.DCP_BRIDGE:
+        num_csv_threads = min(32, len(csv_files))
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=num_csv_threads) as executor:
+          futures = [
+              executor.submit(self._run_single_import, file)
+              for file in csv_files
+          ]
+          for future in concurrent.futures.as_completed(futures):
+            future.result()
+      else:
+        for file in csv_files:
+          self._run_single_import(file)
 
   def _log_file_progress(self, file_prefix: str, file: File):
     """Increments file progress counter thread-safely and logs standard progress line."""
