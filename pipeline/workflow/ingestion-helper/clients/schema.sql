@@ -28,6 +28,7 @@ CREATE TABLE Edge (
   predicate STRING(1024) NOT NULL,
   object_id STRING(1024) NOT NULL,
   provenance STRING(1024) NOT NULL,
+  last_update_timestamp TIMESTAMP OPTIONS (allow_commit_timestamp=true),
 ) PRIMARY KEY(subject_id, predicate, object_id, provenance),
 INTERLEAVE IN Node, OPTIONS (
   columnar_policy = 'enabled'
