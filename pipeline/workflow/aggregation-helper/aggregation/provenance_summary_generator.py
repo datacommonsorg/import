@@ -62,42 +62,40 @@ class ProvenanceSummaryGenerator:
         DECLARE place_count INT64;
         DECLARE sample_dcids_str STRING;
 
-        -- Step 1: Fetch joined TimeSeries and Observation data from Spanner
-        -- We filter by provenance (which corresponds to import_name with prefix)
-        CREATE OR REPLACE TEMPORARY TABLE `temp_obs_flat` AS
-        SELECT 
-          variable_measured, 
-          entity1 as observation_about, 
-          extra_entities_id,
-          facet_id, 
-          provenance,
-          observation_period,
-          measurement_method,
-          unit,
-          JSON_VALUE(facet, '$.scalingFactor') as scaling_factor,
-          CAST(JSON_VALUE(facet, '$.isDcAggregate') AS BOOL) as is_dc_aggregate,
-          date as date_val,
-          SAFE_CAST(value AS FLOAT64) as value_num
+        -- Step 1: Aggregate observations per time series in Spanner so that only
+        -- one row per series is transferred to BigQuery.
+        CREATE OR REPLACE TEMPORARY TABLE `temp_series_summary` AS
+        SELECT *
         FROM EXTERNAL_QUERY("{connection_id}",
           '''SELECT 
-               variable_measured, 
-               entity1, 
-               extra_entities_id,
-               facet_id, 
-               provenance,
-               observation_period,
-               measurement_method,
-               unit,               
-               facet,
-               date,
-               value
-             FROM TimeSeries
-             JOIN Observation USING (variable_measured, entity1, extra_entities_id, facet_id)
-             WHERE provenance IN ({provenances_str}) ''');
+               ts.variable_measured,
+               ts.entity1 AS observation_about,
+               ts.facet_id,
+               ts.provenance,
+               ANY_VALUE(ts.observation_period) AS observation_period,
+               ANY_VALUE(ts.measurement_method) AS measurement_method,
+               ANY_VALUE(ts.unit) AS unit,
+               ANY_VALUE(JSON_VALUE(ts.facet, '$.scalingFactor')) AS scaling_factor,
+               ANY_VALUE(SAFE_CAST(JSON_VALUE(ts.facet, '$.isDcAggregate') AS BOOL)) AS is_dc_aggregate,
+               MIN(obs.date) AS min_date,
+               MAX(obs.date) AS max_date,
+               MIN(SAFE_CAST(obs.value AS FLOAT64)) AS min_value,
+               MAX(SAFE_CAST(obs.value AS FLOAT64)) AS max_value,
+               COUNT(*) AS observation_count
+             FROM TimeSeries AS ts
+             JOIN Observation AS obs
+               USING (variable_measured, entity1, extra_entities_id, facet_id)
+             WHERE ts.provenance IN ({provenances_str})
+             GROUP BY
+               ts.variable_measured,
+               ts.entity1,
+               ts.extra_entities_id,
+               ts.facet_id,
+               ts.provenance ''');
 
         -- Step 2: Extract distinct place IDs in this dataset
         CREATE OR REPLACE TEMPORARY TABLE `temp_dataset_places` AS
-        SELECT DISTINCT observation_about FROM `temp_obs_flat`;
+        SELECT DISTINCT observation_about FROM `temp_series_summary`;
 
         SET place_count = (SELECT COUNT(*) FROM `temp_dataset_places`);
 
@@ -127,10 +125,14 @@ class ProvenanceSummaryGenerator:
         -- Step 4: Join observations with filtered place_type only
         CREATE OR REPLACE TEMPORARY TABLE `temp_prepared` AS
         SELECT 
-          raw.*,
-          IF(raw.provenance LIKE 'dc/base/%', SUBSTR(raw.provenance, 9), raw.provenance) as import_name,
+          raw.variable_measured,
+          raw.observation_about,
+          raw.facet_id,
+          raw.provenance,
+          raw.min_value,
+          raw.max_value,
           edges.place_type
-        FROM `temp_obs_flat` raw
+        FROM `temp_series_summary` raw
         LEFT JOIN `temp_type_edges_filtered` edges ON raw.observation_about = edges.subject_id;
 
         -- Step 5: Extract top 3 sample place DCIDs per summary group
@@ -177,8 +179,8 @@ class ProvenanceSummaryGenerator:
             provenance,
             facet_id,
             place_type,
-            MIN(value_num) as min_val,
-            MAX(value_num) as max_val,
+            MIN(min_value) as min_val,
+            MAX(max_value) as max_val,
             COUNT(DISTINCT observation_about) as place_count
           FROM `temp_prepared`
           WHERE place_type IS NOT NULL
@@ -225,13 +227,13 @@ class ProvenanceSummaryGenerator:
             ANY_VALUE(unit) as unit,
             ANY_VALUE(scaling_factor) as scaling_factor,
             ANY_VALUE(is_dc_aggregate) as is_dc_aggregate,
-            MIN(date_val) as min_date,
-            MAX(date_val) as max_date,
-            MIN(value_num) as facet_min,
-            MAX(value_num) as facet_max,
-            COUNT(*) as facet_obs_count,
-            COUNT(DISTINCT CONCAT(observation_about, '|', extra_entities_id)) as facet_ts_count
-          FROM `temp_obs_flat`
+            MIN(min_date) as min_date,
+            MAX(max_date) as max_date,
+            MIN(min_value) as facet_min,
+            MAX(max_value) as facet_max,
+            SUM(observation_count) as facet_obs_count,
+            COUNT(*) as facet_ts_count
+          FROM `temp_series_summary`
           GROUP BY variable_measured, provenance, facet_id
         ),
         facet_summaries AS (

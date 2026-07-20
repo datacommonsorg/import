@@ -259,6 +259,12 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         self.assertIn("spanner-uri", query)
         self.assertIn("'dc/base/import1'",
                       query)  # Since is_base_dc=True
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_series_summary`",
+                      query)
+        self.assertIn("COUNT(*) AS observation_count", query)
+        self.assertIn("SUM(observation_count) as facet_obs_count", query)
+        self.assertIn("COUNT(*) as facet_ts_count", query)
+        self.assertNotIn("temp_obs_flat", query)
 
 
 class TestPlaceAggregationGenerator(unittest.TestCase):
