@@ -76,8 +76,12 @@ public class SpannerClientTest {
     Mutation mutation = spannerClient.toEdgeMutation(edge);
 
     assertEquals(mutation.getTable(), "Edge");
-    assertEquals(
-        mutation.asMap().get("last_update_timestamp").toString(), "spanner.commit_timestamp()");
+    var mutationMap = mutation.asMap();
+    assertEquals(mutationMap.get("subject_id").getString(), "dcid:subject");
+    assertEquals(mutationMap.get("predicate").getString(), "dcid:predicate");
+    assertEquals(mutationMap.get("object_id").getString(), "dcid:object");
+    assertEquals(mutationMap.get("provenance").getString(), "dcid:provenance");
+    assertEquals(mutationMap.get("last_update_timestamp").toString(), "spanner.commit_timestamp()");
   }
 
   @Test
