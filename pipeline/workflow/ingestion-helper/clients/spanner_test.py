@@ -698,6 +698,85 @@ class TestSpannerClient(unittest.TestCase):
             None, None, None, None, None, None, "ingestion-workflow:wf-789"
         ]])
 
+    @patch('google.cloud.spanner.Client')
+    def test_get_import_version_history(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_txn = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_txn, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        mock_results = MagicMock()
+        mock_results.__iter__.return_value = [["v2", "comment2"], ["v1", "comment1"]]
+        mock_txn.execute_sql.return_value = mock_results
+
+        client = SpannerClient("project", "instance", "database")
+        history = client.get_import_version_history("foo:bar:imp1", limit=5)
+        self.assertEqual(history, [("v2", "comment2"), ("v1", "comment1")])
+
+    @patch('google.cloud.spanner.Client')
+    def test_get_import_latest_version(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_txn = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_txn, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        mock_results = MagicMock()
+        mock_results.__iter__.return_value = [["gs://bucket/path/v2"]]
+        mock_txn.execute_sql.return_value = mock_results
+
+        client = SpannerClient("project", "instance", "database")
+        latest = client.get_import_latest_version("foo:bar:imp1")
+        self.assertEqual(latest, "gs://bucket/path/v2")
+
+    @patch('google.cloud.spanner.Client')
+    def test_revert_import_state(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_txn = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_txn, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+        success = client.revert_import_state(
+            import_name="imp1",
+            new_latest_version_path="gs://bucket/path/v1",
+            previous_version="v1",
+            workflow_id="wf-123",
+            comment="Reverted batch workflow"
+        )
+        self.assertTrue(success)
+        self.assertEqual(mock_txn.execute_update.call_count, 2)
+
+    @patch('google.cloud.spanner.Client')
+    def test_get_imports_for_workflow(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_results = MagicMock()
+        mock_results.__iter__.return_value = [[["imp1", "imp2"]]]
+        mock_snapshot.execute_sql.return_value = mock_results
+
+        client = SpannerClient("project", "instance", "database")
+        imports = client.get_imports_for_workflow("wf-123")
+        self.assertEqual(imports, ["imp1", "imp2"])
 
 if __name__ == '__main__':
     unittest.main()

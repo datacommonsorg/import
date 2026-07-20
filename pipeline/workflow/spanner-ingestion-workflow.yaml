@@ -16,7 +16,7 @@ main:
           - workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
           - import_list: ${default(map.get(args, "importList"), [])}
           - skip_aggregation: ${default(map.get(args, "skipAggregation"), true)}
-          - dataflow_job_id: null
+          - is_retry: ${default(map.get(args, "isRetry"), false)}
           - execution_error: null
     - acquire_ingestion_lock:
         try:
@@ -36,141 +36,159 @@ main:
             initial_delay: 300
             max_delay: 600
             multiplier: 2
-    - process_ingestion:
+    - run_process_ingestion:
         try:
-          steps:
-            - get_import_info:
-                steps:
-                  - fetch_import_info:
-                      call: http.post
-                      args:
-                        url: ${helper_url + "/imports/info"}
-                        auth:
-                          type: OIDC
-                        body:
-                          importList: ${import_list}
-                      result: import_info
-                  - update_ingestion_history_pending:
-                      call: http.post
-                      args:
-                        url: ${helper_url + "/imports/ingestion-history"}
-                        auth:
-                          type: OIDC
-                        body:
-                          workflowId: '${workflow_id}'
-                          status: 'PENDING'
-                          stage: 'dataflow'
-                          importList: '${import_info.body}'
-                      result: pending_history_response
-            - run_ingestion_job:
-                call: run_dataflow_job
-                args:
-                  import_list: '${json.encode_to_string(import_info.body)}'
-                  project_id: ${project_id}
-                  job_name: ${dataflow_job_name}
-                  template_gcs_path: ${dataflow_gcs_path}
-                  location: ${location}
-                  spanner_project_id: ${spanner_project_id}
-                  spanner_instance_id: ${spanner_instance_id}
-                  spanner_database_id: ${spanner_database_id}
-                  wait_period: ${wait_period}
-                  helper_url: ${helper_url}
-                  workflow_id: ${workflow_id}
-                result: dataflow_job_id
-            - run_aggregation_if_needed:
-                switch:
-                  - condition: ${not skip_aggregation}
-                    steps:
-                      - run_aggregation_job:
-                          call: run_aggregation_job
-                          args:
-                            import_list: ${import_info.body}
-                            project_id: ${project_id}
-                            location: ${location}
-            - update_ingestion_status:
-                steps:
-                  - update_status_success:
-                      call: http.post
-                      args:
-                        url: ${helper_url + "/imports/ingestion-status"}
-                        auth:
-                          type: OIDC
-                        body:
-                          workflowId: '${workflow_id}'
-                          jobId: '${dataflow_job_id}'
-                          importList: '${import_info.body}'
-                          status: 'SUCCESS'
-                      result: function_response
-                  - update_ingestion_history_success:
-                      call: http.post
-                      args:
-                        url: ${helper_url + "/imports/ingestion-history"}
-                        auth:
-                          type: OIDC
-                        body:
-                          workflowId: '${workflow_id}'
-                          jobId: '${dataflow_job_id}'
-                          importList: '${import_info.body}'
-                          status: 'SUCCESS'
-                          stage: 'dataflow'
-                      result: success_history_response
+          call: process_ingestion_subworkflow
+          args:
+            import_list: ${import_list}
+            workflow_id: ${workflow_id}
+            helper_url: ${helper_url}
+            project_id: ${project_id}
+            dataflow_job_name: ${dataflow_job_name}
+            dataflow_gcs_path: ${dataflow_gcs_path}
+            location: ${location}
+            spanner_project_id: ${spanner_project_id}
+            spanner_instance_id: ${spanner_instance_id}
+            spanner_database_id: ${spanner_database_id}
+            skip_aggregation: ${skip_aggregation}
+            wait_period: ${wait_period}
+          result: process_result
         except:
           as: e
           steps:
-            - record_failure:
-                steps:
-                  - update_status_retry:
-                      call: http.post
-                      args:
-                        url: ${helper_url + "/imports/ingestion-status"}
-                        auth:
-                          type: OIDC
-                        body:
-                          workflowId: '${workflow_id}'
-                          jobId: ${default(dataflow_job_id, default(map.get(e, "job_id"), "N/A"))}
-                          importList: '${import_info.body}'
-                          status: 'RETRY'
-                      result: retry_response
-                  - update_ingestion_history_retry:
-                      call: http.post
-                      args:
-                        url: ${helper_url + "/imports/ingestion-history"}
-                        auth:
-                          type: OIDC
-                        body:
-                          workflowId: '${workflow_id}'
-                          jobId: ${default(dataflow_job_id, default(map.get(e, "job_id"), "N/A"))}
-                          importList: '${import_info.body}'
-                          status: 'RETRY'
-                          stage: 'dataflow'
-                      result: retry_history_response
             - capture_error:
                 assign:
                   - execution_error: ${e}
+            - run_rollback:
+                try:
+                  call: rollback_subworkflow
+                  args:
+                    workflow_id: '${workflow_id}'
+                    helper_url: ${helper_url}
+                    import_list: ${import_list}
+                    project_id: ${project_id}
+                    dataflow_job_name: ${dataflow_job_name}
+                    dataflow_gcs_path: ${dataflow_gcs_path}
+                    location: ${location}
+                    spanner_project_id: ${spanner_project_id}
+                    spanner_instance_id: ${spanner_instance_id}
+                    spanner_database_id: ${spanner_database_id}
+                    skip_aggregation: ${skip_aggregation}
+                    wait_period: ${wait_period}
+                    is_retry: ${is_retry}
+                    job_id: ${default(map.get(e, "job_id"), "N/A")}
+                  result: rollback_result
+                except:
+                  as: rollback_err
+                  call: sys.log
+                  args:
+                    text: '${"Rollback finished with notice: " + string(rollback_err)}'
+                    severity: WARNING
     - release_ingestion_lock:
-        call: http.post
-        args:
-          url: ${helper_url + "/database/lock/release"}
-          auth:
-            type: OIDC
-          body:
-            workflowId: '${workflow_id}'
-        result: function_response
+        try:
+          call: http.post
+          args:
+            url: ${helper_url + "/database/lock/release"}
+            auth:
+              type: OIDC
+            body:
+              workflowId: '${workflow_id}'
+          result: function_response
+        retry:
+          predicate: ${http.default_retry_predicate}
+          max_retries: 5
+          backoff:
+            initial_delay: 2
+            max_delay: 60
+            multiplier: 2
     - fail_workflow:
         switch:
           - condition: ${execution_error != null}
             raise: ${execution_error}
     - return_import_info:
+        return: ${process_result}
+
+# Sub-workflow that processes dataset ingestion: fetches STAGING imports, runs Dataflow, and aggregates.
+process_ingestion_subworkflow:
+  params: [import_list, workflow_id, helper_url, project_id, dataflow_job_name, dataflow_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, skip_aggregation, wait_period]
+  steps:
+    - init:
+        assign:
+          - dataflow_job_id: null
+    - fetch_import_info:
+        call: http.post
+        args:
+          url: ${helper_url + "/imports/info"}
+          auth:
+            type: OIDC
+          body:
+            importList: ${import_list}
+        result: import_info
+    - update_pending_state:
+        call: update_ingestion_state_subworkflow
+        args:
+          helper_url: ${helper_url}
+          workflow_id: ${workflow_id}
+          status: 'PENDING'
+          stage: 'dataflow'
+          job_id: 'N/A'
+          import_list: ${import_info.body}
+    - run_ingestion_job:
+        call: run_dataflow_job
+        args:
+          import_list: '${json.encode_to_string(import_info.body)}'
+          project_id: ${project_id}
+          job_name: ${dataflow_job_name}
+          template_gcs_path: ${dataflow_gcs_path}
+          location: ${location}
+          spanner_project_id: ${spanner_project_id}
+          spanner_instance_id: ${spanner_instance_id}
+          spanner_database_id: ${spanner_database_id}
+          wait_period: ${wait_period}
+          helper_url: ${helper_url}
+          workflow_id: ${workflow_id}
+        result: dataflow_job_id
+    - run_aggregation_if_needed:
+        switch:
+          - condition: ${not skip_aggregation}
+            steps:
+              - run_aggregation_job:
+                  call: run_aggregation_job
+                  args:
+                    import_list: ${import_info.body}
+                    project_id: ${project_id}
+                    location: ${location}
+                    helper_url: ${helper_url}
+                    workflow_id: ${workflow_id}
+    - update_success_state:
+        call: update_ingestion_state_subworkflow
+        args:
+          helper_url: ${helper_url}
+          workflow_id: ${workflow_id}
+          status: 'SUCCESS'
+          stage: 'dataflow'
+          job_id: ${dataflow_job_id}
+          import_list: ${import_info.body}
+    - return_success:
         return: '${import_info.body}'
 
 # This sub-workflow runs aggregation jobs and waits for them to complete.
 run_aggregation_job:
-  params: [import_list, project_id, location]
+  params: [import_list, project_id, location, helper_url, workflow_id]
   steps:
     - check_if_empty:
         switch:
           - condition: ${import_list == null or len(import_list) == 0}
             return: 'SKIPPED'
+    - update_aggregation_state:
+        call: update_ingestion_state_subworkflow
+        args:
+          helper_url: ${helper_url}
+          workflow_id: ${workflow_id}
+          status: 'RUNNING'
+          stage: 'aggregation'
+          job_id: 'N/A'
+          import_list: ${import_list}
     - run_aggregation:
         call: googleapis.run.v2.projects.locations.jobs.run
         args:
@@ -203,41 +221,36 @@ run_dataflow_job:
         switch:
           - condition: ${import_list == "[]"}
             return: ''
-    - launch_dataflow_job:
-        steps:
-          - launch_job:
-              call: googleapis.dataflow.v1b3.projects.locations.flexTemplates.launch
-              args:
-                projectId: '${project_id}'
-                location: '${location}'
-                body:
-                  launchParameter:
-                    containerSpecGcsPath: '${template_gcs_path}'
-                    jobName: '${jobName}'
-                    parameters:
-                      importList: '${import_list}'
-                      projectId: '${spanner_project_id}'
-                      spannerInstanceId: '${spanner_instance_id}'
-                      spannerDatabaseId: '${spanner_database_id}'
-                      # Revert this once switched to the new DB.
-                      spannerObservationTableName: 'Observation_final_v3'
-                      spannerTimeSeriesTableName: 'TimeSeries_final_v3'
-                    environment:
-                      numWorkers: ${numWorkers}
-                      machineType: ${machineType}
-              result: launch_result
-          - update_ingestion_history_running:
-              call: http.post
-              args:
-                url: ${helper_url + "/imports/ingestion-history"}
-                auth:
-                  type: OIDC
-                body:
-                  workflowId: '${workflow_id}'
-                  status: 'RUNNING'
-                  stage: 'dataflow'
-                  jobId: '${launch_result.job.id}'
-              result: running_history_response
+    - launch_job:
+        call: googleapis.dataflow.v1b3.projects.locations.flexTemplates.launch
+        args:
+          projectId: '${project_id}'
+          location: '${location}'
+          body:
+            launchParameter:
+              containerSpecGcsPath: '${template_gcs_path}'
+              jobName: '${jobName}'
+              parameters:
+                importList: '${import_list}'
+                projectId: '${spanner_project_id}'
+                spannerInstanceId: '${spanner_instance_id}'
+                spannerDatabaseId: '${spanner_database_id}'
+                # Revert this once switched to the new DB.
+                spannerObservationTableName: 'Observation_final_v3'
+                spannerTimeSeriesTableName: 'TimeSeries_final_v3'
+              environment:
+                numWorkers: ${numWorkers}
+                machineType: ${machineType}
+        result: launch_result
+    - update_running_state:
+        call: update_ingestion_state_subworkflow
+        args:
+          helper_url: ${helper_url}
+          workflow_id: ${workflow_id}
+          status: 'RUNNING'
+          stage: 'dataflow'
+          job_id: ${launch_result.job.id}
+          import_list: ${import_list}
     - wait_for_job_completion:
         call: sys.sleep
         args:
@@ -264,3 +277,113 @@ run_dataflow_job:
               code: 500
               job_id: ${launch_result.job.id}
         next: wait_for_job_completion
+
+# This sub-workflow performs rollback: checks empty/retry, updates history, reverts imports, retriggers ingestion, logs success, and on any error marks imports as ROLLBACK and raises to trigger failure alert in main.
+rollback_subworkflow:
+  params: [workflow_id, helper_url, import_list, project_id, dataflow_job_name, dataflow_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, skip_aggregation, wait_period, is_retry, job_id]
+  steps:
+    - check_imports_empty:
+        switch:
+          - condition: ${import_list == null or len(import_list) == 0}
+            return: "NO_IMPORTS_TO_ROLLBACK"
+    - execute_rollback_and_retrigger:
+        try:
+          steps:
+            - check_retry:
+                switch:
+                  - condition: ${is_retry}
+                    raise: '${"Execution " + workflow_id + " is already a retry. Halting further retries."}'
+            - update_rollback_state:
+                call: update_ingestion_state_subworkflow
+                args:
+                  helper_url: ${helper_url}
+                  workflow_id: ${workflow_id}
+                  status: 'RETRY'
+                  stage: 'rollback'
+                  job_id: ${default(job_id, "N/A")}
+                  import_list: ${import_list}
+            - revert_imports:
+                call: http.post
+                args:
+                  url: ${helper_url + "/imports/revert"}
+                  auth:
+                    type: OIDC
+                  body:
+                    importList: ${import_list}
+                    workflowId: '${workflow_id}'
+                result: revert_res
+            - run_process_ingestion_subworkflow:
+                call: process_ingestion_subworkflow
+                args:
+                  import_list: ${import_list}
+                  workflow_id: ${workflow_id}
+                  helper_url: ${helper_url}
+                  project_id: ${project_id}
+                  dataflow_job_name: ${"ingestion-job-retry-" + string(int(sys.now()))}
+                  dataflow_gcs_path: ${dataflow_gcs_path}
+                  location: ${location}
+                  spanner_project_id: ${spanner_project_id}
+                  spanner_instance_id: ${spanner_instance_id}
+                  spanner_database_id: ${spanner_database_id}
+                  skip_aggregation: ${skip_aggregation}
+                  wait_period: ${wait_period}
+                result: retry_ingestion_result
+            - log_success:
+                call: sys.log
+                args:
+                  text: '${"Completed rollback and retriggered ingestion successfully for execution: " + workflow_id}'
+                  severity: INFO
+            - raise_parent_failure:
+                raise: '${"Ingestion execution " + workflow_id + " failed on initial run. Rollback and retrigger completed."}'
+        except:
+          as: err
+          steps:
+            - mark_imports_as_retry:
+                call: update_ingestion_state_subworkflow
+                args:
+                  helper_url: ${helper_url}
+                  workflow_id: ${workflow_id}
+                  status: 'RETRY'
+                  stage: 'rollback'
+                  job_id: ${default(job_id, "N/A")}
+                  import_list: ${import_list}
+            - trigger_failure_alert:
+                raise: ${err}
+
+# Sub-workflow that updates ingestion status and ingestion history in Spanner.
+update_ingestion_state_subworkflow:
+  params: [helper_url, workflow_id, status, stage, job_id, import_list]
+  steps:
+    - check_update_status:
+        switch:
+          - condition: ${status == "SUCCESS" or status == "RETRY"}
+            steps:
+              - update_status:
+                  call: http.post
+                  args:
+                    url: ${helper_url + "/imports/ingestion-status"}
+                    auth:
+                      type: OIDC
+                    body:
+                      workflowId: '${workflow_id}'
+                      status: '${status}'
+                      jobId: '${default(job_id, "N/A")}'
+                      importList: ${import_list}
+                  result: status_response
+    - check_update_history:
+        switch:
+          - condition: ${stage != null or status != null}
+            steps:
+              - update_history:
+                  call: http.post
+                  args:
+                    url: ${helper_url + "/imports/ingestion-history"}
+                    auth:
+                      type: OIDC
+                    body:
+                      workflowId: '${workflow_id}'
+                      status: '${default(status, "RUNNING")}'
+                      stage: '${default(stage, "dataflow")}'
+                      jobId: '${default(job_id, "N/A")}'
+                      importList: ${import_list}
+                  result: history_response

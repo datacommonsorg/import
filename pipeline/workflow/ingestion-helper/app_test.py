@@ -136,7 +136,9 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.json()["status"], "OK")
         mock_spanner_client.seed_database.assert_called_once()
 
-    def test_update_import_status_success(self):
+    @patch('routes.imports.import_utils.get_next_refresh')
+    def test_update_import_status_success(self, mock_get_next_refresh):
+        mock_get_next_refresh.return_value = "2026-07-01T00:00:00Z"
         mock_spanner_client = MagicMock()
         mock_storage_client = MagicMock()
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
@@ -263,6 +265,34 @@ class TestMain(unittest.TestCase):
         
         # Verify get_caller_identity was called exactly once outside of the loop
         mock_get_caller_identity.assert_called_once()
+
+    def test_revert_single_import(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_version_history.return_value = [("v2", "comment2"), ("v1", "comment1")]
+        mock_spanner_client.get_import_latest_version.return_value = "gs://bucket/path/v2"
+        mock_spanner_client.revert_import_state.return_value = True
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        payload = {
+            "importName": "foo:bar:imp1",
+            "workflowId": "wf-123",
+            "dryRun": False
+        }
+        response = client.post("/imports/revert", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertEqual(data["importName"], "foo:bar:imp1")
+        self.assertEqual(data["previousVersion"], "v1")
+        self.assertTrue(data["reverted"])
+        mock_spanner_client.get_import_version_history.assert_called_once_with("imp1")
+        mock_spanner_client.revert_import_state.assert_called_once_with(
+            import_name="imp1",
+            new_latest_version_path="gs://bucket/path/v1",
+            previous_version="v1",
+            workflow_id="wf-123",
+            comment="Reverted batch workflow (wf-123)"
+        )
 
 
     @patch('routes.imports.import_utils.get_ingestion_metrics')
