@@ -64,7 +64,7 @@ class ProvenanceSummaryGenerator:
         DECLARE sample_dcids_str STRING;
         DECLARE sample_batch_index INT64 DEFAULT 0;
         DECLARE sample_batch_count INT64;
-        DECLARE sample_dcid_batch_size INT64 DEFAULT 1000;
+        DECLARE sample_dcid_batch_size INT64 DEFAULT 100;
 
         -- Step 1: Aggregate observations per time series in Spanner so that only
         -- one row per series is transferred to BigQuery.

@@ -15,7 +15,7 @@
 -- BigQuery UI query for previewing provenance summaries for one import.
 --
 -- Before running, replace both placeholders below throughout this file:
---   datcom-store.us-central1.rk-prod-spanner
+--   projects/datcom-store/locations/us-central1/connections/rk-prod-spanner
 --   dc/base/CensusACS5YearSurvey
 --
 -- The query returns one row per (variable_measured, provenance), not one row
@@ -26,14 +26,14 @@ DECLARE place_count INT64;
 DECLARE sample_dcids_str STRING;
 DECLARE sample_batch_index INT64 DEFAULT 0;
 DECLARE sample_batch_count INT64;
-DECLARE sample_dcid_batch_size INT64 DEFAULT 1000;
+DECLARE sample_dcid_batch_size INT64 DEFAULT 100;
 
 -- Aggregate in Spanner before transferring data to BigQuery. This changes the
 -- federated result from one row per observation to one row per time series.
 CREATE OR REPLACE TEMPORARY TABLE `temp_series_summary` AS
 SELECT *
 FROM EXTERNAL_QUERY(
-  "datcom-store.us-central1.rk-prod-spanner",
+  "projects/datcom-store/locations/us-central1/connections/rk-prod-spanner",
   '''SELECT
        ts.variable_measured,
        ts.entity1 AS observation_about,
@@ -82,7 +82,7 @@ IF place_count <= 10000 THEN
     CREATE OR REPLACE TEMPORARY TABLE `temp_type_edges_filtered` AS
     SELECT subject_id, object_id AS place_type
     FROM EXTERNAL_QUERY(
-      "datcom-store.us-central1.rk-prod-spanner",
+      "projects/datcom-store/locations/us-central1/connections/rk-prod-spanner",
       "SELECT subject_id, object_id FROM Edge WHERE predicate = 'typeOf' AND subject_id IN (%s)"
     );
   ''', place_dcids_str);
@@ -90,7 +90,7 @@ ELSE
   CREATE OR REPLACE TEMPORARY TABLE `temp_type_edges_filtered` AS
   SELECT subject_id, object_id AS place_type
   FROM EXTERNAL_QUERY(
-    "datcom-store.us-central1.rk-prod-spanner",
+    "projects/datcom-store/locations/us-central1/connections/rk-prod-spanner",
     "SELECT subject_id, object_id FROM Edge WHERE predicate = 'typeOf'"
   );
 END IF;
@@ -161,7 +161,7 @@ WHILE sample_batch_index < sample_batch_count DO
     INSERT INTO `temp_node_names_filtered` (subject_id, name)
     SELECT subject_id, name
     FROM EXTERNAL_QUERY(
-      "datcom-store.us-central1.rk-prod-spanner",
+      "projects/datcom-store/locations/us-central1/connections/rk-prod-spanner",
       "SELECT subject_id, SUBSTR(name, 1, 1024) AS name FROM Node WHERE subject_id IN (%s)"
     );
   ''', sample_dcids_str);
