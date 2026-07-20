@@ -16,9 +16,11 @@ import logging
 
 import pandas as pd
 from stats import constants
+from stats.data import FileValidationError
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
+from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -44,7 +46,7 @@ class EntitiesImporter(Importer):
     self.nodes = nodes
     self.config = nodes.config
     self.ignore_columns = self.config.ignore_columns(self.input_file)
-    self.provenance = self.nodes.provenance(self.input_file).id
+    self.provenance_id = ""
 
     self.row_entity_type = self.config.row_entity_type(self.input_file)
     assert self.row_entity_type, f"Row entity type must be specified: {self.input_file.full_path()}"
@@ -55,6 +57,7 @@ class EntitiesImporter(Importer):
 
     # Initialize reverse column mappings from config
     column_mappings = self.config.column_mappings(self.input_file)
+    self.has_column_mappings = bool(column_mappings)
     self.reverse_mappings = {
         v: strip_namespace(k) for k, v in column_mappings.items()
     }
@@ -64,6 +67,10 @@ class EntitiesImporter(Importer):
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
+      errors = self.validate_headers()
+      if errors:
+        raise ValueError("\n".join(errors))
+      self.provenance_id = self.nodes.provenance(self.input_file).id
       self._read_csv()
       self._drop_ignored_columns()
       self._sanitize_values()
@@ -73,6 +80,42 @@ class EntitiesImporter(Importer):
     except Exception as e:
       self.reporter.report_failure(str(e))
       raise e
+
+  def validate_headers(self) -> list[FileValidationError]:
+    errors = []
+    if not self.has_column_mappings:
+      return []
+
+    try:
+      with self.input_file.open_stream() as stream:
+        header_df = pd.read_csv(stream, nrows=0)
+      actual_columns = set(header_df.columns)
+    except Exception as e:
+      return [
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.GENERIC_ERROR,
+              error_message=
+              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
+          )
+      ]
+
+    mapped_columns = set(self.reverse_mappings.keys())
+    ignored_columns = set(self.ignore_columns)
+    id_col = {self.id_column} if self.id_column else set()
+    all_allowed_columns = mapped_columns | ignored_columns | id_col
+    unmapped_columns = actual_columns - all_allowed_columns
+    if unmapped_columns:
+      errors.append(
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.UNMAPPED_COLUMNS,
+              problem_columns=sorted(list(unmapped_columns)),
+              error_message=
+              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+          ))
+
+    return errors
 
   def _read_csv(self) -> None:
     # Read CSVs with the following behaviors:
@@ -155,7 +198,7 @@ class EntitiesImporter(Importer):
 
       row_entity = RowEntity(dcid,
                              strip_namespace(self.row_entity_type),
-                             provenance_id=self.provenance,
+                             provenance_id=self.provenance_id,
                              prop_object_values=prop_object_values,
                              prop_object_ids=prop_object_ids)
       triples.extend(row_entity.triples())

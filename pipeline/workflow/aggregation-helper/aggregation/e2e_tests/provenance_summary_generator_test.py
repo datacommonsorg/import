@@ -442,6 +442,122 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(results[1][2], prov_2)
             self.assertEqual(results[1][1], 'Count_HousingUnit')
 
+    def test_provenance_summary_aggregation_multi_entity(self):
+        """Tests run_provenance_summary_aggregation with multi-entity observations.
+
+        Verifies that time_series_count accurately accounts for distinct
+        combinations of entity1 and extra_entities_id (2-entity and 3-entity).
+        """
+        import_name = 'MultiEntity_Integration_Test'
+
+        # 1. Setup mock data
+        self.add_node('country/USA', 'United States', types=['Country'])
+        self.add_node('country/CAN', 'Canada', types=['Country'])
+        self.add_node('country/MEX', 'Mexico', types=['Country'])
+        self.add_node('agency/USAID', 'USAID', types=['Agency'])
+        self.add_node('Country', 'Country Class', types=['Class'])
+
+        self.add_edge('country/USA', 'typeOf', 'Country', import_name)
+        self.add_edge('country/CAN', 'typeOf', 'Country', import_name)
+        self.add_edge('country/MEX', 'typeOf', 'Country', import_name)
+
+        # Observations:
+        # TimeSeries 1: USA (recipient) <- CAN (donor) (2 dates: 2020, 2021)
+        self.add_observation(
+            variable='directionalFinancialAid',
+            entity_id='country/USA',
+            extra_entities_id='country/CAN',
+            date='2020',
+            value=100.0,
+            import_name=import_name,
+            facet_id='facet1',
+        )
+        self.add_observation(
+            variable='directionalFinancialAid',
+            entity_id='country/USA',
+            extra_entities_id='country/CAN',
+            date='2021',
+            value=110.0,
+            import_name=import_name,
+            facet_id='facet1',
+        )
+        # TimeSeries 2: USA (recipient) <- MEX (donor)
+        self.add_observation(
+            variable='directionalFinancialAid',
+            entity_id='country/USA',
+            extra_entities_id='country/MEX',
+            date='2020',
+            value=200.0,
+            import_name=import_name,
+            facet_id='facet1',
+        )
+        # TimeSeries 3: 3-entity: USA <- CAN via USAID
+        self.add_observation(
+            variable='directionalFinancialAid',
+            entity_id='country/USA',
+            extra_entities_id='country/CAN^agency/USAID',
+            date='2020',
+            value=300.0,
+            import_name=import_name,
+            facet_id='facet1',
+        )
+
+        self.flush_to_spanner()
+
+        calculations = [
+            {
+                "name": "Provenance Summary Multi Entity",
+                "type": "PROVENANCE_SUMMARY",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        # Verify results in Spanner KeyValueStore table
+        with self.database.snapshot() as snapshot:
+            query = """
+                SELECT type, key, provenance, value 
+                FROM KeyValueStore 
+                WHERE type = 'ProvenanceSummary'
+            """
+            results = list(snapshot.execute_sql(query))
+
+            self.assertEqual(len(results), 1)
+            row = results[0]
+            self.assertEqual(row[0], 'ProvenanceSummary')
+            self.assertEqual(row[1], 'directionalFinancialAid')
+
+            expected_provenance = f'dc/base/{import_name}' if self.is_base_dc else import_name
+            self.assertEqual(row[2], expected_provenance)
+
+            value_json = row[3]
+            self.assertIsInstance(value_json, Mapping)
+
+            self.assertEqual(value_json['import_name'], import_name)
+            # 4 observations total across 3 distinct time series
+            self.assertEqual(value_json['observation_count'], 4.0)
+            self.assertEqual(value_json['time_series_count'], 3.0)
+
+            series_summary = value_json['series_summary']
+            self.assertEqual(len(series_summary), 1)
+            summary = series_summary[0]
+
+            self.assertEqual(summary['observation_count'], 4.0)
+            self.assertEqual(summary['time_series_count'], 3.0)
+            self.assertEqual(summary['min_value'], 100.0)
+            self.assertEqual(summary['max_value'], 300.0)
+
+            # Place type summary: only USA is entity1
+            pts = summary['place_type_summary']
+            self.assertIsNotNone(pts)
+            self.assertIn('Country', pts)
+            country_summary = pts['Country']
+            self.assertEqual(country_summary['place_count'], 1.0)
+            self.assertEqual(country_summary['min_value'], 100.0)
+            self.assertEqual(country_summary['max_value'], 300.0)
+
 
 class ProvenanceSummaryGeneratorCustomDcTest(ProvenanceSummaryGeneratorIntegrationTest):
     is_base_dc = False
