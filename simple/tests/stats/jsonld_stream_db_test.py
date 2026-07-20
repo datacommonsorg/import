@@ -384,16 +384,16 @@ class TestJsonLdStreamDb(unittest.TestCase):
 
       try:
         # Two rows with identical metadata keys (entity, variable, date, provenance) but different values
-        df = pd.DataFrame(
-            [
-                ("country/USA", "var1", "2023", "100", "p1", "", "", "", "", ""),
-                ("country/USA", "var1", "2023", "200", "p1", "", "", "", "", ""),
-            ],
-            columns=[
-                "entity", "variable", "date", "value", "provenance", "unit",
-                "scaling_factor", "measurement_method", "observation_period",
-                "properties"
-            ])
+        df = pd.DataFrame([
+            ("country/USA", "var1", "2023", "100", "p1", "", "", "", "", ""),
+            ("country/USA", "var1", "2023", "200", "p1", "", "", "", "", ""),
+        ],
+                          columns=[
+                              "entity", "variable", "date", "value",
+                              "provenance", "unit", "scaling_factor",
+                              "measurement_method", "observation_period",
+                              "properties"
+                          ])
         mock_file = mock.Mock(path="test_import/data.csv")
         db.insert_observations(df, mock_file)
 

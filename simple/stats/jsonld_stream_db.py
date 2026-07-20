@@ -78,11 +78,11 @@ def _parse_numeric(val):
 
 
 def _write_observation_shard(chunk: list[tuple],
-                              shard_index: int,
-                              jsonld_dir_path: str,
-                              ns_map: dict[str, str],
-                              prov_urls: dict[str, str],
-                              track_hash_fn: Optional[Callable] = None):
+                             shard_index: int,
+                             jsonld_dir_path: str,
+                             ns_map: dict[str, str],
+                             prov_urls: dict[str, str],
+                             track_hash_fn: Optional[Callable] = None):
   """Writes a single shard of observation JSON-LD objects to disk.
 
   Args:
@@ -104,7 +104,8 @@ def _write_observation_shard(chunk: list[tuple],
 
     # Track 64-bit integer hash to detect observation @id collisions
     if track_hash_fn:
-      track_hash_fn(obs_hash, str(entity), str(variable), str(date), str(provenance))
+      track_hash_fn(obs_hash, str(entity), str(variable), str(date),
+                    str(provenance))
 
     var_obj = _uri_ref(variable)
     prop_keys = None
@@ -346,13 +347,11 @@ class JsonLdStreamDb(Db):
           self.obs_sample_collisions.append(sample_info)
           logging.warning(
               "Observation @id collision detected! Duplicate metadata key produces identical %s",
-              sample_info
-          )
+              sample_info)
         elif self.obs_collision_count % 1000 == 0:
           logging.warning(
               "Detected %d observation @id collisions so far across processed datasets.",
-              self.obs_collision_count
-          )
+              self.obs_collision_count)
       else:
         self.obs_hash_set.add(hash_int)
 
@@ -372,13 +371,12 @@ class JsonLdStreamDb(Db):
       with self.lock:
         shard_index = self.obs_shard_index
         self.obs_shard_index += 1
-      _write_observation_shard(
-          chunk=chunk_records,
-          shard_index=shard_index,
-          jsonld_dir_path=import_temp_dir,
-          ns_map=self.ns_map,
-          prov_urls=prov_urls,
-          track_hash_fn=self.track_observation_hash)
+      _write_observation_shard(chunk=chunk_records,
+                               shard_index=shard_index,
+                               jsonld_dir_path=import_temp_dir,
+                               ns_map=self.ns_map,
+                               prov_urls=prov_urls,
+                               track_hash_fn=self.track_observation_hash)
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
@@ -466,9 +464,7 @@ class JsonLdStreamDb(Db):
       logging.warning(
           "Observation @ID Collision Summary: Total of %d observation @id collisions detected during export.\n"
           "Sample colliding @IDs and metadata:\n  - %s",
-          self.obs_collision_count,
-          sample_str
-      )
+          self.obs_collision_count, sample_str)
 
     # Clean up local temporary directory
     try:
