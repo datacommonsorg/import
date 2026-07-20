@@ -1655,6 +1655,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_node('Student', 'Student', value='Student', types=['Class'])
         self.add_node('Person', 'Person', value='Person', types=['Class'])
         self.add_node('Thing', 'Thing', value='Thing', types=['Class'])
+        self.add_node('svProp_measuredProperty_count', value='measuredProperty=count')
         
         # Spec mappings
         self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
@@ -1662,7 +1663,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')
         self.add_edge('Spec_Person', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Person', 'populationType', 'Person', 'TestImport')
-        self.add_edge('Spec_Person', 'statVarProperties', 'measuredProperty=count', 'TestImport')
+        self.add_edge('Spec_Person', 'statVarProperties', 'svProp_measuredProperty_count', 'TestImport')
         self.add_edge('Spec_Person', 'vertical', f'{ns}g/TestVertical', 'TestImport')
         self.add_edge(f'{ns}g/TestVertical', 'specializationOf', f'{ns}g/Root', 'TestImport')
         self.add_edge(f'{ns}g/TestCustomVertical', 'specializationOf', f'{ns}g/Root', 'TestCustomImport')
