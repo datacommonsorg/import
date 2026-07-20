@@ -95,7 +95,6 @@ class AggregationOrchestrator:
         run_sequential: bool = False,
         poll_interval: int = 15,
         enable_embeddings: bool = False,
-        embedding_conn_id: Optional[str] = None,
         bq_dataset_id: str = "datacommons"
     ) -> None:
         """Initializes the orchestrator and loads/validates configuration files.
@@ -120,7 +119,6 @@ class AggregationOrchestrator:
             location=location,
             run_sequential=run_sequential,
             enable_embeddings=enable_embeddings,
-            embedding_conn_id=embedding_conn_id,
             bq_dataset_id=bq_dataset_id
         )
         self.is_base_dc = is_base_dc
@@ -519,7 +517,18 @@ class AggregationOrchestrator:
     def _trigger_stat_var_groups(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers statistical variable group aggregations."""
         logging.info(f"  -> Stat Var Groups Aggregation for imports {applicable_imports}")
-        generator = StatVarGroupGenerator(self.executor, self.is_base_dc)
+        should_prune = config.get("should_prune_single_child_svgs", False)
+        if should_prune and applicable_imports:
+            logging.warning(
+                "WARNING: Pruning is enabled (should_prune_single_child_svgs=True), with imports "
+                f"({applicable_imports}) being processed. Pruning should only be used when "
+                "reprocessing the FULL graph (all imports), as pruning on a subset may produce "
+                "incorrect results due to incomplete hierarchy data."
+            )
+        generator = StatVarGroupGenerator(
+            self.executor, self.is_base_dc,
+            should_prune_single_child_svgs=should_prune
+        )
         return generator.run_all(applicable_imports)
 
     def _trigger_stat_var_series_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
