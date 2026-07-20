@@ -230,12 +230,26 @@ class StatVarGroupGenerator:
             IFNULL(statVarProperties, []) AS statVarProperties,
             IFNULL(constraintProperties, []) AS constraintProperties,
             IFNULL(vertical, []) AS vertical,
-            IFNULL(dependentPropertyValue, []) AS dependentPropertyValue
+            IFNULL(dependentPropertyValue, []) AS dependentPropertyValue,
+            (
+              SELECT ARRAY_TO_STRING(ARRAY(
+                SELECT DISTINCT x 
+                FROM UNNEST(
+                  ARRAY_CONCAT(
+                    IFNULL(constraintProperties, []),
+                    ARRAY(SELECT TRIM(SPLIT(d, '=')[SAFE_OFFSET(0)]) FROM UNNEST(dependentPropertyValue) AS d)
+                  )
+                ) AS x ORDER BY x
+              ), ',')
+            ) AS cprops_key,
+            ARRAY(
+              SELECT NormalizeDPV(d)
+              FROM UNNEST(IFNULL(dependentPropertyValue, [])) AS d
+            ) AS normalized_dpvs
           FROM PivotSpec
           -- Only specs that actually declare DPVs are DPV specs.
           WHERE ARRAY_LENGTH(IFNULL(dependentPropertyValue, [])) > 0
         );
-
 
         -- Fetch all specializationOf edges.
         -- NOTE: specializationOf edges will be generated in this script. We only need the edges for the verticals here.
@@ -391,7 +405,8 @@ class StatVarGroupGenerator:
             PT.populationType,
             IFNULL(SVP.sv_statVarProperties, []) AS sv_statVarProperties,
             IFNULL(SC.cprops, []) AS cprops,
-            IFNULL(SP.sv_pvs, []) AS sv_pvs
+            IFNULL(SP.sv_pvs, []) AS sv_pvs,
+            ARRAY_TO_STRING(IFNULL(SC.cprops, []), ',') AS cprops_key
           FROM SVPopType PT
           LEFT JOIN SVStatVarPropsAgg SVP ON SVP.subject_id = PT.subject_id
           LEFT JOIN SVCprops SC ON SC.subject_id = PT.subject_id
@@ -412,10 +427,7 @@ class StatVarGroupGenerator:
               D.spec_id,
               ARRAY_LENGTH(D.dependentPropertyValue) AS dpv_count,
               ARRAY_LENGTH(D.constraintProperties) AS cprop_count,
-              ARRAY(
-                SELECT NormalizeDPV(d)
-                FROM UNNEST(D.dependentPropertyValue) AS d
-              ) AS normalized_dpvs
+              D.normalized_dpvs
             FROM SVBaseData SV
             JOIN DPVSpec D
               ON SV.populationType = D.populationType
@@ -433,24 +445,12 @@ class StatVarGroupGenerator:
               -- EXACT set equality: SV cprops must equal (spec cprops ∪ DPV predicates).
               -- This prevents a spec with fewer cprops from matching an SV with extra cprops.
               AND ARRAY_LENGTH(SV.cprops) > 0
-              AND TO_JSON_STRING(
-                ARRAY(SELECT DISTINCT x FROM UNNEST(
-                  ARRAY_CONCAT(
-                    D.constraintProperties,
-                    ARRAY(SELECT TRIM(SPLIT(d, '=')[SAFE_OFFSET(0)])
-                          FROM UNNEST(D.dependentPropertyValue) AS d)
-                  )
-                ) AS x ORDER BY x)
-              ) = TO_JSON_STRING(
-                ARRAY(SELECT DISTINCT x FROM UNNEST(SV.cprops) AS x ORDER BY x)
-              )
+              AND SV.cprops_key = D.cprops_key
               -- All spec DPVs must match exactly (SV pvs contain the normalized DPV)
               AND ARRAY_LENGTH(SV.sv_pvs) > 0
               AND (
                 SELECT COUNTIF(nd IN UNNEST(SV.sv_pvs))
-                FROM UNNEST(
-                  ARRAY(SELECT NormalizeDPV(d) FROM UNNEST(D.dependentPropertyValue) AS d)
-                ) AS nd
+                FROM UNNEST(D.normalized_dpvs) AS nd
               ) = ARRAY_LENGTH(D.dependentPropertyValue)
           ),
           -- Pick most specific: most DPVs first, then most cprops.
