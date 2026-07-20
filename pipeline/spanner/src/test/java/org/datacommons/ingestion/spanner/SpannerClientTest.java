@@ -7,6 +7,7 @@ import com.google.cloud.spanner.Mutation;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.List;
+import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.junit.Before;
@@ -60,6 +61,23 @@ public class SpannerClientTest {
     assertEquals(mutationMap.get("subject_id").getString(), "dcid:456");
     assertFalse(mutationMap.containsKey("value"));
     assertEquals(mutationMap.get("last_update_timestamp").toString(), "spanner.commit_timestamp()");
+  }
+
+  @Test
+  public void testToEdgeMutation() {
+    Edge edge =
+        Edge.builder()
+            .subjectId("dcid:subject")
+            .predicate("dcid:predicate")
+            .objectId("dcid:object")
+            .provenance("dcid:provenance")
+            .build();
+
+    Mutation mutation = spannerClient.toEdgeMutation(edge);
+
+    assertEquals(mutation.getTable(), "Edge");
+    assertEquals(
+        mutation.asMap().get("last_update_timestamp").toString(), "spanner.commit_timestamp()");
   }
 
   @Test
