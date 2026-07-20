@@ -14,6 +14,7 @@
 
 import logging
 import os
+import posixpath
 from enum import Enum
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
@@ -32,12 +33,14 @@ class IngestionState(str, Enum):
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     FAILURE = "FAILURE"
-    RETRY = "RETRY"
+    ROLLBACK = "ROLLBACK"
 
 
 class IngestionStage(str, Enum):
     DATAFLOW = "dataflow"
+    AGGREGATION = "aggregation"
     POSTPROCESSING = "postprocessing"
+    ROLLBACK = "rollback"
 
 
 class SpannerClient:
@@ -347,12 +350,12 @@ class SpannerClient:
 
             # The statements below allow us to construct a partial update, only for the fields that are set.
             if status in (IngestionState.SUCCESS, IngestionState.FAILURE,
-                          IngestionState.RETRY):
+                          IngestionState.ROLLBACK):
                 columns.append("CompletionTimestamp")
                 values.append(spanner.COMMIT_TIMESTAMP)
                 columns.append("IngestionFailure")
                 values.append(status in (IngestionState.FAILURE,
-                                         IngestionState.RETRY))
+                                         IngestionState.ROLLBACK))
 
             if job_id:
                 columns.append("DataflowJobID")
@@ -448,11 +451,140 @@ class SpannerClient:
         try:
             with self.database.snapshot() as snapshot:
                 results = snapshot.execute_sql(
-                    "SELECT 1 FROM ImportStatus WHERE State = 'RETRY' LIMIT 1")
+                    "SELECT 1 FROM ImportStatus WHERE State = 'ROLLBACK' LIMIT 1")
                 return any(results)
         except Exception as e:
-            logging.error(f'Error checking for retry imports: {e}')
+            logging.error(f'Error checking for rollback imports: {e}')
             return True
+
+    def get_imports_for_workflow(self, workflow_id: str) -> list[str]:
+        """Gets the list of ingested imports for a given workflow execution ID from IngestionHistory.
+
+        Args:
+            workflow_id: The workflow execution ID.
+
+        Returns:
+            A list of import names, or an empty list if not found.
+        """
+        try:
+            with self.database.snapshot() as snapshot:
+                sql = "SELECT IngestedImports FROM IngestionHistory WHERE WorkflowExecutionID = @workflowId"
+                results = snapshot.execute_sql(
+                    sql,
+                    params={'workflowId': workflow_id},
+                    param_types={'workflowId': STRING}
+                )
+                rows = list(results)
+                if rows and rows[0][0]:
+                    return list(rows[0][0])
+        except Exception as e:
+            logging.error(f"Error querying IngestionHistory for workflow '{workflow_id}': {e}")
+        return []
+
+    def get_import_version_history(self, import_name: str, limit: int = 10) -> list[tuple[str, str]]:
+        """Queries ImportVersionHistory for an import's version history."""
+        short_name = import_name.split(':')[-1]
+
+        def _query(transaction: Transaction):
+            sql_history = """
+                SELECT Version, Comment FROM ImportVersionHistory
+                WHERE ImportName = @importName
+                ORDER BY UpdateTimestamp DESC
+                LIMIT @limit
+            """
+            results = transaction.execute_sql(
+                sql_history,
+                params={'importName': short_name, 'limit': limit},
+                param_types={'importName': STRING, 'limit': INT64})
+            return [(row[0], row[1] if len(row) > 1 else "") for row in results]
+
+        try:
+            return self.database.run_in_transaction(_query)
+        except Exception as e:
+            logging.error(f"Error fetching version history for import '{short_name}': {e}")
+            return []
+
+    def get_import_latest_version(self, import_name: str) -> str | None:
+        """Queries ImportStatus for an import's current LatestVersion path."""
+        short_name = import_name.split(':')[-1]
+
+        def _query(transaction: Transaction):
+            sql = """
+                SELECT LatestVersion FROM ImportStatus
+                WHERE ImportName = @importName
+            """
+            results = transaction.execute_sql(
+                sql,
+                params={'importName': short_name},
+                param_types={'importName': STRING})
+            rows = list(results)
+            return rows[0][0] if (rows and rows[0][0]) else None
+
+        try:
+            return self.database.run_in_transaction(_query)
+        except Exception as e:
+            logging.error(f"Error fetching latest version for import '{short_name}': {e}")
+            return None
+
+    def revert_import_state(self,
+                            import_name: str,
+                            new_latest_version_path: str,
+                            previous_version: str,
+                            workflow_id: str,
+                            comment: str) -> bool:
+        """Updates ImportStatus and inserts into ImportVersionHistory to revert import state to STAGING."""
+        short_name = import_name.split(':')[-1]
+
+        def _update_txn(transaction: Transaction):
+            # 1. Update ImportStatus
+            transaction.execute_update(
+                """
+                UPDATE ImportStatus
+                SET LatestVersion = @version, State = 'STAGING', StatusUpdateTimestamp = PENDING_COMMIT_TIMESTAMP()
+                WHERE ImportName = @importName
+                """,
+                params={
+                    'version': new_latest_version_path,
+                    'importName': short_name
+                },
+                param_types={
+                    'version': STRING,
+                    'importName': STRING
+                })
+
+            # 2. Add entry to ImportVersionHistory
+            transaction.execute_update(
+                """
+                INSERT INTO ImportVersionHistory (ImportName, Version, UpdateTimestamp, WorkflowExecutionID, Status, Comment)
+                VALUES (@importName, @version, PENDING_COMMIT_TIMESTAMP(), @workflowId, 'STAGING', @comment)
+                """,
+                params={
+                    'importName': short_name,
+                    'version': previous_version,
+                    'workflowId': workflow_id,
+                    'comment': comment
+                },
+                param_types={
+                    'importName': STRING,
+                    'version': STRING,
+                    'workflowId': STRING,
+                    'comment': STRING
+                })
+            return True
+
+        try:
+            return self.database.run_in_transaction(_update_txn)
+        except Exception as e:
+            logging.error(f"Error reverting import state for '{short_name}': {e}")
+            return False
+
+    def revert_import(self,
+                      import_name: str,
+                      workflow_id: str,
+                      dry_run: bool = False) -> tuple[bool, str | None]:
+        """Reverts an import to its previous version in Spanner and sets it to STAGING."""
+        from utils import rollback_helper
+        return rollback_helper.revert_import(self, import_name, workflow_id, dry_run=dry_run)
 
     def update_import_status(self, params: dict):
         """Updates the status for the specified import job.

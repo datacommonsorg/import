@@ -13,6 +13,7 @@
 # limitations under the License.
 """Utility functions for the ingestion helper."""
 
+import json
 import logging
 import re
 from datetime import datetime, timezone
