@@ -48,13 +48,16 @@ class ObservationsImporter(Importer):
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
     self._resolved_entities_cache: dict[str, str | None] = {}
+    self.all_unresolved_entities: set[str] = set()
 
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
       self._process_chunks()
+      self.check_and_report_unresolved_entities(self.all_unresolved_entities)
       self.reporter.report_success()
     except Exception as e:
+      self._write_debug_csvs()
       self.reporter.report_failure(str(e))
       raise e
 
@@ -71,6 +74,7 @@ class ObservationsImporter(Importer):
           dtype={0: str},
           skipinitialspace=True,
           thousands=",",
+          na_values=constants.STANDARD_NA_VALUES,
           chunksize=10000,
       )
 
@@ -140,7 +144,7 @@ class ObservationsImporter(Importer):
 
     # Get entity nodes that are not already recorded.
     new_entity_dcids = [
-        dcid for dcid in entity_dcids if dcid not in self.nodes.entities.keys()
+        dcid for dcid in entity_dcids if not self.nodes.has_entity(dcid)
     ]
 
     logging.info("Found %s total entities, of which %s are already imported.",
@@ -198,6 +202,7 @@ class ObservationsImporter(Importer):
 
     df[constants.COLUMN_DCID] = column
     if unresolved_list:
+      self.all_unresolved_entities.update(unresolved_list)
       logging.warning("# unresolved entities which will be dropped: %s",
                       len(unresolved_list))
       logging.warning("Dropped entities: %s", unresolved_list)

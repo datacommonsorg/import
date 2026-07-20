@@ -67,6 +67,9 @@ EXTERNALLY_RESOLVED_INPUT_COLUMNS_TO_PREFIXES = dict([
 
 DCID_OVERRIDE_PREFIX = "dcid:"
 
+# Standard NA/null value representations
+STANDARD_NA_VALUES = ["-", "nil", "n/a", "na", "none", "null", "<na>"]
+
 # Observations CSV columns.
 COLUMN_DCID = "dcid"
 COLUMN_VARIABLE = "variable"

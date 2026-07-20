@@ -223,21 +223,9 @@ class TestJsonLdExporter(unittest.TestCase):
 
       mock_file = mock.Mock()
       mock_file.path = "dummy.csv"
-      db.insert_observations(df, mock_file)
-      db.commit()
-
-      export_to_jsonld(db, output_dir, chunk_size=10)
-
-      shard_path = os.path.join(temp_dir, "observation-00000.jsonld")
-      self.assertTrue(os.path.exists(shard_path))
-
-      with open(shard_path, 'r') as f:
-        shard = json.load(f)
-        nodes = {node['@id']: node for node in shard['@graph']}
-        obs_nodes = [node for node in nodes if node.startswith('dcid:obs_')]
-        self.assertTrue(len(obs_nodes) > 0)
-        obs_node_id = obs_nodes[0]
-        self.assertEqual(nodes[obs_node_id]['dcid:value'], "Unavailable")
+      with self.assertRaises(ValueError) as ctx:
+        db.insert_observations(df, mock_file)
+      self.assertIn("Invalid non-numeric value(s)", str(ctx.exception))
 
 
 if __name__ == "__main__":
