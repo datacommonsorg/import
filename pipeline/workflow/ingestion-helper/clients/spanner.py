@@ -38,6 +38,7 @@ class IngestionState(str, Enum):
 class IngestionStage(str, Enum):
     DATAFLOW = "dataflow"
     POSTPROCESSING = "postprocessing"
+    PREPROCESSING = "preprocessing"
 
 
 class SpannerClient:
@@ -323,7 +324,7 @@ class SpannerClient:
         Args:
             workflow_id: The ID of the workflow.
             status: The status of the ingestion stage (PENDING, RUNNING, SUCCESS, FAILURE).
-            stage: The stage of the ingestion (dataflow, postprocessing, etc.).
+            stage: The stage of the ingestion (preprocessing, dataflow, postprocessing, etc.).
             job_id: The Dataflow job ID.
             ingested_imports: List of ingested import names.
             metrics: A dictionary containing metrics about the ingestion.
