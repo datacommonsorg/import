@@ -95,7 +95,6 @@ class AggregationOrchestrator:
         run_sequential: bool = False,
         poll_interval: int = 15,
         enable_embeddings: bool = False,
-        embedding_conn_id: Optional[str] = None,
         bq_dataset_id: str = "datacommons"
     ) -> None:
         """Initializes the orchestrator and loads/validates configuration files.
@@ -120,7 +119,6 @@ class AggregationOrchestrator:
             location=location,
             run_sequential=run_sequential,
             enable_embeddings=enable_embeddings,
-            embedding_conn_id=embedding_conn_id,
             bq_dataset_id=bq_dataset_id
         )
         self.is_base_dc = is_base_dc

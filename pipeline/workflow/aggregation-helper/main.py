@@ -81,7 +81,6 @@ def main():
 
     config_path = args.config_path or os.environ.get("CONFIG_PATH")
     enable_embeddings = os.environ.get("ENABLE_EMBEDDINGS", "false").lower() == "true"
-    embedding_conn_id = os.environ.get("BQ_MODEL_CONNECTION")
     bq_dataset_id = os.environ.get("BQ_DATASET_ID", "datacommons")
 
     orchestrator = AggregationOrchestrator(
@@ -92,7 +91,6 @@ def main():
         location=location,
         config_file_path=config_path,
         enable_embeddings=enable_embeddings,
-        embedding_conn_id=embedding_conn_id,
         bq_dataset_id=bq_dataset_id
     )
 

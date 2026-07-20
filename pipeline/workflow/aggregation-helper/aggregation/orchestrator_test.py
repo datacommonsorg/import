@@ -362,7 +362,6 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             database_id="db",
             config_file_path=self.config_path,
             enable_embeddings=True,
-            embedding_conn_id="test-conn-id",
             bq_dataset_id="test-dataset"
         )
         result = orchestrator.run(active_imports=[], dry_run=True)
@@ -379,7 +378,6 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             database_id="db",
             config_file_path=self.config_path,
             enable_embeddings=True,
-            embedding_conn_id="test-conn-id",
             bq_dataset_id="test-dataset"
         )
         mock_job = MagicMock()
@@ -402,7 +400,6 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             location=None,
             run_sequential=False,
             enable_embeddings=True,
-            embedding_conn_id="test-conn-id",
             bq_dataset_id="test-dataset"
         )
 
@@ -414,7 +411,6 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             database_id="db",
             config_file_path=self.config_path,
             enable_embeddings=True,
-            embedding_conn_id="test-conn-id",
             bq_dataset_id="test-dataset"
         )
         mock_embedding_gen.return_value.run_all.side_effect = Exception("Vertex AI quota exceeded")
