@@ -24,6 +24,9 @@
 DECLARE place_dcids_str STRING;
 DECLARE place_count INT64;
 DECLARE sample_dcids_str STRING;
+DECLARE sample_batch_index INT64 DEFAULT 0;
+DECLARE sample_batch_count INT64;
+DECLARE sample_dcid_batch_size INT64 DEFAULT 1000;
 
 -- Aggregate in Spanner before transferring data to BigQuery. This changes the
 -- federated result from one row per observation to one row per time series.
@@ -125,23 +128,46 @@ SELECT
 FROM distinct_places
 GROUP BY variable_measured, provenance, facet_id, place_type;
 
-SET sample_dcids_str = (
-  SELECT IFNULL(
-    STRING_AGG(DISTINCT FORMAT("'%s'", REPLACE(dcid, "'", "\\'")), ','),
-    "''"
-  )
+-- Fetch optional sample labels in bounded batches. This avoids exceeding the
+-- 200 MiB Spanner federation message limit.
+CREATE OR REPLACE TEMPORARY TABLE `temp_sample_dcids` AS
+SELECT
+  dcid,
+  DIV(ROW_NUMBER() OVER (ORDER BY dcid) - 1, sample_dcid_batch_size) AS batch_index
+FROM (
+  SELECT DISTINCT dcid
   FROM `temp_top_place_dcids`
   CROSS JOIN UNNEST(top_dcids) AS dcid
 );
 
-EXECUTE IMMEDIATE FORMAT('''
-  CREATE OR REPLACE TEMPORARY TABLE `temp_node_names_filtered` AS
-  SELECT subject_id, name
-  FROM EXTERNAL_QUERY(
-    "datcom-store.us-central1.rk-prod-spanner",
-    "SELECT subject_id, name FROM Node WHERE subject_id IN (%s)"
+SET sample_batch_count = (
+  SELECT IFNULL(MAX(batch_index) + 1, 0)
+  FROM `temp_sample_dcids`
+);
+
+CREATE OR REPLACE TEMPORARY TABLE `temp_node_names_filtered` (
+  subject_id STRING,
+  name STRING
+);
+
+WHILE sample_batch_index < sample_batch_count DO
+  SET sample_dcids_str = (
+    SELECT STRING_AGG(FORMAT("'%s'", REPLACE(dcid, "'", "\\'")), ',')
+    FROM `temp_sample_dcids`
+    WHERE batch_index = sample_batch_index
   );
-''', sample_dcids_str);
+
+  EXECUTE IMMEDIATE FORMAT('''
+    INSERT INTO `temp_node_names_filtered` (subject_id, name)
+    SELECT subject_id, name
+    FROM EXTERNAL_QUERY(
+      "datcom-store.us-central1.rk-prod-spanner",
+      "SELECT subject_id, SUBSTR(name, 1, 1024) AS name FROM Node WHERE subject_id IN (%s)"
+    );
+  ''', sample_dcids_str);
+
+  SET sample_batch_index = sample_batch_index + 1;
+END WHILE;
 
 CREATE OR REPLACE TEMPORARY TABLE `temp_place_type_summary` AS
 WITH place_stats AS (

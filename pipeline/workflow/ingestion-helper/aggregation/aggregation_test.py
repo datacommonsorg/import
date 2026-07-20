@@ -245,6 +245,9 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         self.assertIn("COUNT(*) AS observation_count", query)
         self.assertIn("SUM(observation_count) as facet_obs_count", query)
         self.assertIn("COUNT(*) as facet_ts_count", query)
+        self.assertIn("sample_dcid_batch_size INT64 DEFAULT 1000", query)
+        self.assertIn("WHILE sample_batch_index < sample_batch_count", query)
+        self.assertIn("SUBSTR(name, 1, 1024) AS name", query)
         self.assertNotIn("temp_obs_flat", query)
 
 
