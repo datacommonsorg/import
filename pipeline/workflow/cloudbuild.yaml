@@ -24,7 +24,7 @@ substitutions:
   _SPANNER_GRAPH_DATABASE_ID: 'dc-test-db'
   _GCS_BUCKET_ID: 'datcom-ci-test'
   _GCS_MOUNT_BUCKET: 'datcom-ci-test'
-  _BQ_DATASET_ID: 'stuniki_test_dataset'
+  _BQ_DATASET_ID: 'spanner_model_dataset'
   _LOCATION: 'us-central1'
   _PROJECT_NUMBER: '879489846695'
   _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
