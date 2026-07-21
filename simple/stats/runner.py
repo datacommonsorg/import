@@ -117,7 +117,7 @@ def _run_single_csv_import_proc(args: tuple):
       )
     importer.do_import()
     db.commit_and_close()
-  return (file_path, db.obs_collision_count)
+  return (file_rel_path, db.obs_collision_count)
 
 
 class Runner:
