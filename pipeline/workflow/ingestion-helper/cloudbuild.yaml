@@ -25,9 +25,9 @@
 #
 
 steps:
-  # Run unit tests (disabled until further testing)
-  # - name: 'ghcr.io/astral-sh/uv:latest'
-  #  args: ['run', 'pytest']
+  # Run unit tests
+  - name: 'ghcr.io/astral-sh/uv:latest'
+    args: ['run', 'pytest', '--ignore=aggregation/e2e_tests/']
 
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
