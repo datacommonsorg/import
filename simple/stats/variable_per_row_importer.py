@@ -56,33 +56,6 @@ STANDARD_PROPERTY_MAPPING = {
 }
 
 
-def _convert_numeric_to_string(col: pd.Series,
-                               default_for_na: str = "") -> pd.Series:
-  """Convert numeric column to string, preserving integer format.
-
-  Args:
-      col: Pandas Series that may contain numeric values, NaN, or strings
-      default_for_na: Value to use for NaN entries (default is empty string)
-
-  Returns:
-      Series with all values converted to strings
-  """
-
-  # If not numeric, just convert to string
-  if not pd.api.types.is_numeric_dtype(col):
-    return col.astype(str)
-
-    # For numeric columns, preserve integer format
-  is_int_value = col.notna() & (col == col.round())
-  is_na = col.isna()
-
-  return np.where(
-      is_int_value,
-      col.round().astype("Int64").astype(str),
-      np.where(is_na, default_for_na, col.astype(str)),
-  )
-
-
 def _apply_property_defaults(df: pd.DataFrame,
                              obs_props: ObservationProperties) -> pd.DataFrame:
   """Apply property defaults, using per-row values where available."""
@@ -96,30 +69,20 @@ def _apply_property_defaults(df: pd.DataFrame,
   for prop, col_name in property_mapping.items():
     default_value = getattr(obs_props, col_name, "")
     if col_name in df.columns:
-      # Replace empty strings with NaN for consistent handling
       source_col = df[col_name].replace("", pd.NA)
-
-      # Check if source is numeric before filling (to preserve int format for numeric columns)
-      is_source_numeric = pd.api.types.is_numeric_dtype(source_col)
-
-      if is_source_numeric:
-        df[col_name] = _convert_numeric_to_string(source_col,
-                                                  default_for_na=default_value)
-      else:
-        df[col_name] = source_col.fillna(default_value).astype(str)
+      df[col_name] = source_col.fillna(default_value).astype(str)
     else:
       # If the column doesn't exist, use default for all rows
       df[col_name] = default_value
 
-    # Custom properties column (always empty for variable_per_row_importer)
+  # Custom properties column (always empty for variable_per_row_importer)
   df[constants.COLUMN_PROPERTIES] = ""
   return df
 
 
 def _format_numeric_values(df: pd.DataFrame) -> pd.DataFrame:
-  """Convert value column to string, preserving integer format."""
-  df[constants.COLUMN_VALUE] = _convert_numeric_to_string(
-      df[constants.COLUMN_VALUE])
+  """Format value column as string."""
+  df[constants.COLUMN_VALUE] = df[constants.COLUMN_VALUE].fillna("").astype(str)
   return df
 
 
@@ -306,7 +269,8 @@ class VariablePerRowImporter(Importer):
     with self.input_file.open_stream() as stream:
       reader = pd.read_csv(stream,
                            na_values=constants.STANDARD_NA_VALUES,
-                           chunksize=10000)
+                           chunksize=10000,
+                           dtype=str)
 
       for chunk_df in reader:
         if chunk_df.empty:
