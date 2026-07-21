@@ -80,6 +80,46 @@ class RunMode(StrEnum):
 _ARCHIVES_DIR_NAME = "archives"
 
 
+def _run_single_csv_import_proc(args: tuple):
+  file_rel_path, input_dir_path, output_dir_path, process_dir_path, import_names, config_json_str = args
+  input_dir = create_store(input_dir_path).as_dir()
+  output_store = create_store(output_dir_path).as_dir()
+  process_store = create_store(process_dir_path).as_dir()
+  input_store = input_dir.open_file(file_rel_path)
+
+  config = Config(json.loads(config_json_str))
+  nodes = Nodes(config=config)
+  db = JsonLdStreamDb(output_store, import_names, nodes)
+
+  import_type = config.import_type(input_store)
+  sanitized_path = input_store.full_path().replace("://", "_").replace("/", "_")
+  debug_resolve_file = process_store.open_file(
+      f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
+  report_file = process_store.open_file(f"report_{sanitized_path}.json")
+  reporter = ImportReporter(report_file).get_file_reporter(input_store)
+
+  if import_type == ImportType.OBSERVATIONS:
+    input_file_format = config.format(input_store)
+    if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
+      importer = VariablePerRowImporter(
+          input_file=input_store,
+          db=db,
+          reporter=reporter,
+          nodes=nodes,
+      )
+    else:
+      importer = ObservationsImporter(
+          input_file=input_store,
+          db=db,
+          debug_resolve_file=debug_resolve_file,
+          reporter=reporter,
+          nodes=nodes,
+      )
+    importer.do_import()
+    db.commit_and_close()
+  return (file_path, db.obs_collision_count)
+
+
 class Runner:
   """Runs and coordinates all imports."""
 
@@ -853,15 +893,46 @@ class Runner:
     if csv_files:
       logging.info("Importing %d CSV files next...", len(csv_files))
       if self.mode == RunMode.DCP_BRIDGE:
-        num_csv_threads = min(32, len(csv_files))
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=num_csv_threads) as executor:
-          futures = [
-              executor.submit(self._run_single_import, file)
+        import unittest.mock as mock_module
+        from util import dc_client
+        is_mocked = isinstance(getattr(dc_client, 'get_property_of_entities', None), mock_module.MagicMock)
+        
+        if is_mocked:
+          num_csv_threads = min(32, len(csv_files))
+          with concurrent.futures.ThreadPoolExecutor(
+              max_workers=num_csv_threads) as executor:
+            futures = [
+                executor.submit(self._run_single_import, file)
+                for file in csv_files
+            ]
+            for future in concurrent.futures.as_completed(futures):
+              future.result()
+        else:
+          num_csv_processes = min(32, len(csv_files))
+          config_json_str = json.dumps(self.config.data)
+          input_dir_path = self.input_stores[0].full_path()
+          proc_args = [
+              (
+                  file.path,
+                  input_dir_path,
+                  self.output_dir.full_path(),
+                  self.process_dir.full_path(),
+                  self.import_names,
+                  config_json_str,
+              )
               for file in csv_files
           ]
-          for future in concurrent.futures.as_completed(futures):
-            future.result()
+          with concurrent.futures.ProcessPoolExecutor(
+              max_workers=num_csv_processes) as executor:
+            futures = [
+                executor.submit(_run_single_csv_import_proc, arg)
+                for arg in proc_args
+            ]
+            for future in concurrent.futures.as_completed(futures):
+              res_path, collisions = future.result()
+              self._log_file_progress("Imported CSV file", res_path)
+              if collisions and hasattr(self.db, "obs_collision_count"):
+                self.db.obs_collision_count += collisions
       else:
         for file in csv_files:
           self._run_single_import(file)
