@@ -39,7 +39,7 @@ BQ_CONNECTION_ID = os.environ.get(
 )
 BQ_LOCATION = os.environ.get('BQ_LOCATION', 'us-central1')
 ENABLE_EMBEDDINGS = os.environ.get('ENABLE_EMBEDDINGS', 'true').lower() == 'true'
-BQ_DATASET_ID = os.environ.get('BQ_DATASET_ID', 'stuniki_test_dataset')
+BQ_DATASET_ID = os.environ.get('BQ_DATASET_ID', 'spanner_model_dataset')
 
 logging.basicConfig(level=logging.INFO)
 
