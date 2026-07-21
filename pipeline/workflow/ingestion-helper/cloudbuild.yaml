@@ -26,7 +26,8 @@
 
 steps:
   # Run unit tests
-  - name: 'ghcr.io/astral-sh/uv:latest'
+  - name: 'ghcr.io/astral-sh/uv:python3.12-bookworm-slim'
+    entrypoint: 'uv'
     args: ['run', 'pytest', '--ignore=aggregation/e2e_tests/']
 
   # Build the container image
