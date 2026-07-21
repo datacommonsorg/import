@@ -162,10 +162,9 @@ def get_ingestion_metrics(project_id, location, job_id):
             for metric in metrics.get('metrics', []):
                 name = metric['name']['name']
                 scalar = int(metric.get('scalar', 0))
-                if ':' in name:
-                    metric_type, imp_name = name.split(':', 1)
-                else:
-                    metric_type, imp_name = name, None
+                match = re.match(r"^([^:]+)(?::(.+))?$", name)
+                metric_type = match.group(1) if match else name
+                imp_name = match.group(2).split(':')[-1] if match and match.group(2) else None
 
                 if imp_name and imp_name not in import_metrics:
                     import_metrics[imp_name] = {

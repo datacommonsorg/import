@@ -129,12 +129,17 @@ public class GraphIngestionPipeline {
     boolean isBaseDc = options.getIsBaseDc();
     String provenance = ProvenanceUtils.getProvenanceDcid(importName, isBaseDc);
 
-    Counter nodeCounter = Metrics.counter(GraphIngestionPipeline.class, "node_count:" + importName);
-    Counter edgeCounter = Metrics.counter(GraphIngestionPipeline.class, "edge_count:" + importName);
+    String shortName =
+        importName.contains(":")
+            ? importName.substring(importName.lastIndexOf(':') + 1)
+            : importName;
+
+    Counter nodeCounter = Metrics.counter(GraphIngestionPipeline.class, "node_count:" + shortName);
+    Counter edgeCounter = Metrics.counter(GraphIngestionPipeline.class, "edge_count:" + shortName);
     Counter obsCounter =
-        Metrics.counter(GraphIngestionPipeline.class, "observation_count:" + importName);
+        Metrics.counter(GraphIngestionPipeline.class, "observation_count:" + shortName);
     Counter timeSeriesCounter =
-        Metrics.counter(GraphIngestionPipeline.class, "timeseries_count:" + importName);
+        Metrics.counter(GraphIngestionPipeline.class, "timeseries_count:" + shortName);
 
     // 1. Prepare Deletes:
     // Generate mutations to delete existing data for this import/provenance.

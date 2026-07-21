@@ -62,8 +62,7 @@ class SpannerClient:
                  embedding_table: str = "NodeEmbedding",
                  embedding_index: str = "NodeEmbeddingIndex",
                  embedding_label_index: str = "NodeEmbeddingLabelIndex",
-                 emulator_host: str = None,
-                 is_base_dc: bool = True):
+                 emulator_host: str = None):
         """Initializes a Spanner client and connects to a specific database."""
         client_options = {"api_endpoint": "spanner.googleapis.com"}
         credentials = None
@@ -95,7 +94,6 @@ class SpannerClient:
         self.embedding_table = embedding_table
         self.embedding_index = embedding_index
         self.embedding_label_index = embedding_label_index
-        self.is_base_dc = is_base_dc
 
         if not models:
             models = self._DEFAULT_MODELS
@@ -420,12 +418,7 @@ class SpannerClient:
                     continue
 
                 short_name = import_name.split(':')[-1]
-                counts = (
-                    import_metrics.get(short_name) or
-                    import_metrics.get(import_name) or
-                    (import_json if all(k in import_json and import_json[k] is not None for k in ('node_count', 'edge_count', 'obs_count', 'ts_count')) else {}) or
-                    (import_json if all(k in import_json and import_json[k] is not None for k in ('nodeCount', 'edgeCount', 'obsCount', 'tsCount')) else {})
-                )
+                counts = import_metrics.get(short_name) or import_json
 
                 version_history_values.append([
                     import_name, import_json.get('latestVersion'),
