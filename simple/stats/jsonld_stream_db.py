@@ -94,6 +94,7 @@ def _write_observation_shard(chunk_or_args,
     chunk = chunk_or_args
 
   graph_list = []
+  chunk_hashes = []
 
   for row in chunk:
     entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
@@ -101,7 +102,7 @@ def _write_observation_shard(chunk_or_args,
     key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
     obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
     if track_hash_fn:
-      track_hash_fn(obs_hash, entity, variable, date, provenance, file_name)
+      chunk_hashes.append((obs_hash, entity, variable, date, provenance))
 
     var_obj = _uri_ref(variable)
     prop_keys = None
@@ -161,6 +162,9 @@ def _write_observation_shard(chunk_or_args,
             entity, variable, e)
 
     graph_list.append(obs_obj)
+
+  if track_hash_fn and chunk_hashes:
+    track_hash_fn(chunk_hashes, file_name=file_name)
 
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
@@ -321,32 +325,40 @@ class JsonLdStreamDb(Db):
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
-  def track_observation_hash(self, obs_hash: str, entity: str, variable: str,
-                             date: str, provenance: str, file_name: str = "") -> None:
-    hash_int = int(obs_hash[:16], 16)
-    file_key = os.path.basename(file_name) if file_name else "unknown"
-    with self.lock:
-      if hash_int in self.obs_hash_set:
-        self.obs_collision_count += 1
-        self.file_collision_counts[file_key] += 1
-        sample_info = (
-            f"@id='dcid:obs_{obs_hash}' [entity='{entity}', variable='{variable}', date='{date}', provenance='{provenance}']"
-        )
-        if len(self.obs_sample_collisions) < 10:
-          self.obs_sample_collisions.append(sample_info)
-        if len(self.file_sample_collisions[file_key]) < 3:
-          self.file_sample_collisions[file_key].append(sample_info)
-          logging.warning(
-              "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
-              file_key, sample_info
-          )
-        elif self.obs_collision_count % 1000 == 0:
-          logging.warning(
-              "Detected %d observation @id collisions so far across processed datasets.",
-              self.obs_collision_count
-          )
-      else:
-        self.obs_hash_set.add(hash_int)
+  def track_observation_hash(self, obs_hash_or_chunk, entity: str = "", variable: str = "",
+                             date: str = "", provenance: str = "", file_name: str = "") -> None:
+    if isinstance(obs_hash_or_chunk, list):
+      chunk_items = obs_hash_or_chunk
+      file_key = os.path.basename(file_name) if file_name else "unknown"
+      with self.lock:
+        for obs_hash, ent, var, dt, prov in chunk_items:
+          hash_int = int(obs_hash[:16], 16)
+          if hash_int in self.obs_hash_set:
+            self.obs_collision_count += 1
+            self.file_collision_counts[file_key] += 1
+            sample_info = (
+                f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
+            )
+            if len(self.obs_sample_collisions) < 10:
+              self.obs_sample_collisions.append(sample_info)
+            if len(self.file_sample_collisions[file_key]) < 3:
+              self.file_sample_collisions[file_key].append(sample_info)
+              logging.warning(
+                  "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
+                  file_key, sample_info
+              )
+            elif self.obs_collision_count % 1000 == 0:
+              logging.warning(
+                  "Detected %d observation @id collisions so far across processed datasets.",
+                  self.obs_collision_count
+              )
+          else:
+            self.obs_hash_set.add(hash_int)
+    else:
+      self.track_observation_hash(
+          [(obs_hash_or_chunk, entity, variable, date, provenance)],
+          file_name=file_name
+      )
 
 
   def _get_prov_urls(self) -> dict[str, str]:
