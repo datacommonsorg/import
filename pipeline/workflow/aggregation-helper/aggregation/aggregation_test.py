@@ -258,6 +258,15 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         self.assertIn("spanner-uri", query)
         self.assertIn("'dc/base/import1'",
                       query)  # Since is_base_dc=True
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_series_summary`",
+                      query)
+        self.assertIn("COUNT(*) AS observation_count", query)
+        self.assertIn("SUM(observation_count) as facet_obs_count", query)
+        self.assertIn("COUNT(*) as facet_ts_count", query)
+        self.assertIn("sample_dcid_batch_size INT64 DEFAULT 100", query)
+        self.assertIn("WHILE sample_batch_index < sample_batch_count", query)
+        self.assertIn("SUBSTR(name, 1, 1024) AS name", query)
+        self.assertNotIn("temp_obs_flat", query)
 
 
 class TestPlaceAggregationGenerator(unittest.TestCase):
