@@ -49,7 +49,10 @@ class TestEmbeddingUtils(unittest.TestCase):
 
     @patch('utils.embeddings._extract_nl_stat_var')
     def test_get_node_filter_condition_nl_filter(self, mock_extract):
-        mock_extract.return_value = ["Count_Person", "Median_Age"]
+        mock_extract.return_value = [
+            {"dcid": "Count_Person", "sentence": "population"},
+            {"dcid": "Median_Age", "sentence": "median age"}
+        ]
         params = {}
         param_types = {}
         condition = self.utils._get_node_filter_condition("NLStatisticalVariable", params, param_types)
@@ -138,7 +141,10 @@ class TestEmbeddingUtils(unittest.TestCase):
     def test_get_updated_nodes_with_nl_filter(self, mock_extract):
         mock_snapshot = MagicMock()
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
-        mock_extract.return_value = ["dc/1", "dc/2"]
+        mock_extract.return_value = [
+            {"dcid": "dc/1", "sentence": "Node 1"},
+            {"dcid": "dc/2", "sentence": "Node 2"}
+        ]
 
         class MockField:
             def __init__(self, name):

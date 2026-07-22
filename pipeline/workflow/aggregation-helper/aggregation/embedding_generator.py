@@ -139,7 +139,7 @@ class EmbeddingGenerator:
             select_nodes_sql = """
                 SELECT 
                   subject_id, 
-                  CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content.name)) AS STRING) AS embedding_content_key,
+                  CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content, '$.name')) AS STRING) AS embedding_content_key,
                   TO_JSON_STRING(embedding_content) AS content, 
                   embedding_content, 
                   node_types 
