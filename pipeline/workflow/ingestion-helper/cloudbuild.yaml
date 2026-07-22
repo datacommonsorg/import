@@ -28,7 +28,7 @@ steps:
   # Run unit tests
   - name: 'ghcr.io/astral-sh/uv:python3.12-bookworm-slim'
     entrypoint: 'uv'
-    args: ['run', 'pytest', '--ignore=aggregation/e2e_tests/']
+    args: ['run', 'pytest']
 
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'

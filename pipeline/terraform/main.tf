@@ -205,10 +205,6 @@ resource "google_cloud_run_v2_service" "ingestion_helper" {
         name  = "LOCATION"
         value = var.region
       }
-      env {
-        name  = "BQ_DATASET_ID"
-        value = var.bq_dataset_id
-      }
     }
   }
 
