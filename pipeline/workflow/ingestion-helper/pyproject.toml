@@ -30,7 +30,6 @@ dependencies = [
     "google-cloud-storage",
     "google-auth",
     "absl-py",
-    "google-cloud-bigquery",
     "redis",
     "jinja2",
     "pandas~=3.0.3",
