@@ -152,14 +152,47 @@ class StorageClient:
                              'import_metadata_mcf.mcf'))
             new_blob.upload_from_string(default_provenance)
 
-        provenance_file = import_name.split(':')[-1] + '.mcf'
-        provenance_blob = self.bucket.blob(
-            os.path.join('provenance', provenance_file))
-        if provenance_blob.exists():
-            self.bucket.copy_blob(
-                provenance_blob, self.bucket,
-                os.path.join(output_dir, version, 'provenance', 'genmcf',
-                             provenance_file))
+        # Copy additional provenance files from GCS
+        prefix = 'cns/jv-d/home/datcom/cda/plx'
+        try:
+            prov_version = self.get_staging_version('scripts/entities:Provenance').strip()
+        except Exception as e:
+            logging.error(f"Failed to get staging version for import scripts/entities:Provenance: {e}")
+            raise
+
+        if not prov_version:
+            raise ValueError("Staging version for 'import scripts/entities:Provenance' is empty")
+
+        import_name_clean = import_name.split(':')[-1]
+        target_filename = import_name_clean + '.mcf'
+
+        import_prefix = f"scripts/entities/Provenance/{prov_version}/{prefix}/import/"
+        import_blob = None
+        for blob in self.bucket.list_blobs(prefix=import_prefix):
+            if os.path.basename(blob.name) == target_filename:
+                import_blob = blob
+                break
+
+        if import_blob:
+            dest_name = os.path.join(output_dir, version, 'provenance', 'genmcf', f"{import_name_clean}_import.mcf")
+            logging.info(f"Copying {import_blob.name} to {dest_name}")
+            self.bucket.copy_blob(import_blob, self.bucket, dest_name)
+        else:
+            logging.warning(f"Could not find {target_filename} under {import_prefix}")
+
+        provenance_prefix = f"scripts/entities/Provenance/{prov_version}/{prefix}/manifest/"
+        provenance_blob = None
+        for blob in self.bucket.list_blobs(prefix=provenance_prefix):
+            if os.path.basename(blob.name) == target_filename:
+                provenance_blob = blob
+                break
+
+        if provenance_blob:
+            dest_name = os.path.join(output_dir, version, 'provenance', 'genmcf', f"{import_name_clean}_manifest.mcf")
+            logging.info(f"Copying {provenance_blob.name} to {dest_name}")
+            self.bucket.copy_blob(provenance_blob, self.bucket, dest_name)
+        else:
+            logging.warning(f"Could not find {target_filename} under {provenance_prefix}")
         logging.info(
             f'Updated provenance file for import {import_name} to add {version}'
         )
