@@ -118,7 +118,6 @@ class EmbeddingGenerator:
 
         dest = self.executor.get_spanner_destination_uri()
         conn_id = self.executor.connection_id
-        embedding_conn_id = self.executor.embedding_conn_id
         project_id = self.executor.project_id
         bq_dataset_id = self.executor.bq_dataset_id
         location = self.executor.location

@@ -25,9 +25,10 @@
 #
 
 steps:
-  # Run unit tests (disabled until further testing)
-  # - name: 'ghcr.io/astral-sh/uv:latest'
-  #  args: ['run', 'pytest']
+  # Run unit tests
+  - name: 'ghcr.io/astral-sh/uv:python3.12-bookworm-slim'
+    entrypoint: 'uv'
+    args: ['run', 'pytest']
 
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'

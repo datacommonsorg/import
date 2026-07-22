@@ -33,7 +33,6 @@ from aggregation.e2e_tests.base import (
     BQ_CONNECTION_ID,
     BQ_LOCATION,
     ENABLE_EMBEDDINGS,
-    BQ_MODEL_CONNECTION,
     BQ_DATASET_ID,
 )
 from aggregation import BigQueryExecutor, EmbeddingGenerator
@@ -51,7 +50,6 @@ class EmbeddingGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         # 2. Trigger embedding generation orchestrator
         os.environ['ENABLE_EMBEDDINGS'] = 'true'
-        os.environ['BQ_MODEL_CONNECTION'] = BQ_MODEL_CONNECTION
         os.environ['BQ_DATASET_ID'] = BQ_DATASET_ID
 
         calculations = [

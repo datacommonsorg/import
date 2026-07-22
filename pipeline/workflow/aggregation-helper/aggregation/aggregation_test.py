@@ -70,7 +70,6 @@ class TestBigQueryExecutor(unittest.TestCase):
             "https://spanner.googleapis.com/projects/proj/instances/inst/databases/db"
         )
         self.assertFalse(executor.enable_embeddings)
-        self.assertIsNone(executor.embedding_conn_id)
         self.assertEqual(executor.bq_dataset_id, "datacommons")
 
     def test_init_failure(self, mock_bq_client):
@@ -309,7 +308,6 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.mock_executor.connection_id = "test-conn"
         self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
         self.mock_executor.enable_embeddings = True
-        self.mock_executor.embedding_conn_id = "test-conn"
         self.mock_executor.bq_dataset_id = "datacommons"
 
     def test_run_all(self):

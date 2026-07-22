@@ -30,7 +30,6 @@ class BigQueryExecutor:
                  location: Optional[str] = None,
                  run_sequential: bool = True,
                  enable_embeddings: bool = False,
-                 embedding_conn_id: Optional[str] = None,
                  bq_dataset_id: Optional[str] = None) -> None:
         """Initializes the BigQueryExecutor with connection and destination details."""
         self.connection_id = connection_id
@@ -39,7 +38,6 @@ class BigQueryExecutor:
         self.database_id = database_id
         self.location = location
         self.enable_embeddings = enable_embeddings
-        self.embedding_conn_id = embedding_conn_id
         self.bq_dataset_id = bq_dataset_id or "datacommons"
         # TODO: Remove run_sequential logic once DCP migrates to async execution.
         self.run_sequential = run_sequential

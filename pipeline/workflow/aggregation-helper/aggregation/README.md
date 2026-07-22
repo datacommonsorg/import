@@ -84,9 +84,9 @@ The orchestrator strictly validates configuration files against `schema.json`. I
 ### Running the Validator Locally
 You can validate all configuration files locally using the built-in CLI tool:
 
-1.  **Navigate to the ingestion-helper root**:
+1.  **Navigate to the aggregation-helper root**:
     ```bash
-    cd pipeline/workflow/ingestion-helper
+    cd pipeline/workflow/aggregation-helper
     ```
 2.  **Run the validator**:
     ```bash

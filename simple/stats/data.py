@@ -465,6 +465,32 @@ class EntityType:
     return triples
 
 
+class ValidationErrorType(StrEnum):
+  UNMAPPED_COLUMNS = "UNMAPPED_COLUMNS"
+  MISSING_REQUIRED_COLUMNS = "MISSING_REQUIRED_COLUMNS"
+  INVALID_CONFIGURATION = "INVALID_CONFIGURATION"
+  UNRESOLVED_ENTITY = "UNRESOLVED_ENTITY"
+  MISSING_SOURCE = "MISSING_SOURCE"
+  MISSING_PROVENANCE = "MISSING_PROVENANCE"
+  GENERIC_ERROR = "GENERIC_ERROR"
+
+
+@dataclass
+class FileValidationError:
+  file: str
+  error_type: ValidationErrorType
+  problem_columns: list[str] = field(default_factory=list)
+  error_message: str = ""
+
+  def to_dict(self) -> dict:
+    return {
+        "file": self.file,
+        "errorType": self.error_type,
+        "problemColumns": self.problem_columns,
+        "errorMessage": self.error_message,
+    }
+
+
 class ImportType(StrEnum):
   OBSERVATIONS = "observations"
   EVENTS = "events"
@@ -589,6 +615,35 @@ def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
   return df[(df[constants.COLUMN_VALUE].notna()) &
             (df[constants.COLUMN_VALUE] != "<NA>") &
             (df[constants.COLUMN_VALUE] != "")].copy()
+
+
+def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
+  """Validates that all values in the 'value' column are numeric or NaN.
+
+  Raises:
+      ValueError: If any non-numeric value is found.
+  """
+  if constants.COLUMN_VALUE not in df.columns:
+    return
+  # Convert values to numeric, coercion will map invalid strings to NaN
+  converted = pd.to_numeric(df[constants.COLUMN_VALUE], errors='coerce')
+  # Only perform expensive string operations on non-numeric candidates
+  na_mask = converted.isna() & df[constants.COLUMN_VALUE].notna()
+  if na_mask.any():
+    val_series = df.loc[na_mask, constants.COLUMN_VALUE].astype(
+        str).str.strip().str.lower()
+    standard_nulls = {val.lower() for val in constants.STANDARD_NA_VALUES
+                     } | {"nan", ""}
+    invalid_mask = ~val_series.isin(standard_nulls)
+    if invalid_mask.any():
+      invalid_examples = df.loc[na_mask].loc[invalid_mask,
+                                             constants.COLUMN_VALUE].unique()
+      ex = ValueError(
+          f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
+          f"{list(invalid_examples)[:10]}. If these represent missing values, please configure "
+          f"them under 'naValues' in config.json.")
+      ex.file_path = file_path
+      raise ex
 
 
 def prepare_observations_df(df: pd.DataFrame, provenance: str,

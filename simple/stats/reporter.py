@@ -87,7 +87,12 @@ class ImportReporter:
     self.data["error"] = error
 
   def get_file_reporter(self, import_file: File):
-    return self.file_reporters_by_full_path[import_file.full_path()]
+    full_path = import_file.full_path()
+    with self.lock:
+      if full_path not in self.file_reporters_by_full_path:
+        self.file_reporters_by_full_path[full_path] = FileImportReporter(
+            full_path, self)
+      return self.file_reporters_by_full_path[full_path]
 
   def recompute_progress(self):
     with self.lock:
@@ -177,16 +182,20 @@ class FileImportReporter:
     self.status = Status.FAILURE
     self.data["error"] = error
 
+  def report_unresolved_entities(self, unresolved_list: list[str]):
+    self.data["unresolvedEntities"] = unresolved_list
+
   def json(self) -> dict:
     report = {}
 
     def _maybe_report(field: str, func=None):
       value = self.data.get(field)
-      if value:
+      if value is not None:
         report[field] = value if not func else func(value)
 
     report["status"] = self.status.name
     _maybe_report("error")
+    _maybe_report("unresolvedEntities")
 
     if self.start_time:
       report["startTime"] = str(self.start_time)
