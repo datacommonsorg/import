@@ -230,6 +230,9 @@ public class PipelineUtils {
                     if (!g.getNodesMap().isEmpty()) {
                       // Access the single element in the map.
                       PropertyValues pvs = g.getNodesMap().entrySet().iterator().next().getValue();
+                      if (GraphUtils.isStatisticalPopulation(pvs)) {
+                        return;
+                      }
                       if (GraphUtils.isObservation(pvs)) {
                         c.output(OBSERVATION_NODES_TAG, g);
                       } else {
