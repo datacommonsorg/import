@@ -193,10 +193,11 @@ CREATE TABLE KeyValueStore (
 CREATE TABLE {{ embedding_table }} (
   subject_id STRING(1024) NOT NULL,
   embedding_label STRING(1024) NOT NULL,
+  embedding_content_key STRING(1024) NOT NULL,
   embedding_content JSON,
   node_types ARRAY<STRING(1024)>,
-  embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }})
-) PRIMARY KEY(subject_id, embedding_label),
+  embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }}),
+) PRIMARY KEY(subject_id, embedding_label, embedding_content_key),
 INTERLEAVE IN PARENT Node ON DELETE CASCADE;
 
 CREATE VECTOR INDEX {{ embedding_index }}

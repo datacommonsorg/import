@@ -160,8 +160,8 @@ class EmbeddingUtils:
         logging.info(f"Generating embeddings in batches of {_BATCH_SIZE}.")
 
         embeddings_sql = f"""
-            INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content, embeddings, node_types)
-            SELECT subject_id, @embedding_label, embedding_content, embeddings.values, node_types
+            INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content_key, embedding_content, embeddings, node_types)
+            SELECT subject_id, @embedding_label, CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content, '$.name')) AS STRING), embedding_content, embeddings.values, node_types
             FROM ML.PREDICT(
                 MODEL {model_name},
                 (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))

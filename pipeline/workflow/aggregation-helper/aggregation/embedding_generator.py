@@ -49,7 +49,7 @@ _DEFAULT_EMBEDDING_SPECS = [
 
 
 @lru_cache(maxsize=1)
-def _extract_nl_stat_var() -> dict[str, str]:
+def _extract_nl_stat_var() -> list[dict[str, str]]:
     path = _NL_STAT_VAR_FILE
     content = ""
     if path.startswith("gs://"):
@@ -66,17 +66,22 @@ def _extract_nl_stat_var() -> dict[str, str]:
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
 
-    dcids = dict()
+    seen = set()
+    records = []
     reader = csv.DictReader(io.StringIO(content))
     for row in reader:
         dcid_str = row.get("dcid")
         sentence = row.get("sentence")
-        if dcid_str:
+        if dcid_str and sentence:
+            sentence = sentence.strip()
             for item in dcid_str.split(";"):
                 item = item.strip()
-                if item:
-                    dcids[item] = sentence
-    return dcids
+                if item and sentence:
+                    pair = (item, sentence)
+                    if pair not in seen:
+                        seen.add(pair)
+                        records.append({"dcid": item, "sentence": sentence})
+    return records
 
 
 class EmbeddingGenerator:
@@ -135,6 +140,7 @@ class EmbeddingGenerator:
             select_nodes_sql = """
                 SELECT 
                   subject_id, 
+                  CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content.name)) AS STRING) AS embedding_content_key,
                   TO_JSON_STRING(embedding_content) AS content, 
                   embedding_content, 
                   node_types 
@@ -144,13 +150,14 @@ class EmbeddingGenerator:
             select_nodes_sql = """
                 SELECT 
                   r.subject_id, 
+                  CAST(FARM_FINGERPRINT(m.sentence) AS STRING) AS embedding_content_key,
                   m.sentence AS content, 
                   JSON_OBJECT("title", r.subject_id, "name", m.sentence) AS embedding_content, 
                   r.node_types 
                 FROM UNNEST(@nl_stat_vars) m
                 INNER JOIN raw_nodes r ON r.subject_id = m.dcid
             """
-            nl_dict = _extract_nl_stat_var()
+            nl_records = _extract_nl_stat_var()
             job_config = bigquery.QueryJobConfig(
                 query_parameters=[
                     bigquery.ArrayQueryParameter(
@@ -159,10 +166,10 @@ class EmbeddingGenerator:
                         [
                             bigquery.StructQueryParameter(
                                 "",
-                                bigquery.ScalarQueryParameter("dcid", "STRING", k),
-                                bigquery.ScalarQueryParameter("sentence", "STRING", v)
+                                bigquery.ScalarQueryParameter("dcid", "STRING", rec["dcid"]),
+                                bigquery.ScalarQueryParameter("sentence", "STRING", rec["sentence"])
                             )
-                            for k, v in nl_dict.items()
+                            for rec in nl_records
                         ]
                     )
                 ]
@@ -215,6 +222,7 @@ class EmbeddingGenerator:
         SELECT 
           subject_id, 
           "{embedding_label}" AS embedding_label, 
+          embedding_content_key,
           embedding_content, 
           node_types, 
           ml_generate_embedding_result AS embeddings

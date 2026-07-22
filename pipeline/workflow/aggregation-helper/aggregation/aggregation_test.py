@@ -339,7 +339,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("CustomEmbeddingTable", query)
         self.assertIn("TEST_TASK", query)
 
-    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value={'statVar1': 'sentence1', 'statVar2': 'sentence2'})
+    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value=[{'dcid': 'statVar1', 'sentence': 'sentence1'}, {'dcid': 'statVar2', 'sentence': 'sentence2'}])
     def test_run_all_nl_stat_var(self, mock_extract):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
