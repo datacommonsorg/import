@@ -28,6 +28,8 @@ import tempfile
 import threading
 from typing import Callable, Optional
 
+from google.api_core.exceptions import GoogleAPICallError, TooManyRequests
+from google.api_core.retry import Retry
 from google.cloud import storage
 import pandas as pd
 from rdflib import Graph
@@ -51,7 +53,7 @@ from util.filesystem import File
 
 # Configuration Constants
 _CHUNK_SIZE = 10000
-_UPLOAD_CONCURRENCY = 32
+_UPLOAD_CONCURRENCY = 4
 _EXPORT_PROCESSES_MAX = 8
 
 
@@ -524,11 +526,20 @@ class JsonLdStreamDb(Db):
 
     bucket = client.bucket(bucket_name)
 
+    gcs_retry = Retry(
+        initial=1.0,
+        maximum=10.0,
+        multiplier=2.0,
+        deadline=120.0,
+        predicate=lambda e: isinstance(
+            e, (TooManyRequests, GoogleAPICallError, requests.exceptions.RequestException))
+    )
+
     def _upload_single(rel_path: str):
       local_file_path = os.path.join(temp_local_dir, rel_path)
       blob_key = f"{blob_prefix}/{rel_path}" if blob_prefix else rel_path
       blob = bucket.blob(blob_key)
-      blob.upload_from_filename(local_file_path)
+      blob.upload_from_filename(local_file_path, retry=gcs_retry)
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=_UPLOAD_CONCURRENCY) as executor:
