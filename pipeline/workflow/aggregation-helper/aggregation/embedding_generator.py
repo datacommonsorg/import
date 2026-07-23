@@ -15,6 +15,7 @@
 import csv
 from functools import lru_cache
 import io
+import itertools
 import json
 import logging
 from typing import Any, Dict, List, Optional
@@ -22,6 +23,7 @@ import urllib.request
 import urllib.error
 
 from google.cloud import bigquery
+from google.cloud import spanner
 from google.cloud import storage
 from pydantic import BaseModel
 from .bq_executor import BigQueryExecutor
@@ -93,6 +95,99 @@ class EmbeddingGenerator:
         """Initializes the EmbeddingGenerator with the executor."""
         self.executor = executor
         self.is_base_dc = is_base_dc
+        self._spanner_database = None
+
+    @property
+    def spanner_database(self):
+        """Lazily initializes and returns the Spanner Database client."""
+        if self._spanner_database is None:
+            spanner_client = spanner.Client(project=self.executor.project_id)
+            instance = spanner_client.instance(self.executor.instance_id)
+            self._spanner_database = instance.database(self.executor.database_id)
+            logging.info(f"Initialized Spanner client for EmbeddingGenerator: {self._spanner_database.name}")
+        return self._spanner_database
+
+    def _delete_existing_embeddings(self, spec: EmbeddingSpec, embedding_table: str = "NodeEmbedding") -> int:
+        """Deletes existing embeddings in Spanner for nodes matching the spec before re-generation."""
+        try:
+            db = self.spanner_database
+            lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
+            latest_lock_timestamp = None
+            with db.snapshot() as snapshot:
+                results = snapshot.execute_sql(lock_sql)
+                for row in results:
+                    latest_lock_timestamp = row[0]
+
+            params = {"node_types": spec.node_types}
+            param_types = {"node_types": spanner.param_types.Array(spanner.param_types.STRING)}
+
+            timestamp_condition = "last_update_timestamp > @timestamp" if latest_lock_timestamp else "TRUE"
+            if latest_lock_timestamp:
+                params["timestamp"] = latest_lock_timestamp
+                param_types["timestamp"] = spanner.param_types.TIMESTAMP
+
+            if spec.node_filter_type == "NLStatisticalVariable":
+                nl_records = _extract_nl_stat_var()
+                dcids = sorted(list({r["dcid"] for r in nl_records}))
+                params["nl_stat_vars"] = dcids
+                param_types["nl_stat_vars"] = spanner.param_types.Array(spanner.param_types.STRING)
+                filter_condition = "subject_id IN UNNEST(@nl_stat_vars)"
+            else:
+                filter_condition = "TRUE"
+
+            node_select_sql = f"""
+                SELECT subject_id FROM Node
+                WHERE name IS NOT NULL
+                  AND name <> ''
+                  AND {timestamp_condition}
+                  AND {filter_condition}
+                  AND EXISTS (
+                    SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST(@node_types)
+                  )
+            """
+
+            subject_ids = []
+            with db.snapshot() as snapshot:
+                results = snapshot.execute_sql(node_select_sql, params=params, param_types=param_types)
+                subject_ids = [row[0] for row in results]
+
+            if not subject_ids:
+                logging.info(f"No nodes found to delete existing embeddings for label '{spec.embedding_label}'.")
+                return 0
+
+            logging.info(f"Deleting existing embeddings in {embedding_table} for {len(subject_ids)} nodes (label: {spec.embedding_label})...")
+            delete_sql = f"""
+                DELETE FROM {embedding_table}
+                WHERE embedding_label = @embedding_label
+                  AND subject_id IN UNNEST(@subject_ids)
+            """
+
+            def chunked(iterable, n):
+                it = iter(iterable)
+                while True:
+                    chunk = list(itertools.islice(it, n))
+                    if not chunk:
+                        break
+                    yield chunk
+
+            total_deleted = 0
+            for batch in chunked(subject_ids, 1000):
+                del_params = {
+                    "embedding_label": spec.embedding_label,
+                    "subject_ids": batch
+                }
+                del_param_types = {
+                    "embedding_label": spanner.param_types.STRING,
+                    "subject_ids": spanner.param_types.Array(spanner.param_types.STRING)
+                }
+                rows = db.execute_partitioned_dml(delete_sql, params=del_params, param_types=del_param_types)
+                total_deleted += rows
+
+            logging.info(f"Deleted {total_deleted} existing embedding rows for label '{spec.embedding_label}'.")
+            return total_deleted
+        except Exception as e:
+            logging.error(f"Failed to delete existing embeddings in Spanner: {e}")
+            raise
 
     def run_all(self, specs: Optional[List[Any]] = None, embedding_table: str = "NodeEmbedding") -> List[bigquery.job.QueryJob]:
         """Runs all embedding generations asynchronously and returns their jobs."""
@@ -128,6 +223,9 @@ class EmbeddingGenerator:
         task_type = spec.task_type
         node_types = spec.node_types
         node_filter_type = spec.node_filter_type
+
+        # 1. Pre-delete existing embeddings in Spanner for updated nodes
+        self._delete_existing_embeddings(spec, embedding_table=embedding_table)
 
         # 1. Format node types list for Spanner
         safe_types = [f"'{nt.replace(chr(39), chr(92) + chr(39))}'" for nt in node_types]

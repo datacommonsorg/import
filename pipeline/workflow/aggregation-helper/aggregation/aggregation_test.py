@@ -310,7 +310,8 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.mock_executor.enable_embeddings = True
         self.mock_executor.bq_dataset_id = "datacommons"
 
-    def test_run_all(self):
+    @patch.object(EmbeddingGenerator, '_delete_existing_embeddings')
+    def test_run_all(self, mock_delete):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -328,6 +329,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
         jobs = generator.run_all(specs=specs, embedding_table="CustomEmbeddingTable")
 
         self.assertEqual(len(jobs), 1)
+        mock_delete.assert_called_once()
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
         self.assertIn("test-conn", query)
@@ -337,8 +339,9 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("CustomEmbeddingTable", query)
         self.assertIn("TEST_TASK", query)
 
+    @patch.object(EmbeddingGenerator, '_delete_existing_embeddings')
     @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value=[{'dcid': 'statVar1', 'sentence': 'sentence1'}, {'dcid': 'statVar2', 'sentence': 'sentence2'}])
-    def test_run_all_nl_stat_var(self, mock_extract):
+    def test_run_all_nl_stat_var(self, mock_extract, mock_delete):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -356,6 +359,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
         jobs = generator.run_all(specs=specs, embedding_table="CustomEmbeddingTable")
 
         self.assertEqual(len(jobs), 1)
+        mock_delete.assert_called_once()
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
         job_config = self.mock_executor.execute.call_args[1].get('job_config') or self.mock_executor.execute.call_args.kwargs.get('job_config')
@@ -374,6 +378,29 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("statVar2", dcids)
         self.assertIn("sentence1", sentences)
         self.assertIn("sentence2", sentences)
+
+    @patch.object(EmbeddingGenerator, 'spanner_database')
+    def test_delete_existing_embeddings(self, mock_db):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.side_effect = [
+            [(None,)],  # IngestionLock query
+            [("dcid/1",), ("dcid/2",)]  # Node query
+        ]
+        mock_db.execute_partitioned_dml.return_value = 2
+
+        spec = EmbeddingSpec(
+            embedding_label="test_embedding",
+            model_name="TestModel",
+            model_endpoint="text-embedding-005",
+            task_type="TEST_TASK",
+            node_types=["StatVar"],
+            node_filter_type="NoFilter"
+        )
+        deleted = generator._delete_existing_embeddings(spec, embedding_table="NodeEmbedding")
+        self.assertEqual(deleted, 2)
+        mock_db.execute_partitioned_dml.assert_called_once()
 
 
 if __name__ == '__main__':
