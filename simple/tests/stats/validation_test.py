@@ -17,6 +17,7 @@ from unittest import mock
 
 from stats.config import Config
 from stats.data import Triple
+from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.validation import MetadataValidator
 
@@ -73,6 +74,8 @@ class TestMetadataValidator(unittest.TestCase):
     self.assertIn("referenced provenances are not defined in your MCF files",
                   str(context.exception))
     self.assertIn("dcid:MissingProvenance", str(context.exception))
+    self.assertEqual(context.exception.error_type,
+                     ValidationErrorType.MISSING_PROVENANCE)
 
   def test_validation_missing_source_link(self):
     # Setup mock config with referenced provenance
@@ -99,6 +102,8 @@ class TestMetadataValidator(unittest.TestCase):
     self.assertIn("Linked sources are missing for defined provenances",
                   str(context.exception))
     self.assertIn("has no linked Source", str(context.exception))
+    self.assertEqual(context.exception.error_type,
+                     ValidationErrorType.MISSING_SOURCE)
 
   def test_validation_undefined_source_node_passes(self):
     # Setup mock config with referenced provenance
@@ -137,6 +142,8 @@ class TestMetadataValidator(unittest.TestCase):
       validator.validate()
 
     self.assertIn("must have a 'provenance' property", str(context.exception))
+    self.assertEqual(context.exception.error_type,
+                     ValidationErrorType.INVALID_CONFIGURATION)
 
   def test_validation_invalid_provenance_format(self):
     # Setup mock config with provenance that doesn't start with 'dcid:'
@@ -157,3 +164,5 @@ class TestMetadataValidator(unittest.TestCase):
 
     self.assertIn("must be a valid DCID or URI", str(context.exception))
     self.assertIn("InvalidProvenanceName", str(context.exception))
+    self.assertEqual(context.exception.error_type,
+                     ValidationErrorType.INVALID_CONFIGURATION)

@@ -40,6 +40,7 @@ from stats.data import McfNode
 from stats.data import STAT_VAR_GROUP
 from stats.data import STATISTICAL_VARIABLE
 from stats.data import Triple
+from stats.data import validate_numeric_values
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
@@ -286,6 +287,8 @@ class MainDcDb(Db):
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
+    validate_numeric_values(observations_df, input_file.path)
+
     # Only keep basic observation columns.
     # Provenance is specified differently for main dc.
     # TODO: Include obs properties in main DC output.
@@ -356,6 +359,8 @@ class SqlDb(Db):
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
+    validate_numeric_values(observations_df, input_file.path)
+
     logging.info("Writing %s observations to [%s]", len(observations_df),
                  self.engine)
     self.num_observations += len(observations_df)

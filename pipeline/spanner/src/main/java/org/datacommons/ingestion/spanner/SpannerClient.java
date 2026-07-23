@@ -192,6 +192,8 @@ public class SpannerClient implements Serializable {
         .to(edge.getObjectId())
         .set("provenance")
         .to(edge.getProvenance())
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
         .build();
   }
 

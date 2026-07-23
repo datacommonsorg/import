@@ -19,10 +19,12 @@ import numpy as np
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
+from stats.data import FileValidationError
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
 from stats.data import strip_namespace
 from stats.data import strip_namespace_series
+from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -54,33 +56,6 @@ STANDARD_PROPERTY_MAPPING = {
 }
 
 
-def _convert_numeric_to_string(col: pd.Series,
-                               default_for_na: str = "") -> pd.Series:
-  """Convert numeric column to string, preserving integer format.
-
-  Args:
-      col: Pandas Series that may contain numeric values, NaN, or strings
-      default_for_na: Value to use for NaN entries (default is empty string)
-
-  Returns:
-      Series with all values converted to strings
-  """
-
-  # If not numeric, just convert to string
-  if not pd.api.types.is_numeric_dtype(col):
-    return col.astype(str)
-
-    # For numeric columns, preserve integer format
-  is_int_value = col.notna() & (col == col.round())
-  is_na = col.isna()
-
-  return np.where(
-      is_int_value,
-      col.round().astype("Int64").astype(str),
-      np.where(is_na, default_for_na, col.astype(str)),
-  )
-
-
 def _apply_property_defaults(df: pd.DataFrame,
                              obs_props: ObservationProperties) -> pd.DataFrame:
   """Apply property defaults, using per-row values where available."""
@@ -94,30 +69,20 @@ def _apply_property_defaults(df: pd.DataFrame,
   for prop, col_name in property_mapping.items():
     default_value = getattr(obs_props, col_name, "")
     if col_name in df.columns:
-      # Replace empty strings with NaN for consistent handling
       source_col = df[col_name].replace("", pd.NA)
-
-      # Check if source is numeric before filling (to preserve int format for numeric columns)
-      is_source_numeric = pd.api.types.is_numeric_dtype(source_col)
-
-      if is_source_numeric:
-        df[col_name] = _convert_numeric_to_string(source_col,
-                                                  default_for_na=default_value)
-      else:
-        df[col_name] = source_col.fillna(default_value).astype(str)
+      df[col_name] = source_col.fillna(default_value).astype(str)
     else:
       # If the column doesn't exist, use default for all rows
       df[col_name] = default_value
 
-    # Custom properties column (always empty for variable_per_row_importer)
+  # Custom properties column (always empty for variable_per_row_importer)
   df[constants.COLUMN_PROPERTIES] = ""
   return df
 
 
 def _format_numeric_values(df: pd.DataFrame) -> pd.DataFrame:
-  """Convert value column to string, preserving integer format."""
-  df[constants.COLUMN_VALUE] = _convert_numeric_to_string(
-      df[constants.COLUMN_VALUE])
+  """Format value column as string."""
+  df[constants.COLUMN_VALUE] = df[constants.COLUMN_VALUE].fillna("").astype(str)
   return df
 
 
@@ -160,6 +125,9 @@ class VariablePerRowImporter(Importer):
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
+      errors = self.validate_headers()
+      if errors:
+        raise ValueError("\n".join(errors))
       self._read_csv()
       self._map_columns()
       self._write_observations()
@@ -174,11 +142,66 @@ class VariablePerRowImporter(Importer):
     with self.input_file.open_stream() as stream:
       self.df = pd.read_csv(stream, nrows=1)
 
+  def validate_headers(self) -> list[FileValidationError]:
+    column_mappings, custom_dimensions = self._parse_column_mappings()
+    errors = self._validate_mappings(column_mappings, custom_dimensions)
+
+    if errors:
+      return errors
+
+    try:
+      with self.input_file.open_stream() as stream:
+        header_df = pd.read_csv(stream, nrows=0)
+      actual_column_names = set(header_df.columns)
+    except Exception as e:
+      return [
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.GENERIC_ERROR,
+              error_message=
+              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
+          )
+      ]
+
+    expected_column_names = set(column_mappings.values())
+    difference = expected_column_names - actual_column_names
+    if difference:
+      errors.append(
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.MISSING_REQUIRED_COLUMNS,
+              problem_columns=sorted(list(difference)),
+              error_message=
+              f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
+          ))
+
+    ignored_column_names = set(self.config.ignore_columns(self.input_file))
+    all_allowed_columns = expected_column_names | ignored_column_names
+    unmapped_columns = actual_column_names - all_allowed_columns
+    if unmapped_columns:
+      errors.append(
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.UNMAPPED_COLUMNS,
+              problem_columns=sorted(list(unmapped_columns)),
+              error_message=
+              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
+          ))
+
+    return errors
+
   def _map_columns(self):
+    self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
+    errors = self._validate_mappings(self.column_mappings,
+                                     self.custom_dimensions)
+    if errors:
+      raise ValueError(errors[0]["errorMessage"])
+
+  def _parse_column_mappings(self) -> tuple[dict[str, str], list[str]]:
     config_mappings = self.config.column_mappings(self.input_file)
 
     if not config_mappings:
-      # Legacy fallback: if no column mappings are specified, assume standard headers
+      # TODO: Remove this default fallback and require explicit columnMappings in config.json.
       config_mappings = {
           "dcid:observationAbout": "entity",
           "dcid:variableMeasured": "variable",
@@ -186,56 +209,57 @@ class VariablePerRowImporter(Importer):
           "dcid:value": "value",
       }
 
-    self.column_mappings = {}
-    self.custom_dimensions = []
+    column_mappings = {}
+    custom_dimensions = []
 
-    # Map column mappings to internal names and identify custom dimensions
     for key, physical_col in config_mappings.items():
       if key in STANDARD_PROPERTY_MAPPING:
         internal_col = STANDARD_PROPERTY_MAPPING[key]
-        self.column_mappings[internal_col] = physical_col
+        column_mappings[internal_col] = physical_col
       else:
-        # It's a custom dimension!
-        self.custom_dimensions.append(key)
-        self.column_mappings[key] = physical_col
+        custom_dimensions.append(key)
+        column_mappings[key] = physical_col
 
-    # 1. Validate strictly required columns
+    return column_mappings, custom_dimensions
+
+  def _validate_mappings(
+      self, column_mappings: dict[str, str],
+      custom_dimensions: list[str]) -> list[FileValidationError]:
+    errors = []
     for req_col in [
         constants.COLUMN_VARIABLE, constants.COLUMN_DATE, constants.COLUMN_VALUE
     ]:
-      if req_col not in self.column_mappings:
-        # Find the official DCID key for the error message
+      if req_col not in column_mappings:
         official_key = [
             k for k, v in STANDARD_PROPERTY_MAPPING.items() if v == req_col
         ][0]
-        raise ValueError(
-            f"Missing required column mapping for: '{official_key}'")
+        errors.append(
+            FileValidationError(
+                file=self.input_file.path,
+                error_type=ValidationErrorType.MISSING_REQUIRED_COLUMNS,
+                problem_columns=[official_key],
+                error_message=
+                f"Missing required column mapping for: '{official_key}'"))
 
-    # 2. Validate entity dimensions count (1 to 3 allowed)
-    # Since dcid:observationAbout is now treated as a custom dimension, all entity dimensions are in custom_dimensions
-    entity_dims_count = len(self.custom_dimensions)
+    entity_dims_count = len(custom_dimensions)
 
     if entity_dims_count < 1:
-      raise ValueError(
-          "Invalid configuration: An observation must have at least one entity dimension. "
-          "Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
-      )
+      errors.append(
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.INVALID_CONFIGURATION,
+              error_message=
+              "Invalid configuration: An observation must have at least one entity dimension. Please map 'dcid:observationAbout' or map at least one custom dimension in 'columnMappings'."
+          ))
     if entity_dims_count > 3:
-      raise ValueError(
-          f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). "
-          "A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
-      )
-
-    # 3. Verify that the physical columns actually exist in the CSV DataFrame
-    expected_column_names = set(self.column_mappings.values())
-    actual_column_names = set(self.df.columns)
-    difference = expected_column_names - actual_column_names
-    if difference:
-      logging.info("Expected column names: %s", expected_column_names)
-      logging.info("Actual column names: %s", actual_column_names)
-      raise ValueError(
-          f"The following expected columns were not found in the CSV: {difference}. "
-          f"Please check your 'columnMappings' and the CSV header.")
+      errors.append(
+          FileValidationError(
+              file=self.input_file.path,
+              error_type=ValidationErrorType.INVALID_CONFIGURATION,
+              error_message=
+              f"Invalid configuration: Too many entity dimensions mapped ({entity_dims_count}). A maximum of 3 entity dimensions (including 'dcid:observationAbout') is allowed."
+          ))
+    return errors
 
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file).id
@@ -243,7 +267,10 @@ class VariablePerRowImporter(Importer):
         self.config.observation_properties(self.input_file))
 
     with self.input_file.open_stream() as stream:
-      reader = pd.read_csv(stream, chunksize=10000)
+      reader = pd.read_csv(stream,
+                           na_values=constants.STANDARD_NA_VALUES,
+                           chunksize=10000,
+                           dtype=str)
 
       for chunk_df in reader:
         if chunk_df.empty:
@@ -307,7 +334,7 @@ class VariablePerRowImporter(Importer):
     new_entity_dcids = [
         strip_namespace(dcid)
         for dcid in self.entity_dcids
-        if dcid not in self.nodes.entities.keys()
+        if not self.nodes.has_entity(dcid)
     ]
 
     logging.info("Found %s total entities, of which %s are already imported.",
