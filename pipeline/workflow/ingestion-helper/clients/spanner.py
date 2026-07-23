@@ -83,7 +83,6 @@ class SpannerClient:
             project=project_id,
             credentials=credentials,
             client_options=client_options,
-            disable_builtin_metrics=True,
         )
         instance = spanner_client.instance(instance_id)
         database = instance.database(database_id)
