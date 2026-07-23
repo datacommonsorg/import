@@ -33,7 +33,6 @@ from aggregation.e2e_tests.base import (
     BQ_CONNECTION_ID,
     BQ_LOCATION,
     ENABLE_EMBEDDINGS,
-    BQ_MODEL_CONNECTION,
     BQ_DATASET_ID,
 )
 from aggregation import BigQueryExecutor, EmbeddingGenerator
@@ -51,7 +50,6 @@ class EmbeddingGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         # 2. Trigger embedding generation orchestrator
         os.environ['ENABLE_EMBEDDINGS'] = 'true'
-        os.environ['BQ_MODEL_CONNECTION'] = BQ_MODEL_CONNECTION
         os.environ['BQ_DATASET_ID'] = BQ_DATASET_ID
 
         calculations = [
@@ -83,7 +81,7 @@ class EmbeddingGeneratorIntegrationTest(AggregationIntegrationTestBase):
             # 3. Verify results in Spanner NodeEmbedding table
             with self.database.snapshot() as snapshot:
                 query = """
-                    SELECT subject_id, embedding_label, embedding_content, ARRAY_LENGTH(embeddings)
+                    SELECT subject_id, embedding_label, embedding_content_key, embedding_content, ARRAY_LENGTH(embeddings)
                     FROM NodeEmbedding
                     ORDER BY subject_id
                 """
@@ -93,12 +91,14 @@ class EmbeddingGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 # Assert first result (TestStatVar)
                 self.assertEqual(results[0][0], "dcid/TestStatVar")
                 self.assertEqual(results[0][1], "base_text_embedding")
-                self.assertEqual(results[0][3], 768)
+                self.assertTrue(isinstance(results[0][2], str) and len(results[0][2]) > 0)
+                self.assertEqual(results[0][4], 768)
 
                 # Assert second result (TestTopic)
                 self.assertEqual(results[1][0], "dcid/TestTopic")
                 self.assertEqual(results[1][1], "base_text_embedding")
-                self.assertEqual(results[1][3], 768)
+                self.assertTrue(isinstance(results[1][2], str) and len(results[1][2]) > 0)
+                self.assertEqual(results[1][4], 768)
 
         finally:
             if not ENABLE_EMBEDDINGS:

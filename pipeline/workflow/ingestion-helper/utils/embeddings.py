@@ -31,9 +31,17 @@ _BATCH_SIZE = 1000
 _NL_STAT_VAR_FILE = f"gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
 
 @lru_cache(maxsize=1)
-def _extract_nl_stat_var():
+def _extract_nl_stat_var() -> list[dict[str, str]]:
+    """Extracts deduplicated (dcid, sentence) pairs from NL stat var CSV file."""
     output_df = pd.read_csv(_NL_STAT_VAR_FILE)
-    return list(set(output_df.dcid.apply(lambda x: x.split(';')).explode().to_list()))
+    output_df = output_df.dropna(subset=['dcid', 'sentence'])
+    output_df['dcid'] = output_df['dcid'].apply(lambda x: [item.strip() for item in str(x).split(';') if item.strip()])
+    output_df['sentence'] = output_df['sentence'].astype(str).str.strip()
+    
+    exploded = output_df.explode('dcid')
+    exploded = exploded[(exploded['dcid'] != '') & (exploded['sentence'] != '')]
+    deduped = exploded[['dcid', 'sentence']].drop_duplicates()
+    return deduped.to_dict(orient='records')
 
 
 class EmbeddingUtils:
@@ -63,7 +71,9 @@ class EmbeddingUtils:
         if node_filter_type == "NoFilter":
             return "TRUE"
         elif node_filter_type == "NLStatisticalVariable":
-            params["nl_stat_vars"] = _extract_nl_stat_var()
+            nl_records = _extract_nl_stat_var()
+            dcids = sorted(list({r["dcid"] for r in nl_records}))
+            params["nl_stat_vars"] = dcids
             param_types["nl_stat_vars"] = Array(STRING)
             return "subject_id IN UNNEST(@nl_stat_vars)"
         else:
@@ -118,25 +128,100 @@ class EmbeddingUtils:
             logging.error(f"Error fetching updated nodes: {e}")
             raise
 
-    def _filter_and_convert_nodes(self, nodes_generator):
+    def _filter_and_convert_nodes(self, nodes_generator, node_filter_type="NoFilter"):
         """Filters out nodes without a name and converts dictionaries to tuples.
         Reads from a generator and yields results.
 
         Args:
             nodes_generator: A generator yielding dictionaries containing subject_id, name, and types.
+            node_filter_type: String specifying the node filtering logic.
 
         Yields:
             Tuples (subject_id, embedding_content, types).
         """
-        for node in nodes_generator:
-            name = node.get("name")
-            subject_id = node.get("subject_id")
-            if name:
-                embedding_content = json.dumps(OrderedDict([
-                    ("title", subject_id),
-                    ("name", name)
-                ]))
-                yield (subject_id, embedding_content, node.get("types"))
+        if node_filter_type == "NLStatisticalVariable":
+            nl_records = _extract_nl_stat_var()
+            dcid_to_sentences = {}
+            for r in nl_records:
+                dcid_to_sentences.setdefault(r["dcid"], []).append(r["sentence"])
+
+            for node in nodes_generator:
+                subject_id = node.get("subject_id")
+                sentences = dcid_to_sentences.get(subject_id, [])
+                for sentence in sentences:
+                    embedding_content = json.dumps(OrderedDict([
+                        ("title", subject_id),
+                        ("name", sentence)
+                    ]))
+                    yield (subject_id, embedding_content, node.get("types"))
+        else:
+            for node in nodes_generator:
+                name = node.get("name")
+                subject_id = node.get("subject_id")
+                if name:
+                    embedding_content = json.dumps(OrderedDict([
+                        ("title", subject_id),
+                        ("name", name)
+                    ]))
+                    yield (subject_id, embedding_content, node.get("types"))
+
+    def _delete_existing_embeddings(self, embedding_table: str, embedding_label: str, subject_ids_iterable, timeout: int) -> int:
+        """Deletes existing embeddings for subject_ids from a generator or iterable in batches.
+
+        Args:
+            embedding_table: Name of the embedding table.
+            embedding_label: Embedding label key to delete.
+            subject_ids_iterable: An iterable or generator yielding subject IDs.
+            timeout: Timeout for the spanner client to execute queries.
+
+        Returns:
+            The number of affected rows.
+        """
+        global _BATCH_SIZE
+        delete_sql = f"""
+            DELETE FROM {embedding_table}
+            WHERE embedding_label = @embedding_label
+              AND subject_id IN UNNEST(@subject_ids)
+        """
+        total_deleted = 0
+
+        def chunked(iterable, n):
+            it = iter(iterable)
+            while True:
+                chunk = list(itertools.islice(it, n))
+                if not chunk:
+                    break
+                yield chunk
+
+        seen_subject_ids = set()
+        def deduplicated_stream(iterable):
+            for item in iterable:
+                if item not in seen_subject_ids:
+                    seen_subject_ids.add(item)
+                    yield item
+
+        for batch in chunked(deduplicated_stream(subject_ids_iterable), _BATCH_SIZE):
+            params = {
+                "embedding_label": embedding_label,
+                "subject_ids": batch
+            }
+            param_types = {
+                "embedding_label": STRING,
+                "subject_ids": Array(STRING)
+            }
+
+            def _execute_dml(transaction):
+                return transaction.execute_update(delete_sql, params=params, param_types=param_types, timeout=timeout)
+
+            try:
+                row_count = self.spanner.database.run_in_transaction(_execute_dml)
+                total_deleted += row_count
+            except Exception as e:
+                logging.error(f"Error deleting existing embeddings for batch: {e}")
+                raise
+
+        logging.info(f"Deleted {total_deleted} existing embedding rows (embedding_label: {embedding_label}).")
+        return total_deleted
 
     def _generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_table, embedding_label, task_type, timeout):
         """Generates embeddings in batches using standard transactions.
@@ -168,8 +253,8 @@ class EmbeddingUtils:
         """
 
         insert_sql = f"""
-            INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content, embeddings, node_types)
-            SELECT subject_id, @embedding_label, embedding_content, embeddings, node_types
+            INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content_key, embedding_content, embeddings, node_types)
+            SELECT subject_id, @embedding_label, CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content, '$.name')) AS STRING), embedding_content, embeddings, node_types
             FROM UNNEST(@rows)
         """
 
@@ -270,10 +355,21 @@ class EmbeddingUtils:
             task_type = spec.task_type
             node_filter_type = spec.node_filter_type
 
-            logging.info(f"Job started for {embedding_label}. Fetching all nodes for types: {node_types}")
+            logging.info(f"Job started for {embedding_label}. Streaming subject_ids for pre-deletion...")
+            nodes_for_ids = self._get_updated_nodes(timestamp, node_types, node_filter_type, timeout=config.TIMEOUT)
+            converted_stream = self._filter_and_convert_nodes(nodes_for_ids, node_filter_type=node_filter_type)
+            subject_ids_generator = (item[0] for item in converted_stream)
+
+            self._delete_existing_embeddings(
+                embedding_table=self.spanner.embedding_table,
+                embedding_label=embedding_label,
+                subject_ids_iterable=subject_ids_generator,
+                timeout=config.TIMEOUT
+            )
+
+            logging.info(f"Fetching and streaming nodes for types: {node_types}")
             nodes = self._get_updated_nodes(timestamp, node_types, node_filter_type, timeout=config.TIMEOUT)
-            converted_nodes = list(self._filter_and_convert_nodes(nodes))
-            logging.info(f"Retrieved {len(converted_nodes)} nodes to be inserted for embedding_label: {embedding_label}")
+            converted_nodes = self._filter_and_convert_nodes(nodes, node_filter_type=node_filter_type)
 
             logging.info(f"Generating embeddings for model {model_name} (embedding_label: {embedding_label})")
             affected_rows = self._generate_embeddings_partitioned(

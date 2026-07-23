@@ -15,6 +15,7 @@
 import logging
 
 from stats.config import Config
+from stats.data import ValidationErrorType
 from stats.db import Db
 from stats.util import is_uri_or_namespace
 
@@ -65,15 +66,19 @@ class MetadataValidator:
         continue
       prov = entry.get("provenance")
       if not prov:
-        raise ValueError(
+        ex = ValueError(
             f"Metadata Validation Failed: Every input file in config.json "
             f"must have a 'provenance' property. "
             f"Found entry missing provenance: {entry}")
+        ex.error_type = ValidationErrorType.INVALID_CONFIGURATION
+        raise ex
       if not is_uri_or_namespace(prov):
-        raise ValueError(
+        ex = ValueError(
             f"Metadata Validation Failed: The 'provenance' property must be "
             f"a valid DCID or URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL). "
             f"Found invalid provenance: '{prov}'")
+        ex.error_type = ValidationErrorType.INVALID_CONFIGURATION
+        raise ex
       referenced.add(self._clean_dcid(prov))
     return referenced
 
@@ -109,11 +114,13 @@ class MetadataValidator:
     """Verifies all referenced provenances exist in the defined set."""
     missing = sorted(list(referenced - defined))
     if missing:
-      raise ValueError(
+      ex = ValueError(
           f"Metadata Validation Failed: The following referenced provenances "
           f"are not defined in your MCF files: {missing}. "
           f"Please define them in an MCF file (e.g., Node: dcid:YourProvenance)."
       )
+      ex.error_type = ValidationErrorType.MISSING_PROVENANCE
+      raise ex
 
   def _validate_source_links(self, defined_provs: set[str],
                              links: dict[str, str]) -> None:
@@ -129,10 +136,12 @@ class MetadataValidator:
           f"  - Provenance '{p}' has no linked Source (source property is missing or empty)"
           for p in missing_sources
       ]
-      raise ValueError(
+      ex = ValueError(
           f"Metadata Validation Failed: Linked sources are missing for "
           f"defined provenances:\n" + "\n".join(details) +
           f"\nPlease specify a source property on these Provenance nodes.")
+      ex.error_type = ValidationErrorType.MISSING_SOURCE
+      raise ex
 
   def _clean_dcid(self, val: str) -> str:
     """Normalizes a DCID value by ensuring it starts with 'dcid:' and has no prefix namespaces."""

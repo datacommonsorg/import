@@ -63,10 +63,19 @@ class TestMain(unittest.TestCase):
 
         # Mock side effect for execute_sql
         # First call: get_latest_lock_timestamp
-        # Second call: get_updated_nodes
-        # Third call: ML.PREDICT
+        # Second call: get_updated_nodes (for pre-deletion subject_ids)
+        # Third call: get_updated_nodes (for embedding generation)
+        # Fourth call: ML.PREDICT
         mock_snapshot.execute_sql.side_effect = [
             [(expected_timestamp,)],
+            MockResults(
+                rows=[
+                    ("dc/1", "Node 1", ["Topic"]),
+                    ("dc/2", None, ["Topic"]),
+                    ("dc/3", "SV 1", ["StatisticalVariable"])
+                ],
+                field_names=["subject_id", "name", "types"]
+            ),
             MockResults(
                 rows=[
                     ("dc/1", "Node 1", ["Topic"]),
@@ -102,30 +111,36 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.json()["status"], "OK")
         self.assertEqual(response.json()["affected_rows"], 2)
 
-        # Assertions for snapshots
-        self.assertEqual(mock_database.snapshot.call_count, 3)
+        # Assertions for snapshots and execute_sql calls
+        self.assertEqual(mock_database.snapshot.call_count, 4)
         call_args_list = mock_snapshot.execute_sql.call_args_list
-        self.assertEqual(len(call_args_list), 3)
+        self.assertEqual(len(call_args_list), 4)
 
         # Check first call (lock timestamp)
         self.assertIn("IngestionLock", call_args_list[0].args[0])
 
-        # Check second call (updated nodes)
+        # Check second call (updated nodes for deletion)
         args2, kwargs2 = call_args_list[1]
         self.assertIn("Node", args2[0])
         self.assertEqual(kwargs2["params"]["timestamp"], expected_timestamp)
         self.assertEqual(kwargs2["params"]["node_types"], ["StatisticalVariable", "Topic"])
 
-        # Check third call (ML.PREDICT)
+        # Check third call (updated nodes for embedding generation)
         args3, kwargs3 = call_args_list[2]
-        self.assertIn("ML.PREDICT", args3[0])
-        self.assertEqual(kwargs3["params"]["task_type"], "RETRIEVAL_QUERY")
+        self.assertIn("Node", args3[0])
+        self.assertEqual(kwargs3["params"]["timestamp"], expected_timestamp)
+        self.assertEqual(kwargs3["params"]["node_types"], ["StatisticalVariable", "Topic"])
 
-        # Assertions for generate_embeddings_partitioned
-        mock_database.run_in_transaction.assert_called_once()
-        self.assertEqual(len(transactions), 1)
-        transactions[0].execute_update.assert_called_once()
-        args_tx, kwargs_tx = transactions[0].execute_update.call_args
+        # Check fourth call (ML.PREDICT)
+        args4, kwargs4 = call_args_list[3]
+        self.assertIn("ML.PREDICT", args4[0])
+        self.assertEqual(kwargs4["params"]["task_type"], "RETRIEVAL_QUERY")
+
+        # Assertions for transactions (1 for DELETE, 1 for INSERT OR UPDATE)
+        self.assertEqual(mock_database.run_in_transaction.call_count, 2)
+        self.assertEqual(len(transactions), 2)
+        self.assertIn("DELETE FROM NodeEmbedding", transactions[0].execute_update.call_args[0][0])
+        args_tx, kwargs_tx = transactions[1].execute_update.call_args
         self.assertIn("INSERT OR UPDATE INTO NodeEmbedding", args_tx[0])
 
         # Verify data passed to generate_embeddings_partitioned reached execute_update
