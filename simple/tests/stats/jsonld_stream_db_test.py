@@ -328,7 +328,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
     prov_urls = {"p1": "http://my-provenance.org/url"}
 
     with tempfile.TemporaryDirectory() as temp_dir:
-      _write_observation_shard((chunk, 0, temp_dir, ns_map, prov_urls))
+      _write_observation_shard(chunk, 0, temp_dir, ns_map, prov_urls)
 
       shard_file = os.path.join(temp_dir, "observation-00000.jsonld")
       self.assertTrue(os.path.exists(shard_file))
@@ -374,6 +374,84 @@ class TestJsonLdStreamDb(unittest.TestCase):
       ][0]
       self.assertEqual(obs3["dcid:value"], "Unavailable")
       self.assertEqual(obs3["dcid:observationDate"], "2026-06")
+
+  def test_custom_namespace_rewriting(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      db = JsonLdStreamDb(output_dir=temp_store.as_dir(),
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
+
+      try:
+        # Insert triples using custom namespace (e.g. undata:)
+        triples = [
+            Triple("undata:provenance/WHO",
+                   "typeOf",
+                   object_id="dcid:Provenance"),
+            Triple("undata:provenance/WHO", "dcid:name", object_value="WHO"),
+            Triple("undata:provenance/WHO",
+                   "schema:url",
+                   object_value="https://who.int"),
+            # Reference to another custom namespace node
+            Triple("undata:provenance/WHO",
+                   "dcid:source",
+                   object_id="undata:source/WHO_Org")
+        ]
+        mock_file = mock.Mock(path="test_import/data.csv")
+        db.insert_triples(triples, mock_file)
+
+        node_shard = os.path.join(db.temp_local_dir, "test_import",
+                                  "node-00000.jsonld")
+        self.assertTrue(os.path.exists(node_shard))
+
+        with open(node_shard, "r") as f:
+          data = json.load(f)
+
+        self.assertIn("@graph", data)
+        graph = data["@graph"]
+        self.assertEqual(len(graph), 1)
+
+        node = graph[0]
+        # Subject ID should be rewritten to dcid:
+        self.assertEqual(node["@id"], "dcid:provenance/WHO")
+
+        # Reference in dcid:source should be rewritten to dcid:
+        self.assertEqual(node["dcid:source"]["@id"], "dcid:source/WHO_Org")
+
+        # dcs:name should be dcid:name
+        self.assertEqual(node["dcid:name"], "WHO")
+
+      finally:
+        db._temp_dir_obj.cleanup()
+
+  def test_observation_collision_tracking(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      db = JsonLdStreamDb(output_dir=temp_store.as_dir(),
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
+
+      try:
+        # Two rows with identical metadata keys (entity, variable, date, provenance) but different values
+        df = pd.DataFrame([
+            ("country/USA", "var1", "2023", "100", "p1", "", "", "", "", ""),
+            ("country/USA", "var1", "2023", "200", "p1", "", "", "", "", ""),
+        ],
+                          columns=[
+                              "entity", "variable", "date", "value",
+                              "provenance", "unit", "scaling_factor",
+                              "measurement_method", "observation_period",
+                              "properties"
+                          ])
+        mock_file = mock.Mock(path="test_import/data.csv")
+        db.insert_observations(df, mock_file)
+
+        self.assertEqual(db.obs_collision_count, 1)
+        self.assertEqual(len(db.obs_sample_collisions), 1)
+        self.assertIn("country/USA", db.obs_sample_collisions[0])
+        self.assertIn("var1", db.obs_sample_collisions[0])
+      finally:
+        db._temp_dir_obj.cleanup()
 
 
 if __name__ == "__main__":

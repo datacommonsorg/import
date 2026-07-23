@@ -13,12 +13,19 @@
 # limitations under the License.
 
 import logging
+from dataclasses import dataclass
 from typing import List, Optional
 
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
 from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
+
+
+@dataclass
+class LinkedEdgeConfig:
+    """Configuration for linked edge generation."""
+    import_names: Optional[List[str]] = None
 
 
 class LinkedEdgeGenerator:
@@ -32,8 +39,10 @@ class LinkedEdgeGenerator:
         self.is_base_dc = is_base_dc
 
     def run_all(self,
-                import_names: List[str] = None) -> List[bigquery.job.QueryJob]:
+                config: LinkedEdgeConfig) -> List[bigquery.job.QueryJob]:
         """Runs all global aggregations asynchronously and returns their jobs."""
+        import_names = config.import_names
+
         if not import_names:
             logging.info("No imports specified. Skipping global aggregations.")
             return []

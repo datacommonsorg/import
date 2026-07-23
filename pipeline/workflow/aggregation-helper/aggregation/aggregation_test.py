@@ -21,10 +21,10 @@ from unittest.mock import patch
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aggregation import BigQueryExecutor
-from aggregation import LinkedEdgeGenerator
-from aggregation import ProvenanceSummaryGenerator
-from aggregation import PlaceAggregationGenerator
-from aggregation import EmbeddingGenerator
+from aggregation import LinkedEdgeGenerator, LinkedEdgeConfig
+from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
+from aggregation import PlaceAggregationGenerator, PlaceAggregationConfig
+from aggregation import EmbeddingGenerator, EmbeddingGenerationConfig
 from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.common import (
     BASE_PROVENANCE_PREFIX,
@@ -70,7 +70,6 @@ class TestBigQueryExecutor(unittest.TestCase):
             "https://spanner.googleapis.com/projects/proj/instances/inst/databases/db"
         )
         self.assertFalse(executor.enable_embeddings)
-        self.assertIsNone(executor.embedding_conn_id)
         self.assertEqual(executor.bq_dataset_id, "datacommons")
 
     def test_init_failure(self, mock_bq_client):
@@ -202,7 +201,7 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
 
     def test_run_all_empty(self):
         generator = LinkedEdgeGenerator(self.mock_executor)
-        jobs = generator.run_all([])
+        jobs = generator.run_all(LinkedEdgeConfig(import_names=[]))
         self.assertEqual(jobs, [])
         self.mock_executor.execute.assert_not_called()
 
@@ -212,7 +211,7 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
 
-        jobs = generator.run_all(["import1", "import2"])
+        jobs = generator.run_all(LinkedEdgeConfig(import_names=["import1", "import2"]))
 
         self.assertEqual(len(jobs), 3)  # Should run 3 queries
         self.assertEqual(self.mock_executor.execute.call_count, 3)
@@ -237,7 +236,7 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
 
     def test_run_all_empty(self):
         generator = ProvenanceSummaryGenerator(self.mock_executor)
-        jobs = generator.run_all([])
+        jobs = generator.run_all(ProvenanceSummaryConfig(import_names=[]))
         self.assertEqual(jobs, [])
         self.mock_executor.execute.assert_not_called()
 
@@ -248,7 +247,7 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
 
-        jobs = generator.run_all(["import1"])
+        jobs = generator.run_all(ProvenanceSummaryConfig(import_names=["import1"]))
 
         self.assertEqual(len(jobs), 1)
         self.mock_executor.execute.assert_called_once()
@@ -272,10 +271,12 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         """Verifies that it returns None immediately if import list is empty."""
         generator = PlaceAggregationGenerator(self.mock_executor)
         job = generator.aggregate_places(
-            import_names=[],
-            source_type="County",
-            destination_type="State",
-            output_import_name="import1_AggState"
+            PlaceAggregationConfig(
+                import_names=[],
+                source_type="County",
+                destination_type="State",
+                output_import_name="import1_AggState"
+            )
         )
         self.assertIsNone(job)
         self.mock_executor.execute.assert_not_called()
@@ -283,20 +284,22 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
     def test_aggregate_places_calls_executor(self):
         """Verifies that it constructs a query and delegates execution to the executor."""
         generator = PlaceAggregationGenerator(self.mock_executor)
-        
+
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
 
         job = generator.aggregate_places(
-            import_names=["import1"],
-            source_type="County",
-            destination_type="State",
-            output_import_name="import1_AggState"
+            PlaceAggregationConfig(
+                import_names=["import1"],
+                source_type="County",
+                destination_type="State",
+                output_import_name="import1_AggState"
+            )
         )
-        
+
         # Should return the job returned by the executor
         self.assertEqual(job, mock_job)
-        
+
         # Should have called execute once with a non-empty query string
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
@@ -311,7 +314,6 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.mock_executor.connection_id = "test-conn"
         self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
         self.mock_executor.enable_embeddings = True
-        self.mock_executor.embedding_conn_id = "test-conn"
         self.mock_executor.bq_dataset_id = "datacommons"
 
     def test_run_all(self):
@@ -329,7 +331,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 node_filter_type="NoFilter"
             )
         ]
-        jobs = generator.run_all(specs=specs, embedding_table="CustomEmbeddingTable")
+        jobs = generator.run_all(EmbeddingGenerationConfig(specs=specs, embedding_table="CustomEmbeddingTable"))
 
         self.assertEqual(len(jobs), 1)
         self.mock_executor.execute.assert_called_once()
@@ -357,7 +359,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 node_filter_type="NLStatisticalVariable"
             )
         ]
-        jobs = generator.run_all(specs=specs, embedding_table="CustomEmbeddingTable")
+        jobs = generator.run_all(EmbeddingGenerationConfig(specs=specs, embedding_table="CustomEmbeddingTable"))
 
         self.assertEqual(len(jobs), 1)
         self.mock_executor.execute.assert_called_once()

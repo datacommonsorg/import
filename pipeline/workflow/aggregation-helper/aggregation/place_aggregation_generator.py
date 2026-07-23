@@ -14,6 +14,7 @@
 """Place-based aggregation generator using BQ Federation."""
 
 import logging
+from dataclasses import dataclass
 from typing import List, Optional
 
 from google.cloud import bigquery
@@ -55,6 +56,16 @@ CREATE TEMP FUNCTION GET_AGGR_STRATEGY(stat_type STRING, prop STRING) AS (
 '''
 
 
+@dataclass
+class PlaceAggregationConfig:
+    """Configuration for place aggregation."""
+    import_names: List[str]
+    source_type: str
+    destination_type: str
+    output_import_name: str
+    allow_multiple_to_places: bool = False
+
+
 class PlaceAggregationGenerator:
     """Generates and runs place-based aggregations using BigQuery Federation.
 
@@ -73,11 +84,7 @@ class PlaceAggregationGenerator:
 
     def aggregate_places(
             self,
-            import_names: List[str],
-            source_type: str,
-            destination_type: str,
-            output_import_name: str,
-            allow_multiple_to_places: bool = False) -> Optional[bigquery.job.QueryJob]:
+            config: PlaceAggregationConfig) -> Optional[bigquery.job.QueryJob]:
         """Generates and runs place-based aggregations using BigQuery Federation.
 
         This is a multi-statement SQL script that:
@@ -87,14 +94,14 @@ class PlaceAggregationGenerator:
            the facet_id via Farm Fingerprint, and exports the Observations.
 
         Args:
-            import_names: List of import names to filter by.
-            source_type: The source place type (e.g., 'County').
-            destination_type: The destination place type (e.g., 'State').
-            output_import_name: The mandatory output import name from orchestration config.
-            allow_multiple_to_places: If False, each child place is aggregated into
-              at most one parent place (lexicographically first) to prevent double-counting.
-              If True, a child place can roll up to multiple parents (useful for grids/ZIPs).
+            config: Structured PlaceAggregationConfig dataclass instance.
         """
+        import_names = config.import_names
+        source_type = config.source_type
+        destination_type = config.destination_type
+        output_import_name = config.output_import_name
+        allow_multiple_to_places = config.allow_multiple_to_places
+
         if not import_names:
             return None
 

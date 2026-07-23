@@ -16,6 +16,11 @@
 
 set -e
 
+# Default to searching public PyPI in addition to any configured global index-url,
+# to ensure standard third-party tools/packages can be resolved.
+export PIP_EXTRA_INDEX_URL="${PIP_EXTRA_INDEX_URL:-https://pypi.org/simple}"
+
+
 # Fixes lint
 function run_lint_fix {
   echo -e "#### Fixing Python code"
@@ -75,12 +80,20 @@ function py_test {
   python3 -m venv .env
   source .env/bin/activate
 
+  ROOT_DIR=$(pwd)
+
   cd simple
   pip3 install -r requirements.txt -q
 
   echo -e "#### Running stats tests"
   python3 -m pytest tests/ -s
 
+  echo -e "#### Running ingestion helper tests"
+  cd "${ROOT_DIR}/pipeline/workflow/ingestion-helper"
+  pip3 install uv -q
+  uv run pytest --ignore=aggregation/e2e_tests/
+
+  cd "${ROOT_DIR}"
   deactivate
 }
 

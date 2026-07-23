@@ -26,6 +26,7 @@ import os
 import shutil
 import tempfile
 import threading
+from typing import Callable, Optional
 
 from google.cloud import storage
 import pandas as pd
@@ -53,6 +54,28 @@ _CHUNK_SIZE = 10000
 _UPLOAD_CONCURRENCY = 32
 _EXPORT_PROCESSES_MAX = 8
 
+_KNOWN_CUSTOM_PREFIXES = set()
+_STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
+
+
+def _rewrite_custom_ns_to_dcid(val: str) -> str:
+  """Rewrites custom namespaces to 'dcid:' as a temporary workaround until the ingestion loader natively supports custom namespaces.
+
+  This allows users to author schemas with their custom namespaces today, which will be fully preserved when we re-ingest after backend support is added.
+  """
+  if not isinstance(val, str) or not val:
+    return val
+  if ":" in val and " " not in val:
+    prefix, suffix = val.split(":", 1)
+    if prefix in _KNOWN_CUSTOM_PREFIXES:
+      return f"dcid:{suffix.lstrip('/')}"
+    if prefix in _STANDARD_PREFIXES:
+      return val
+    if prefix.isalnum() and prefix.lower() not in _STANDARD_PREFIXES:
+      _KNOWN_CUSTOM_PREFIXES.add(prefix)
+      return f"dcid:{suffix.lstrip('/')}"
+  return val
+
 
 def _uri_ref(val):
   if not val or pd.isna(val):
@@ -76,8 +99,23 @@ def _parse_numeric(val):
     return str(val)
 
 
-def _write_observation_shard(args):
-  chunk, shard_index, jsonld_dir_path, ns_map, prov_urls = args
+def _write_observation_shard(chunk: list[tuple],
+                             shard_index: int,
+                             jsonld_dir_path: str,
+                             ns_map: dict[str, str],
+                             prov_urls: dict[str, str],
+                             track_hash_fn: Optional[Callable] = None):
+  """Writes a single shard of observation JSON-LD objects to disk.
+
+  Args:
+    chunk: List of row tuples containing observation fields.
+    shard_index: Integer index for output shard filename.
+    jsonld_dir_path: Path to output directory.
+    ns_map: Namespace mapping dictionary.
+    prov_urls: Dictionary mapping provenance IDs to URLs.
+    track_hash_fn: Optional callback function to track 64-bit @id hashes.
+  """
+
   graph_list = []
 
   for row in chunk:
@@ -86,7 +124,12 @@ def _write_observation_shard(args):
     key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
     obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
 
-    var_obj = _uri_ref(variable)
+    # Track 64-bit integer hash to detect observation @id collisions
+    if track_hash_fn:
+      track_hash_fn(obs_hash, str(entity), str(variable), str(date),
+                    str(provenance))
+
+    var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
     prop_keys = None
     if props:
       try:
@@ -110,20 +153,22 @@ def _write_observation_shard(args):
         "dcid:value": _parse_numeric(value),
     }
 
-    entity_ref = _uri_ref(entity)
+    entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))
     if entity_ref:
       obs_obj["dcid:observationAbout"] = entity_ref
 
     if provenance:
-      obs_obj["dcid:provenance"] = _uri_ref(provenance)
+      obs_obj["dcid:provenance"] = _uri_ref(
+          _rewrite_custom_ns_to_dcid(provenance))
       if provenance in prov_urls and prov_urls[provenance]:
         obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
     if unit:
-      obs_obj["dcid:unit"] = _uri_ref(unit)
+      obs_obj["dcid:unit"] = _uri_ref(_rewrite_custom_ns_to_dcid(unit))
     if scaling_factor:
       obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
     if mmethod:
-      obs_obj["dcid:measurementMethod"] = _uri_ref(mmethod)
+      obs_obj["dcid:measurementMethod"] = _uri_ref(
+          _rewrite_custom_ns_to_dcid(mmethod))
     if period:
       obs_obj["dcid:observationPeriod"] = period
 
@@ -135,7 +180,7 @@ def _write_observation_shard(args):
             prop_key = f"dcid:{k}" if not k.startswith(
                 "dcid:") and not k.startswith("http") else k
             if is_entity_reference(v):
-              obs_obj[prop_key] = _uri_ref(v)
+              obs_obj[prop_key] = _uri_ref(_rewrite_custom_ns_to_dcid(v))
             else:
               obs_obj[prop_key] = _parse_numeric(v)
       except json.JSONDecodeError as e:
@@ -170,7 +215,7 @@ def _write_node_shard_fast(args):
   subjects = {}
 
   for row in chunk:
-    sub_id = row.subject_id
+    sub_id = _rewrite_custom_ns_to_dcid(row.subject_id)
     if sub_id not in subjects:
       subjects[sub_id] = {
           "@id":
@@ -178,14 +223,14 @@ def _write_node_shard_fast(args):
               if is_uri_or_namespace(sub_id) else f"dcid:{sub_id.lstrip('/')}"
       }
 
-    pred = row.predicate
+    pred = _rewrite_custom_ns_to_dcid(row.predicate)
     pred_key = pred if is_uri_or_namespace(pred) else f"dcid:{pred}"
 
     if pred == "typeOf":
       pred_key = "@type"
 
     if row.object_id:
-      val = _uri_ref(row.object_id)
+      val = _uri_ref(_rewrite_custom_ns_to_dcid(row.object_id))
     else:
       val = _parse_numeric(row.object_value)
 
@@ -239,10 +284,10 @@ def _write_node_shard_rdflib(args):
   g.bind("dcid", DCID)
 
   for row in chunk:
-    sub = expand_id(row.subject_id)
-    p = expand_id(row.predicate)
+    sub = expand_id(_rewrite_custom_ns_to_dcid(row.subject_id))
+    p = expand_id(_rewrite_custom_ns_to_dcid(row.predicate))
     if row.object_id:
-      o = expand_id(row.object_id)
+      o = expand_id(_rewrite_custom_ns_to_dcid(row.object_id))
     else:
       o = Literal(row.object_value)
 
@@ -292,6 +337,48 @@ class JsonLdStreamDb(Db):
     self._processed_imports = set()
     self._node_streaming_started = set()
 
+    # 64-bit Integer Hash Tracker for Observation @ID Collisions.
+    # Observation @ids are generated from a SHA-256 hash of metadata fields (entity, variable, date, etc.),
+    # intentionally excluding value. If multiple CSV rows share identical metadata keys, their @ids collide,
+    # causing nodes to overwrite each other in graph storage.
+    # To detect collisions efficiently across millions of observations without high memory consumption,
+    # we convert the first 16 hex characters of SHA-256 (64 bits) to Python integers.
+    # Storing 64-bit ints in memory requires ~8 bytes per entry (~80MB RAM per 10 million rows).
+    self.obs_hash_set: set[int] = set()
+    self.obs_collision_count: int = 0
+    self.obs_sample_collisions: list[str] = []
+
+  def track_observation_hash(self, obs_hash: str, entity: str, variable: str,
+                             date: str, provenance: str) -> None:
+    """Tracks 64-bit observation @id hashes under thread lock to detect collisions.
+
+    Args:
+      obs_hash: 64-character SHA-256 hex digest string.
+      entity: Observation entity ID for diagnostic logging.
+      variable: Observation variable ID for diagnostic logging.
+      date: Observation date for diagnostic logging.
+      provenance: Observation provenance for diagnostic logging.
+    """
+    # Truncate SHA-256 to 16 hex chars (64 bits) and cast to int for ~90% lower memory footprint
+    hash_int = int(obs_hash[:16], 16)
+    with self.lock:
+      if hash_int in self.obs_hash_set:
+        self.obs_collision_count += 1
+        if len(self.obs_sample_collisions) < 10:
+          sample_info = (
+              f"@id='dcid:obs_{obs_hash}' [entity='{entity}', variable='{variable}', date='{date}', provenance='{provenance}']"
+          )
+          self.obs_sample_collisions.append(sample_info)
+          logging.warning(
+              "Observation @id collision detected! Duplicate metadata key produces identical %s",
+              sample_info)
+        elif self.obs_collision_count % 1000 == 0:
+          logging.warning(
+              "Detected %d observation @id collisions so far across processed datasets.",
+              self.obs_collision_count)
+      else:
+        self.obs_hash_set.add(hash_int)
+
   def _get_prov_urls(self) -> dict[str, str]:
     if hasattr(self, 'nodes') and self.nodes and hasattr(
         self.nodes, 'get_provenance_urls'):
@@ -308,8 +395,12 @@ class JsonLdStreamDb(Db):
       with self.lock:
         shard_index = self.obs_shard_index
         self.obs_shard_index += 1
-      _write_observation_shard(
-          (chunk_records, shard_index, import_temp_dir, self.ns_map, prov_urls))
+      _write_observation_shard(chunk=chunk_records,
+                               shard_index=shard_index,
+                               jsonld_dir_path=import_temp_dir,
+                               ns_map=self.ns_map,
+                               prov_urls=prov_urls,
+                               track_hash_fn=self.track_observation_hash)
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
@@ -391,6 +482,13 @@ class JsonLdStreamDb(Db):
       logging.info(
           "Finalizing JSON-LD local export and bulk uploading shards...")
       self._upload_shards(self.temp_local_dir)
+
+    if self.obs_collision_count > 0:
+      sample_str = "\n  - ".join(self.obs_sample_collisions)
+      logging.warning(
+          "Observation @ID Collision Summary: Total of %d observation @id collisions detected during export.\n"
+          "Sample colliding @IDs and metadata:\n  - %s",
+          self.obs_collision_count, sample_str)
 
     # Clean up local temporary directory
     try:

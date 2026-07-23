@@ -19,8 +19,56 @@ import json
 import logging
 import os
 import sys
+from dataclasses import dataclass
+from typing import List, Optional
 
-from aggregation import AggregationOrchestrator
+from aggregation import AggregationOrchestrator, OrchestratorConfig
+
+
+def parse_import_list(import_list_str: Optional[str]) -> List[str]:
+    """Parses and validates the JSON string representing active imports."""
+    if not import_list_str:
+        logging.info("No --import_list provided. Proceeding with global import-independent calculations only.")
+        return []
+
+    parsed = json.loads(import_list_str)
+    if not isinstance(parsed, list):
+        raise ValueError("Parsed import_list is not a list")
+    logging.info(f"Received active imports to process: {parsed}")
+    return parsed
+
+
+def create_orchestrator_config(
+    args: argparse.Namespace, env: os._Environ = os.environ
+) -> OrchestratorConfig:
+    """Creates an OrchestratorConfig from CLI arguments and environment variables."""
+    connection_id = env.get("BQ_SPANNER_CONN_ID")
+    project_id = env.get("PROJECT_ID")
+    instance_id = env.get("SPANNER_INSTANCE_ID")
+    database_id = env.get("SPANNER_GRAPH_DATABASE_ID")
+    location = env.get("LOCATION")
+
+    if not connection_id or not project_id or not instance_id or not database_id:
+        raise ValueError(
+            f"Missing required environment variables. connection_id={connection_id}, "
+            f"project_id={project_id}, instance_id={instance_id}, database_id (SPANNER_GRAPH_DATABASE_ID)={database_id}"
+        )
+
+    config_path = args.config_path or env.get("CONFIG_PATH")
+    enable_embeddings = env.get("ENABLE_EMBEDDINGS", "false").lower() == "true"
+    bq_dataset_id = env.get("BQ_DATASET_ID", "datacommons")
+
+    return OrchestratorConfig(
+        connection_id=connection_id,
+        project_id=project_id,
+        instance_id=instance_id,
+        database_id=database_id,
+        location=location,
+        is_base_dc=args.is_base_dc,
+        config_file_path=config_path,
+        enable_embeddings=enable_embeddings,
+        bq_dataset_id=bq_dataset_id,
+    )
 
 
 def main():
@@ -57,53 +105,18 @@ def main():
 
     args = parser.parse_args()
 
-    import_list = []
-    if args.import_list:
-        try:
-            import_list = json.loads(args.import_list)
-            logging.info(f"Received active imports to process: {import_list}")
-        except json.JSONDecodeError as e:
-            logging.error(f"Failed to parse import_list JSON: {e}")
-            sys.exit(1)
-
-        if not isinstance(import_list, list):
-            logging.error("Parsed import_list is not a list")
-            sys.exit(1)
-    else:
-        logging.info("No --import_list provided. Proceeding with global import-independent calculations only.")
-
-    connection_id = os.environ.get("BQ_SPANNER_CONN_ID")
-    project_id = os.environ.get("PROJECT_ID")
-    instance_id = os.environ.get("SPANNER_INSTANCE_ID")
-    database_id = os.environ.get("SPANNER_GRAPH_DATABASE_ID")
-    location = os.environ.get("LOCATION")
-
-    if not all([connection_id, project_id, instance_id, database_id]):
-        logging.error(
-            f"Missing required environment variables. connection_id={connection_id}, "
-            f"project_id={project_id}, instance_id={instance_id}, database_id (SPANNER_GRAPH_DATABASE_ID)={database_id}"
-        )
+    try:
+        import_list = parse_import_list(args.import_list)
+        config = create_orchestrator_config(args)
+    except (ValueError, json.JSONDecodeError) as e:
+        logging.error(f"Failed to load job configuration: {e}")
         sys.exit(1)
 
-    config_path = args.config_path or os.environ.get("CONFIG_PATH")
-    enable_embeddings = os.environ.get("ENABLE_EMBEDDINGS", "false").lower() == "true"
-    embedding_conn_id = os.environ.get("BQ_MODEL_CONNECTION")
-    bq_dataset_id = os.environ.get("BQ_DATASET_ID", "datacommons")
+    orchestrator = AggregationOrchestrator(config=config)
 
-    orchestrator = AggregationOrchestrator(
-        connection_id=connection_id,
-        project_id=project_id,
-        instance_id=instance_id,
-        database_id=database_id,
-        location=location,
-        is_base_dc=args.is_base_dc,
-        config_file_path=config_path,
-        enable_embeddings=enable_embeddings,
-        embedding_conn_id=embedding_conn_id,
-        bq_dataset_id=bq_dataset_id
+    logging.info(
+        f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}, skip_deletions={args.skip_deletions}) for imports: {import_list}"
     )
-
-    logging.info(f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}, skip_deletions={args.skip_deletions}) for imports: {import_list}")
     run_result = orchestrator.run(
         active_imports=import_list,
         dry_run=args.dry_run,
@@ -117,6 +130,7 @@ def main():
         sys.exit(1)
 
     logging.info("Aggregation Helper Cloud Run Job completed successfully.")
+
 
 if __name__ == "__main__":
     main()
