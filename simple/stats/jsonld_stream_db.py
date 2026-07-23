@@ -55,6 +55,10 @@ _UPLOAD_CONCURRENCY = 32
 _EXPORT_PROCESSES_MAX = 8
 
 
+_KNOWN_CUSTOM_PREFIXES = set()
+_STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
+
+
 def _rewrite_custom_ns_to_dcid(val: str) -> str:
   """Rewrites custom namespaces to 'dcid:' as a temporary workaround until the ingestion loader natively supports custom namespaces.
 
@@ -64,10 +68,15 @@ def _rewrite_custom_ns_to_dcid(val: str) -> str:
     return val
   if ":" in val and " " not in val:
     prefix, suffix = val.split(":", 1)
-    if prefix.isalnum() and prefix.lower() not in (
-        "http", "https", "dcid", "schema", "dcs"):
+    if prefix in _KNOWN_CUSTOM_PREFIXES:
+      return f"dcid:{suffix.lstrip('/')}"
+    if prefix in _STANDARD_PREFIXES:
+      return val
+    if prefix.isalnum() and prefix.lower() not in _STANDARD_PREFIXES:
+      _KNOWN_CUSTOM_PREFIXES.add(prefix)
       return f"dcid:{suffix.lstrip('/')}"
   return val
+
 
 
 def _uri_ref(val):
