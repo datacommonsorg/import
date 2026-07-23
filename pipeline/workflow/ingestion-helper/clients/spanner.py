@@ -336,26 +336,39 @@ class SpannerClient:
 
         def _update(transaction: Transaction):
             status_str = status.value if hasattr(status, 'value') else status
+            stage_str = stage.value if stage and hasattr(stage, 'value') else stage
+
             columns = ["WorkflowExecutionID", "Status"]
             values = [workflow_id, status_str]
 
-            if stage:
-                stage_str = stage.value if hasattr(stage, 'value') else stage
+            if stage_str:
                 columns.append("Stage")
                 values.append(stage_str)
 
-            if status == IngestionState.PENDING:
-                columns.append("CreationTimestamp")
-                values.append(spanner.COMMIT_TIMESTAMP)
+            is_base_dc = os.environ.get('IS_BASE_DC', 'true').lower() == 'true'
+            if not is_base_dc:
+                if stage == IngestionStage.PREPROCESSING:
+                    columns.append("CreationTimestamp")
+                    values.append(spanner.COMMIT_TIMESTAMP)
+            else:
+                if status == IngestionState.PENDING:
+                    columns.append("CreationTimestamp")
+                    values.append(spanner.COMMIT_TIMESTAMP)
 
             # The statements below allow us to construct a partial update, only for the fields that are set.
-            if status in (IngestionState.SUCCESS, IngestionState.FAILURE,
-                          IngestionState.RETRY):
+            terminal_statuses = {
+                IngestionState.SUCCESS.value,
+                IngestionState.FAILURE.value,
+                IngestionState.RETRY.value,
+            }
+            if status_str in terminal_statuses:
                 columns.append("CompletionTimestamp")
                 values.append(spanner.COMMIT_TIMESTAMP)
                 columns.append("IngestionFailure")
-                values.append(status in (IngestionState.FAILURE,
-                                         IngestionState.RETRY))
+                values.append(status_str in {
+                    IngestionState.FAILURE.value,
+                    IngestionState.RETRY.value,
+                })
 
             if job_id:
                 columns.append("DataflowJobID")
