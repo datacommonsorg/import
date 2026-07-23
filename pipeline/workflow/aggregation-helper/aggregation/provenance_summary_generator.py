@@ -13,12 +13,19 @@
 # limitations under the License.
 
 import logging
+from dataclasses import dataclass
 from typing import List, Optional
 
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
 from .common import _escape_sql_literal, get_provenance_name
+
+
+@dataclass
+class ProvenanceSummaryConfig:
+    """Configuration for provenance summary generation."""
+    import_names: List[str]
 
 
 class ProvenanceSummaryGenerator:
@@ -31,8 +38,11 @@ class ProvenanceSummaryGenerator:
         self.executor = executor
         self.is_base_dc = is_base_dc
 
-    def run_all(self, import_names: List[str]) -> List[bigquery.job.QueryJob]:
+    def run_all(self,
+                config: ProvenanceSummaryConfig) -> List[bigquery.job.QueryJob]:
         """Runs all provenance summary generation asynchronously and returns their jobs."""
+        import_names = config.import_names
+
         if not import_names:
             logging.info("No imports specified. Skipping cache aggregations.")
             return []

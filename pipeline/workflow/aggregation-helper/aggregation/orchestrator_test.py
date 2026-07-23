@@ -22,7 +22,13 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from aggregation.common import CALCULATION_TYPE_PRIORITY
-from aggregation.orchestrator import AggregationOrchestrator, CalculationType, OrchestratorConfig
+from aggregation.orchestrator import (
+    AggregationOrchestrator,
+    CalculationType,
+    OrchestratorConfig,
+    PlaceAggregationConfig,
+    StatVarAggregationConfig,
+)
 
 
 VALID_CONFIG_YAML = textwrap.dedent("""\
@@ -182,18 +188,22 @@ class TestOrchestratorExecution(unittest.TestCase):
         self.assertTrue(result.import_results["USFed_Census"].success)
 
         mock_place_gen.return_value.aggregate_places.assert_called_once_with(
-            import_names=["USFed_Census"],
-            source_type="County",
-            destination_type="State",
-            allow_multiple_to_places=False
+            config=PlaceAggregationConfig(
+                import_names=["USFed_Census"],
+                source_type="County",
+                destination_type="State",
+                allow_multiple_to_places=False
+            )
         )
 
         mock_sv_agg.return_value.aggregate_stat_vars.assert_called_once_with(
-            ancestor_sv="Count_Person",
-            source_svs=["Count_Person_Male", "Count_Person_Female"],
-            import_names=["USFed_Census"],
-            output_import_name="USFed_Census_StatVarAgg",
-            skip_all_sources_present_check=True
+            config=StatVarAggregationConfig(
+                ancestor_sv="Count_Person",
+                source_svs=["Count_Person_Male", "Count_Person_Female"],
+                import_names=["USFed_Census"],
+                output_import_name="USFed_Census_StatVarAgg",
+                skip_all_sources_present_check=True
+            )
         )
 
         # Verify deleter was called with expected outputs
@@ -309,10 +319,11 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
         mock_job2 = MagicMock()
         mock_job2.job_id = "job-place-2"
         
-        def aggregate_places_side_effect(import_names, source_type, destination_type, allow_multiple_to_places=False):
-            if import_names == ["USFed_Census"]:
+        def aggregate_places_side_effect(config: PlaceAggregationConfig):
+            names = config.import_names
+            if names == ["USFed_Census"]:
                 return mock_job1
-            elif import_names == ["USFed_Census_AggState"]:
+            elif names == ["USFed_Census_AggState"]:
                 return mock_job2
             return None
             
