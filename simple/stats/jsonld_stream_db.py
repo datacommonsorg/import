@@ -54,6 +54,28 @@ _CHUNK_SIZE = 10000
 _UPLOAD_CONCURRENCY = 32
 _EXPORT_PROCESSES_MAX = 8
 
+_KNOWN_CUSTOM_PREFIXES = set()
+_STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
+
+
+def _rewrite_custom_ns_to_dcid(val: str) -> str:
+  """Rewrites custom namespaces to 'dcid:' as a temporary workaround until the ingestion loader natively supports custom namespaces.
+
+  This allows users to author schemas with their custom namespaces today, which will be fully preserved when we re-ingest after backend support is added.
+  """
+  if not isinstance(val, str) or not val:
+    return val
+  if ":" in val and " " not in val:
+    prefix, suffix = val.split(":", 1)
+    if prefix in _KNOWN_CUSTOM_PREFIXES:
+      return f"dcid:{suffix.lstrip('/')}"
+    if prefix in _STANDARD_PREFIXES:
+      return val
+    if prefix.isalnum() and prefix.lower() not in _STANDARD_PREFIXES:
+      _KNOWN_CUSTOM_PREFIXES.add(prefix)
+      return f"dcid:{suffix.lstrip('/')}"
+  return val
+
 
 def _uri_ref(val):
   if not val or pd.isna(val):
@@ -107,7 +129,7 @@ def _write_observation_shard(chunk: list[tuple],
       track_hash_fn(obs_hash, str(entity), str(variable), str(date),
                     str(provenance))
 
-    var_obj = _uri_ref(variable)
+    var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
     prop_keys = None
     if props:
       try:
@@ -131,20 +153,22 @@ def _write_observation_shard(chunk: list[tuple],
         "dcid:value": _parse_numeric(value),
     }
 
-    entity_ref = _uri_ref(entity)
+    entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))
     if entity_ref:
       obs_obj["dcid:observationAbout"] = entity_ref
 
     if provenance:
-      obs_obj["dcid:provenance"] = _uri_ref(provenance)
+      obs_obj["dcid:provenance"] = _uri_ref(
+          _rewrite_custom_ns_to_dcid(provenance))
       if provenance in prov_urls and prov_urls[provenance]:
         obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
     if unit:
-      obs_obj["dcid:unit"] = _uri_ref(unit)
+      obs_obj["dcid:unit"] = _uri_ref(_rewrite_custom_ns_to_dcid(unit))
     if scaling_factor:
       obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
     if mmethod:
-      obs_obj["dcid:measurementMethod"] = _uri_ref(mmethod)
+      obs_obj["dcid:measurementMethod"] = _uri_ref(
+          _rewrite_custom_ns_to_dcid(mmethod))
     if period:
       obs_obj["dcid:observationPeriod"] = period
 
@@ -156,7 +180,7 @@ def _write_observation_shard(chunk: list[tuple],
             prop_key = f"dcid:{k}" if not k.startswith(
                 "dcid:") and not k.startswith("http") else k
             if is_entity_reference(v):
-              obs_obj[prop_key] = _uri_ref(v)
+              obs_obj[prop_key] = _uri_ref(_rewrite_custom_ns_to_dcid(v))
             else:
               obs_obj[prop_key] = _parse_numeric(v)
       except json.JSONDecodeError as e:
@@ -191,7 +215,7 @@ def _write_node_shard_fast(args):
   subjects = {}
 
   for row in chunk:
-    sub_id = row.subject_id
+    sub_id = _rewrite_custom_ns_to_dcid(row.subject_id)
     if sub_id not in subjects:
       subjects[sub_id] = {
           "@id":
@@ -199,14 +223,14 @@ def _write_node_shard_fast(args):
               if is_uri_or_namespace(sub_id) else f"dcid:{sub_id.lstrip('/')}"
       }
 
-    pred = row.predicate
+    pred = _rewrite_custom_ns_to_dcid(row.predicate)
     pred_key = pred if is_uri_or_namespace(pred) else f"dcid:{pred}"
 
     if pred == "typeOf":
       pred_key = "@type"
 
     if row.object_id:
-      val = _uri_ref(row.object_id)
+      val = _uri_ref(_rewrite_custom_ns_to_dcid(row.object_id))
     else:
       val = _parse_numeric(row.object_value)
 
@@ -260,10 +284,10 @@ def _write_node_shard_rdflib(args):
   g.bind("dcid", DCID)
 
   for row in chunk:
-    sub = expand_id(row.subject_id)
-    p = expand_id(row.predicate)
+    sub = expand_id(_rewrite_custom_ns_to_dcid(row.subject_id))
+    p = expand_id(_rewrite_custom_ns_to_dcid(row.predicate))
     if row.object_id:
-      o = expand_id(row.object_id)
+      o = expand_id(_rewrite_custom_ns_to_dcid(row.object_id))
     else:
       o = Literal(row.object_value)
 
