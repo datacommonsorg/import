@@ -22,7 +22,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from aggregation.common import CALCULATION_TYPE_PRIORITY
-from aggregation.orchestrator import AggregationOrchestrator, CalculationType
+from aggregation.orchestrator import AggregationOrchestrator, CalculationType, OrchestratorConfig
 
 
 VALID_CONFIG_YAML = textwrap.dedent("""\
@@ -79,13 +79,13 @@ class TestOrchestratorScanning(unittest.TestCase):
         with open(config_path, "w") as f:
             f.write(VALID_CONFIG_YAML)
 
-        self.orchestrator = AggregationOrchestrator(
+        self.orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
             database_id="db",
             config_file_path=config_path
-        )
+        ))
 
     def tearDown(self):
         self.tmpdir.cleanup()
@@ -100,18 +100,18 @@ class TestOrchestratorScanning(unittest.TestCase):
 
     def test_directory_config_loading(self, mock_executor):
         """Tests that orchestrator correctly scans and loads config files from a directory."""
-        dir_orchestrator = AggregationOrchestrator(
+        dir_orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
             database_id="db",
             config_dir=self.tmpdir.name
-        )
+        ))
         self.assertEqual(len(dir_orchestrator.calculations), 3)
 
     def test_init_options(self, mock_executor):
         """Tests that run_sequential and poll_interval parameters are properly set and passed."""
-        custom_orchestrator = AggregationOrchestrator(
+        custom_orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
@@ -119,7 +119,7 @@ class TestOrchestratorScanning(unittest.TestCase):
             config_dir=self.tmpdir.name,
             run_sequential=True,
             poll_interval=5
-        )
+        ))
         self.assertEqual(custom_orchestrator.poll_interval, 5)
         self.assertTrue(custom_orchestrator.executor.run_sequential)
 
@@ -144,13 +144,13 @@ class TestOrchestratorExecution(unittest.TestCase):
         with open(config_path, "w") as f:
             f.write(VALID_CONFIG_YAML)
 
-        self.orchestrator = AggregationOrchestrator(
+        self.orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
             database_id="db",
             config_file_path=config_path
-        )
+        ))
 
     def test_run_dry_run_true(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=True logs stages without submitting BigQuery jobs."""
@@ -293,13 +293,13 @@ class TestOrchestratorChainedExecution(unittest.TestCase):
         with open(config_path, "w") as f:
             f.write(CHAINED_CONFIG_YAML)
 
-        self.orchestrator = AggregationOrchestrator(
+        self.orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
             database_id="db",
             config_file_path=config_path
-        )
+        ))
 
     def test_run_chained_dry_run_false(self, mock_place_gen, mock_executor_cls):
         """Tests that run with dry_run=False submits BigQuery jobs across chained stages."""
@@ -355,7 +355,7 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             f.write(GLOBAL_CALCS_CONFIG_YAML)
 
     def test_run_global_calcs_dry_run(self, mock_embedding_gen, mock_executor_cls):
-        orchestrator = AggregationOrchestrator(
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
@@ -363,7 +363,7 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             config_file_path=self.config_path,
             enable_embeddings=True,
             bq_dataset_id="test-dataset"
-        )
+        ))
         result = orchestrator.run(active_imports=[], dry_run=True)
         self.assertTrue(result.success)
         self.assertIn("GLOBAL", result.import_results)
@@ -371,7 +371,7 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
         mock_embedding_gen.return_value.run_all.assert_not_called()
 
     def test_run_global_calcs_success(self, mock_embedding_gen, mock_executor_cls):
-        orchestrator = AggregationOrchestrator(
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
@@ -379,7 +379,7 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             config_file_path=self.config_path,
             enable_embeddings=True,
             bq_dataset_id="test-dataset"
-        )
+        ))
         mock_job = MagicMock()
         mock_job.job_id = "global-job-1"
         mock_embedding_gen.return_value.run_all.return_value = [mock_job]
@@ -404,7 +404,7 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
         )
 
     def test_run_global_calcs_failure(self, mock_embedding_gen, mock_executor_cls):
-        orchestrator = AggregationOrchestrator(
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
@@ -412,7 +412,7 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             config_file_path=self.config_path,
             enable_embeddings=True,
             bq_dataset_id="test-dataset"
-        )
+        ))
         mock_embedding_gen.return_value.run_all.side_effect = Exception("Vertex AI quota exceeded")
 
         result = orchestrator.run(active_imports=[], dry_run=False)
@@ -458,13 +458,13 @@ class TestOrchestratorOrdering(unittest.TestCase):
         with open(self.config_path, "w") as f:
             f.write(ORDERING_CONFIG_YAML)
 
-        self.orchestrator = AggregationOrchestrator(
+        self.orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
             instance_id="inst",
             database_id="db",
             config_file_path=self.config_path
-        )
+        ))
 
     def test_active_stages_includes_stage_0(self, mock_executor):
         """Verifies stage 0 is included in active stages for matching imports."""
