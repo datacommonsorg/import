@@ -252,11 +252,6 @@ class AggregationOrchestrator:
             step_type = calc.get("type")
             if dry_run:
                 logging.info(f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}")
-                return ImportExecutionResult(
-                    import_name="GLOBAL",
-                    success=True,
-                    stages_executed=[]
-                )
             else:
                 logging.info(f"Triggering global step: '{step_type}'...")
                 try:
