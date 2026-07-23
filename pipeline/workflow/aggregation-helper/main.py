@@ -89,7 +89,7 @@ def main():
         "--generate_stat_var_groups",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Whether to auto-generate StatVarGroup hierarchy tree (default: True, use --no-generate_stat_var_groups or --generate_stat_var_groups=false to disable)."
+        help="Whether to auto-generate StatVarGroup hierarchy tree (default: True, use --no-generate_stat_var_groups to disable)."
     )
     parser.add_argument(
         "--dry_run",
