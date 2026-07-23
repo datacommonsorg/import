@@ -250,9 +250,6 @@ class AggregationOrchestrator:
 
         logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} step(s)) ===")
         for calc in global_calcs:
-            if not self.config.generate_stat_var_groups and calc.get("type") == CalculationType.STAT_VAR_GROUPS:
-                logging.info("Skipping global step 'STAT_VAR_GROUPS' because generate_stat_var_groups is False.")
-                continue
             step_type = calc.get("type")
             if dry_run:
                 logging.info(f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}")
@@ -603,7 +600,6 @@ class AggregationOrchestrator:
             return False
 
         if not self.config.generate_stat_var_groups and calc.get("type") == CalculationType.STAT_VAR_GROUPS:
-            logging.info("Skipping step 'STAT_VAR_GROUPS' because generate_stat_var_groups is False.")
             return False
 
         if calc.get("type") in GLOBAL_CALCULATION_TYPES:
