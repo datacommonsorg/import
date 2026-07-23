@@ -14,6 +14,7 @@
 """Generates aggregated Observations and TimeSeries directly for Statvars."""
 
 import logging
+from dataclasses import dataclass
 from typing import List, Optional
 
 from google.cloud import bigquery
@@ -22,6 +23,16 @@ from .bq_executor import BigQueryExecutor
 from .common import _escape_sql_literal, get_provenance_name
 
 logging.getLogger().setLevel(logging.INFO)
+
+
+@dataclass
+class StatVarAggregationConfig:
+    """Configuration for statistical variable aggregation."""
+    ancestor_sv: str
+    source_svs: List[str]
+    import_names: List[str]
+    output_import_name: Optional[str] = None
+    skip_all_sources_present_check: bool = False
 
 
 class StatVarAggregator:
@@ -45,11 +56,7 @@ class StatVarAggregator:
 
     def aggregate_stat_vars(
         self,
-        ancestor_sv: str,
-        source_svs: List[str],
-        import_names: List[str],
-        output_import_name: Optional[str] = None,
-        skip_all_sources_present_check: bool = False
+        config: StatVarAggregationConfig
     ) -> List[bigquery.job.QueryJob]:
         """Aggregates multiple source StatVars into an ancestor StatVar.
 
@@ -57,17 +64,16 @@ class StatVarAggregator:
         TimeSeries and Observation rows in Spanner.
 
         Args:
-            ancestor_sv: The target parent StatVar ID (e.g., 'Count_Person').
-            source_svs: List of source StatVar IDs to aggregate.
-            import_names: List of input import names (provenances) to process.
-            output_import_name: Optional name for the output import (provenance).
-                If not specified, defaults to '{import_names[0]}_StatVarAgg'.
-            skip_all_sources_present_check: If True, aggregates even if some source
-                variables are missing. If False, only aggregates if all sources are present.
+            config: Structured StatVarAggregationConfig dataclass instance.
 
         Returns:
             A list of BigQuery QueryJob objects representing the async execution.
         """
+        ancestor_sv = config.ancestor_sv
+        source_svs = config.source_svs
+        import_names = config.import_names
+        output_import_name = config.output_import_name
+        skip_all_sources_present_check = config.skip_all_sources_present_check
         if not import_names or not source_svs:
             logging.info("Empty imports or sources. Skipping aggregation.")
             return []

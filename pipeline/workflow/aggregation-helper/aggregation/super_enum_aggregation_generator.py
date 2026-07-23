@@ -14,11 +14,19 @@
 """Super Enum Aggregation Generator."""
 
 import logging
+from dataclasses import dataclass
 from typing import Any, List, Optional
 from google.cloud import spanner
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
 from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
+
+
+@dataclass
+class SuperEnumAggregationConfig:
+    """Configuration for super enum aggregation."""
+    import_names: List[str]
+
 
 def get_dc_base32_encode_sql() -> str:
     """Returns the SQL definition for the DC_BASE32_ENCODE UDF.
@@ -135,12 +143,15 @@ class SuperEnumAggregationGenerator:
         self.spanner_client = spanner_client
         self.spanner_database = spanner_database
 
-    def run(self, import_names: List[str]) -> List[bigquery.job.QueryJob]:
+    def run(self,
+            config: SuperEnumAggregationConfig) -> List[bigquery.job.QueryJob]:
         """Runs the Super Enum aggregation.
 
         Args:
-            import_names: List of import names to process.
+            config: Structured SuperEnumAggregationConfig dataclass instance.
         """
+        import_names = config.import_names
+
         if not import_names:
             logging.info("Empty import names. Skipping Super Enum aggregation.")
             return []

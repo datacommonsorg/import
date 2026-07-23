@@ -24,16 +24,16 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from .bq_executor import BigQueryExecutor
-from .embedding_generator import EmbeddingGenerator
-from .linked_edge_generator import LinkedEdgeGenerator
-from .place_aggregation_generator import PlaceAggregationGenerator
-from .provenance_summary_generator import ProvenanceSummaryGenerator
-from .stat_var_aggregator import StatVarAggregator
-from .stat_var_calculation_generator import StatVarCalculationGenerator
-from .stat_var_group_generator import StatVarGroupGenerator
-from .stat_var_series_aggregator import StatVarSeriesAggregator
+from .embedding_generator import EmbeddingGenerator, EmbeddingGenerationConfig
+from .linked_edge_generator import LinkedEdgeGenerator, LinkedEdgeConfig
+from .place_aggregation_generator import PlaceAggregationGenerator, PlaceAggregationConfig
+from .provenance_summary_generator import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
+from .stat_var_aggregator import StatVarAggregator, StatVarAggregationConfig
+from .stat_var_calculation_generator import StatVarCalculationGenerator, StatVarCalculationConfig
+from .stat_var_group_generator import StatVarGroupGenerator, StatVarGroupConfig
+from .stat_var_series_aggregator import StatVarSeriesAggregator, StatVarSeriesAggregationConfig
 from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
-from .super_enum_aggregation_generator import SuperEnumAggregationGenerator
+from .super_enum_aggregation_generator import SuperEnumAggregationGenerator, SuperEnumAggregationConfig
 from .common import CALCULATION_TYPE_PRIORITY
 from .validator import validate_config
 from .deleter import AggregationDeleter
@@ -462,12 +462,13 @@ class AggregationOrchestrator:
 
         logging.info(f"  -> Place Rollup: {from_type} -> {to_type} for imports {applicable_imports}")
         generator = PlaceAggregationGenerator(self.executor, self.is_base_dc)
-        job = generator.aggregate_places(
+        place_config = PlaceAggregationConfig(
             import_names=applicable_imports,
             source_type=from_type,
             destination_type=to_type,
             allow_multiple_to_places=place_cfg.get("allow_multiple_to_places", False)
         )
+        job = generator.aggregate_places(config=place_config)
         return [job] if job else []
 
     def _trigger_stat_var(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
@@ -485,13 +486,14 @@ class AggregationOrchestrator:
             logging.info(
                 f"  -> Stat Var Aggregation: ancestor '{ancestor_sv}' (sources: {source_svs}) for imports {applicable_imports}"
             )
-            item_jobs = generator.aggregate_stat_vars(
+            sv_config = StatVarAggregationConfig(
                 ancestor_sv=ancestor_sv,
                 source_svs=source_svs,
                 import_names=applicable_imports,
                 output_import_name=output_import_name,
                 skip_all_sources_present_check=item.get("skip_all_sources_present_check", False)
             )
+            item_jobs = generator.aggregate_stat_vars(config=sv_config)
             jobs.extend(item_jobs)
 
         return jobs
@@ -504,23 +506,26 @@ class AggregationOrchestrator:
 
         logging.info(f"  -> Stat Var Calculation for imports {applicable_imports}")
         generator = StatVarCalculationGenerator(self.executor, self.is_base_dc)
-        return generator.calculate_stat_vars(
+        calc_config = StatVarCalculationConfig(
             calculations=calculations,
             import_names=applicable_imports,
             output_import_name=output_import_name
         )
+        return generator.calculate_stat_vars(config=calc_config)
 
     def _trigger_linked_edges(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers linked edge aggregations."""
         logging.info(f"  -> Linked Edges Aggregation for imports {applicable_imports}")
         generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
-        return generator.run_all(applicable_imports)
+        edge_config = LinkedEdgeConfig(import_names=applicable_imports)
+        return generator.run_all(config=edge_config)
 
     def _trigger_provenance_summary(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers provenance summary aggregations."""
         logging.info(f"  -> Provenance Summary Aggregation for imports {applicable_imports}")
         generator = ProvenanceSummaryGenerator(self.executor, self.is_base_dc)
-        return generator.run_all(applicable_imports)
+        prov_config = ProvenanceSummaryConfig(import_names=applicable_imports)
+        return generator.run_all(config=prov_config)
 
     def _trigger_stat_var_groups(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers statistical variable group aggregations."""
@@ -537,7 +542,8 @@ class AggregationOrchestrator:
             self.executor, self.is_base_dc,
             should_prune_single_child_svgs=should_prune
         )
-        return generator.run_all(applicable_imports)
+        svg_config = StatVarGroupConfig(import_names=applicable_imports)
+        return generator.run_all(config=svg_config)
 
     def _trigger_stat_var_series_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers statistical variable series aggregations."""
@@ -545,7 +551,8 @@ class AggregationOrchestrator:
         calc = config.copy()
         calc["input_imports"] = applicable_imports
         generator = StatVarSeriesAggregator(self.executor, self.is_base_dc)
-        return generator.aggregate_series([calc])
+        series_config = StatVarSeriesAggregationConfig(calculations=[calc])
+        return generator.aggregate_series(config=series_config)
 
     def _trigger_entity(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers entity aggregations."""
@@ -570,7 +577,8 @@ class AggregationOrchestrator:
         """Triggers super enum aggregations."""
         logging.info(f"  -> Super Enum Aggregation for imports {applicable_imports}")
         generator = SuperEnumAggregationGenerator(self.executor, self.is_base_dc)
-        return generator.run(applicable_imports)
+        super_config = SuperEnumAggregationConfig(import_names=applicable_imports)
+        return generator.run(config=super_config)
 
     def _trigger_embeddings(self, config: Dict[str, Any]) -> List[Any]:
         """Triggers node embedding generation."""
@@ -579,7 +587,11 @@ class AggregationOrchestrator:
         embedding_table = config.get("embedding_table", "NodeEmbedding")
         logging.info(f"  -> Node Embeddings Generation (specs: {len(specs)}, table: {embedding_table})")
         generator = EmbeddingGenerator(self.executor, self.is_base_dc)
-        return generator.run_all(specs=specs, embedding_table=embedding_table)
+        embed_config = EmbeddingGenerationConfig(
+            specs=specs,
+            embedding_table=embedding_table
+        )
+        return generator.run_all(config=embed_config)
 
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""
