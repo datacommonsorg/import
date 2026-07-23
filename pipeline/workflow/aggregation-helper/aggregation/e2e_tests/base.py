@@ -27,7 +27,7 @@ from google.cloud import bigquery
 
 # Add aggregation-helper to sys.path (two levels up from this file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from aggregation import BigQueryExecutor, AggregationOrchestrator, AggregationRunResult
+from aggregation import BigQueryExecutor, AggregationOrchestrator, AggregationRunResult, OrchestratorConfig
 
 # Configuration
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
@@ -186,7 +186,7 @@ class AggregationIntegrationTestBase(unittest.TestCase):
                 tmp_path = tmp_file.name
                 yaml.dump({"calculations": calculations}, tmp_file)
 
-            orchestrator = AggregationOrchestrator(
+            orchestrator = AggregationOrchestrator(OrchestratorConfig(
                 connection_id=BQ_CONNECTION_ID,
                 project_id=PROJECT_ID,
                 instance_id=SPANNER_INSTANCE_ID,
@@ -198,7 +198,7 @@ class AggregationIntegrationTestBase(unittest.TestCase):
                 poll_interval=poll_interval,
                 enable_embeddings=ENABLE_EMBEDDINGS,
                 bq_dataset_id=BQ_DATASET_ID
-            )
+            ))
             return orchestrator.run(active_imports=active_imports, dry_run=dry_run, skip_deletions=skip_deletions)
         finally:
             if tmp_path and os.path.exists(tmp_path):

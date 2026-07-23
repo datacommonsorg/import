@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import csv
+from dataclasses import dataclass
 from functools import lru_cache
 import io
 import itertools
@@ -27,6 +28,14 @@ from google.cloud import spanner
 from google.cloud import storage
 from pydantic import BaseModel
 from .bq_executor import BigQueryExecutor
+
+
+@dataclass
+class EmbeddingGenerationConfig:
+    """Configuration for embedding generation."""
+    specs: Optional[List[Any]] = None
+    embedding_table: str = "NodeEmbedding"
+
 
 _NL_STAT_VAR_FILE = "gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
 
@@ -87,7 +96,7 @@ def _extract_nl_stat_var() -> list[dict[str, str]]:
 
 
 class EmbeddingGenerator:
-    """Generates embeddings using Vertex AI remote models and saves them to Spanner."""
+    """Generates Node embeddings asynchronously in BigQuery and ingests them into Spanner."""
 
     def __init__(self,
                  executor: BigQueryExecutor,
@@ -189,8 +198,11 @@ class EmbeddingGenerator:
             logging.error(f"Failed to delete existing embeddings in Spanner: {e}")
             raise
 
-    def run_all(self, specs: Optional[List[Any]] = None, embedding_table: str = "NodeEmbedding") -> List[bigquery.job.QueryJob]:
+    def run_all(self,
+                config: EmbeddingGenerationConfig) -> List[bigquery.job.QueryJob]:
         """Runs all embedding generations asynchronously and returns their jobs."""
+        specs = config.specs
+        embedding_table = config.embedding_table
         if not self.executor.enable_embeddings or not self.is_base_dc:
             logging.info("Embeddings generation is disabled in config/env or not in base DC. Skipping.")
             return []

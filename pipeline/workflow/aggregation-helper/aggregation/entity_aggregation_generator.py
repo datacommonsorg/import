@@ -15,30 +15,23 @@
 
 import logging
 import re
-from typing import Dict, List, Tuple
+from dataclasses import dataclass
+from typing import Any, Dict, List, Tuple
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
 from .common import _escape_sql_literal, get_provenance_name
 
 
+@dataclass
 class EntityAggregationConfig:
     """Configuration for entity aggregation."""
-
-    def __init__(self,
-                 entity_types: List[str],
-                 location_props: List[str],
-                 date_prop: str,
-                 agg_date_formats: List[str],
-                 constraints: List[Dict],
-                 output_import: str,
-                 input_imports: List[str]):
-        self.entity_types = entity_types
-        self.location_props = location_props
-        self.date_prop = date_prop
-        self.agg_date_formats = agg_date_formats
-        self.constraints = constraints
-        self.output_import = output_import
-        self.input_imports = input_imports
+    entity_types: List[str]
+    location_props: List[str]
+    date_prop: str
+    agg_date_formats: List[str]
+    constraints: List[Dict[str, Any]]
+    output_import: str
+    input_imports: List[str]
 
 
 class EntityAggregationGenerator:
