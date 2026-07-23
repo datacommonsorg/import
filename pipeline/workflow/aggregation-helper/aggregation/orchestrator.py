@@ -18,6 +18,7 @@ import glob
 import logging
 import os
 import time
+from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -79,60 +80,61 @@ class CalculationType(str, Enum):
     EMBEDDING_GENERATION = "EMBEDDING_GENERATION"
 
 
+GLOBAL_CALCULATION_TYPES = {
+    CalculationType.EMBEDDING_GENERATION,
+}
+
+
+@dataclass
+class OrchestratorConfig:
+    """Configuration settings for initializing AggregationOrchestrator."""
+    connection_id: str
+    project_id: str
+    instance_id: str
+    database_id: str
+    location: Optional[str] = None
+    is_base_dc: bool = True
+    config_dir: Optional[str] = None
+    config_file_path: Optional[str] = None
+    run_sequential: bool = False
+    poll_interval: int = 15
+    enable_embeddings: bool = False
+    bq_dataset_id: str = "datacommons"
+
+
 class AggregationOrchestrator:
     """Orchestrates the overall aggregation workflow across multi-stage execution."""
 
-    def __init__(
-        self,
-        connection_id: str,
-        project_id: str,
-        instance_id: str,
-        database_id: str,
-        location: Optional[str] = None,
-        is_base_dc: bool = True,
-        config_dir: Optional[str] = None,
-        config_file_path: Optional[str] = None,
-        run_sequential: bool = False,
-        poll_interval: int = 15,
-        enable_embeddings: bool = False,
-        bq_dataset_id: str = "datacommons"
-    ) -> None:
+    def __init__(self, config: OrchestratorConfig) -> None:
         """Initializes the orchestrator and loads/validates configuration files.
 
         Args:
-            connection_id: BigQuery connection ID to Spanner.
-            project_id: GCP Project ID.
-            instance_id: Spanner Instance ID.
-            database_id: Spanner Database ID.
-            location: BigQuery location.
-            is_base_dc: Whether this is running in the base Data Commons environment.
-            config_dir: Directory containing aggregation YAML configs (default: configs/).
-            config_file_path: Optional path to single config file or directory.
-            run_sequential: Whether to run queries sequentially (default: False).
-            poll_interval: Polling interval in seconds when waiting for jobs (default: 15).
+            config: OrchestratorConfig dataclass instance containing connection and execution parameters.
         """
+        self.config = config
+
         self.executor = BigQueryExecutor(
-            connection_id=connection_id,
-            project_id=project_id,
-            instance_id=instance_id,
-            database_id=database_id,
-            location=location,
-            run_sequential=run_sequential,
-            enable_embeddings=enable_embeddings,
-            bq_dataset_id=bq_dataset_id
+            connection_id=self.config.connection_id,
+            project_id=self.config.project_id,
+            instance_id=self.config.instance_id,
+            database_id=self.config.database_id,
+            location=self.config.location,
+            run_sequential=self.config.run_sequential,
+            enable_embeddings=self.config.enable_embeddings,
+            bq_dataset_id=self.config.bq_dataset_id
         )
-        self.is_base_dc = is_base_dc
-        self.poll_interval = poll_interval
+        self.is_base_dc = self.config.is_base_dc
+        self.poll_interval = self.config.poll_interval
         self.deleter = AggregationDeleter(
-            project_id=project_id,
-            instance_id=instance_id,
-            database_id=database_id,
-            is_base_dc=is_base_dc
+            project_id=self.config.project_id,
+            instance_id=self.config.instance_id,
+            database_id=self.config.database_id,
+            is_base_dc=self.config.is_base_dc
         )
 
         # Resolve paths for config directory and schema
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        target_config = config_dir or config_file_path or os.path.join(curr_dir, "configs")
+        target_config = self.config.config_dir or self.config.config_file_path or os.path.join(curr_dir, "configs")
         schema_file_path = os.path.join(curr_dir, "schema.json")
 
         # self.calculations holds the complete list of validated calculation step
@@ -229,50 +231,59 @@ class AggregationOrchestrator:
                     error_message=str(e)
                 )
 
-        # Execute global, import-independent calculation steps (e.g., EMBEDDING_GENERATION) once
-        global_calcs = [
-            calc for calc in self.calculations
-            if calc.get("type") == CalculationType.EMBEDDING_GENERATION and not calc.get("disabled", False)
-        ]
-        if global_calcs:
-            logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} step(s)) ===")
-            for calc in global_calcs:
-                step_type = calc.get("type")
-                if dry_run:
-                    logging.info(f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}")
-                    run_result.import_results["GLOBAL"] = ImportExecutionResult(
-                        import_name="GLOBAL",
-                        success=True,
-                        stages_executed=[]
-                    )
-                else:
-                    logging.info(f"Triggering global step: '{step_type}'...")
-                    try:
-                        step_jobs = self._dispatch_stage_steps(calc)
-                        if step_jobs:
-                            job_ids = [job.job_id for job in step_jobs if hasattr(job, "job_id")]
-                            logging.info(f"Submitted {len(job_ids)} global job(s): {job_ids}")
-                            self._wait_for_jobs(
-                                job_ids=job_ids,
-                                poll_interval=15,
-                                step_name=calc.get("name", str(step_type)),
-                                single_import="GLOBAL"
-                            )
-                        run_result.import_results["GLOBAL"] = ImportExecutionResult(
-                            import_name="GLOBAL",
-                            success=True,
-                            stages_executed=[]
-                        )
-                    except Exception as e:
-                        logging.error(f"Global calculation step '{step_type}' failed: {e}")
-                        run_result.import_results["GLOBAL"] = ImportExecutionResult(
-                            import_name="GLOBAL",
-                            success=False,
-                            stages_executed=[],
-                            error_message=str(e)
-                        )
+        # Execute global, import-independent calculation steps once
+        global_result = self._run_global_calculations(dry_run=dry_run)
+        if global_result:
+            run_result.import_results["GLOBAL"] = global_result
 
         return run_result
+
+    def _run_global_calculations(self, dry_run: bool = True) -> Optional[ImportExecutionResult]:
+        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION)."""
+        global_calcs = [
+            calc for calc in self.calculations
+            if calc.get("type") in GLOBAL_CALCULATION_TYPES and not calc.get("disabled", False)
+        ]
+        if not global_calcs:
+            return None
+
+        logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} step(s)) ===")
+        for calc in global_calcs:
+            step_type = calc.get("type")
+            if dry_run:
+                logging.info(f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}")
+                return ImportExecutionResult(
+                    import_name="GLOBAL",
+                    success=True,
+                    stages_executed=[]
+                )
+            else:
+                logging.info(f"Triggering global step: '{step_type}'...")
+                try:
+                    step_jobs = self._dispatch_stage_steps(calc)
+                    if step_jobs:
+                        job_ids = [job.job_id for job in step_jobs if hasattr(job, "job_id")]
+                        logging.info(f"Submitted {len(job_ids)} global job(s): {job_ids}")
+                        self._wait_for_jobs(
+                            job_ids=job_ids,
+                            poll_interval=self.poll_interval,
+                            step_name=calc.get("name", str(step_type)),
+                            single_import="GLOBAL"
+                        )
+                except Exception as e:
+                    logging.error(f"Global calculation step '{step_type}' failed: {e}")
+                    return ImportExecutionResult(
+                        import_name="GLOBAL",
+                        success=False,
+                        stages_executed=[],
+                        error_message=str(e)
+                    )
+
+        return ImportExecutionResult(
+            import_name="GLOBAL",
+            success=True,
+            stages_executed=[]
+        )
 
     def _delete_previous_aggregations(
         self,
@@ -290,7 +301,7 @@ class AggregationOrchestrator:
         for single_import in imports:
             for calc in self.calculations:
                 if self._calc_applies_to_import(calc, single_import):
-                    output = calc.get("output_import")
+                    output = calc.get(_OUTPUT_IMPORT_KEY)
                     if output:
                         to_delete.add(output)
 
@@ -329,14 +340,16 @@ class AggregationOrchestrator:
         This process is repeated transitively.
         """
         expanded = list(active_imports)
-        queue = list(active_imports)
+        seen = set(active_imports)
+        queue = deque(active_imports)
 
         while queue:
-            current_import = queue.pop(0)
+            current_import = queue.popleft()
             for calc in self.calculations:
                 if self._calc_applies_to_import(calc, current_import):
                     output = calc.get(_OUTPUT_IMPORT_KEY)
-                    if output and output not in expanded:
+                    if output and output not in seen:
+                        seen.add(output)
                         queue.append(output)
                         expanded.append(output)
                         
@@ -578,7 +591,7 @@ class AggregationOrchestrator:
         if calc.get("disabled", False):
             return False
 
-        if calc.get("type") == CalculationType.EMBEDDING_GENERATION:
+        if calc.get("type") in GLOBAL_CALCULATION_TYPES:
             return False
 
         configured_imports = calc.get("input_imports") or calc.get("imports", [])
