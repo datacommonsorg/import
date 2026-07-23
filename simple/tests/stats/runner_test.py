@@ -579,6 +579,7 @@ class TestRunner(unittest.TestCase):
       written_str = entered_mock.as_file.return_value.write.call_args[0][0]
       written_payload = json.loads(written_str)
       self.assertIn("importList", written_payload)
+      self.assertIn("generateStatVarGroups", written_payload)
 
       decoded_import_list = json.loads(written_payload["importList"])
       self.assertEqual(len(decoded_import_list), 2)
