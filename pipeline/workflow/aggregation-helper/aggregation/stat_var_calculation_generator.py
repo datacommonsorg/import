@@ -28,7 +28,7 @@ class StatVarCalculationConfig:
     """Configuration for statistical variable calculation."""
     calculations: List[Dict[str, Any]]
     import_names: List[str]
-    output_import_name: str
+    output_import_name: Optional[str] = None
 
 
 class StatVarCalculationGenerator:
@@ -67,8 +67,8 @@ class StatVarCalculationGenerator:
         calculations = config.calculations
         import_names = config.import_names
         output_import_name = config.output_import_name
-        if not calculations or not import_names:
-            logging.info("Empty calculations or import names. Skipping.")
+        if not calculations or not import_names or not output_import_name:
+            logging.info("Empty calculations, import names, or output import name. Skipping.")
             return []
 
         connection_id = self.executor.connection_id
