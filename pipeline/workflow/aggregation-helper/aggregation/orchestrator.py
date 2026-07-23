@@ -100,6 +100,7 @@ class OrchestratorConfig:
     poll_interval: int = 15
     enable_embeddings: bool = False
     bq_dataset_id: str = "datacommons"
+    generate_stat_var_groups: bool = True
 
 
 class AggregationOrchestrator:
@@ -249,7 +250,10 @@ class AggregationOrchestrator:
 
         logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} step(s)) ===")
         for calc in global_calcs:
-            step_type = calc.get("type")
+            step_type = str(calc.get("type"))
+            if step_type in self.config.skip_types or calc.get("type") in self.config.skip_types:
+                logging.info(f"Skipping global step '{calc.get('name', step_type)}' because calculation type '{step_type}' is in skip_types.")
+                continue
             if dry_run:
                 logging.info(f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}")
             else:
@@ -596,6 +600,10 @@ class AggregationOrchestrator:
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""
         if calc.get("disabled", False):
+            return False
+
+        if not self.config.generate_stat_var_groups and calc.get("type") == CalculationType.STAT_VAR_GROUPS:
+            logging.info("Skipping step 'STAT_VAR_GROUPS' because generate_stat_var_groups is False.")
             return False
 
         if calc.get("type") in GLOBAL_CALCULATION_TYPES:
