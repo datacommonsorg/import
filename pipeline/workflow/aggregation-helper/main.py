@@ -25,78 +25,50 @@ from typing import List, Optional
 from aggregation import AggregationOrchestrator, OrchestratorConfig
 
 
-@dataclass
-class CloudRunJobConfig:
-    """Configuration for the Aggregation Helper Cloud Run job invocation."""
-    import_list: List[str]
-    config_path: Optional[str]
-    dry_run: bool
-    skip_deletions: bool
-    is_base_dc: bool
-    connection_id: str
-    project_id: str
-    instance_id: str
-    database_id: str
-    location: Optional[str]
-    enable_embeddings: bool
-    bq_dataset_id: str
+def parse_import_list(import_list_str: Optional[str]) -> List[str]:
+    """Parses and validates the JSON string representing active imports."""
+    if not import_list_str:
+        logging.info("No --import_list provided. Proceeding with global import-independent calculations only.")
+        return []
 
-    @classmethod
-    def from_args_and_env(cls, args: argparse.Namespace, env: os._Environ = os.environ) -> "CloudRunJobConfig":
-        """Constructs a CloudRunJobConfig from parsed command line arguments and environment variables."""
-        import_list = []
-        if args.import_list:
-            import_list = json.loads(args.import_list)
-            if not isinstance(import_list, list):
-                raise ValueError("Parsed import_list is not a list")
-            logging.info(f"Received active imports to process: {import_list}")
-        else:
-            logging.info("No --import_list provided. Proceeding with global import-independent calculations only.")
+    parsed = json.loads(import_list_str)
+    if not isinstance(parsed, list):
+        raise ValueError("Parsed import_list is not a list")
+    logging.info(f"Received active imports to process: {parsed}")
+    return parsed
 
-        connection_id = env.get("BQ_SPANNER_CONN_ID")
-        project_id = env.get("PROJECT_ID")
-        instance_id = env.get("SPANNER_INSTANCE_ID")
-        database_id = env.get("SPANNER_GRAPH_DATABASE_ID")
-        location = env.get("LOCATION")
 
-        if not connection_id or not project_id or not instance_id or not database_id:
-            raise ValueError(
-                f"Missing required environment variables. connection_id={connection_id}, "
-                f"project_id={project_id}, instance_id={instance_id}, database_id (SPANNER_GRAPH_DATABASE_ID)={database_id}"
-            )
+def create_orchestrator_config(
+    args: argparse.Namespace, env: os._Environ = os.environ
+) -> OrchestratorConfig:
+    """Creates an OrchestratorConfig from CLI arguments and environment variables."""
+    connection_id = env.get("BQ_SPANNER_CONN_ID")
+    project_id = env.get("PROJECT_ID")
+    instance_id = env.get("SPANNER_INSTANCE_ID")
+    database_id = env.get("SPANNER_GRAPH_DATABASE_ID")
+    location = env.get("LOCATION")
 
-        config_path = args.config_path or env.get("CONFIG_PATH")
-        enable_embeddings = env.get("ENABLE_EMBEDDINGS", "false").lower() == "true"
-        bq_dataset_id = env.get("BQ_DATASET_ID", "datacommons")
-
-        return cls(
-            import_list=import_list,
-            config_path=config_path,
-            dry_run=args.dry_run,
-            skip_deletions=args.skip_deletions,
-            is_base_dc=args.is_base_dc,
-            connection_id=connection_id,
-            project_id=project_id,
-            instance_id=instance_id,
-            database_id=database_id,
-            location=location,
-            enable_embeddings=enable_embeddings,
-            bq_dataset_id=bq_dataset_id,
+    if not connection_id or not project_id or not instance_id or not database_id:
+        raise ValueError(
+            f"Missing required environment variables. connection_id={connection_id}, "
+            f"project_id={project_id}, instance_id={instance_id}, database_id (SPANNER_GRAPH_DATABASE_ID)={database_id}"
         )
 
-    def to_orchestrator_config(self) -> OrchestratorConfig:
-        """Converts this run configuration into an OrchestratorConfig."""
-        return OrchestratorConfig(
-            connection_id=self.connection_id,
-            project_id=self.project_id,
-            instance_id=self.instance_id,
-            database_id=self.database_id,
-            location=self.location,
-            is_base_dc=self.is_base_dc,
-            config_file_path=self.config_path,
-            enable_embeddings=self.enable_embeddings,
-            bq_dataset_id=self.bq_dataset_id,
-        )
+    config_path = args.config_path or env.get("CONFIG_PATH")
+    enable_embeddings = env.get("ENABLE_EMBEDDINGS", "false").lower() == "true"
+    bq_dataset_id = env.get("BQ_DATASET_ID", "datacommons")
+
+    return OrchestratorConfig(
+        connection_id=connection_id,
+        project_id=project_id,
+        instance_id=instance_id,
+        database_id=database_id,
+        location=location,
+        is_base_dc=args.is_base_dc,
+        config_file_path=config_path,
+        enable_embeddings=enable_embeddings,
+        bq_dataset_id=bq_dataset_id,
+    )
 
 
 def main():
@@ -134,20 +106,21 @@ def main():
     args = parser.parse_args()
 
     try:
-        job_config = CloudRunJobConfig.from_args_and_env(args)
+        import_list = parse_import_list(args.import_list)
+        config = create_orchestrator_config(args)
     except (ValueError, json.JSONDecodeError) as e:
-        logging.error(f"Failed to parse job configuration: {e}")
+        logging.error(f"Failed to load job configuration: {e}")
         sys.exit(1)
 
-    orchestrator = AggregationOrchestrator(config=job_config.to_orchestrator_config())
+    orchestrator = AggregationOrchestrator(config=config)
 
     logging.info(
-        f"Executing AggregationOrchestrator pipeline (dry_run={job_config.dry_run}, skip_deletions={job_config.skip_deletions}) for imports: {job_config.import_list}"
+        f"Executing AggregationOrchestrator pipeline (dry_run={args.dry_run}, skip_deletions={args.skip_deletions}) for imports: {import_list}"
     )
     run_result = orchestrator.run(
-        active_imports=job_config.import_list,
-        dry_run=job_config.dry_run,
-        skip_deletions=job_config.skip_deletions
+        active_imports=import_list,
+        dry_run=args.dry_run,
+        skip_deletions=args.skip_deletions
     )
 
     if not run_result.success:
