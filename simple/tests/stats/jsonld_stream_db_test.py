@@ -385,11 +385,17 @@ class TestJsonLdStreamDb(unittest.TestCase):
       try:
         # Insert triples using custom namespace (e.g. undata:)
         triples = [
-            Triple("undata:provenance/WHO", "typeOf", object_id="dcid:Provenance"),
+            Triple("undata:provenance/WHO",
+                   "typeOf",
+                   object_id="dcid:Provenance"),
             Triple("undata:provenance/WHO", "dcid:name", object_value="WHO"),
-            Triple("undata:provenance/WHO", "schema:url", object_value="https://who.int"),
+            Triple("undata:provenance/WHO",
+                   "schema:url",
+                   object_value="https://who.int"),
             # Reference to another custom namespace node
-            Triple("undata:provenance/WHO", "dcid:source", object_id="undata:source/WHO_Org")
+            Triple("undata:provenance/WHO",
+                   "dcid:source",
+                   object_id="undata:source/WHO_Org")
         ]
         mock_file = mock.Mock(path="test_import/data.csv")
         db.insert_triples(triples, mock_file)

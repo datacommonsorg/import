@@ -16,6 +16,11 @@
 
 set -e
 
+# Default to searching public PyPI in addition to any configured global index-url,
+# to ensure standard third-party tools/packages can be resolved.
+export PIP_EXTRA_INDEX_URL="${PIP_EXTRA_INDEX_URL:-https://pypi.org/simple}"
+
+
 # Fixes lint
 function run_lint_fix {
   echo -e "#### Fixing Python code"

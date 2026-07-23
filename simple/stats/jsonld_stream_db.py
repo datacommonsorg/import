@@ -54,7 +54,6 @@ _CHUNK_SIZE = 10000
 _UPLOAD_CONCURRENCY = 32
 _EXPORT_PROCESSES_MAX = 8
 
-
 _KNOWN_CUSTOM_PREFIXES = set()
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
@@ -76,7 +75,6 @@ def _rewrite_custom_ns_to_dcid(val: str) -> str:
       _KNOWN_CUSTOM_PREFIXES.add(prefix)
       return f"dcid:{suffix.lstrip('/')}"
   return val
-
 
 
 def _uri_ref(val):
@@ -160,7 +158,8 @@ def _write_observation_shard(chunk: list[tuple],
       obs_obj["dcid:observationAbout"] = entity_ref
 
     if provenance:
-      obs_obj["dcid:provenance"] = _uri_ref(_rewrite_custom_ns_to_dcid(provenance))
+      obs_obj["dcid:provenance"] = _uri_ref(
+          _rewrite_custom_ns_to_dcid(provenance))
       if provenance in prov_urls and prov_urls[provenance]:
         obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
     if unit:
@@ -168,7 +167,8 @@ def _write_observation_shard(chunk: list[tuple],
     if scaling_factor:
       obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
     if mmethod:
-      obs_obj["dcid:measurementMethod"] = _uri_ref(_rewrite_custom_ns_to_dcid(mmethod))
+      obs_obj["dcid:measurementMethod"] = _uri_ref(
+          _rewrite_custom_ns_to_dcid(mmethod))
     if period:
       obs_obj["dcid:observationPeriod"] = period
 
