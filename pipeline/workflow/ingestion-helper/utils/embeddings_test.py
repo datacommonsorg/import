@@ -49,7 +49,10 @@ class TestEmbeddingUtils(unittest.TestCase):
 
     @patch('utils.embeddings._extract_nl_stat_var')
     def test_get_node_filter_condition_nl_filter(self, mock_extract):
-        mock_extract.return_value = ["Count_Person", "Median_Age"]
+        mock_extract.return_value = [
+            {"dcid": "Count_Person", "sentence": "population"},
+            {"dcid": "Median_Age", "sentence": "median age"}
+        ]
         params = {}
         param_types = {}
         condition = self.utils._get_node_filter_condition("NLStatisticalVariable", params, param_types)
@@ -138,7 +141,10 @@ class TestEmbeddingUtils(unittest.TestCase):
     def test_get_updated_nodes_with_nl_filter(self, mock_extract):
         mock_snapshot = MagicMock()
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
-        mock_extract.return_value = ["dc/1", "dc/2"]
+        mock_extract.return_value = [
+            {"dcid": "dc/1", "sentence": "Node 1"},
+            {"dcid": "dc/2", "sentence": "Node 2"}
+        ]
 
         class MockField:
             def __init__(self, name):
@@ -252,6 +258,199 @@ class TestEmbeddingUtils(unittest.TestCase):
             self.assertEqual(len(batch), 2)
             self.assertEqual(batch[0][0], f"dc/{i*2 + 1}")
             self.assertEqual(batch[1][0], f"dc/{i*2 + 2}")
+
+    @patch('utils.embeddings._BATCH_SIZE', 2)
+    def test_delete_existing_embeddings(self):
+        subject_ids = ["dc/1", "dc/2", "dc/3"]
+        transactions = []
+
+        def side_effect(func):
+            mock_transaction = MagicMock()
+
+            def mock_execute_update(*args, **kwargs):
+                params = kwargs.get("params", {})
+                self.assertIn("subject_ids", params)
+                self.assertIn("embedding_label", params)
+                self.assertEqual(params["embedding_label"], "base_text_embedding")
+                return len(params["subject_ids"])
+
+            mock_transaction.execute_update.side_effect = mock_execute_update
+            transactions.append(mock_transaction)
+            return func(mock_transaction)
+
+        self.mock_database.run_in_transaction.side_effect = side_effect
+
+        deleted = self.utils._delete_existing_embeddings(
+            embedding_table="NodeEmbedding",
+            embedding_label="base_text_embedding",
+            subject_ids_iterable=(s for s in subject_ids),
+            timeout=3600
+        )
+        self.assertEqual(deleted, 3)
+        self.assertEqual(self.mock_database.run_in_transaction.call_count, 2)
+        self.assertEqual(len(transactions), 2)
+        for tx in transactions:
+            tx.execute_update.assert_called_once()
+            args, _ = tx.execute_update.call_args
+            self.assertIn("DELETE FROM NodeEmbedding", args[0])
+
+    @patch('utils.embeddings.config')
+    def test_ingest_embeddings_content_change(self, mock_config):
+        mock_spec = MagicMock()
+        mock_spec.node_types = ["StatisticalVariable"]
+        mock_spec.model_name = "NodeEmbeddingModel"
+        mock_spec.embedding_label = "base_text_embedding"
+        mock_spec.task_type = "RETRIEVAL_DOCUMENT"
+        mock_spec.node_filter_type = "NoFilter"
+        mock_config.EMBEDDING_SPECS = [mock_spec]
+        mock_config.TIMEOUT = 3600
+
+        mock_snapshot = MagicMock()
+        self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
+
+        class MockField:
+            def __init__(self, name):
+                self.name = name
+
+        class MockResults:
+            def __init__(self, rows, field_names):
+                self.rows = rows
+                self.fields = [MockField(name) for name in field_names]
+
+            def __iter__(self):
+                return iter(self.rows)
+
+        mock_snapshot.execute_sql.side_effect = [
+            [(None,)],  # IngestionLock MAX(AcquiredTimestamp)
+            MockResults(
+                rows=[("dc/statvar1", "New Total Population", ["StatisticalVariable"])],
+                field_names=["subject_id", "name", "types"]
+            ),
+            MockResults(
+                rows=[("dc/statvar1", "New Total Population", ["StatisticalVariable"])],
+                field_names=["subject_id", "name", "types"]
+            ),
+        ]
+
+        executed_sqls = []
+        executed_params = []
+
+        def side_effect(func):
+            mock_transaction = MagicMock()
+
+            def mock_execute_update(sql, params=None, param_types=None, timeout=None):
+                executed_sqls.append(sql)
+                executed_params.append(params)
+                return 1
+
+            mock_transaction.execute_update.side_effect = mock_execute_update
+            return func(mock_transaction)
+
+        self.mock_database.run_in_transaction.side_effect = side_effect
+
+        affected_rows = self.utils.ingest_embeddings()
+
+        self.assertEqual(affected_rows, 1)
+        self.assertEqual(len(executed_sqls), 2)
+
+        # 1. First transaction: DELETE old content for dc/statvar1 under base_text_embedding
+        self.assertIn("DELETE FROM NodeEmbedding", executed_sqls[0])
+        self.assertEqual(executed_params[0]["embedding_label"], "base_text_embedding")
+        self.assertEqual(executed_params[0]["subject_ids"], ["dc/statvar1"])
+
+        # 2. Second transaction: INSERT OR UPDATE new content for dc/statvar1
+        self.assertIn("INSERT OR UPDATE INTO NodeEmbedding", executed_sqls[1])
+        self.assertEqual(executed_params[1]["embedding_label"], "base_text_embedding")
+        batch_nodes = executed_params[1]["nodes"]
+        self.assertEqual(len(batch_nodes), 1)
+        self.assertEqual(batch_nodes[0][0], "dc/statvar1")
+
+        content_json = json.loads(batch_nodes[0][1])
+        self.assertEqual(content_json["title"], "dc/statvar1")
+        self.assertEqual(content_json["name"], "New Total Population")
+
+    @patch('utils.embeddings._extract_nl_stat_var')
+    @patch('utils.embeddings.config')
+    def test_ingest_embeddings_multi_sentence_content_change(self, mock_config, mock_extract):
+        mock_extract.return_value = [
+            {"dcid": "dc/statvar1", "sentence": "New Total Population"},
+            {"dcid": "dc/statvar1", "sentence": "New Total Population Content 2"}
+        ]
+
+        mock_spec = MagicMock()
+        mock_spec.node_types = ["StatisticalVariable"]
+        mock_spec.model_name = "NodeEmbeddingModel"
+        mock_spec.embedding_label = "base_text_embedding"
+        mock_spec.task_type = "RETRIEVAL_DOCUMENT"
+        mock_spec.node_filter_type = "NLStatisticalVariable"
+        mock_config.EMBEDDING_SPECS = [mock_spec]
+        mock_config.TIMEOUT = 3600
+
+        mock_snapshot = MagicMock()
+        self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
+
+        class MockField:
+            def __init__(self, name):
+                self.name = name
+
+        class MockResults:
+            def __init__(self, rows, field_names):
+                self.rows = rows
+                self.fields = [MockField(name) for name in field_names]
+
+            def __iter__(self):
+                return iter(self.rows)
+
+        mock_snapshot.execute_sql.side_effect = [
+            [(None,)],  # IngestionLock MAX(AcquiredTimestamp)
+            MockResults(
+                rows=[("dc/statvar1", "Dummy Name", ["StatisticalVariable"])],
+                field_names=["subject_id", "name", "types"]
+            ),
+            MockResults(
+                rows=[("dc/statvar1", "Dummy Name", ["StatisticalVariable"])],
+                field_names=["subject_id", "name", "types"]
+            ),
+        ]
+
+        executed_sqls = []
+        executed_params = []
+
+        def side_effect(func):
+            mock_transaction = MagicMock()
+
+            def mock_execute_update(sql, params=None, param_types=None, timeout=None):
+                executed_sqls.append(sql)
+                executed_params.append(params)
+                return 1
+
+            mock_transaction.execute_update.side_effect = mock_execute_update
+            return func(mock_transaction)
+
+        self.mock_database.run_in_transaction.side_effect = side_effect
+
+        affected_rows = self.utils.ingest_embeddings()
+
+        self.assertEqual(affected_rows, 1)
+        self.assertEqual(len(executed_sqls), 2)
+
+        # 1. DELETE should be deduplicated so dc/statvar1 is deleted only once
+        self.assertIn("DELETE FROM NodeEmbedding", executed_sqls[0])
+        self.assertEqual(executed_params[0]["embedding_label"], "base_text_embedding")
+        self.assertEqual(executed_params[0]["subject_ids"], ["dc/statvar1"])
+
+        # 2. INSERT OR UPDATE should contain 2 nodes for dc/statvar1 with the two different sentences
+        self.assertIn("INSERT OR UPDATE INTO NodeEmbedding", executed_sqls[1])
+        batch_nodes = executed_params[1]["nodes"]
+        self.assertEqual(len(batch_nodes), 2)
+
+        self.assertEqual(batch_nodes[0][0], "dc/statvar1")
+        content_json_1 = json.loads(batch_nodes[0][1])
+        self.assertEqual(content_json_1["name"], "New Total Population")
+
+        self.assertEqual(batch_nodes[1][0], "dc/statvar1")
+        content_json_2 = json.loads(batch_nodes[1][1])
+        self.assertEqual(content_json_2["name"], "New Total Population Content 2")
 
 if __name__ == '__main__':
     unittest.main()

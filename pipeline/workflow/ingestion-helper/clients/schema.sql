@@ -173,13 +173,6 @@ CREATE PROPERTY GRAPH DCGraph
         subject_id)
   );
 
-CREATE TABLE Cache (
-  type STRING(1024) NOT NULL,
-  key STRING(1024) NOT NULL,
-  provenance STRING(1024) NOT NULL,
-  value JSON,
-) PRIMARY KEY(type, key, provenance);
-
 CREATE TABLE KeyValueStore (
   type STRING(1024) NOT NULL,
   key STRING(1024) NOT NULL,
@@ -194,10 +187,11 @@ CREATE TABLE KeyValueStore (
 CREATE TABLE {{ embedding_table }} (
   subject_id STRING(1024) NOT NULL,
   embedding_label STRING(1024) NOT NULL,
+  embedding_content_key STRING(1024) NOT NULL,
   embedding_content JSON,
   node_types ARRAY<STRING(1024)>,
   embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }})
-) PRIMARY KEY(subject_id, embedding_label),
+) PRIMARY KEY(subject_id, embedding_label, embedding_content_key),
 INTERLEAVE IN PARENT Node ON DELETE CASCADE;
 
 CREATE VECTOR INDEX {{ embedding_index }}
