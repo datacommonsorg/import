@@ -12,19 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import logging
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Request
-from clients.spanner import SpannerClient, IngestionState, IngestionStage
-from clients.storage import StorageClient
-from dependencies import get_spanner_client, get_storage_client
-import config
-from utils import imports as import_utils
 from enum import Enum
-from typing import Optional
+import logging
+import os
+from typing import Any, Dict, List, Optional
+
+from clients.spanner import IngestionStage, IngestionState, SpannerClient
+from clients.storage import StorageClient
+import config
+from dependencies import get_spanner_client, get_storage_client
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from routes.models import BaseResponse, ResponseStatus
+from utils import imports as import_utils
+from utils import rollback_helper
 
 
 class ImportState(str, Enum):
@@ -47,7 +48,6 @@ class UpdateIngestionStatusRequest(BaseModel):
     workflowId: str
     status: IngestionState
     jobId: Optional[str] = None
-
 
 class UpdateIngestionHistoryRequest(BaseModel):
     workflowId: str
@@ -90,6 +90,18 @@ class ImportInfoItem(BaseModel):
     graphPath: str = Field(
         description="The full GCS path to the import graph files")
 
+
+class RevertImportRequest(BaseModel):
+    importName: Optional[str] = Field(default=None, description="Import name to revert")
+    importList: Optional[List[Any]] = Field(default=None, description="List of import items to revert")
+    workflowId: str = Field(description="Workflow execution ID")
+    dryRun: bool = Field(default=False, description="Dry run mode")
+
+class RevertImportResponse(BaseResponse):
+    importName: str
+    previousVersion: Optional[str] = None
+    reverted: bool = False
+    dryRun: bool = False
 
 router = APIRouter(prefix="/imports", tags=["imports"])
 
@@ -270,3 +282,34 @@ def update_import_version(req: UpdateImportVersionRequest,
 
     return BaseResponse(status=ResponseStatus.OK,
                         message="; ".join(updated_imports))
+
+
+@router.post("/revert", response_model=RevertImportResponse)
+def revert_imports(
+    req: RevertImportRequest,
+    spanner: SpannerClient = Depends(get_spanner_client)
+):
+    """Reverts import(s) to their previous version and resets status to STAGING in Spanner."""
+    items = []
+    if req.importList is not None:
+        items = req.importList
+    elif req.importName:
+        items = [req.importName]
+
+    results = rollback_helper.revert_imports(
+        spanner, items, workflow_id=req.workflowId, dry_run=req.dryRun
+    )
+
+    any_reverted = any(r["reverted"] for r in results)
+    status = ResponseStatus.OK if (any_reverted or not items) else ResponseStatus.SKIPPED
+    msg = "; ".join(r["message"] for r in results) if results else "No imports provided to revert."
+
+    first = results[0] if results else {}
+    return RevertImportResponse(
+        status=status,
+        message=msg,
+        importName=first.get("importName", req.importName or ""),
+        previousVersion=first.get("previousVersion"),
+        reverted=first.get("reverted", False),
+        dryRun=req.dryRun
+    )
