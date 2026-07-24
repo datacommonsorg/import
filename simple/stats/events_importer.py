@@ -197,10 +197,15 @@ class EventsImporter(Importer):
         self.id_column).dcid if self.id_column else ""
 
     for index, row in self.df.iterrows():
-      if id_column_name and id_column_name in row:
-        dcid = row[id_column_name]
-      elif self.id_column and self.id_column in row:
-        dcid = row[self.id_column]
+      if self.id_column:
+        if id_column_name and id_column_name in row:
+          dcid = row[id_column_name]
+        elif self.id_column in row:
+          dcid = row[self.id_column]
+        else:
+          raise ValueError(
+              f"Configured idColumn '{self.id_column}' not found in CSV file '{self.input_file.path}'"
+          )
       else:
         dcid = f"{self.event_type}_{index}"
 
