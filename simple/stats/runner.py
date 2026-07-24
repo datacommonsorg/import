@@ -299,7 +299,10 @@ class Runner:
       ]
       handshake_payload = {"status": "FAILURE", "errors": errors_dict}
     else:
-      handshake_payload = {"importList": json.dumps(self.trigger_workflow_info)}
+      handshake_payload = {
+          "importList": json.dumps(self.trigger_workflow_info),
+          "generateStatVarGroups": self.config.generate_hierarchy(),
+      }
 
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
     logging.info(

@@ -100,6 +100,7 @@ class OrchestratorConfig:
     poll_interval: int = 15
     enable_embeddings: bool = False
     bq_dataset_id: str = "datacommons"
+    generate_stat_var_groups: bool = True
 
 
 class AggregationOrchestrator:
@@ -596,6 +597,9 @@ class AggregationOrchestrator:
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""
         if calc.get("disabled", False):
+            return False
+
+        if not self.config.generate_stat_var_groups and calc.get("type") == CalculationType.STAT_VAR_GROUPS:
             return False
 
         if calc.get("type") in GLOBAL_CALCULATION_TYPES:
