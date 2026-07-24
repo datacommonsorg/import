@@ -14,7 +14,8 @@
 """Orchestrates StatVar Series Aggregations using BigQuery Federation."""
 
 import logging
-from typing import Any, Dict, List
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from google.cloud import bigquery
 
@@ -22,6 +23,12 @@ from .bq_executor import BigQueryExecutor
 from .common import _escape_sql_literal, get_provenance_name
 
 logging.getLogger().setLevel(logging.INFO)
+
+
+@dataclass
+class StatVarSeriesAggregationConfig:
+    """Configuration for statistical variable series aggregation."""
+    calculations: List[Dict[str, Any]]
 
 
 class StatVarSeriesAggregator:
@@ -42,15 +49,20 @@ class StatVarSeriesAggregator:
         self.executor = executor
         self.is_base_dc = is_base_dc
 
-    def aggregate_series(self, calculations: List[Dict[str, Any]]) -> List[Any]:
+    def aggregate_series(
+        self,
+        config: StatVarSeriesAggregationConfig
+    ) -> List[Any]:
         """Orchestrates multi-round StatVar Series Aggregations.
 
         Args:
-            calculations: A list of dicts representing the calculations to run.
+            config: Structured StatVarSeriesAggregationConfig dataclass instance.
 
         Returns:
             A list of completed BigQuery job objects.
         """
+        calculations = config.calculations
+
         if not calculations:
             logging.info("No calculations specified. Skipping.")
             return []

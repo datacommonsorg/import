@@ -232,7 +232,10 @@ class File(_StoreWrapper):
     return io.StringIO(self.read())
 
   def open_stream(self, max_retries: int = 3):
-    """Returns an open text stream for streaming line-by-line with retries for transient network drops."""
+    """Returns an open text stream for streaming line-by-line without downloading full contents upfront.
+
+    Includes retries for transient network drops.
+    """
     for attempt in range(max_retries):
       try:
         return self.fs().open(self.path, "r")

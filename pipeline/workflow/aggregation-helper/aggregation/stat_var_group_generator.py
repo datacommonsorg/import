@@ -1,9 +1,17 @@
 import logging
+from dataclasses import dataclass
 from typing import List, Optional
 
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
 from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_provenance_name
+
+
+@dataclass
+class StatVarGroupConfig:
+    """Configuration for statistical variable group generation."""
+    import_names: Optional[List[str]] = None
+
 
 class StatVarGroupGenerator:
     """Iteratively generates StatVarGroup nodes and hierarchical edges from MCF schemas."""
@@ -14,7 +22,7 @@ class StatVarGroupGenerator:
                  max_iterations: int = 50,
                  namespace: Optional[str] = None,
                  generated_provenance: Optional[str] = None,
-                 should_filter_basic_population_type: bool = True,
+                 should_filter_basic_population_type: Optional[bool] = None,
                  should_prune_single_child_svgs: bool = False) -> None:
         """Initializes the StatVarGroupGenerator with executor and configuration parameters.
 
@@ -38,12 +46,18 @@ class StatVarGroupGenerator:
           if generated_provenance is not None
           else (f'{BASE_PROVENANCE_PREFIX}GeneratedGraphs' if is_base_dc else 'GeneratedGraphs')
         )
-        self.should_filter_basic_population_type = should_filter_basic_population_type
+        self.should_filter_basic_population_type = (
+            should_filter_basic_population_type
+            if should_filter_basic_population_type is not None
+            else is_base_dc
+        )
         self.should_prune_single_child_svgs = should_prune_single_child_svgs
 
     def run_all(self,
-                import_names: List[str] = None) -> List[bigquery.job.QueryJob]:
+                config: StatVarGroupConfig) -> List[bigquery.job.QueryJob]:
         """Runs all global aggregations asynchronously and returns their jobs."""
+        import_names = config.import_names
+
         if not import_names:
             logging.info("No imports specified. Skipping global aggregations.")
             return []

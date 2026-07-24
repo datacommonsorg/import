@@ -590,7 +590,7 @@ class SpannerClient:
         required_tables = [
             "Node", "Edge", "TimeSeries", "Observation", "ImportStatus",
             "IngestionHistory", "ImportVersionHistory", "IngestionLock",
-            "Cache", "KeyValueStore", self.embedding_table
+            "KeyValueStore", self.embedding_table
         ]
         required_indexes = [
             "InEdge",
