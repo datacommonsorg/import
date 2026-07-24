@@ -68,6 +68,7 @@ def create_orchestrator_config(
         config_file_path=config_path,
         enable_embeddings=enable_embeddings,
         bq_dataset_id=bq_dataset_id,
+        generate_stat_var_groups=args.generate_stat_var_groups,
     )
 
 
@@ -83,6 +84,12 @@ def main():
     parser.add_argument(
         "--config_path",
         help="Optional path to a specific YAML config file or directory (e.g., aggregation/configs/embedding.yaml)."
+    )
+    parser.add_argument(
+        "--generate_stat_var_groups",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Whether to auto-generate StatVarGroup hierarchy tree (default: True, use --no-generate_stat_var_groups to disable)."
     )
     parser.add_argument(
         "--dry_run",

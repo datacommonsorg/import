@@ -22,7 +22,7 @@ class StatVarGroupGenerator:
                  max_iterations: int = 50,
                  namespace: Optional[str] = None,
                  generated_provenance: Optional[str] = None,
-                 should_filter_basic_population_type: bool = True,
+                 should_filter_basic_population_type: Optional[bool] = None,
                  should_prune_single_child_svgs: bool = False) -> None:
         """Initializes the StatVarGroupGenerator with executor and configuration parameters.
 
@@ -46,7 +46,11 @@ class StatVarGroupGenerator:
           if generated_provenance is not None
           else (f'{BASE_PROVENANCE_PREFIX}GeneratedGraphs' if is_base_dc else 'GeneratedGraphs')
         )
-        self.should_filter_basic_population_type = should_filter_basic_population_type
+        self.should_filter_basic_population_type = (
+            should_filter_basic_population_type
+            if should_filter_basic_population_type is not None
+            else is_base_dc
+        )
         self.should_prune_single_child_svgs = should_prune_single_child_svgs
 
     def run_all(self,

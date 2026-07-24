@@ -493,6 +493,31 @@ class TestOrchestratorOrdering(unittest.TestCase):
         ]
         self.assertEqual(types_in_order, expected_order)
 
+    def test_generate_stat_var_groups_disabled(self, mock_executor):
+        """Verifies STAT_VAR_GROUPS calculation step is skipped when generate_stat_var_groups is set to False."""
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            generate_stat_var_groups=False
+        ))
+
+        svg_calc = next(c for c in orchestrator.calculations if c.get("type") == CalculationType.STAT_VAR_GROUPS)
+        self.assertFalse(orchestrator._calc_applies_to_import(svg_calc, "TestImport"))
+
+        # Verify STAT_VAR_GROUPS is active when generate_stat_var_groups is True
+        orchestrator_enabled = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            generate_stat_var_groups=True
+        ))
+        self.assertTrue(orchestrator_enabled._calc_applies_to_import(svg_calc, "TestImport"))
+
 
 class TestConfigSanity(unittest.TestCase):
     """Sanity checks for calculation configurations and metadata."""
