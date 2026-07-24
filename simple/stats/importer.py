@@ -16,11 +16,11 @@
 class EntityResolutionError(ValueError):
   """Raised when entity resolution fails during import."""
 
-  def __init__(self, file_path: str, unresolved_entities: list[str],
-               message: str) -> None:
+  def __init__(self, file_path: str = "", unresolved_entities: list[str] | None = None,
+               message: str = "") -> None:
     super().__init__(message)
     self.file_path = file_path
-    self.unresolved_entities = unresolved_entities
+    self.unresolved_entities = unresolved_entities if unresolved_entities is not None else []
 
 
 class Importer:
