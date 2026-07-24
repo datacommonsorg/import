@@ -591,7 +591,10 @@ class JsonLdStreamDb(Db):
 
     parent_dirs = set(os.path.dirname(f) for f in files if os.path.dirname(f))
     for d in sorted(parent_dirs):
-      target_store.open_dir(d)
+      try:
+        target_store.open_dir(d)
+      except Exception:
+        pass
 
     def _copy_single(rel_path: str):
       local_file_path = os.path.join(temp_local_dir, rel_path)
