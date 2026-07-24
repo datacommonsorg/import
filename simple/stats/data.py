@@ -28,6 +28,7 @@ from stats import constants
 from stats import schema_constants as sc
 from stats.util import base64_decode_and_gunzip_json
 from stats.util import gzip_and_base64_encode_json
+from stats.util import has_namespace_prefix
 from stats.util import is_uri_or_namespace
 
 _PREDICATE_TYPE_OF = "typeOf"
@@ -546,7 +547,10 @@ class McfNode:
 
   def to_mcf(self) -> str:
     parts: list[str] = []
-    parts.append(f"Node: dcid:{self.id}")
+    if has_namespace_prefix(self.id):
+      parts.append(f"Node: {self.id}")
+    else:
+      parts.append(f"Node: dcid:{self.id}")
     parts.extend([f"{p}: {v}" for p, v in self.properties.items()])
     return "\n".join(parts)
 

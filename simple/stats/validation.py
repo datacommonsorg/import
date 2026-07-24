@@ -15,8 +15,10 @@
 import logging
 
 from stats.config import Config
+from stats.data import strip_namespace
 from stats.data import ValidationErrorType
 from stats.db import Db
+from stats.util import has_namespace_prefix
 from stats.util import is_uri_or_namespace
 
 
@@ -102,7 +104,7 @@ class MetadataValidator:
 
     for triple in all_triples:
       sub = self._clean_dcid(triple.subject_id)
-      pred = triple.predicate
+      pred = strip_namespace(triple.predicate)
 
       if pred == "typeOf":
         obj = triple.object_id or ""
@@ -110,7 +112,7 @@ class MetadataValidator:
           defined_provenances.add(sub)
 
       elif pred == "source":
-        obj = triple.object_id or ""
+        obj = triple.object_id or triple.object_value or ""
         if obj:
           provenance_to_source[sub] = self._clean_dcid(obj)
 
@@ -151,11 +153,11 @@ class MetadataValidator:
       raise ex
 
   def _clean_dcid(self, val: str) -> str:
-    """Normalizes a DCID value by ensuring it starts with 'dcid:' and has no prefix namespaces."""
+    """Normalizes a DCID value by ensuring it starts with a namespace prefix."""
+    if not val:
+      return ""
     if val.startswith(("http://", "https://")):
       return val
-    if val.startswith("dcid:"):
+    if has_namespace_prefix(val):
       return val
-    if ":" in val:
-      return f"dcid:{val.split(':', 1)[1]}"
     return f"dcid:{val}"

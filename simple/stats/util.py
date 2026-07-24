@@ -55,6 +55,33 @@ def base64_decode_and_gunzip_json(encoded_data: str) -> dict:
   return json.loads(base64_decode_and_gunzip(encoded_data))
 
 
+_STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
+_NAMESPACE_PREFIX_RE = re.compile(r"^[a-zA-Z0-9_\-]+:")
+
+
+def has_namespace_prefix(val: str) -> bool:
+  """Returns True if string starts with a namespace prefix (e.g. 'dcid:', 'undata:', 'acme:')."""
+  if not isinstance(val, str) or not val:
+    return False
+  return bool(_NAMESPACE_PREFIX_RE.match(val.strip()))
+
+
+def get_namespace_prefix_and_suffix(val: str) -> tuple[str, str]:
+  """Extracts (prefix, suffix) from a namespaced string (e.g. 'undata:place/1' -> ('undata', 'place/1'))."""
+  if isinstance(val, str) and ":" in val and " " not in val:
+    parts = val.split(":", 1)
+    return parts[0], parts[1]
+  return "", val or ""
+
+
+def is_custom_namespace_prefix(prefix: str) -> bool:
+  """Returns True if the prefix represents a custom instance namespace (not standard 'dcid', 'http', 'schema')."""
+  if not prefix:
+    return False
+  p_lower = prefix.lower()
+  return p_lower not in _STANDARD_PREFIXES
+
+
 def is_uri_or_namespace(val: str) -> bool:
   """Returns True if the value is a full URL, standard DCID, or valid custom namespace."""
   if not isinstance(val, str):
@@ -65,7 +92,6 @@ def is_uri_or_namespace(val: str) -> bool:
     return True
   if ":" in val and " " not in val:
     prefix = val.split(":", 1)[0]
-    # A valid namespace prefix must be purely alphanumeric (e.g. 'custom', 'un', 'myorg')
     return prefix.isalnum()
   return False
 

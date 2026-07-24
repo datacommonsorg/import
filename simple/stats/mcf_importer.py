@@ -191,8 +191,8 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
       val = triple.object_value or triple.object_id or ""
       subject_properties[sub_id]["name"] = _clean_literal(val)
     elif pred == "source":
-      # Map source to the source ID
-      subject_properties[sub_id]["source"] = triple.object_id
+      val = triple.object_id or triple.object_value or ""
+      subject_properties[sub_id]["source"] = _clean_literal(val)
 
   for sub_id, props in subject_properties.items():
     node_type = props.get("typeOf")
