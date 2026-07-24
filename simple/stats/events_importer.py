@@ -196,6 +196,7 @@ class EventsImporter(Importer):
     id_column_name = self.nodes.property(
         self.id_column).dcid if self.id_column else ""
 
+    triples: list[Triple] = []
     for index, row in self.df.iterrows():
       if self.id_column:
         if id_column_name and id_column_name in row:
