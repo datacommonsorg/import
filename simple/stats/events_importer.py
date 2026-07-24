@@ -27,6 +27,7 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
+from stats.util import is_uri_or_namespace
 from util.filesystem import File
 
 from util import dc_client as dc
@@ -229,9 +230,12 @@ class EventsImporter(Importer):
     pre_resolved_entities = {}
 
     def remove_pre_resolved(entity: str) -> bool:
-      if entity.startswith(constants.DCID_OVERRIDE_PREFIX):
-        pre_resolved_entities[entity] = entity[
-            len(constants.DCID_OVERRIDE_PREFIX):].strip()
+      if is_uri_or_namespace(entity):
+        if entity.startswith(constants.DCID_OVERRIDE_PREFIX):
+          pre_resolved_entities[entity] = entity[
+              len(constants.DCID_OVERRIDE_PREFIX):].strip()
+        else:
+          pre_resolved_entities[entity] = entity
         return False
       return True
 

@@ -107,3 +107,4 @@ class TestMcfImporter(unittest.TestCase):
     _test_import(self, "basic_mcf_main_dc", is_main_dc=True)
     _test_import(self, "invalid_mcf", is_main_dc=False, raises_error=True)
     _test_import(self, "provenance_source", is_main_dc=False)
+    _test_import(self, "custom_namespace_provenance", is_main_dc=False)
