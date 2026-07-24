@@ -37,6 +37,7 @@ from stats.data import VerticalSpec
 from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
+from stats.db import Db
 from stats.db import FIELD_DB_PARAMS
 from stats.db import FIELD_DB_TYPE
 from stats.db import get_blue_green_config_from_env
@@ -57,6 +58,7 @@ from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
+from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.svg_cache import generate_svg_cache
