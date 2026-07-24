@@ -196,11 +196,13 @@ class EventsImporter(Importer):
     id_column_name = self.nodes.property(
         self.id_column).dcid if self.id_column else ""
 
-    triples: list[Triple] = []
     for index, row in self.df.iterrows():
-      # If id column is configured, use it as the event dcid else generate based on row index.
-      dcid = row[
-          id_column_name] if id_column_name else f"{self.event_type}_{index}"
+      if id_column_name and id_column_name in row:
+        dcid = row[id_column_name]
+      elif self.id_column and self.id_column in row:
+        dcid = row[self.id_column]
+      else:
+        dcid = f"{self.event_type}_{index}"
 
       entity = row.iloc[0]
       date = row.iloc[1]
