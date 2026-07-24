@@ -84,6 +84,10 @@ GLOBAL_CALCULATION_TYPES = {
     CalculationType.EMBEDDING_GENERATION,
 }
 
+SCOPED_GRAPH_CALCULATION_TYPES = {
+    CalculationType.LINKED_EDGES,
+}
+
 
 @dataclass
 class OrchestratorConfig:
@@ -300,6 +304,8 @@ class AggregationOrchestrator:
                     output = calc.get(_OUTPUT_IMPORT_KEY)
                     if output:
                         to_delete.add(output)
+                    if calc.get("type") in SCOPED_GRAPH_CALCULATION_TYPES:
+                        to_delete.add(f"generated/{single_import}")
 
         if not to_delete:
             logging.info("No existing aggregated data resolved for deletion.")

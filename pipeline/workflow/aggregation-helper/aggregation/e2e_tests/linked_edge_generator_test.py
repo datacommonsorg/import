@@ -89,7 +89,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
             self.assertEqual(len(results), 3)
             self.assertEqual(tuple(results[0]), ('geoId/06', 'country/USA', expected_provenance))
             self.assertEqual(tuple(results[1]), ('geoId/06075', 'country/USA', expected_provenance))
@@ -134,7 +134,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
             self.assertEqual(len(results), 2)
             self.assertEqual(tuple(results[0]), ('Instance_A', 'Class_B', expected_provenance))
             self.assertEqual(tuple(results[1]), ('Instance_A', 'Class_C', expected_provenance))
@@ -178,7 +178,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
             self.assertEqual(len(results), 1)
             self.assertEqual(tuple(results[0]), ('TestVariable', 'dc/topic/TestTopic', expected_provenance))
 
@@ -219,7 +219,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
             # Should resolve to 4 distinct edges: 06->06, 06->36, 36->06, 36->36
             self.assertEqual(len(results), 4)
             self.assertEqual(tuple(results[0]), ('geoId/06', 'geoId/06', expected_provenance))
@@ -237,7 +237,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('geoId/06075', 'containedInPlace', 'geoId/06', import_name)
         
         # 2. Pre-insert the expected generated edge (simulating a previous run)
-        self.add_edge('geoId/06075', 'linkedContainedInPlace', 'geoId/06', 'GeneratedGraphs')
+        self.add_edge('geoId/06075', 'linkedContainedInPlace', 'geoId/06', f'generated/{import_name}')
         
         self.flush_to_spanner()
         
@@ -262,9 +262,44 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             """
             results = list(snapshot.execute_sql(query))
             
-            expected_provenance = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
             self.assertEqual(len(results), 1)
             self.assertEqual(tuple(results[0]), ('geoId/06075', 'geoId/06', expected_provenance))
+
+    def test_linked_edges_multiple_imports(self):
+        """Tests that passing multiple imports simultaneously assigns distinct scoped provenances per row."""
+        import_a = 'ImportA_MultiTest'
+        import_b = 'ImportB_MultiTest'
+        self.add_node('geoId/06075', 'San Francisco County', types=['County'])
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('country/USA', 'United States', types=['Country'])
+        self.add_node('geoId/36061', 'New York County', types=['County'])
+        self.add_node('geoId/36', 'New York', types=['State'])
+        
+        self.add_edge('geoId/06075', 'containedInPlace', 'geoId/06', import_a)
+        self.add_edge('geoId/06', 'containedInPlace', 'country/USA', import_a)
+        self.add_edge('geoId/36061', 'containedInPlace', 'geoId/36', import_b)
+        self.add_edge('geoId/36', 'containedInPlace', 'country/USA', import_b)
+        self.flush_to_spanner()
+        
+        calculations = [
+            {
+                "name": "Linked Edges Multiple Imports",
+                "type": "LINKED_EDGES",
+                "stage": 1,
+                "input_imports": [import_a, import_b]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_a, import_b])
+        self.assertTrue(res.success)
+        
+        with self.database.snapshot(multi_use=True) as snapshot:
+            prov_a = 'dc/base/generated/ImportA_MultiTest' if self.is_base_dc else 'generated/ImportA_MultiTest'
+            prov_b = 'dc/base/generated/ImportB_MultiTest' if self.is_base_dc else 'generated/ImportB_MultiTest'
+            res_a = list(snapshot.execute_sql(f"SELECT subject_id FROM Edge WHERE provenance = '{prov_a}' AND predicate = 'linkedContainedInPlace'"))
+            res_b = list(snapshot.execute_sql(f"SELECT subject_id FROM Edge WHERE provenance = '{prov_b}' AND predicate = 'linkedContainedInPlace'"))
+            self.assertEqual(len(res_a), 3, "ImportA should have 3 scoped linked edges.")
+            self.assertEqual(len(res_b), 3, "ImportB should have 3 scoped linked edges.")
 
 
 class LinkedEdgeGeneratorCustomDcTest(LinkedEdgeGeneratorIntegrationTest):

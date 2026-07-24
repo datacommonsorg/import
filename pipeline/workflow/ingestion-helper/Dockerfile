@@ -26,16 +26,16 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y protobuf-compiler curl && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency definition files to leverage Docker layer caching
-COPY pyproject.toml __init__.py ./
+COPY pyproject.toml uv.lock __init__.py ./
 
 # Install production dependencies (without the project itself)
-RUN uv sync --no-dev --no-install-project
+RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy local code to the container image
 COPY . .
 
 # Install the project itself
-RUN uv sync --no-dev
+RUN uv sync --frozen --no-dev
 
 # Place the virtual environment's bin directory on the PATH
 ENV PATH="/app/.venv/bin:$PATH"

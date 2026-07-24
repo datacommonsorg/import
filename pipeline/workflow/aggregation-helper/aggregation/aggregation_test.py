@@ -30,7 +30,9 @@ from aggregation.common import (
     BASE_PROVENANCE_PREFIX,
     _escape_sql_literal,
     get_provenance_prefix,
-    get_provenance_name
+    get_provenance_name,
+    get_generated_provenance_name,
+    get_sql_generated_provenance_expr,
 )
 
 
@@ -52,6 +54,14 @@ class TestCommonUtils(unittest.TestCase):
     def test_get_provenance_name(self):
         self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=True), "dc/base/USFed_Census")
         self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=False), "USFed_Census")
+
+    def test_get_generated_provenance_name(self):
+        self.assertEqual(get_generated_provenance_name("USFed_Census", is_base_dc=True), "dc/base/generated/USFed_Census")
+        self.assertEqual(get_generated_provenance_name("USFed_Census", is_base_dc=False), "generated/USFed_Census")
+
+    def test_get_sql_generated_provenance_expr(self):
+        self.assertIn("CONCAT('dc/base/generated/'", get_sql_generated_provenance_expr(True, "prov"))
+        self.assertIn("CONCAT('generated/'", get_sql_generated_provenance_expr(False, "prov"))
 
 
 @patch('aggregation.bq_executor.bigquery.Client')

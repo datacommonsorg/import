@@ -19,7 +19,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
+from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_sql_generated_provenance_expr
 
 
 @dataclass
@@ -68,13 +68,13 @@ class LinkedEdgeGenerator:
         prefix = BASE_PROVENANCE_PREFIX if self.is_base_dc else ""
         provenances = [f"'{prefix}{name}'" for name in safe_names]
         provenance_filter = f" AND provenance IN ({', '.join(provenances)})"
-        gen_graphs_prov = f'{BASE_PROVENANCE_PREFIX}GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        prov_expr = get_sql_generated_provenance_expr(self.is_base_dc, "provenance")
 
         query = f"""  # nosec
         -- Pull base edges needed for memberOf aggregation
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_member_of` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
-          "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN ('memberOf', 'specializationOf'){provenance_filter}");
+          "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate IN ('memberOf', 'specializationOf'){provenance_filter}");
 
         -- Pull existing generated edges to filter them out later
         CREATE OR REPLACE TEMPORARY TABLE `temp_existing_linked_member_of` AS
@@ -82,7 +82,7 @@ class LinkedEdgeGenerator:
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'linkedMemberOf'");
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_hierarchy` AS
-        SELECT DISTINCT subject_id, predicate, object_id
+        SELECT DISTINCT subject_id, predicate, object_id, provenance
         FROM `temp_base_member_of`;
 
         EXPORT DATA
@@ -93,7 +93,8 @@ class LinkedEdgeGenerator:
           SELECT
             subject_id,
             object_id AS ancestor,
-            1 AS level
+            1 AS level,
+            provenance
           FROM
             temp_hierarchy
           WHERE
@@ -103,7 +104,8 @@ class LinkedEdgeGenerator:
           SELECT
             a.subject_id,
             t.object_id AS ancestor,
-            a.level + 1
+            a.level + 1,
+            a.provenance
           FROM
             Ancestors AS a
           JOIN
@@ -118,7 +120,7 @@ class LinkedEdgeGenerator:
             subject_id,
             'linkedMemberOf' as predicate,
             ancestor as object_id,
-            '{gen_graphs_prov}' as provenance
+            {prov_expr} as provenance
           FROM
             Ancestors
         ),
@@ -161,13 +163,13 @@ class LinkedEdgeGenerator:
         prefix = "dc/base/" if self.is_base_dc else ""
         provenances = [f"'{prefix}{name}'" for name in safe_names]
         provenance_filter = f" AND provenance IN ({', '.join(provenances)})"
-        gen_graphs_prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        prov_expr = get_sql_generated_provenance_expr(self.is_base_dc, "provenance")
 
         query = f"""  # nosec
         -- Pull base edges needed for containedInPlace aggregation
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_contained_in_place` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
-          "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate = 'containedInPlace'{provenance_filter}");
+          "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'containedInPlace'{provenance_filter}");
 
         -- Pull existing generated edges to filter them out later
         CREATE OR REPLACE TEMPORARY TABLE `temp_existing_linked_contained_in_place` AS
@@ -175,7 +177,7 @@ class LinkedEdgeGenerator:
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'linkedContainedInPlace'");
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_contained_in_place` AS
-        SELECT subject_id, object_id
+        SELECT subject_id, object_id, provenance
         FROM `temp_base_contained_in_place`;
 
         EXPORT DATA
@@ -186,7 +188,8 @@ class LinkedEdgeGenerator:
           SELECT
             subject_id,
             object_id AS ancestor_place,
-            1 AS level
+            1 AS level,
+            provenance
           FROM
             temp_contained_in_place
           UNION ALL
@@ -194,7 +197,8 @@ class LinkedEdgeGenerator:
           SELECT
             a.subject_id,
             t.object_id AS ancestor_place,
-            a.level + 1
+            a.level + 1,
+            a.provenance
           FROM
             Ancestors AS a
           JOIN
@@ -208,7 +212,7 @@ class LinkedEdgeGenerator:
             subject_id,
             'linkedContainedInPlace' as predicate,
             ancestor_place as object_id,
-            '{gen_graphs_prov}' as provenance
+            {prov_expr} as provenance
           FROM
             Ancestors
         ),
@@ -251,13 +255,13 @@ class LinkedEdgeGenerator:
         prefix = "dc/base/" if self.is_base_dc else ""
         provenances = [f"'{prefix}{name}'" for name in safe_names]
         provenance_filter = f" AND provenance IN ({', '.join(provenances)})"
-        gen_graphs_prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        prov_expr = get_sql_generated_provenance_expr(self.is_base_dc, "provenance")
 
         query = f"""  # nosec
         -- Pull base edges needed for member aggregation
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_member` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
-          "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN ('relevantVariable', 'member'){provenance_filter}");
+          "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate IN ('relevantVariable', 'member'){provenance_filter}");
 
         -- Pull existing generated edges to filter them out later
         CREATE OR REPLACE TEMPORARY TABLE `temp_existing_linked_member` AS
@@ -265,7 +269,7 @@ class LinkedEdgeGenerator:
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'linkedMember'");
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_topic_hierarchy` AS
-        SELECT DISTINCT subject_id, object_id
+        SELECT DISTINCT subject_id, object_id, provenance
         FROM `temp_base_member`
         WHERE (subject_id LIKE 'dc/topic%' OR subject_id LIKE 'dc/svpg%');
 
@@ -277,7 +281,8 @@ class LinkedEdgeGenerator:
           SELECT
             subject_id,
             object_id AS descendant,
-            1 AS level
+            1 AS level,
+            provenance
           FROM
             temp_topic_hierarchy
           UNION ALL
@@ -285,7 +290,8 @@ class LinkedEdgeGenerator:
           SELECT
             d.subject_id,
             t.object_id AS descendant,
-            d.level + 1
+            d.level + 1,
+            d.provenance
           FROM
             Descendants AS d
           JOIN
@@ -299,7 +305,7 @@ class LinkedEdgeGenerator:
             descendant as subject_id,
             'linkedMember' as predicate,
             subject_id as object_id,
-            '{gen_graphs_prov}' as provenance
+            {prov_expr} as provenance
           FROM
             Descendants
           WHERE subject_id LIKE 'dc/topic%'

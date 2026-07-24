@@ -280,5 +280,25 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
             ))
             self.assertEqual(len(new_obs_b), 0)
 
+    def test_scoped_linked_edges_deletion(self):
+        """Verifies that deleting aggregations for ImportA deletes generated/ImportA but preserves generated/ImportB."""
+        import_a = 'ImportA_LinkedDelTest'
+        import_b = 'ImportB_LinkedDelTest'
+        prov_gen_a = 'dc/base/generated/ImportA_LinkedDelTest' if self.is_base_dc else 'generated/ImportA_LinkedDelTest'
+        prov_gen_b = 'dc/base/generated/ImportB_LinkedDelTest' if self.is_base_dc else 'generated/ImportB_LinkedDelTest'
+        
+        self.add_edge('geoId/06075', 'linkedContainedInPlace', 'geoId/06', f'generated/{import_a}')
+        self.add_edge('geoId/36061', 'linkedContainedInPlace', 'geoId/36', f'generated/{import_b}')
+        self.flush_to_spanner()
+        
+        calculations = [{"name": "Linked Edges", "type": "LINKED_EDGES", "stage": 1, "input_imports": ["*"]}]
+        self.run_orchestrator(calculations=calculations, active_imports=[import_a])
+        
+        with self.database.snapshot(multi_use=True) as snapshot:
+            edges_a = list(snapshot.execute_sql(f"SELECT subject_id FROM Edge WHERE provenance = '{prov_gen_a}'"))
+            edges_b = list(snapshot.execute_sql(f"SELECT subject_id FROM Edge WHERE provenance = '{prov_gen_b}'"))
+            self.assertEqual(len(edges_a), 0, "ImportA generated linked edges should be deleted.")
+            self.assertEqual(len(edges_b), 1, "ImportB generated linked edges should be preserved.")
+
 if __name__ == '__main__':
     unittest.main()
