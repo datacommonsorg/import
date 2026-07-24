@@ -701,7 +701,45 @@ class TestSpannerClient(unittest.TestCase):
             None, None, None, None, None, None, "ingestion-workflow:wf-789"
         ]])
 
+    @patch('google.cloud.spanner.Client')
+    def test_update_import_version_history_per_import_counts(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+
+        import_list = [
+            {"importName": "import1", "latestVersion": "v1.0"},
+            {"importName": "import2", "latestVersion": "v2.0"}
+        ]
+        metrics = {
+            'execution_time': 120,
+            'import_metrics': {
+                "import1": {'node_count': 10, 'edge_count': 20, 'ts_count': 5, 'obs_count': 15},
+                "import2": {'node_count': 30, 'edge_count': 40, 'ts_count': 25, 'obs_count': 35},
+            }
+        }
+        client.update_import_version_history(
+            import_list, workflow_id="wf-123", status="SUCCESS", metrics=metrics
+        )
+
+        mock_transaction.insert.assert_called_once()
+        _, kwargs = mock_transaction.insert.call_args
+        self.assertEqual(kwargs['table'], 'ImportVersionHistory')
+        self.assertEqual(kwargs['values'], [
+            ["import1", "v1.0", spanner.COMMIT_TIMESTAMP, "wf-123", "SUCCESS", 120, 10, 20, 15, 5, "ingestion-workflow:wf-123"],
+            ["import2", "v2.0", spanner.COMMIT_TIMESTAMP, "wf-123", "SUCCESS", 120, 30, 40, 35, 25, "ingestion-workflow:wf-123"]
+        ])
+
 
 if __name__ == '__main__':
     unittest.main()
+
 

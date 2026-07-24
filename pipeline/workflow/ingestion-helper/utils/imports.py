@@ -127,7 +127,8 @@ def get_ingestion_metrics(project_id, location, job_id):
         job_id: The Dataflow job ID.
 
     Returns:
-        A dictionary containing 'obs_count', 'node_count', 'edge_count', 'ts_count', and 'execution_time'.
+        A dictionary containing 'obs_count', 'node_count', 'edge_count', 'ts_count', 'execution_time',
+        and 'import_metrics'.
     """
     dataflow = build('dataflow', 'v1b3', cache_discovery=False)
     # Fetch Dataflow metrics
@@ -136,6 +137,7 @@ def get_ingestion_metrics(project_id, location, job_id):
     obs_count = 0
     ts_count = 0
     execution_time = 0
+    import_metrics = {}
     if project_id and job_id:
         try:
             # Fetch Job details for execution time
@@ -159,14 +161,35 @@ def get_ingestion_metrics(project_id, location, job_id):
                 jobId=job_id).execute()
             for metric in metrics.get('metrics', []):
                 name = metric['name']['name']
-                if name == 'graph_node_count':
-                    node_count += int(metric['scalar'])
-                elif name == 'graph_edge_count':
-                    edge_count += int(metric['scalar'])
-                elif name == 'graph_observation_count':
-                    obs_count += int(metric['scalar'])
-                elif name == 'graph_timeseries_count':
-                    ts_count += int(metric['scalar'])
+                scalar = int(metric.get('scalar', 0))
+                match = re.match(r"^([^:]+)(?::(.+))?$", name)
+                metric_type = match.group(1) if match else name
+                imp_name = match.group(2).split(':')[-1] if match and match.group(2) else None
+
+                if imp_name and imp_name not in import_metrics:
+                    import_metrics[imp_name] = {
+                        'node_count': 0,
+                        'edge_count': 0,
+                        'obs_count': 0,
+                        'ts_count': 0,
+                    }
+
+                if metric_type == 'node_count':
+                    node_count += scalar
+                    if imp_name:
+                        import_metrics[imp_name]['node_count'] = scalar
+                elif metric_type == 'edge_count':
+                    edge_count += scalar
+                    if imp_name:
+                        import_metrics[imp_name]['edge_count'] = scalar
+                elif metric_type == 'observation_count':
+                    obs_count += scalar
+                    if imp_name:
+                        import_metrics[imp_name]['obs_count'] = scalar
+                elif metric_type == 'timeseries_count':
+                    ts_count += scalar
+                    if imp_name:
+                        import_metrics[imp_name]['ts_count'] = scalar
         except HttpError as e:
             logging.error(
                 f"Error fetching dataflow metrics for job {job_id}: {e}")
@@ -175,5 +198,6 @@ def get_ingestion_metrics(project_id, location, job_id):
         'node_count': node_count,
         'edge_count': edge_count,
         'ts_count': ts_count,
-        'execution_time': execution_time
+        'execution_time': execution_time,
+        'import_metrics': import_metrics,
     }
