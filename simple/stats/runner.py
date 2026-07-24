@@ -80,6 +80,57 @@ class RunMode(StrEnum):
 _ARCHIVES_DIR_NAME = "archives"
 
 
+def _create_importer_for_file(
+    config: Config,
+    input_file: File,
+    process_dir: Dir,
+    db: Db,
+    reporter: FileImportReporter,
+    nodes: Nodes,
+    mode: Optional[RunMode] = None,
+) -> Importer:
+  import_type = config.import_type(input_file)
+
+  match import_type:
+    case ImportType.OBSERVATIONS:
+      mappings = config.column_mappings(input_file)
+      if not mappings and mode == RunMode.DCP_BRIDGE:
+        raise ValueError(
+            f"Missing column mappings for file '{input_file.path}' in config.json"
+        )
+      return VariablePerRowImporter(
+          input_file=input_file,
+          db=db,
+          reporter=reporter,
+          nodes=nodes,
+      )
+
+    case ImportType.EVENTS:
+      sanitized_path = input_file.full_path().replace("://", "_").replace("/", "_")
+      debug_resolve_file = process_dir.open_file(
+          f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}"
+      )
+      return EventsImporter(
+          input_file=input_file,
+          db=db,
+          debug_resolve_file=debug_resolve_file,
+          reporter=reporter,
+          nodes=nodes,
+      )
+
+    case ImportType.ENTITIES:
+      return EntitiesImporter(
+          input_file=input_file,
+          db=db,
+          reporter=reporter,
+          nodes=nodes,
+      )
+
+    case _:
+      raise ValueError(
+          f"Unsupported import type: {import_type} ({input_file.full_path()})")
+
+
 def _run_single_csv_import_proc(args: tuple):
   file_rel_path, input_dir_path, output_dir_path, process_dir_path, import_names, config_json_str, jsonld_dir_name = args
   input_dir = create_store(input_dir_path).as_dir()
@@ -91,33 +142,24 @@ def _run_single_csv_import_proc(args: tuple):
   nodes = Nodes(config=config)
   db = JsonLdStreamDb(output_store, import_names, nodes, jsonld_dir_name=jsonld_dir_name)
 
-  import_type = config.import_type(input_store)
   sanitized_path = input_store.full_path().replace("://", "_").replace("/", "_")
-  debug_resolve_file = process_store.open_file(
-      f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
   report_file = process_store.open_file(f"report_{sanitized_path}.json")
   reporter = ImportReporter(report_file).get_file_reporter(input_store)
 
-  if import_type == ImportType.OBSERVATIONS:
-    input_file_format = config.format(input_store)
-    if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
-      importer = VariablePerRowImporter(
-          input_file=input_store,
-          db=db,
-          reporter=reporter,
-          nodes=nodes,
-      )
-    else:
-      importer = ObservationsImporter(
-          input_file=input_store,
-          db=db,
-          debug_resolve_file=debug_resolve_file,
-          reporter=reporter,
-          nodes=nodes,
-      )
-    importer.do_import()
-    db.commit_and_close()
-  return (file_rel_path, db.obs_collision_count)
+  importer = _create_importer_for_file(
+      config, input_store, process_store, db, reporter, nodes, mode=RunMode.DCP_BRIDGE
+  )
+  importer.do_import()
+  db.commit_and_close()
+
+  resolved_entities = {e.id: e.type for e in nodes.entities.values()}
+  return (
+      file_rel_path,
+      db.obs_collision_count,
+      dict(db.file_collision_counts),
+      dict(db.file_sample_collisions),
+      resolved_entities,
+  )
 
 
 class Runner:
@@ -931,10 +973,15 @@ class Runner:
                 for arg in proc_args
             ]
             for future in concurrent.futures.as_completed(futures):
-              res_path, collisions = future.result()
+              res_path, collisions, file_counts, file_samples, resolved_entities = future.result()
               self._log_file_progress("Imported CSV file", res_path)
+              if resolved_entities:
+                self.nodes.entities_with_types(resolved_entities)
               if collisions and hasattr(self.db, "obs_collision_count"):
                 self.db.obs_collision_count += collisions
+                for f_name, count in file_counts.items():
+                  self.db.file_collision_counts[f_name] += count
+                  self.db.file_sample_collisions[f_name].extend(file_samples.get(f_name, []))
       else:
         for file in csv_files:
           self._run_single_import(file)
@@ -972,53 +1019,16 @@ class Runner:
     )
 
   def _create_importer(self, input_file: File) -> Importer:
-    import_type = self.config.import_type(input_file)
-    sanitized_path = input_file.full_path().replace("://",
-                                                    "_").replace("/", "_")
-    debug_resolve_file = self.process_dir.open_file(
-        f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
     reporter = self.reporter.get_file_reporter(input_file)
-
-    if import_type == ImportType.OBSERVATIONS:
-      input_file_format = self.config.format(input_file)
-      if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
-        # Fail immediately if column mappings are missing from config
-        mappings = self.config.column_mappings(input_file)
-        if not mappings and self.mode == RunMode.DCP_BRIDGE:
-          raise ValueError(
-              f"Missing column mappings for file '{input_file.path}' in config.json"
-          )
-        return VariablePerRowImporter(
-            input_file=input_file,
-            db=self.db,
-            reporter=reporter,
-            nodes=self.nodes,
-        )
-      return ObservationsImporter(
-          input_file=input_file,
-          db=self.db,
-          debug_resolve_file=debug_resolve_file,
-          reporter=reporter,
-          nodes=self.nodes,
-      )
-
-    if import_type == ImportType.EVENTS:
-      return EventsImporter(
-          input_file=input_file,
-          db=self.db,
-          debug_resolve_file=debug_resolve_file,
-          reporter=reporter,
-          nodes=self.nodes,
-      )
-
-    if import_type == ImportType.ENTITIES:
-      return EntitiesImporter(input_file=input_file,
-                              db=self.db,
-                              reporter=reporter,
-                              nodes=self.nodes)
-
-    raise ValueError(
-        f"Unsupported import type: {import_type} ({input_file.full_path()})")
+    return _create_importer_for_file(
+        self.config,
+        input_file,
+        self.process_dir,
+        self.db,
+        reporter,
+        self.nodes,
+        mode=self.mode,
+    )
 
   def _run_imports_and_export_jsonld(self):
     logging.info(
