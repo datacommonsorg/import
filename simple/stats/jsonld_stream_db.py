@@ -28,7 +28,8 @@ import tempfile
 import threading
 from typing import Callable, Optional
 
-from google.api_core.exceptions import GoogleAPICallError, TooManyRequests
+from google.api_core.exceptions import GoogleAPICallError
+from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
 from google.cloud import storage
 import pandas as pd
@@ -80,12 +81,12 @@ def _parse_numeric(val):
 
 
 def _write_observation_shard(chunk_or_args,
-                              shard_index: Optional[int] = None,
-                              jsonld_dir_path: Optional[str] = None,
-                              ns_map: Optional[dict[str, str]] = None,
-                              prov_urls: Optional[dict[str, str]] = None,
-                              track_hash_fn: Optional[Callable] = None,
-                              file_name: str = ""):
+                             shard_index: Optional[int] = None,
+                             jsonld_dir_path: Optional[str] = None,
+                             ns_map: Optional[dict[str, str]] = None,
+                             prov_urls: Optional[dict[str, str]] = None,
+                             track_hash_fn: Optional[Callable] = None,
+                             file_name: str = ""):
   if isinstance(chunk_or_args, tuple):
     chunk = chunk_or_args[0]
     shard_index = chunk_or_args[1]
@@ -289,7 +290,11 @@ def _write_node_shard_rdflib(args):
 class JsonLdStreamDb(Db):
   """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
 
-  def __init__(self, output_dir, import_names, nodes, jsonld_dir_name: Optional[str] = None) -> None:
+  def __init__(self,
+               output_dir,
+               import_names,
+               nodes,
+               jsonld_dir_name: Optional[str] = None) -> None:
     self.output_dir = output_dir
     self.import_names = import_names
     self.nodes = nodes
@@ -331,8 +336,13 @@ class JsonLdStreamDb(Db):
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
-  def track_observation_hash(self, obs_hash_or_chunk, entity: str = "", variable: str = "",
-                             date: str = "", provenance: str = "", file_name: str = "") -> None:
+  def track_observation_hash(self,
+                             obs_hash_or_chunk,
+                             entity: str = "",
+                             variable: str = "",
+                             date: str = "",
+                             provenance: str = "",
+                             file_name: str = "") -> None:
     if isinstance(obs_hash_or_chunk, list):
       chunk_items = obs_hash_or_chunk
       file_key = os.path.basename(file_name) if file_name else "unknown"
@@ -351,21 +361,17 @@ class JsonLdStreamDb(Db):
               self.file_sample_collisions[file_key].append(sample_info)
               logging.warning(
                   "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
-                  file_key, sample_info
-              )
+                  file_key, sample_info)
             elif self.obs_collision_count % 1000 == 0:
               logging.warning(
                   "Detected %d observation @id collisions so far across processed datasets.",
-                  self.obs_collision_count
-              )
+                  self.obs_collision_count)
           else:
             self.obs_hash_set.add(hash_int)
     else:
       self.track_observation_hash(
           [(obs_hash_or_chunk, entity, variable, date, provenance)],
-          file_name=file_name
-      )
-
+          file_name=file_name)
 
   def _get_prov_urls(self) -> dict[str, str]:
     if hasattr(self, 'nodes') and self.nodes and hasattr(
@@ -373,7 +379,10 @@ class JsonLdStreamDb(Db):
       return self.nodes.get_provenance_urls()
     return {}
 
-  def _write_observations_df_to_disk(self, df: pd.DataFrame, import_name: str, file_name: str = ""):
+  def _write_observations_df_to_disk(self,
+                                     df: pd.DataFrame,
+                                     import_name: str,
+                                     file_name: str = ""):
     import_temp_dir = os.path.join(self.temp_local_dir, import_name)
     prov_urls = self._get_prov_urls()
     n = len(df)
@@ -383,9 +392,13 @@ class JsonLdStreamDb(Db):
       with self.lock:
         shard_index = self.obs_shard_index
         self.obs_shard_index += 1
-      _write_observation_shard(
-          chunk_records, shard_index, import_temp_dir, self.ns_map, prov_urls,
-          track_hash_fn=self.track_observation_hash, file_name=file_name)
+      _write_observation_shard(chunk_records,
+                               shard_index,
+                               import_temp_dir,
+                               self.ns_map,
+                               prov_urls,
+                               track_hash_fn=self.track_observation_hash,
+                               file_name=file_name)
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
@@ -396,7 +409,9 @@ class JsonLdStreamDb(Db):
     import_name = self.config.import_name(input_file)
     file_name = input_file.path if input_file else ""
     self._init_import_export_dir(import_name)
-    self._write_observations_df_to_disk(observations_df, import_name, file_name=file_name)
+    self._write_observations_df_to_disk(observations_df,
+                                        import_name,
+                                        file_name=file_name)
 
   def _init_import_export_dir(self, import_name: str):
     import_temp_dir = os.path.join(self.temp_local_dir, import_name)
@@ -535,9 +550,9 @@ class JsonLdStreamDb(Db):
         maximum=10.0,
         multiplier=2.0,
         deadline=120.0,
-        predicate=lambda e: isinstance(
-            e, (TooManyRequests, GoogleAPICallError, requests.exceptions.RequestException))
-    )
+        predicate=lambda e: isinstance(e,
+                                       (TooManyRequests, GoogleAPICallError,
+                                        requests.exceptions.RequestException)))
 
     def _upload_single(rel_path: str):
       local_file_path = os.path.join(temp_local_dir, rel_path)

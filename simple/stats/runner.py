@@ -108,10 +108,10 @@ def _create_importer_for_file(
       )
 
     case ImportType.EVENTS:
-      sanitized_path = input_file.full_path().replace("://", "_").replace("/", "_")
+      sanitized_path = input_file.full_path().replace("://",
+                                                      "_").replace("/", "_")
       debug_resolve_file = process_dir.open_file(
-          f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}"
-      )
+          f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
       return EventsImporter(
           input_file=input_file,
           db=db,
@@ -142,19 +142,28 @@ def _run_single_csv_import_proc(args: tuple):
 
   config = Config(json.loads(config_json_str))
   nodes = Nodes(config=config)
-  db = JsonLdStreamDb(output_store, import_names, nodes, jsonld_dir_name=jsonld_dir_name)
+  db = JsonLdStreamDb(output_store,
+                      import_names,
+                      nodes,
+                      jsonld_dir_name=jsonld_dir_name)
 
   sanitized_path = input_store.full_path().replace("://", "_").replace("/", "_")
   report_file = process_store.open_file(f"report_{sanitized_path}.json")
   reporter = ImportReporter(report_file).get_file_reporter(input_store)
 
-  importer = _create_importer_for_file(
-      config, input_store, process_store, db, reporter, nodes, mode=RunMode.DCP_BRIDGE
-  )
+  importer = _create_importer_for_file(config,
+                                       input_store,
+                                       process_store,
+                                       db,
+                                       reporter,
+                                       nodes,
+                                       mode=RunMode.DCP_BRIDGE)
   importer.do_import()
   db.commit_and_close()
 
-  resolved_entities = {e.entity_dcid: e.entity_type for e in nodes.entities.values()}
+  resolved_entities = {
+      e.entity_dcid: e.entity_type for e in nodes.entities.values()
+  }
   return (
       file_rel_path,
       db.obs_collision_count,
@@ -938,9 +947,12 @@ class Runner:
       logging.info("Importing %d CSV files next...", len(csv_files))
       if self.mode == RunMode.DCP_BRIDGE:
         import unittest.mock as mock_module
+
         from util import dc_client
-        is_mocked = isinstance(getattr(dc_client, 'get_property_of_entities', None), mock_module.MagicMock)
-        
+        is_mocked = isinstance(
+            getattr(dc_client, 'get_property_of_entities', None),
+            mock_module.MagicMock)
+
         if is_mocked:
           num_csv_threads = min(32, len(csv_files))
           with concurrent.futures.ThreadPoolExecutor(
@@ -956,18 +968,15 @@ class Runner:
           config_json_str = json.dumps(self.config.data)
           input_dir_path = self.input_stores[0].full_path()
           jsonld_dir_name = self.db.jsonld_dir.name()
-          proc_args = [
-              (
-                  file.path,
-                  input_dir_path,
-                  self.output_dir.full_path(),
-                  self.process_dir.full_path(),
-                  self.import_names,
-                  config_json_str,
-                  jsonld_dir_name,
-              )
-              for file in csv_files
-          ]
+          proc_args = [(
+              file.path,
+              input_dir_path,
+              self.output_dir.full_path(),
+              self.process_dir.full_path(),
+              self.import_names,
+              config_json_str,
+              jsonld_dir_name,
+          ) for file in csv_files]
           with concurrent.futures.ProcessPoolExecutor(
               max_workers=num_csv_processes) as executor:
             futures = [
@@ -975,7 +984,8 @@ class Runner:
                 for arg in proc_args
             ]
             for future in concurrent.futures.as_completed(futures):
-              res_path, collisions, file_counts, file_samples, resolved_entities = future.result()
+              res_path, collisions, file_counts, file_samples, resolved_entities = future.result(
+              )
               self._log_file_progress("Imported CSV file", res_path)
               if resolved_entities:
                 self.nodes.entities_with_types(resolved_entities)
@@ -983,7 +993,8 @@ class Runner:
                 self.db.obs_collision_count += collisions
                 for f_name, count in file_counts.items():
                   self.db.file_collision_counts[f_name] += count
-                  self.db.file_sample_collisions[f_name].extend(file_samples.get(f_name, []))
+                  self.db.file_sample_collisions[f_name].extend(
+                      file_samples.get(f_name, []))
       else:
         for file in csv_files:
           self._run_single_import(file)
