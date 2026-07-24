@@ -154,7 +154,7 @@ def _run_single_csv_import_proc(args: tuple):
   importer.do_import()
   db.commit_and_close()
 
-  resolved_entities = {e.id: e.type for e in nodes.entities.values()}
+  resolved_entities = {e.entity_dcid: e.entity_type for e in nodes.entities.values()}
   return (
       file_rel_path,
       db.obs_collision_count,
