@@ -289,7 +289,7 @@ def _write_node_shard_rdflib(args):
 class JsonLdStreamDb(Db):
   """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
 
-  def __init__(self, output_dir, import_names, nodes) -> None:
+  def __init__(self, output_dir, import_names, nodes, jsonld_dir_name: Optional[str] = None) -> None:
     self.output_dir = output_dir
     self.import_names = import_names
     self.nodes = nodes
@@ -308,8 +308,12 @@ class JsonLdStreamDb(Db):
     if self.import_name and "/" in self.import_name:
       self.import_name = self.import_name.replace("/", "_")
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-    unique_dir_name = f"{self.import_name}_{timestamp}"
+    if jsonld_dir_name:
+      unique_dir_name = jsonld_dir_name
+    else:
+      timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+      unique_dir_name = f"{self.import_name}_{timestamp}"
+
     self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(unique_dir_name)
 
     self.obs_shard_index = 0

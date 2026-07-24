@@ -81,7 +81,7 @@ _ARCHIVES_DIR_NAME = "archives"
 
 
 def _run_single_csv_import_proc(args: tuple):
-  file_rel_path, input_dir_path, output_dir_path, process_dir_path, import_names, config_json_str = args
+  file_rel_path, input_dir_path, output_dir_path, process_dir_path, import_names, config_json_str, jsonld_dir_name = args
   input_dir = create_store(input_dir_path).as_dir()
   output_store = create_store(output_dir_path).as_dir()
   process_store = create_store(process_dir_path).as_dir()
@@ -89,7 +89,7 @@ def _run_single_csv_import_proc(args: tuple):
 
   config = Config(json.loads(config_json_str))
   nodes = Nodes(config=config)
-  db = JsonLdStreamDb(output_store, import_names, nodes)
+  db = JsonLdStreamDb(output_store, import_names, nodes, jsonld_dir_name=jsonld_dir_name)
 
   import_type = config.import_type(input_store)
   sanitized_path = input_store.full_path().replace("://", "_").replace("/", "_")
@@ -911,6 +911,7 @@ class Runner:
           num_csv_processes = min(32, len(csv_files))
           config_json_str = json.dumps(self.config.data)
           input_dir_path = self.input_stores[0].full_path()
+          jsonld_dir_name = self.db.jsonld_dir.name()
           proc_args = [
               (
                   file.path,
@@ -919,6 +920,7 @@ class Runner:
                   self.process_dir.full_path(),
                   self.import_names,
                   config_json_str,
+                  jsonld_dir_name,
               )
               for file in csv_files
           ]
