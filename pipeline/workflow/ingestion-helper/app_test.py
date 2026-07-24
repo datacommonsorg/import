@@ -42,7 +42,6 @@ class TestMain(unittest.TestCase):
         mock_spanner_client.database = mock_database
         mock_spanner_client.embedding_table = "NodeEmbedding"
         mock_spanner_client.embedding_index = "NodeEmbeddingIndex"
-        mock_spanner_client.embedding_label_index = "NodeEmbeddingLabelIndex"
 
         # Mock snapshot and execute_sql
         mock_snapshot = MagicMock()
@@ -66,6 +65,7 @@ class TestMain(unittest.TestCase):
         # First call: get_latest_lock_timestamp
         # Second call: get_updated_nodes (for pre-deletion subject_ids)
         # Third call: get_updated_nodes (for embedding generation)
+        # Fourth call: ML.PREDICT
         mock_snapshot.execute_sql.side_effect = [
             [(expected_timestamp,)],
             MockResults(
@@ -83,7 +83,11 @@ class TestMain(unittest.TestCase):
                     ("dc/3", "SV 1", ["StatisticalVariable"])
                 ],
                 field_names=["subject_id", "name", "types"]
-            )
+            ),
+            [
+                ("dc/1", '{"title": "dc/1", "name": "Node 1"}', [0.1, 0.2], ["Topic"]),
+                ("dc/3", '{"title": "dc/3", "name": "SV 1"}', [0.3, 0.4], ["StatisticalVariable"])
+            ]
         ]
 
         # Mock transaction for generate_embeddings_partitioned
@@ -107,19 +111,30 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.json()["status"], "OK")
         self.assertEqual(response.json()["affected_rows"], 2)
 
-        # Assertions for get_latest_lock_timestamp and get_updated_nodes
-        self.assertEqual(mock_database.snapshot.call_count, 3)
+        # Assertions for snapshots and execute_sql calls
+        self.assertEqual(mock_database.snapshot.call_count, 4)
         call_args_list = mock_snapshot.execute_sql.call_args_list
-        self.assertEqual(len(call_args_list), 3)
+        self.assertEqual(len(call_args_list), 4)
 
         # Check first call (lock timestamp)
         self.assertIn("IngestionLock", call_args_list[0].args[0])
 
-        # Check second and third call (updated nodes)
+        # Check second call (updated nodes for deletion)
         args2, kwargs2 = call_args_list[1]
         self.assertIn("Node", args2[0])
         self.assertEqual(kwargs2["params"]["timestamp"], expected_timestamp)
         self.assertEqual(kwargs2["params"]["node_types"], ["StatisticalVariable", "Topic"])
+
+        # Check third call (updated nodes for embedding generation)
+        args3, kwargs3 = call_args_list[2]
+        self.assertIn("Node", args3[0])
+        self.assertEqual(kwargs3["params"]["timestamp"], expected_timestamp)
+        self.assertEqual(kwargs3["params"]["node_types"], ["StatisticalVariable", "Topic"])
+
+        # Check fourth call (ML.PREDICT)
+        args4, kwargs4 = call_args_list[3]
+        self.assertIn("ML.PREDICT", args4[0])
+        self.assertEqual(kwargs4["params"]["task_type"], "RETRIEVAL_QUERY")
 
         # Assertions for transactions (1 for DELETE, 1 for INSERT OR UPDATE)
         self.assertEqual(mock_database.run_in_transaction.call_count, 2)
@@ -129,11 +144,11 @@ class TestMain(unittest.TestCase):
         self.assertIn("INSERT OR UPDATE INTO NodeEmbedding", args_tx[0])
 
         # Verify data passed to generate_embeddings_partitioned reached execute_update
-        batch = kwargs_tx["params"]["nodes"]
-        self.assertEqual(len(batch), 2)
-        self.assertEqual(batch[0][0], "dc/1")
-        self.assertEqual(batch[1][0], "dc/3")
-        self.assertEqual(batch[0][1], '{"title": "dc/1", "name": "Node 1"}')
+        rows = kwargs_tx["params"]["rows"]
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0][0], "dc/1")
+        self.assertEqual(rows[1][0], "dc/3")
+        self.assertEqual(rows[0][2], [0.1, 0.2])
 
     def test_seed_database_success(self):
         mock_spanner_client = MagicMock()
