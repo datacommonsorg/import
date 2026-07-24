@@ -463,10 +463,12 @@ class AggregationOrchestrator:
 
         logging.info(f"  -> Place Rollup: {from_type} -> {to_type} for imports {applicable_imports}")
         generator = PlaceAggregationGenerator(self.executor, self.is_base_dc)
+        output_import_name = config.get(_OUTPUT_IMPORT_KEY)
         place_config = PlaceAggregationConfig(
             import_names=applicable_imports,
             source_type=from_type,
             destination_type=to_type,
+            output_import_name=output_import_name,
             allow_multiple_to_places=place_cfg.get("allow_multiple_to_places", False)
         )
         job = generator.aggregate_places(config=place_config)
