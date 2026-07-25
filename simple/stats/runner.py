@@ -1063,7 +1063,8 @@ class Runner:
                   self.nodes.ids_to_groups[svg.id] = svg
               if res.properties:
                 self.nodes.properties.update(res.properties)
-              if res.obs_collision_count and hasattr(self.db, "obs_collision_count"):
+              if res.obs_collision_count and hasattr(self.db,
+                                                     "obs_collision_count"):
                 self.db.obs_collision_count += res.obs_collision_count
                 for f_name, count in res.file_collision_counts.items():
                   self.db.file_collision_counts[f_name] += count
