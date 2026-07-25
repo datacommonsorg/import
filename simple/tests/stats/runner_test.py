@@ -320,6 +320,7 @@ class TestRunner(unittest.TestCase):
           input_dir_path=input_dir,
           output_dir_path=temp_dir,
           mode=RunMode.DCP_BRIDGE,
+          use_multiprocessing=False,
       ).run()
 
       # Verify that NO SQLite database file is created
