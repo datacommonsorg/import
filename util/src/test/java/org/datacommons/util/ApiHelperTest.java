@@ -1,14 +1,30 @@
 package org.datacommons.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.io.ByteArrayOutputStream;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 public class ApiHelperTest {
 
@@ -18,6 +34,7 @@ public class ApiHelperTest {
         ApiHelper.buildPropertyValuesRequest(
             List.of("geoId/06"),
             "name",
+            "",
             new DcApiConfig("https://api.datacommons.org", "prod-key"));
 
     assertEquals("https://api.datacommons.org/v2/node", request.uri().toString());
@@ -30,6 +47,7 @@ public class ApiHelperTest {
         ApiHelper.buildPropertyValuesRequest(
             List.of("geoId/06"),
             "name",
+            "",
             new DcApiConfig("https://custom.api.datacommons.org/", "key"));
 
     assertEquals("https://custom.api.datacommons.org/v2/node", request.uri().toString());
@@ -40,18 +58,75 @@ public class ApiHelperTest {
   public void buildPropertyValuesRequestOmitsMissingKey() {
     HttpRequest request =
         ApiHelper.buildPropertyValuesRequest(
-            List.of("geoId/06"), "name", new DcApiConfig("https://api.datacommons.org", ""));
+            List.of("geoId/06"), "name", "", new DcApiConfig("https://api.datacommons.org", ""));
 
     assertEquals("https://api.datacommons.org/v2/node", request.uri().toString());
     assertTrue(request.headers().firstValue("x-api-key").isEmpty());
   }
 
   @Test
-  public void convertsNodesWithDcid() throws Exception {
-    V2NodeResponse response = new V2NodeResponse();
-    response.data = Map.of("geoId/06", nodeWith("typeOf", List.of(nodeWithDcid("Class"))));
+  public void fetchPropertyValuesMergesAllPages() throws Exception {
+    HttpClient mockHttp = mock(HttpClient.class);
+    HttpResponse<String> firstResponse = mock(HttpResponse.class);
+    HttpResponse<String> secondResponse = mock(HttpResponse.class);
+    when(firstResponse.body())
+        .thenReturn(
+            "{\"data\":{"
+                + "\"nodeA\":{\"arcs\":{\"typeOf\":{\"nodes\":[{\"dcid\":\"Place\"}]}}},"
+                + "\"nodeB\":{}},"
+                + "\"nextToken\":\"next-page-token\"}");
+    when(secondResponse.body())
+        .thenReturn(
+            "{\"data\":{"
+                + "\"nodeA\":{\"arcs\":{\"typeOf\":{\"nodes\":[{\"dcid\":\"City\"}]}}},"
+                + "\"nodeB\":{\"arcs\":{\"typeOf\":{\"nodes\":[{\"dcid\":\"Place\"}]}}}}}");
+    doReturn(firstResponse, secondResponse).when(mockHttp).send(any(), any());
 
-    JsonObject legacy = ApiHelper.convertToLegacyFormat(response, List.of("geoId/06"), "typeOf");
+    JsonObject result =
+        ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA", "nodeB"), "typeOf");
+
+    ArgumentCaptor<HttpRequest> requestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+    verify(mockHttp, org.mockito.Mockito.times(2)).send(requestCaptor.capture(), any());
+    JsonObject firstRequest = requestBody(requestCaptor.getAllValues().get(0));
+    JsonObject secondRequest = requestBody(requestCaptor.getAllValues().get(1));
+    assertFalse(firstRequest.has("nextToken"));
+    assertEquals("next-page-token", secondRequest.get("nextToken").getAsString());
+    assertEquals(firstRequest.get("nodes"), secondRequest.get("nodes"));
+    assertEquals("->typeOf", secondRequest.get("property").getAsString());
+
+    JsonArray nodeA = result.getAsJsonObject("nodeA").getAsJsonArray("out");
+    JsonArray nodeB = result.getAsJsonObject("nodeB").getAsJsonArray("out");
+    assertEquals(2, nodeA.size());
+    assertEquals("Place", nodeA.get(0).getAsJsonObject().get("dcid").getAsString());
+    assertEquals("City", nodeA.get(1).getAsJsonObject().get("dcid").getAsString());
+    assertEquals(1, nodeB.size());
+    assertEquals("Place", nodeB.get(0).getAsJsonObject().get("dcid").getAsString());
+  }
+
+  @Test
+  public void fetchPropertyValuesDoesNotReturnPartialData() throws Exception {
+    HttpClient mockHttp = mock(HttpClient.class);
+    HttpResponse<String> firstResponse = mock(HttpResponse.class);
+    HttpResponse<String> invalidResponse = mock(HttpResponse.class);
+    when(firstResponse.body())
+        .thenReturn(
+            "{\"data\":{\"nodeA\":{\"arcs\":{\"typeOf\":{\"nodes\":[{\"dcid\":\"Place\"}]}}}},"
+                + "\"nextToken\":\"next-page-token\"}");
+    when(invalidResponse.body()).thenReturn("{}");
+    doReturn(firstResponse, invalidResponse).when(mockHttp).send(any(), any());
+
+    JsonObject result = ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf");
+
+    assertNull(result);
+    verify(mockHttp, org.mockito.Mockito.times(2)).send(any(), any());
+  }
+
+  @Test
+  public void convertsNodesWithDcid() throws Exception {
+    Map<String, List<V2NodeResponse.NodeInfo>> propertyValuesByNode =
+        Map.of("geoId/06", List.of(nodeWithDcid("Class")));
+
+    JsonObject legacy = ApiHelper.convertToLegacyFormat(propertyValuesByNode, List.of("geoId/06"));
 
     JsonArray out = legacy.getAsJsonObject("geoId/06").getAsJsonArray("out");
     assertEquals(1, out.size());
@@ -60,10 +135,10 @@ public class ApiHelperTest {
 
   @Test
   public void convertsNodesWithValue() throws Exception {
-    V2NodeResponse response = new V2NodeResponse();
-    response.data = Map.of("geoId/06", nodeWith("name", List.of(nodeWithValue("California"))));
+    Map<String, List<V2NodeResponse.NodeInfo>> propertyValuesByNode =
+        Map.of("geoId/06", List.of(nodeWithValue("California")));
 
-    JsonObject legacy = ApiHelper.convertToLegacyFormat(response, List.of("geoId/06"), "name");
+    JsonObject legacy = ApiHelper.convertToLegacyFormat(propertyValuesByNode, List.of("geoId/06"));
 
     JsonArray out = legacy.getAsJsonObject("geoId/06").getAsJsonArray("out");
     assertEquals(1, out.size());
@@ -72,40 +147,10 @@ public class ApiHelperTest {
 
   @Test
   public void populatesPlaceholdersWhenNoDataReturned() throws Exception {
-    V2NodeResponse response = new V2NodeResponse();
-    response.data = Map.of();
-
-    JsonObject legacy = ApiHelper.convertToLegacyFormat(response, List.of("geoId/06"), "name");
+    JsonObject legacy = ApiHelper.convertToLegacyFormat(Map.of(), List.of("geoId/06"));
 
     JsonArray out = legacy.getAsJsonObject("geoId/06").getAsJsonArray("out");
     assertTrue(out.isEmpty());
-  }
-
-  @Test
-  public void returnsEmptyWhenPropertyMissing() throws Exception {
-    V2NodeResponse.NodeData nodeWithoutProperty = new V2NodeResponse.NodeData();
-    nodeWithoutProperty.arcs = Map.of();
-
-    V2NodeResponse response = new V2NodeResponse();
-    response.data = Map.of("geoId/06", nodeWithoutProperty);
-
-    JsonObject legacy = ApiHelper.convertToLegacyFormat(response, List.of("geoId/06"), "name");
-
-    JsonArray out = legacy.getAsJsonObject("geoId/06").getAsJsonArray("out");
-    assertTrue(out.isEmpty());
-  }
-
-  private static V2NodeResponse.NodeData nodeWith(
-      String property, List<V2NodeResponse.NodeInfo> nodes) {
-    V2NodeResponse.NodeData nodeData = new V2NodeResponse.NodeData();
-    nodeData.arcs = Map.of(property, arcWith(nodes));
-    return nodeData;
-  }
-
-  private static V2NodeResponse.ArcData arcWith(List<V2NodeResponse.NodeInfo> nodes) {
-    V2NodeResponse.ArcData arcData = new V2NodeResponse.ArcData();
-    arcData.nodes = nodes;
-    return arcData;
   }
 
   private static V2NodeResponse.NodeInfo nodeWithDcid(String dcid) {
@@ -118,5 +163,39 @@ public class ApiHelperTest {
     V2NodeResponse.NodeInfo nodeInfo = new V2NodeResponse.NodeInfo();
     nodeInfo.value = value;
     return nodeInfo;
+  }
+
+  private static JsonObject requestBody(HttpRequest request) throws Exception {
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    CompletableFuture<JsonObject> body = new CompletableFuture<>();
+    request
+        .bodyPublisher()
+        .orElseThrow()
+        .subscribe(
+            new Flow.Subscriber<>() {
+              @Override
+              public void onSubscribe(Flow.Subscription subscription) {
+                subscription.request(Long.MAX_VALUE);
+              }
+
+              @Override
+              public void onNext(ByteBuffer bytes) {
+                byte[] chunk = new byte[bytes.remaining()];
+                bytes.get(chunk);
+                output.write(chunk, 0, chunk.length);
+              }
+
+              @Override
+              public void onError(Throwable error) {
+                body.completeExceptionally(error);
+              }
+
+              @Override
+              public void onComplete() {
+                body.complete(
+                    new Gson().fromJson(output.toString(StandardCharsets.UTF_8), JsonObject.class));
+              }
+            });
+    return body.get();
   }
 }
