@@ -546,7 +546,8 @@ class TestRunner(unittest.TestCase):
                           input_dir_path=input_dir,
                           output_dir_path=output_dir,
                           mode=RunMode.DCP_BRIDGE,
-                          import_names=[constants.ALL_IMPORTS])
+                          import_names=[constants.ALL_IMPORTS],
+                          use_multiprocessing=False)
           runner.run()
 
       # Verify GCS client calls were made
