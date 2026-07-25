@@ -93,7 +93,8 @@ def _test_runner(test: unittest.TestCase,
     Runner(config_file_path=config_path,
            input_dir_path=input_dir,
            output_dir_path=temp_dir,
-           mode=run_mode).run()
+           mode=run_mode,
+           use_multiprocessing=False).run()
 
     if is_write_mode():
       write_full_db_to_file(db_path=db_path, output_path=expected_db_path)
