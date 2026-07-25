@@ -68,7 +68,7 @@ def has_namespace_prefix(val: str) -> bool:
 
 def get_namespace_prefix_and_suffix(val: str) -> tuple[str, str]:
   """Extracts (prefix, suffix) from a namespaced string (e.g. 'undata:place/1' -> ('undata', 'place/1'))."""
-  if isinstance(val, str) and ":" in val and " " not in val:
+  if isinstance(val, str) and ":" in val and " " not in val.split(":", 1)[0]:
     parts = val.split(":", 1)
     return parts[0], parts[1]
   return "", val or ""

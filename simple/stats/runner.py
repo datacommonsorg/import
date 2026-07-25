@@ -177,6 +177,7 @@ class ImportProcResult:
   provenances: dict
   groups: dict
   properties: dict
+  processed_imports: set
 
 
 def _run_single_csv_import_proc(
@@ -241,6 +242,7 @@ def _run_single_csv_import_proc(
         provenances=provenances,
         groups=groups,
         properties=properties,
+        processed_imports=set(db._processed_imports),
     )
 
 
@@ -1063,6 +1065,8 @@ class Runner:
                   self.nodes.ids_to_groups[svg.id] = svg
               if res.properties:
                 self.nodes.properties.update(res.properties)
+              if res.processed_imports:
+                self.db._processed_imports.update(res.processed_imports)
               if res.obs_collision_count and hasattr(self.db,
                                                      "obs_collision_count"):
                 self.db.obs_collision_count += res.obs_collision_count
@@ -1139,12 +1143,12 @@ class Runner:
     output_path = self.db.jsonld_dir.full_path()
     import_name = self.db.import_name
     if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      processed_imports = list(self.db._processed_imports)
+      processed_imports = sorted(list(self.db._processed_imports))
       if not processed_imports:
         processed_imports = [import_name]
       import_list = []
       for imp in processed_imports:
-        gcs_pattern = f"{output_path.rstrip('/')}/{imp}/*.jsonld"
+        gcs_pattern = f"{output_path.rstrip('/')}/{imp}/**/*.jsonld"
         import_list.append({"importName": imp, "graphPath": gcs_pattern})
       self.trigger_workflow_info = import_list
     else:
