@@ -371,12 +371,9 @@ class Nodes:
                        entity_type: str,
                        provenance_dir: str = ""):
     if entity_dcid not in self.entities:
-      self.entities[entity_dcid] = Entity(entity_dcid,
-                                          entity_type,
-                                          provenance_dir=provenance_dir)
-    elif provenance_dir and not getattr(self.entities[entity_dcid],
-                                        "provenance_dir", ""):
-      self.entities[entity_dcid].provenance_dir = provenance_dir
+      self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
+    if provenance_dir:
+      self.entities[entity_dcid].provenance_dirs.add(provenance_dir)
 
   @thread_safe
   def has_entity(self, entity_dcid: str) -> bool:
@@ -478,8 +475,12 @@ class Nodes:
     for property in self.properties.values():
       result["_global"].extend(property.triples())
     for entity in self.entities.values():
-      imp = getattr(entity, "provenance_dir", "") or "_global"
-      result[imp].extend(entity.triples())
+      dirs = getattr(entity, "provenance_dirs", set())
+      if not dirs:
+        result["_global"].extend(entity.triples())
+      else:
+        for p_dir in dirs:
+          result[p_dir].extend(entity.triples())
     return result
 
 

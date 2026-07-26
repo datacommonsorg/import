@@ -221,7 +221,7 @@ def _run_single_csv_import_proc(
 
     resolved_entities = {
         e.entity_dcid:
-        (e.entity_type, getattr(e, "provenance_dir", ""))
+        (e.entity_type, getattr(e, "provenance_dirs", set()))
         for e in nodes.entities.values()
     }
     event_types = dict(nodes.event_types)
@@ -1044,12 +1044,18 @@ class Runner:
               if res.resolved_entities:
                 for dcid, val in res.resolved_entities.items():
                   if isinstance(val, tuple):
-                    t, p_dir = val
+                    t, p_dirs = val
                   else:
-                    t, p_dir = val, ""
-                  self.nodes.entity_with_type(dcid,
-                                              t,
-                                              provenance_dir=p_dir)
+                    t, p_dirs = val, set()
+                  if isinstance(p_dirs, set):
+                    for p_dir in (p_dirs or [""]):
+                      self.nodes.entity_with_type(dcid,
+                                                  t,
+                                                  provenance_dir=p_dir)
+                  else:
+                    self.nodes.entity_with_type(dcid,
+                                                t,
+                                                provenance_dir=p_dirs)
               if res.event_types:
                 self.nodes.event_types.update(res.event_types)
               if res.entity_types:

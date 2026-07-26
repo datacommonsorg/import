@@ -182,7 +182,7 @@ class StatVar:
 class Entity:
   entity_dcid: str
   entity_type: str
-  provenance_dir: str = ""
+  provenance_dirs: set[str] = field(default_factory=set)
 
   def triples(self) -> list[Triple]:
     # Currently only 1 triple is generated but could be more in the future (e.g. name)

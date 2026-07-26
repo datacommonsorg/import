@@ -487,21 +487,21 @@ class JsonLdStreamDb(Db):
     pass
 
   def commit_and_close(self):
-    # Add global triples to every processed import's triples
     global_triples = self._triples.pop("_global", [])
     if not self._processed_imports:
       self._processed_imports.add(self.import_name)
 
-    # Write global triples as node shards to the local temp directory for each import
-    for import_name in self._processed_imports:
-      import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+    # Write any remaining untagged triples once to the primary import directory (no duplication across provenances)
+    if global_triples:
+      target_import = self.import_name if self.import_name in self._processed_imports else next(
+          iter(self._processed_imports))
+      import_temp_dir = os.path.join(self.temp_local_dir, target_import)
       os.makedirs(import_temp_dir, exist_ok=True)
-      if global_triples:
-        for i in range(0, len(global_triples), _CHUNK_SIZE):
-          chunk = global_triples[i:i + _CHUNK_SIZE]
-          _write_node_shard(
-              (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-          self.node_shard_index += 1
+      for i in range(0, len(global_triples), _CHUNK_SIZE):
+        chunk = global_triples[i:i + _CHUNK_SIZE]
+        _write_node_shard(
+            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+        self.node_shard_index += 1
 
     has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
         self.temp_local_dir) else False
