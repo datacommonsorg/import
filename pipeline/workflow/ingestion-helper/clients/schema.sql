@@ -178,8 +178,13 @@ CREATE TABLE KeyValueStore (
   key STRING(1024) NOT NULL,
   provenance STRING(1024) NOT NULL,
   value JSON,
-) PRIMARY KEY(type, key, provenance);
+) PRIMARY KEY(type, key, provenance), OPTIONS (
+  columnar_policy = 'enabled'
+);
 
+CREATE INDEX KeyValueStoreByProvenance ON KeyValueStore(provenance) OPTIONS (
+  columnar_policy = 'enabled'
+);
 
 
 -- NodeEmbedding table, NodeEmbeddingIndex index and NodeEmbeddingModel model are necessary for embeddings to work properly.
