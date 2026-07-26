@@ -764,22 +764,60 @@ class StatVarGroupGenerator:
             FROM Edge WHERE predicate = 'memberOf'
           );
 
-          -- An SVG is prunable if it is generated and has exactly 1 child.
-          CREATE OR REPLACE TEMP TABLE PrunableSVGs AS (
-            SELECT pc.parent AS svg_id
-            FROM ParentChild pc
-            JOIN GeneratedSVGs g ON pc.parent = g.svg_id
-            GROUP BY pc.parent
-            HAVING COUNT(*) = 1
+          -- Iteratively identify all prunable SVGs (generated SVGs with <= 1 child).
+          -- Includes SVGs with 0 children (empty/orphaned groups) and SVGs whose child count
+          -- drops to <= 1 as a result of pruning child SVGs.
+          --DECLARE pruning_iteration INT64 DEFAULT 0;
+          --DECLARE new_prunable_found BOOL DEFAULT TRUE;
+
+          CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
+            SELECT * FROM ParentChild
           );
 
-          -- Compute effective parent for each child of a pruned SVG.
-          -- Use a recursive CTE to explore ALL paths through the DAG (a pruned SVG
-          -- may have multiple parents via specializationOf from different cprop
-          -- removal orders). Each path stops when it reaches a non-prunable ancestor.
-          -- Then pick the nearest non-prunable ancestor, preferring generated SVGs
-          -- over verticals/root (so we redirect to the closest surviving SVG, not
-          -- a distant vertical like Demographics).
+          CREATE OR REPLACE TEMP TABLE PrunableSVGs (svg_id STRING);
+
+          WHILE new_prunable_found AND pruning_iteration < 50 DO
+            SET pruning_iteration = pruning_iteration + 1;
+            SET new_prunable_found = FALSE;
+
+            CREATE OR REPLACE TEMP TABLE NewPrunable AS (
+              SELECT g.svg_id
+              FROM GeneratedSVGs g
+              LEFT JOIN CurrentParentChild pc ON g.svg_id = pc.parent
+              WHERE g.svg_id NOT IN (SELECT svg_id FROM PrunableSVGs)
+              GROUP BY g.svg_id
+              HAVING COUNT(DISTINCT pc.child) <= 1
+            );
+
+            IF (SELECT COUNT(*) FROM NewPrunable) > 0 THEN
+              SET new_prunable_found = TRUE;
+
+              INSERT INTO PrunableSVGs SELECT svg_id FROM NewPrunable;
+
+              -- Update CurrentParentChild by bypassing PrunableSVGs nodes recursively
+              CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
+                WITH RECURSIVE Walk AS (
+                  SELECT child, parent, predicate
+                  FROM ParentChild
+
+                  UNION ALL
+
+                  SELECT w.child, pc.parent, w.predicate
+                  FROM Walk w
+                  JOIN PrunableSVGs p ON w.parent = p.svg_id
+                  JOIN ParentChild pc ON p.svg_id = pc.child
+                )
+                SELECT DISTINCT child, parent, predicate
+                FROM Walk
+                WHERE parent NOT IN (SELECT svg_id FROM PrunableSVGs)
+                  AND child NOT IN (SELECT svg_id FROM PrunableSVGs)
+              );
+            END IF;
+          END WHILE;
+
+          -- Compute effective parent for each surviving child of a pruned SVG across ALL DAG paths.
+          -- Use a recursive CTE to explore ALL paths through the DAG. Each path stops when it
+          -- reaches a non-prunable ancestor.
           CREATE OR REPLACE TEMP TABLE EffectiveParent AS (
             WITH RECURSIVE
             WalkUp AS (
@@ -803,58 +841,33 @@ class StatVarGroupGenerator:
               FROM WalkUp w
               JOIN PrunableSVGs p ON w.effective_parent = p.svg_id
               JOIN ParentChild pc ON p.svg_id = pc.child
-            ),
-            -- Filter to only non-prunable ancestors (the walk stops here)
-            NonPrunableAncestors AS (
-              SELECT
-                node_id,
-                effective_parent,
-                predicate,
-                depth
-              FROM WalkUp
-              WHERE effective_parent NOT IN (SELECT svg_id FROM PrunableSVGs)
-            ),
-            -- Pick the nearest non-prunable ancestor per node.
-            -- Tiebreaker: prefer generated SVGs (more specific) over
-            -- verticals/root (which are less specific).
-            Ranked AS (
-              SELECT
-                npa.node_id,
-                npa.effective_parent,
-                npa.predicate,
-                ROW_NUMBER() OVER (
-                  PARTITION BY npa.node_id
-                  ORDER BY npa.depth ASC,
-                    -- Prefer generated SVGs over verticals/root
-                    IF(g.svg_id IS NOT NULL, 0, 1),
-                    npa.effective_parent
-                ) AS rn
-              FROM NonPrunableAncestors npa
-              LEFT JOIN GeneratedSVGs g ON npa.effective_parent = g.svg_id
             )
-            SELECT node_id, effective_parent, predicate FROM Ranked WHERE rn = 1
+            -- Filter to non-prunable ancestors for surviving (non-pruned) children
+            SELECT DISTINCT
+              node_id,
+              effective_parent,
+              predicate
+            FROM WalkUp
+            WHERE effective_parent NOT IN (SELECT svg_id FROM PrunableSVGs)
+              AND node_id NOT IN (SELECT svg_id FROM PrunableSVGs)
           );
 
           -- Build redirected edges for non-pruned children of pruned SVGs.
           -- Pruned SVGs themselves are removed entirely (no redirected edges).
           -- The predicate is preserved: specializationOf for SVG children, memberOf for SV children.
-          -- Skip redirects for nodes that already have a surviving edge with the same
-          -- predicate (e.g., an SV with a memberOf to a non-pruned SVG doesn't need
-          -- another memberOf from a pruned SVG's redirect).
           CREATE OR REPLACE TEMP TABLE RedirectedEdges AS (
-            SELECT
+            SELECT DISTINCT
               ep.node_id AS subject_id,
               ep.predicate,
               ep.effective_parent AS object_id,
               generated_provenance AS provenance
             FROM EffectiveParent ep
-            WHERE ep.node_id NOT IN (SELECT svg_id FROM PrunableSVGs)
-              AND NOT EXISTS (
-                SELECT 1 FROM Edge e
-                WHERE e.subject_id = ep.node_id
-                  AND e.predicate = ep.predicate
-                  AND e.object_id NOT IN (SELECT svg_id FROM PrunableSVGs)
-              )
+            WHERE NOT EXISTS (
+              SELECT 1 FROM Edge e
+              WHERE e.subject_id = ep.node_id
+                AND e.predicate = ep.predicate
+                AND e.object_id = ep.effective_parent
+            )
           );
 
           -- Rebuild Edge: remove all edges involving pruned SVGs, add redirected edges.
