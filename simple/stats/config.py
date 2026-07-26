@@ -216,7 +216,10 @@ class Config:
     return self.data.get(_DATABASE_FIELD)
 
   def generate_hierarchy(self) -> bool:
-    return self.data.get(_GROUP_STAT_VARS_BY_PROPERTY) or False
+    val = self.data.get(_GROUP_STAT_VARS_BY_PROPERTY)
+    if isinstance(val, str):
+      return val.lower() in ("true", "1", "yes")
+    return bool(val)
 
   def include_input_subdirs(self) -> bool:
     return self.data.get(_INCLUDE_INPUT_SUBDIRS_PROPERTY) or False

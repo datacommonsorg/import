@@ -73,7 +73,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
         mock_file = mock.Mock(path="test_import/data.csv")
         db.insert_observations(df, mock_file)
         obs_shard = os.path.join(db.temp_local_dir, "test_import",
-                                 "observation-00000.jsonld")
+                                 "observation-test_import_data-00000.jsonld")
         self.assertTrue(os.path.exists(obs_shard))
 
         # Insert triples
@@ -161,7 +161,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
       # Shards should be written directly to the target unique directory
       target_dir_path = db.jsonld_dir.full_path()
       obs_shard = os.path.join(target_dir_path, "test_import",
-                               "observation-00000.jsonld")
+                               "observation-test_import_data-00000.jsonld")
       node_shard = os.path.join(target_dir_path, "test_import",
                                 "node-00000.jsonld")
 
@@ -223,7 +223,8 @@ class TestJsonLdStreamDb(unittest.TestCase):
 
       # Verify upload blob calls
       mock_bucket.blob.assert_called_with(
-          "ingestion/test/test_import/observation-00000.jsonld")
+          "ingestion/test/test_import/observation-test_import_data-00000.jsonld"
+      )
       mock_blob.upload_from_filename.assert_called_once()
 
   def test_node_fast_vs_rdflib_parity(self):

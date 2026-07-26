@@ -166,6 +166,9 @@ class Dir(_StoreWrapper):
   def __init__(self, store: "Store", path: str):
     super().__init__(store, path)
 
+  def name(self) -> str:
+    return fspath.basename(self.path.rstrip("/"))
+
   def open_dir(self, path: str) -> "Dir":
     # The new dir will use the same underlying store with a path relative to
     # the same root.
