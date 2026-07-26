@@ -220,7 +220,9 @@ def _run_single_csv_import_proc(
     db.commit_and_close()
 
     resolved_entities = {
-        e.entity_dcid: e.entity_type for e in nodes.entities.values()
+        e.entity_dcid:
+        (e.entity_type, getattr(e, "provenance_dir", ""))
+        for e in nodes.entities.values()
     }
     event_types = dict(nodes.event_types)
     entity_types = dict(nodes.entity_types)
@@ -1040,7 +1042,14 @@ class Runner:
               res = future.result()
               self._log_file_progress("Imported file", res.file_rel_path)
               if res.resolved_entities:
-                self.nodes.entities_with_types(res.resolved_entities)
+                for dcid, val in res.resolved_entities.items():
+                  if isinstance(val, tuple):
+                    t, p_dir = val
+                  else:
+                    t, p_dir = val, ""
+                  self.nodes.entity_with_type(dcid,
+                                              t,
+                                              provenance_dir=p_dir)
               if res.event_types:
                 self.nodes.event_types.update(res.event_types)
               if res.entity_types:
