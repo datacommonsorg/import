@@ -149,6 +149,11 @@ class ObservationsImporter(Importer):
         dcid for dcid in entity_dcids if not self.nodes.has_entity(dcid)
     ]
 
+    prov_dir = self.config.import_name(self.input_file)
+    for dcid in entity_dcids:
+      if self.nodes.has_entity(dcid):
+        self.nodes.entities[dcid].provenance_dirs.add(prov_dir)
+
     logging.info("Found %s total entities, of which %s are already imported.",
                  len(entity_dcids),
                  len(entity_dcids) - len(new_entity_dcids))

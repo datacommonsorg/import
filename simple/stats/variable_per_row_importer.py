@@ -337,8 +337,14 @@ class VariablePerRowImporter(Importer):
     new_entity_dcids = [
         strip_namespace(dcid)
         for dcid in self.entity_dcids
-        if not self.nodes.has_entity(dcid)
+        if not self.nodes.has_entity(strip_namespace(dcid))
     ]
+
+    prov_dir = self.config.import_name(self.input_file)
+    for dcid in self.entity_dcids:
+      clean_dcid = strip_namespace(dcid)
+      if self.nodes.has_entity(clean_dcid):
+        self.nodes.entities[clean_dcid].provenance_dirs.add(prov_dir)
 
     logging.info("Found %s total entities, of which %s are already imported.",
                  len(self.entity_dcids),
@@ -357,4 +363,4 @@ class VariablePerRowImporter(Importer):
     if dcid2type:
       logging.info("Importing %s of %s entities.", len(dcid2type),
                    len(new_entity_dcids))
-      self.nodes.entities_with_types(dcid2type)
+      self.nodes.entities_with_types(dcid2type, provenance_dir=prov_dir)

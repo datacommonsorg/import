@@ -20,6 +20,7 @@ from stats import constants
 from stats.data import AggregationConfig
 from stats.data import Event
 from stats.data import filter_invalid_observation_values
+from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.data import TimePeriod
 from stats.data import Triple
@@ -246,6 +247,16 @@ class EventsImporter(Importer):
       return True
 
     entities = list(filter(remove_pre_resolved, column.tolist()))
+
+    prov_dir = self.config.import_name(self.input_file)
+    for dcid in column.tolist():
+      clean_dcid = strip_namespace(dcid)
+      if self.nodes.has_entity(clean_dcid):
+        self.nodes.entities[clean_dcid].provenance_dirs.add(prov_dir)
+      else:
+        self.nodes.entity_with_type(clean_dcid,
+                                    "Thing",
+                                    provenance_dir=prov_dir)
 
     logging.info("Found %s entities pre-resolved.", len(pre_resolved_entities))
 
