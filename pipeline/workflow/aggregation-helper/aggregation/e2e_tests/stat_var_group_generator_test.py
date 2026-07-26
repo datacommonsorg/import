@@ -490,7 +490,6 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           3. No ghost linkedMemberOf edges remain pointing to pruned SVGs.
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
 
         self._setup_dpv_mock_data(ns)
 

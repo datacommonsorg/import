@@ -118,6 +118,8 @@ class StatVarGroupGenerator:
         DECLARE root_svg STRING DEFAULT CONCAT(namespace, 'g/Root'); -- DCID for root SVG
         DECLARE should_filter_basic_population_type BOOL DEFAULT @should_filter; -- Whether to filter basic population type SVGs. Default to true for base DC
         DECLARE should_prune BOOL DEFAULT @should_prune; -- Whether to prune single-child SVGs from the generated hierarchy
+        DECLARE pruning_iteration INT64 DEFAULT 0; -- Iteration of pruning loop
+        DECLARE new_prunable_found BOOL DEFAULT TRUE; -- Whether new prunable nodes were found in the iteration
 
         -- ============================================================================
         -- UDFs
@@ -767,9 +769,6 @@ class StatVarGroupGenerator:
           -- Iteratively identify all prunable SVGs (generated SVGs with <= 1 child).
           -- Includes SVGs with 0 children (empty/orphaned groups) and SVGs whose child count
           -- drops to <= 1 as a result of pruning child SVGs.
-          --DECLARE pruning_iteration INT64 DEFAULT 0;
-          --DECLARE new_prunable_found BOOL DEFAULT TRUE;
-
           CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
             SELECT * FROM ParentChild
           );
