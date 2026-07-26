@@ -1051,14 +1051,19 @@ class Runner:
                 for src in res.sources.values():
                   self.nodes.register_source(id=src.id,
                                              name=src.name,
-                                             url=src.url)
+                                             url=src.url,
+                                             provenance_dir=getattr(
+                                                 src, "provenance_dir", ""))
               if res.provenances:
                 for prov in res.provenances.values():
                   self.nodes.register_provenance(id=prov.id,
                                                  name=prov.name,
                                                  url=prov.url,
                                                  source_id=prov.source_id,
-                                                 properties=prov.properties)
+                                                 properties=prov.properties,
+                                                 provenance_dir=getattr(
+                                                     prov, "provenance_dir",
+                                                     ""))
               if res.groups:
                 self.nodes.groups.update(res.groups)
                 for svg in res.groups.values():
@@ -1132,9 +1137,12 @@ class Runner:
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
 
-    # Generate triples from nodes and write directly
-    triples = self.nodes.triples()
-    self.db.insert_triples(triples)
+    # Generate triples from nodes grouped by provenance directory and write directly
+    for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
+      if prov_dir == "_global":
+        self.db.insert_triples(triples)
+      else:
+        self.db.insert_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.db).validate()

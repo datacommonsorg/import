@@ -182,6 +182,7 @@ class StatVar:
 class Entity:
   entity_dcid: str
   entity_type: str
+  provenance_dir: str = ""
 
   def triples(self) -> list[Triple]:
     # Currently only 1 triple is generated but could be more in the future (e.g. name)
@@ -197,6 +198,7 @@ class Provenance:
   name: str
   url: str = ""
   properties: dict[str, str] = field(default_factory=dict)
+  provenance_dir: str = ""
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
@@ -228,6 +230,7 @@ class Source:
   url: str = ""
   domain: str = field(init=False)
   properties: dict[str, str] = field(default_factory=dict)
+  provenance_dir: str = ""
 
   def __post_init__(self):
     self.domain = urlparse(self.url).netloc

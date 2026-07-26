@@ -105,7 +105,14 @@ class McfImporter(Importer):
 
         # Register all collected metadata nodes at the end
         if all_metadata_triples:
-          _register_metadata_nodes(all_metadata_triples, self.nodes)
+          prov_dir = ""
+          try:
+            prov_dir = self.config.import_name(self.input_file)
+          except Exception:
+            pass
+          _register_metadata_nodes(all_metadata_triples,
+                                   self.nodes,
+                                   provenance_dir=prov_dir)
 
       self.reporter.report_success()
     except Exception as e:
@@ -161,7 +168,9 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   return Triple(resolved_subject, predicate, object_value=value)
 
 
-def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
+def _register_metadata_nodes(triples: list[Triple],
+                             nodes: Nodes,
+                             provenance_dir: str = "") -> None:
   """Extracts and registers Provenance and Source nodes from parsed MCF triples.
 
   This helper is robust against:
@@ -200,11 +209,13 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
       nodes.register_provenance(id=sub_id,
                                 name=props.get("name", ""),
                                 url=props.get("url", ""),
-                                source_id=props.get("source", ""))
+                                source_id=props.get("source", ""),
+                                provenance_dir=provenance_dir)
     elif node_type == "Source":
       nodes.register_source(id=sub_id,
                             name=props.get("name", ""),
-                            url=props.get("url", ""))
+                            url=props.get("url", ""),
+                            provenance_dir=provenance_dir)
 
 
 def _clean_literal(val: str) -> str:

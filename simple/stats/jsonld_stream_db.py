@@ -465,18 +465,23 @@ class JsonLdStreamDb(Db):
             (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
         self.node_shard_index += 1
 
-  def insert_triples(self, triples: list[Triple], input_file: File = None):
+  def insert_triples(self,
+                     triples: list[Triple],
+                     input_file: File = None,
+                     provenance_dir: str = None):
     if not triples:
       return
 
-    if not input_file:
+    if not provenance_dir and input_file:
+      provenance_dir = self.config.import_name(input_file)
+
+    if not provenance_dir:
       with self.lock:
         self._triples["_global"].extend(triples)
       return
 
-    import_name = self.config.import_name(input_file)
-    self._init_import_export_dir(import_name)
-    self._write_triples_to_disk(triples, import_name)
+    self._init_import_export_dir(provenance_dir)
+    self._write_triples_to_disk(triples, provenance_dir)
 
   def commit(self):
     pass
