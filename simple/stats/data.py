@@ -335,6 +335,7 @@ OBSERVATION_FIELD_NAMES = _get_flattened_dataclass_field_names(Observation)
 class Property:
   dcid: str
   name: str
+  provenance_dirs: set[str] = field(default_factory=set)
 
   def triples(self) -> list[Triple]:
     return [

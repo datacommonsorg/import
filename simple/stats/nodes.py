@@ -247,10 +247,14 @@ class Nodes:
                                 self.provenance(input_file))
 
   @thread_safe
-  def property(self, property_column_name: str) -> Property:
+  def property(self,
+               property_column_name: str,
+               provenance_dir: str = "") -> Property:
     if not property_column_name in self.properties:
       self.properties[property_column_name] = Property(
           self._property_id(property_column_name), property_column_name)
+    if provenance_dir:
+      self.properties[property_column_name].provenance_dirs.add(provenance_dir)
 
     return self.properties[property_column_name]
 
@@ -461,19 +465,33 @@ class Nodes:
     for group in self.groups.values():
       result["_global"].extend(group.triples())
     for variable in self.variables.values():
-      imp = strip_namespace(variable.provenance_ids[0]) if getattr(
-          variable, "provenance_ids", None) else "_global"
-      result[imp].extend(variable.triples())
+      p_ids = getattr(variable, "provenance_ids", [])
+      if not p_ids:
+        result["_global"].extend(variable.triples())
+      else:
+        for p_id in p_ids:
+          result[strip_namespace(p_id)].extend(variable.triples())
     for event_type in self.event_types.values():
-      imp = strip_namespace(event_type.provenance_ids[0]) if getattr(
-          event_type, "provenance_ids", None) else "_global"
-      result[imp].extend(event_type.triples())
+      p_ids = getattr(event_type, "provenance_ids", [])
+      if not p_ids:
+        result["_global"].extend(event_type.triples())
+      else:
+        for p_id in p_ids:
+          result[strip_namespace(p_id)].extend(event_type.triples())
     for entity_type in self.entity_types.values():
-      imp = strip_namespace(entity_type.provenance_ids[0]) if getattr(
-          entity_type, "provenance_ids", None) else "_global"
-      result[imp].extend(entity_type.triples())
+      p_ids = getattr(entity_type, "provenance_ids", [])
+      if not p_ids:
+        result["_global"].extend(entity_type.triples())
+      else:
+        for p_id in p_ids:
+          result[strip_namespace(p_id)].extend(entity_type.triples())
     for property in self.properties.values():
-      result["_global"].extend(property.triples())
+      dirs = getattr(property, "provenance_dirs", set())
+      if not dirs:
+        result["_global"].extend(property.triples())
+      else:
+        for p_dir in dirs:
+          result[p_dir].extend(property.triples())
     for entity in self.entities.values():
       dirs = getattr(entity, "provenance_dirs", set())
       if not dirs:

@@ -1084,7 +1084,12 @@ class Runner:
                 for svg in res.groups.values():
                   self.nodes.ids_to_groups[svg.id] = svg
               if res.properties:
-                self.nodes.properties.update(res.properties)
+                for prop_name, prop_obj in res.properties.items():
+                  if prop_name not in self.nodes.properties:
+                    self.nodes.properties[prop_name] = prop_obj
+                  else:
+                    self.nodes.properties[prop_name].provenance_dirs.update(
+                        getattr(prop_obj, "provenance_dirs", set()))
               if res.processed_imports:
                 self.db._processed_imports.update(res.processed_imports)
               if res.obs_collision_count and hasattr(self.db,
