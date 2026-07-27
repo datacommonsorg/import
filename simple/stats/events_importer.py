@@ -248,15 +248,6 @@ class EventsImporter(Importer):
 
     entities = list(filter(remove_pre_resolved, column.tolist()))
 
-    prov_id = getattr(self, "provenance", "")
-    for dcid in column.tolist():
-      clean_dcid = strip_namespace(dcid)
-      if self.nodes.has_entity(clean_dcid):
-        if prov_id:
-          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
-      else:
-        self.nodes.entity_with_type(clean_dcid, "Thing", provenance_id=prov_id)
-
     logging.info("Found %s entities pre-resolved.", len(pre_resolved_entities))
 
     logging.info("Resolving %s entities of type %s.", len(entities),
@@ -288,6 +279,19 @@ class EventsImporter(Importer):
         pre_resolved=pre_resolved_entities,
         unresolved=unresolved_list,
     )
+
+    prov_id = getattr(self, "provenance", "")
+    for dcid in df[constants.COLUMN_DCID].dropna().unique():
+      clean_dcid = strip_namespace(dcid)
+      if self.nodes.has_entity(clean_dcid):
+        if prov_id:
+          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
+      elif prov_id:
+        self.nodes.entity_with_type(
+            clean_dcid,
+            self.entity_type or "Thing",
+            provenance_id=prov_id,
+        )
 
   def _resolve(self, entities: list[str]) -> dict[str, str]:
     lower_case_entity_name = self.entity_column_name.lower()

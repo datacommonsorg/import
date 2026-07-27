@@ -17,6 +17,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -126,17 +127,23 @@ class TestObservationsImporter(unittest.TestCase):
     importer.entity_type = "State"
     importer.entity_column_name = "entity"
     importer.df = pd.DataFrame(
-        {"dcid": ["undata:place/custom_1", "dcid:geoId/06", "California"]})
+        {"dcid": ["undata:place/custom_1", "dcid:geoId/06", "California"]}
+    )
+    with mock.patch.object(
+        dc_client,
+        "resolve_entities",
+        return_value={"California": "geoId/06"},
+    ) as mock_resolve, mock.patch.object(
+        dc_client, "get_property_of_entities", return_value={}
+    ):
+      importer._resolve_entities()
 
-    dc_client.resolve_entities = MagicMock(
-        return_value={"California": "geoId/06"})
-    dc_client.get_property_of_entities = MagicMock(return_value={})
-
-    importer._resolve_entities()
-
-    dc_client.resolve_entities.assert_called_once_with(
-        entities=["California"],
-        entity_type="State",
-        property_name="description")
-    self.assertEqual(importer.df["dcid"].tolist(),
-                     ["place/custom_1", "geoId/06", "geoId/06"])
+      mock_resolve.assert_called_once_with(
+          entities=["California"],
+          entity_type="State",
+          property_name="description",
+      )
+      self.assertEqual(
+          importer.df["dcid"].tolist(),
+          ["place/custom_1", "geoId/06", "geoId/06"],
+      )
