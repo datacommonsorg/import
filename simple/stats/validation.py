@@ -83,9 +83,16 @@ class MetadataValidator:
     return referenced
 
   def _collect_defined_nodes(self) -> tuple[set[str], dict[str, str]]:
-    """Gathers all defined Provenances and their links from the DB triples."""
+    """Gathers all defined Provenances and their links from Nodes and DB triples."""
     defined_provenances = set()
     provenance_to_source = {}
+
+    if hasattr(self.db, "nodes") and self.db.nodes:
+      for prov_id, prov in self.db.nodes.provenances.items():
+        clean_prov_id = self._clean_dcid(prov.id)
+        defined_provenances.add(clean_prov_id)
+        if prov.source_id:
+          provenance_to_source[clean_prov_id] = self._clean_dcid(prov.source_id)
 
     all_triples = []
     db_triples = getattr(self.db, "_triples", {})

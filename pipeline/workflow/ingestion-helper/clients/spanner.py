@@ -559,7 +559,7 @@ class SpannerClient:
             SELECT 'table' as type, table_name as name FROM information_schema.tables WHERE table_schema = ''
             UNION ALL
             SELECT 'index' as type, index_name as name FROM information_schema.indexes
-            WHERE table_schema = '' AND table_name IN ('{self.embedding_table}', 'Edge', 'TimeSeries')
+            WHERE table_schema = '' AND table_name IN ('{self.embedding_table}', 'Edge', 'TimeSeries', 'KeyValueStore')
             UNION ALL
             SELECT 'model' as type, model_name as name FROM information_schema.models WHERE model_schema = ''
         """
@@ -601,6 +601,7 @@ class SpannerClient:
             "TimeSeriesByEntity3",
             self.embedding_index,
             self.embedding_label_index,
+            "KeyValueStoreByProvenance",
         ]
         required_models = [m['name'] for m in self.models]
 
