@@ -30,7 +30,6 @@ PROJECT_ID = os.environ.get('PROJECT_ID')
 SPANNER_PROJECT_ID = os.environ.get('SPANNER_PROJECT_ID')
 SPANNER_INSTANCE_ID = os.environ.get('SPANNER_INSTANCE_ID')
 SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID')
-SPANNER_GRAPH_DATABASE_ID = os.environ.get('SPANNER_GRAPH_DATABASE_ID')
 GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID')
 LOCATION = os.environ.get('LOCATION') or os.environ.get('REGION')
 ENABLE_EMBEDDINGS = os.environ.get('ENABLE_EMBEDDINGS', 'false').lower() == 'true'

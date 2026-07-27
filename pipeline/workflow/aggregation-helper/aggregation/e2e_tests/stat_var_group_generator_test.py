@@ -177,14 +177,20 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
             # Verify basic populationType SV attached to SVG by mprop
-            self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+            if self.is_base_dc:
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+            else:
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/Person', prov), edges)
 
             # Verify basic populationType SV attached to ancestor SVGs
             self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
             self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
             # Verify uncategorized basic populationType SV attached to Uncategorized_Variables SVG
-            self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+            if self.is_base_dc:
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+            else:
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Thing', prov), edges)
 
             # Verify uncategorized basic populationType SV attached to ancestor SVGs
             self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
@@ -348,10 +354,12 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
             # --- Other SVs unaffected ---
-            # Count_Person (basic popType, attached to TestVertical)
-            self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
-            # Count_Thing (uncategorized)
-            self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+            if self.is_base_dc:
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+            else:
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/Person', prov), edges)
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Thing', prov), edges)
 
     def test_pruning_dag_fanout(self):
         """
@@ -470,6 +478,64 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(over20_member_edges), 1,
                 f'Expected exactly 1 memberOf edge for Median_Income_Person_Over20, '
                 f'got {len(over20_member_edges)}: {over20_member_edges}')
+
+    def test_pruning_distinct_child_count_and_cascading(self):
+        """
+        Tests multi-level cascading pruning and distinct child counting.
+
+        Verifies:
+          1. Multi-level cascading pruning (3+ levels of single-child SVGs are recursively pruned).
+          2. COUNT(DISTINCT pc.child) correctly evaluates unique distinct children when multiple
+             convergent paths roll up duplicate entries of the same StatVar.
+          3. No ghost linkedMemberOf edges remain pointing to pruned SVGs.
+        """
+        ns = 'dc/' if self.is_base_dc else 'c/'
+
+        self._setup_dpv_mock_data(ns)
+
+        calculations = [
+            {
+                "name": "StatVar Groups Generation with Distinct Pruning",
+                "type": "STAT_VAR_GROUPS",
+                "stage": 1,
+                "input_imports": ["TestImport"],
+                "should_prune_single_child_svgs": True
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=["TestImport"])
+        self.assertTrue(res.success)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            edge_query = """
+                SELECT subject_id, predicate, object_id, provenance
+                FROM Edge 
+                WHERE predicate IN ('memberOf', 'specializationOf', 'linkedMemberOf')
+                ORDER BY subject_id, predicate, object_id
+            """
+            edges = [(r[0], r[1], r[2], r[3]) for r in snapshot.execute_sql(edge_query)]
+
+            node_query = """
+                SELECT subject_id 
+                FROM Node 
+                WHERE 'StatVarGroup' IN UNNEST(types)
+                ORDER BY subject_id
+            """
+            nodes = [r[0] for r in snapshot.execute_sql(node_query)]
+
+            # Check that all single-child generated SVGs were pruned (removed from Node)
+            pruned_svg_candidates = [
+                f'{ns}g/Person_ArmedForcesStatus',
+                f'{ns}g/Person_VeteranStatus',
+                f'{ns}g/Person_ArmedForcesStatus_VeteranStatus',
+                f'{ns}g/Person_Age',
+                f'{ns}g/Person_Age-Years20Onwards'
+            ]
+            for svg_id in pruned_svg_candidates:
+                self.assertNotIn(svg_id, nodes)
+                # Verify ZERO linkedMemberOf or memberOf edges point to pruned SVGs (no ghost edges)
+                linked_to_pruned = [e for e in edges if e[2] == svg_id]
+                self.assertEqual(len(linked_to_pruned), 0,
+                    f'Found ghost edges pointing to pruned SVG {svg_id}: {linked_to_pruned}')
 
     def _setup_dpv_mock_data(self, ns):
         """Setup mock data for DPV (dependentPropertyValue) matching tests."""
