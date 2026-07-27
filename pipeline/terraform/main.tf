@@ -55,12 +55,6 @@ variable "spanner_database_id" {
   default     = "dc-import-db"
 }
 
-variable "spanner_graph_database_id" {
-  description = "Spanner Graph Database ID"
-  type        = string
-  default     = "dc-import-db"
-}
-
 variable "bq_dataset_id" {
   description = "BigQuery Dataset ID for aggregation"
   type        = string
@@ -194,10 +188,6 @@ resource "google_cloud_run_v2_service" "ingestion_helper" {
         value = var.spanner_database_id
       }
       env {
-        name  = "SPANNER_GRAPH_DATABASE_ID"
-        value = var.spanner_graph_database_id
-      }
-      env {
         name  = "GCS_BUCKET_ID"
         value = google_storage_bucket.import_bucket.name
       }
@@ -268,10 +258,6 @@ resource "google_cloud_run_v2_job" "aggregation_helper" {
         env {
           name  = "SPANNER_DATABASE_ID"
           value = var.spanner_database_id
-        }
-        env {
-          name  = "SPANNER_GRAPH_DATABASE_ID"
-          value = var.spanner_graph_database_id
         }
         env {
           name  = "GCS_BUCKET_ID"

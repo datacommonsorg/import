@@ -56,7 +56,6 @@ class SpannerClient:
                  project_id: str,
                  instance_id: str,
                  database_id: str,
-                 graph_database_id: str = None,
                  location: str = None,
                  models: list[dict] = None,
                  embedding_space: int = 768,
@@ -89,12 +88,6 @@ class SpannerClient:
         database = instance.database(database_id)
         logging.info(f"Successfully initialized database: {database.name}")
         self.database = database
-        self.graph_database = database
-        if graph_database_id:
-            self.graph_database = instance.database(graph_database_id)
-            logging.info(
-                f"Successfully initialized graph database: {self.graph_database.name}"
-            )
         self.project_id = project_id
         self.location = location
         self.embedding_space = embedding_space
@@ -383,9 +376,6 @@ class SpannerClient:
 
         try:
             self.database.run_in_transaction(_update)
-            # TODO: remove dual writes after switching to the prod setup.
-            if self.graph_database and self.graph_database.name != self.database.name:
-                self.graph_database.run_in_transaction(_update)
             logging.info(
                 f"Updated IngestionHistory table for workflow {workflow_id}")
         except Exception as e:
@@ -711,8 +701,6 @@ class SpannerClient:
 
         try:
             self.database.run_in_transaction(_seed)
-            if self.graph_database and self.graph_database.name != self.database.name:
-                self.graph_database.run_in_transaction(_seed)
             logging.info("Database seeded successfully.")
         except Exception as e:
             logging.error(f"Error seeding database: {e}")
