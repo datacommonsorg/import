@@ -9,11 +9,25 @@
       "entityType": "Country",
       "provenance": "Provenance1 Name"
     },
-    "*.csv": {
+    "countr*.csv": {
       "importType": "observations",
       "format": "variablePerColumn",
       "entityType": "Country",
-      "provenance": "Provenance1 Name"
+      "provenance": "Provenance1 Name",
+      "columnMappings": {
+        "dcid:observationAbout": "place",
+        "dcid:observationDate": "year"
+      }
+    },
+    "wiki*.csv": {
+      "importType": "observations",
+      "format": "variablePerColumn",
+      "entityType": "Country",
+      "provenance": "Provenance1 Name",
+      "columnMappings": {
+        "dcid:observationAbout": "wikidataid",
+        "dcid:observationDate": "year"
+      }
     }
   },
   "sources": {

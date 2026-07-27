@@ -1,7 +1,11 @@
 {
   "inputFiles": {
     "input.csv": {
-      "entityType": "Dummy"
+      "entityType": "Dummy",
+      "columnMappings": {
+        "dcid:observationAbout": "countryAlpha3Code",
+        "dcid:observationDate": "year"
+      }
     }
   }
 }

@@ -98,8 +98,11 @@ class EventsImporter(Importer):
                           thousands=",",
                           na_values=constants.STANDARD_NA_VALUES)
     logging.info("Read %s rows.", self.df.index.size)
-    self.entity_column_name = self.df.columns[0]
-    logging.info("Entity column name: %s", self.entity_column_name)
+    mappings = self.get_column_mappings()
+    self.entity_column_name = mappings.get("dcid:location", "")
+    self.date_column_name = mappings.get("dcid:observationDate", "")
+    if self.entity_column_name:
+      logging.info("Entity column name: %s", self.entity_column_name)
 
   def _drop_ignored_columns(self):
     if self.ignore_columns:
@@ -109,23 +112,27 @@ class EventsImporter(Importer):
     # Convert to best possible dtypes (i.e. keep ints as ints even when some values are NaN)
     self.df = self.df.convert_dtypes()
     # Set date field to type str.
-    self.df = self.df.astype({self.df.columns[1]: str})
+    if self.date_column_name and self.date_column_name in self.df.columns:
+      self.df = self.df.astype({self.date_column_name: str})
 
   def _rename_columns(self) -> None:
     renamed = {}
-    # Rename dcid and date columns
-    renamed[self.df.columns[0]] = constants.COLUMN_DCID
-    renamed[self.df.columns[1]] = constants.COLUMN_DATE
+    reverse_mappings = self.get_reverse_column_mappings()
+
+    # Rename dcid and date columns if present
+    if self.entity_column_name:
+      renamed[self.entity_column_name] = constants.COLUMN_DCID
+    if self.date_column_name:
+      renamed[self.date_column_name] = constants.COLUMN_DATE
 
     # Rename property columns to their IDs
-    property_column_names = self.df.columns[2:]
-    property_ids = [
-        self.nodes.property(property_column_name).dcid
-        for property_column_name in property_column_names
-    ]
-    renamed.update({
-        col: id for col, id in zip(property_column_names, property_ids)
-    })
+    for col in self.df.columns:
+      if col == self.entity_column_name or col == self.date_column_name:
+        continue
+      prop_id = reverse_mappings.get(col, self.nodes.property(col).dcid)
+      if col == self.id_column:
+        continue
+      renamed[col] = prop_id
 
     self.df = self.df.rename(columns=renamed)
 
@@ -213,12 +220,28 @@ class EventsImporter(Importer):
       else:
         dcid = f"{self.event_type}_{index}"
 
-      entity = row.iloc[0]
-      date = row.iloc[1]
+      # TODO: Add row-level validation to reject rows with empty/invalid location (entity)
+      # or observationDate values rather than silently omitting those triples.
+      entity_val = row.get(constants.COLUMN_DCID, "")
+      entity = (
+          ""
+          if pd.isna(entity_val) or str(entity_val) in ("<NA>", "nan", "")
+          else str(entity_val).strip()
+      )
+      date_val = row.get(constants.COLUMN_DATE, "")
+      date = (
+          ""
+          if pd.isna(date_val) or str(date_val) in ("<NA>", "nan", "")
+          else str(date_val).strip()
+      )
       properties: dict[str, str] = {}
 
-      for i, (k, v) in enumerate(row.items()):
-        if i < 2 or pd.isna(v):
+      for k, v in row.items():
+        if (
+            k in (constants.COLUMN_DCID, constants.COLUMN_DATE)
+            or pd.isna(v)
+            or str(v) in ("<NA>", "nan", "")
+        ):
           continue
         properties[k] = v
 
@@ -233,65 +256,21 @@ class EventsImporter(Importer):
     self.db.insert_triples(triples, self.input_file)
 
   def _resolve_entities(self) -> None:
-    df = self.df
-    # get entity column
-    column = df[constants.COLUMN_DCID]
-
-    pre_resolved_entities = {}
-
-    def remove_pre_resolved(entity: str) -> bool:
-      if has_namespace_prefix(entity):
-        prefix, suffix = get_namespace_prefix_and_suffix(entity)
-        pre_resolved_entities[entity] = suffix.strip()
-        return False
-      return True
-
-    entities = list(filter(remove_pre_resolved, column.tolist()))
-
-    logging.info("Found %s entities pre-resolved.", len(pre_resolved_entities))
-
-    logging.info("Resolving %s entities of type %s.", len(entities),
-                 self.entity_type)
-    dcids = self._resolve(entities=entities)
-    logging.info("Resolved %s of %s entities.", len(dcids), len(entities))
-
-    # Replace resolved entities.
-    # NOTE: column.map performs much better than column.replace, hence using the former.
-    column = column.map(lambda x: dcids.get(x, x))
-    unresolved = set(entities).difference(set(dcids.keys()))
-    unresolved_list = sorted(list(unresolved))
-
-    # Replace pre-resolved entities without the "dcid:" prefix.
-    column = column.map(lambda x: pre_resolved_entities.get(x, x))
-    logging.info("Replaced %s pre-resolved entities.",
-                 len(pre_resolved_entities))
-
-    df[constants.COLUMN_DCID] = column
-    if unresolved_list:
-      self.all_unresolved_entities.update(unresolved_list)
-      logging.warning("# unresolved entities which will be dropped: %s",
-                      len(unresolved_list))
-      logging.warning("Dropped entities: %s", unresolved_list)
-      df.drop(df[df.iloc[:, 0].isin(values=unresolved_list)].index,
-              inplace=True)
-    self._create_debug_resolve_dataframe(
-        resolved=dcids,
-        pre_resolved=pre_resolved_entities,
-        unresolved=unresolved_list,
-    )
+    self.df = self.resolve_specified_columns(self.df)
 
     prov_id = getattr(self, "provenance", "")
-    for dcid in df[constants.COLUMN_DCID].dropna().unique():
-      clean_dcid = strip_namespace(dcid)
-      if self.nodes.has_entity(clean_dcid):
-        if prov_id:
-          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
-      elif prov_id:
-        self.nodes.entity_with_type(
-            clean_dcid,
-            self.entity_type or "Thing",
-            provenance_id=prov_id,
-        )
+    if constants.COLUMN_DCID in self.df.columns:
+      for dcid in self.df[constants.COLUMN_DCID].dropna().unique():
+        clean_dcid = strip_namespace(dcid)
+        if self.nodes.has_entity(clean_dcid):
+          if prov_id:
+            self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
+        elif prov_id:
+          self.nodes.entity_with_type(
+              clean_dcid,
+              self.entity_type or "Thing",
+              provenance_id=prov_id,
+          )
 
   def _resolve(self, entities: list[str]) -> dict[str, str]:
     lower_case_entity_name = self.entity_column_name.lower()

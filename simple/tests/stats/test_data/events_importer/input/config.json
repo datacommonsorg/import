@@ -4,14 +4,32 @@
       "eventType": "CrimeEvent",
       "entityType": "Country",
       "provenance": "Test Provenance",
-      "computedVariables": ["Count_CrimeEvent"]
+      "computedVariables": [
+        "Count_CrimeEvent"
+      ],
+      "entityColumns": [
+        "countryAlpha3Code"
+      ],
+      "columnMappings": {
+        "dcid:location": "countryAlpha3Code",
+        "dcid:observationDate": "DATE  OF OCCURRENCE"
+      }
     },
     "idcolumns.csv": {
       "eventType": "CrimeEvent2",
       "entityType": "Country",
       "provenance": "Test Provenance",
       "idColumn": "CASE",
-      "computedVariables": ["Crime Event2 Count"]
+      "computedVariables": [
+        "Crime Event2 Count"
+      ],
+      "entityColumns": [
+        "countryAlpha3Code"
+      ],
+      "columnMappings": {
+        "dcid:location": "countryAlpha3Code",
+        "dcid:observationDate": "DATE  OF OCCURRENCE"
+      }
     }
   },
   "events": {

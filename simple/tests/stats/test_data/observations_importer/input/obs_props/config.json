@@ -2,6 +2,10 @@
   "inputFiles": {
     "input.csv": {
       "entityType": "Dummy",
+      "columnMappings": {
+        "dcid:observationAbout": "countryAlpha3Code",
+        "dcid:observationDate": "year"
+      },
       "observationProperties": {
         "unit": "USD",
         "observationPeriod": "P1Y",
