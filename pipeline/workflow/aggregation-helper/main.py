@@ -45,13 +45,13 @@ def create_orchestrator_config(
     connection_id = env.get("BQ_SPANNER_CONN_ID")
     project_id = env.get("PROJECT_ID")
     instance_id = env.get("SPANNER_INSTANCE_ID")
-    database_id = env.get("SPANNER_GRAPH_DATABASE_ID")
+    database_id = env.get("SPANNER_DATABASE_ID")
     location = env.get("LOCATION")
 
     if not connection_id or not project_id or not instance_id or not database_id:
         raise ValueError(
             f"Missing required environment variables. connection_id={connection_id}, "
-            f"project_id={project_id}, instance_id={instance_id}, database_id (SPANNER_GRAPH_DATABASE_ID)={database_id}"
+            f"project_id={project_id}, instance_id={instance_id}, database_id (SPANNER_DATABASE_ID)={database_id}"
         )
 
     config_path = args.config_path or env.get("CONFIG_PATH")
