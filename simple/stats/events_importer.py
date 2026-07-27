@@ -255,9 +255,7 @@ class EventsImporter(Importer):
         if prov_id:
           self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
       else:
-        self.nodes.entity_with_type(
-            clean_dcid, "Thing", provenance_id=prov_id
-        )
+        self.nodes.entity_with_type(clean_dcid, "Thing", provenance_id=prov_id)
 
     logging.info("Found %s entities pre-resolved.", len(pre_resolved_entities))
 

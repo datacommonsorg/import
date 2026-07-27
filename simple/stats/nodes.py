@@ -458,7 +458,8 @@ class Nodes:
     for provenance in self.provenances.values():
       if self.has_custom_mcf_nodes and provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
         continue
-      raw = getattr(provenance, "provenance_id", "") or provenance.id or "_global"
+      raw = getattr(provenance, "provenance_id",
+                    "") or provenance.id or "_global"
       imp = strip_namespace(raw) if raw != "_global" else "_global"
       result[imp].extend(provenance.triples())
     for group in self.groups.values():
