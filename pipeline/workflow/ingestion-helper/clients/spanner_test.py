@@ -454,6 +454,32 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(kwargs['values'], [["wf-123", "PENDING", "dataflow", spanner.COMMIT_TIMESTAMP, ["import1", "import2"]]])
 
     @patch('google.cloud.spanner.Client')
+    def test_update_ingestion_history_preprocessing(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_transaction = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_transaction, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        client = SpannerClient("project", "instance", "database")
+        client.update_ingestion_history(
+            workflow_id="wf-123",
+            status=IngestionState.RUNNING,
+            stage=IngestionStage.PREPROCESSING,
+            ingested_imports=["import1"]
+        )
+
+        mock_transaction.insert_or_update.assert_called_once()
+        _, kwargs = mock_transaction.insert_or_update.call_args
+        self.assertEqual(kwargs['table'], 'IngestionHistory')
+        self.assertEqual(kwargs['columns'], ["WorkflowExecutionID", "Status", "Stage", "CreationTimestamp", "IngestedImports"])
+        self.assertEqual(kwargs['values'], [["wf-123", "RUNNING", "preprocessing", spanner.COMMIT_TIMESTAMP, ["import1"]]])
+
+    @patch('google.cloud.spanner.Client')
     def test_update_ingestion_history_running(self, mock_spanner_client):
         mock_instance = MagicMock()
         mock_db = MagicMock()
