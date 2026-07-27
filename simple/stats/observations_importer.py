@@ -172,15 +172,16 @@ class ObservationsImporter(Importer):
     if dcid2type:
       logging.info("Importing %s of %s entities.", len(dcid2type),
                    len(new_entity_dcids))
-      self.nodes.entities_with_types(
-          dcid2type, provenance_dir=self.config.import_name(self.input_file))
+      self.nodes.entities_with_types(dcid2type,
+                                     provenance_dir=self.config.import_name(
+                                         self.input_file))
     elif self.entity_type:
       logging.info("Importing %s entities with type %s.", len(new_entity_dcids),
                    self.entity_type)
-      self.nodes.entities_with_type(
-          new_entity_dcids,
-          self.entity_type,
-          provenance_dir=self.config.import_name(self.input_file))
+      self.nodes.entities_with_type(new_entity_dcids,
+                                    self.entity_type,
+                                    provenance_dir=self.config.import_name(
+                                        self.input_file))
 
   def _resolve_entities(self) -> None:
     df = self.df

@@ -160,7 +160,8 @@ class Nodes:
                         name=name or clean_id,
                         url=url,
                         properties=properties or {},
-                        provenance_dir=provenance_dir or strip_namespace(clean_id))
+                        provenance_dir=provenance_dir or
+                        strip_namespace(clean_id))
       self.provenances[clean_id] = prov
       if name:
         self.provenances[name] = prov
@@ -458,9 +459,8 @@ class Nodes:
     for provenance in self.provenances.values():
       if self.has_custom_mcf_nodes and provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
         continue
-      imp = getattr(provenance,
-                    "provenance_dir", "") or (strip_namespace(provenance.id)
-                                              if provenance.id else "_global")
+      imp = getattr(provenance, "provenance_dir", "") or (strip_namespace(
+          provenance.id) if provenance.id else "_global")
       result[imp].extend(provenance.triples())
     for group in self.groups.values():
       result["_global"].extend(group.triples())

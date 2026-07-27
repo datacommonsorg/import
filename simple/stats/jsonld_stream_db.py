@@ -102,21 +102,13 @@ def _parse_numeric(val):
     return str(val)
 
 
-def _write_observation_shard(chunk_or_args,
+def _write_observation_shard(chunk,
                              shard_index: Optional[int] = None,
                              jsonld_dir_path: Optional[str] = None,
                              ns_map: Optional[dict[str, str]] = None,
                              prov_urls: Optional[dict[str, str]] = None,
                              track_hash_fn: Optional[Callable] = None,
                              file_name: str = ""):
-  if isinstance(chunk_or_args, tuple):
-    chunk = chunk_or_args[0]
-    shard_index = chunk_or_args[1]
-    jsonld_dir_path = chunk_or_args[2]
-    ns_map = chunk_or_args[3]
-    prov_urls = chunk_or_args[4]
-  else:
-    chunk = chunk_or_args
 
   graph_list = []
   chunk_hashes = []
@@ -207,6 +199,9 @@ def _write_observation_shard(chunk_or_args,
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
+# TODO(gmechali): When parallelizing node shard exports (MCF and Events CSV files),
+# include the sanitized file_name in the shard name (e.g., node-{sanitized_stem}-{shard_index:05d}.jsonld)
+# to prevent shard filename collisions across parallel workers, similar to observation shards.
 def _write_node_shard(args):
   # TODO(gmechali): Get rid of this and keep only the "fast" mode.
   fast_export = os.getenv("FAST_NODE_EXPORT",
@@ -268,6 +263,8 @@ def _write_node_shard_fast(args):
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
+  # TODO(gmechali): When parallelizing node shard exports, include file_name in shard_name
+  # (e.g., f"node-{sanitized_stem}-{shard_index:05d}.jsonld") to prevent collisions across workers.
   shard_name = f"node-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
