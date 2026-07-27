@@ -147,8 +147,7 @@ class Nodes:
                           name: str = "",
                           url: str = "",
                           source_id: str = "",
-                          properties: dict[str, str] = None,
-                          provenance_dir: str = "") -> Provenance:
+                          properties: dict[str, str] = None) -> Provenance:
     self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
@@ -160,8 +159,7 @@ class Nodes:
                         name=name or clean_id,
                         url=url,
                         properties=properties or {},
-                        provenance_dir=provenance_dir or
-                        strip_namespace(clean_id))
+                        provenance_id=clean_id)
       self.provenances[clean_id] = prov
       if name:
         self.provenances[name] = prov
@@ -176,8 +174,8 @@ class Nodes:
         prov.source_id = clean_source_id
       if properties:
         prov.properties.update(properties)
-      if provenance_dir and not prov.provenance_dir:
-        prov.provenance_dir = provenance_dir
+      if not prov.provenance_id:
+        prov.provenance_id = clean_id
     return prov
 
   @thread_safe
@@ -186,7 +184,7 @@ class Nodes:
                       name: str = "",
                       url: str = "",
                       properties: dict[str, str] = None,
-                      provenance_dir: str = "") -> Source:
+                      provenance_id: str = "") -> Source:
     self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
 
@@ -196,7 +194,7 @@ class Nodes:
                    name=name or clean_id,
                    url=url,
                    properties=properties or {},
-                   provenance_dir=provenance_dir or "")
+                   provenance_id=provenance_id or "")
       self.sources[clean_id] = src
       if name:
         self.sources[name] = src
@@ -209,8 +207,8 @@ class Nodes:
         src.url = url
       if properties:
         src.properties.update(properties)
-      if provenance_dir and not src.provenance_dir:
-        src.provenance_dir = provenance_dir
+      if provenance_id and not src.provenance_id:
+        src.provenance_id = provenance_id
     return src
 
   @thread_safe
@@ -250,12 +248,12 @@ class Nodes:
   @thread_safe
   def property(self,
                property_column_name: str,
-               provenance_dir: str = "") -> Property:
+               provenance_id: str = "") -> Property:
     if not property_column_name in self.properties:
       self.properties[property_column_name] = Property(
           self._property_id(property_column_name), property_column_name)
-    if provenance_dir:
-      self.properties[property_column_name].provenance_dirs.add(provenance_dir)
+    if provenance_id:
+      self.properties[property_column_name].provenance_ids.add(provenance_id)
 
     return self.properties[property_column_name]
 
@@ -374,11 +372,11 @@ class Nodes:
   def entity_with_type(self,
                        entity_dcid: str,
                        entity_type: str,
-                       provenance_dir: str = ""):
+                       provenance_id: str = ""):
     if entity_dcid not in self.entities:
       self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
-    if provenance_dir:
-      self.entities[entity_dcid].provenance_dirs.add(provenance_dir)
+    if provenance_id:
+      self.entities[entity_dcid].provenance_ids.add(provenance_id)
 
   @thread_safe
   def has_entity(self, entity_dcid: str) -> bool:
@@ -399,16 +397,16 @@ class Nodes:
   def entities_with_type(self,
                          entity_dcids: list[str],
                          entity_type: str,
-                         provenance_dir: str = ""):
+                         provenance_id: str = ""):
     for entity_dcid in entity_dcids:
       self.entity_with_type(entity_dcid,
                             entity_type,
-                            provenance_dir=provenance_dir)
+                            provenance_id=provenance_id)
 
   @thread_safe
   def entities_with_types(self,
                           dcid2type: dict[str, str],
-                          provenance_dir: str = ""):
+                          provenance_id: str = ""):
     """
     Adds each dcid2type mapping to the list of entities with their types.
     The full list will be inserted into the DB in the final stages of the import.
@@ -416,7 +414,7 @@ class Nodes:
     for entity_dcid, entity_type in dcid2type.items():
       self.entity_with_type(entity_dcid,
                             entity_type,
-                            provenance_dir=provenance_dir)
+                            provenance_id=provenance_id)
 
   @thread_safe
   def triples(self, triples_file: File | None = None) -> list[Triple]:
@@ -454,13 +452,14 @@ class Nodes:
     for source in self.sources.values():
       if self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and _DEFAULT_SOURCE.id not in self._used_source_ids:
         continue
-      imp = getattr(source, "provenance_dir", "") or "_global"
+      raw = getattr(source, "provenance_id", "") or "_global"
+      imp = strip_namespace(raw) if raw != "_global" else "_global"
       result[imp].extend(source.triples())
     for provenance in self.provenances.values():
       if self.has_custom_mcf_nodes and provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
         continue
-      imp = getattr(provenance, "provenance_dir", "") or (strip_namespace(
-          provenance.id) if provenance.id else "_global")
+      raw = getattr(provenance, "provenance_id", "") or provenance.id or "_global"
+      imp = strip_namespace(raw) if raw != "_global" else "_global"
       result[imp].extend(provenance.triples())
     for group in self.groups.values():
       result["_global"].extend(group.triples())
@@ -486,19 +485,19 @@ class Nodes:
         for p_id in p_ids:
           result[strip_namespace(p_id)].extend(entity_type.triples())
     for property in self.properties.values():
-      dirs = getattr(property, "provenance_dirs", set())
-      if not dirs:
+      p_ids = getattr(property, "provenance_ids", set())
+      if not p_ids:
         result["_global"].extend(property.triples())
       else:
-        for p_dir in dirs:
-          result[p_dir].extend(property.triples())
+        for p_id in p_ids:
+          result[strip_namespace(p_id)].extend(property.triples())
     for entity in self.entities.values():
-      dirs = getattr(entity, "provenance_dirs", set())
-      if not dirs:
+      p_ids = getattr(entity, "provenance_ids", set())
+      if not p_ids:
         result["_global"].extend(entity.triples())
       else:
-        for p_dir in dirs:
-          result[p_dir].extend(entity.triples())
+        for p_id in p_ids:
+          result[strip_namespace(p_id)].extend(entity.triples())
     return result
 
 

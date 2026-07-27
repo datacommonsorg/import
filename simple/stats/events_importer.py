@@ -248,18 +248,16 @@ class EventsImporter(Importer):
 
     entities = list(filter(remove_pre_resolved, column.tolist()))
 
-    try:
-      prov_dir = self.config.import_name(self.input_file)
-    except Exception:
-      prov_dir = ""
+    prov_id = getattr(self, "provenance", "")
     for dcid in column.tolist():
       clean_dcid = strip_namespace(dcid)
-      if self.nodes.has_entity(clean_dcid) and prov_dir:
-        self.nodes.entities[clean_dcid].provenance_dirs.add(prov_dir)
-      elif prov_dir:
-        self.nodes.entity_with_type(clean_dcid,
-                                    "Thing",
-                                    provenance_dir=prov_dir)
+      if self.nodes.has_entity(clean_dcid):
+        if prov_id:
+          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
+      else:
+        self.nodes.entity_with_type(
+            clean_dcid, "Thing", provenance_id=prov_id
+        )
 
     logging.info("Found %s entities pre-resolved.", len(pre_resolved_entities))
 

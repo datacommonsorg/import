@@ -220,7 +220,7 @@ def _run_single_csv_import_proc(
     db.commit_and_close()
 
     resolved_entities = {
-        e.entity_dcid: (e.entity_type, getattr(e, "provenance_dirs", set()))
+        e.entity_dcid: (e.entity_type, getattr(e, "provenance_ids", set()))
         for e in nodes.entities.values()
     }
     event_types = dict(nodes.event_types)
@@ -1043,14 +1043,14 @@ class Runner:
               if res.resolved_entities:
                 for dcid, val in res.resolved_entities.items():
                   if isinstance(val, tuple):
-                    t, p_dirs = val
+                    t, p_ids = val
                   else:
-                    t, p_dirs = val, set()
-                  if isinstance(p_dirs, set):
-                    for p_dir in (p_dirs or [""]):
-                      self.nodes.entity_with_type(dcid, t, provenance_dir=p_dir)
+                    t, p_ids = val, set()
+                  if isinstance(p_ids, set):
+                    for p_id in (p_ids or [""]):
+                      self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
                   else:
-                    self.nodes.entity_with_type(dcid, t, provenance_dir=p_dirs)
+                    self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
               if res.event_types:
                 self.nodes.event_types.update(res.event_types)
               if res.entity_types:
@@ -1062,18 +1062,15 @@ class Runner:
                   self.nodes.register_source(id=src.id,
                                              name=src.name,
                                              url=src.url,
-                                             provenance_dir=getattr(
-                                                 src, "provenance_dir", ""))
+                                             provenance_id=getattr(
+                                                 src, "provenance_id", ""))
               if res.provenances:
                 for prov in res.provenances.values():
                   self.nodes.register_provenance(id=prov.id,
                                                  name=prov.name,
                                                  url=prov.url,
                                                  source_id=prov.source_id,
-                                                 properties=prov.properties,
-                                                 provenance_dir=getattr(
-                                                     prov, "provenance_dir",
-                                                     ""))
+                                                 properties=prov.properties)
               if res.groups:
                 self.nodes.groups.update(res.groups)
                 for svg in res.groups.values():
@@ -1083,8 +1080,8 @@ class Runner:
                   if prop_name not in self.nodes.properties:
                     self.nodes.properties[prop_name] = prop_obj
                   else:
-                    self.nodes.properties[prop_name].provenance_dirs.update(
-                        getattr(prop_obj, "provenance_dirs", set()))
+                    self.nodes.properties[prop_name].provenance_ids.update(
+                        getattr(prop_obj, "provenance_ids", set()))
               if res.processed_imports:
                 self.db._processed_imports.update(res.processed_imports)
               if res.obs_collision_count and hasattr(self.db,

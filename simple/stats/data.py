@@ -182,7 +182,7 @@ class StatVar:
 class Entity:
   entity_dcid: str
   entity_type: str
-  provenance_dirs: set[str] = field(default_factory=set)
+  provenance_ids: set[str] = field(default_factory=set)
 
   def triples(self) -> list[Triple]:
     # Currently only 1 triple is generated but could be more in the future (e.g. name)
@@ -198,7 +198,7 @@ class Provenance:
   name: str
   url: str = ""
   properties: dict[str, str] = field(default_factory=dict)
-  provenance_dir: str = ""
+  provenance_id: str = ""
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
@@ -230,7 +230,7 @@ class Source:
   url: str = ""
   domain: str = field(init=False)
   properties: dict[str, str] = field(default_factory=dict)
-  provenance_dir: str = ""
+  provenance_id: str = ""
 
   def __post_init__(self):
     self.domain = urlparse(self.url).netloc
@@ -335,7 +335,7 @@ OBSERVATION_FIELD_NAMES = _get_flattened_dataclass_field_names(Observation)
 class Property:
   dcid: str
   name: str
-  provenance_dirs: set[str] = field(default_factory=set)
+  provenance_ids: set[str] = field(default_factory=set)
 
   def triples(self) -> list[Triple]:
     return [

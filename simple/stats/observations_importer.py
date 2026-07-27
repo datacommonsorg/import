@@ -149,13 +149,11 @@ class ObservationsImporter(Importer):
         dcid for dcid in entity_dcids if not self.nodes.has_entity(dcid)
     ]
 
-    try:
-      prov_dir = self.config.import_name(self.input_file)
-    except Exception:
-      prov_dir = ""
-    for dcid in entity_dcids:
-      if self.nodes.has_entity(dcid) and prov_dir:
-        self.nodes.entities[dcid].provenance_dirs.add(prov_dir)
+    prov_id = getattr(self, "provenance", "")
+    if prov_id:
+      for dcid in entity_dcids:
+        if self.nodes.has_entity(dcid):
+          self.nodes.entities[dcid].provenance_ids.add(prov_id)
 
     logging.info("Found %s total entities, of which %s are already imported.",
                  len(entity_dcids),
@@ -172,16 +170,13 @@ class ObservationsImporter(Importer):
     if dcid2type:
       logging.info("Importing %s of %s entities.", len(dcid2type),
                    len(new_entity_dcids))
-      self.nodes.entities_with_types(dcid2type,
-                                     provenance_dir=self.config.import_name(
-                                         self.input_file))
+      self.nodes.entities_with_types(dcid2type, provenance_id=prov_id)
     elif self.entity_type:
       logging.info("Importing %s entities with type %s.", len(new_entity_dcids),
                    self.entity_type)
       self.nodes.entities_with_type(new_entity_dcids,
                                     self.entity_type,
-                                    provenance_dir=self.config.import_name(
-                                        self.input_file))
+                                    provenance_id=prov_id)
 
   def _resolve_entities(self) -> None:
     df = self.df
