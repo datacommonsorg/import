@@ -34,10 +34,11 @@ public class ApiHelper {
   public static JsonObject fetchPropertyValues(
       HttpClient httpClient, List<String> nodes, String property)
       throws IOException, InterruptedException {
+    DcApiConfig config = DcApiConfigs.getConfig();
     Map<String, List<V2NodeResponse.NodeInfo>> propertyValuesByNode = new HashMap<>();
-    String nextToken = "";
+    String nextToken = null;
     do {
-      V2NodeResponse page = fetchPropertyValuesPage(httpClient, nodes, property, nextToken);
+      V2NodeResponse page = fetchPropertyValuesPage(httpClient, nodes, property, nextToken, config);
       if (page == null) return null;
 
       mergePropertyValues(propertyValuesByNode, page, property);
@@ -48,9 +49,13 @@ public class ApiHelper {
   }
 
   private static V2NodeResponse fetchPropertyValuesPage(
-      HttpClient httpClient, List<String> nodes, String property, String nextToken)
+      HttpClient httpClient,
+      List<String> nodes,
+      String property,
+      String nextToken,
+      DcApiConfig config)
       throws IOException, InterruptedException {
-    var request = buildPropertyValuesRequest(nodes, property, nextToken, DcApiConfigs.getConfig());
+    var request = buildPropertyValuesRequest(nodes, property, nextToken, config);
 
     // maxRetries = 0 means no retries (only initial attempt)
     // maxRetries = 3 means 4 total attempts (1 initial + 3 retries)
