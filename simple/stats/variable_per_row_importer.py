@@ -340,10 +340,13 @@ class VariablePerRowImporter(Importer):
         if not self.nodes.has_entity(strip_namespace(dcid))
     ]
 
-    prov_dir = self.config.import_name(self.input_file)
+    try:
+      prov_dir = self.config.import_name(self.input_file)
+    except Exception:
+      prov_dir = ""
     for dcid in self.entity_dcids:
       clean_dcid = strip_namespace(dcid)
-      if self.nodes.has_entity(clean_dcid):
+      if self.nodes.has_entity(clean_dcid) and prov_dir:
         self.nodes.entities[clean_dcid].provenance_dirs.add(prov_dir)
 
     logging.info("Found %s total entities, of which %s are already imported.",
