@@ -15,6 +15,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.junit.Test;
@@ -102,10 +103,12 @@ public class StatVarStateTest {
     // Test that the payload contained in TEST_SV_MEASRES_HTTP_RESP
     // is correctly parsed and Vocabulary.MEASUREMENT_RESULT is returned.
     V2NodeResponse response = new Gson().fromJson(TEST_SV_MEASRES_HTTP_RESP, V2NodeResponse.class);
+    List<V2NodeResponse.NodeInfo> statTypes =
+        response.data.get(TEST_SV_MEASRES_DCID).arcs.get(Vocabulary.STAT_TYPE).nodes;
 
     JsonObject payloadJson =
         ApiHelper.convertToLegacyFormat(
-            response, List.of(TEST_SV_MEASRES_DCID), Vocabulary.STAT_TYPE);
+            Map.of(TEST_SV_MEASRES_DCID, statTypes), List.of(TEST_SV_MEASRES_DCID));
 
     String returnValue = StatVarState.parseApiStatTypeResponse(payloadJson, TEST_SV_MEASRES_DCID);
 

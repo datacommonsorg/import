@@ -34,7 +34,23 @@ public class ApiHelper {
   public static JsonObject fetchPropertyValues(
       HttpClient httpClient, List<String> nodes, String property)
       throws IOException, InterruptedException {
-    var request = buildPropertyValuesRequest(nodes, property, DcApiConfigs.getConfig());
+    Map<String, List<V2NodeResponse.NodeInfo>> propertyValuesByNode = new HashMap<>();
+    String nextToken = "";
+    do {
+      V2NodeResponse page = fetchPropertyValuesPage(httpClient, nodes, property, nextToken);
+      if (page == null) return null;
+
+      mergePropertyValues(propertyValuesByNode, page, property);
+      nextToken = page.nextToken;
+    } while (nextToken != null && !nextToken.isEmpty());
+
+    return convertToLegacyFormat(propertyValuesByNode, nodes);
+  }
+
+  private static V2NodeResponse fetchPropertyValuesPage(
+      HttpClient httpClient, List<String> nodes, String property, String nextToken)
+      throws IOException, InterruptedException {
+    var request = buildPropertyValuesRequest(nodes, property, nextToken, DcApiConfigs.getConfig());
 
     // maxRetries = 0 means no retries (only initial attempt)
     // maxRetries = 3 means 4 total attempts (1 initial + 3 retries)
@@ -42,6 +58,7 @@ public class ApiHelper {
 
     RetryPolicy<HttpResponse<String>> retryPolicy =
         RetryPolicy.<HttpResponse<String>>builder()
+            // TODO: Retry transient HTTP responses such as 429 and 5xx.
             .handle(IOException.class)
             .withMaxRetries(maxRetries)
             // Exponential backoff: 1s, 2s, 4s, 8s, 8s... (doubles each retry, capped at
@@ -70,12 +87,11 @@ public class ApiHelper {
 
     V2NodeResponse v2Response = new Gson().fromJson(response.body().trim(), V2NodeResponse.class);
     if (v2Response == null || v2Response.data == null) return null;
-
-    return convertToLegacyFormat(v2Response, nodes, property);
+    return v2Response;
   }
 
   static HttpRequest buildPropertyValuesRequest(
-      List<String> nodes, String property, DcApiConfig config) {
+      List<String> nodes, String property, String nextToken, DcApiConfig config) {
     JsonArray dcids = new JsonArray();
     for (var node : nodes) {
       dcids.add(node);
@@ -85,6 +101,9 @@ public class ApiHelper {
     arg.add("nodes", dcids);
     // V2 uses -> for out-edges, which is equivalent to direction: "out" in V1
     arg.addProperty("property", "->" + property);
+    if (nextToken != null && !nextToken.isEmpty()) {
+      arg.addProperty("nextToken", nextToken);
+    }
 
     var requestBuilder =
         HttpRequest.newBuilder(URI.create(config.apiRoot() + NODE_API_PATH))
@@ -98,8 +117,25 @@ public class ApiHelper {
     return requestBuilder.build();
   }
 
+  private static void mergePropertyValues(
+      Map<String, List<V2NodeResponse.NodeInfo>> propertyValuesByNode,
+      V2NodeResponse page,
+      String property) {
+    for (Map.Entry<String, V2NodeResponse.NodeData> entry : page.data.entrySet()) {
+      V2NodeResponse.NodeData nodeData = entry.getValue();
+      if (nodeData == null || nodeData.arcs == null) continue;
+
+      V2NodeResponse.ArcData arcData = nodeData.arcs.get(property);
+      if (arcData == null || arcData.nodes == null) continue;
+
+      propertyValuesByNode
+          .computeIfAbsent(entry.getKey(), unused -> new ArrayList<>())
+          .addAll(arcData.nodes);
+    }
+  }
+
   static JsonObject convertToLegacyFormat(
-      V2NodeResponse v2Response, List<String> nodes, String property) {
+      Map<String, List<V2NodeResponse.NodeInfo>> propertyValuesByNode, List<String> nodes) {
     JsonObject legacyFormat = new JsonObject();
     // Iterate over requested nodes to ensure each has an entry in the response,
     // even if empty. This is required by callers like ExistenceChecker.
@@ -109,16 +145,10 @@ public class ApiHelper {
       outWrapper.add("out", outArray);
       legacyFormat.add(dcid, outWrapper);
 
-      V2NodeResponse.NodeData nodeData = v2Response.data.get(dcid);
-      if (nodeData == null) continue;
+      List<V2NodeResponse.NodeInfo> propertyValues = propertyValuesByNode.get(dcid);
+      if (propertyValues == null) continue;
 
-      Map<String, V2NodeResponse.ArcData> arcs = nodeData.arcs;
-      if (arcs == null) continue;
-
-      V2NodeResponse.ArcData arcData = arcs.get(property);
-      if (arcData == null || arcData.nodes == null) continue;
-
-      for (V2NodeResponse.NodeInfo node : arcData.nodes) {
+      for (V2NodeResponse.NodeInfo node : propertyValues) {
         outArray.add(createOutObject(node));
       }
     }
