@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
 from functools import wraps
 import logging
 import re
@@ -157,7 +158,8 @@ class Nodes:
                         source_id=clean_source_id,
                         name=name or clean_id,
                         url=url,
-                        properties=properties or {})
+                        properties=properties or {},
+                        provenance_id=clean_id)
       self.provenances[clean_id] = prov
       if name:
         self.provenances[name] = prov
@@ -172,6 +174,8 @@ class Nodes:
         prov.source_id = clean_source_id
       if properties:
         prov.properties.update(properties)
+      if not prov.provenance_id:
+        prov.provenance_id = clean_id
     return prov
 
   @thread_safe
@@ -179,7 +183,8 @@ class Nodes:
                       id: str,
                       name: str = "",
                       url: str = "",
-                      properties: dict[str, str] = None) -> Source:
+                      properties: dict[str, str] = None,
+                      provenance_id: str = "") -> Source:
     self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
 
@@ -188,7 +193,8 @@ class Nodes:
       src = Source(id=clean_id,
                    name=name or clean_id,
                    url=url,
-                   properties=properties or {})
+                   properties=properties or {},
+                   provenance_id=provenance_id or "")
       self.sources[clean_id] = src
       if name:
         self.sources[name] = src
@@ -201,6 +207,8 @@ class Nodes:
         src.url = url
       if properties:
         src.properties.update(properties)
+      if provenance_id and not src.provenance_id:
+        src.provenance_id = provenance_id
     return src
 
   @thread_safe
@@ -238,10 +246,14 @@ class Nodes:
                                 self.provenance(input_file))
 
   @thread_safe
-  def property(self, property_column_name: str) -> Property:
+  def property(self,
+               property_column_name: str,
+               provenance_id: str = "") -> Property:
     if not property_column_name in self.properties:
       self.properties[property_column_name] = Property(
           self._property_id(property_column_name), property_column_name)
+    if provenance_id:
+      self.properties[property_column_name].provenance_ids.add(provenance_id)
 
     return self.properties[property_column_name]
 
@@ -357,9 +369,14 @@ class Nodes:
     return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
   @thread_safe
-  def entity_with_type(self, entity_dcid: str, entity_type: str):
+  def entity_with_type(self,
+                       entity_dcid: str,
+                       entity_type: str,
+                       provenance_id: str = ""):
     if entity_dcid not in self.entities:
       self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
+    if provenance_id:
+      self.entities[entity_dcid].provenance_ids.add(provenance_id)
 
   @thread_safe
   def has_entity(self, entity_dcid: str) -> bool:
@@ -377,18 +394,27 @@ class Nodes:
     return prov_urls
 
   @thread_safe
-  def entities_with_type(self, entity_dcids: list[str], entity_type: str):
+  def entities_with_type(self,
+                         entity_dcids: list[str],
+                         entity_type: str,
+                         provenance_id: str = ""):
     for entity_dcid in entity_dcids:
-      self.entity_with_type(entity_dcid, entity_type)
+      self.entity_with_type(entity_dcid,
+                            entity_type,
+                            provenance_id=provenance_id)
 
   @thread_safe
-  def entities_with_types(self, dcid2type: dict[str, str]):
+  def entities_with_types(self,
+                          dcid2type: dict[str, str],
+                          provenance_id: str = ""):
     """
     Adds each dcid2type mapping to the list of entities with their types.
     The full list will be inserted into the DB in the final stages of the import.
     """
     for entity_dcid, entity_type in dcid2type.items():
-      self.entity_with_type(entity_dcid, entity_type)
+      self.entity_with_type(entity_dcid,
+                            entity_type,
+                            provenance_id=provenance_id)
 
   @thread_safe
   def triples(self, triples_file: File | None = None) -> list[Triple]:
@@ -419,6 +445,49 @@ class Nodes:
       triples_file.write(pd.DataFrame(triples).to_csv(index=False))
 
     return triples
+
+  @thread_safe
+  def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
+    result: dict[str, list[Triple]] = defaultdict(list)
+    for source in self.sources.values():
+      if self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and _DEFAULT_SOURCE.id not in self._used_source_ids:
+        continue
+      raw = getattr(source, "provenance_id", "") or "_global"
+      imp = strip_namespace(raw) if raw != "_global" else "_global"
+      result[imp].extend(source.triples())
+    for provenance in self.provenances.values():
+      if self.has_custom_mcf_nodes and provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
+        continue
+      raw = getattr(provenance, "provenance_id",
+                    "") or provenance.id or "_global"
+      imp = strip_namespace(raw) if raw != "_global" else "_global"
+      result[imp].extend(provenance.triples())
+    for group in self.groups.values():
+      result["_global"].extend(group.triples())
+    for collection in (
+        self.variables,
+        self.event_types,
+        self.entity_types,
+        self.properties,
+        self.entities,
+    ):
+      for node in collection.values():
+        p_ids = getattr(node, "provenance_ids", None)
+        target_dirs = ({strip_namespace(p) for p in p_ids}
+                       if p_ids else {"_global"})
+        for dir_name in target_dirs:
+          result[dir_name].extend(node.triples())
+    deduped_result = {}
+    for k, triples in result.items():
+      seen = set()
+      deduped = []
+      for t in triples:
+        key = (t.subject_id, t.predicate, t.object_id, t.object_value)
+        if key not in seen:
+          seen.add(key)
+          deduped.append(t)
+      deduped_result[k] = deduped
+    return deduped_result
 
 
 def _clean_metadata_id(id: str) -> str:

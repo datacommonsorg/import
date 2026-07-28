@@ -25,6 +25,19 @@ def get_provenance_name(import_name: str, is_base_dc: bool) -> str:
     return f"{get_provenance_prefix(is_base_dc)}{import_name}"
 
 
+def get_generated_provenance_name(import_name: str, is_base_dc: bool) -> str:
+    """Returns the generated provenance name for an import (e.g. 'dc/base/generated/USFed_Census' or 'generated/USFed_Census')."""
+    return f"{get_provenance_prefix(is_base_dc)}generated/{import_name}"
+
+
+def get_sql_generated_provenance_expr(is_base_dc: bool, source_col: str = "provenance") -> str:
+    """Returns a SQL expression that transforms a source provenance into a scoped generated provenance."""
+    if is_base_dc:
+        return f"CONCAT('dc/base/generated/', REGEXP_REPLACE({source_col}, r'^dc/base/(generated/)?', ''))"
+    else:
+        return f"CONCAT('generated/', REGEXP_REPLACE({source_col}, r'^(generated/)?', ''))"
+
+
 def _escape_sql_literal(val: str) -> str:
     r"""
     Escapes a string literal for use in nested BigQuery/Spanner queries.

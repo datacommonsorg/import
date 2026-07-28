@@ -22,6 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator, LinkedEdgeConfig
+from aggregation import StatVarGroupGenerator, StatVarGroupConfig
 from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from aggregation import PlaceAggregationGenerator, PlaceAggregationConfig
 from aggregation import EmbeddingGenerator, EmbeddingGenerationConfig
@@ -30,7 +31,9 @@ from aggregation.common import (
     BASE_PROVENANCE_PREFIX,
     _escape_sql_literal,
     get_provenance_prefix,
-    get_provenance_name
+    get_provenance_name,
+    get_generated_provenance_name,
+    get_sql_generated_provenance_expr,
 )
 
 
@@ -52,6 +55,14 @@ class TestCommonUtils(unittest.TestCase):
     def test_get_provenance_name(self):
         self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=True), "dc/base/USFed_Census")
         self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=False), "USFed_Census")
+
+    def test_get_generated_provenance_name(self):
+        self.assertEqual(get_generated_provenance_name("USFed_Census", is_base_dc=True), "dc/base/generated/USFed_Census")
+        self.assertEqual(get_generated_provenance_name("USFed_Census", is_base_dc=False), "generated/USFed_Census")
+
+    def test_get_sql_generated_provenance_expr(self):
+        self.assertIn("CONCAT('dc/base/generated/'", get_sql_generated_provenance_expr(True, "prov"))
+        self.assertIn("CONCAT('generated/'", get_sql_generated_provenance_expr(False, "prov"))
 
 
 @patch('aggregation.bq_executor.bigquery.Client')
@@ -316,7 +327,8 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.mock_executor.enable_embeddings = True
         self.mock_executor.bq_dataset_id = "datacommons"
 
-    def test_run_all(self):
+    @patch.object(EmbeddingGenerator, '_delete_existing_embeddings')
+    def test_run_all(self, mock_delete):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -334,6 +346,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
         jobs = generator.run_all(EmbeddingGenerationConfig(specs=specs, embedding_table="CustomEmbeddingTable"))
 
         self.assertEqual(len(jobs), 1)
+        mock_delete.assert_called_once()
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
         self.assertIn("test-conn", query)
@@ -343,8 +356,9 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("CustomEmbeddingTable", query)
         self.assertIn("TEST_TASK", query)
 
-    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value={'statVar1': 'sentence1', 'statVar2': 'sentence2'})
-    def test_run_all_nl_stat_var(self, mock_extract):
+    @patch.object(EmbeddingGenerator, '_delete_existing_embeddings')
+    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value=[{'dcid': 'statVar1', 'sentence': 'sentence1'}, {'dcid': 'statVar2', 'sentence': 'sentence2'}])
+    def test_run_all_nl_stat_var(self, mock_extract, mock_delete):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -362,6 +376,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
         jobs = generator.run_all(EmbeddingGenerationConfig(specs=specs, embedding_table="CustomEmbeddingTable"))
 
         self.assertEqual(len(jobs), 1)
+        mock_delete.assert_called_once()
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
         job_config = self.mock_executor.execute.call_args[1].get('job_config') or self.mock_executor.execute.call_args.kwargs.get('job_config')
@@ -380,6 +395,58 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("statVar2", dcids)
         self.assertIn("sentence1", sentences)
         self.assertIn("sentence2", sentences)
+
+    @patch.object(EmbeddingGenerator, 'spanner_database')
+    def test_delete_existing_embeddings(self, mock_db):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.side_effect = [
+            [(None,)],  # IngestionLock query
+            [("dcid/1",), ("dcid/2",)]  # Node query
+        ]
+        mock_db.execute_partitioned_dml.return_value = 2
+
+        spec = EmbeddingSpec(
+            embedding_label="test_embedding",
+            model_name="TestModel",
+            model_endpoint="text-embedding-005",
+            task_type="TEST_TASK",
+            node_types=["StatVar"],
+            node_filter_type="NoFilter"
+        )
+        deleted = generator._delete_existing_embeddings(spec, embedding_table="NodeEmbedding")
+        self.assertEqual(deleted, 2)
+        mock_db.execute_partitioned_dml.assert_called_once()
+
+
+class TestStatVarGroupGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_run_all_empty(self):
+        generator = StatVarGroupGenerator(self.mock_executor)
+        jobs = generator.run_all(StatVarGroupConfig(import_names=[]))
+        self.assertEqual(jobs, [])
+        self.mock_executor.execute.assert_not_called()
+
+    def test_run_stat_var_group(self):
+        generator = StatVarGroupGenerator(self.mock_executor, is_base_dc=True, should_prune_single_child_svgs=True)
+        mock_prep_job = [MagicMock(object_id="gender"), MagicMock(object_id="age")]
+        mock_exec_job = MagicMock()
+        self.mock_executor.execute.side_effect = [mock_prep_job, mock_exec_job]
+
+        jobs = generator.run_all(StatVarGroupConfig(import_names=["import1"]))
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(self.mock_executor.execute.call_count, 2)
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("PrunableSVGs", query)
+        self.assertIn("EffectiveParent", query)
+        self.assertIn("HAVING COUNT(DISTINCT pc.child) <= 1", query)
 
 
 if __name__ == '__main__':

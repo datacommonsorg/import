@@ -84,6 +84,10 @@ GLOBAL_CALCULATION_TYPES = {
     CalculationType.EMBEDDING_GENERATION,
 }
 
+SCOPED_GRAPH_CALCULATION_TYPES = {
+    CalculationType.LINKED_EDGES,
+}
+
 
 @dataclass
 class OrchestratorConfig:
@@ -100,6 +104,7 @@ class OrchestratorConfig:
     poll_interval: int = 15
     enable_embeddings: bool = False
     bq_dataset_id: str = "datacommons"
+    generate_stat_var_groups: bool = True
 
 
 class AggregationOrchestrator:
@@ -299,6 +304,8 @@ class AggregationOrchestrator:
                     output = calc.get(_OUTPUT_IMPORT_KEY)
                     if output:
                         to_delete.add(output)
+                    if calc.get("type") in SCOPED_GRAPH_CALCULATION_TYPES:
+                        to_delete.add(f"generated/{single_import}")
 
         if not to_delete:
             logging.info("No existing aggregated data resolved for deletion.")
@@ -598,6 +605,9 @@ class AggregationOrchestrator:
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""
         if calc.get("disabled", False):
+            return False
+
+        if not self.config.generate_stat_var_groups and calc.get("type") == CalculationType.STAT_VAR_GROUPS:
             return False
 
         if calc.get("type") in GLOBAL_CALCULATION_TYPES:

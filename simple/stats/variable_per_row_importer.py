@@ -306,19 +306,22 @@ class VariablePerRowImporter(Importer):
     """Serializes dynamic custom dimensions and merges them with static custom properties."""
     custom_cols = [dim for dim in self.custom_dimensions if dim in df.columns]
 
-    def row_to_json(row):
-      # Start with static default custom properties
+    if not custom_cols:
+      static_json = json.dumps(static_props) if static_props else ""
+      df[constants.COLUMN_PROPERTIES] = static_json
+      return df
+
+    records = df[custom_cols].to_dict(orient="records")
+    serialized = []
+    for r in records:
       d = dict(static_props)
-      # Add/override with dynamic custom dimensions from the row
-      for col in custom_cols:
-        val = row[col]
+      for col, val in r.items():
         if pd.notna(val) and val != "":
           d[col] = strip_namespace(str(val))
-      return json.dumps(d) if d else ""
+      serialized.append(json.dumps(d) if d else "")
 
-    df[constants.COLUMN_PROPERTIES] = df.apply(row_to_json, axis=1)
+    df[constants.COLUMN_PROPERTIES] = serialized
 
-    # Drop the dynamic custom dimension columns from the DataFrame now that they are serialized
     if custom_cols:
       df = df.drop(columns=custom_cols)
     return df
@@ -334,8 +337,15 @@ class VariablePerRowImporter(Importer):
     new_entity_dcids = [
         strip_namespace(dcid)
         for dcid in self.entity_dcids
-        if not self.nodes.has_entity(dcid)
+        if not self.nodes.has_entity(strip_namespace(dcid))
     ]
+
+    prov_id = getattr(self, "provenance", "")
+    if prov_id:
+      for dcid in self.entity_dcids:
+        clean_dcid = strip_namespace(dcid)
+        if self.nodes.has_entity(clean_dcid):
+          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
 
     logging.info("Found %s total entities, of which %s are already imported.",
                  len(self.entity_dcids),
@@ -354,4 +364,4 @@ class VariablePerRowImporter(Importer):
     if dcid2type:
       logging.info("Importing %s of %s entities.", len(dcid2type),
                    len(new_entity_dcids))
-      self.nodes.entities_with_types(dcid2type)
+      self.nodes.entities_with_types(dcid2type, provenance_id=prov_id)

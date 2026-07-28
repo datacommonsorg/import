@@ -28,6 +28,9 @@ import tempfile
 import threading
 from typing import Callable, Optional
 
+from google.api_core.exceptions import GoogleAPICallError
+from google.api_core.exceptions import TooManyRequests
+from google.api_core.retry import Retry
 from google.cloud import storage
 import pandas as pd
 from rdflib import Graph
@@ -51,7 +54,7 @@ from util.filesystem import File
 
 # Configuration Constants
 _CHUNK_SIZE = 10000
-_UPLOAD_CONCURRENCY = 32
+_UPLOAD_CONCURRENCY = 4
 _EXPORT_PROCESSES_MAX = 8
 
 _KNOWN_CUSTOM_PREFIXES = set()
@@ -99,35 +102,24 @@ def _parse_numeric(val):
     return str(val)
 
 
-def _write_observation_shard(chunk: list[tuple],
-                             shard_index: int,
-                             jsonld_dir_path: str,
-                             ns_map: dict[str, str],
-                             prov_urls: dict[str, str],
-                             track_hash_fn: Optional[Callable] = None):
-  """Writes a single shard of observation JSON-LD objects to disk.
-
-  Args:
-    chunk: List of row tuples containing observation fields.
-    shard_index: Integer index for output shard filename.
-    jsonld_dir_path: Path to output directory.
-    ns_map: Namespace mapping dictionary.
-    prov_urls: Dictionary mapping provenance IDs to URLs.
-    track_hash_fn: Optional callback function to track 64-bit @id hashes.
-  """
+def _write_observation_shard(chunk,
+                             shard_index: Optional[int] = None,
+                             jsonld_dir_path: Optional[str] = None,
+                             ns_map: Optional[dict[str, str]] = None,
+                             prov_urls: Optional[dict[str, str]] = None,
+                             track_hash_fn: Optional[Callable] = None,
+                             file_name: str = ""):
 
   graph_list = []
+  chunk_hashes = []
 
   for row in chunk:
     entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
 
     key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
     obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
-
-    # Track 64-bit integer hash to detect observation @id collisions
     if track_hash_fn:
-      track_hash_fn(obs_hash, str(entity), str(variable), str(date),
-                    str(provenance))
+      chunk_hashes.append((obs_hash, entity, variable, date, provenance))
 
     var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
     prop_keys = None
@@ -190,9 +182,16 @@ def _write_observation_shard(chunk: list[tuple],
 
     graph_list.append(obs_obj)
 
+  if track_hash_fn and chunk_hashes:
+    track_hash_fn(chunk_hashes, file_name=file_name)
+
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
-  shard_name = f"observation-{shard_index:05d}.jsonld"
+  if file_name:
+    sanitized_stem = file_name.replace("/", "_").rsplit(".", 1)[0]
+    shard_name = f"observation-{sanitized_stem}-{shard_index:05d}.jsonld"
+  else:
+    shard_name = f"observation-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
     output_dir.open_file(shard_name).write(
@@ -200,6 +199,9 @@ def _write_observation_shard(chunk: list[tuple],
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
+# TODO(gmechali): When parallelizing node shard exports (MCF and Events CSV files),
+# include the sanitized file_name in the shard name (e.g., node-{sanitized_stem}-{shard_index:05d}.jsonld)
+# to prevent shard filename collisions across parallel workers, similar to observation shards.
 def _write_node_shard(args):
   # TODO(gmechali): Get rid of this and keep only the "fast" mode.
   fast_export = os.getenv("FAST_NODE_EXPORT",
@@ -261,6 +263,8 @@ def _write_node_shard_fast(args):
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
+  # TODO(gmechali): When parallelizing node shard exports, include file_name in shard_name
+  # (e.g., f"node-{sanitized_stem}-{shard_index:05d}.jsonld") to prevent collisions across workers.
   shard_name = f"node-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
@@ -304,7 +308,11 @@ def _write_node_shard_rdflib(args):
 class JsonLdStreamDb(Db):
   """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
 
-  def __init__(self, output_dir, import_names, nodes) -> None:
+  def __init__(self,
+               output_dir,
+               import_names,
+               nodes,
+               jsonld_dir_name: Optional[str] = None) -> None:
     self.output_dir = output_dir
     self.import_names = import_names
     self.nodes = nodes
@@ -323,8 +331,12 @@ class JsonLdStreamDb(Db):
     if self.import_name and "/" in self.import_name:
       self.import_name = self.import_name.replace("/", "_")
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-    unique_dir_name = f"{self.import_name}_{timestamp}"
+    if jsonld_dir_name:
+      unique_dir_name = jsonld_dir_name
+    else:
+      timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+      unique_dir_name = f"{self.import_name}_{timestamp}"
+
     self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(unique_dir_name)
 
     self.obs_shard_index = 0
@@ -336,48 +348,48 @@ class JsonLdStreamDb(Db):
     self._triples = defaultdict(list)
     self._processed_imports = set()
     self._node_streaming_started = set()
-
-    # 64-bit Integer Hash Tracker for Observation @ID Collisions.
-    # Observation @ids are generated from a SHA-256 hash of metadata fields (entity, variable, date, etc.),
-    # intentionally excluding value. If multiple CSV rows share identical metadata keys, their @ids collide,
-    # causing nodes to overwrite each other in graph storage.
-    # To detect collisions efficiently across millions of observations without high memory consumption,
-    # we convert the first 16 hex characters of SHA-256 (64 bits) to Python integers.
-    # Storing 64-bit ints in memory requires ~8 bytes per entry (~80MB RAM per 10 million rows).
     self.obs_hash_set: set[int] = set()
     self.obs_collision_count: int = 0
     self.obs_sample_collisions: list[str] = []
+    self.file_collision_counts: dict[str, int] = defaultdict(int)
+    self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
-  def track_observation_hash(self, obs_hash: str, entity: str, variable: str,
-                             date: str, provenance: str) -> None:
-    """Tracks 64-bit observation @id hashes under thread lock to detect collisions.
-
-    Args:
-      obs_hash: 64-character SHA-256 hex digest string.
-      entity: Observation entity ID for diagnostic logging.
-      variable: Observation variable ID for diagnostic logging.
-      date: Observation date for diagnostic logging.
-      provenance: Observation provenance for diagnostic logging.
-    """
-    # Truncate SHA-256 to 16 hex chars (64 bits) and cast to int for ~90% lower memory footprint
-    hash_int = int(obs_hash[:16], 16)
-    with self.lock:
-      if hash_int in self.obs_hash_set:
-        self.obs_collision_count += 1
-        if len(self.obs_sample_collisions) < 10:
-          sample_info = (
-              f"@id='dcid:obs_{obs_hash}' [entity='{entity}', variable='{variable}', date='{date}', provenance='{provenance}']"
-          )
-          self.obs_sample_collisions.append(sample_info)
-          logging.warning(
-              "Observation @id collision detected! Duplicate metadata key produces identical %s",
-              sample_info)
-        elif self.obs_collision_count % 1000 == 0:
-          logging.warning(
-              "Detected %d observation @id collisions so far across processed datasets.",
-              self.obs_collision_count)
-      else:
-        self.obs_hash_set.add(hash_int)
+  def track_observation_hash(self,
+                             obs_hash_or_chunk,
+                             entity: str = "",
+                             variable: str = "",
+                             date: str = "",
+                             provenance: str = "",
+                             file_name: str = "") -> None:
+    if isinstance(obs_hash_or_chunk, list):
+      chunk_items = obs_hash_or_chunk
+      file_key = os.path.basename(file_name) if file_name else "unknown"
+      with self.lock:
+        for obs_hash, ent, var, dt, prov in chunk_items:
+          hash_int = int(obs_hash[:16], 16)
+          if hash_int in self.obs_hash_set:
+            self.obs_collision_count += 1
+            self.file_collision_counts[file_key] += 1
+            sample_info = (
+                f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
+            )
+            if len(self.obs_sample_collisions) < 10:
+              self.obs_sample_collisions.append(sample_info)
+            if len(self.file_sample_collisions[file_key]) < 3:
+              self.file_sample_collisions[file_key].append(sample_info)
+              logging.warning(
+                  "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
+                  file_key, sample_info)
+            elif self.obs_collision_count % 1000 == 0:
+              logging.warning(
+                  "Detected %d observation @id collisions so far across processed datasets.",
+                  self.obs_collision_count)
+          else:
+            self.obs_hash_set.add(hash_int)
+    else:
+      self.track_observation_hash(
+          [(obs_hash_or_chunk, entity, variable, date, provenance)],
+          file_name=file_name)
 
   def _get_prov_urls(self) -> dict[str, str]:
     if hasattr(self, 'nodes') and self.nodes and hasattr(
@@ -385,7 +397,10 @@ class JsonLdStreamDb(Db):
       return self.nodes.get_provenance_urls()
     return {}
 
-  def _write_observations_df_to_disk(self, df: pd.DataFrame, import_name: str):
+  def _write_observations_df_to_disk(self,
+                                     df: pd.DataFrame,
+                                     import_name: str,
+                                     file_name: str = ""):
     import_temp_dir = os.path.join(self.temp_local_dir, import_name)
     prov_urls = self._get_prov_urls()
     n = len(df)
@@ -395,12 +410,13 @@ class JsonLdStreamDb(Db):
       with self.lock:
         shard_index = self.obs_shard_index
         self.obs_shard_index += 1
-      _write_observation_shard(chunk=chunk_records,
-                               shard_index=shard_index,
-                               jsonld_dir_path=import_temp_dir,
-                               ns_map=self.ns_map,
-                               prov_urls=prov_urls,
-                               track_hash_fn=self.track_observation_hash)
+      _write_observation_shard(chunk_records,
+                               shard_index,
+                               import_temp_dir,
+                               self.ns_map,
+                               prov_urls,
+                               track_hash_fn=self.track_observation_hash,
+                               file_name=file_name)
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
@@ -409,8 +425,11 @@ class JsonLdStreamDb(Db):
     validate_numeric_values(observations_df, input_file.path)
 
     import_name = self.config.import_name(input_file)
+    file_name = input_file.path if input_file else ""
     self._init_import_export_dir(import_name)
-    self._write_observations_df_to_disk(observations_df, import_name)
+    self._write_observations_df_to_disk(observations_df,
+                                        import_name,
+                                        file_name=file_name)
 
   def _init_import_export_dir(self, import_name: str):
     import_temp_dir = os.path.join(self.temp_local_dir, import_name)
@@ -443,38 +462,43 @@ class JsonLdStreamDb(Db):
             (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
         self.node_shard_index += 1
 
-  def insert_triples(self, triples: list[Triple], input_file: File = None):
+  def insert_triples(self,
+                     triples: list[Triple],
+                     input_file: File = None,
+                     provenance_dir: str = None):
     if not triples:
       return
 
-    if not input_file:
+    if not provenance_dir and input_file:
+      provenance_dir = self.config.import_name(input_file)
+
+    if not provenance_dir:
       with self.lock:
         self._triples["_global"].extend(triples)
       return
 
-    import_name = self.config.import_name(input_file)
-    self._init_import_export_dir(import_name)
-    self._write_triples_to_disk(triples, import_name)
+    self._init_import_export_dir(provenance_dir)
+    self._write_triples_to_disk(triples, provenance_dir)
 
   def commit(self):
     pass
 
   def commit_and_close(self):
-    # Add global triples to every processed import's triples
     global_triples = self._triples.pop("_global", [])
     if not self._processed_imports:
       self._processed_imports.add(self.import_name)
 
-    # Write global triples as node shards to the local temp directory for each import
-    for import_name in self._processed_imports:
-      import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+    # Write any remaining untagged triples once to the primary import directory (no duplication across provenances)
+    if global_triples:
+      target_import = self.import_name if self.import_name in self._processed_imports else next(
+          iter(self._processed_imports))
+      import_temp_dir = os.path.join(self.temp_local_dir, target_import)
       os.makedirs(import_temp_dir, exist_ok=True)
-      if global_triples:
-        for i in range(0, len(global_triples), _CHUNK_SIZE):
-          chunk = global_triples[i:i + _CHUNK_SIZE]
-          _write_node_shard(
-              (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-          self.node_shard_index += 1
+      for i in range(0, len(global_triples), _CHUNK_SIZE):
+        chunk = global_triples[i:i + _CHUNK_SIZE]
+        _write_node_shard(
+            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+        self.node_shard_index += 1
 
     has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
         self.temp_local_dir) else False
@@ -484,11 +508,14 @@ class JsonLdStreamDb(Db):
       self._upload_shards(self.temp_local_dir)
 
     if self.obs_collision_count > 0:
-      sample_str = "\n  - ".join(self.obs_sample_collisions)
-      logging.warning(
-          "Observation @ID Collision Summary: Total of %d observation @id collisions detected during export.\n"
-          "Sample colliding @IDs and metadata:\n  - %s",
-          self.obs_collision_count, sample_str)
+      summary_lines = [
+          f"Observation @ID Collision Summary: Total of {self.obs_collision_count} observation @id collisions detected across {len(self.file_collision_counts)} file(s):"
+      ]
+      for f_name, count in self.file_collision_counts.items():
+        summary_lines.append(f"  File '{f_name}': {count} collision(s)")
+        for sample in self.file_sample_collisions[f_name]:
+          summary_lines.append(f"    - {sample}")
+      logging.warning("\n".join(summary_lines))
 
     # Clean up local temporary directory
     try:
@@ -541,11 +568,20 @@ class JsonLdStreamDb(Db):
 
     bucket = client.bucket(bucket_name)
 
+    gcs_retry = Retry(
+        initial=1.0,
+        maximum=10.0,
+        multiplier=2.0,
+        deadline=120.0,
+        predicate=lambda e: isinstance(e,
+                                       (TooManyRequests, GoogleAPICallError,
+                                        requests.exceptions.RequestException)))
+
     def _upload_single(rel_path: str):
       local_file_path = os.path.join(temp_local_dir, rel_path)
       blob_key = f"{blob_prefix}/{rel_path}" if blob_prefix else rel_path
       blob = bucket.blob(blob_key)
-      blob.upload_from_filename(local_file_path)
+      blob.upload_from_filename(local_file_path, retry=gcs_retry)
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=_UPLOAD_CONCURRENCY) as executor:
@@ -557,7 +593,10 @@ class JsonLdStreamDb(Db):
 
     parent_dirs = set(os.path.dirname(f) for f in files if os.path.dirname(f))
     for d in sorted(parent_dirs):
-      target_store.open_dir(d)
+      try:
+        target_store.open_dir(d)
+      except Exception:
+        pass
 
     def _copy_single(rel_path: str):
       local_file_path = os.path.join(temp_local_dir, rel_path)

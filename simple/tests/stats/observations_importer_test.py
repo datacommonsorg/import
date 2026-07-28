@@ -17,6 +17,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -105,3 +106,43 @@ class TestObservationsImporter(unittest.TestCase):
 
   def test_obs_props(self):
     _test_import(self, "obs_props")
+
+  def test_custom_namespace_pre_resolution(self):
+    config = Config({
+        "inputFiles": [{
+            "pattern": "data.csv",
+            "provenance": "undata:provenance/WHO"
+        }]
+    })
+    nodes = Nodes(config)
+    mock_input_file = MagicMock()
+    mock_input_file.path = "data.csv"
+    importer = ObservationsImporter(
+        input_file=mock_input_file,
+        db=MagicMock(),
+        debug_resolve_file=MagicMock(),
+        reporter=MagicMock(),
+        nodes=nodes,
+    )
+    importer.entity_type = "State"
+    importer.entity_column_name = "entity"
+    importer.df = pd.DataFrame(
+        {"dcid": ["undata:place/custom_1", "dcid:geoId/06", "California"]})
+    with mock.patch.object(
+        dc_client,
+        "resolve_entities",
+        return_value={"California": "geoId/06"},
+    ) as mock_resolve, mock.patch.object(dc_client,
+                                         "get_property_of_entities",
+                                         return_value={}):
+      importer._resolve_entities()
+
+      mock_resolve.assert_called_once_with(
+          entities=["California"],
+          entity_type="State",
+          property_name="description",
+      )
+      self.assertEqual(
+          importer.df["dcid"].tolist(),
+          ["place/custom_1", "geoId/06", "geoId/06"],
+      )

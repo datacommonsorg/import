@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class V2NodeResponse {
   public Map<String, NodeData> data;
+  public String nextToken;
 
   public static class NodeData {
     public Map<String, ArcData> arcs;

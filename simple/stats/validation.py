@@ -15,8 +15,10 @@
 import logging
 
 from stats.config import Config
+from stats.data import strip_namespace
 from stats.data import ValidationErrorType
 from stats.db import Db
+from stats.util import has_namespace_prefix
 from stats.util import is_uri_or_namespace
 
 
@@ -83,9 +85,16 @@ class MetadataValidator:
     return referenced
 
   def _collect_defined_nodes(self) -> tuple[set[str], dict[str, str]]:
-    """Gathers all defined Provenances and their links from the DB triples."""
+    """Gathers all defined Provenances and their links from Nodes and DB triples."""
     defined_provenances = set()
     provenance_to_source = {}
+
+    if hasattr(self.db, "nodes") and self.db.nodes:
+      for prov_id, prov in self.db.nodes.provenances.items():
+        clean_prov_id = self._clean_dcid(prov.id)
+        defined_provenances.add(clean_prov_id)
+        if prov.source_id:
+          provenance_to_source[clean_prov_id] = self._clean_dcid(prov.source_id)
 
     all_triples = []
     db_triples = getattr(self.db, "_triples", {})
@@ -95,7 +104,7 @@ class MetadataValidator:
 
     for triple in all_triples:
       sub = self._clean_dcid(triple.subject_id)
-      pred = triple.predicate
+      pred = strip_namespace(triple.predicate)
 
       if pred == "typeOf":
         obj = triple.object_id or ""
@@ -103,7 +112,7 @@ class MetadataValidator:
           defined_provenances.add(sub)
 
       elif pred == "source":
-        obj = triple.object_id or ""
+        obj = triple.object_id or triple.object_value or ""
         if obj:
           provenance_to_source[sub] = self._clean_dcid(obj)
 
@@ -144,11 +153,9 @@ class MetadataValidator:
       raise ex
 
   def _clean_dcid(self, val: str) -> str:
-    """Normalizes a DCID value by ensuring it starts with 'dcid:' and has no prefix namespaces."""
-    if val.startswith(("http://", "https://")):
+    """Normalizes a DCID value by ensuring it starts with a namespace prefix."""
+    if not val:
+      return ""
+    if has_namespace_prefix(val):
       return val
-    if val.startswith("dcid:"):
-      return val
-    if ":" in val:
-      return f"dcid:{val.split(':', 1)[1]}"
     return f"dcid:{val}"
