@@ -33,6 +33,14 @@ public class GraphIngestionPipeline {
   private static final Logger LOGGER = LoggerFactory.getLogger(GraphIngestionPipeline.class);
   private static final Counter nodeInvalidTypeCounter =
       Metrics.counter(GraphIngestionPipeline.class, "mcf_nodes_without_type");
+  private static final Counter nodeCounter =
+      Metrics.counter(GraphIngestionPipeline.class, "graph_node_count");
+  private static final Counter edgeCounter =
+      Metrics.counter(GraphIngestionPipeline.class, "graph_edge_count");
+  private static final Counter obsCounter =
+      Metrics.counter(GraphIngestionPipeline.class, "graph_observation_count");
+  private static final Counter timeSeriesCounter =
+      Metrics.counter(GraphIngestionPipeline.class, "graph_timeseries_count");
 
   // List of imports that require node combination.
   private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place", "Provenance");
@@ -129,18 +137,6 @@ public class GraphIngestionPipeline {
     boolean isBaseDc = options.getIsBaseDc();
     String provenance = ProvenanceUtils.getProvenanceDcid(importName, isBaseDc);
 
-    String shortName =
-        importName.contains(":")
-            ? importName.substring(importName.lastIndexOf(':') + 1)
-            : importName;
-
-    Counter nodeCounter = Metrics.counter(GraphIngestionPipeline.class, "node_count:" + shortName);
-    Counter edgeCounter = Metrics.counter(GraphIngestionPipeline.class, "edge_count:" + shortName);
-    Counter obsCounter =
-        Metrics.counter(GraphIngestionPipeline.class, "observation_count:" + shortName);
-    Counter timeSeriesCounter =
-        Metrics.counter(GraphIngestionPipeline.class, "timeseries_count:" + shortName);
-
     // 1. Prepare Deletes:
     // Generate mutations to delete existing data for this import/provenance.
     // Create a dummy signal if deletes are skipped, so downstream dependencies are satisfied
@@ -166,8 +162,7 @@ public class GraphIngestionPipeline {
     PipelineUtils.InputFormat format = PipelineUtils.resolveFormat(graphPath);
     if (format == PipelineUtils.InputFormat.TFRECORD) {
       TfRecordProcessingResult result =
-          processTfRecordImport(
-              pipeline, importName, graphPath, isBaseDc, obsCounter, timeSeriesCounter);
+          processTfRecordImport(pipeline, importName, graphPath, isBaseDc);
       writeToSpanner(
           pipeline,
           spannerClient,
@@ -331,12 +326,7 @@ public class GraphIngestionPipeline {
   }
 
   private static TfRecordProcessingResult processTfRecordImport(
-      Pipeline pipeline,
-      String importName,
-      String graphPath,
-      boolean isBaseDc,
-      Counter obsCounter,
-      Counter timeSeriesCounter) {
+      Pipeline pipeline, String importName, String graphPath, boolean isBaseDc) {
     PCollection<McfOptimizedGraph> optGraph =
         PipelineUtils.readOptimizedMcfGraph(importName, graphPath, pipeline);
     PCollection<TimeSeries> uniqueSeries =
