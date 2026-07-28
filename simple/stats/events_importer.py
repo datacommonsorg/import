@@ -254,11 +254,9 @@ class EventsImporter(Importer):
     self.df = self.resolve_specified_columns(self.df)
 
     prov_id = getattr(self, "provenance", "")
-    entity_col = (
-        constants.COLUMN_DCID
-        if constants.COLUMN_DCID in self.df.columns
-        else getattr(self, "entity_column_name", None)
-    )
+    entity_col = (constants.COLUMN_DCID
+                  if constants.COLUMN_DCID in self.df.columns else getattr(
+                      self, "entity_column_name", None))
     if entity_col and entity_col in self.df.columns:
       for dcid in self.df[entity_col].dropna().unique():
         clean_dcid = strip_namespace(dcid)
