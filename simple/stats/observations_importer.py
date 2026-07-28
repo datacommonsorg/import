@@ -113,9 +113,10 @@ class ObservationsImporter(Importer):
           renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
           first_chunk = False
 
-        chunk_df = chunk_df.rename(columns=renamed)
         self.df = chunk_df
         self._resolve_entities()
+        chunk_df = self.df.rename(columns=renamed)
+        self.df = chunk_df
         if self.debug_resolve_df is not None:
           debug_dfs.append(self.debug_resolve_df)
           self.debug_resolve_df = None

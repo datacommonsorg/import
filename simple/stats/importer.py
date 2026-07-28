@@ -103,18 +103,7 @@ class Importer:
     for col_name in cols_to_resolve:
       target_col = col_name
       if target_col not in df.columns:
-        entity_cols = [
-            col for col in (
-                constants.COLUMN_DCID,
-                constants.COLUMN_ENTITY,
-                "dcid:observationAbout",
-            ) if col in df.columns
-        ]
-        if (getattr(self, "entity_column_name", None) == col_name and
-            entity_cols):
-          target_col = entity_cols[0]
-        else:
-          continue
+        continue
 
       column = df[target_col]
       pre_resolved_entities = {}

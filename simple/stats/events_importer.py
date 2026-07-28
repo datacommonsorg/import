@@ -72,8 +72,8 @@ class EventsImporter(Importer):
       self._read_csv()
       self._drop_ignored_columns()
       self._sanitize_values()
-      self._rename_columns()
       self._resolve_entities()
+      self._rename_columns()
 
       self.check_and_report_unresolved_entities(self.all_unresolved_entities)
 
@@ -254,8 +254,13 @@ class EventsImporter(Importer):
     self.df = self.resolve_specified_columns(self.df)
 
     prov_id = getattr(self, "provenance", "")
-    if constants.COLUMN_DCID in self.df.columns:
-      for dcid in self.df[constants.COLUMN_DCID].dropna().unique():
+    entity_col = (
+        constants.COLUMN_DCID
+        if constants.COLUMN_DCID in self.df.columns
+        else getattr(self, "entity_column_name", None)
+    )
+    if entity_col and entity_col in self.df.columns:
+      for dcid in self.df[entity_col].dropna().unique():
         clean_dcid = strip_namespace(dcid)
         if self.nodes.has_entity(clean_dcid):
           if prov_id:
