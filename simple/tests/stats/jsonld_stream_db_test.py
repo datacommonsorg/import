@@ -88,8 +88,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
         triples = [Triple("sub1", "pred1", object_value="val1")]
         db.insert_triples(triples, mock_file)
         node_shard = self._find_shard(
-            os.path.join(db.temp_local_dir, "test_import"), "node-00000"
-        )
+            os.path.join(db.temp_local_dir, "test_import"), "node-00000")
         self.assertIsNotNone(node_shard)
       finally:
         db._temp_dir_obj.cleanup()
@@ -116,11 +115,9 @@ class TestJsonLdStreamDb(unittest.TestCase):
         db.insert_triples(triples, mock_file)
 
         shard0 = self._find_shard(
-            os.path.join(db.temp_local_dir, "test_import"), "node-00000"
-        )
+            os.path.join(db.temp_local_dir, "test_import"), "node-00000")
         shard1 = self._find_shard(
-            os.path.join(db.temp_local_dir, "test_import"), "node-00001"
-        )
+            os.path.join(db.temp_local_dir, "test_import"), "node-00001")
 
         self.assertIsNotNone(shard0)
         self.assertIsNotNone(shard1)
@@ -174,8 +171,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
       obs_shard = os.path.join(target_dir_path, "test_import",
                                "observation-test_import_data-00000.jsonld")
       node_shard = self._find_shard(
-          os.path.join(target_dir_path, "test_import"), "node-00000"
-      )
+          os.path.join(target_dir_path, "test_import"), "node-00000")
 
       self.assertTrue(os.path.exists(obs_shard))
       self.assertIsNotNone(node_shard)
@@ -414,8 +410,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
         db.insert_triples(triples, mock_file)
 
         node_shard = self._find_shard(
-            os.path.join(db.temp_local_dir, "test_import"), "node-00000"
-        )
+            os.path.join(db.temp_local_dir, "test_import"), "node-00000")
         self.assertIsNotNone(node_shard)
 
         with open(node_shard, "r") as f:
