@@ -1,0 +1,8 @@
+subject_id,predicate,object_id,object_value
+source/UnitedNationsStatisticsDivision,typeOf,Source,
+source/UnitedNationsStatisticsDivision,name,,United Nations Statistics Division
+source/UnitedNationsStatisticsDivision,url,,https://unstats.un.org
+provenance/GlobalSustainableDevelopmentGoalsDatabase,typeOf,Provenance,
+provenance/GlobalSustainableDevelopmentGoalsDatabase,name,,Global Sustainable Development Goals Database
+provenance/GlobalSustainableDevelopmentGoalsDatabase,source,source/UnitedNationsStatisticsDivision,
+provenance/GlobalSustainableDevelopmentGoalsDatabase,url,,https://unstats.un.org/sdgs/dataportal

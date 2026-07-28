@@ -1,0 +1,7 @@
+{
+  "inputFiles": {
+    "input.csv": {
+      "entityType": "Dummy"
+    }
+  }
+}
