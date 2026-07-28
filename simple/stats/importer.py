@@ -153,10 +153,10 @@ class Importer:
             property_name=property_name,
         )
 
-      column = column.map(lambda x: dcids.get(x, x))
       unresolved = set(entities).difference(set(dcids.keys()))
       unresolved_list = sorted(list(unresolved))
-      column = column.map(lambda x: pre_resolved_entities.get(x, x))
+      column = column.map(
+          lambda x: dcids.get(x, pre_resolved_entities.get(x, x)))
       df[target_col] = column
 
       if unresolved_list:

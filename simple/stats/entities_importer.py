@@ -136,20 +136,16 @@ class EntitiesImporter(Importer):
     self.df = self.df.convert_dtypes()
 
   def _is_entity_reference_column(self, col: str) -> bool:
-    if col in self.entity_columns:
-      return True
-    mappings = self.get_column_mappings()
-    for prop, header in mappings.items():
-      if (strip_namespace(prop) == strip_namespace(col) and
-          header in self.entity_columns):
-        return True
-    return False
+    return col in self.entity_columns
 
   def _rename_columns(self) -> None:
     renamed = {}
     for col in self.df.columns:
-      renamed[col] = self.reverse_mappings.get(col,
-                                               self.nodes.property(col).dcid)
+      id = self.reverse_mappings.get(col, self.nodes.property(col).dcid)
+      renamed[col] = id
+      if col in self.entity_columns:
+        self.entity_columns.remove(col)
+        self.entity_columns.add(id)
     self.df = self.df.rename(columns=renamed)
 
   def _write_row_entity_triples(self) -> None:

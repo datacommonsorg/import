@@ -231,8 +231,12 @@ class EventsImporter(Importer):
       properties: dict[str, str] = {}
 
       for k, v in row.items():
-        if (k in (constants.COLUMN_DCID, constants.COLUMN_DATE) or pd.isna(v) or
-            str(v) in ("<NA>", "nan", "")):
+        if (k in (
+            constants.COLUMN_DCID,
+            constants.COLUMN_DATE,
+            self.id_column,
+            id_column_name,
+        ) or pd.isna(v) or str(v) in ("<NA>", "nan", "")):
           continue
         properties[k] = v
 
