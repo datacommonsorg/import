@@ -201,10 +201,8 @@ class File(_StoreWrapper):
     super().__init__(store, path)
     if not self.fs().exists(self.path):
       if create_if_missing:
-        # Make parent dir if needed.
         parent_dir_path = fspath.dirname(path)
-        if not self.fs().isdir(parent_dir_path):
-          self.fs().makedirs(parent_dir_path)
+        self.fs().makedirs(parent_dir_path, recreate=True)
         # Make empty file.
         self.fs().touch(path)
       else:
@@ -232,10 +230,7 @@ class File(_StoreWrapper):
     return io.StringIO(self.read())
 
   def open_stream(self, max_retries: int = 3):
-    """Returns an open text stream for streaming line-by-line without downloading full contents upfront.
-
-    Includes retries for transient network drops.
-    """
+    """Returns an open text stream for streaming line-by-line with retries for transient network drops."""
     for attempt in range(max_retries):
       try:
         return self.fs().open(self.path, "r")

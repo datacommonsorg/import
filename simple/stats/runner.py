@@ -177,6 +177,7 @@ class ImportProcResult:
   provenances: dict
   groups: dict
   properties: dict
+  processed_imports: set
 
 
 def _run_single_csv_import_proc(
@@ -219,7 +220,8 @@ def _run_single_csv_import_proc(
     db.commit_and_close()
 
     resolved_entities = {
-        e.entity_dcid: e.entity_type for e in nodes.entities.values()
+        e.entity_dcid: (e.entity_type, getattr(e, "provenance_ids", set()))
+        for e in nodes.entities.values()
     }
     event_types = dict(nodes.event_types)
     entity_types = dict(nodes.entity_types)
@@ -241,6 +243,7 @@ def _run_single_csv_import_proc(
         provenances=provenances,
         groups=groups,
         properties=properties,
+        processed_imports=set(db._processed_imports),
     )
 
 
@@ -1038,7 +1041,16 @@ class Runner:
               res = future.result()
               self._log_file_progress("Imported file", res.file_rel_path)
               if res.resolved_entities:
-                self.nodes.entities_with_types(res.resolved_entities)
+                for dcid, val in res.resolved_entities.items():
+                  if isinstance(val, tuple):
+                    t, p_ids = val
+                  else:
+                    t, p_ids = val, set()
+                  if isinstance(p_ids, set):
+                    for p_id in (p_ids or [""]):
+                      self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
+                  else:
+                    self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
               if res.event_types:
                 self.nodes.event_types.update(res.event_types)
               if res.entity_types:
@@ -1049,7 +1061,9 @@ class Runner:
                 for src in res.sources.values():
                   self.nodes.register_source(id=src.id,
                                              name=src.name,
-                                             url=src.url)
+                                             url=src.url,
+                                             provenance_id=getattr(
+                                                 src, "provenance_id", ""))
               if res.provenances:
                 for prov in res.provenances.values():
                   self.nodes.register_provenance(id=prov.id,
@@ -1062,7 +1076,14 @@ class Runner:
                 for svg in res.groups.values():
                   self.nodes.ids_to_groups[svg.id] = svg
               if res.properties:
-                self.nodes.properties.update(res.properties)
+                for prop_name, prop_obj in res.properties.items():
+                  if prop_name not in self.nodes.properties:
+                    self.nodes.properties[prop_name] = prop_obj
+                  else:
+                    self.nodes.properties[prop_name].provenance_ids.update(
+                        getattr(prop_obj, "provenance_ids", set()))
+              if res.processed_imports:
+                self.db._processed_imports.update(res.processed_imports)
               if res.obs_collision_count and hasattr(self.db,
                                                      "obs_collision_count"):
                 self.db.obs_collision_count += res.obs_collision_count
@@ -1128,9 +1149,12 @@ class Runner:
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
 
-    # Generate triples from nodes and write directly
-    triples = self.nodes.triples()
-    self.db.insert_triples(triples)
+    # Generate triples from nodes grouped by provenance directory and write directly
+    for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
+      if prov_dir == "_global":
+        self.db.insert_triples(triples)
+      else:
+        self.db.insert_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.db).validate()
@@ -1139,12 +1163,12 @@ class Runner:
     output_path = self.db.jsonld_dir.full_path()
     import_name = self.db.import_name
     if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      processed_imports = list(self.db._processed_imports)
+      processed_imports = sorted(list(self.db._processed_imports))
       if not processed_imports:
         processed_imports = [import_name]
       import_list = []
       for imp in processed_imports:
-        gcs_pattern = f"{output_path.rstrip('/')}/{imp}/*.jsonld"
+        gcs_pattern = f"{output_path.rstrip('/')}/{imp}/**/*.jsonld"
         import_list.append({"importName": imp, "graphPath": gcs_pattern})
       self.trigger_workflow_info = import_list
     else:

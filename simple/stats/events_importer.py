@@ -20,6 +20,7 @@ from stats import constants
 from stats.data import AggregationConfig
 from stats.data import Event
 from stats.data import filter_invalid_observation_values
+from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.data import TimePeriod
 from stats.data import Triple
@@ -27,6 +28,8 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
+from stats.util import get_namespace_prefix_and_suffix
+from stats.util import has_namespace_prefix
 from util.filesystem import File
 
 from util import dc_client as dc
@@ -237,9 +240,9 @@ class EventsImporter(Importer):
     pre_resolved_entities = {}
 
     def remove_pre_resolved(entity: str) -> bool:
-      if entity.startswith(constants.DCID_OVERRIDE_PREFIX):
-        pre_resolved_entities[entity] = entity[
-            len(constants.DCID_OVERRIDE_PREFIX):].strip()
+      if has_namespace_prefix(entity):
+        prefix, suffix = get_namespace_prefix_and_suffix(entity)
+        pre_resolved_entities[entity] = suffix.strip()
         return False
       return True
 
@@ -276,6 +279,19 @@ class EventsImporter(Importer):
         pre_resolved=pre_resolved_entities,
         unresolved=unresolved_list,
     )
+
+    prov_id = getattr(self, "provenance", "")
+    for dcid in df[constants.COLUMN_DCID].dropna().unique():
+      clean_dcid = strip_namespace(dcid)
+      if self.nodes.has_entity(clean_dcid):
+        if prov_id:
+          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
+      elif prov_id:
+        self.nodes.entity_with_type(
+            clean_dcid,
+            self.entity_type or "Thing",
+            provenance_id=prov_id,
+        )
 
   def _resolve(self, entities: list[str]) -> dict[str, str]:
     lower_case_entity_name = self.entity_column_name.lower()

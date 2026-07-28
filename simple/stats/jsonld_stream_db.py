@@ -102,21 +102,13 @@ def _parse_numeric(val):
     return str(val)
 
 
-def _write_observation_shard(chunk_or_args,
+def _write_observation_shard(chunk,
                              shard_index: Optional[int] = None,
                              jsonld_dir_path: Optional[str] = None,
                              ns_map: Optional[dict[str, str]] = None,
                              prov_urls: Optional[dict[str, str]] = None,
                              track_hash_fn: Optional[Callable] = None,
                              file_name: str = ""):
-  if isinstance(chunk_or_args, tuple):
-    chunk = chunk_or_args[0]
-    shard_index = chunk_or_args[1]
-    jsonld_dir_path = chunk_or_args[2]
-    ns_map = chunk_or_args[3]
-    prov_urls = chunk_or_args[4]
-  else:
-    chunk = chunk_or_args
 
   graph_list = []
   chunk_hashes = []
@@ -207,6 +199,9 @@ def _write_observation_shard(chunk_or_args,
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
+# TODO(gmechali): When parallelizing node shard exports (MCF and Events CSV files),
+# include the sanitized file_name in the shard name (e.g., node-{sanitized_stem}-{shard_index:05d}.jsonld)
+# to prevent shard filename collisions across parallel workers, similar to observation shards.
 def _write_node_shard(args):
   # TODO(gmechali): Get rid of this and keep only the "fast" mode.
   fast_export = os.getenv("FAST_NODE_EXPORT",
@@ -268,6 +263,8 @@ def _write_node_shard_fast(args):
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
+  # TODO(gmechali): When parallelizing node shard exports, include file_name in shard_name
+  # (e.g., f"node-{sanitized_stem}-{shard_index:05d}.jsonld") to prevent collisions across workers.
   shard_name = f"node-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
@@ -465,38 +462,43 @@ class JsonLdStreamDb(Db):
             (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
         self.node_shard_index += 1
 
-  def insert_triples(self, triples: list[Triple], input_file: File = None):
+  def insert_triples(self,
+                     triples: list[Triple],
+                     input_file: File = None,
+                     provenance_dir: str = None):
     if not triples:
       return
 
-    if not input_file:
+    if not provenance_dir and input_file:
+      provenance_dir = self.config.import_name(input_file)
+
+    if not provenance_dir:
       with self.lock:
         self._triples["_global"].extend(triples)
       return
 
-    import_name = self.config.import_name(input_file)
-    self._init_import_export_dir(import_name)
-    self._write_triples_to_disk(triples, import_name)
+    self._init_import_export_dir(provenance_dir)
+    self._write_triples_to_disk(triples, provenance_dir)
 
   def commit(self):
     pass
 
   def commit_and_close(self):
-    # Add global triples to every processed import's triples
     global_triples = self._triples.pop("_global", [])
     if not self._processed_imports:
       self._processed_imports.add(self.import_name)
 
-    # Write global triples as node shards to the local temp directory for each import
-    for import_name in self._processed_imports:
-      import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+    # Write any remaining untagged triples once to the primary import directory (no duplication across provenances)
+    if global_triples:
+      target_import = self.import_name if self.import_name in self._processed_imports else next(
+          iter(self._processed_imports))
+      import_temp_dir = os.path.join(self.temp_local_dir, target_import)
       os.makedirs(import_temp_dir, exist_ok=True)
-      if global_triples:
-        for i in range(0, len(global_triples), _CHUNK_SIZE):
-          chunk = global_triples[i:i + _CHUNK_SIZE]
-          _write_node_shard(
-              (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-          self.node_shard_index += 1
+      for i in range(0, len(global_triples), _CHUNK_SIZE):
+        chunk = global_triples[i:i + _CHUNK_SIZE]
+        _write_node_shard(
+            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+        self.node_shard_index += 1
 
     has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
         self.temp_local_dir) else False
@@ -591,7 +593,10 @@ class JsonLdStreamDb(Db):
 
     parent_dirs = set(os.path.dirname(f) for f in files if os.path.dirname(f))
     for d in sorted(parent_dirs):
-      target_store.open_dir(d)
+      try:
+        target_store.open_dir(d)
+      except Exception:
+        pass
 
     def _copy_single(rel_path: str):
       local_file_path = os.path.join(temp_local_dir, rel_path)
