@@ -31,14 +31,14 @@
       "importType": "entities",
       "rowEntityType": "Author",
       "idColumn": "author_id",
-      "entityColumns": ["author_country"],
+      "columnsToResolve": ["author_country"],
       "provenance": "Provenance1 Name"
     },
     "article_entities.csv": {
       "importType": "entities",
       "rowEntityType": "Article",
       "idColumn": "article_id",
-      "entityColumns": ["article_author"],
+      "columnsToResolve": ["article_author"],
       "provenance": "Provenance1 Name"
     }
   },

@@ -3,7 +3,7 @@
     {
       "pattern": "input*",
       "provenance": "dcid:provenance/CustomImport",
-      "entityColumns": [
+      "columnsToResolve": [
         "GEOGRAPHY",
         "SOURCE_COUNTRY"
       ],

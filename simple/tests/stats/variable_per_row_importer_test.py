@@ -142,7 +142,7 @@ class TestVariablePerRowImporter(unittest.TestCase):
       csv_path = os.path.join(temp_dir, "data.csv")
       with open(config_path, "w") as f:
         f.write(
-            '{"inputFiles": [{"pattern": "data.csv", "format": "variablePerRow", "entityType": "Country", "entityColumns": ["entity"], "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable", "dcid:observationDate": "date", "dcid:value": "value"}}]}'
+            '{"inputFiles": [{"pattern": "data.csv", "format": "variablePerRow", "entityType": "Country", "columnsToResolve": ["entity"], "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable", "dcid:observationDate": "date", "dcid:value": "value"}}]}'
         )
       with open(csv_path, "w") as f:
         f.write(

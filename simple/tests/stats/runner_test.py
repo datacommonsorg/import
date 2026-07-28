@@ -293,14 +293,14 @@ class TestRunner(unittest.TestCase):
               "importType": "entities",
               "rowEntityType": "Author",
               "idColumn": "author_id",
-              "entityColumns": ["author_country"],
+              "columnsToResolve": ["author_country"],
               "provenance": "dcid:Provenance1"
           }, {
               "pattern": "article_entities.csv",
               "importType": "entities",
               "rowEntityType": "Article",
               "idColumn": "article_id",
-              "entityColumns": ["article_author"],
+              "columnsToResolve": ["article_author"],
               "provenance": "dcid:Provenance1"
           }, {
               "pattern": "*.mcf",

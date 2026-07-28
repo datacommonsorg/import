@@ -355,7 +355,7 @@ class TestConfig(unittest.TestCase):
     config = Config(
         {"inputFiles": {
             "foo.csv": {
-                "entityColumns": ["foo", "bar"]
+                "columnsToResolve": ["foo", "bar"]
             }
         }})
     self.assertListEqual(config.entity_columns(self.make_file("foo.csv")),

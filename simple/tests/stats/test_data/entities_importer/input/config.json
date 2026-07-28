@@ -12,7 +12,7 @@
     "with_entity_columns.csv": {
       "rowEntityType": "CrimeCase",
       "idColumn": "CASE",
-      "entityColumns": ["OFFICERS", "DEPARTMENT"],
+      "columnsToResolve": ["OFFICERS", "DEPARTMENT"],
       "provenance": "Test Provenance"
     }
   },

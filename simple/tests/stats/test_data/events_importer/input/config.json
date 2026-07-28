@@ -7,7 +7,7 @@
       "computedVariables": [
         "Count_CrimeEvent"
       ],
-      "entityColumns": [
+      "columnsToResolve": [
         "countryAlpha3Code"
       ],
       "columnMappings": {
@@ -23,7 +23,7 @@
       "computedVariables": [
         "Crime Event2 Count"
       ],
-      "entityColumns": [
+      "columnsToResolve": [
         "countryAlpha3Code"
       ],
       "columnMappings": {
