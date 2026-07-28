@@ -368,6 +368,9 @@ class SqlDb(Db):
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
+    if observations_df.empty:
+      return
+
     validate_numeric_values(observations_df, input_file.path)
 
     logging.info("Writing %s observations to [%s]", len(observations_df),

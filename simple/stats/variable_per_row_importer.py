@@ -29,6 +29,7 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
+from stats.util import has_namespace_prefix
 from util.filesystem import File
 
 from util import dc_client as dc
@@ -118,9 +119,11 @@ class VariablePerRowImporter(Importer):
     self.custom_dimensions = []
     self.column_mappings = {}
     self.df = pd.DataFrame()
+    self.entity_columns = set(self.config.entity_columns(self.input_file))
     # Unique entity IDs seen in this CSV.
     # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
     self.entity_dcids: dict[str, bool] = {}
+    self.all_unresolved_entities: set[str] = set()
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -132,6 +135,7 @@ class VariablePerRowImporter(Importer):
       self._map_columns()
       self._write_observations()
       self._add_entity_nodes()
+      self.check_and_report_unresolved_entities(self.all_unresolved_entities)
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
@@ -198,7 +202,7 @@ class VariablePerRowImporter(Importer):
       raise ValueError(errors[0]["errorMessage"])
 
   def _parse_column_mappings(self) -> tuple[dict[str, str], list[str]]:
-    config_mappings = self.config.column_mappings(self.input_file)
+    config_mappings = self.get_column_mappings()
 
     if not config_mappings:
       # TODO: Remove this default fallback and require explicit columnMappings in config.json.
@@ -275,8 +279,8 @@ class VariablePerRowImporter(Importer):
       for chunk_df in reader:
         if chunk_df.empty:
           continue
-        observations_df = (self._apply_column_mappings(chunk_df).pipe(
-            self._track_entity_dcids).pipe(
+        observations_df = (self.resolve_specified_columns(chunk_df).pipe(
+            self._apply_column_mappings).pipe(self._track_entity_dcids).pipe(
                 _apply_property_defaults, obs_props).pipe(
                     self._serialize_custom_dimensions,
                     obs_props.properties).pipe(_format_numeric_values).pipe(
@@ -293,11 +297,17 @@ class VariablePerRowImporter(Importer):
 
   def _track_entity_dcids(self, df: pd.DataFrame) -> pd.DataFrame:
     """Track unique entity DCIDs seen in all entity dimension columns in this CSV."""
-    for col in self.custom_dimensions:
+    cols_to_check = list(self.custom_dimensions)
+    if constants.COLUMN_ENTITY in df.columns:
+      cols_to_check.append(constants.COLUMN_ENTITY)
+    for col in cols_to_check:
       if col in df.columns:
         valid_dcids = df[col].dropna().unique()
         for dcid in valid_dcids:
-          if dcid != "":
+          if dcid != "" and (col in self.entity_columns or
+                             self.column_mappings.get(col)
+                             in self.entity_columns or
+                             has_namespace_prefix(str(dcid))):
             self.entity_dcids[dcid] = True
     return df
 

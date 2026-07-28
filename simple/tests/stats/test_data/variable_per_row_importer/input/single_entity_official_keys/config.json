@@ -3,6 +3,7 @@
     {
       "pattern": "input*",
       "provenance": "dcid:provenance/CustomImport",
+      "columnsToResolve": ["GEOGRAPHY"],
       "columnMappings": {
         "dcid:observationAbout": "GEOGRAPHY",
         "dcid:variableMeasured": "SERIES",

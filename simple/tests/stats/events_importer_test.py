@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import json
 import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import MagicMock
 
+from stats import constants
 from stats.config import Config
 from stats.db import create_and_update_db
 from stats.db import create_sqlite_config
@@ -100,3 +103,46 @@ class TestEventsImporter(unittest.TestCase):
 
   def test_idcolumns(self):
     _test_import(self, "idcolumns")
+
+  def test_column_mappings_semantic(self):
+    config = Config(
+        data={
+            "inputFiles": {
+                "events.csv": {
+                    "eventType": "CrimeEvent",
+                    "entityType": "Country",
+                    "columnMappings": {
+                        "dcid:location": "My_Location",
+                        "dcid:observationDate": "My_Date",
+                        "dcid:IUCR": "My_IUCR",
+                    },
+                }
+            },
+            "sources": {
+                "S1": {
+                    "url": "http://s1",
+                    "provenances": {
+                        "P1": "http://p1"
+                    }
+                }
+            },
+        })
+    nodes = Nodes(config)
+    mock_input = MagicMock()
+    mock_input.path = "events.csv"
+    mock_input.full_path.return_value = "events.csv"
+    mock_input.read_string_io.return_value = io.StringIO(
+        "My_Date,My_Location,My_IUCR\n2023-01-01,country/USA,860\n")
+    importer = EventsImporter(
+        input_file=mock_input,
+        db=MagicMock(),
+        debug_resolve_file=MagicMock(),
+        reporter=MagicMock(),
+        nodes=nodes,
+    )
+    importer._read_csv()
+    importer._rename_columns()
+    self.assertEqual(
+        list(importer.df.columns),
+        [constants.COLUMN_DATE, constants.COLUMN_DCID, "IUCR"],
+    )

@@ -4,13 +4,21 @@
       "importType": "observations",
       "format": "variablePerColumn",
       "entityType": "Country",
-      "provenance": "Provenance1 Name"
+      "provenance": "Provenance1 Name",
+      "columnMappings": {
+        "dcid:observationAbout": "place",
+        "dcid:observationDate": "year"
+      }
     },
     "wikidataids.csv": {
       "importType": "observations",
       "format": "variablePerColumn",
       "entityType": "Country",
-      "provenance": "Provenance1 Name"
+      "provenance": "Provenance1 Name",
+      "columnMappings": {
+        "dcid:observationAbout": "wikidataid",
+        "dcid:observationDate": "year"
+      }
     },
     "variable_per_row.csv": {
       "importType": "observations",
@@ -22,14 +30,14 @@
       "importType": "entities",
       "rowEntityType": "Author",
       "idColumn": "author_id",
-      "entityColumns": ["author_country"],
+      "columnsToResolve": ["author_country"],
       "provenance": "Provenance1 Name"
     },
     "article_entities.csv": {
       "importType": "entities",
       "rowEntityType": "Article",
       "idColumn": "article_id",
-      "entityColumns": ["article_author"],
+      "columnsToResolve": ["article_author"],
       "provenance": "Provenance1 Name"
     }
   },

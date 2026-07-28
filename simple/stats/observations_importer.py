@@ -90,15 +90,22 @@ class ObservationsImporter(Importer):
                         errors="ignore",
                         inplace=True)
 
+        mappings = self.get_column_mappings()
+        entity_col = (mappings.get("dcid:observationAbout") or
+                      chunk_df.columns[0])
+        date_col = mappings.get("dcid:observationDate") or chunk_df.columns[1]
+
         chunk_df = chunk_df.convert_dtypes()
-        chunk_df = chunk_df.astype({chunk_df.columns[1]: str})
+        chunk_df = chunk_df.astype({date_col: str})
 
         if first_chunk:
-          self.entity_column_name = chunk_df.columns[0]
+          self.entity_column_name = entity_col
           logging.info("Entity column name: %s", self.entity_column_name)
-          renamed[chunk_df.columns[0]] = constants.COLUMN_DCID
-          renamed[chunk_df.columns[1]] = constants.COLUMN_DATE
-          sv_column_names = chunk_df.columns[2:]
+          renamed[entity_col] = constants.COLUMN_DCID
+          renamed[date_col] = constants.COLUMN_DATE
+          sv_column_names = [
+              c for c in chunk_df.columns if c != entity_col and c != date_col
+          ]
           sv_ids = [
               self.nodes.variable(sv_column_name, self.input_file).id
               for sv_column_name in sv_column_names
@@ -106,9 +113,10 @@ class ObservationsImporter(Importer):
           renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
           first_chunk = False
 
-        chunk_df = chunk_df.rename(columns=renamed)
         self.df = chunk_df
         self._resolve_entities()
+        chunk_df = self.df.rename(columns=renamed)
+        self.df = chunk_df
         if self.debug_resolve_df is not None:
           debug_dfs.append(self.debug_resolve_df)
           self.debug_resolve_df = None
@@ -179,50 +187,7 @@ class ObservationsImporter(Importer):
                                     provenance_id=prov_id)
 
   def _resolve_entities(self) -> None:
-    df = self.df
-    # get entity column
-    column = df[constants.COLUMN_DCID]
-
-    pre_resolved_entities = {}
-
-    def remove_pre_resolved(entity: str) -> bool:
-      if has_namespace_prefix(entity):
-        prefix, suffix = get_namespace_prefix_and_suffix(entity)
-        pre_resolved_entities[entity] = suffix.strip()
-        return False
-      return True
-
-    entities = list(filter(remove_pre_resolved, column.tolist()))
-
-    logging.info("Found %s entities pre-resolved.", len(pre_resolved_entities))
-
-    logging.info("Resolving %s entities of type %s.", len(entities),
-                 self.entity_type)
-    dcids = self._resolve(entities=entities)
-    logging.info("Resolved %s of %s entities.", len(dcids), len(entities))
-
-    # Replace resolved entities.
-    # NOTE: column.map performs much better than column.replace, hence using the former.
-    column = column.map(lambda x: dcids.get(x, x))
-    unresolved = set(entities).difference(set(dcids.keys()))
-    unresolved_list = sorted(list(unresolved))
-
-    # Replace pre-resolved entities without the "dcid:" prefix.
-    column = column.map(lambda x: pre_resolved_entities.get(x, x))
-
-    df[constants.COLUMN_DCID] = column
-    if unresolved_list:
-      self.all_unresolved_entities.update(unresolved_list)
-      logging.warning("# unresolved entities which will be dropped: %s",
-                      len(unresolved_list))
-      logging.warning("Dropped entities: %s", unresolved_list)
-      df.drop(df[df.iloc[:, 0].isin(values=unresolved_list)].index,
-              inplace=True)
-    self._create_debug_resolve_dataframe(
-        resolved=dcids,
-        pre_resolved=pre_resolved_entities,
-        unresolved=unresolved_list,
-    )
+    self.df = self.resolve_specified_columns(self.df)
 
   def _resolve(self, entities: list[str]) -> dict[str, str]:
     """Resolves entity strings to DCIDs, caching results across streaming chunks."""
@@ -285,11 +250,16 @@ class ObservationsImporter(Importer):
         links.append(f"{constants.DC_BROWSER}/{dcid}")
 
     # Create dataframe
-    self.debug_resolve_df = pd.DataFrame({
+    new_df = pd.DataFrame({
         constants.DEBUG_COLUMN_INPUT: inputs,
         constants.DEBUG_COLUMN_DCID: dcids,
         constants.DEBUG_COLUMN_LINK: links,
     })
+    if self.debug_resolve_df is None:
+      self.debug_resolve_df = new_df
+    else:
+      self.debug_resolve_df = pd.concat([self.debug_resolve_df, new_df],
+                                        ignore_index=True).drop_duplicates()
 
   def _write_debug_csvs(self) -> None:
     if self.debug_resolve_df is not None:

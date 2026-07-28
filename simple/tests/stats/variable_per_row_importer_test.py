@@ -127,3 +127,37 @@ class TestVariablePerRowImporter(unittest.TestCase):
 
   def test_multi_entity_with_primary(self):
     _test_import(self, "multi_entity_with_primary")
+
+  def test_unresolved_entity_raises_error(self):
+    from unittest import mock
+
+    from stats.db import create_and_update_db
+    from stats.db import create_sqlite_config
+    from stats.importer import EntityResolutionError
+    from util.filesystem import create_store
+
+    from util import dc_client as dc
+    with tempfile.TemporaryDirectory() as temp_dir:
+      config_path = os.path.join(temp_dir, "config.json")
+      csv_path = os.path.join(temp_dir, "data.csv")
+      with open(config_path, "w") as f:
+        f.write(
+            '{"inputFiles": [{"pattern": "data.csv", "format": "variablePerRow", "entityType": "Country", "columnsToResolve": ["entity"], "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable", "dcid:observationDate": "date", "dcid:value": "value"}}]}'
+        )
+      with open(csv_path, "w") as f:
+        f.write(
+            "entity,variable,date,value\nUnknownPlace123,Count_Person,2020,10\n"
+        )
+      with open(config_path) as config_file:
+        config = Config(json.load(config_file))
+      db_file = create_store(temp_dir).as_dir().open_file("test.db")
+      db = create_and_update_db(create_sqlite_config(db_file))
+      nodes = Nodes(config)
+      report_file = create_store(temp_dir).as_dir().open_file("report.json")
+      reporter = FileImportReporter(csv_path, ImportReporter(report_file))
+      importer = VariablePerRowImporter(
+          create_store(csv_path).as_file(), db, reporter, nodes)
+      with mock.patch.object(dc, "resolve_entities",
+                             return_value={}) as mock_resolve:
+        with self.assertRaises(EntityResolutionError):
+          importer.do_import()

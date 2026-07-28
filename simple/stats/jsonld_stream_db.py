@@ -27,6 +27,7 @@ import shutil
 import tempfile
 import threading
 from typing import Callable, Optional
+import uuid
 
 from google.api_core.exceptions import GoogleAPICallError
 from google.api_core.exceptions import TooManyRequests
@@ -264,8 +265,8 @@ def _write_node_shard_fast(args):
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
   # TODO(gmechali): When parallelizing node shard exports, include file_name in shard_name
-  # (e.g., f"node-{sanitized_stem}-{shard_index:05d}.jsonld") to prevent collisions across workers.
-  shard_name = f"node-{shard_index:05d}.jsonld"
+  unique_id = uuid.uuid4().hex[:12]
+  shard_name = f"node-{shard_index:05d}-{unique_id}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
     output_dir.open_file(shard_name).write(
@@ -401,7 +402,8 @@ class JsonLdStreamDb(Db):
                                      df: pd.DataFrame,
                                      import_name: str,
                                      file_name: str = ""):
-    import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+    dir_name = import_name.replace("/", "_")
+    import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
     prov_urls = self._get_prov_urls()
     n = len(df)
     for i in range(0, n, _CHUNK_SIZE):
@@ -432,7 +434,8 @@ class JsonLdStreamDb(Db):
                                         file_name=file_name)
 
   def _init_import_export_dir(self, import_name: str):
-    import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+    dir_name = import_name.replace("/", "_")
+    import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
     os.makedirs(import_temp_dir, exist_ok=True)
     with self.lock:
       self._processed_imports.add(import_name)
@@ -441,7 +444,8 @@ class JsonLdStreamDb(Db):
         self._node_streaming_started.add(import_name)
 
   def _write_triples_to_disk(self, triples: list[Triple], import_name: str):
-    import_temp_dir = os.path.join(self.temp_local_dir, import_name)
+    dir_name = import_name.replace("/", "_")
+    import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
     with self.lock:
       i = 0
       n = len(triples)
@@ -488,11 +492,11 @@ class JsonLdStreamDb(Db):
     if not self._processed_imports:
       self._processed_imports.add(self.import_name)
 
-    # Write any remaining untagged triples once to the primary import directory (no duplication across provenances)
     if global_triples:
       target_import = self.import_name if self.import_name in self._processed_imports else next(
           iter(self._processed_imports))
-      import_temp_dir = os.path.join(self.temp_local_dir, target_import)
+      dir_name = target_import.replace("/", "_")
+      import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
       os.makedirs(import_temp_dir, exist_ok=True)
       for i in range(0, len(global_triples), _CHUNK_SIZE):
         chunk = global_triples[i:i + _CHUNK_SIZE]

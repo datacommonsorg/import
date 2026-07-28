@@ -261,13 +261,21 @@ class TestRunner(unittest.TestCase):
               "importType": "observations",
               "format": "variablePerColumn",
               "entityType": "Country",
-              "provenance": "dcid:Provenance1"
+              "provenance": "dcid:Provenance1",
+              "columnMappings": {
+                  "dcid:observationAbout": "place",
+                  "dcid:observationDate": "year",
+              },
           }, {
               "pattern": "wikidataids.csv",
               "importType": "observations",
               "format": "variablePerColumn",
               "entityType": "Country",
-              "provenance": "dcid:Provenance1"
+              "provenance": "dcid:Provenance1",
+              "columnMappings": {
+                  "dcid:observationAbout": "wikidataid",
+                  "dcid:observationDate": "year",
+              },
           }, {
               "pattern": "variable_per_row.csv",
               "importType": "observations",
@@ -285,14 +293,14 @@ class TestRunner(unittest.TestCase):
               "importType": "entities",
               "rowEntityType": "Author",
               "idColumn": "author_id",
-              "entityColumns": ["author_country"],
+              "columnsToResolve": ["author_country"],
               "provenance": "dcid:Provenance1"
           }, {
               "pattern": "article_entities.csv",
               "importType": "entities",
               "rowEntityType": "Article",
               "idColumn": "article_id",
-              "entityColumns": ["article_author"],
+              "columnsToResolve": ["article_author"],
               "provenance": "dcid:Provenance1"
           }, {
               "pattern": "*.mcf",

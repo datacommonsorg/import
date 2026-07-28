@@ -25,6 +25,7 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
+from stats.util import has_namespace_prefix
 from util.filesystem import File
 
 
@@ -56,11 +57,9 @@ class EntitiesImporter(Importer):
     self.entity_columns = set(self.config.entity_columns(self.input_file))
 
     # Initialize reverse column mappings from config
-    column_mappings = self.config.column_mappings(self.input_file)
+    column_mappings = self.get_column_mappings()
     self.has_column_mappings = bool(column_mappings)
-    self.reverse_mappings = {
-        v: strip_namespace(k) for k, v in column_mappings.items()
-    }
+    self.reverse_mappings = self.get_reverse_column_mappings()
 
     self.df = pd.DataFrame()
 
@@ -136,24 +135,17 @@ class EntitiesImporter(Importer):
     # Convert to best possible dtypes (i.e. keep ints as ints even when some values are NaN)
     self.df = self.df.convert_dtypes()
 
+  def _is_entity_reference_column(self, col: str) -> bool:
+    return col in self.entity_columns
+
   def _rename_columns(self) -> None:
     renamed = {}
-
-    # Rename property columns to their IDs (using custom mappings if defined)
-    property_column_names = self.df.columns
-    property_ids = [
-        self.reverse_mappings.get(col,
-                                  self.nodes.property(col).dcid)
-        for col in property_column_names
-    ]
-
-    for col, id in zip(property_column_names, property_ids):
+    for col in self.df.columns:
+      id = self.reverse_mappings.get(col, self.nodes.property(col).dcid)
       renamed[col] = id
-      # If column is an entity reference, use the ID.
       if col in self.entity_columns:
         self.entity_columns.remove(col)
         self.entity_columns.add(id)
-
     self.df = self.df.rename(columns=renamed)
 
   def _write_row_entity_triples(self) -> None:
@@ -185,8 +177,8 @@ class EntitiesImporter(Importer):
       for i, (k, v) in enumerate(row.items()):
         if pd.isna(v):
           continue
-        if k in self.entity_columns:
-          v_str = str(v)
+        v_str = str(v)
+        if self._is_entity_reference_column(k) or has_namespace_prefix(v_str):
           if "," in v_str:
             ids = list(
                 map(lambda x: strip_namespace(x.strip()), v_str.split(",")))
