@@ -401,9 +401,6 @@ class SpannerClient:
         logging.info(
             f"Updating ImportVersionHistory table for workflow {workflow_id}")
 
-        m = metrics if metrics else {}
-        import_metrics = m.get('import_metrics', {})
-
         def _insert(transaction: Transaction):
             columns = [
                 "ImportName", "Version", "UpdateTimestamp",
@@ -411,24 +408,17 @@ class SpannerClient:
                 "NodeCount", "EdgeCount", "ObservationCount",
                 "TimeSeriesCount", "Comment"
             ]
+            m = metrics if metrics else {}
             version_history_values = []
             for import_json in import_list_json:
-                import_name = import_json.get('importName')
-                if not import_name:
-                    continue
-
-                short_name = import_name.split(':')[-1]
-                counts = import_metrics.get(short_name) or import_json
-
                 version_history_values.append([
-                    import_name, import_json.get('latestVersion'),
+                    import_json['importName'], import_json['latestVersion'],
                     spanner.COMMIT_TIMESTAMP, workflow_id, status,
                     m.get('execution_time'),
-                    counts.get('node_count') or counts.get('nodeCount'),
-                    counts.get('edge_count') or counts.get('edgeCount'),
-                    counts.get('obs_count') or counts.get('obsCount'),
-                    counts.get('ts_count') or counts.get('tsCount'),
-                    "ingestion-workflow:" + workflow_id
+                    m.get('node_count'),
+                    m.get('edge_count'),
+                    m.get('obs_count'),
+                    m.get('ts_count'), "ingestion-workflow:" + workflow_id
                 ])
 
             if version_history_values:
@@ -522,12 +512,6 @@ class SpannerClient:
         import_name = import_name.split(':')[-1]
         logging.info(f"Updating version history for {import_name} to {version}")
 
-        m = metrics if metrics else {}
-        node_count = m.get('node_count')
-        edge_count = m.get('edge_count')
-        obs_count = m.get('obs_count')
-        ts_count = m.get('ts_count')
-
         def _record(transaction: Transaction):
             columns = [
                 "ImportName", "Version", "UpdateTimestamp",
@@ -535,14 +519,15 @@ class SpannerClient:
                 "NodeCount", "EdgeCount", "ObservationCount",
                 "TimeSeriesCount", "Comment"
             ]
+            m = metrics if metrics else {}
             values = [[
                 import_name, version, spanner.COMMIT_TIMESTAMP, workflow_id,
                 status,
                 m.get('execution_time'),
-                node_count,
-                edge_count,
-                obs_count,
-                ts_count, comment
+                m.get('node_count'),
+                m.get('edge_count'),
+                m.get('obs_count'),
+                m.get('ts_count'), comment
             ]]
             transaction.insert(table="ImportVersionHistory",
                                columns=columns,
