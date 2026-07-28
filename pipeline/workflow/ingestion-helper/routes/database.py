@@ -58,7 +58,7 @@ def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Dep
         status_ok = spanner.acquire_lock(req.workflowId, req.timeout)
         if not status_ok:
             raise HTTPException(
-                status_code=400,
+                status_code=503,
                 detail=f"Failed to acquire lock: Lock already held or acquisition timed out for workflow {req.workflowId}"
             )
         return BaseResponse(status=ResponseStatus.OK)
