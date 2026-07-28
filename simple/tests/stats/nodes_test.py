@@ -407,3 +407,14 @@ class TestNodes(unittest.TestCase):
     ]
     self.assertTrue(default_groups, "Default custom root SVG should exist")
     self.assertEqual(default_groups[0].name, "ONE Data")
+
+  def test_triples_by_provenance_dir_and_deduplication(self):
+    nodes = Nodes(Config(CONFIG_DATA))
+    var = nodes.variable("Variable 1", self.a)
+    # Add duplicate provenance IDs to verify deduplication
+    var.provenance_ids = ["prov/1", "prov/1"]
+    shards = nodes.triples_by_provenance_dir()
+    self.assertIn("prov/1", shards)
+    triples = shards["prov/1"]
+    db_tuples = [t.db_tuple() for t in triples]
+    self.assertEqual(len(db_tuples), len(set(db_tuples)))
