@@ -76,11 +76,6 @@ class LinkedEdgeGenerator:
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate IN ('memberOf', 'specializationOf'){provenance_filter}");
 
-        -- Pull existing generated edges to filter them out later
-        CREATE OR REPLACE TEMPORARY TABLE `temp_existing_linked_member_of` AS
-        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
-          "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'linkedMemberOf'");
-
         CREATE OR REPLACE TEMPORARY TABLE `temp_hierarchy` AS
         SELECT DISTINCT subject_id, predicate, object_id, provenance
         FROM `temp_base_member_of`;
@@ -123,23 +118,6 @@ class LinkedEdgeGenerator:
             {prov_expr} as provenance
           FROM
             Ancestors
-        ),
-        FilteredEdges AS (
-          SELECT
-            subject_id,
-            predicate,
-            object_id,
-            provenance
-          FROM
-            NewEdges n
-          WHERE NOT EXISTS (
-            SELECT 1
-            FROM `temp_existing_linked_member_of` e
-            WHERE n.subject_id = e.subject_id
-              AND n.predicate = e.predicate
-              AND n.object_id = e.object_id
-              AND n.provenance = e.provenance
-          )
         )
         SELECT
           subject_id,
@@ -147,7 +125,7 @@ class LinkedEdgeGenerator:
           object_id,
           provenance
         FROM
-          FilteredEdges
+          NewEdges
         """
         return self.executor.execute(query)
 
@@ -170,11 +148,6 @@ class LinkedEdgeGenerator:
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_contained_in_place` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'containedInPlace'{provenance_filter}");
-
-        -- Pull existing generated edges to filter them out later
-        CREATE OR REPLACE TEMPORARY TABLE `temp_existing_linked_contained_in_place` AS
-        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
-          "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'linkedContainedInPlace'");
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_contained_in_place` AS
         SELECT subject_id, object_id, provenance
@@ -215,23 +188,6 @@ class LinkedEdgeGenerator:
             {prov_expr} as provenance
           FROM
             Ancestors
-        ),
-        FilteredEdges AS (
-          SELECT
-            subject_id,
-            predicate,
-            object_id,
-            provenance
-          FROM
-            NewEdges n
-          WHERE NOT EXISTS (
-            SELECT 1
-            FROM `temp_existing_linked_contained_in_place` e
-            WHERE n.subject_id = e.subject_id
-              AND n.predicate = e.predicate
-              AND n.object_id = e.object_id
-              AND n.provenance = e.provenance
-          )
         )
         SELECT
           subject_id,
@@ -239,7 +195,7 @@ class LinkedEdgeGenerator:
           object_id,
           provenance
         FROM
-          FilteredEdges
+          NewEdges
         """
         return self.executor.execute(query)
 
@@ -262,11 +218,6 @@ class LinkedEdgeGenerator:
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_member` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate IN ('relevantVariable', 'member'){provenance_filter}");
-
-        -- Pull existing generated edges to filter them out later
-        CREATE OR REPLACE TEMPORARY TABLE `temp_existing_linked_member` AS
-        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
-          "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'linkedMember'");
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_topic_hierarchy` AS
         SELECT DISTINCT subject_id, object_id, provenance
@@ -311,23 +262,6 @@ class LinkedEdgeGenerator:
           WHERE subject_id LIKE 'dc/topic%'
           AND descendant NOT LIKE 'dc/topic%'
           AND descendant NOT LIKE 'dc/svpg%'
-        ),
-        FilteredEdges AS (
-          SELECT
-            subject_id,
-            predicate,
-            object_id,
-            provenance
-          FROM
-            NewEdges n
-          WHERE NOT EXISTS (
-            SELECT 1
-            FROM `temp_existing_linked_member` e
-            WHERE n.subject_id = e.subject_id
-              AND n.predicate = e.predicate
-              AND n.object_id = e.object_id
-              AND n.provenance = e.provenance
-          )
         )
         SELECT
           subject_id,
@@ -335,6 +269,6 @@ class LinkedEdgeGenerator:
           object_id,
           provenance
         FROM
-          FilteredEdges
+          NewEdges
         """
         return self.executor.execute(query)
