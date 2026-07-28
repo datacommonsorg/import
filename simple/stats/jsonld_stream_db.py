@@ -27,6 +27,7 @@ import shutil
 import tempfile
 import threading
 from typing import Callable, Optional
+import uuid
 
 from google.api_core.exceptions import GoogleAPICallError
 from google.api_core.exceptions import TooManyRequests
@@ -264,8 +265,8 @@ def _write_node_shard_fast(args):
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
   # TODO(gmechali): When parallelizing node shard exports, include file_name in shard_name
-  # (e.g., f"node-{sanitized_stem}-{shard_index:05d}.jsonld") to prevent collisions across workers.
-  shard_name = f"node-{shard_index:05d}.jsonld"
+  unique_id = uuid.uuid4().hex[:8]
+  shard_name = f"node-{unique_id}-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
     output_dir.open_file(shard_name).write(
