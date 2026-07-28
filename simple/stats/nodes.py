@@ -473,9 +473,8 @@ class Nodes:
     ):
       for node in collection.values():
         p_ids = getattr(node, "provenance_ids", None)
-        target_dirs = (
-            {strip_namespace(p) for p in p_ids} if p_ids else {"_global"}
-        )
+        target_dirs = ({strip_namespace(p) for p in p_ids}
+                       if p_ids else {"_global"})
         for dir_name in target_dirs:
           result[dir_name].extend(node.triples())
     deduped_result = {}

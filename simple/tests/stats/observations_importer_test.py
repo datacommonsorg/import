@@ -127,15 +127,14 @@ class TestObservationsImporter(unittest.TestCase):
     importer.entity_type = "State"
     importer.entity_column_name = "entity"
     importer.df = pd.DataFrame(
-        {"dcid": ["undata:place/custom_1", "dcid:geoId/06", "California"]}
-    )
+        {"dcid": ["undata:place/custom_1", "dcid:geoId/06", "California"]})
     with mock.patch.object(
         dc_client,
         "resolve_entities",
         return_value={"California": "geoId/06"},
-    ) as mock_resolve, mock.patch.object(
-        dc_client, "get_property_of_entities", return_value={}
-    ):
+    ) as mock_resolve, mock.patch.object(dc_client,
+                                         "get_property_of_entities",
+                                         return_value={}):
       importer._resolve_entities()
 
       mock_resolve.assert_called_once_with(
