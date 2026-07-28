@@ -464,42 +464,31 @@ class Nodes:
       result[imp].extend(provenance.triples())
     for group in self.groups.values():
       result["_global"].extend(group.triples())
-    for variable in self.variables.values():
-      p_ids = getattr(variable, "provenance_ids", [])
-      if not p_ids:
-        result["_global"].extend(variable.triples())
-      else:
-        for p_id in p_ids:
-          result[strip_namespace(p_id)].extend(variable.triples())
-    for event_type in self.event_types.values():
-      p_ids = getattr(event_type, "provenance_ids", [])
-      if not p_ids:
-        result["_global"].extend(event_type.triples())
-      else:
-        for p_id in p_ids:
-          result[strip_namespace(p_id)].extend(event_type.triples())
-    for entity_type in self.entity_types.values():
-      p_ids = getattr(entity_type, "provenance_ids", [])
-      if not p_ids:
-        result["_global"].extend(entity_type.triples())
-      else:
-        for p_id in p_ids:
-          result[strip_namespace(p_id)].extend(entity_type.triples())
-    for property in self.properties.values():
-      p_ids = getattr(property, "provenance_ids", set())
-      if not p_ids:
-        result["_global"].extend(property.triples())
-      else:
-        for p_id in p_ids:
-          result[strip_namespace(p_id)].extend(property.triples())
-    for entity in self.entities.values():
-      p_ids = getattr(entity, "provenance_ids", set())
-      if not p_ids:
-        result["_global"].extend(entity.triples())
-      else:
-        for p_id in p_ids:
-          result[strip_namespace(p_id)].extend(entity.triples())
-    return result
+    for collection in (
+        self.variables,
+        self.event_types,
+        self.entity_types,
+        self.properties,
+        self.entities,
+    ):
+      for node in collection.values():
+        p_ids = getattr(node, "provenance_ids", None)
+        target_dirs = (
+            {strip_namespace(p) for p in p_ids} if p_ids else {"_global"}
+        )
+        for dir_name in target_dirs:
+          result[dir_name].extend(node.triples())
+    deduped_result = {}
+    for k, triples in result.items():
+      seen = set()
+      deduped = []
+      for t in triples:
+        key = (t.subject_id, t.predicate, t.object_id, t.object_value)
+        if key not in seen:
+          seen.add(key)
+          deduped.append(t)
+      deduped_result[k] = deduped
+    return deduped_result
 
 
 def _clean_metadata_id(id: str) -> str:

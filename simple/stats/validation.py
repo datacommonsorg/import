@@ -156,8 +156,6 @@ class MetadataValidator:
     """Normalizes a DCID value by ensuring it starts with a namespace prefix."""
     if not val:
       return ""
-    if val.startswith(("http://", "https://")):
-      return val
     if has_namespace_prefix(val):
       return val
     return f"dcid:{val}"

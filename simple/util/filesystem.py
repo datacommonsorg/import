@@ -201,13 +201,8 @@ class File(_StoreWrapper):
     super().__init__(store, path)
     if not self.fs().exists(self.path):
       if create_if_missing:
-        # Make parent dir if needed.
         parent_dir_path = fspath.dirname(path)
-        if not self.fs().isdir(parent_dir_path):
-          try:
-            self.fs().makedirs(parent_dir_path)
-          except Exception:
-            pass
+        self.fs().makedirs(parent_dir_path, recreate=True)
         # Make empty file.
         self.fs().touch(path)
       else:
