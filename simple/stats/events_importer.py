@@ -314,11 +314,16 @@ class EventsImporter(Importer):
         links.append(f"{constants.DC_BROWSER}/{dcid}")
 
     # Create dataframe
-    self.debug_resolve_df = pd.DataFrame({
+    new_df = pd.DataFrame({
         constants.DEBUG_COLUMN_INPUT: inputs,
         constants.DEBUG_COLUMN_DCID: dcids,
         constants.DEBUG_COLUMN_LINK: links,
     })
+    if self.debug_resolve_df is None:
+      self.debug_resolve_df = new_df
+    else:
+      self.debug_resolve_df = pd.concat([self.debug_resolve_df, new_df],
+                                        ignore_index=True).drop_duplicates()
 
   def _write_debug_csvs(self) -> None:
     if self.debug_resolve_df is not None:
