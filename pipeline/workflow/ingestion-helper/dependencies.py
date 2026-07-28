@@ -33,7 +33,6 @@ def get_spanner_client() -> SpannerClient:
             config.SPANNER_PROJECT_ID,
             config.SPANNER_INSTANCE_ID,
             config.SPANNER_DATABASE_ID,
-            graph_database_id=config.SPANNER_GRAPH_DATABASE_ID,
             location=config.LOCATION,
             models=config.EMBEDDING_MODELS,
             embedding_space=config.EMBEDDING_SPACE,

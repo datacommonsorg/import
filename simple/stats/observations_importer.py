@@ -24,6 +24,8 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
+from stats.util import get_namespace_prefix_and_suffix
+from stats.util import has_namespace_prefix
 from util.filesystem import File
 
 from util import dc_client as dc
@@ -147,6 +149,12 @@ class ObservationsImporter(Importer):
         dcid for dcid in entity_dcids if not self.nodes.has_entity(dcid)
     ]
 
+    prov_id = getattr(self, "provenance", "")
+    if prov_id:
+      for dcid in entity_dcids:
+        if self.nodes.has_entity(dcid):
+          self.nodes.entities[dcid].provenance_ids.add(prov_id)
+
     logging.info("Found %s total entities, of which %s are already imported.",
                  len(entity_dcids),
                  len(entity_dcids) - len(new_entity_dcids))
@@ -162,11 +170,13 @@ class ObservationsImporter(Importer):
     if dcid2type:
       logging.info("Importing %s of %s entities.", len(dcid2type),
                    len(new_entity_dcids))
-      self.nodes.entities_with_types(dcid2type)
+      self.nodes.entities_with_types(dcid2type, provenance_id=prov_id)
     elif self.entity_type:
       logging.info("Importing %s entities with type %s.", len(new_entity_dcids),
                    self.entity_type)
-      self.nodes.entities_with_type(new_entity_dcids, self.entity_type)
+      self.nodes.entities_with_type(new_entity_dcids,
+                                    self.entity_type,
+                                    provenance_id=prov_id)
 
   def _resolve_entities(self) -> None:
     df = self.df
@@ -176,9 +186,9 @@ class ObservationsImporter(Importer):
     pre_resolved_entities = {}
 
     def remove_pre_resolved(entity: str) -> bool:
-      if entity.startswith(constants.DCID_OVERRIDE_PREFIX):
-        pre_resolved_entities[entity] = entity[
-            len(constants.DCID_OVERRIDE_PREFIX):].strip()
+      if has_namespace_prefix(entity):
+        prefix, suffix = get_namespace_prefix_and_suffix(entity)
+        pre_resolved_entities[entity] = suffix.strip()
         return False
       return True
 

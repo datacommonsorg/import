@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import concurrent.futures
+from dataclasses import dataclass
 from datetime import datetime
 from datetime import timezone
 from enum import StrEnum
@@ -21,6 +22,7 @@ import logging
 import os
 import threading
 from typing import Optional
+import unittest.mock as mock_module
 
 import fs.path as fspath
 from stats import constants
@@ -37,6 +39,7 @@ from stats.data import VerticalSpec
 from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
+from stats.db import Db
 from stats.db import FIELD_DB_PARAMS
 from stats.db import FIELD_DB_TYPE
 from stats.db import get_blue_green_config_from_env
@@ -57,6 +60,7 @@ from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
+from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.svg_cache import generate_svg_cache
@@ -69,6 +73,8 @@ from util.filesystem import File
 from util.filesystem import join_path
 from util.filesystem import Store
 
+from util import dc_client
+
 
 class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
@@ -78,6 +84,167 @@ class RunMode(StrEnum):
 
 
 _ARCHIVES_DIR_NAME = "archives"
+
+
+def _create_importer_for_file(
+    config: Config,
+    input_file: File,
+    process_dir: Dir,
+    db: Db,
+    reporter: FileImportReporter,
+    nodes: Nodes,
+    mode: Optional[RunMode] = None,
+) -> Importer:
+  if input_file.path.lower().endswith(".mcf"):
+    output_file = process_dir.open_file(
+        input_file.path) if mode == RunMode.MAIN_DC else None
+    return McfImporter(
+        input_file=input_file,
+        output_file=output_file,
+        db=db,
+        reporter=reporter,
+        is_main_dc=(mode == RunMode.MAIN_DC),
+        nodes=nodes,
+    )
+
+  import_type = config.import_type(input_file)
+
+  match import_type:
+
+    case ImportType.OBSERVATIONS:
+      input_file_format = config.format(input_file)
+      if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
+        mappings = config.column_mappings(input_file)
+        if not mappings and mode == RunMode.DCP_BRIDGE:
+          raise ValueError(
+              f"Missing column mappings for file '{input_file.path}' in config.json"
+          )
+        return VariablePerRowImporter(
+            input_file=input_file,
+            db=db,
+            reporter=reporter,
+            nodes=nodes,
+        )
+      sanitized_path = input_file.full_path().replace("://",
+                                                      "_").replace("/", "_")
+      debug_resolve_file = process_dir.open_file(
+          f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
+      return ObservationsImporter(
+          input_file=input_file,
+          db=db,
+          debug_resolve_file=debug_resolve_file,
+          reporter=reporter,
+          nodes=nodes,
+      )
+
+    case ImportType.EVENTS:
+      sanitized_path = input_file.full_path().replace("://",
+                                                      "_").replace("/", "_")
+      debug_resolve_file = process_dir.open_file(
+          f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
+      return EventsImporter(
+          input_file=input_file,
+          db=db,
+          debug_resolve_file=debug_resolve_file,
+          reporter=reporter,
+          nodes=nodes,
+      )
+
+    case ImportType.ENTITIES:
+      return EntitiesImporter(
+          input_file=input_file,
+          db=db,
+          reporter=reporter,
+          nodes=nodes,
+      )
+
+    case _:
+      raise ValueError(
+          f"Unsupported import type: {import_type} ({input_file.full_path()})")
+
+
+@dataclass
+class ImportProcResult:
+  file_rel_path: str
+  obs_collision_count: int
+  file_collision_counts: dict
+  file_sample_collisions: dict
+  resolved_entities: dict
+  event_types: dict
+  entity_types: dict
+  variables: dict
+  sources: dict
+  provenances: dict
+  groups: dict
+  properties: dict
+  processed_imports: set
+
+
+def _run_single_csv_import_proc(
+    file_rel_path: str,
+    input_dir_path: str,
+    output_dir_path: str,
+    process_dir_path: str,
+    import_names: dict,
+    config_json_str: str,
+    jsonld_dir_name: str,
+) -> ImportProcResult:
+  with create_store(input_dir_path) as input_store_obj, \
+       create_store(output_dir_path) as output_store_obj, \
+       create_store(process_dir_path) as process_store_obj:
+    input_dir = input_store_obj.as_dir()
+    output_store = output_store_obj.as_dir()
+    process_store = process_store_obj.as_dir()
+    input_store = input_dir.open_file(file_rel_path)
+
+    config = Config(json.loads(config_json_str))
+    nodes = Nodes(config=config)
+    db = JsonLdStreamDb(output_store,
+                        import_names,
+                        nodes,
+                        jsonld_dir_name=jsonld_dir_name)
+
+    sanitized_path = input_store.full_path().replace("://",
+                                                     "_").replace("/", "_")
+    report_file = process_store.open_file(f"report_{sanitized_path}.json")
+    reporter = ImportReporter(report_file).get_file_reporter(input_store)
+
+    importer = _create_importer_for_file(config,
+                                         input_store,
+                                         process_store,
+                                         db,
+                                         reporter,
+                                         nodes,
+                                         mode=RunMode.DCP_BRIDGE)
+    importer.do_import()
+    db.commit_and_close()
+
+    resolved_entities = {
+        e.entity_dcid: (e.entity_type, getattr(e, "provenance_ids", set()))
+        for e in nodes.entities.values()
+    }
+    event_types = dict(nodes.event_types)
+    entity_types = dict(nodes.entity_types)
+    variables = dict(nodes.variables)
+    sources = dict(nodes.sources)
+    provenances = dict(nodes.provenances)
+    groups = dict(nodes.groups)
+    properties = dict(nodes.properties)
+    return ImportProcResult(
+        file_rel_path=file_rel_path,
+        obs_collision_count=db.obs_collision_count,
+        file_collision_counts=dict(db.file_collision_counts),
+        file_sample_collisions=dict(db.file_sample_collisions),
+        resolved_entities=resolved_entities,
+        event_types=event_types,
+        entity_types=entity_types,
+        variables=variables,
+        sources=sources,
+        provenances=provenances,
+        groups=groups,
+        properties=properties,
+        processed_imports=set(db._processed_imports),
+    )
 
 
 class Runner:
@@ -90,6 +257,7 @@ class Runner:
       output_dir_path: str,
       mode: RunMode = RunMode.CUSTOM_DC,
       import_names: Optional[list[str]] = None,
+      use_multiprocessing: bool = True,
   ) -> None:
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
@@ -97,6 +265,7 @@ class Runner:
 
     self.mode = mode
     self.import_names = import_names
+    self.use_multiprocessing = use_multiprocessing
     self.active_import_prefixes = None
 
     # File systems, both input and output. Must be closed when run finishes.
@@ -301,7 +470,7 @@ class Runner:
     else:
       handshake_payload = {
           "importList": json.dumps(self.trigger_workflow_info),
-          "generateStatVarGroups": self.config.generate_hierarchy(),
+          "generateStatVarGroups": bool(self.config.generate_hierarchy()),
       }
 
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
@@ -835,37 +1004,96 @@ class Runner:
     self._total_files_count = len(csv_files) + len(mcf_files)
     self._counter_lock = threading.Lock()
 
-    # 1. Process MCF files first (contains schema/provenances)
-    if mcf_files:
-      logging.info("Importing %d MCF files first...", len(mcf_files))
+    all_files = list(mcf_files) + list(csv_files)
+    if all_files:
+      logging.info("Importing %d files (%d MCF, %d CSV)...", len(all_files),
+                   len(mcf_files), len(csv_files))
       if self.mode == RunMode.DCP_BRIDGE:
-        num_mcf_threads = min(32, len(mcf_files))
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=num_mcf_threads) as executor:
-          futures = [
-              executor.submit(self._run_single_mcf_import, file)
-              for file in mcf_files
-          ]
-          for future in concurrent.futures.as_completed(futures):
-            future.result()
+        if not self.use_multiprocessing:
+          num_threads = min(32, len(all_files))
+          with concurrent.futures.ThreadPoolExecutor(
+              max_workers=num_threads) as executor:
+            futures = [
+                executor.submit(self._run_single_import, file)
+                for file in all_files
+            ]
+            for future in concurrent.futures.as_completed(futures):
+              future.result()
+        else:
+          num_processes = min(32, len(all_files))
+          config_json_str = json.dumps(self.config.data)
+          jsonld_dir_name = self.db.jsonld_dir.name()
+          with concurrent.futures.ProcessPoolExecutor(
+              max_workers=num_processes) as executor:
+            futures = [
+                executor.submit(
+                    _run_single_csv_import_proc,
+                    file.path,
+                    file._store.root_path,
+                    self.output_dir.full_path(),
+                    self.process_dir.full_path(),
+                    self.import_names,
+                    config_json_str,
+                    jsonld_dir_name,
+                ) for file in all_files
+            ]
+            for future in concurrent.futures.as_completed(futures):
+              res = future.result()
+              self._log_file_progress("Imported file", res.file_rel_path)
+              if res.resolved_entities:
+                for dcid, val in res.resolved_entities.items():
+                  if isinstance(val, tuple):
+                    t, p_ids = val
+                  else:
+                    t, p_ids = val, set()
+                  if isinstance(p_ids, set):
+                    for p_id in (p_ids or [""]):
+                      self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
+                  else:
+                    self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
+              if res.event_types:
+                self.nodes.event_types.update(res.event_types)
+              if res.entity_types:
+                self.nodes.entity_types.update(res.entity_types)
+              if res.variables:
+                self.nodes.variables.update(res.variables)
+              if res.sources:
+                for src in res.sources.values():
+                  self.nodes.register_source(id=src.id,
+                                             name=src.name,
+                                             url=src.url,
+                                             provenance_id=getattr(
+                                                 src, "provenance_id", ""))
+              if res.provenances:
+                for prov in res.provenances.values():
+                  self.nodes.register_provenance(id=prov.id,
+                                                 name=prov.name,
+                                                 url=prov.url,
+                                                 source_id=prov.source_id,
+                                                 properties=prov.properties)
+              if res.groups:
+                self.nodes.groups.update(res.groups)
+                for svg in res.groups.values():
+                  self.nodes.ids_to_groups[svg.id] = svg
+              if res.properties:
+                for prop_name, prop_obj in res.properties.items():
+                  if prop_name not in self.nodes.properties:
+                    self.nodes.properties[prop_name] = prop_obj
+                  else:
+                    self.nodes.properties[prop_name].provenance_ids.update(
+                        getattr(prop_obj, "provenance_ids", set()))
+              if res.processed_imports:
+                self.db._processed_imports.update(res.processed_imports)
+              if res.obs_collision_count and hasattr(self.db,
+                                                     "obs_collision_count"):
+                self.db.obs_collision_count += res.obs_collision_count
+                for f_name, count in res.file_collision_counts.items():
+                  self.db.file_collision_counts[f_name] += count
+                  self.db.file_sample_collisions[f_name].extend(
+                      res.file_sample_collisions.get(f_name, []))
       else:
         for file in mcf_files:
           self._run_single_mcf_import(file)
-
-    # 2. Process CSV files next (contains data observations/entities)
-    if csv_files:
-      logging.info("Importing %d CSV files next...", len(csv_files))
-      if self.mode == RunMode.DCP_BRIDGE:
-        num_csv_threads = min(32, len(csv_files))
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=num_csv_threads) as executor:
-          futures = [
-              executor.submit(self._run_single_import, file)
-              for file in csv_files
-          ]
-          for future in concurrent.futures.as_completed(futures):
-            future.result()
-      else:
         for file in csv_files:
           self._run_single_import(file)
 
@@ -902,53 +1130,16 @@ class Runner:
     )
 
   def _create_importer(self, input_file: File) -> Importer:
-    import_type = self.config.import_type(input_file)
-    sanitized_path = input_file.full_path().replace("://",
-                                                    "_").replace("/", "_")
-    debug_resolve_file = self.process_dir.open_file(
-        f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
     reporter = self.reporter.get_file_reporter(input_file)
-
-    if import_type == ImportType.OBSERVATIONS:
-      input_file_format = self.config.format(input_file)
-      if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
-        # Fail immediately if column mappings are missing from config
-        mappings = self.config.column_mappings(input_file)
-        if not mappings and self.mode == RunMode.DCP_BRIDGE:
-          raise ValueError(
-              f"Missing column mappings for file '{input_file.path}' in config.json"
-          )
-        return VariablePerRowImporter(
-            input_file=input_file,
-            db=self.db,
-            reporter=reporter,
-            nodes=self.nodes,
-        )
-      return ObservationsImporter(
-          input_file=input_file,
-          db=self.db,
-          debug_resolve_file=debug_resolve_file,
-          reporter=reporter,
-          nodes=self.nodes,
-      )
-
-    if import_type == ImportType.EVENTS:
-      return EventsImporter(
-          input_file=input_file,
-          db=self.db,
-          debug_resolve_file=debug_resolve_file,
-          reporter=reporter,
-          nodes=self.nodes,
-      )
-
-    if import_type == ImportType.ENTITIES:
-      return EntitiesImporter(input_file=input_file,
-                              db=self.db,
-                              reporter=reporter,
-                              nodes=self.nodes)
-
-    raise ValueError(
-        f"Unsupported import type: {import_type} ({input_file.full_path()})")
+    return _create_importer_for_file(
+        self.config,
+        input_file,
+        self.process_dir,
+        self.db,
+        reporter,
+        self.nodes,
+        mode=self.mode,
+    )
 
   def _run_imports_and_export_jsonld(self):
     logging.info(
@@ -958,9 +1149,12 @@ class Runner:
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
 
-    # Generate triples from nodes and write directly
-    triples = self.nodes.triples()
-    self.db.insert_triples(triples)
+    # Generate triples from nodes grouped by provenance directory and write directly
+    for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
+      if prov_dir == "_global":
+        self.db.insert_triples(triples)
+      else:
+        self.db.insert_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.db).validate()
@@ -969,12 +1163,12 @@ class Runner:
     output_path = self.db.jsonld_dir.full_path()
     import_name = self.db.import_name
     if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      processed_imports = list(self.db._processed_imports)
+      processed_imports = sorted(list(self.db._processed_imports))
       if not processed_imports:
         processed_imports = [import_name]
       import_list = []
       for imp in processed_imports:
-        gcs_pattern = f"{output_path.rstrip('/')}/{imp}/*.jsonld"
+        gcs_pattern = f"{output_path.rstrip('/')}/{imp}/**/*.jsonld"
         import_list.append({"importName": imp, "graphPath": gcs_pattern})
       self.trigger_workflow_info = import_list
     else:

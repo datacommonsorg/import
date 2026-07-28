@@ -105,7 +105,10 @@ class McfImporter(Importer):
 
         # Register all collected metadata nodes at the end
         if all_metadata_triples:
-          _register_metadata_nodes(all_metadata_triples, self.nodes)
+          prov_id = getattr(self, "provenance", "")
+          _register_metadata_nodes(all_metadata_triples,
+                                   self.nodes,
+                                   provenance_id=prov_id)
 
       self.reporter.report_success()
     except Exception as e:
@@ -161,7 +164,9 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   return Triple(resolved_subject, predicate, object_value=value)
 
 
-def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
+def _register_metadata_nodes(triples: list[Triple],
+                             nodes: Nodes,
+                             provenance_id: str = "") -> None:
   """Extracts and registers Provenance and Source nodes from parsed MCF triples.
 
   This helper is robust against:
@@ -191,8 +196,8 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
       val = triple.object_value or triple.object_id or ""
       subject_properties[sub_id]["name"] = _clean_literal(val)
     elif pred == "source":
-      # Map source to the source ID
-      subject_properties[sub_id]["source"] = triple.object_id
+      val = triple.object_id or triple.object_value or ""
+      subject_properties[sub_id]["source"] = _clean_literal(val)
 
   for sub_id, props in subject_properties.items():
     node_type = props.get("typeOf")
@@ -204,7 +209,8 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
     elif node_type == "Source":
       nodes.register_source(id=sub_id,
                             name=props.get("name", ""),
-                            url=props.get("url", ""))
+                            url=props.get("url", ""),
+                            provenance_id=provenance_id)
 
 
 def _clean_literal(val: str) -> str:

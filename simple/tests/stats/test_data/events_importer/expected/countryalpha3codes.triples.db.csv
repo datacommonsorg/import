@@ -94,3 +94,6 @@ PRIMARY_DESCRIPTION,typeOf,Property,
 PRIMARY_DESCRIPTION,name,,PRIMARY DESCRIPTION
 SECONDARY_DESCRIPTION,typeOf,Property,
 SECONDARY_DESCRIPTION,name,,SECONDARY DESCRIPTION
+country/USA,typeOf,Country,
+country/BRA,typeOf,Country,
+country/CHN,typeOf,Country,

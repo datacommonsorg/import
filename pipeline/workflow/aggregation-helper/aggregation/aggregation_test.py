@@ -22,6 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator, LinkedEdgeConfig
+from aggregation import StatVarGroupGenerator, StatVarGroupConfig
 from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from aggregation import PlaceAggregationGenerator, PlaceAggregationConfig
 from aggregation import EmbeddingGenerator, EmbeddingGenerationConfig
@@ -415,6 +416,35 @@ class TestEmbeddingGenerator(unittest.TestCase):
         deleted = generator._delete_existing_embeddings(spec, embedding_table="NodeEmbedding")
         self.assertEqual(deleted, 2)
         mock_db.execute_partitioned_dml.assert_called_once()
+
+
+class TestStatVarGroupGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_run_all_empty(self):
+        generator = StatVarGroupGenerator(self.mock_executor)
+        jobs = generator.run_all(StatVarGroupConfig(import_names=[]))
+        self.assertEqual(jobs, [])
+        self.mock_executor.execute.assert_not_called()
+
+    def test_run_stat_var_group(self):
+        generator = StatVarGroupGenerator(self.mock_executor, is_base_dc=True, should_prune_single_child_svgs=True)
+        mock_prep_job = [MagicMock(object_id="gender"), MagicMock(object_id="age")]
+        mock_exec_job = MagicMock()
+        self.mock_executor.execute.side_effect = [mock_prep_job, mock_exec_job]
+
+        jobs = generator.run_all(StatVarGroupConfig(import_names=["import1"]))
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(self.mock_executor.execute.call_count, 2)
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("PrunableSVGs", query)
+        self.assertIn("EffectiveParent", query)
+        self.assertIn("HAVING COUNT(DISTINCT pc.child) <= 1", query)
 
 
 if __name__ == '__main__':
