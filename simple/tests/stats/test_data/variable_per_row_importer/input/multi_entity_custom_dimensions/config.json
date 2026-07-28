@@ -3,6 +3,7 @@
     {
       "pattern": "input*",
       "provenance": "dcid:provenance/CustomImport",
+      "entityColumns": ["SOURCE_COUNTRY", "DESTINATION_COUNTRY"],
       "columnMappings": {
         "dcid:variableMeasured": "SERIES",
         "dcid:observationDate": "TIME_PERIOD",

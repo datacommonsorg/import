@@ -120,9 +120,13 @@ class VariablePerRowImporter(Importer):
     self.column_mappings = {}
     self.df = pd.DataFrame()
     self.entity_columns = set(self.config.entity_columns(self.input_file))
+    self.entity_type = self.config.entity_type(self.input_file)
+    self.row_entity_type = self.config.row_entity_type(self.input_file)
+    self.entity_column_name = constants.COLUMN_ENTITY
     # Unique entity IDs seen in this CSV.
     # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
     self.entity_dcids: dict[str, bool] = {}
+    self.all_unresolved_entities: set[str] = set()
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -134,6 +138,7 @@ class VariablePerRowImporter(Importer):
       self._map_columns()
       self._write_observations()
       self._add_entity_nodes()
+      self.check_and_report_unresolved_entities(self.all_unresolved_entities)
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
@@ -215,8 +220,6 @@ class VariablePerRowImporter(Importer):
     custom_dimensions = []
 
     for key, physical_col in config_mappings.items():
-      if key == "dcid:observationAbout":
-        self.entity_column_name = physical_col
       if key in STANDARD_PROPERTY_MAPPING:
         internal_col = STANDARD_PROPERTY_MAPPING[key]
         column_mappings[internal_col] = physical_col
@@ -279,17 +282,14 @@ class VariablePerRowImporter(Importer):
       for chunk_df in reader:
         if chunk_df.empty:
           continue
-        observations_df = (
-            self._apply_column_mappings(chunk_df)
-            .pipe(self.resolve_specified_columns)
-            .pipe(self._track_entity_dcids)
-            .pipe(_apply_property_defaults, obs_props)
-            .pipe(self._serialize_custom_dimensions, obs_props.properties)
-            .pipe(_format_numeric_values)
-            .pipe(filter_invalid_observation_values)
-            .pipe(self._ensure_entity_column)
-            .pipe(_strip_namespaces, provenance)
-        )
+        observations_df = (self._apply_column_mappings(chunk_df).pipe(
+            self.resolve_specified_columns).pipe(self._track_entity_dcids).pipe(
+                _apply_property_defaults, obs_props).pipe(
+                    self._serialize_custom_dimensions,
+                    obs_props.properties).pipe(_format_numeric_values).pipe(
+                        filter_invalid_observation_values).pipe(
+                            self._ensure_entity_column).pipe(
+                                _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.db.insert_observations(observations_df, self.input_file)
 
@@ -307,11 +307,9 @@ class VariablePerRowImporter(Importer):
       if col in df.columns:
         valid_dcids = df[col].dropna().unique()
         for dcid in valid_dcids:
-          if dcid != "" and (
-              col == constants.COLUMN_ENTITY
-              or col in self.entity_columns
-              or has_namespace_prefix(str(dcid))
-          ):
+          if dcid != "" and (col == constants.COLUMN_ENTITY or
+                             col in self.entity_columns or
+                             has_namespace_prefix(str(dcid))):
             self.entity_dcids[dcid] = True
     return df
 

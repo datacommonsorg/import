@@ -223,25 +223,16 @@ class EventsImporter(Importer):
       # TODO: Add row-level validation to reject rows with empty/invalid location (entity)
       # or observationDate values rather than silently omitting those triples.
       entity_val = row.get(constants.COLUMN_DCID, "")
-      entity = (
-          ""
-          if pd.isna(entity_val) or str(entity_val) in ("<NA>", "nan", "")
-          else str(entity_val).strip()
-      )
+      entity = ("" if pd.isna(entity_val) or str(entity_val)
+                in ("<NA>", "nan", "") else str(entity_val).strip())
       date_val = row.get(constants.COLUMN_DATE, "")
-      date = (
-          ""
-          if pd.isna(date_val) or str(date_val) in ("<NA>", "nan", "")
-          else str(date_val).strip()
-      )
+      date = ("" if pd.isna(date_val) or str(date_val) in ("<NA>", "nan", "")
+              else str(date_val).strip())
       properties: dict[str, str] = {}
 
       for k, v in row.items():
-        if (
-            k in (constants.COLUMN_DCID, constants.COLUMN_DATE)
-            or pd.isna(v)
-            or str(v) in ("<NA>", "nan", "")
-        ):
+        if (k in (constants.COLUMN_DCID, constants.COLUMN_DATE) or pd.isna(v) or
+            str(v) in ("<NA>", "nan", "")):
           continue
         properties[k] = v
 

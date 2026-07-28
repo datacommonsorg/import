@@ -91,9 +91,8 @@ class ObservationsImporter(Importer):
                         inplace=True)
 
         mappings = self.get_column_mappings()
-        entity_col = (
-            mappings.get("dcid:observationAbout") or chunk_df.columns[0]
-        )
+        entity_col = (mappings.get("dcid:observationAbout") or
+                      chunk_df.columns[0])
         date_col = mappings.get("dcid:observationDate") or chunk_df.columns[1]
 
         chunk_df = chunk_df.convert_dtypes()

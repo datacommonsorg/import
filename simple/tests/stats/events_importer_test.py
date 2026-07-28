@@ -119,17 +119,20 @@ class TestEventsImporter(unittest.TestCase):
                 }
             },
             "sources": {
-                "S1": {"url": "http://s1", "provenances": {"P1": "http://p1"}}
+                "S1": {
+                    "url": "http://s1",
+                    "provenances": {
+                        "P1": "http://p1"
+                    }
+                }
             },
-        }
-    )
+        })
     nodes = Nodes(config)
     mock_input = MagicMock()
     mock_input.path = "events.csv"
     mock_input.full_path.return_value = "events.csv"
     mock_input.read_string_io.return_value = io.StringIO(
-        "My_Date,My_Location,My_IUCR\n2023-01-01,country/USA,860\n"
-    )
+        "My_Date,My_Location,My_IUCR\n2023-01-01,country/USA,860\n")
     importer = EventsImporter(
         input_file=mock_input,
         db=MagicMock(),
