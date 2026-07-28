@@ -192,6 +192,7 @@ class TestOrchestratorExecution(unittest.TestCase):
                 import_names=["USFed_Census"],
                 source_type="County",
                 destination_type="State",
+                output_import_name="USFed_Census_AggState",
                 allow_multiple_to_places=False
             )
         )

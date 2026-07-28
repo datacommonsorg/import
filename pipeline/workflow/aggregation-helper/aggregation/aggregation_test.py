@@ -285,7 +285,8 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
             PlaceAggregationConfig(
                 import_names=[],
                 source_type="County",
-                destination_type="State"
+                destination_type="State",
+                output_import_name="import1_AggState"
             )
         )
         self.assertIsNone(job)
@@ -302,7 +303,8 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
             PlaceAggregationConfig(
                 import_names=["import1"],
                 source_type="County",
-                destination_type="State"
+                destination_type="State",
+                output_import_name="import1_AggState"
             )
         )
 

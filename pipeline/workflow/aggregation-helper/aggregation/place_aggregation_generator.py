@@ -23,12 +23,46 @@ from .bq_executor import BigQueryExecutor
 from .common import _escape_sql_literal, get_provenance_name
 
 
+def get_is_measured_prop_aggregatable_sql() -> str:
+    """Returns the SQL definition for IS_MEASURED_PROP_AGGREGATABLE."""
+    return r'''
+CREATE TEMP FUNCTION IS_MEASURED_PROP_AGGREGATABLE(prop STRING) AS (
+  prop IN ('amount', 'area', 'coverageArea', 'generation', 'reserves', 'retailDrugDistribution')
+  OR ENDS_WITH(prop, 'Count')
+  OR prop = 'count'
+);
+'''
+
+
+def get_aggr_strategy_sql() -> str:
+    """Returns the SQL definition for GET_AGGR_STRATEGY."""
+    return r'''
+CREATE TEMP FUNCTION GET_AGGR_STRATEGY(stat_type STRING, prop STRING) AS (
+  IF(IS_MEASURED_PROP_AGGREGATABLE(prop),
+    CASE 
+      WHEN stat_type = 'measuredValue' THEN 'SUM'
+      WHEN stat_type = 'minValue' THEN 'MIN'
+      WHEN stat_type = 'maxValue' THEN 'MAX'
+      ELSE 'NONE'
+    END,
+    IF(
+      (stat_type = 'meanValue' AND prop = 'concentration') OR
+      (stat_type = 'measuredValue' AND prop IN ('lifetimeContractionProbability', 'heavyPrecipitationIndex', 'consecutiveDryDays')),
+      'MEAN',
+      'NONE'
+    )
+  )
+);
+'''
+
+
 @dataclass
 class PlaceAggregationConfig:
     """Configuration for place aggregation."""
     import_names: List[str]
     source_type: str
     destination_type: str
+    output_import_name: str
     allow_multiple_to_places: bool = False
 
 
@@ -55,7 +89,7 @@ class PlaceAggregationGenerator:
 
         This is a multi-statement SQL script that:
         1. Calculates the new aggregated TimeSeries metadata (with dcAggregate/
-           measurementMethod and _Agg<Type> provenance) and exports it to Spanner first.
+           measurementMethod and output_import_name provenance) and exports it to Spanner first.
         2. Aggregates all variables, facets, and dates in parallel, calculates
            the facet_id via Farm Fingerprint, and exports the Observations.
 
@@ -65,6 +99,7 @@ class PlaceAggregationGenerator:
         import_names = config.import_names
         source_type = config.source_type
         destination_type = config.destination_type
+        output_import_name = config.output_import_name
         allow_multiple_to_places = config.allow_multiple_to_places
 
         if not import_names:
@@ -78,6 +113,10 @@ class PlaceAggregationGenerator:
         provenance_names = [get_provenance_name(name, self.is_base_dc) for name in safe_names]
         provenance_str = ", ".join([f"'{name}'" for name in provenance_names])
 
+        # Output provenance is derived directly from mandatory output_import_name
+        safe_output_prov = _escape_sql_literal(get_provenance_name(output_import_name, self.is_base_dc))
+        new_prov_sql = f"'{safe_output_prov}'"
+
         # Escape types just in case
         source_type = _escape_sql_literal(source_type)
         destination_type = _escape_sql_literal(destination_type)
@@ -86,22 +125,10 @@ class PlaceAggregationGenerator:
             f"Running dynamic place aggregation: {source_type} -> {destination_type} (allow_multiple={allow_multiple_to_places}) for imports: {import_names}"
         )
 
-        # If allow_multiple_to_places is False, use MIN() to select only one parent per child.
+        # If allow_multiple_to_places is False, filter candidate parents by destination_type in BigQuery first, then use MIN().
         if allow_multiple_to_places:
             containment_sql = f"""
-            SELECT subject_id AS child_id, object_id AS parent_id
-            FROM EXTERNAL_QUERY(
-              "{connection_id}",
-              '''
-              SELECT subject_id, object_id
-              FROM Edge
-              WHERE predicate = "containedInPlace"
-              '''
-            )
-            """
-        else:
-            containment_sql = f"""
-            SELECT child_id, MIN(parent_id) AS parent_id
+            SELECT c.child_id, c.parent_id
             FROM (
               SELECT subject_id AS child_id, object_id AS parent_id
               FROM EXTERNAL_QUERY(
@@ -112,19 +139,64 @@ class PlaceAggregationGenerator:
                 WHERE predicate = "containedInPlace"
                 '''
               )
+            ) c
+            JOIN (
+              SELECT subject_id AS parent_id
+              FROM EXTERNAL_QUERY(
+                "{connection_id}",
+                '''
+                SELECT subject_id
+                FROM Edge
+                WHERE predicate = "typeOf" AND object_id = "{destination_type}"
+                '''
+              )
+            ) d ON c.parent_id = d.parent_id
+            """
+        else:
+            containment_sql = f"""
+            SELECT child_id, MIN(parent_id) AS parent_id
+            FROM (
+              SELECT c.child_id, c.parent_id
+              FROM (
+                SELECT subject_id AS child_id, object_id AS parent_id
+                FROM EXTERNAL_QUERY(
+                  "{connection_id}",
+                  '''
+                  SELECT subject_id, object_id
+                  FROM Edge
+                  WHERE predicate = "containedInPlace"
+                  '''
+                )
+              ) c
+              JOIN (
+                SELECT subject_id AS parent_id
+                FROM EXTERNAL_QUERY(
+                  "{connection_id}",
+                  '''
+                  SELECT subject_id
+                  FROM Edge
+                  WHERE predicate = "typeOf" AND object_id = "{destination_type}"
+                  '''
+                )
+              ) d ON c.parent_id = d.parent_id
             )
             GROUP BY child_id
             """
 
         # SQL helper fragments for dynamic lineage and hashing
-        # Target provenance and method expressions working directly on the JSON 'facet' column
-        new_prov_sql = f"CONCAT(JSON_VALUE(facet, '$.provenance'), '_Agg', '{destination_type}')"
+        # Target provenance derived directly from mandatory output_import_name
+        safe_output_prov = _escape_sql_literal(get_provenance_name(output_import_name, self.is_base_dc))
+        new_prov_sql = f"'{safe_output_prov}'"
         
         new_method_sql = f"""
             IF(
               JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
               'DataCommonsAggregate',
-              CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+              IF(
+                STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
+                JSON_VALUE(facet, '$.measurementMethod'),
+                CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+              )
             )
         """
         
@@ -166,9 +238,51 @@ class PlaceAggregationGenerator:
         """
 
         # Multi-Statement SQL Script:
-        # 1. Calculates and exports the new TimeSeries parent rows.
-        # 2. Calculates and exports the aggregated Observation child rows.
+        # 1. Calculates the StatVar eligibility and aggregation strategy.
+        # 2. Calculates and exports the new TimeSeries parent rows.
+        # 3. Calculates and exports the aggregated Observation child rows.
         query = f"""
+        -- =========================================================================
+        -- DEFINE HELPERS
+        -- =========================================================================
+        {get_is_measured_prop_aggregatable_sql()}
+        {get_aggr_strategy_sql()}
+
+        -- Identify eligible StatVars from Spanner Edge table or fallback to default
+        CREATE OR REPLACE TEMP TABLE StatVarMetadata AS
+        SELECT 
+          subject_id AS stat_var,
+          MAX(IF(predicate = 'measuredProperty', object_id, NULL)) AS measured_property,
+          COALESCE(MAX(IF(predicate = 'statType', object_id, NULL)), 'measuredValue') AS stat_type,
+          MAX(IF(predicate = 'measurementDenominator', object_id, NULL)) AS denominator
+        FROM EXTERNAL_QUERY("{connection_id}",
+          '''SELECT subject_id, predicate, object_id FROM Edge 
+             WHERE predicate IN ("measuredProperty", "statType", "measurementDenominator")''')
+        GROUP BY subject_id;
+
+        CREATE OR REPLACE TEMP TABLE EligibleSVs AS
+        SELECT 
+          ts_vars.variable_measured AS stat_var,
+          IF(
+            sv.stat_var IS NOT NULL,
+            IF(sv.denominator IS NOT NULL, 'NONE', GET_AGGR_STRATEGY(COALESCE(sv.stat_type, 'measuredValue'), sv.measured_property)),
+            'SUM'
+          ) AS aggr_strategy
+        FROM (
+          SELECT DISTINCT variable_measured 
+          FROM (
+            SELECT variable_measured 
+            FROM EXTERNAL_QUERY("{connection_id}", 
+              '''SELECT variable_measured FROM TimeSeries WHERE provenance IN ({provenance_str})''')
+          )
+        ) ts_vars
+        LEFT JOIN StatVarMetadata sv ON ts_vars.variable_measured = sv.stat_var
+        WHERE IF(
+            sv.stat_var IS NOT NULL,
+            IF(sv.denominator IS NOT NULL, 'NONE', GET_AGGR_STRATEGY(COALESCE(sv.stat_type, 'measuredValue'), sv.measured_property)),
+            'SUM'
+          ) != 'NONE';
+
         -- =========================================================================
         -- STEP 1: Export Parent TimeSeries Metadata (The Parent Rows)
         -- =========================================================================
@@ -180,14 +294,16 @@ class PlaceAggregationGenerator:
           SELECT
             ts.variable_measured,
             parent.parent_id,
-            '' AS extra_entities_id,
+            ts.extra_entities_id,
             -- Stringify JSON columns because BigQuery does not support SELECT DISTINCT on JSON
-            TO_JSON_STRING(JSON_OBJECT('entity1', parent.parent_id)) as entities_str,
+            TO_JSON_STRING(JSON_SET(ts.entities, '$.entity1', parent.parent_id)) as entities_str,
             TO_JSON_STRING({facet_expr}) as facet_str
           FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
+            '''SELECT entity1, variable_measured, facet_id, extra_entities_id, entities, facet
                FROM TimeSeries
-               WHERE provenance IN ({provenance_str})''') ts
+               WHERE provenance IN ({provenance_str})
+                 AND COALESCE(JSON_VALUE(facet, '$.measurementMethod'), '') != 'CensusACS5yrSurveySubjectTable' ''') ts
+          JOIN EligibleSVs sv ON ts.variable_measured = sv.stat_var
           JOIN (
             -- Source Type Check (Edge where predicate = 'typeOf' and object_id = source_type)
             SELECT subject_id
@@ -241,46 +357,32 @@ class PlaceAggregationGenerator:
             spanner_options = '{{"table": "Observation"}}' ) AS
         WITH MappedObservations AS (
           SELECT
-            ts.variable_measured,
+            obs.variable_measured,
             parent.parent_id AS entity1,
-            ts.extra_entities_id,
+            obs.extra_entities_id,
             obs.date,
             SAFE_CAST(obs.value AS FLOAT64) as val_num,
             -- Calculate the new facet JSON first to preserve all fields
             {facet_expr} AS new_facet
-          FROM (
-            -- Source TimeSeries (filtered by provenance)
-            SELECT 
-                entity1, 
-                variable_measured, 
-                facet_id, 
-                extra_entities_id,
-                facet
-            FROM EXTERNAL_QUERY("{connection_id}",
-              '''SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
-                 FROM TimeSeries
-                 WHERE provenance IN ({provenance_str})''')
-          ) ts
+          FROM EXTERNAL_QUERY("{connection_id}",
+            '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value, ts.facet
+               FROM Observation o
+               JOIN TimeSeries ts ON o.variable_measured = ts.variable_measured
+                 AND o.entity1 = ts.entity1
+                 AND o.extra_entities_id = ts.extra_entities_id
+                 AND o.facet_id = ts.facet_id
+               WHERE ts.provenance IN ({provenance_str})
+                 AND COALESCE(JSON_VALUE(ts.facet, '$.measurementMethod'), '') != 'CensusACS5yrSurveySubjectTable' ''') AS obs
           JOIN (
             -- Source Type Check
             SELECT subject_id
             FROM EXTERNAL_QUERY("{connection_id}",
               '''SELECT subject_id FROM Edge WHERE predicate = "typeOf" AND object_id = "{source_type}"''')
-          ) src_type ON ts.entity1 = src_type.subject_id
-          JOIN (
-            -- Source Observations
-            SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value
-            FROM EXTERNAL_QUERY("{connection_id}",
-              '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value FROM Observation''')
-          ) obs ON 
-              ts.variable_measured = obs.variable_measured AND 
-              ts.entity1 = obs.entity1 AND 
-              ts.extra_entities_id = obs.extra_entities_id AND 
-              ts.facet_id = obs.facet_id
+          ) src_type ON obs.entity1 = src_type.subject_id
           JOIN (
             -- Containment (child -> parent)
             {containment_sql}
-          ) parent ON ts.entity1 = parent.child_id
+          ) parent ON obs.entity1 = parent.child_id
           JOIN (
             -- Destination Type Check
             SELECT subject_id
@@ -301,14 +403,21 @@ class PlaceAggregationGenerator:
         ),
         AggregatedObs AS (
           SELECT
-            entity1,
-            variable_measured,
-            extra_entities_id,
-            new_facet_id AS facet_id,
-            date,
-            SUM(val_num) as total_val
-          FROM ObservationsWithFingerprint
-          GROUP BY entity1, variable_measured, extra_entities_id, new_facet_id, date
+            obs.entity1,
+            obs.variable_measured,
+            obs.extra_entities_id,
+            obs.new_facet_id AS facet_id,
+            obs.date,
+            CASE 
+              WHEN ANY_VALUE(sv.aggr_strategy) = 'SUM' THEN SUM(obs.val_num)
+              WHEN ANY_VALUE(sv.aggr_strategy) = 'MIN' THEN MIN(obs.val_num)
+              WHEN ANY_VALUE(sv.aggr_strategy) = 'MAX' THEN MAX(obs.val_num)
+              WHEN ANY_VALUE(sv.aggr_strategy) = 'MEAN' THEN AVG(obs.val_num)
+            END as total_val
+          FROM ObservationsWithFingerprint obs
+          JOIN EligibleSVs sv ON obs.variable_measured = sv.stat_var
+          GROUP BY obs.entity1, obs.variable_measured, obs.extra_entities_id, obs.new_facet_id, obs.date
+          HAVING total_val IS NOT NULL
         )
         SELECT 
             entity1, 
