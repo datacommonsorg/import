@@ -594,11 +594,11 @@ calculations:
             - dc/dc9v9h3q8l8n7
 
   # Education - ACSED5YrSurvey
-  - name: "CensusSAHIE_AggCountry: Health Insurance SV Aggregation"
+  - name: "ACSED5YrSurvey: Education SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
       - ACSED5YrSurvey
-    output_import: CensusSAHIE_AggCountry_StatVarAgg
+    output_import: ACSED5YrSurvey_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Parent_Occupation_Management_Business_Science_Arts
