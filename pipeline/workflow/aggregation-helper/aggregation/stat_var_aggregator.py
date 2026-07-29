@@ -88,7 +88,7 @@ class StatVarAggregator:
 
         # 1. Generate TimeSeries parent query
         ts_query = self._get_timeseries_query(
-            ancestor_sv, source_svs, import_names, output_import_name
+            ancestor_sv, source_svs, import_names, output_import_name, skip_all_sources_present_check
         )
         
         # 2. Generate Observation child query
@@ -107,7 +107,8 @@ class StatVarAggregator:
         ancestor_sv: str,
         source_svs: List[str],
         import_names: List[str],
-        output_import_name: str
+        output_import_name: str,
+        skip_all_sources_present_check: bool
     ) -> str:
         """Creates TimeSeries entries for the ancestor StatVar."""
         dest = self.executor.get_spanner_destination_uri()
@@ -122,6 +123,11 @@ class StatVarAggregator:
         
         output_provenance = get_provenance_name(output_import_name, self.is_base_dc)
         safe_output_provenance = _escape_sql_literal(output_provenance)
+
+        if skip_all_sources_present_check:
+            filter_condition = "TRUE"
+        else:
+            filter_condition = f"contribution_count = {len(source_svs)}"
 
         new_method_sql = """
             IF(
@@ -150,24 +156,49 @@ class StatVarAggregator:
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "TimeSeries"}}' ) AS
-        WITH SourceTS AS (
+        WITH MappedObservations AS (
           SELECT
-            extra_entities_id,
-            -- Stringify JSON columns because BigQuery does not support SELECT DISTINCT on JSON
-            TO_JSON_STRING(entities) as entities_str,
+            o.variable_measured,
+            o.entity1,
+            o.extra_entities_id,
+            o.date,
+            TO_JSON_STRING(o.entities) as entities_str,
             TO_JSON_STRING({facet_expr}) as facet_str
           FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT extra_entities_id, entities, facet
-               FROM TimeSeries
-               WHERE variable_measured IN ({sources_str})
-                 AND provenance IN ({imports_str})''')
+            '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.date, ts.entities AS entities, ts.facet AS facet
+               FROM Observation o
+               JOIN TimeSeries ts ON o.variable_measured = ts.variable_measured
+                 AND o.entity1 = ts.entity1
+                 AND o.extra_entities_id = ts.extra_entities_id
+                 AND o.facet_id = ts.facet_id
+               WHERE o.variable_measured IN ({sources_str})
+                 AND ts.provenance IN ({imports_str})''') AS o
+        ),
+        AggregatedCounts AS (
+          SELECT
+            entity1,
+            extra_entities_id,
+            entities_str,
+            facet_str,
+            date,
+            COUNT(DISTINCT variable_measured) as contribution_count
+          FROM MappedObservations
+          GROUP BY entity1, extra_entities_id, date, entities_str, facet_str
+        ),
+        ValidFacets AS (
+          SELECT
+            extra_entities_id,
+            entities_str,
+            facet_str
+          FROM AggregatedCounts
+          WHERE {filter_condition}
         ),
         UniqueTS AS (
           SELECT DISTINCT
             extra_entities_id,
             entities_str,
             facet_str
-          FROM SourceTS
+          FROM ValidFacets
         ),
         ParsedTS AS (
           SELECT

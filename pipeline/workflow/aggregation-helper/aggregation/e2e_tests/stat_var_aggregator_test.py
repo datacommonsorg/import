@@ -534,7 +534,58 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(results), 1)
             self.assertEqual(float(results[0][3]), 50.0)
 
+    def test_aggregate_stat_vars_no_orphaned_timeseries(self):
+        """Tests that strict mode (skip_all_sources_present_check=False) produces NO orphaned TimeSeries header rows when observations are dropped."""
+        import_name = 'OrphanTest_Import'
+        output_import_name = f'{import_name}_StatVarAgg'
+
+        # 1. Setup mock TimeSeries headers for 3 source StatVars, but only 2 have observations for geoId/06
+        self.add_timeseries('SV_A', 'geoId/06', 'OrphanMethod', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('SV_B', 'geoId/06', 'OrphanMethod', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('SV_C', 'geoId/06', 'OrphanMethod', 'P1Y', '1', '1', import_name)
+
+        # Only add Observations for SV_A and SV_B (SV_C is missing!)
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, method='OrphanMethod', import_name=import_name)
+        self.add_observation('SV_B', 'geoId/06', '2020', 20.0, method='OrphanMethod', import_name=import_name)
+
+        self.flush_to_spanner()
+
+        calculations = [
+            {
+                "name": "Orphan Test Strict Aggregation",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Orphan_Parent",
+                            "source_sv_ids": ["SV_A", "SV_B", "SV_C"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            }
+        ]
+
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        # 3. Verify in Spanner: Since SV_C is missing, strict mode drops Observations.
+        # Confirm BOTH Observation count AND TimeSeries header count for SV_Orphan_Parent are 0 (no orphaned TimeSeries headers!).
+        with self.database.snapshot() as snapshot:
+            obs_query = "SELECT COUNT(*) FROM Observation WHERE variable_measured = 'SV_Orphan_Parent'"
+            obs_count = list(snapshot.execute_sql(obs_query))[0][0]
+            self.assertEqual(obs_count, 0)
+
+        with self.database.snapshot() as snapshot:
+            ts_query = "SELECT COUNT(*) FROM TimeSeries WHERE variable_measured = 'SV_Orphan_Parent'"
+            ts_count = list(snapshot.execute_sql(ts_query))[0][0]
+            self.assertEqual(ts_count, 0)
+
 
 class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
     is_base_dc = False
+
 
