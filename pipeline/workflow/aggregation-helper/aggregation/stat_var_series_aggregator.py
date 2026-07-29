@@ -31,6 +31,30 @@ class StatVarSeriesAggregationConfig:
     calculations: List[Dict[str, Any]]
 
 
+def get_extract_year_sql() -> str:
+    """Returns the SQL definition for the ExtractYear TEMP function."""
+    return """
+CREATE TEMP FUNCTION ExtractYear(d STRING) AS (
+  COALESCE(
+    EXTRACT(YEAR FROM SAFE.PARSE_DATE('%Y-%m-%d', d)),
+    EXTRACT(YEAR FROM SAFE.PARSE_DATE('%Y-%m', d)),
+    EXTRACT(YEAR FROM SAFE.PARSE_DATE('%Y', d))
+  )
+);"""
+
+
+def get_extract_month_sql() -> str:
+    """Returns the SQL definition for the ExtractMonth TEMP function."""
+    return """
+CREATE TEMP FUNCTION ExtractMonth(d STRING) AS (
+  COALESCE(
+    EXTRACT(MONTH FROM SAFE.PARSE_DATE('%Y-%m-%d', d)),
+    EXTRACT(MONTH FROM SAFE.PARSE_DATE('%Y-%m', d))
+  )
+);"""
+
+
+
 class StatVarSeriesAggregator:
     """Orchestrates StatVar Series Aggregations.
 
@@ -212,11 +236,6 @@ class StatVarSeriesAggregator:
                 cte_idx = len(ts_ctes)
                 safe_base_date = _escape_sql_literal(base_date)
                 clean_date_suffix = safe_base_date.replace("-", "")
-                
-                if len(safe_base_date) == 4:
-                    base_filter = f"(date = '{safe_base_date}' OR SUBSTR(date, 1, 4) = '{safe_base_date}')"
-                else:
-                    base_filter = f"date = '{safe_base_date}'"
 
                 ts_cte = f"""
                 DiffRelTS_{cte_idx} AS (
@@ -245,10 +264,10 @@ class StatVarSeriesAggregator:
                     extra_entities_id,
                     model,
                     val_num AS base_val,
-                    SUBSTR(date, 1, 4) AS base_year,
-                    SUBSTR(date, 6, 2) AS base_month
+                    ExtractYear(date) AS base_year,
+                    ExtractMonth(date) AS base_month
                   FROM RawObs
-                  WHERE {base_filter}
+                  WHERE ExtractYear(date) = ExtractYear('{safe_base_date}')
                 ),
                 DiffRelObs_{cte_idx} AS (
                   SELECT
@@ -271,8 +290,8 @@ class StatVarSeriesAggregator:
                     AND r.variable_measured = b.variable_measured 
                     AND r.model = b.model
                     AND r.facet_id = b.facet_id
-                    AND SUBSTR(r.date, 6, 2) = b.base_month
-                    AND SUBSTR(r.date, 1, 4) > b.base_year
+                    AND ExtractMonth(r.date) = b.base_month
+                    AND ExtractYear(r.date) > b.base_year
                 )
                 """
                 obs_ctes.append(obs_cte)
@@ -311,9 +330,9 @@ class StatVarSeriesAggregator:
                     extra_entities_id,
                     model,
                     AVG(val_num) AS base_val,
-                    SUBSTR(date, 6, 2) AS base_month
+                    ExtractMonth(date) AS base_month
                   FROM RawObs
-                  WHERE date BETWEEN '{safe_start}' AND '{safe_end}'
+                  WHERE ExtractYear(date) BETWEEN ExtractYear('{safe_start}') AND ExtractYear('{safe_end}')
                   GROUP BY facet_id, variable_measured, entity1, extra_entities_id, model, base_month
                 ),
                 DiffRelRangeObs_{cte_idx} AS (
@@ -337,8 +356,8 @@ class StatVarSeriesAggregator:
                     AND r.variable_measured = b.variable_measured 
                     AND r.model = b.model
                     AND r.facet_id = b.facet_id
-                    AND SUBSTR(r.date, 6, 2) = b.base_month
-                    AND SUBSTR(r.date, 1, 4) > SUBSTR('{safe_end}', 1, 4)
+                    AND ExtractMonth(r.date) = b.base_month
+                    AND ExtractYear(r.date) > ExtractYear('{safe_end}')
                 )
                 """
                 obs_ctes.append(obs_cte)
@@ -754,33 +773,44 @@ class StatVarSeriesAggregator:
         obs_final_select = "\nUNION ALL\n".join(obs_union_targets)
 
         # Source filtering for Observations (Step 2)
-        obs_exclude_filter = ""
+        obs_exclude_filter_spanner = ""
         if has_stats_models:
-            obs_exclude_filter = "WHERE NOT variable_measured LIKE 'DifferenceAcrossModels_%'"
+            obs_exclude_filter_spanner = "AND NOT o.variable_measured LIKE 'DifferenceAcrossModels_%'"
 
         obs_query = f"""
+{get_extract_year_sql()}
+{get_extract_month_sql()}
+
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "Observation"}}' ) AS
         WITH RawObs AS (
           SELECT 
-            o.variable_measured, 
-            o.entity1, 
-            o.extra_entities_id, 
-            o.date, 
-            SAFE_CAST(o.value AS FLOAT64) AS val_num,
-            ts.facet,
-            ts.facet_id,
-            COALESCE(JSON_VALUE(ts.facet, '$.measurementMethod'), '') AS model
+            variable_measured, 
+            entity1, 
+            extra_entities_id, 
+            date, 
+            SAFE_CAST(value AS FLOAT64) AS val_num,
+            facet,
+            facet_id,
+            COALESCE(JSON_VALUE(facet, '$.measurementMethod'), '') AS model
           FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value 
-               FROM Observation {obs_exclude_filter} ''') o
-          JOIN EXTERNAL_QUERY("{connection_id}",
-            '''SELECT variable_measured, entity1, extra_entities_id, facet_id, facet 
-               FROM TimeSeries 
-               WHERE provenance IN ({input_provenance_str})''') ts
-            ON o.variable_measured = ts.variable_measured AND o.entity1 = ts.entity1 AND o.facet_id = ts.facet_id AND o.extra_entities_id = ts.extra_entities_id
+            '''SELECT 
+                 o.variable_measured, 
+                 o.entity1, 
+                 o.extra_entities_id, 
+                 o.facet_id, 
+                 o.date, 
+                 o.value,
+                 ts.facet
+               FROM Observation o
+               JOIN TimeSeries ts
+                 ON o.variable_measured = ts.variable_measured 
+                AND o.entity1 = ts.entity1 
+                AND o.extra_entities_id = ts.extra_entities_id 
+                AND o.facet_id = ts.facet_id
+               WHERE ts.provenance IN ({input_provenance_str}) {obs_exclude_filter_spanner} ''')
         ),
         {obs_ctes_combined}
         {obs_final_select};
