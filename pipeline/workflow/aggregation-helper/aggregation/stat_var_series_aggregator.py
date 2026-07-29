@@ -54,6 +54,24 @@ CREATE TEMP FUNCTION ExtractMonth(d STRING) AS (
 );"""
 
 
+def _get_time_window_filter_sql(output_obs_date: Optional[str], output_obs_period: Optional[str]) -> str:
+    """Computes SQL WHERE clause filter for multi-year output periods (e.g. P10Y, P30Y, P80Y)."""
+    if not output_obs_date or not output_obs_period:
+        return ""
+
+    if len(output_obs_date) == 4 and output_obs_date.isdigit():
+        end_year = int(output_obs_date)
+        if output_obs_period.startswith("P") and output_obs_period.endswith("Y"):
+            period_num_str = output_obs_period[1:-1]
+            if period_num_str.isdigit():
+                num_years = int(period_num_str)
+                start_year = end_year - num_years + 1
+                return f"AND ExtractYear(date) BETWEEN {start_year} AND {end_year}"
+
+    return ""
+
+
+
 
 class StatVarSeriesAggregator:
     """Orchestrates StatVar Series Aggregations.
@@ -471,6 +489,7 @@ class StatVarSeriesAggregator:
                 op_name = "AggregateSum"
 
             # Determine date binning expression based on target period
+            date_window_filter = _get_time_window_filter_sql(output_obs_date, output_period)
             if output_obs_date:
                 date_bin_expr = f"'{_escape_sql_literal(output_obs_date)}'"
                 group_by_date = ""
@@ -533,7 +552,7 @@ class StatVarSeriesAggregator:
                   'true'
                 )) AS STRING) AS facet_id
               FROM RawObs
-              WHERE {period_filter} {regex_filter_obs}
+              WHERE {period_filter} {regex_filter_obs} {date_window_filter}
               GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
             )
             """
@@ -585,6 +604,7 @@ class StatVarSeriesAggregator:
             sql_comp = ">=" if is_ge else "<="
 
             # Determine date binning and output date
+            date_window_filter = _get_time_window_filter_sql(output_obs_date, output_period)
             if output_obs_date:
                 date_expr = f"'{_escape_sql_literal(output_obs_date)}'"
                 group_by_date = ""
@@ -640,7 +660,7 @@ class StatVarSeriesAggregator:
                 )) AS STRING) AS facet_id
               FROM RawObs
               WHERE COALESCE(JSON_VALUE(facet, '$.observationPeriod'), '') = '{input_period}'
-                {regex_filter_obs}
+                {regex_filter_obs} {date_window_filter}
               GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
               HAVING SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) > 0
             )

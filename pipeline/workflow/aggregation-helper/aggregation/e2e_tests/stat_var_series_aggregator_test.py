@@ -264,8 +264,69 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
                   AND date = '2050-07'
             """
             obs_results = list(snapshot.execute_sql(obs_query))
-            self.assertEqual(len(obs_results), 1)
+            self.assertEqual(obs_results[0][0], '3.0')
             self.assertEqual(float(obs_results[0][0]), 3.0)
+
+    def test_multiyear_window_date_filtering(self):
+        """Tests aggr_over_time with multi-year period (P10Y) and output_obs_date ('2030').
+
+        Verifies that observations outside the window [2021, 2030] (e.g. 2010) are EXCLUDED.
+        """
+        import_name = 'NASA_NEXGDDP_Test_Window'
+        output_import = f'{import_name}_AggrWindow'
+        place_id = 'geoId/5363000'
+
+        # Outside window (year 2010): value = 100.0 (should be EXCLUDED)
+        self.add_observation('Max_Temperature', place_id, '2010-05', 100.0, method='Model_A', period='P1M', import_name=import_name, facet_id='facet_a')
+
+        # Inside window [2021, 2030]
+        self.add_observation('Max_Temperature', place_id, '2025-05', 50.0, method='Model_A', period='P1M', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2028-05', 80.0, method='Model_A', period='P1M', import_name=import_name, facet_id='facet_a')
+
+        self.flush_to_spanner()
+
+        calculations_config = [
+            {
+                "name": "P10Y Window Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 3,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "aggr_over_time": {
+                                "time_range": {
+                                    "input_obs_period": "P1M",
+                                    "output_obs_period": "P10Y",
+                                    "output_obs_date": "2030"
+                                },
+                                "sv_configs": [
+                                    {
+                                        "aggregation_op": "MAX",
+                                        "use_input_sv_for_output": True
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'Max_Temperature'
+                  AND date = '2030'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            # Must be MAX(50.0, 80.0) = 80.0, excluding 100.0 from 2010
+            self.assertEqual(float(obs_results[0][0]), 80.0)
 
     def test_temporal_aggregation(self):
         """Tests temporal aggregation (aggr_over_time): daily to monthly/yearly."""
