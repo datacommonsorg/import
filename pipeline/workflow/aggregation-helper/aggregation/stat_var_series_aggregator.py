@@ -194,13 +194,13 @@ class StatVarSeriesAggregator:
         ts_cte = f"""
         DiffAcrossModelsTS AS (
           SELECT DISTINCT
-            CONCAT('DifferenceAcrossModels_', variable_measured) AS variable_measured,
+            CONCAT('MaxDiffAcrossMeasurementMethods_', variable_measured) AS variable_measured,
             entity1,
             extra_entities_id,
             TO_JSON_STRING(JSON_SET(
               JSON_SET(
                 JSON_SET(facet, '$.provenance', '{output_provenance}'),
-                '$.measurementMethod', 'dcAggregate/DifferenceAcrossModels'
+                '$.measurementMethod', 'dcAggregate/MaxDiffAcrossMeasurementMethods'
               ),
               '$.isDcAggregate', true
             )) AS facet_str
@@ -212,14 +212,14 @@ class StatVarSeriesAggregator:
         obs_cte = f"""
         MaxDiffObs AS (
           SELECT
-            CONCAT('DifferenceAcrossModels_', variable_measured) AS variable_measured,
+            CONCAT('MaxDiffAcrossMeasurementMethods_', variable_measured) AS variable_measured,
             entity1,
             extra_entities_id,
             date,
             MAX(val_num) - MIN(val_num) AS val,
             CAST(FARM_FINGERPRINT(CONCAT(
               '{output_provenance}', '^',
-              'dcAggregate/DifferenceAcrossModels', '^',
+              'dcAggregate/MaxDiffAcrossMeasurementMethods', '^',
               COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.observationPeriod'), ''), '^',
               COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.scalingFactor'), ''), '^',
               COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.unit'), ''), '^',
@@ -737,7 +737,7 @@ class StatVarSeriesAggregator:
         if has_stats_models:
             # Stats across models consumes the output of Round 1, but we must ignore
             # DifferenceAcrossModels which doesn't have multiple models to aggregate
-            ts_exclude_filter = "AND NOT variable_measured LIKE 'DifferenceAcrossModels_%'"
+            ts_exclude_filter = "AND NOT variable_measured LIKE 'MaxDiffAcrossMeasurementMethods_%'"
 
         ts_query = f"""
         EXPORT DATA
@@ -802,7 +802,7 @@ class StatVarSeriesAggregator:
         # Source filtering for Observations (Step 2)
         obs_exclude_filter_spanner = ""
         if has_stats_models:
-            obs_exclude_filter_spanner = "AND NOT o.variable_measured LIKE 'DifferenceAcrossModels_%'"
+            obs_exclude_filter_spanner = "AND NOT o.variable_measured LIKE 'MaxDiffAcrossMeasurementMethods_%'"
 
         obs_query = f"""
 {get_extract_year_sql()}
