@@ -35,11 +35,7 @@ def get_extract_year_sql() -> str:
     """Returns the SQL definition for the ExtractYear TEMP function."""
     return """
 CREATE TEMP FUNCTION ExtractYear(d STRING) AS (
-  COALESCE(
-    EXTRACT(YEAR FROM SAFE.PARSE_DATE('%Y-%m-%d', d)),
-    EXTRACT(YEAR FROM SAFE.PARSE_DATE('%Y-%m', d)),
-    EXTRACT(YEAR FROM SAFE.PARSE_DATE('%Y', d))
-  )
+  SAFE_CAST(SUBSTR(d, 1, 4) AS INT64)
 );"""
 
 
@@ -48,8 +44,8 @@ def get_extract_month_sql() -> str:
     return """
 CREATE TEMP FUNCTION ExtractMonth(d STRING) AS (
   COALESCE(
-    EXTRACT(MONTH FROM SAFE.PARSE_DATE('%Y-%m-%d', d)),
-    EXTRACT(MONTH FROM SAFE.PARSE_DATE('%Y-%m', d))
+    SAFE_CAST(SUBSTR(d, 6, 2) AS INT64),
+    0
   )
 );"""
 
@@ -230,7 +226,10 @@ class StatVarSeriesAggregator:
               'true'
             )) AS STRING) AS facet_id
           FROM RawObs
-          GROUP BY entity1, extra_entities_id, variable_measured, date
+          GROUP BY entity1, extra_entities_id, variable_measured, date,
+                   COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''),
+                   COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''),
+                   COALESCE(JSON_VALUE(facet, '$.unit'), '')
           HAVING COUNT(DISTINCT model) >= 2
         )
         """
@@ -620,6 +619,7 @@ class StatVarSeriesAggregator:
             cte_idx = len(ts_ctes)
             regex_filter_ts = f"AND REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
             regex_filter_obs = f"AND REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
+            unit_filter = f"AND COALESCE(JSON_VALUE(facet, '$.unit'), '') = '{_escape_sql_literal(unit)}'" if unit else ""
 
             # TimeSeries Metadata CTE (removes unit, updates period and provenance)
             ts_cte = f"""
@@ -660,7 +660,7 @@ class StatVarSeriesAggregator:
                 )) AS STRING) AS facet_id
               FROM RawObs
               WHERE COALESCE(JSON_VALUE(facet, '$.observationPeriod'), '') = '{input_period}'
-                {regex_filter_obs} {date_window_filter}
+                {unit_filter} {regex_filter_obs} {date_window_filter}
               GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
               HAVING SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) > 0
             )
@@ -720,7 +720,14 @@ class StatVarSeriesAggregator:
             extra_entities_id,
             SAFE.PARSE_JSON(facet_str) AS facet
           FROM (
-            {ts_union_select}
+            SELECT DISTINCT
+              variable_measured,
+              entity1,
+              extra_entities_id,
+              facet_str
+            FROM (
+              {ts_union_select}
+            )
           )
         )
         """
