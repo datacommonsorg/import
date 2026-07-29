@@ -831,6 +831,7 @@ calculations:
           source_sv_ids:
             - Count_Person_WithOwnChildrenUnder18_Female
             - Count_Person_WithOwnChildrenUnder18_Male
+          skip_all_sources_present_check: true
 
   # Marriage
   - name: "CensusACS5YearSurvey_SubjectTables_S1201: Marital Status SV Aggregation"
@@ -1035,6 +1036,7 @@ calculations:
             - Count_Person_USCitizenByNaturalization_DateOfEntry1990To1999_ForeignBorn
             - Count_Person_USCitizenByNaturalization_DateOfEntry2000OrLater_ForeignBorn
             - Count_Person_USCitizenByNaturalization_DateOfEntry2010OrLater_ForeignBorn
+          skip_all_sources_present_check: true
 
   # HousingUnit HomeValue.
   - name: "CensusACS5YearSurvey: Home Value SV Aggregation"
