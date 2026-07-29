@@ -213,6 +213,11 @@ class StatVarSeriesAggregator:
                 safe_base_date = _escape_sql_literal(base_date)
                 clean_date_suffix = safe_base_date.replace("-", "")
                 
+                if len(safe_base_date) == 4:
+                    base_filter = f"(date = '{safe_base_date}' OR SUBSTR(date, 1, 4) = '{safe_base_date}')"
+                else:
+                    base_filter = f"date = '{safe_base_date}'"
+
                 ts_cte = f"""
                 DiffRelTS_{cte_idx} AS (
                   SELECT DISTINCT
@@ -240,10 +245,10 @@ class StatVarSeriesAggregator:
                     extra_entities_id,
                     model,
                     val_num AS base_val,
-                    date AS base_date,
+                    SUBSTR(date, 1, 4) AS base_year,
                     SUBSTR(date, 6, 2) AS base_month
                   FROM RawObs
-                  WHERE date = '{safe_base_date}'
+                  WHERE {base_filter}
                 ),
                 DiffRelObs_{cte_idx} AS (
                   SELECT
@@ -267,7 +272,7 @@ class StatVarSeriesAggregator:
                     AND r.model = b.model
                     AND r.facet_id = b.facet_id
                     AND SUBSTR(r.date, 6, 2) = b.base_month
-                    AND SUBSTR(r.date, 1, 4) > SUBSTR(b.base_date, 1, 4)
+                    AND SUBSTR(r.date, 1, 4) > b.base_year
                 )
                 """
                 obs_ctes.append(obs_cte)

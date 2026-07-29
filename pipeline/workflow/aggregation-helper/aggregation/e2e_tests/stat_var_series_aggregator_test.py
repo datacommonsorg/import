@@ -221,6 +221,52 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(obs_ensemble_results[2][0], 'Percentile90AcrossModels_DifferenceRelativeToBaseDate201507_Max_Temperature')
             self.assertEqual(float(obs_ensemble_results[2][1]), 4.0)
 
+    def test_4digit_base_year_matching(self):
+        """Tests diff_relative_to_base_date with a 4-digit base year (e.g. '2015') matching monthly dates ('2015-07')."""
+        import_name = 'NASA_NEXGDDP_Test_BaseYear'
+        output_import = f'{import_name}_AggrBaseYear'
+        place_id = 'geoId/5363000'
+
+        # Baseline monthly observation in 2015-07 (base year '2015')
+        self.add_observation('Max_Temperature', place_id, '2015-07', 30.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+
+        # Projection monthly observation in 2050-07 -> 33 - 30 = 3.0
+        self.add_observation('Max_Temperature', place_id, '2050-07', 33.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+
+        self.flush_to_spanner()
+
+        calculations_config = [
+            {
+                "name": "Base Year 4-Digit Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "diff_relative_to_base_date": {
+                                "dates": ["2015"]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'DifferenceRelativeToBaseDate2015_Max_Temperature'
+                  AND date = '2050-07'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            self.assertEqual(float(obs_results[0][0]), 3.0)
+
     def test_temporal_aggregation(self):
         """Tests temporal aggregation (aggr_over_time): daily to monthly/yearly."""
         import_name = 'NASA_NEXGDDP_Test_Temporal'
