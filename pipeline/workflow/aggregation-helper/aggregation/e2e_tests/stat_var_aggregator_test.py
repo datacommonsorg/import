@@ -461,6 +461,80 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             count = list(snapshot.execute_sql(obs_query))[0][0]
             self.assertEqual(count, 0)
 
+    def test_aggregate_stat_vars_multistage(self):
+        """Tests that a 2-stage stat var aggregation correctly computes intermediate SVs in stage 1 and top-level SVs in stage 2."""
+        import_name = 'S1251_Test'
+        stage1_import_name = f'{import_name}_Stage1'
+        output_import_name = f'{import_name}_StatVarAgg'
+
+        # 1. Setup mock data for 4 raw leaf StatVars
+        self.add_timeseries('SV_Female_Married', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('SV_Female_Divorced', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('SV_Male_Married', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+        self.add_timeseries('SV_Male_Divorced', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
+
+        self.add_observation('SV_Female_Married', 'geoId/06', '2020', 10.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('SV_Female_Divorced', 'geoId/06', '2020', 5.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('SV_Male_Married', 'geoId/06', '2020', 20.0, method='CensusACS5yrSurvey', import_name=import_name)
+        self.add_observation('SV_Male_Divorced', 'geoId/06', '2020', 15.0, method='CensusACS5yrSurvey', import_name=import_name)
+
+        self.flush_to_spanner()
+
+        calculations = [
+            {
+                "name": "S1251 Stage 1",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": stage1_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Female_Total",
+                            "source_sv_ids": ["SV_Female_Married", "SV_Female_Divorced"],
+                            "skip_all_sources_present_check": False
+                        },
+                        {
+                            "ancestor_sv_id": "SV_Male_Total",
+                            "source_sv_ids": ["SV_Male_Married", "SV_Male_Divorced"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "S1251 Stage 2",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 2,
+                "input_imports": [stage1_import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_TopLevel_Total",
+                            "source_sv_ids": ["SV_Female_Total", "SV_Male_Total"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            }
+        ]
+
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        # 3. Verify in Spanner: SV_TopLevel_Total should exist with aggregated value 50.0 (10 + 5 + 20 + 15)
+        with self.database.snapshot() as snapshot:
+            obs_query = """
+                SELECT variable_measured, entity1, date, value
+                FROM Observation
+                WHERE variable_measured = 'SV_TopLevel_Total'
+            """
+            results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(results), 1)
+            self.assertEqual(float(results[0][3]), 50.0)
+
 
 class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
     is_base_dc = False
+

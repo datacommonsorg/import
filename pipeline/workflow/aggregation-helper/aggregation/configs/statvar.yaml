@@ -800,12 +800,13 @@ calculations:
             - dc/qgv9d3frn35qc
             - dc/91vy0sf20wlg9
 
-  # WithOwnChildrenUnder18.
-  - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation"
+  # WithOwnChildrenUnder18 (Stage 1).
+  - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation (Stage 1)"
     type: STAT_VAR_AGGREGATION
+    stage: 1
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S1251
-    output_import: CensusACS5YearSurvey_SubjectTables_S1251_StatVarAgg
+    output_import: CensusACS5YearSurvey_SubjectTables_S1251_Stage1
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_WithOwnChildrenUnder18_Female
@@ -816,6 +817,16 @@ calculations:
           source_sv_ids:
             - Count_Person_WithOwnChildrenUnder18_Male_FamilyHousehold_MarriedInThePast12Months_ResidesInHousehold
             - Count_Person_WithOwnChildrenUnder18_Male_FamilyHousehold_DivorcedInThePast12Months_ResidesInHousehold
+
+  # WithOwnChildrenUnder18 (Stage 2).
+  - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation (Stage 2)"
+    type: STAT_VAR_AGGREGATION
+    stage: 2
+    input_imports:
+      - CensusACS5YearSurvey_SubjectTables_S1251_Stage1
+    output_import: CensusACS5YearSurvey_SubjectTables_S1251_StatVarAgg
+    stat_var_aggregation:
+      aggregations:
         - ancestor_sv_id: Count_Person_WithOwnChildrenUnder18
           source_sv_ids:
             - Count_Person_WithOwnChildrenUnder18_Female
@@ -829,24 +840,28 @@ calculations:
     output_import: CensusACS5YearSurvey_SubjectTables_S1201_StatVarAgg
     stat_var_aggregation:
       aggregations:
-        - ancestor_sv_id: Count_Person_InLaborForce_Divorced
+        - ancestor_sv_id: Count_Person_15OrMoreYears_MarriedAndNotSeparated
           source_sv_ids:
-            - Count_Person_InLaborForce_Female_Divorced
-            - Count_Person_InLaborForce_Male_Divorced
-        - ancestor_sv_id: Count_Person_InLaborForce_NeverMarried
+            - Count_Person_15OrMoreYears_Female_MarriedAndNotSeparated
+            - Count_Person_15OrMoreYears_Male_MarriedAndNotSeparated
+        - ancestor_sv_id: Count_Person_15OrMoreYears_Widowed
           source_sv_ids:
-            - Count_Person_InLaborForce_Female_NeverMarried
-            - Count_Person_InLaborForce_Male_NeverMarried
-        - ancestor_sv_id: Count_Person_InLaborForce_MarriedAndNotSeparated
+            - Count_Person_15OrMoreYears_Female_Widowed
+            - Count_Person_15OrMoreYears_Male_Widowed
+        - ancestor_sv_id: Count_Person_15OrMoreYears_Divorced
           source_sv_ids:
-            - Count_Person_InLaborForce_Female_MarriedAndNotSeparated
-            - Count_Person_InLaborForce_Male_MarriedAndNotSeparated
-        - ancestor_sv_id: Count_Person_InLaborForce_Widowed
+            - Count_Person_15OrMoreYears_Female_Divorced
+            - Count_Person_15OrMoreYears_Male_Divorced
+        - ancestor_sv_id: Count_Person_15OrMoreYears_Separated
           source_sv_ids:
-            - Count_Person_InLaborForce_Female_Widowed
-            - Count_Person_InLaborForce_Male_Widowed
+            - Count_Person_15OrMoreYears_Female_Separated
+            - Count_Person_15OrMoreYears_Male_Separated
+        - ancestor_sv_id: Count_Person_15OrMoreYears_NeverMarried
+          source_sv_ids:
+            - Count_Person_15OrMoreYears_Female_NeverMarried
+            - Count_Person_15OrMoreYears_Male_NeverMarried
 
-  # Employment by business ownership type.
+  # Business Ownership Employment
   - name: "CensusACS5YearSurvey_SubjectTables_S2408: Business Ownership Employment SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
@@ -854,21 +869,38 @@ calculations:
     output_import: CensusACS5YearSurvey_SubjectTables_S2408_StatVarAgg
     stat_var_aggregation:
       aggregations:
-        - ancestor_sv_id: Count_Person_PrivatelyOwnedNotForProfitEstablishment_PaidWorker
+        - ancestor_sv_id: Count_Person_16OrMoreYears_PrivateForProfitEmployee
           source_sv_ids:
-            - Count_Person_PrivatelyOwnedNotForProfitEstablishment_Male_PaidWorker
-            - Count_Person_PrivatelyOwnedNotForProfitEstablishment_Female_PaidWorker
-        - ancestor_sv_id: Count_Person_PrivatelyOwnedForProfitEstablishment_PaidWorker
+            - Count_Person_16OrMoreYears_Female_PrivateForProfitEmployee
+            - Count_Person_16OrMoreYears_Male_PrivateForProfitEmployee
+        - ancestor_sv_id: Count_Person_16OrMoreYears_SelfEmployedInOwnIncorporatedBusiness
           source_sv_ids:
-            - Count_Person_PrivatelyOwnedForProfitEstablishment_Male_PaidWorker
-            - Count_Person_PrivatelyOwnedForProfitEstablishment_Female_PaidWorker
+            - Count_Person_16OrMoreYears_Female_SelfEmployedInOwnIncorporatedBusiness
+            - Count_Person_16OrMoreYears_Male_SelfEmployedInOwnIncorporatedBusiness
+        - ancestor_sv_id: Count_Person_16OrMoreYears_PrivateNotForProfitEmployee
+          source_sv_ids:
+            - Count_Person_16OrMoreYears_Female_PrivateNotForProfitEmployee
+            - Count_Person_16OrMoreYears_Male_PrivateNotForProfitEmployee
+        - ancestor_sv_id: Count_Person_16OrMoreYears_LocalGovernmentEmployee
+          source_sv_ids:
+            - Count_Person_16OrMoreYears_Female_LocalGovernmentEmployee
+            - Count_Person_16OrMoreYears_Male_LocalGovernmentEmployee
+        - ancestor_sv_id: Count_Person_16OrMoreYears_StateGovernmentEmployee
+          source_sv_ids:
+            - Count_Person_16OrMoreYears_Female_StateGovernmentEmployee
+            - Count_Person_16OrMoreYears_Male_StateGovernmentEmployee
+        - ancestor_sv_id: Count_Person_16OrMoreYears_FederalGovernmentEmployee
+          source_sv_ids:
+            - Count_Person_16OrMoreYears_Female_FederalGovernmentEmployee
+            - Count_Person_16OrMoreYears_Male_FederalGovernmentEmployee
 
-  # US Citizen by Naturalization
-  - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation"
+  # US Citizen by Naturalization (Stage 1).
+  - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation (Stage 1)"
     type: STAT_VAR_AGGREGATION
+    stage: 1
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0504
-    output_import: CensusACS5YearSurvey_SubjectTables_S0504_StatVarAgg
+    output_import: CensusACS5YearSurvey_SubjectTables_S0504_Stage1
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_USCitizenByNaturalization_DateOfEntry2000OrLater_ForeignBorn
@@ -985,6 +1017,16 @@ calculations:
             - Count_Person_USCitizenByNaturalization_DateOfEntry1990OrEarlier_ForeignBorn_PlaceOfBirthSouthernEasternEurope
             - Count_Person_USCitizenByNaturalization_DateOfEntry1990OrEarlier_ForeignBorn_PlaceOfBirthWesternAsia
           skip_all_sources_present_check: true
+
+  # US Citizen by Naturalization (Stage 2).
+  - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation (Stage 2)"
+    type: STAT_VAR_AGGREGATION
+    stage: 2
+    input_imports:
+      - CensusACS5YearSurvey_SubjectTables_S0504_Stage1
+    output_import: CensusACS5YearSurvey_SubjectTables_S0504_StatVarAgg
+    stat_var_aggregation:
+      aggregations:
         - ancestor_sv_id: Count_Person_USCitizenByNaturalization
           source_sv_ids:
             - Count_Person_USCitizenByNaturalization_DateOfEntry1990OrEarlier_ForeignBorn
