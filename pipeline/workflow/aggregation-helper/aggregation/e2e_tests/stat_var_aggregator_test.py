@@ -415,7 +415,52 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(obs_row[1], ts_row[1]) # facet_id matches!
             self.assertEqual(float(obs_row[2]), 30.0)
 
+    def test_aggregate_stat_vars_mismatched_units_strict(self):
+        """Tests that source SVs with mismatched units are separated into different facets and dropped in strict mode."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        output_import_name = f'{import_name}_StatVarAgg'
+
+        # 1. Setup mock data: SV_A has unit='USD', SV_B has unit='EUR'
+        self.add_timeseries('SV_A', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', 'USD', '1', import_name, facet_id='facet_usd')
+        self.add_timeseries('SV_B', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', 'EUR', '1', import_name, facet_id='facet_eur')
+
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, unit='USD', import_name=import_name, facet_id='facet_usd')
+        self.add_observation('SV_B', 'geoId/06', '2020', 20.0, unit='EUR', import_name=import_name, facet_id='facet_eur')
+
+        self.flush_to_spanner()
+
+        calculations = [
+            {
+                "name": "StatVar Aggregation Mismatched Units Strict",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Parent",
+                            "source_sv_ids": ["SV_A", "SV_B"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        # 3. Verify in Spanner: Since units don't match, contribution_count for each facet is 1 (instead of 2),
+        # so strict mode drops all observations.
+        with self.database.snapshot() as snapshot:
+            obs_query = """
+                SELECT COUNT(*)
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+            """
+            count = list(snapshot.execute_sql(obs_query))[0][0]
+            self.assertEqual(count, 0)
+
 
 class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
     is_base_dc = False
-
