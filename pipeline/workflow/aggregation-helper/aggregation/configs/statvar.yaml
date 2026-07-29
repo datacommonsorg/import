@@ -1254,7 +1254,7 @@ calculations:
             # Population: Male, 10,000 - 12,499 USD, White Alone Not Hispanic or Latino, Worked Full Time
             - dc/5jp07brw3g26h
 
-  - name: "DEA_ARCOS: Opioid Prescription SV Aggregation"
+  - name: "IndiaNSS_HealthAilments: Health Ailments SV Aggregation"
     type: STAT_VAR_AGGREGATION
     input_imports:
       - IndiaNSS_HealthAilments
