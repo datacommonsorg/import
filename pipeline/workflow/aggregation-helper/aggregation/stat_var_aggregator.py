@@ -127,7 +127,11 @@ class StatVarAggregator:
             IF(
               JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
               'DataCommonsAggregate',
-              CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+              IF(
+                STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
+                JSON_VALUE(facet, '$.measurementMethod'),
+                CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+              )
             )
         """
         facet_expr = f"""
@@ -218,6 +222,18 @@ class StatVarAggregator:
         else:
             filter_condition = f"contribution_count = {len(source_svs)}"
 
+        new_method_sql = """
+            IF(
+              JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
+              'DataCommonsAggregate',
+              IF(
+                STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
+                JSON_VALUE(facet, '$.measurementMethod'),
+                CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
+              )
+            )
+        """
+
         query = f"""  # nosec
         EXPORT DATA
           OPTIONS( uri="{dest}",
@@ -235,11 +251,7 @@ class StatVarAggregator:
               -- New provenance
               '{safe_output_provenance}', '^',
               -- New measurementMethod
-              IF(
-                JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
-                'DataCommonsAggregate',
-                CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
-              ), '^',
+              {new_method_sql}, '^',
               -- Preserved fields
               COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), '^',
               COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), '^',

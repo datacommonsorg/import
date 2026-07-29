@@ -353,6 +353,69 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(obs_row[4], '2020')
             self.assertEqual(float(obs_row[5]), 30.0)
 
+    def test_aggregate_stat_vars_idempotent_method(self):
+        """Tests that an existing dcAggregate/ prefix in measurementMethod is preserved and not duplicated."""
+        import_name = 'CensusACS5YearSurvey_Test'
+        output_import_name = f'{import_name}_StatVarAgg'
+        prefix = "dc/base/" if self.is_base_dc else ""
+        expected_provenance = f"{prefix}{output_import_name}"
+
+        # 1. Setup mock data with existing dcAggregate/ prefix
+        existing_method = 'dcAggregate/CensusACS5yrSurvey'
+        self.add_timeseries('SV_A', 'geoId/06', existing_method, 'P1Y', '1', '1', import_name)
+        self.add_timeseries('SV_B', 'geoId/06', existing_method, 'P1Y', '1', '1', import_name)
+
+        self.add_observation('SV_A', 'geoId/06', '2020', 10.0, method=existing_method, import_name=import_name)
+        self.add_observation('SV_B', 'geoId/06', '2020', 20.0, method=existing_method, import_name=import_name)
+
+        self.flush_to_spanner()
+
+        calculations = [
+            {
+                "name": "StatVar Aggregation Idempotent Method",
+                "type": "STAT_VAR_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import_name,
+                "stat_var_aggregation": {
+                    "aggregations": [
+                        {
+                            "ancestor_sv_id": "SV_Parent",
+                            "source_sv_ids": ["SV_A", "SV_B"],
+                            "skip_all_sources_present_check": False
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        # 3. Verify results in Spanner: measurementMethod should still be 'dcAggregate/CensusACS5yrSurvey'
+        with self.database.snapshot(multi_use=True) as snapshot:
+            ts_query = """
+                SELECT variable_measured, facet_id, facet
+                FROM TimeSeries
+                WHERE variable_measured = 'SV_Parent'
+            """
+            ts_results = list(snapshot.execute_sql(ts_query))
+            self.assertEqual(len(ts_results), 1)
+            ts_row = ts_results[0]
+            facet_json = ts_row[2]
+            self.assertEqual(facet_json['measurementMethod'], 'dcAggregate/CensusACS5yrSurvey')
+
+            obs_query = """
+                SELECT variable_measured, facet_id, value
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            obs_row = obs_results[0]
+            self.assertEqual(obs_row[1], ts_row[1]) # facet_id matches!
+            self.assertEqual(float(obs_row[2]), 30.0)
+
 
 class StatVarAggregatorCustomDcTest(StatVarAggregatorIntegrationTest):
     is_base_dc = False
+
