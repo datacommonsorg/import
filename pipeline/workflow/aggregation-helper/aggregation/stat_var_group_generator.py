@@ -854,7 +854,8 @@ class StatVarGroupGenerator:
               orig.provenance
             FROM EffectiveParent ep
             JOIN Edge orig ON orig.subject_id = ep.node_id AND orig.predicate = ep.predicate
-            WHERE NOT EXISTS (
+            WHERE orig.object_id IN (SELECT svg_id FROM PrunableSVGs)
+              AND NOT EXISTS (
               SELECT 1 FROM Edge e
               WHERE e.subject_id = ep.node_id
                 AND e.predicate = ep.predicate
