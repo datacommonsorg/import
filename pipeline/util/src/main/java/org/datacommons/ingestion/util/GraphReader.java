@@ -171,16 +171,21 @@ public class GraphReader implements Serializable {
                 }));
 
     return uniqueSeries.apply(
-        "CountTimeSeries-" + importName,
-        ParDo.of(
-            new DoFn<TimeSeries, TimeSeries>() {
-              @ProcessElement
-              public void processElement(
-                  @Element TimeSeries ts, OutputReceiver<TimeSeries> receiver) {
-                tsCounter.inc();
-                receiver.output(ts);
-              }
-            }));
+        "CountTimeSeries-" + importName, ParDo.of(new CountTimeSeriesFn(tsCounter)));
+  }
+
+  public static class CountTimeSeriesFn extends DoFn<TimeSeries, TimeSeries> {
+    private final Counter tsCounter;
+
+    public CountTimeSeriesFn(Counter tsCounter) {
+      this.tsCounter = tsCounter;
+    }
+
+    @ProcessElement
+    public void processElement(@Element TimeSeries ts, OutputReceiver<TimeSeries> receiver) {
+      tsCounter.inc();
+      receiver.output(ts);
+    }
   }
 
   public static PCollection<Observation> extractObservations(
