@@ -161,7 +161,9 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.json()["status"], "OK")
         mock_spanner_client.seed_database.assert_called_once()
 
-    def test_update_import_status_success(self):
+    @patch('routes.imports.import_utils.get_next_refresh')
+    def test_update_import_status_success(self, mock_get_next_refresh):
+        mock_get_next_refresh.return_value = "2026-07-01T00:00:00Z"
         mock_spanner_client = MagicMock()
         mock_storage_client = MagicMock()
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
@@ -288,6 +290,100 @@ class TestMain(unittest.TestCase):
         
         # Verify get_caller_identity was called exactly once outside of the loop
         mock_get_caller_identity.assert_called_once()
+
+    def test_revert_single_import(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_version_history.return_value = ["v2", "v1"]
+        mock_spanner_client.get_import_latest_version.return_value = "gs://bucket/path/v2"
+        mock_spanner_client.revert_import_state.return_value = True
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        payload = {
+            "importName": "foo:bar:imp1",
+            "workflowId": "wf-123",
+            "dryRun": False
+        }
+        response = client.post("/imports/revert", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertEqual(data["message"], "Reverted foo:bar:imp1: v2 -> v1")
+        self.assertTrue(data["reverted"])
+        self.assertEqual(len(data["revertedImports"]), 1)
+        self.assertEqual(data["revertedImports"][0]["importName"], "foo:bar:imp1")
+        self.assertEqual(data["revertedImports"][0]["failedVersion"], "v2")
+        self.assertEqual(data["revertedImports"][0]["restoredVersion"], "v1")
+        mock_spanner_client.get_import_version_history.assert_called_once_with("imp1")
+        mock_spanner_client.revert_import_state.assert_called_once_with(
+            import_name="imp1",
+            new_latest_version_path="gs://bucket/path/v1",
+            previous_version="v1",
+            workflow_id="wf-123",
+            comment="Reverted batch workflow (wf-123)"
+        )
+
+    def test_revert_single_import_without_workflow_id(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_version_history.return_value = ["v2", "v1"]
+        mock_spanner_client.get_import_latest_version.return_value = "gs://bucket/path/v2"
+        mock_spanner_client.revert_import_state.return_value = True
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        payload = {
+            "importName": "foo:bar:imp1",
+            "dryRun": False
+        }
+        response = client.post("/imports/revert", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertEqual(data["message"], "Reverted foo:bar:imp1: v2 -> v1")
+        self.assertTrue(data["reverted"])
+        mock_spanner_client.revert_import_state.assert_called_once_with(
+            import_name="imp1",
+            new_latest_version_path="gs://bucket/path/v1",
+            previous_version="v1",
+            workflow_id=None,
+            comment="Reverted import state"
+        )
+
+    def test_revert_multiple_imports(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_imports_for_workflow.return_value = ["imp1", "imp2"]
+        mock_spanner_client.get_import_version_history.side_effect = lambda name: ["v2", "v1"] if name == "imp1" else ["v3", "v2"]
+        mock_spanner_client.get_import_latest_version.return_value = "gs://bucket/path/latest"
+        mock_spanner_client.revert_import_state.return_value = True
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        payload = {
+            "workflowId": "wf-123",
+            "dryRun": True
+        }
+        response = client.post("/imports/revert", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertEqual(data["message"], "Reverted imp1: v2 -> v1, imp2: v3 -> v2")
+        self.assertTrue(data["reverted"])
+        self.assertEqual(len(data["revertedImports"]), 2)
+        self.assertEqual(data["revertedImports"][0]["importName"], "imp1")
+        self.assertEqual(data["revertedImports"][0]["failedVersion"], "v2")
+        self.assertEqual(data["revertedImports"][0]["restoredVersion"], "v1")
+        self.assertEqual(data["revertedImports"][1]["importName"], "imp2")
+        self.assertEqual(data["revertedImports"][1]["failedVersion"], "v3")
+        self.assertEqual(data["revertedImports"][1]["restoredVersion"], "v2")
+        mock_spanner_client.get_imports_for_workflow.assert_called_once_with("wf-123")
+
+    def test_revert_neither_import_name_nor_workflow_id(self):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        payload = {
+            "dryRun": True
+        }
+        response = client.post("/imports/revert", json=payload)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(data["detail"], "Either importName or workflowId must be provided.")
 
 
     @patch('routes.imports.import_utils.get_ingestion_metrics')
