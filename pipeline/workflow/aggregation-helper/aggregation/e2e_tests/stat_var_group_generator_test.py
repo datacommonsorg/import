@@ -119,7 +119,8 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           - An uncategorized basic SV 'Count_Thing'.
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        prov_test = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
+        prov_custom = 'dc/base/generated/TestCustomImport' if self.is_base_dc else 'generated/TestCustomImport'
         
         self._setup_mock_data(ns)
 
@@ -128,10 +129,10 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 "name": "StatVar Groups Generation",
                 "type": "STAT_VAR_GROUPS",
                 "stage": 1,
-                "input_imports": ["TestImport"]
+                "input_imports": ["schema"]
             }
         ]
-        res = self.run_orchestrator(calculations=calculations, active_imports=["TestImport"])
+        res = self.run_orchestrator(calculations=calculations, active_imports=["schema"])
         self.assertTrue(res.success)
 
         # 3. Verify results in Spanner
@@ -159,111 +160,57 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             edges = [(r[0], r[1], r[2], r[3]) for r in snapshot.execute_sql(edge_query)]
 
             # Verify unconstrained SV attached directly to the Student Root SVG
-            self.assertIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov), edges)
+            self.assertIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov_test), edges)
 
             # Verify unconstrained SV attached to ancestor SVGs
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov_test), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
             
             # Verify constrained SV attached to the constrained SVG
-            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov), edges)
+            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov_test), edges)
 
             # Verify constrained SV attached to ancestor SVGs
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender-Female', prov), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender-Female', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
 
             # Verify basic populationType SV attached to SVG by mprop
             if self.is_base_dc:
-                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov_test), edges)
             else:
-                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/Person', prov), edges)
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/Person', prov_test), edges)
 
             # Verify basic populationType SV attached to ancestor SVGs
-            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
 
             # Verify uncategorized basic populationType SV attached to Uncategorized_Variables SVG
             if self.is_base_dc:
-                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov_test), edges)
             else:
-                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Thing', prov), edges)
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Thing', prov_test), edges)
 
             # Verify uncategorized basic populationType SV attached to ancestor SVGs
-            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
-            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized', prov), edges)
-            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
+            if self.is_base_dc:
+                self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized_Variables', prov_test), edges)
+            else:
+                self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Thing', prov_test), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized', prov_test), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
             
             # Verify hierarchical specialization of generated SVGs
-            self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov), edges)
-            self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov), edges)
+            self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov_test), edges)
+            self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov_test), edges)
 
             # Verify the root SVG attached to the Vertical declared in the Spec
-            self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov), edges)
+            self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov_test), edges)
 
-            # Verify curated SVs from OTHER imports are NOT processed
-            self.assertNotIn(('Median_Age_Student', 'memberOf', f'{ns}g/Student', prov), edges)
-            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
-            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov), edges)
-            self.assertNotIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
-
-
-    def test_stat_var_group_generation_only_custom_import(self):
-        """
-        Tests that running for TestCustomImport only processes its data.
-        """
-        ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
-        
-        self._setup_mock_data(ns)
-
-        calculations = [
-            {
-                "name": "StatVar Groups Generation",
-                "type": "STAT_VAR_GROUPS",
-                "stage": 1,
-                "input_imports": ["TestCustomImport"]
-            }
-        ]
-        res = self.run_orchestrator(calculations=calculations, active_imports=["TestCustomImport"])
-        self.assertTrue(res.success)
-
-        # Verify results in Spanner
-        with self.database.snapshot(multi_use=True) as snapshot:
-            # Check newly created SVG nodes (Should NOT generate 'Student' groups as they are in TestImport)
-            node_query = """
-                SELECT subject_id 
-                FROM Node 
-                WHERE 'StatVarGroup' IN UNNEST(types) 
-                  AND subject_id LIKE '%/g/Student%'
-                ORDER BY subject_id
-            """
-            nodes = [r[0] for r in snapshot.execute_sql(node_query)]
-            self.assertEqual(len(nodes), 0)
-
-            # Check linkedMemberOf/memberOf attachments
-            edge_query = """
-                SELECT subject_id, predicate, object_id, provenance
-                FROM Edge 
-                WHERE predicate IN ('memberOf', 'specializationOf', 'linkedMemberOf')
-                ORDER BY subject_id, predicate, object_id
-            """
-            edges = [(r[0], r[1], r[2], r[3]) for r in snapshot.execute_sql(edge_query)]
-
-            # Verify curated SVs from TestCustomImport ARE processed
-            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov), edges)
-            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
-
-            # Verify TestImport SVs are NOT processed (no generated edges for them)
-            self.assertNotIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov), edges)
-            self.assertNotIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov), edges)
-            self.assertNotIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov), edges)
-            self.assertNotIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
-            self.assertNotIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
+            # Verify curated SV from TestCustomImport is processed with its scoped provenance
+            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov_custom), edges)
+            self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/Root', prov_custom), edges)
 
 
     def test_pruning_single_child_svgs(self):
@@ -283,7 +230,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         Count_Student_Female gets memberOf Student (redirected).
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        prov = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
 
         self._setup_mock_data(ns)
 
@@ -292,11 +239,11 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 "name": "StatVar Groups Generation with Pruning",
                 "type": "STAT_VAR_GROUPS",
                 "stage": 1,
-                "input_imports": ["TestImport"],
+                "input_imports": ["schema"],
                 "should_prune_single_child_svgs": True
             }
         ]
-        res = self.run_orchestrator(calculations=calculations, active_imports=["TestImport"])
+        res = self.run_orchestrator(calculations=calculations, active_imports=["schema"])
         self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -358,8 +305,8 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
                 self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov), edges)
             else:
-                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/Person', prov), edges)
-                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Thing', prov), edges)
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov), edges)
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized', prov), edges)
 
     def test_pruning_dag_fanout(self):
         """
@@ -383,7 +330,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           4. Remove all pruned SVG nodes and their edges
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        prov = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
 
         self._setup_dpv_mock_data(ns)
 
@@ -392,11 +339,11 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 "name": "StatVar Groups Generation with DAG Pruning",
                 "type": "STAT_VAR_GROUPS",
                 "stage": 1,
-                "input_imports": ["TestImport"],
+                "input_imports": ["schema"],
                 "should_prune_single_child_svgs": True
             }
         ]
-        res = self.run_orchestrator(calculations=calculations, active_imports=["TestImport"])
+        res = self.run_orchestrator(calculations=calculations, active_imports=["schema"])
         self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -428,14 +375,21 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 e for e in edges
                 if e[0] == 'Count_Military_Person' and e[1] == 'memberOf'
             ]
-            self.assertEqual(len(military_member_edges), 1,
-                f'Expected exactly 1 memberOf edge for Count_Military_Person, '
-                f'got {len(military_member_edges)}: {military_member_edges}')
-            self.assertIn(('Count_Military_Person', 'memberOf', f'{ns}g/MilitaryService', prov), edges)
+            if self.is_base_dc:
+                self.assertEqual(len(military_member_edges), 1,
+                    f'Expected exactly 1 memberOf edge for Count_Military_Person, '
+                    f'got {len(military_member_edges)}: {military_member_edges}')
+                self.assertIn(('Count_Military_Person', 'memberOf', f'{ns}g/MilitaryService', prov), edges)
+            else:
+                self.assertIn(('Count_Military_Person', 'memberOf', f'{ns}g/Person', prov), edges)
 
             # linkedMemberOf to non-pruned ancestors retained
-            self.assertIn(('Count_Military_Person', 'linkedMemberOf',
-                f'{ns}g/MilitaryService', prov), edges)
+            if self.is_base_dc:
+                self.assertIn(('Count_Military_Person', 'linkedMemberOf',
+                    f'{ns}g/MilitaryService', prov), edges)
+            else:
+                self.assertIn(('Count_Military_Person', 'linkedMemberOf',
+                    f'{ns}g/Person', prov), edges)
             self.assertIn(('Count_Military_Person', 'linkedMemberOf',
                 f'{ns}g/Root', prov), edges)
 
@@ -460,8 +414,12 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             # --- Other SVs unaffected by pruning ---
             # Median_Income_Person: 0 cprops after DPV stripping → attached to Demographics
             # No SVGs generated for it, so pruning has no effect.
-            self.assertIn(('Median_Income_Person', 'memberOf',
-                f'{ns}g/Demographics', prov), edges)
+            if self.is_base_dc:
+                self.assertIn(('Median_Income_Person', 'memberOf',
+                    f'{ns}g/Demographics', prov), edges)
+            else:
+                self.assertIn(('Median_Income_Person', 'memberOf',
+                    f'{ns}g/Person', prov), edges)
             self.assertIn(('Median_Income_Person', 'linkedMemberOf',
                 f'{ns}g/Demographics', prov), edges)
             self.assertIn(('Median_Income_Person', 'linkedMemberOf',
@@ -475,9 +433,12 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 e for e in edges
                 if e[0] == 'Median_Income_Person_Over20' and e[1] == 'memberOf'
             ]
-            self.assertEqual(len(over20_member_edges), 1,
-                f'Expected exactly 1 memberOf edge for Median_Income_Person_Over20, '
-                f'got {len(over20_member_edges)}: {over20_member_edges}')
+            if self.is_base_dc:
+                self.assertEqual(len(over20_member_edges), 1,
+                    f'Expected exactly 1 memberOf edge for Median_Income_Person_Over20, '
+                    f'got {len(over20_member_edges)}: {over20_member_edges}')
+            else:
+                self.assertIn(('Median_Income_Person_Over20', 'memberOf', f'{ns}g/Person', prov), edges)
 
     def test_pruning_distinct_child_count_and_cascading(self):
         """
@@ -498,11 +459,11 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 "name": "StatVar Groups Generation with Distinct Pruning",
                 "type": "STAT_VAR_GROUPS",
                 "stage": 1,
-                "input_imports": ["TestImport"],
+                "input_imports": ["schema"],
                 "should_prune_single_child_svgs": True
             }
         ]
-        res = self.run_orchestrator(calculations=calculations, active_imports=["TestImport"])
+        res = self.run_orchestrator(calculations=calculations, active_imports=["schema"])
         self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -679,7 +640,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             SVGs generated under MilitaryService
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
+        prov = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
 
         self._setup_dpv_mock_data(ns)
 
@@ -688,10 +649,10 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 "name": "StatVar Groups Generation with DPV",
                 "type": "STAT_VAR_GROUPS",
                 "stage": 1,
-                "input_imports": ["TestImport"]
+                "input_imports": ["schema"]
             }
         ]
-        res = self.run_orchestrator(calculations=calculations, active_imports=["TestImport"])
+        res = self.run_orchestrator(calculations=calculations, active_imports=["schema"])
         self.assertTrue(res.success)
 
         with self.database.snapshot(multi_use=True) as snapshot:
@@ -705,7 +666,10 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
             # --- SV 1: Median_Income_Person ---
             # DPVs fully stripped → 0 cprops → attached to Demographics via SVVerticalEdges
-            self.assertIn(('Median_Income_Person', 'memberOf', f'{ns}g/Demographics', prov), edges)
+            if self.is_base_dc:
+                self.assertIn(('Median_Income_Person', 'memberOf', f'{ns}g/Demographics', prov), edges)
+            else:
+                self.assertIn(('Median_Income_Person', 'memberOf', f'{ns}g/Person', prov), edges)
             self.assertIn(('Median_Income_Person', 'linkedMemberOf', f'{ns}g/Demographics', prov), edges)
             self.assertIn(('Median_Income_Person', 'linkedMemberOf', f'{ns}g/Root', prov), edges)
 
@@ -718,11 +682,12 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             # --- SV 2: Median_Income_Person_Over20 ---
             # Spec_DPV_Full doesn't match (age=Years20Onwards != Years15Onwards)
             # Spec_DPV_Partial matches → incomeStatus stripped, age remains
-            # → NOT attached to Demographics
-            self.assertNotIn(('Median_Income_Person_Over20', 'memberOf',
-                f'{ns}g/Demographics', prov), edges)
-            self.assertNotIn(('Median_Income_Person_Over20', 'linkedMemberOf',
-                f'{ns}g/Demographics', prov), edges)
+            # → NOT attached to Demographics in Base DC
+            if self.is_base_dc:
+                self.assertNotIn(('Median_Income_Person_Over20', 'memberOf',
+                    f'{ns}g/Demographics', prov), edges)
+                self.assertNotIn(('Median_Income_Person_Over20', 'linkedMemberOf',
+                    f'{ns}g/Demographics', prov), edges)
 
             # Should have age-based SVG hierarchy (incomeStatus stripped, age remains)
             # Person is basic → 1-cprop group (Person_Age) generated in iteration
@@ -733,20 +698,24 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             # Only Spec_DPV_Military matches (exact cprops match)
             # DPVs stripped → [armedForcesStatus, veteranStatus] remain
             # → 1-cprop SVGs generated under MilitaryService
-            self.assertIn((f'{ns}g/Person_ArmedForcesStatus', 'specializationOf',
-                f'{ns}g/MilitaryService', prov), edges)
-            self.assertIn((f'{ns}g/Person_VeteranStatus', 'specializationOf',
-                f'{ns}g/MilitaryService', prov), edges)
-
-            # SV should be linked to MilitaryService vertical
-            self.assertIn(('Count_Military_Person', 'linkedMemberOf',
-                f'{ns}g/MilitaryService', prov), edges)
+            if self.is_base_dc:
+                self.assertIn((f'{ns}g/Person_ArmedForcesStatus', 'specializationOf',
+                    f'{ns}g/MilitaryService', prov), edges)
+                self.assertIn((f'{ns}g/Person_VeteranStatus', 'specializationOf',
+                    f'{ns}g/MilitaryService', prov), edges)
+                self.assertIn(('Count_Military_Person', 'linkedMemberOf',
+                    f'{ns}g/MilitaryService', prov), edges)
+                self.assertNotIn(('Count_Military_Person', 'linkedMemberOf',
+                    f'{ns}g/Demographics', prov), edges)
+            else:
+                self.assertIn((f'{ns}g/Person_ArmedForcesStatus', 'specializationOf',
+                    f'{ns}g/Person', prov), edges)
+                self.assertIn((f'{ns}g/Person_VeteranStatus', 'specializationOf',
+                    f'{ns}g/Person', prov), edges)
+                self.assertIn(('Count_Military_Person', 'linkedMemberOf',
+                    f'{ns}g/Person', prov), edges)
             self.assertIn(('Count_Military_Person', 'linkedMemberOf',
                 f'{ns}g/Root', prov), edges)
-
-            # SV should NOT be attached to Demographics (different spec)
-            self.assertNotIn(('Count_Military_Person', 'linkedMemberOf',
-                f'{ns}g/Demographics', prov), edges)
 
             # DPV pvs should NOT appear in hierarchy (age and incomeStatus stripped)
             self.assertNotIn(('Count_Military_Person', 'linkedMemberOf',

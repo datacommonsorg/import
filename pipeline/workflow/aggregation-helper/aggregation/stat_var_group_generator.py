@@ -4,13 +4,13 @@ from typing import List, Optional
 
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_provenance_name
+from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_provenance_name, get_provenance_prefix, get_sql_generated_provenance_expr
 
 
 @dataclass
 class StatVarGroupConfig:
     """Configuration for statistical variable group generation."""
-    import_names: Optional[List[str]] = None
+    pass
 
 
 class StatVarGroupGenerator:
@@ -54,37 +54,24 @@ class StatVarGroupGenerator:
         self.should_prune_single_child_svgs = should_prune_single_child_svgs
 
     def run_all(self,
-                config: StatVarGroupConfig) -> List[bigquery.job.QueryJob]:
+                config: Optional[StatVarGroupConfig] = None) -> List[bigquery.job.QueryJob]:
         """Runs all global aggregations asynchronously and returns their jobs."""
-        import_names = config.import_names
-
-        if not import_names:
-            logging.info("No imports specified. Skipping global aggregations.")
-            return []
-
-        logging.info(f"Running global aggregations for imports: {import_names}")
+        logging.info("Running StatVarGroup generation for all provenances in DB.")
 
         jobs = [
-            self.run_stat_var_group(import_names),
+            self.run_stat_var_group(),
         ]
         return [job for job in jobs if job]
 
-    def run_stat_var_group(self, import_names: List[str]) -> Optional[bigquery.job.QueryJob]:
+    def run_stat_var_group(self) -> Optional[bigquery.job.QueryJob]:
         """Compiles and executes the StatVarGroup generation script."""
-        if not import_names:
-            logging.info("No imports specified. Skipping StatVarGroup generation.")
-            return None
-
-        logging.info("Starting StatVarGroup generation script...")
+        logging.info("Starting StatVarGroup generation script for all DB provenances...")
 
         dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
         conn_id = _escape_sql_literal(self.executor.connection_id)
         no_cache_config = bigquery.QueryJobConfig(use_query_cache=False)
-
-        # Handle import filtering
-        safe_imports = [_escape_sql_literal(name) for name in import_names]
-        imports_str = ", ".join([f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_imports])
-        provenance_filter = f"AND provenance IN ({imports_str})"
+        prov_expr = get_sql_generated_provenance_expr(self.is_base_dc, "provenance")
+        gen_prov_prefix = f"{get_provenance_prefix(self.is_base_dc)}generated/"
 
         # =====================================================================
         # OPTIMIZATION: Two-Stage Fetch for StatVar Triples
@@ -112,7 +99,7 @@ class StatVarGroupGenerator:
         DECLARE iteration_count INT64 DEFAULT 0; -- Iteration of loop
         DECLARE max_iterations INT64 DEFAULT @max_iterations; -- Maximum number of iterations to generate
         DECLARE namespace STRING DEFAULT @namespace; -- Namespace for generated DCIDs
-        DECLARE generated_provenance STRING DEFAULT @generated_provenance; -- Provenance for generated Edges
+        DECLARE generated_provenance_prefix STRING DEFAULT @generated_provenance_prefix; -- Prefix for generated Edges
         DECLARE uncategorized_svg STRING DEFAULT CONCAT(namespace, 'g/Uncategorized'); -- DCID for uncategorized SVs/SVGs
         DECLARE uncategorized_sv_svg STRING DEFAULT CONCAT(namespace, 'g/Uncategorized_Variables'); -- DCID for uncategorized SVs
         DECLARE root_svg STRING DEFAULT CONCAT(namespace, 'g/Root'); -- DCID for root SVG
@@ -337,18 +324,18 @@ class StatVarGroupGenerator:
 
         -- Fetch curated memberOf edges to identify which SVs to skip during generation.
         CREATE OR REPLACE TEMP TABLE CuratedMemberOf AS (
-          SELECT subject_id AS statvar, object_id AS parent_svg
-          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, object_id, provenance FROM Edge WHERE predicate = 'memberOf' {provenance_filter}")
-          WHERE provenance != generated_provenance
+          SELECT subject_id AS statvar, object_id AS parent_svg, provenance
+          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, object_id, provenance FROM Edge WHERE predicate = 'memberOf'")
+          WHERE NOT STARTS_WITH(provenance, generated_provenance_prefix)
         );
         
         -- Find all recursive ancestors for curated SVs to generate linkedMemberOf edges
         CREATE OR REPLACE TEMP TABLE CuratedLinkedEdges AS (
           WITH RECURSIVE Ancestors AS (
-            SELECT statvar, parent_svg AS ancestor_svg, 1 AS level
+            SELECT statvar, parent_svg AS ancestor_svg, 1 AS level, provenance
             FROM CuratedMemberOf
             UNION ALL
-            SELECT A.statvar, H.object_id AS ancestor_svg, A.level + 1
+            SELECT A.statvar, H.object_id AS ancestor_svg, A.level + 1, A.provenance
             FROM Ancestors A
             JOIN VerticalHierarchy H ON A.ancestor_svg = H.subject_id
             WHERE A.level <= 10
@@ -357,14 +344,15 @@ class StatVarGroupGenerator:
             statvar AS subject_id, 
             'linkedMemberOf' AS predicate, 
             ancestor_svg AS object_id, 
-            generated_provenance AS provenance
+            {prov_expr} AS provenance
           FROM Ancestors
         );
 
-        -- Fetch all StatisticalVariable nodes.
+        -- Fetch all StatisticalVariable nodes and their provenance.
         CREATE OR REPLACE TEMP TABLE StatVar AS (
-          SELECT subject_id
-          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatisticalVariable' {provenance_filter}")
+          SELECT DISTINCT subject_id, provenance
+          FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, provenance FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatisticalVariable'")
+          WHERE NOT STARTS_WITH(provenance, generated_provenance_prefix)
         );
 
         -- Fetch relevant StatisticalVariable triples.
@@ -374,7 +362,7 @@ class StatVarGroupGenerator:
         CREATE OR REPLACE TEMP TABLE StatVarTriple AS (
           SELECT DISTINCT E.subject_id, E.predicate, E.object_id
           FROM EXTERNAL_QUERY("{conn_id}",
-            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}]) AND object_id NOT LIKE '[%' {provenance_filter}"
+            "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN UNNEST([{sv_predicates_sql}]) AND object_id NOT LIKE '[%'"
           ) E
           JOIN StatVar SV ON SV.subject_id = E.subject_id
         );
@@ -422,8 +410,10 @@ class StatVarGroupGenerator:
             IFNULL(SVP.sv_statVarProperties, []) AS sv_statVarProperties,
             IFNULL(SC.cprops, []) AS cprops,
             IFNULL(SP.sv_pvs, []) AS sv_pvs,
-            ARRAY_TO_STRING(IFNULL(SC.cprops, []), ',') AS cprops_key
+            ARRAY_TO_STRING(IFNULL(SC.cprops, []), ',') AS cprops_key,
+            SV.provenance
           FROM SVPopType PT
+          JOIN StatVar SV ON SV.subject_id = PT.subject_id
           LEFT JOIN SVStatVarPropsAgg SVP ON SVP.subject_id = PT.subject_id
           LEFT JOIN SVCprops SC ON SC.subject_id = PT.subject_id
           LEFT JOIN SVPvs SP ON SP.subject_id = PT.subject_id
@@ -521,7 +511,8 @@ class StatVarGroupGenerator:
             ARRAY<STRING>[] AS constraintProperties,
             IFNULL(Constraints.aligned_cps, ARRAY<STRING>[]) AS newConstraintProperties,
             IFNULL(Constraints.pvs, ARRAY<STRING>[]) AS attributes,
-            0 AS iteration
+            0 AS iteration,
+            SVB.provenance
           FROM SVBaseData SVB
           LEFT JOIN UNNEST(SVB.sv_statVarProperties) AS statVarProperties
           LEFT JOIN Constraints ON Constraints.subject_id = SVB.subject_id
@@ -541,7 +532,7 @@ class StatVarGroupGenerator:
             AND (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
           )
           SELECT DISTINCT
-            SV.statvar AS subject_id, map.predicate, v AS object_id, generated_provenance AS provenance 
+            SV.statvar AS subject_id, map.predicate, v AS object_id, {prov_expr} AS provenance 
           FROM ZeroConstraintStatVars SV
           LEFT JOIN VerticalSpec VS 
             ON SV.populationType = VS.populationType 
@@ -568,7 +559,7 @@ class StatVarGroupGenerator:
           node1 STRING, node2 STRING, node2name STRING, node3 STRING, node3name STRING,
           statvar STRING, populationType STRING, statVarProperties STRING,
           constraintProperties ARRAY<STRING>, newConstraintProperties ARRAY<STRING>,
-          attributes ARRAY<STRING>, iteration INT64 
+          attributes ARRAY<STRING>, iteration INT64, provenance STRING
         );
 
         INSERT INTO AllResults
@@ -611,7 +602,8 @@ class StatVarGroupGenerator:
               statvar, populationType, statVarProperties, newConstraintProperties AS constraintProperties,
               ARRAY(SELECT cp FROM UNNEST(newConstraintProperties) AS cp WITH OFFSET AS cp_idx WHERE cp_idx != target_idx) AS newConstraintProperties,
               ARRAY(SELECT a FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx WHERE a_idx != target_idx) AS attributes,
-              iteration + 1 AS iteration
+              iteration + 1 AS iteration,
+              provenance
             FROM InitialData AS T, UNNEST(T.attributes) AS attr WITH OFFSET AS target_idx
             WHERE T.iteration = iteration_count - 1
               AND ARRAY_LENGTH(T.attributes) >= 1
@@ -642,22 +634,22 @@ class StatVarGroupGenerator:
         CREATE OR REPLACE TEMP TABLE SVGVerticalEdges AS (
           WITH TopLevelSVGs AS (
             -- Basic PopTypes: Attach the 1-constraint group (node2) to the vertical.
-            SELECT DISTINCT node2 AS svg_id, statvar, constraintProperties, populationType
+            SELECT DISTINCT node2 AS svg_id, statvar, constraintProperties, populationType, provenance
             FROM AllResults
             WHERE iteration > 0
               AND (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
               AND ARRAY_LENGTH(constraintProperties) = 1
             UNION ALL
             -- Non-basic PopTypes: Attach the 0-constraint group (node3) to the vertical.
-            SELECT DISTINCT node3 AS svg_id, statvar, ARRAY<STRING>[] AS constraintProperties, populationType
+            SELECT DISTINCT node3 AS svg_id, statvar, ARRAY<STRING>[] AS constraintProperties, populationType, provenance
             FROM AllResults
             WHERE node3 IS NOT NULL
               AND NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
-              AND ARRAY_LENGTH(attributes) = 0
+              AND ARRAY_LENGTH(constraintProperties) = 0
           ),
           BaseJoined AS (
             SELECT
-              SVG.statvar, SVG.svg_id, generated_provenance AS provenance,
+              SVG.statvar, SVG.svg_id, {get_sql_generated_provenance_expr(self.is_base_dc, "SVG.provenance")} AS provenance,
               IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS svg_targets,
               IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg], VS.linkedVertical) AS statvar_targets
             FROM TopLevelSVGs SVG 
@@ -713,7 +705,7 @@ class StatVarGroupGenerator:
 
         -- Generate Spanner Edge rows.
         CREATE OR REPLACE TEMP TABLE Edge AS (
-          SELECT DISTINCT edge_data.subject_id, edge_data.predicate, edge_data.object_id, generated_provenance AS provenance
+          SELECT DISTINCT edge_data.subject_id, edge_data.predicate, edge_data.object_id, {prov_expr} AS provenance
           FROM AllResults
           CROSS JOIN UNNEST([
             STRUCT(statvar AS subject_id, 'memberOf' AS predicate, node3 AS object_id, iteration = 0 AND node3 IS NOT NULL AS keep),
@@ -859,8 +851,9 @@ class StatVarGroupGenerator:
               ep.node_id AS subject_id,
               ep.predicate,
               ep.effective_parent AS object_id,
-              generated_provenance AS provenance
+              orig.provenance
             FROM EffectiveParent ep
+            JOIN Edge orig ON orig.subject_id = ep.node_id AND orig.predicate = ep.predicate
             WHERE NOT EXISTS (
               SELECT 1 FROM Edge e
               WHERE e.subject_id = ep.node_id
@@ -911,7 +904,7 @@ class StatVarGroupGenerator:
             use_query_cache=False,
             query_parameters=[
                 bigquery.ScalarQueryParameter("namespace", "STRING", self.namespace),
-                bigquery.ScalarQueryParameter("generated_provenance", "STRING", self.generated_provenance),
+                bigquery.ScalarQueryParameter("generated_provenance_prefix", "STRING", gen_prov_prefix),
                 bigquery.ScalarQueryParameter("max_iterations", "INT64", self.max_iterations),
                 bigquery.ScalarQueryParameter("should_filter", "BOOL", self.should_filter_basic_population_type),
                 bigquery.ScalarQueryParameter("should_prune", "BOOL", self.should_prune_single_child_svgs),
