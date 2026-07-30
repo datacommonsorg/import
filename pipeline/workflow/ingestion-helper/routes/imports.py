@@ -12,19 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import logging
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Request
-from clients.spanner import SpannerClient, IngestionState, IngestionStage
-from clients.storage import StorageClient
-from dependencies import get_spanner_client, get_storage_client
-import config
-from utils import imports as import_utils
 from enum import Enum
-from typing import Optional
+import logging
+import os
+from typing import Any, Dict, List, Optional
+
+from clients.spanner import IngestionStage, IngestionState, SpannerClient
+from clients.storage import StorageClient
+import config
+from dependencies import get_spanner_client, get_storage_client
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from routes.models import BaseResponse, ResponseStatus
+from utils import imports as import_utils
+from utils import rollback_helper
 
 
 class ImportState(str, Enum):
@@ -47,7 +48,6 @@ class UpdateIngestionStatusRequest(BaseModel):
     workflowId: str
     status: IngestionState
     jobId: Optional[str] = None
-
 
 class UpdateIngestionHistoryRequest(BaseModel):
     workflowId: str
@@ -90,6 +90,22 @@ class ImportInfoItem(BaseModel):
     graphPath: str = Field(
         description="The full GCS path to the import graph files")
 
+
+class RevertImportRequest(BaseModel):
+    importName: Optional[str] = Field(default=None, description="Import name to revert")
+    workflowId: Optional[str] = Field(default=None, description="Workflow execution ID")
+    dryRun: bool = Field(default=False, description="Dry run mode")
+
+class RevertImportResultItem(BaseModel):
+    importName: str
+    failedVersion: Optional[str] = None
+    restoredVersion: Optional[str] = None
+
+
+class RevertImportResponse(BaseResponse):
+    reverted: bool = False
+    revertedImports: List[RevertImportResultItem] = Field(default_factory=list)
+    dryRun: bool = False
 
 router = APIRouter(prefix="/imports", tags=["imports"])
 
@@ -270,3 +286,53 @@ def update_import_version(req: UpdateImportVersionRequest,
 
     return BaseResponse(status=ResponseStatus.OK,
                         message="; ".join(updated_imports))
+
+
+@router.post("/revert", response_model=RevertImportResponse)
+def revert_imports(
+    req: RevertImportRequest,
+    spanner: SpannerClient = Depends(get_spanner_client)
+):
+    """Reverts import(s) to their previous version and resets status to STAGING in Spanner."""
+    if not req.importName and not req.workflowId:
+        raise HTTPException(
+            status_code=400,
+            detail="Either importName or workflowId must be provided."
+        )
+
+    items = []
+    if req.importName:
+        items = [req.importName]
+    elif req.workflowId:
+        items = spanner.get_imports_for_workflow(req.workflowId)
+
+    results = rollback_helper.revert_imports(
+        spanner, items, workflow_id=req.workflowId, dry_run=req.dryRun
+    )
+
+    any_reverted = any(r.get("reverted", False) for r in results)
+    status = ResponseStatus.OK if (any_reverted or not results) else ResponseStatus.SKIPPED
+
+    reverted_successful = [r for r in results if r.get("reverted", False)]
+    if reverted_successful:
+        summaries = [f"{r['importName']}: {r.get('failedVersion')} -> {r.get('restoredVersion')}" for r in reverted_successful]
+        msg = f"Reverted {', '.join(summaries)}"
+    else:
+        errors = [r["error"] for r in results if "error" in r]
+        msg = "; ".join(errors) if errors else "No imports provided to revert."
+
+    reverted_items = [
+        RevertImportResultItem(
+            importName=r["importName"],
+            failedVersion=r.get("failedVersion"),
+            restoredVersion=r.get("restoredVersion")
+        ) for r in results
+    ]
+
+    return RevertImportResponse(
+        status=status,
+        message=msg,
+        reverted=any_reverted,
+        revertedImports=reverted_items,
+        dryRun=req.dryRun
+    )
