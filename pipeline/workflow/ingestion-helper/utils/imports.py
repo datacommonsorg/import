@@ -177,19 +177,19 @@ def get_ingestion_metrics(project_id, location, job_id):
                 if metric_type == 'node_count':
                     node_count += scalar
                     if imp_name:
-                        import_metrics[imp_name]['node_count'] = scalar
+                        import_metrics[imp_name]['node_count'] += scalar
                 elif metric_type == 'edge_count':
                     edge_count += scalar
                     if imp_name:
-                        import_metrics[imp_name]['edge_count'] = scalar
+                        import_metrics[imp_name]['edge_count'] += scalar
                 elif metric_type == 'observation_count':
                     obs_count += scalar
                     if imp_name:
-                        import_metrics[imp_name]['obs_count'] = scalar
+                        import_metrics[imp_name]['obs_count'] += scalar
                 elif metric_type == 'timeseries_count':
                     ts_count += scalar
                     if imp_name:
-                        import_metrics[imp_name]['ts_count'] = scalar
+                        import_metrics[imp_name]['ts_count'] += scalar
         except HttpError as e:
             logging.error(
                 f"Error fetching dataflow metrics for job {job_id}: {e}")
