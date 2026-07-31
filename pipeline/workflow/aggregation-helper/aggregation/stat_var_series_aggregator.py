@@ -31,6 +31,44 @@ class StatVarSeriesAggregationConfig:
     calculations: List[Dict[str, Any]]
 
 
+def get_extract_year_sql() -> str:
+    """Returns the SQL definition for the ExtractYear TEMP function."""
+    return """
+CREATE TEMP FUNCTION ExtractYear(d STRING) AS (
+  SAFE_CAST(SUBSTR(d, 1, 4) AS INT64)
+);"""
+
+
+def get_extract_month_sql() -> str:
+    """Returns the SQL definition for the ExtractMonth TEMP function."""
+    return """
+CREATE TEMP FUNCTION ExtractMonth(d STRING) AS (
+  COALESCE(
+    SAFE_CAST(SUBSTR(d, 6, 2) AS INT64),
+    0
+  )
+);"""
+
+
+def _get_time_window_filter_sql(output_obs_date: Optional[str], output_obs_period: Optional[str]) -> str:
+    """Computes SQL WHERE clause filter for multi-year output periods (e.g. P10Y, P30Y, P80Y)."""
+    if not output_obs_date or not output_obs_period:
+        return ""
+
+    if len(output_obs_date) == 4 and output_obs_date.isdigit():
+        end_year = int(output_obs_date)
+        if output_obs_period.startswith("P") and output_obs_period.endswith("Y"):
+            period_num_str = output_obs_period[1:-1]
+            if period_num_str.isdigit():
+                num_years = int(period_num_str)
+                start_year = end_year - num_years + 1
+                return f"AND ExtractYear(date) BETWEEN {start_year} AND {end_year}"
+
+    return ""
+
+
+
+
 class StatVarSeriesAggregator:
     """Orchestrates StatVar Series Aggregations.
 
@@ -156,13 +194,13 @@ class StatVarSeriesAggregator:
         ts_cte = f"""
         DiffAcrossModelsTS AS (
           SELECT DISTINCT
-            CONCAT('DifferenceAcrossModels_', variable_measured) AS variable_measured,
+            CONCAT('MaxDiffAcrossMeasurementMethods_', variable_measured) AS variable_measured,
             entity1,
             extra_entities_id,
             TO_JSON_STRING(JSON_SET(
               JSON_SET(
                 JSON_SET(facet, '$.provenance', '{output_provenance}'),
-                '$.measurementMethod', 'dcAggregate/DifferenceAcrossModels'
+                '$.measurementMethod', 'dcAggregate/MaxDiffAcrossMeasurementMethods'
               ),
               '$.isDcAggregate', true
             )) AS facet_str
@@ -174,21 +212,24 @@ class StatVarSeriesAggregator:
         obs_cte = f"""
         MaxDiffObs AS (
           SELECT
-            CONCAT('DifferenceAcrossModels_', variable_measured) AS variable_measured,
+            CONCAT('MaxDiffAcrossMeasurementMethods_', variable_measured) AS variable_measured,
             entity1,
             extra_entities_id,
             date,
             MAX(val_num) - MIN(val_num) AS val,
             CAST(FARM_FINGERPRINT(CONCAT(
               '{output_provenance}', '^',
-              'dcAggregate/DifferenceAcrossModels', '^',
+              'dcAggregate/MaxDiffAcrossMeasurementMethods', '^',
               COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.observationPeriod'), ''), '^',
               COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.scalingFactor'), ''), '^',
               COALESCE(JSON_VALUE(ANY_VALUE(facet), '$.unit'), ''), '^',
               'true'
             )) AS STRING) AS facet_id
           FROM RawObs
-          GROUP BY entity1, extra_entities_id, variable_measured, date
+          GROUP BY entity1, extra_entities_id, variable_measured, date,
+                   COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''),
+                   COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''),
+                   COALESCE(JSON_VALUE(facet, '$.unit'), '')
           HAVING COUNT(DISTINCT model) >= 2
         )
         """
@@ -212,7 +253,7 @@ class StatVarSeriesAggregator:
                 cte_idx = len(ts_ctes)
                 safe_base_date = _escape_sql_literal(base_date)
                 clean_date_suffix = safe_base_date.replace("-", "")
-                
+
                 ts_cte = f"""
                 DiffRelTS_{cte_idx} AS (
                   SELECT DISTINCT
@@ -240,10 +281,10 @@ class StatVarSeriesAggregator:
                     extra_entities_id,
                     model,
                     val_num AS base_val,
-                    date AS base_date,
-                    SUBSTR(date, 6, 2) AS base_month
+                    ExtractYear(date) AS base_year,
+                    ExtractMonth(date) AS base_month
                   FROM RawObs
-                  WHERE date = '{safe_base_date}'
+                  WHERE ExtractYear(date) = ExtractYear('{safe_base_date}')
                 ),
                 DiffRelObs_{cte_idx} AS (
                   SELECT
@@ -266,8 +307,8 @@ class StatVarSeriesAggregator:
                     AND r.variable_measured = b.variable_measured 
                     AND r.model = b.model
                     AND r.facet_id = b.facet_id
-                    AND SUBSTR(r.date, 6, 2) = b.base_month
-                    AND SUBSTR(r.date, 1, 4) > SUBSTR(b.base_date, 1, 4)
+                    AND ExtractMonth(r.date) = b.base_month
+                    AND ExtractYear(r.date) > b.base_year
                 )
                 """
                 obs_ctes.append(obs_cte)
@@ -306,9 +347,9 @@ class StatVarSeriesAggregator:
                     extra_entities_id,
                     model,
                     AVG(val_num) AS base_val,
-                    SUBSTR(date, 6, 2) AS base_month
+                    ExtractMonth(date) AS base_month
                   FROM RawObs
-                  WHERE date BETWEEN '{safe_start}' AND '{safe_end}'
+                  WHERE ExtractYear(date) BETWEEN ExtractYear('{safe_start}') AND ExtractYear('{safe_end}')
                   GROUP BY facet_id, variable_measured, entity1, extra_entities_id, model, base_month
                 ),
                 DiffRelRangeObs_{cte_idx} AS (
@@ -332,8 +373,8 @@ class StatVarSeriesAggregator:
                     AND r.variable_measured = b.variable_measured 
                     AND r.model = b.model
                     AND r.facet_id = b.facet_id
-                    AND SUBSTR(r.date, 6, 2) = b.base_month
-                    AND SUBSTR(r.date, 1, 4) > SUBSTR('{safe_end}', 1, 4)
+                    AND ExtractMonth(r.date) = b.base_month
+                    AND ExtractYear(r.date) > ExtractYear('{safe_end}')
                 )
                 """
                 obs_ctes.append(obs_cte)
@@ -447,6 +488,7 @@ class StatVarSeriesAggregator:
                 op_name = "AggregateSum"
 
             # Determine date binning expression based on target period
+            date_window_filter = _get_time_window_filter_sql(output_obs_date, output_period)
             if output_obs_date:
                 date_bin_expr = f"'{_escape_sql_literal(output_obs_date)}'"
                 group_by_date = ""
@@ -509,7 +551,7 @@ class StatVarSeriesAggregator:
                   'true'
                 )) AS STRING) AS facet_id
               FROM RawObs
-              WHERE {period_filter} {regex_filter_obs}
+              WHERE {period_filter} {regex_filter_obs} {date_window_filter}
               GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
             )
             """
@@ -561,6 +603,7 @@ class StatVarSeriesAggregator:
             sql_comp = ">=" if is_ge else "<="
 
             # Determine date binning and output date
+            date_window_filter = _get_time_window_filter_sql(output_obs_date, output_period)
             if output_obs_date:
                 date_expr = f"'{_escape_sql_literal(output_obs_date)}'"
                 group_by_date = ""
@@ -576,6 +619,7 @@ class StatVarSeriesAggregator:
             cte_idx = len(ts_ctes)
             regex_filter_ts = f"AND REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
             regex_filter_obs = f"AND REGEXP_CONTAINS(variable_measured, r'^{sv_regex}$')" if sv_regex else ""
+            unit_filter = f"AND COALESCE(JSON_VALUE(facet, '$.unit'), '') = '{_escape_sql_literal(unit)}'" if unit else ""
 
             # TimeSeries Metadata CTE (removes unit, updates period and provenance)
             ts_cte = f"""
@@ -616,7 +660,7 @@ class StatVarSeriesAggregator:
                 )) AS STRING) AS facet_id
               FROM RawObs
               WHERE COALESCE(JSON_VALUE(facet, '$.observationPeriod'), '') = '{input_period}'
-                {regex_filter_obs}
+                {unit_filter} {regex_filter_obs} {date_window_filter}
               GROUP BY entity1, extra_entities_id, variable_measured, model {group_by_date}
               HAVING SUM(CASE WHEN val_num {sql_comp} {threshold} THEN 1 ELSE 0 END) > 0
             )
@@ -676,7 +720,14 @@ class StatVarSeriesAggregator:
             extra_entities_id,
             SAFE.PARSE_JSON(facet_str) AS facet
           FROM (
-            {ts_union_select}
+            SELECT DISTINCT
+              variable_measured,
+              entity1,
+              extra_entities_id,
+              facet_str
+            FROM (
+              {ts_union_select}
+            )
           )
         )
         """
@@ -686,7 +737,7 @@ class StatVarSeriesAggregator:
         if has_stats_models:
             # Stats across models consumes the output of Round 1, but we must ignore
             # DifferenceAcrossModels which doesn't have multiple models to aggregate
-            ts_exclude_filter = "AND NOT variable_measured LIKE 'DifferenceAcrossModels_%'"
+            ts_exclude_filter = "AND NOT variable_measured LIKE 'MaxDiffAcrossMeasurementMethods_%'"
 
         ts_query = f"""
         EXPORT DATA
@@ -749,33 +800,44 @@ class StatVarSeriesAggregator:
         obs_final_select = "\nUNION ALL\n".join(obs_union_targets)
 
         # Source filtering for Observations (Step 2)
-        obs_exclude_filter = ""
+        obs_exclude_filter_spanner = ""
         if has_stats_models:
-            obs_exclude_filter = "WHERE NOT variable_measured LIKE 'DifferenceAcrossModels_%'"
+            obs_exclude_filter_spanner = "AND NOT o.variable_measured LIKE 'MaxDiffAcrossMeasurementMethods_%'"
 
         obs_query = f"""
+{get_extract_year_sql()}
+{get_extract_month_sql()}
+
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "Observation"}}' ) AS
         WITH RawObs AS (
           SELECT 
-            o.variable_measured, 
-            o.entity1, 
-            o.extra_entities_id, 
-            o.date, 
-            SAFE_CAST(o.value AS FLOAT64) AS val_num,
-            ts.facet,
-            ts.facet_id,
-            COALESCE(JSON_VALUE(ts.facet, '$.measurementMethod'), '') AS model
+            variable_measured, 
+            entity1, 
+            extra_entities_id, 
+            date, 
+            SAFE_CAST(value AS FLOAT64) AS val_num,
+            facet,
+            facet_id,
+            COALESCE(JSON_VALUE(facet, '$.measurementMethod'), '') AS model
           FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value 
-               FROM Observation {obs_exclude_filter} ''') o
-          JOIN EXTERNAL_QUERY("{connection_id}",
-            '''SELECT variable_measured, entity1, extra_entities_id, facet_id, facet 
-               FROM TimeSeries 
-               WHERE provenance IN ({input_provenance_str})''') ts
-            ON o.variable_measured = ts.variable_measured AND o.entity1 = ts.entity1 AND o.facet_id = ts.facet_id AND o.extra_entities_id = ts.extra_entities_id
+            '''SELECT 
+                 o.variable_measured, 
+                 o.entity1, 
+                 o.extra_entities_id, 
+                 o.facet_id, 
+                 o.date, 
+                 o.value,
+                 ts.facet
+               FROM Observation o
+               JOIN TimeSeries ts
+                 ON o.variable_measured = ts.variable_measured 
+                AND o.entity1 = ts.entity1 
+                AND o.extra_entities_id = ts.extra_entities_id 
+                AND o.facet_id = ts.facet_id
+               WHERE ts.provenance IN ({input_provenance_str}) {obs_exclude_filter_spanner} ''')
         ),
         {obs_ctes_combined}
         {obs_final_select};
