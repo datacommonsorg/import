@@ -142,10 +142,9 @@ class StatVarAggregator:
           new_provenance STRING
         ) AS (
           JSON_SET(
-            JSON_SET(
-              JSON_SET(facet, '$.measurementMethod', new_method),
-              '$.provenance', new_provenance
-            ),
+            facet,
+            '$.measurementMethod', new_method,
+            '$.provenance', new_provenance,
             '$.isDcAggregate', true
           )
         );
@@ -161,8 +160,8 @@ class StatVarAggregator:
             o.facet_id,
             o.date,
             SAFE_CAST(o.value AS FLOAT64) AS val_num,
-            TO_JSON_STRING(o.entities) AS entities_str,
-            TO_JSON_STRING(o.facet) AS facet_str,
+            o.entities,
+            o.facet,
             CalculateFacetId(
               output_provenance,
               GetNewMeasurementMethod(JSON_VALUE(o.facet, '$.measurementMethod')),
@@ -171,13 +170,11 @@ class StatVarAggregator:
               JSON_VALUE(o.facet, '$.unit'),
               'true'
             ) AS new_facet_id,
-            TO_JSON_STRING(
-              UpdateFacet(
-                o.facet,
-                GetNewMeasurementMethod(JSON_VALUE(o.facet, '$.measurementMethod')),
-                output_provenance
-              )
-            ) AS new_facet_str
+            UpdateFacet(
+              o.facet,
+              GetNewMeasurementMethod(JSON_VALUE(o.facet, '$.measurementMethod')),
+              output_provenance
+            ) AS new_facet
           FROM EXTERNAL_QUERY("{conn_id}",
             '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value, ts.entities AS entities, ts.facet AS facet
                FROM Observation o
@@ -200,8 +197,8 @@ class StatVarAggregator:
             date,
             SUM(val_num) AS total_val,
             COUNT(DISTINCT variable_measured) AS contribution_count,
-            ANY_VALUE(entities_str) AS entities_str,
-            ANY_VALUE(new_facet_str) AS facet_str
+            ANY_VALUE(entities) AS entities,
+            ANY_VALUE(new_facet) AS facet
           FROM SourceObservations
           GROUP BY entity1, extra_entities_id, new_facet_id, date
         );
@@ -216,8 +213,8 @@ class StatVarAggregator:
             facet_id,
             date,
             total_val,
-            entities_str,
-            facet_str
+            entities,
+            facet
           FROM AggregatedObs
           WHERE (skip_check OR contribution_count = source_count)
             AND total_val IS NOT NULL
@@ -231,22 +228,14 @@ class StatVarAggregator:
           -- Step 4a: Export Aggregated TimeSeries Headers
           -- ============================================================================
           CREATE OR REPLACE TEMP TABLE ValidTimeSeries AS (
-            WITH UniqueTS AS (
-              SELECT DISTINCT
-                ancestor_sv AS variable_measured,
-                extra_entities_id,
-                facet_id,
-                entities_str,
-                facet_str
-              FROM ValidObs
-            )
             SELECT
-              variable_measured,
+              ancestor_sv AS variable_measured,
               extra_entities_id,
               facet_id,
-              SAFE.PARSE_JSON(entities_str) AS entities,
-              SAFE.PARSE_JSON(facet_str) AS facet
-            FROM UniqueTS
+              ANY_VALUE(entities) AS entities,
+              ANY_VALUE(facet) AS facet
+            FROM ValidObs
+            GROUP BY extra_entities_id, facet_id
           );
 
           EXPORT DATA
