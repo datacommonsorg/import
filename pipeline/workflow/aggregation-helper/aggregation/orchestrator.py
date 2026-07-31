@@ -298,6 +298,8 @@ class AggregationOrchestrator:
         """
 
         to_delete = set()
+        linked_to_delete = set()
+        delete_stat_var_groups = False
         for single_import in imports:
             for calc in self.calculations:
                 if self._calc_applies_to_import(calc, single_import):
@@ -305,17 +307,30 @@ class AggregationOrchestrator:
                     if output:
                         to_delete.add(output)
                     if calc.get("type") in SCOPED_GRAPH_CALCULATION_TYPES:
-                        to_delete.add(f"generated/{single_import}")
+                        linked_to_delete.add(single_import)
+                    if calc.get("type") == CalculationType.STAT_VAR_GROUPS:
+                        delete_stat_var_groups = True
 
-        if not to_delete:
+        if not to_delete and not linked_to_delete and not delete_stat_var_groups:
             logging.info("No existing aggregated data resolved for deletion.")
             return
 
         to_delete_list = sorted(list(to_delete))
+        linked_to_delete_list = sorted(list(linked_to_delete))
         if dry_run:
-            logging.info(f"[Dry Run] Would delete aggregated data for imports: {to_delete_list}")
+            if to_delete_list:
+                logging.info(f"[Dry Run] Would delete aggregated data for imports: {to_delete_list}")
+            if linked_to_delete_list:
+                logging.info(f"[Dry Run] Would delete linked relationship edges for imports: {linked_to_delete_list}")
+            if delete_stat_var_groups:
+                logging.info("[Dry Run] Would delete StatVarGroup edges across all provenances.")
         else:
-            self.deleter.delete_aggregated_data(to_delete_list)
+            if to_delete_list:
+                self.deleter.delete_aggregated_data(to_delete_list)
+            if linked_to_delete_list:
+                self.deleter.delete_linked_edges(linked_to_delete_list)
+            if delete_stat_var_groups:
+                self.deleter.delete_stat_var_group_edges()
 
     def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.
@@ -537,22 +552,14 @@ class AggregationOrchestrator:
         return generator.run_all(config=prov_config)
 
     def _trigger_stat_var_groups(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
-        """Triggers statistical variable group aggregations."""
-        logging.info(f"  -> Stat Var Groups Aggregation for imports {applicable_imports}")
+        """Triggers statistical variable group aggregations across all DB provenances."""
+        logging.info("  -> Stat Var Groups Aggregation for all DB provenances")
         should_prune = config.get("should_prune_single_child_svgs", False)
-        if should_prune and applicable_imports:
-            logging.warning(
-                "WARNING: Pruning is enabled (should_prune_single_child_svgs=True), with imports "
-                f"({applicable_imports}) being processed. Pruning should only be used when "
-                "reprocessing the FULL graph (all imports), as pruning on a subset may produce "
-                "incorrect results due to incomplete hierarchy data."
-            )
         generator = StatVarGroupGenerator(
             self.executor, self.is_base_dc,
             should_prune_single_child_svgs=should_prune
         )
-        svg_config = StatVarGroupConfig(import_names=applicable_imports)
-        return generator.run_all(config=svg_config)
+        return generator.run_all()
 
     def _trigger_stat_var_series_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
         """Triggers statistical variable series aggregations."""
