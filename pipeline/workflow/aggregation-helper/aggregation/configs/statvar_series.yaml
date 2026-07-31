@@ -85,17 +85,32 @@ calculations:
                   - "1990"
                   - "2006"
 
+  - name: "NASA_NEXGDDP_Subnational: Stats Across Models Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
+    stage: 2
+    input_imports:
+      - NASA_NEXGDDP_Subnational_AggrDiffStats
+    output_import: NASA_NEXGDDP_Subnational_AggrStatsAcrossModels
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - stats_across_models:
+            sv_regex: "^DifferenceRelativeToBaseDate.*"
+            aggregation_ops:
+              - OPERATOR_MEDIAN
+              - OPERATOR_PERCENTILE90
+              - OPERATOR_PERCENTILE10
+
   - name: "NASA_NEXGDDP_CMIP6_Subnational: Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
     disabled: true
     stage: 2
     input_imports:
-      - NASA_NEXGDDP_CMIP6_Subnational
+      - NASA_NEXGDDP_CMIP6_Subnational_AggrDiffStats
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
         - stats_across_models:
-            sv_regex: "^DifferenceRelativeToObservationalData_.*"
+            sv_regex: "^DifferenceRelativeToBaseDate.*"
             aggregation_ops:
               - OPERATOR_MEDIAN
               - OPERATOR_PERCENTILE90
@@ -106,12 +121,12 @@ calculations:
     disabled: true
     stage: 2
     input_imports:
-      - NASA_NEXGDDP_CMIP6_IpccPlaces50
+      - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrDiffStats
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
         - stats_across_models:
-            sv_regex: "^DifferenceRelativeToObservationalData_.*"
+            sv_regex: "^DifferenceRelativeToBaseDate.*"
             aggregation_ops:
               - OPERATOR_MEDIAN
               - OPERATOR_PERCENTILE90
