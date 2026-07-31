@@ -300,5 +300,32 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(len(edges_a), 0, "ImportA generated linked edges should be deleted.")
             self.assertEqual(len(edges_b), 1, "ImportB generated linked edges should be preserved.")
 
+    def test_stat_var_groups_deletions(self):
+        """Verifies that STAT_VAR_GROUPS deletions delete StatVarGroup edges across all provenances without touching linked relationship edges."""
+        prov_gen_a = 'dc/base/generated/ImportA_SVGDelTest' if self.is_base_dc else 'generated/ImportA_SVGDelTest'
+        prov_gen_b = 'dc/base/generated/ImportB_SVGDelTest' if self.is_base_dc else 'generated/ImportB_SVGDelTest'
+        
+        # Stale StatVarGroup edges under two different import provenances
+        self.add_edge('Count_Person', 'memberOf', 'dc/g/OldGroupA', f'generated/ImportA_SVGDelTest')
+        self.add_edge('dc/g/OldGroupA', 'specializationOf', 'dc/g/Root', f'generated/ImportB_SVGDelTest')
+        # Existing linked relationship edge that should NOT be touched
+        self.add_edge('geoId/06075', 'linkedContainedInPlace', 'geoId/06', f'generated/ImportA_SVGDelTest')
+        self.flush_to_spanner()
+        
+        calculations = [{"name": "StatVar Groups", "type": "STAT_VAR_GROUPS", "stage": 1, "input_imports": ["schema"]}]
+        self.run_orchestrator(calculations=calculations, active_imports=["schema"])
+        
+        with self.database.snapshot(multi_use=True) as snapshot:
+            prefix = 'dc/base/generated/' if self.is_base_dc else 'generated/'
+            stale_svg_edges = list(snapshot.execute_sql(
+                f"SELECT subject_id FROM Edge WHERE predicate IN ('memberOf', 'specializationOf') AND STARTS_WITH(provenance, '{prefix}')"
+            ))
+            preserved_linked_edges = list(snapshot.execute_sql(
+                f"SELECT subject_id FROM Edge WHERE predicate = 'linkedContainedInPlace' AND provenance = '{prov_gen_a}'"
+            ))
+            self.assertEqual(len(stale_svg_edges), 0, "All stale StatVarGroup edges across provenances should be deleted.")
+            self.assertEqual(len(preserved_linked_edges), 1, "Linked relationship edges should not be deleted by STAT_VAR_GROUPS.")
+
+
 if __name__ == '__main__':
     unittest.main()

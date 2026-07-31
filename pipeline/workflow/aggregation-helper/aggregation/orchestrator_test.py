@@ -263,6 +263,17 @@ class TestOrchestratorExecution(unittest.TestCase):
             ["EarthquakeUSGS_Agg"]
         )
 
+    def test_delete_existing_data_scoped_and_svgs(self, mock_entity_gen, mock_calc_gen, mock_sv_agg, mock_place_gen, mock_executor_cls):
+        """Verifies _delete_existing_data dispatches to delete_linked_edges and delete_stat_var_group_edges separately."""
+        self.orchestrator.calculations = [
+            {"type": "LINKED_EDGES", "input_imports": ["*"]},
+            {"type": "STAT_VAR_GROUPS", "input_imports": ["schema"]}
+        ]
+        self.orchestrator._delete_previous_aggregations(["schema", "TestImport"], dry_run=False)
+
+        self.mock_deleter.return_value.delete_linked_edges.assert_called_once_with(["TestImport", "schema"])
+        self.mock_deleter.return_value.delete_stat_var_group_edges.assert_called_once()
+
 
 
 CHAINED_CONFIG_YAML = textwrap.dedent("""\
@@ -453,7 +464,7 @@ ORDERING_CONFIG_YAML = textwrap.dedent("""\
         stage: 0
 
       - type: STAT_VAR_GROUPS
-        input_imports: ["*"]
+        input_imports: ["schema"]
         stage: 0
 """)
 
@@ -506,7 +517,7 @@ class TestOrchestratorOrdering(unittest.TestCase):
         ))
 
         svg_calc = next(c for c in orchestrator.calculations if c.get("type") == CalculationType.STAT_VAR_GROUPS)
-        self.assertFalse(orchestrator._calc_applies_to_import(svg_calc, "TestImport"))
+        self.assertFalse(orchestrator._calc_applies_to_import(svg_calc, "schema"))
 
         # Verify STAT_VAR_GROUPS is active when generate_stat_var_groups is True
         orchestrator_enabled = AggregationOrchestrator(OrchestratorConfig(
@@ -517,7 +528,7 @@ class TestOrchestratorOrdering(unittest.TestCase):
             config_file_path=self.config_path,
             generate_stat_var_groups=True
         ))
-        self.assertTrue(orchestrator_enabled._calc_applies_to_import(svg_calc, "TestImport"))
+        self.assertTrue(orchestrator_enabled._calc_applies_to_import(svg_calc, "schema"))
 
 
 class TestConfigSanity(unittest.TestCase):
