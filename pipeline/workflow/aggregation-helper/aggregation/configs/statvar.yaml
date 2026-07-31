@@ -410,90 +410,52 @@ calculations:
         # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_9ThTo12ThGradeNoDiploma
           source_sv_ids:
-            # Population: 18 - 24 Years, 9th To 12th Grade No Diploma, Female
-            - dc/g0y4zefyr10n7
-            # Population: 18 - 24 Years, 9th To 12th Grade No Diploma, Male
-            - dc/0kptwgt2r2j97
-            # Population: 25 - 34 Years, 9th To 12th Grade No Diploma, Female
-            - dc/4f3r13e4gkhq6
-            # Population: 25 - 34 Years, 9th To 12th Grade No Diploma, Male
-            - dc/tcv30t9ydkldc
-            # Population: 35 - 44 Years, 9th To 12th Grade No Diploma, Female
-            - dc/7k5lylyz4l2th
-            # Population: 35 - 44 Years, 9th To 12th Grade No Diploma, Male
-            - dc/nrmj89cggsfg6
-            # Population: 45 - 64 Years, 9th To 12th Grade No Diploma, Female
-            - dc/m3g8esl121v73
-            # Population: 45 - 64 Years, 9th To 12th Grade No Diploma, Male
-            - dc/3hfl00nblgvg5
-            # Population: 65 Years or More, 9th To 12th Grade No Diploma, Female
-            - dc/5sps7rmylm73b
-            # Population: 65 Years or More, 9th To 12th Grade No Diploma, Male
-            - dc/07hctc6f9e2k9
+            - Count_Person_18To24Years_EducationalAttainment9ThTo12ThGradeNoDiploma_Female
+            - Count_Person_18To24Years_EducationalAttainment9ThTo12ThGradeNoDiploma_Male
+            - Count_Person_25To34Years_EducationalAttainment9ThTo12ThGradeNoDiploma_Female
+            - Count_Person_25To34Years_EducationalAttainment9ThTo12ThGradeNoDiploma_Male
+            - Count_Person_35To44Years_EducationalAttainment9ThTo12ThGradeNoDiploma_Female
+            - Count_Person_35To44Years_EducationalAttainment9ThTo12ThGradeNoDiploma_Male
+            - Count_Person_45To64Years_EducationalAttainment9ThTo12ThGradeNoDiploma_Female
+            - Count_Person_45To64Years_EducationalAttainment9ThTo12ThGradeNoDiploma_Male
+            - Count_Person_65OrMoreYears_EducationalAttainment9ThTo12ThGradeNoDiploma_Female
+            - Count_Person_65OrMoreYears_EducationalAttainment9ThTo12ThGradeNoDiploma_Male
         # dc/g/Person_EducationalAttainment-LessThan9ThGrade
         # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_LessThan9ThGrade
           source_sv_ids:
-            # Population: 18 - 24 Years, Less Than 9th Grade, Female
-            - dc/935ftchsz31b1
-            # Population: 18 - 24 Years, Less Than 9th Grade, Male
-            - dc/n6v6b8vh8jnd5
-            # Population: 25 - 34 Years, Less Than 9th Grade, Female
-            - dc/dr8wcfnpxyrj7
-            # Population: 25 - 34 Years, Less Than 9th Grade, Male
-            - dc/k8g20v452g617
-            # Population: 35 - 44 Years, Less Than 9th Grade, Female
-            - dc/y051838618t9c
-            # Population: 35 - 44 Years, Less Than 9th Grade, Male
-            - dc/cpx5ll8vth2n7
-            # Population: 45 - 64 Years, Less Than 9th Grade, Female
-            - dc/b841qxd3smpt
-            # Population: 45 - 64 Years, Less Than 9th Grade, Male
-            - dc/5vhc0r8m4x5g9
-            # Population: 65 Years or More, Less Than 9th Grade, Female
-            - dc/292723k92k5tb
-            # Population: 65 Years or More, Less Than 9th Grade, Male
-            - dc/68pblb53csteb
+            - Count_Person_18To24Years_EducationalAttainmentLessThan9ThGrade_Female
+            - Count_Person_18To24Years_EducationalAttainmentLessThan9ThGrade_Male
+            - Count_Person_25To34Years_EducationalAttainmentLessThan9ThGrade_Female
+            - Count_Person_25To34Years_EducationalAttainmentLessThan9ThGrade_Male
+            - Count_Person_35To44Years_EducationalAttainmentLessThan9ThGrade_Female
+            - Count_Person_35To44Years_EducationalAttainmentLessThan9ThGrade_Male
+            - Count_Person_45To64Years_EducationalAttainmentLessThan9ThGrade_Female
+            - Count_Person_45To64Years_EducationalAttainmentLessThan9ThGrade_Male
+            - Count_Person_65OrMoreYears_EducationalAttainmentLessThan9ThGrade_Female
+            - Count_Person_65OrMoreYears_EducationalAttainmentLessThan9ThGrade_Male
         # dc/g/Person_EducationalAttainment-LessThanHighSchoolDiploma
         # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_LessThanHighSchoolDiploma
           source_sv_ids:
-            # Population: Less Than High School Diploma, Male, Two or More Races
-            - dc/3g5g2k9n19l45
-            # Population: Less Than High School Diploma, Male, Asian Alone
-            - dc/z3z44q7edbyp7
-            # Population: Less Than High School Diploma, Female, Hispanic or Latino
-            - dc/0p89e7q72edr1
-            # Population: Less Than High School Diploma, Male, White Alone
-            - dc/70kcr1l5jldsb
-            # Population: Less Than High School Diploma, Female, Asian Alone
-            - dc/nbfp13v6t9v87
-            # Population: Less Than High School Diploma, Male, Hispanic or Latino
-            - dc/szpdtvh1v6p49
-            # Population: Less Than High School Diploma, Male, Some Other Race Alone
-            - dc/pyflt85w79j35
-            # Population: Less Than High School Diploma, Female, White Alone Not Hispanic or Latino
-            - dc/vhxsz5bplmef4
-            # Population: Less Than High School Diploma, Male, Black or African American Alone
-            - dc/k51n39gvd22t5
-            # Population: Less Than High School Diploma, Female, Black or African American Alone
-            - dc/m1trmbvh8sygd
-            # Population: Less Than High School Diploma, Male, Native Hawaiian or Other Pacific Islander Alone
-            - dc/7n0468s56spt8
-            # Population: Less Than High School Diploma, Male, American Indian or Alaska Native Alone
-            - dc/5e4qydg4slyvd
-            # Population: Less Than High School Diploma, Female, Native Hawaiian or Other Pacific Islander Alone
-            - dc/y95cbfgtlqrmb
-            # Population: Less Than High School Diploma, Female, Some Other Race Alone
-            - dc/p7978m8tbsns6
-            # Population: Less Than High School Diploma, Female, American Indian or Alaska Native Alone
-            - dc/lyzcfc37eet64
-            # Population: Less Than High School Diploma, Female, White Alone
-            - dc/m4q40nln3qms
-            # Population: Less Than High School Diploma, Male, White Alone Not Hispanic or Latino
-            - dc/yfrrvevrmyr74
-            # Population: Less Than High School Diploma, Female, Two or More Races
-            - dc/29l3m1z7d3n7c
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_AmericanIndianOrAlaskaNativeAlone_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_AmericanIndianOrAlaskaNativeAlone_Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_AsianAlone_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_AsianAlone_Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_BlackOrAfricanAmericanAlone_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_BlackOrAfricanAmericanAlone_Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_HispanicOrLatino_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_HispanicOrLatino_Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_NativeHawaiianOrOtherPacificIslanderAlone_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_NativeHawaiianOrOtherPacificIslanderAlone_Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_SomeOtherRaceAlone_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_SomeOtherRaceAlone_Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_TwoOrMoreRaces_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_TwoOrMoreRaces_Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_WhiteAlone_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_WhiteAlone_Male
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_WhiteAloneNotHispanicOrLatino_Female
+            - Count_Person_25OrMoreYears_EducationalAttainmentLessThanHighSchoolDiploma_WhiteAloneNotHispanicOrLatino_Male
         # dc/g/Person_EducationalAttainment-NurseryTo4ThGrade
         # Level 1
         - ancestor_sv_id: Count_Person_Years25Onwards_EducationalAttainment_NurseryTo4ThGrade
@@ -506,26 +468,16 @@ calculations:
         # Level 3
         - ancestor_sv_id: Count_Person_EducationalAttainment_SomeCollegeNoDegree
           source_sv_ids:
-            # Population: 18 - 24 Years, Some College No Degree, Female
-            - dc/x8sydp80d61v9
-            # Population: 18 - 24 Years, Some College No Degree, Male
-            - dc/bxs5x91p5jbf
-            # Population: 25 - 34 Years, Some College No Degree, Female
-            - dc/z8j7q9303cpx8
-            # Population: 25 - 34 Years, Some College No Degree, Male
-            - dc/d4p0m2p51v7d3
-            # Population: 35 - 44 Years, Some College No Degree, Female
-            - dc/66nscflhly519
-            # Population: 35 - 44 Years, Some College No Degree, Male
-            - dc/q4eclxrhd5mrd
-            # Population: 45 - 64 Years, Some College No Degree, Female
-            - dc/dsmks2epl3ve
-            # Population: 45 - 64 Years, Some College No Degree, Male
-            - dc/6ms49l0q9tq44
-            # Population: 65 Years or More, Some College No Degree, Female
-            - dc/c0vyt03x0h0v4
-            # Population: 65 Years or More, Some College No Degree, Male
-            - dc/5s08n6kdt26db
+            - Count_Person_18To24Years_EducationalAttainmentSomeCollegeNoDegree_Female
+            - Count_Person_18To24Years_EducationalAttainmentSomeCollegeNoDegree_Male
+            - Count_Person_25To34Years_EducationalAttainmentSomeCollegeNoDegree_Female
+            - Count_Person_25To34Years_EducationalAttainmentSomeCollegeNoDegree_Male
+            - Count_Person_35To44Years_EducationalAttainmentSomeCollegeNoDegree_Female
+            - Count_Person_35To44Years_EducationalAttainmentSomeCollegeNoDegree_Male
+            - Count_Person_45To64Years_EducationalAttainmentSomeCollegeNoDegree_Female
+            - Count_Person_45To64Years_EducationalAttainmentSomeCollegeNoDegree_Male
+            - Count_Person_65OrMoreYears_EducationalAttainmentSomeCollegeNoDegree_Female
+            - Count_Person_65OrMoreYears_EducationalAttainmentSomeCollegeNoDegree_Male
         - ancestor_sv_id: Count_Person_EducationalAttainment_1StTo12ThGrade
           source_sv_ids:
             - Count_Person_EducationalAttainment1StGrade
@@ -544,66 +496,48 @@ calculations:
         # The following 9 aggregations are: SomeCollegeOrAssociatesDegree, by race.
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_AmericanIndianOrAlaskaNativeAlone
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, American Indian or Alaska Native Alone
-            - dc/mqxdr821c7kw3
-            # Population: Some College or Associates Degree, Male, American Indian or Alaska Native Alone
-            - dc/lyt8y97bbrkpc
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_AmericanIndianOrAlaskaNativeAlone_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_AmericanIndianOrAlaskaNativeAlone_Male
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_AsianAlone
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, Asian Alone
-            - dc/whn99h1l0xgth
-            # Population: Some College or Associates Degree, Male, Asian Alone
-            - dc/fkvnj4rlrs84f
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_AsianAlone_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_AsianAlone_Male
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_BlackOrAfricanAmericanAlone
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, Black or African American Alone
-            - dc/56md3ndhrmvm7
-            # Population: Some College or Associates Degree, Male, Black or African American Alone
-            - dc/e7h67vn5w4g13
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_BlackOrAfricanAmericanAlone_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_BlackOrAfricanAmericanAlone_Male
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_HispanicOrLatino
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, Hispanic or Latino
-            - dc/3w039ndqy7qv1
-            # Population: Some College or Associates Degree, Male, Hispanic or Latino
-            - dc/7xf6mm0sg9y18
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_HispanicOrLatino_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_HispanicOrLatino_Male
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_NativeHawaiianOrOtherPacificIslanderAlone
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, Native Hawaiian or Other Pacific Islander Alone
-            - dc/kpcfmb6lp3zpd
-            # Population: Some College or Associates Degree, Male, Native Hawaiian or Other Pacific Islander Alone
-            - dc/r3l3rfl1ms85f
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_NativeHawaiianOrOtherPacificIslanderAlone_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_NativeHawaiianOrOtherPacificIslanderAlone_Male
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_SomeOtherRaceAlone
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, Some Other Race Alone
-            - dc/epw58ne8mytn5
-            # Population: Some College or Associates Degree, Male, Some Other Race Alone
-            - dc/t0mcpxqgr2lm9
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_SomeOtherRaceAlone_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_SomeOtherRaceAlone_Male
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_TwoOrMoreRaces
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, Two or More Races
-            - dc/q98jxycvs422f
-            # Population: Some College or Associates Degree, Male, Two or More Races
-            - dc/zjlfv8d8v14f8
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_TwoOrMoreRaces_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_TwoOrMoreRaces_Male
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_WhiteAlone
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, White Alone
-            - dc/9sneyc8lpk8dc
-            # Population: Some College or Associates Degree, Male, White Alone
-            - dc/d2ct8qmvcct81
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_WhiteAlone_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_WhiteAlone_Male
         - ancestor_sv_id: Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_WhiteAloneNotHispanicOrLatino
           source_sv_ids:
-            # Population: Some College or Associates Degree, Female, White Alone Not Hispanic or Latino
-            - dc/bqy52h7y4nq34
-            # Population: Some College or Associates Degree, Male, White Alone Not Hispanic or Latino
-            - dc/dc9v9h3q8l8n7
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_WhiteAloneNotHispanicOrLatino_Female
+            - Count_Person_25OrMoreYears_SomeCollegeOrAssociatesDegree_WhiteAloneNotHispanicOrLatino_Male
 
   # Education - ACSED5YrSurvey
-  - name: "CensusSAHIE_AggCountry: Health Insurance SV Aggregation"
+  - name: "ACSED5YrSurvey: Education SV Aggregation"
     type: STAT_VAR_AGGREGATION
     disabled: true
     input_imports:
       - ACSED5YrSurvey
-    output_import: CensusSAHIE_AggCountry_StatVarAgg
+    output_import: ACSED5YrSurvey_StatVarAgg
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Parent_Occupation_Management_Business_Science_Arts
@@ -875,13 +809,14 @@ calculations:
             - dc/qgv9d3frn35qc
             - dc/91vy0sf20wlg9
 
-  # WithOwnChildrenUnder18.
-  - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation"
+  # WithOwnChildrenUnder18 (Stage 1).
+  - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation (Stage 1)"
     type: STAT_VAR_AGGREGATION
     disabled: true
+    stage: 1
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S1251
-    output_import: CensusACS5YearSurvey_SubjectTables_S1251_StatVarAgg
+    output_import: CensusACS5YearSurvey_SubjectTables_S1251_Stage1
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_WithOwnChildrenUnder18_Female
@@ -892,10 +827,22 @@ calculations:
           source_sv_ids:
             - Count_Person_WithOwnChildrenUnder18_Male_FamilyHousehold_MarriedInThePast12Months_ResidesInHousehold
             - Count_Person_WithOwnChildrenUnder18_Male_FamilyHousehold_DivorcedInThePast12Months_ResidesInHousehold
+
+  # WithOwnChildrenUnder18 (Stage 2).
+  - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation (Stage 2)"
+    type: STAT_VAR_AGGREGATION
+    disabled: true
+    stage: 2
+    input_imports:
+      - CensusACS5YearSurvey_SubjectTables_S1251_Stage1
+    output_import: CensusACS5YearSurvey_SubjectTables_S1251_StatVarAgg
+    stat_var_aggregation:
+      aggregations:
         - ancestor_sv_id: Count_Person_WithOwnChildrenUnder18
           source_sv_ids:
             - Count_Person_WithOwnChildrenUnder18_Female
             - Count_Person_WithOwnChildrenUnder18_Male
+          skip_all_sources_present_check: true
 
   # Marriage
   - name: "CensusACS5YearSurvey_SubjectTables_S1201: Marital Status SV Aggregation"
@@ -906,24 +853,28 @@ calculations:
     output_import: CensusACS5YearSurvey_SubjectTables_S1201_StatVarAgg
     stat_var_aggregation:
       aggregations:
-        - ancestor_sv_id: Count_Person_InLaborForce_Divorced
+        - ancestor_sv_id: Count_Person_15OrMoreYears_MarriedAndNotSeparated
           source_sv_ids:
-            - Count_Person_InLaborForce_Female_Divorced
-            - Count_Person_InLaborForce_Male_Divorced
-        - ancestor_sv_id: Count_Person_InLaborForce_NeverMarried
+            - Count_Person_15OrMoreYears_Female_MarriedAndNotSeparated
+            - Count_Person_15OrMoreYears_Male_MarriedAndNotSeparated
+        - ancestor_sv_id: Count_Person_15OrMoreYears_Widowed
           source_sv_ids:
-            - Count_Person_InLaborForce_Female_NeverMarried
-            - Count_Person_InLaborForce_Male_NeverMarried
-        - ancestor_sv_id: Count_Person_InLaborForce_MarriedAndNotSeparated
+            - Count_Person_15OrMoreYears_Female_Widowed
+            - Count_Person_15OrMoreYears_Male_Widowed
+        - ancestor_sv_id: Count_Person_15OrMoreYears_Divorced
           source_sv_ids:
-            - Count_Person_InLaborForce_Female_MarriedAndNotSeparated
-            - Count_Person_InLaborForce_Male_MarriedAndNotSeparated
-        - ancestor_sv_id: Count_Person_InLaborForce_Widowed
+            - Count_Person_15OrMoreYears_Female_Divorced
+            - Count_Person_15OrMoreYears_Male_Divorced
+        - ancestor_sv_id: Count_Person_15OrMoreYears_Separated
           source_sv_ids:
-            - Count_Person_InLaborForce_Female_Widowed
-            - Count_Person_InLaborForce_Male_Widowed
+            - Count_Person_15OrMoreYears_Female_Separated
+            - Count_Person_15OrMoreYears_Male_Separated
+        - ancestor_sv_id: Count_Person_15OrMoreYears_NeverMarried
+          source_sv_ids:
+            - Count_Person_15OrMoreYears_Female_NeverMarried
+            - Count_Person_15OrMoreYears_Male_NeverMarried
 
-  # Employment by business ownership type.
+  # Business Ownership Employment
   - name: "CensusACS5YearSurvey_SubjectTables_S2408: Business Ownership Employment SV Aggregation"
     type: STAT_VAR_AGGREGATION
     disabled: true
@@ -932,22 +883,39 @@ calculations:
     output_import: CensusACS5YearSurvey_SubjectTables_S2408_StatVarAgg
     stat_var_aggregation:
       aggregations:
-        - ancestor_sv_id: Count_Person_PrivatelyOwnedNotForProfitEstablishment_PaidWorker
+        - ancestor_sv_id: Count_Person_16OrMoreYears_PrivateForProfitEmployee
           source_sv_ids:
-            - Count_Person_PrivatelyOwnedNotForProfitEstablishment_Male_PaidWorker
-            - Count_Person_PrivatelyOwnedNotForProfitEstablishment_Female_PaidWorker
-        - ancestor_sv_id: Count_Person_PrivatelyOwnedForProfitEstablishment_PaidWorker
+            - Count_Person_16OrMoreYears_Female_PrivateForProfitEmployee
+            - Count_Person_16OrMoreYears_Male_PrivateForProfitEmployee
+        - ancestor_sv_id: Count_Person_16OrMoreYears_SelfEmployedInOwnIncorporatedBusiness
           source_sv_ids:
-            - Count_Person_PrivatelyOwnedForProfitEstablishment_Male_PaidWorker
-            - Count_Person_PrivatelyOwnedForProfitEstablishment_Female_PaidWorker
+            - Count_Person_16OrMoreYears_Female_SelfEmployedInOwnIncorporatedBusiness
+            - Count_Person_16OrMoreYears_Male_SelfEmployedInOwnIncorporatedBusiness
+        - ancestor_sv_id: Count_Person_16OrMoreYears_PrivateNotForProfitEmployee
+          source_sv_ids:
+            - Count_Person_16OrMoreYears_Female_PrivateNotForProfitEmployee
+            - Count_Person_16OrMoreYears_Male_PrivateNotForProfitEmployee
+        - ancestor_sv_id: Count_Person_16OrMoreYears_LocalGovernmentEmployee
+          source_sv_ids:
+            - Count_Person_16OrMoreYears_Female_LocalGovernmentEmployee
+            - Count_Person_16OrMoreYears_Male_LocalGovernmentEmployee
+        - ancestor_sv_id: Count_Person_16OrMoreYears_StateGovernmentEmployee
+          source_sv_ids:
+            - Count_Person_16OrMoreYears_Female_StateGovernmentEmployee
+            - Count_Person_16OrMoreYears_Male_StateGovernmentEmployee
+        - ancestor_sv_id: Count_Person_16OrMoreYears_FederalGovernmentEmployee
+          source_sv_ids:
+            - Count_Person_16OrMoreYears_Female_FederalGovernmentEmployee
+            - Count_Person_16OrMoreYears_Male_FederalGovernmentEmployee
 
-  # US Citizen by Naturalization
-  - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation"
+  # US Citizen by Naturalization (Stage 1).
+  - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation (Stage 1)"
     type: STAT_VAR_AGGREGATION
     disabled: true
+    stage: 1
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0504
-    output_import: CensusACS5YearSurvey_SubjectTables_S0504_StatVarAgg
+    output_import: CensusACS5YearSurvey_SubjectTables_S0504_Stage1
     stat_var_aggregation:
       aggregations:
         - ancestor_sv_id: Count_Person_USCitizenByNaturalization_DateOfEntry2000OrLater_ForeignBorn
@@ -1064,6 +1032,17 @@ calculations:
             - Count_Person_USCitizenByNaturalization_DateOfEntry1990OrEarlier_ForeignBorn_PlaceOfBirthSouthernEasternEurope
             - Count_Person_USCitizenByNaturalization_DateOfEntry1990OrEarlier_ForeignBorn_PlaceOfBirthWesternAsia
           skip_all_sources_present_check: true
+
+  # US Citizen by Naturalization (Stage 2).
+  - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation (Stage 2)"
+    type: STAT_VAR_AGGREGATION
+    disabled: true
+    stage: 2
+    input_imports:
+      - CensusACS5YearSurvey_SubjectTables_S0504_Stage1
+    output_import: CensusACS5YearSurvey_SubjectTables_S0504_StatVarAgg
+    stat_var_aggregation:
+      aggregations:
         - ancestor_sv_id: Count_Person_USCitizenByNaturalization
           source_sv_ids:
             - Count_Person_USCitizenByNaturalization_DateOfEntry1990OrEarlier_ForeignBorn
@@ -1072,6 +1051,7 @@ calculations:
             - Count_Person_USCitizenByNaturalization_DateOfEntry1990To1999_ForeignBorn
             - Count_Person_USCitizenByNaturalization_DateOfEntry2000OrLater_ForeignBorn
             - Count_Person_USCitizenByNaturalization_DateOfEntry2010OrLater_ForeignBorn
+          skip_all_sources_present_check: true
 
   # HousingUnit HomeValue.
   - name: "CensusACS5YearSurvey: Home Value SV Aggregation"
@@ -1336,7 +1316,7 @@ calculations:
             # Population: Male, 10,000 - 12,499 USD, White Alone Not Hispanic or Latino, Worked Full Time
             - dc/5jp07brw3g26h
 
-  - name: "DEA_ARCOS: Opioid Prescription SV Aggregation"
+  - name: "IndiaNSS_HealthAilments: Health Ailments SV Aggregation"
     type: STAT_VAR_AGGREGATION
     disabled: true
     input_imports:
