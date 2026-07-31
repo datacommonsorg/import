@@ -1,6 +1,7 @@
 calculations:
   - name: "CensusACS5YearSurvey: State -> Country Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - CensusACS5YearSurvey
@@ -11,6 +12,7 @@ calculations:
 
   - name: "CensusSAHIE: State -> Country Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - CensusSAHIE
@@ -21,6 +23,7 @@ calculations:
 
   - name: "CDCMortality: County -> State Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - CDCMortality
@@ -31,6 +34,7 @@ calculations:
 
   - name: "CDCMortality: State -> Country Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 2
     input_imports:
       - CDCMortality_AggState
@@ -41,6 +45,7 @@ calculations:
 
   - name: "DEA_ARCOS: County -> State Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - DEA_ARCOS
@@ -51,6 +56,7 @@ calculations:
 
   - name: "DEA_ARCOS: State -> Country Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 2
     input_imports:
       - DEA_ARCOS_AggState
@@ -61,6 +67,7 @@ calculations:
 
   - name: "EPA_EJSCREEN: CensusBlockGroup -> CensusTract Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - EPA_EJSCREEN
@@ -71,6 +78,7 @@ calculations:
 
   - name: "EPA_EJSCREEN: CensusTract -> County Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 2
     input_imports:
       - EPA_EJSCREEN_AggCensusTract
@@ -81,6 +89,7 @@ calculations:
 
   - name: "DeepSolar: CensusBlockGroup -> CensusTract Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - DeepSolar
@@ -91,6 +100,7 @@ calculations:
 
   - name: "DeepSolar: CensusTract -> County Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 2
     input_imports:
       - DeepSolar_AggCensusTract
@@ -101,6 +111,7 @@ calculations:
 
   - name: "EPA_GHGRP: EpaReportingFacility -> County Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - EPA_GHGRP
@@ -111,6 +122,7 @@ calculations:
 
   - name: "EPA_GHGRP: EpaReportingFacility -> CensusZipCodeTabulationArea Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - EPA_GHGRP
@@ -121,6 +133,7 @@ calculations:
 
   - name: "EPA_GHGRP: County -> State Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 2
     input_imports:
       - EPA_GHGRP_AggCounty
@@ -131,6 +144,7 @@ calculations:
 
   - name: "RFF_USGridGeo: GeoGrid -> County Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - RFF_USGridGeo_WeatherVariabilityForecast
@@ -142,6 +156,7 @@ calculations:
 
   - name: "India_RBIStateDomesticProduct: State -> Country Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - India_RBIStateDomesticProduct
@@ -153,6 +168,7 @@ calculations:
 
   - name: "India_RBIStateDomesticProduct: StatVarAgg State -> Country Place Rollup"
     type: PLACE_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - India_RBIStateDomesticProduct_StatVarAgg

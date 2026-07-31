@@ -1,6 +1,7 @@
 calculations:
   - name: "NASA_NEXDCP30: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - NASA_NEXDCP30
@@ -16,6 +17,7 @@ calculations:
 
   - name: "NASA_NEXGDDP_Subnational: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - NASA_NEXGDDP_Subnational
@@ -33,6 +35,7 @@ calculations:
 
   - name: "NASA_NEXGDDP_Country: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - NASA_NEXGDDP_Country
@@ -48,6 +51,7 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_Subnational: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
@@ -65,6 +69,7 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50
@@ -80,16 +85,32 @@ calculations:
                   - "1990"
                   - "2006"
 
-  - name: "NASA_NEXGDDP_CMIP6_Subnational: Stats Across Models Series Aggregation"
+  - name: "NASA_NEXGDDP_Subnational: Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
     stage: 2
     input_imports:
-      - NASA_NEXGDDP_CMIP6_Subnational
+      - NASA_NEXGDDP_Subnational_AggrDiffStats
+    output_import: NASA_NEXGDDP_Subnational_AggrStatsAcrossModels
+    stat_var_series_aggregation:
+      aggr_funcs:
+        - stats_across_models:
+            sv_regex: "^DifferenceRelativeToBaseDate.*"
+            aggregation_ops:
+              - OPERATOR_MEDIAN
+              - OPERATOR_PERCENTILE90
+              - OPERATOR_PERCENTILE10
+
+  - name: "NASA_NEXGDDP_CMIP6_Subnational: Stats Across Models Series Aggregation"
+    type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
+    stage: 2
+    input_imports:
+      - NASA_NEXGDDP_CMIP6_Subnational_AggrDiffStats
     output_import: NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
         - stats_across_models:
-            sv_regex: "^DifferenceRelativeToObservationalData_.*"
+            sv_regex: "^DifferenceRelativeToBaseDate.*"
             aggregation_ops:
               - OPERATOR_MEDIAN
               - OPERATOR_PERCENTILE90
@@ -97,14 +118,15 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 2
     input_imports:
-      - NASA_NEXGDDP_CMIP6_IpccPlaces50
+      - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrDiffStats
     output_import: NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
     stat_var_series_aggregation:
       aggr_funcs:
         - stats_across_models:
-            sv_regex: "^DifferenceRelativeToObservationalData_.*"
+            sv_regex: "^DifferenceRelativeToBaseDate.*"
             aggregation_ops:
               - OPERATOR_MEDIAN
               - OPERATOR_PERCENTILE90
@@ -112,6 +134,7 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_Subnational: Over Time Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 3
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational_AggrStatsAcrossModels
@@ -216,6 +239,7 @@ calculations:
 
   - name: "NASA_NEXGDDP_CMIP6_IpccPlaces50: Over Time Stats Across Models Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 3
     input_imports:
       - NASA_NEXGDDP_CMIP6_IpccPlaces50_AggrStatsAcrossModels
@@ -320,6 +344,7 @@ calculations:
 
   - name: "NASA_NEXGDDP_IpccPlaces50: Measurement Methods & Base Date Diff Series Aggregation"
     type: STAT_VAR_SERIES_AGGREGATION
+    disabled: true
     stage: 1
     input_imports:
       - NASA_NEXGDDP_IpccPlaces50

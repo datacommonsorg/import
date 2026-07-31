@@ -2,6 +2,7 @@ calculations:
   # Generates node embeddings in Spanner
   - name: "Global: Node Embeddings Generation"
     type: EMBEDDING_GENERATION
+    disabled: true
     stage: 1
     embedding_table: "NodeEmbedding"
     embedding_generation:

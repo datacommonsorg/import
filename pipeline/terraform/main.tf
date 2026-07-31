@@ -313,6 +313,7 @@ resource "google_workflows_workflow" "spanner_ingestion_workflow" {
     SPANNER_INSTANCE_ID    = var.spanner_instance_id
     SPANNER_DATABASE_ID    = var.spanner_database_id
     INGESTION_HELPER_URL   = google_cloud_run_v2_service.ingestion_helper.uri
+    DEFAULT_SKIP_AGGREGATION = "true"
   }
 
   depends_on = [google_project_service.services]
