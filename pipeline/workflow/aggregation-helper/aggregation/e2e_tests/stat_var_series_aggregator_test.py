@@ -130,12 +130,12 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             ts_diff_query = """
                 SELECT facet_id, facet
                 FROM TimeSeries
-                WHERE variable_measured = 'DifferenceAcrossModels_Max_Temperature'
+                WHERE variable_measured = 'MaxDiffAcrossMeasurementMethods_Max_Temperature'
             """
             ts_diff_results = list(snapshot.execute_sql(ts_diff_query))
             self.assertEqual(len(ts_diff_results), 1)
             self.assertEqual(ts_diff_results[0][1]['provenance'], r1_expected_provenance)
-            self.assertEqual(ts_diff_results[0][1]['measurementMethod'], 'dcAggregate/DifferenceAcrossModels')
+            self.assertEqual(ts_diff_results[0][1]['measurementMethod'], 'dcAggregate/MaxDiffAcrossMeasurementMethods')
 
             # Verify TimeSeries for DifferenceRelativeToBaseDate
             ts_rel_query = """
@@ -150,7 +150,7 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             obs_diff_query = """
                 SELECT value
                 FROM Observation
-                WHERE variable_measured = 'DifferenceAcrossModels_Max_Temperature'
+                WHERE variable_measured = 'MaxDiffAcrossMeasurementMethods_Max_Temperature'
                   AND date = '2050-07'
             """
             obs_diff_results = list(snapshot.execute_sql(obs_diff_query))
@@ -220,6 +220,196 @@ class StatVarSeriesAggregatorIntegrationTest(AggregationIntegrationTestBase):
             
             self.assertEqual(obs_ensemble_results[2][0], 'Percentile90AcrossModels_DifferenceRelativeToBaseDate201507_Max_Temperature')
             self.assertEqual(float(obs_ensemble_results[2][1]), 4.0)
+
+    def test_4digit_base_year_matching(self):
+        """Tests diff_relative_to_base_date with a 4-digit base year (e.g. '2015') matching monthly dates ('2015-07')."""
+        import_name = 'NASA_NEXGDDP_Test_BaseYear'
+        output_import = f'{import_name}_AggrBaseYear'
+        place_id = 'geoId/5363000'
+
+        # Baseline monthly observation in 2015-07 (base year '2015')
+        self.add_observation('Max_Temperature', place_id, '2015-07', 30.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+
+        # Projection monthly observation in 2050-07 -> 33 - 30 = 3.0
+        self.add_observation('Max_Temperature', place_id, '2050-07', 33.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+
+        self.flush_to_spanner()
+
+        calculations_config = [
+            {
+                "name": "Base Year 4-Digit Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "diff_relative_to_base_date": {
+                                "dates": ["2015"]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'DifferenceRelativeToBaseDate2015_Max_Temperature'
+                  AND date = '2050-07'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            self.assertEqual(float(obs_results[0][0]), 3.0)
+
+    def test_multiyear_window_date_filtering(self):
+        """Tests aggr_over_time with multi-year period (P10Y) and output_obs_date ('2030').
+
+        Verifies that observations outside the window [2021, 2030] (e.g. 2010) are EXCLUDED.
+        """
+        import_name = 'NASA_NEXGDDP_Test_Window'
+        output_import = f'{import_name}_AggrWindow'
+        place_id = 'geoId/5363000'
+
+        # Outside window (year 2010): value = 100.0 (should be EXCLUDED)
+        self.add_observation('Max_Temperature', place_id, '2010-05', 100.0, method='Model_A', period='P1M', import_name=import_name, facet_id='facet_a')
+
+        # Inside window [2021, 2030]
+        self.add_observation('Max_Temperature', place_id, '2025-05', 50.0, method='Model_A', period='P1M', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2028-05', 80.0, method='Model_A', period='P1M', import_name=import_name, facet_id='facet_a')
+
+        self.flush_to_spanner()
+
+        calculations_config = [
+            {
+                "name": "P10Y Window Series Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 3,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {
+                            "aggr_over_time": {
+                                "time_range": {
+                                    "input_obs_period": "P1M",
+                                    "output_obs_period": "P10Y",
+                                    "output_obs_date": "2030"
+                                },
+                                "sv_configs": [
+                                    {
+                                        "aggregation_op": "MAX",
+                                        "use_input_sv_for_output": True
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'Max_Temperature'
+                  AND date = '2030'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            # Must be MAX(50.0, 80.0) = 80.0, excluding 100.0 from 2010
+            self.assertEqual(float(obs_results[0][0]), 80.0)
+
+    def test_temp_functions_runtime(self):
+        """Directly tests ExtractYear and ExtractMonth TEMP functions in BigQuery runtime."""
+        from aggregation.stat_var_series_aggregator import get_extract_year_sql, get_extract_month_sql
+
+        query = f"""
+        {get_extract_year_sql()}
+        {get_extract_month_sql()}
+
+        SELECT
+          ExtractYear('2015') AS y1, ExtractMonth('2015') AS m1,
+          ExtractYear('2015-07') AS y2, ExtractMonth('2015-07') AS m2,
+          ExtractYear('2050-12') AS y3, ExtractMonth('2050-12') AS m3,
+          ExtractYear('2050-07-15') AS y4, ExtractMonth('2050-07-15') AS m4
+        """
+        results = list(self.bq_client.query(query).result())
+        self.assertEqual(len(results), 1)
+        row = results[0]
+
+        # 2015 -> year 2015, month 0
+        self.assertEqual(row['y1'], 2015)
+        self.assertEqual(row['m1'], 0)
+
+        # 2015-07 -> year 2015, month 7
+        self.assertEqual(row['y2'], 2015)
+        self.assertEqual(row['m2'], 7)
+
+        # 2050-12 -> year 2050, month 12
+        self.assertEqual(row['y3'], 2050)
+        self.assertEqual(row['m3'], 12)
+
+        # 2050-07-15 -> year 2050, month 7
+        self.assertEqual(row['y4'], 2050)
+        self.assertEqual(row['m4'], 7)
+
+    def test_max_diff_across_measurement_methods(self):
+        """Tests max_diff_across_measurement_methods aggregation."""
+        import_name = 'NASA_NEXGDDP_Test_MaxDiff'
+        output_import = f'{import_name}_AggrMaxDiff'
+        place_id = 'geoId/5363000'
+
+        # Two observations for the same date across 2 measurement methods (Model_A = 30.0, Model_B = 35.0) -> max diff = 5.0
+        self.add_observation('Max_Temperature', place_id, '2050-07', 30.0, method='Model_A', import_name=import_name, facet_id='facet_a')
+        self.add_observation('Max_Temperature', place_id, '2050-07', 35.0, method='Model_B', import_name=import_name, facet_id='facet_b')
+
+        self.flush_to_spanner()
+
+        calculations_config = [
+            {
+                "name": "Max Diff Across Measurement Methods Aggregation",
+                "type": "STAT_VAR_SERIES_AGGREGATION",
+                "stage": 1,
+                "input_imports": [import_name],
+                "output_import": output_import,
+                "stat_var_series_aggregation": {
+                    "aggr_funcs": [
+                        {"max_diff_across_measurement_methods": {}}
+                    ]
+                }
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations_config, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'MaxDiffAcrossMeasurementMethods_Max_Temperature'
+                  AND date = '2050-07'
+            """
+            obs_results = list(snapshot.execute_sql(obs_query))
+            self.assertEqual(len(obs_results), 1)
+            self.assertEqual(float(obs_results[0][0]), 5.0)
+
+            ts_query = """
+                SELECT variable_measured, JSON_VALUE(facet, '$.measurementMethod')
+                FROM TimeSeries
+                WHERE variable_measured = 'MaxDiffAcrossMeasurementMethods_Max_Temperature'
+            """
+            ts_results = list(snapshot.execute_sql(ts_query))
+            self.assertEqual(len(ts_results), 1)
+            self.assertEqual(ts_results[0][1], 'dcAggregate/MaxDiffAcrossMeasurementMethods')
 
     def test_temporal_aggregation(self):
         """Tests temporal aggregation (aggr_over_time): daily to monthly/yearly."""

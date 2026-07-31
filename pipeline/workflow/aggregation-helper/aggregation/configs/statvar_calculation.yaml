@@ -3,6 +3,7 @@ calculations:
   # Energy.
   - name: "EIA_Electricity: Annual Emissions Per Capita StatVar Calculation"
     type: STAT_VAR_CALCULATION
+    disabled: true
     input_imports:
       - EPA_GHGRP_AggCounty
       - EPA_GHGRP_AggCensusZipCodeTabulationArea
@@ -42,6 +43,7 @@ calculations:
   # output, they are preferred. Otherwise, the *_prefix is used.
   - name: "Climate: NASA CMIP6 Temperature Modeling Diffs Calculation"
     type: STAT_VAR_CALCULATION
+    disabled: true
     input_imports:
       - NASA_NEXGDDP_CMIP6_Subnational
       - NASA_NEXGDDP_CMIP6_IpccPlaces50

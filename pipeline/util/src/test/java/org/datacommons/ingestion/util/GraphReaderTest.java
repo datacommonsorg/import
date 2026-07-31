@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
@@ -611,5 +612,65 @@ public class GraphReaderTest {
 
     // This should throw RuntimeException because sourceCountry is missing
     GraphReader.extractTimeSeries("nodeId", pv, "test_import", true);
+  }
+
+  @Test
+  public void testExtractTimeSeriesFn_BundleDeduplication() throws Exception {
+    GraphReader.ExtractTimeSeriesFn fn = new GraphReader.ExtractTimeSeriesFn("test_import", true);
+    fn.startBundle();
+
+    PropertyValues pv =
+        PropertyValues.newBuilder()
+            .putPvs(
+                "typeOf",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("StatVarObservation"))
+                    .build())
+            .putPvs(
+                "variableMeasured",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("Count_Person"))
+                    .build())
+            .putPvs(
+                "observationAbout",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder()
+                            .setType(ValueType.RESOLVED_REF)
+                            .setValue("geoId/06"))
+                    .build())
+            .putPvs(
+                "observationDate",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder().setType(ValueType.TEXT).setValue("2020"))
+                    .build())
+            .putPvs(
+                "value",
+                McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        TypedValue.newBuilder().setType(ValueType.NUMBER).setValue("100"))
+                    .build())
+            .build();
+
+    McfGraph graph =
+        McfGraph.newBuilder()
+            .putNodes("obs1", pv)
+            .putNodes("obs2", pv) // Duplicate observation of same series in same bundle
+            .build();
+
+    DoFn.ProcessContext mockContext = Mockito.mock(DoFn.ProcessContext.class);
+    Mockito.when(mockContext.element()).thenReturn(graph);
+
+    fn.processElement(mockContext);
+
+    // Should only output 1 TimeSeries since obs1 and obs2 belong to the same TimeSeries
+    Mockito.verify(mockContext, Mockito.times(1)).output(Mockito.any(TimeSeries.class));
   }
 }

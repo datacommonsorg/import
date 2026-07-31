@@ -18,5 +18,5 @@ calculations:
     type: STAT_VAR_GROUPS
     stage: 0
     input_imports:
-      - "*"
+      - "schema"
 
