@@ -6,8 +6,10 @@ import com.google.common.base.Joiner;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.transforms.Distinct;
@@ -171,16 +173,21 @@ public class GraphReader implements Serializable {
                 }));
 
     return uniqueSeries.apply(
-        "CountTimeSeries-" + importName,
-        ParDo.of(
-            new DoFn<TimeSeries, TimeSeries>() {
-              @ProcessElement
-              public void processElement(
-                  @Element TimeSeries ts, OutputReceiver<TimeSeries> receiver) {
-                tsCounter.inc();
-                receiver.output(ts);
-              }
-            }));
+        "CountTimeSeries-" + importName, ParDo.of(new CountTimeSeriesFn(tsCounter)));
+  }
+
+  public static class CountTimeSeriesFn extends DoFn<TimeSeries, TimeSeries> {
+    private final Counter tsCounter;
+
+    public CountTimeSeriesFn(Counter tsCounter) {
+      this.tsCounter = tsCounter;
+    }
+
+    @ProcessElement
+    public void processElement(@Element TimeSeries ts, OutputReceiver<TimeSeries> receiver) {
+      tsCounter.inc();
+      receiver.output(ts);
+    }
   }
 
   public static PCollection<Observation> extractObservations(
@@ -192,12 +199,19 @@ public class GraphReader implements Serializable {
 
   /** Extracts unique TimeSeries (metadata series keys) from observation nodes. */
   public static class ExtractTimeSeriesFn extends DoFn<McfGraph, TimeSeries> {
+    private static final int MAX_BUNDLE_CACHE_SIZE = 100_000;
     private final String importName;
     private final boolean isBaseDc;
+    private transient Set<String> bundleSeenKeys;
 
     public ExtractTimeSeriesFn(String importName, boolean isBaseDc) {
       this.importName = importName;
       this.isBaseDc = isBaseDc;
+    }
+
+    @StartBundle
+    public void startBundle() {
+      bundleSeenKeys = new HashSet<>();
     }
 
     @ProcessElement
@@ -207,9 +221,19 @@ public class GraphReader implements Serializable {
         PropertyValues pv = entry.getValue();
         if (GraphUtils.isObservation(pv)) {
           TimeSeries ts = extractTimeSeries(entry.getKey(), pv, importName, isBaseDc);
-          c.output(ts);
+          if (bundleSeenKeys.size() >= MAX_BUNDLE_CACHE_SIZE) {
+            bundleSeenKeys.clear();
+          }
+          if (bundleSeenKeys.add(ts.getDedupeKey())) {
+            c.output(ts);
+          }
         }
       }
+    }
+
+    @FinishBundle
+    public void finishBundle() {
+      bundleSeenKeys = null;
     }
   }
 

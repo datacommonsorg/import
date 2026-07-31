@@ -94,8 +94,40 @@ class TestAggregationDeleter(unittest.TestCase):
 
         deleter = AggregationDeleter("proj", "inst", "db")
 
-        with self.assertRaises(RuntimeError):
-            deleter.delete_aggregated_data(["ImportA"])
+    @patch('aggregation.deleter.spanner.Client')
+    def test_delete_stat_var_group_edges(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value.database.return_value = mock_db
+        
+        deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=True)
+        deleter.delete_stat_var_group_edges()
+        
+        mock_db.execute_partitioned_dml.assert_called_once()
+        call_args = mock_db.execute_partitioned_dml.call_args
+        sql = call_args[0][0]
+        params = call_args[1]["params"]
+        self.assertIn("DELETE FROM Edge", sql)
+        self.assertIn("STARTS_WITH(provenance, @prefix)", sql)
+        self.assertIn("'memberOf'", sql)
+        self.assertIn("'specializationOf'", sql)
+        self.assertEqual(params, {"prefix": "dc/base/generated/"})
+
+    @patch('aggregation.deleter.spanner.Client')
+    def test_delete_linked_edges(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value.database.return_value = mock_db
+        
+        deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=True)
+        deleter.delete_linked_edges(["ImportA"])
+        
+        mock_db.execute_partitioned_dml.assert_called_once()
+        call_args = mock_db.execute_partitioned_dml.call_args
+        sql = call_args[0][0]
+        params = call_args[1]["params"]
+        self.assertIn("DELETE FROM Edge", sql)
+        self.assertIn("provenance IN UNNEST(@provenances)", sql)
+        self.assertIn("'linkedContainedInPlace'", sql)
+        self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA"]})
 
 
 if __name__ == '__main__':

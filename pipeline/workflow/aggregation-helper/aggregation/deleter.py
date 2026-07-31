@@ -19,7 +19,7 @@ import logging
 from typing import List
 from google.cloud import spanner
 
-from .common import get_provenance_name
+from .common import get_provenance_name, get_provenance_prefix
 
 class AggregationDeleter:
     """Handles deletion of aggregated data in Spanner."""
@@ -85,3 +85,33 @@ class AggregationDeleter:
         except Exception as e:
             logging.error(f"Failed to execute partitioned DML for deletions: {e}")
             raise
+
+    def delete_stat_var_group_edges(self) -> int:
+        """Deletes all generated StatVarGroup edges across all provenances in Spanner."""
+        prefix = f"{get_provenance_prefix(self.is_base_dc)}generated/"
+        sql = (
+            "DELETE FROM Edge "
+            "WHERE STARTS_WITH(provenance, @prefix) "
+            "AND predicate IN ('memberOf', 'specializationOf', 'linkedMemberOf', 'typeOf', 'name')"
+        )
+        params = {"prefix": prefix}
+        param_types = {"prefix": spanner.param_types.STRING}
+        rows = self.spanner_database.execute_partitioned_dml(sql, params=params, param_types=param_types)
+        logging.info(f"Deleted {rows} StatVarGroup edges across all provenances.")
+        return rows
+
+    def delete_linked_edges(self, imports_to_delete: List[str]) -> int:
+        """Deletes generated linked relationship edges for the specified imports from Spanner."""
+        if not imports_to_delete:
+            return 0
+        provenance_names = [get_provenance_name(f"generated/{name}", self.is_base_dc) for name in imports_to_delete]
+        sql = (
+            "DELETE FROM Edge "
+            "WHERE provenance IN UNNEST(@provenances) "
+            "AND predicate IN ('linkedContainedInPlace', 'linkedMemberOf', 'linkedMember')"
+        )
+        params = {"provenances": provenance_names}
+        param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
+        rows = self.spanner_database.execute_partitioned_dml(sql, params=params, param_types=param_types)
+        logging.info(f"Deleted {rows} linked relationship edges for imports: {imports_to_delete}")
+        return rows

@@ -427,11 +427,15 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         self.mock_executor.connection_id = "test-conn"
         self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
 
-    def test_run_all_empty(self):
+    def test_run_all(self):
         generator = StatVarGroupGenerator(self.mock_executor)
-        jobs = generator.run_all(StatVarGroupConfig(import_names=[]))
-        self.assertEqual(jobs, [])
-        self.mock_executor.execute.assert_not_called()
+        mock_prep_job = [MagicMock(object_id="gender"), MagicMock(object_id="age")]
+        mock_exec_job = MagicMock()
+        self.mock_executor.execute.side_effect = [mock_prep_job, mock_exec_job]
+
+        jobs = generator.run_all()
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(self.mock_executor.execute.call_count, 2)
 
     def test_run_stat_var_group(self):
         generator = StatVarGroupGenerator(self.mock_executor, is_base_dc=True, should_prune_single_child_svgs=True)
@@ -439,14 +443,14 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         mock_exec_job = MagicMock()
         self.mock_executor.execute.side_effect = [mock_prep_job, mock_exec_job]
 
-        jobs = generator.run_all(StatVarGroupConfig(import_names=["import1"]))
+        job = generator.run_stat_var_group()
 
-        self.assertEqual(len(jobs), 1)
         self.assertEqual(self.mock_executor.execute.call_count, 2)
         query = self.mock_executor.execute.call_args[0][0]
         self.assertIn("PrunableSVGs", query)
         self.assertIn("EffectiveParent", query)
         self.assertIn("HAVING COUNT(DISTINCT pc.child) <= 1", query)
+        self.assertIn("generated_provenance_prefix", query)
 
 
 if __name__ == '__main__':
