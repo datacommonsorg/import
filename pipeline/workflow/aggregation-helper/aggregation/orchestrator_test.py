@@ -531,6 +531,116 @@ class TestOrchestratorOrdering(unittest.TestCase):
         self.assertTrue(orchestrator_enabled._calc_applies_to_import(svg_calc, "schema"))
 
 
+DISABLED_CONFIG_YAML = textwrap.dedent("""\
+    calculations:
+      - type: PLACE_AGGREGATION
+        disabled: true
+        input_imports: ["USFed_Census"]
+        output_import: "USFed_Census_AggState"
+        stage: 1
+        place_aggregation:
+          from_place_types: County
+          to_place_types: State
+""")
+
+
+@patch('aggregation.orchestrator.BigQueryExecutor')
+class TestOrchestratorFiltering(unittest.TestCase):
+    """Tests for selection/rejection filtering by calculation type and import, plus include_disabled."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+
+        self.config_path = os.path.join(self.tmpdir.name, "config.yaml")
+        with open(self.config_path, "w") as f:
+            f.write(VALID_CONFIG_YAML)
+
+        self.disabled_path = os.path.join(self.tmpdir.name, "disabled.yaml")
+        with open(self.disabled_path, "w") as f:
+            f.write(DISABLED_CONFIG_YAML)
+
+    def test_filter_select_type(self, mock_executor):
+        """Verifies only selected calculation types are active."""
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            select_types=["PLACE_AGGREGATION"]
+        ))
+        active_stages = orchestrator._get_active_stages_for_import("USFed_Census")
+        self.assertEqual(active_stages, [1])
+
+    def test_filter_reject_type(self, mock_executor):
+        """Verifies rejected calculation types are excluded."""
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            reject_types=["PLACE_AGGREGATION"]
+        ))
+        active_stages = orchestrator._get_active_stages_for_import("USFed_Census")
+        self.assertEqual(active_stages, [2])
+
+    def test_reject_wins_over_select(self, mock_executor):
+        """Verifies reject rules take precedence over select rules."""
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            select_types=["PLACE_AGGREGATION", "STAT_VAR_AGGREGATION"],
+            reject_types=["STAT_VAR_AGGREGATION"]
+        ))
+        active_stages = orchestrator._get_active_stages_for_import("USFed_Census")
+        self.assertEqual(active_stages, [1])
+
+    def test_filter_reject_import(self, mock_executor):
+        """Verifies calculations associated with rejected imports are skipped."""
+        chained_path = os.path.join(self.tmpdir.name, "chained.yaml")
+        with open(chained_path, "w") as f:
+            f.write(CHAINED_CONFIG_YAML)
+
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=chained_path,
+            reject_imports=["USFed_Census_AggState"]
+        ))
+        # Stage 1 generates USFed_Census_AggState, so it should be rejected
+        active_stages = orchestrator._get_active_stages_for_import("USFed_Census")
+        self.assertEqual(active_stages, [])
+
+    def test_include_disabled(self, mock_executor):
+        """Verifies include_disabled allows executing disabled: true steps from YAML."""
+        orchestrator_default = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.disabled_path,
+            include_disabled=False
+        ))
+        self.assertEqual(orchestrator_default._get_active_stages_for_import("USFed_Census"), [])
+
+        orchestrator_enabled = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.disabled_path,
+            include_disabled=True
+        ))
+        self.assertEqual(orchestrator_enabled._get_active_stages_for_import("USFed_Census"), [1])
+
+
 class TestConfigSanity(unittest.TestCase):
     """Sanity checks for calculation configurations and metadata."""
 

@@ -38,6 +38,34 @@ def parse_import_list(import_list_str: Optional[str]) -> List[str]:
     return parsed
 
 
+def parse_filter_flag(arg_values: Optional[List[str]], flag_name: str) -> dict:
+    """Parses --select or --reject flags requiring explicit 'type:' or 'import:' prefixes."""
+    result = {"types": [], "imports": []}
+    if not arg_values:
+        return result
+    for item_str in arg_values:
+        for token in item_str.split(","):
+            token = token.strip()
+            if not token:
+                continue
+            lower_token = token.lower()
+            if lower_token.startswith("type:"):
+                val = token.split(":", 1)[1].strip().upper()
+                if val:
+                    result["types"].append(val)
+            elif lower_token.startswith("import:"):
+                val = token.split(":", 1)[1].strip()
+                if val:
+                    result["imports"].append(val)
+            else:
+                raise ValueError(
+                    f"Value '{token}' in --{flag_name} must start with 'type:' or 'import:' prefix "
+                    f"(e.g., '--{flag_name} type:PLACE_AGGREGATION' or '--{flag_name} import:CensusACS5YearSurvey')."
+                )
+    logging.info(f"Parsed flag --{flag_name}: {result}")
+    return result
+
+
 def create_orchestrator_config(
     args: argparse.Namespace, env: os._Environ = os.environ
 ) -> OrchestratorConfig:
@@ -58,6 +86,9 @@ def create_orchestrator_config(
     enable_embeddings = env.get("ENABLE_EMBEDDINGS", "false").lower() == "true"
     bq_dataset_id = env.get("BQ_DATASET_ID", "datacommons")
 
+    select_filters = parse_filter_flag(args.select, "select")
+    reject_filters = parse_filter_flag(args.reject, "reject")
+
     return OrchestratorConfig(
         connection_id=connection_id,
         project_id=project_id,
@@ -69,6 +100,11 @@ def create_orchestrator_config(
         enable_embeddings=enable_embeddings,
         bq_dataset_id=bq_dataset_id,
         generate_stat_var_groups=args.generate_stat_var_groups,
+        select_types=select_filters["types"] or None,
+        reject_types=reject_filters["types"] or None,
+        select_imports=select_filters["imports"] or None,
+        reject_imports=reject_filters["imports"] or None,
+        include_disabled=args.include_disabled,
     )
 
 
@@ -108,6 +144,22 @@ def main():
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Whether running in base Data Commons environment (default: True, use --no-is_base_dc for DCP)."
+    )
+    parser.add_argument(
+        "--select",
+        action="append",
+        help="Select calculation types or import names (requires 'type:' or 'import:' prefix, e.g., 'type:PLACE_AGGREGATION,import:CensusACS5YearSurvey')."
+    )
+    parser.add_argument(
+        "--reject",
+        action="append",
+        help="Reject calculation types or import names (requires 'type:' or 'import:' prefix, e.g., 'type:LINKED_EDGES,import:CensusACS5YearSurvey_AggCountry')."
+    )
+    parser.add_argument(
+        "--include_disabled",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to include calculations marked disabled: true in YAML configs when evaluating filters (default: False)."
     )
 
     args = parser.parse_args()

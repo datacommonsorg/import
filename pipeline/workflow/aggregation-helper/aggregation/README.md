@@ -77,6 +77,33 @@ Common graph structure, lineage, and UI group hierarchy rollups defined in `comm
 
 ---
 
+## CLI & Cloud Run Job Filtering Flags (`--select`, `--reject`, `--include_disabled`)
+
+Instead of manually editing YAML configuration files (`configs/*.yaml`) to enable or disable specific aggregations, you can use command-line flags to dynamically filter calculation steps by **Calculation Type** (`type:`) or **Import Name** (`import:`):
+
+*   `--select` (repeated or comma-separated): Only execute calculation steps matching the specified types or import names. Each value MUST be explicitly prefixed with `type:` or `import:`.
+*   `--reject` (repeated or comma-separated): Skip calculation steps matching the specified types or import names. Rejections take precedence over selections.
+*   `--include_disabled` (`default=False`): Allows calculation steps marked `disabled: true` in YAML files to be dynamically executed when selected.
+
+### Examples
+
+**1. Run only Place and StatVar aggregations for an import (skipping all other types):**
+```bash
+python main.py --import_list '["CensusACS5YearSurvey"]' \
+  --select "type:PLACE_AGGREGATION,type:STAT_VAR_AGGREGATION" \
+  --include_disabled
+```
+
+**2. Reject a chained downstream import from running:**
+```bash
+python main.py --import_list '["CensusACS5YearSurvey"]' \
+  --reject "import:CensusACS5YearSurvey_AggCountry" \
+  --include_disabled
+```
+
+---
+
+
 ## Local Configuration Validation
 
 The orchestrator strictly validates configuration files against `schema.json`. If there is any syntax error, type mismatch, or missing required field, validation will fail.

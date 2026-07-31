@@ -105,6 +105,11 @@ class OrchestratorConfig:
     enable_embeddings: bool = False
     bq_dataset_id: str = "datacommons"
     generate_stat_var_groups: bool = True
+    select_types: Optional[List[str]] = None
+    reject_types: Optional[List[str]] = None
+    select_imports: Optional[List[str]] = None
+    reject_imports: Optional[List[str]] = None
+    include_disabled: bool = False
 
 
 class AggregationOrchestrator:
@@ -190,6 +195,12 @@ class AggregationOrchestrator:
         logging.info(
             f"Starting Aggregation Orchestrator run (dry_run={dry_run}, skip_deletions={skip_deletions}) for active imports: {active_imports} (expanded: {expanded_imports})"
         )
+        if any([self.config.select_types, self.config.reject_types, self.config.select_imports, self.config.reject_imports, self.config.include_disabled]):
+            logging.info(
+                f"Active filtering rules: select_types={self.config.select_types}, reject_types={self.config.reject_types}, "
+                f"select_imports={self.config.select_imports}, reject_imports={self.config.reject_imports}, "
+                f"include_disabled={self.config.include_disabled}"
+            )
         run_result = AggregationRunResult()
 
         for single_import in expanded_imports:
@@ -247,7 +258,7 @@ class AggregationOrchestrator:
         """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION)."""
         global_calcs = [
             calc for calc in self.calculations
-            if calc.get("type") in GLOBAL_CALCULATION_TYPES and not calc.get("disabled", False)
+            if calc.get("type") in GLOBAL_CALCULATION_TYPES and self._calc_matches_filters(calc)
         ]
         if not global_calcs:
             return None
@@ -609,15 +620,46 @@ class AggregationOrchestrator:
         )
         return generator.run_all(config=embed_config)
 
+    def _calc_matches_filters(self, calc: Dict[str, Any], single_import: Optional[str] = None) -> bool:
+        """Evaluates whether a calculation step passes CLI/config selection and rejection filters."""
+        if calc.get("disabled", False) and not self.config.include_disabled:
+            return False
+
+        calc_type = calc.get("type", "")
+        if not self.config.generate_stat_var_groups and calc_type == CalculationType.STAT_VAR_GROUPS:
+            return False
+
+        if self.config.reject_types and calc_type in self.config.reject_types:
+            return False
+
+        if self.config.select_types and calc_type not in self.config.select_types:
+            return False
+
+        configured_imports = set(calc.get("input_imports") or calc.get("imports", []))
+        output_import = calc.get("output_import")
+        if output_import:
+            configured_imports.add(output_import)
+
+        if self.config.reject_imports:
+            if (single_import and single_import in self.config.reject_imports) or any(
+                imp in self.config.reject_imports for imp in configured_imports if imp != "*"
+            ):
+                return False
+
+        if self.config.select_imports:
+            if not ((single_import and single_import in self.config.select_imports) or any(
+                imp in self.config.select_imports for imp in configured_imports if imp != "*"
+            )):
+                return False
+
+        return True
+
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""
-        if calc.get("disabled", False):
-            return False
-
-        if not self.config.generate_stat_var_groups and calc.get("type") == CalculationType.STAT_VAR_GROUPS:
-            return False
-
         if calc.get("type") in GLOBAL_CALCULATION_TYPES:
+            return False
+
+        if not self._calc_matches_filters(calc, single_import=single_import):
             return False
 
         configured_imports = calc.get("input_imports") or calc.get("imports", [])
