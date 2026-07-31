@@ -3,6 +3,7 @@ calculations:
   # Health Insurance Coverage
   - name: "CensusACS5YearSurvey: Health Insurance SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -271,6 +272,7 @@ calculations:
   #
   - name: "CensusACS5YearSurvey: Ability To Speak English SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -319,6 +321,7 @@ calculations:
   #
   - name: "CensusACS5YearSurvey: In Armed Forces SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -380,6 +383,7 @@ calculations:
   # Education - CensusACS5YearSurvey
   - name: "CensusACS5YearSurvey: Education SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -596,6 +600,7 @@ calculations:
   # Education - ACSED5YrSurvey
   - name: "CensusSAHIE_AggCountry: Health Insurance SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - ACSED5YrSurvey
     output_import: CensusSAHIE_AggCountry_StatVarAgg
@@ -625,6 +630,7 @@ calculations:
   # Demographics
   - name: "CensusACS5YearSurvey: Demographics SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -643,6 +649,7 @@ calculations:
   # Agriculture
   - name: "USDA_AgricultureCensus: Agriculture Producer SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - USDA_AgricultureCensus
     output_import: USDA_AgricultureCensus_Agriculture_StatVarAgg
@@ -665,6 +672,7 @@ calculations:
 
   - name: "CensusACS5YearSurvey: Employment & Industry SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -856,6 +864,7 @@ calculations:
   # Crime
   - name: "USNationalPrisonerStatistics: Crime & Correctional Facility SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - USNationalPrisonerStatistics
     output_import: USNationalPrisonerStatistics_Crime_StatVarAgg
@@ -869,6 +878,7 @@ calculations:
   # WithOwnChildrenUnder18.
   - name: "CensusACS5YearSurvey_SubjectTables_S1251: Children & Household SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S1251
     output_import: CensusACS5YearSurvey_SubjectTables_S1251_StatVarAgg
@@ -890,6 +900,7 @@ calculations:
   # Marriage
   - name: "CensusACS5YearSurvey_SubjectTables_S1201: Marital Status SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S1201
     output_import: CensusACS5YearSurvey_SubjectTables_S1201_StatVarAgg
@@ -915,6 +926,7 @@ calculations:
   # Employment by business ownership type.
   - name: "CensusACS5YearSurvey_SubjectTables_S2408: Business Ownership Employment SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S2408
     output_import: CensusACS5YearSurvey_SubjectTables_S2408_StatVarAgg
@@ -932,6 +944,7 @@ calculations:
   # US Citizen by Naturalization
   - name: "CensusACS5YearSurvey_SubjectTables_S0504: Naturalized Citizenship SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0504
     output_import: CensusACS5YearSurvey_SubjectTables_S0504_StatVarAgg
@@ -1063,6 +1076,7 @@ calculations:
   # HousingUnit HomeValue.
   - name: "CensusACS5YearSurvey: Home Value SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -1114,6 +1128,7 @@ calculations:
 
   - name: "CensusACS5YearSurvey: Person Age Groups SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -1130,6 +1145,7 @@ calculations:
 
   - name: "CensusACS5YearSurvey: Individual Income SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey
       - CensusACS5YearSurvey_AggCountry
@@ -1322,6 +1338,7 @@ calculations:
 
   - name: "DEA_ARCOS: Opioid Prescription SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - IndiaNSS_HealthAilments
     output_import: IndiaNSS_HealthAilments_StatVarAgg
@@ -1634,6 +1651,7 @@ calculations:
 
   - name: "OECDRegionalDemography: Person Age Groups SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - OECDRegionalDemography_Population
     output_import: OECDRegionalDemography_Person_Age_StatVarAgg
@@ -1720,6 +1738,7 @@ calculations:
 
   - name: "CensusACS5YearSurvey_SubjectTables_S0801: Work Commute SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0801
     output_import: CensusACS5YearSurvey_SubjectTables_S0801_StatVarAgg
@@ -1837,6 +1856,7 @@ calculations:
             - Count_Person_Years16Onwards_60OrMoreMinute_WorkCommute_Employed_Female_WorkedOutsideOfHome
   - name: "CensusACS5YearSurvey_SubjectTables_S0804: Means of Transportation Work Commute SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - CensusACS5YearSurvey_SubjectTables_S0804
     output_import: CensusACS5YearSurvey_SubjectTables_S0804_StatVarAgg
@@ -1877,6 +1897,7 @@ calculations:
             - Count_Person_Years16Onwards_CarTruckOrVanCarpooled_60OrMoreMinute_WorkCommute_Employed_WorkedOutsideOfHome
   - name: "India_RBIStateDomesticProduct: Gross Value Added SV Aggregation"
     type: STAT_VAR_AGGREGATION
+    disabled: true
     input_imports:
       - India_RBIStateDomesticProduct
     output_import: India_RBIStateDomesticProduct_StatVarAgg
