@@ -107,7 +107,9 @@ DECLARE entity_types ARRAY<STRING> DEFAULT @entity_types;
 DECLARE location_props ARRAY<STRING> DEFAULT @location_props;
 DECLARE agg_date_formats ARRAY<STRING> DEFAULT @agg_date_formats;
 
+-- ============================================================================
 -- Step 1: Extract raw entity IDs of target types from Spanner
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_entities` AS
 SELECT DISTINCT subject_id AS entity_id, object_id AS entity_type
 FROM EXTERNAL_QUERY("{connection_id}",
@@ -116,7 +118,9 @@ FROM EXTERNAL_QUERY("{connection_id}",
        AND object_id IN ({entity_types_sql}) 
        AND provenance IN ({input_provenances_sql})''');
 
+-- ============================================================================
 -- Step 2: Two-Stage Fetch - pull all relevant property triples for target entities
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_entity_edges` AS
 SELECT DISTINCT subject_id AS entity_id, predicate, object_id AS val
 FROM EXTERNAL_QUERY("{connection_id}",
@@ -124,14 +128,18 @@ FROM EXTERNAL_QUERY("{connection_id}",
      WHERE predicate IN ({all_props_sql})''')
 WHERE subject_id IN (SELECT entity_id FROM `temp_entities`);
 
+-- ============================================================================
 -- Step 3: Filter locations (excluding latLong/ nodes)
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_locations` AS
 SELECT DISTINCT entity_id, val AS location_id
 FROM `temp_entity_edges`
 WHERE predicate IN UNNEST(location_props)
   AND NOT STARTS_WITH(val, 'latLong/');
 
+-- ============================================================================
 -- Step 4: Define date formatting reference buckets
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_date_formats` AS
 SELECT * FROM (
   SELECT 'YYYY' AS fmt, 4 AS char_len, 'P1Y' AS obs_period
@@ -142,7 +150,9 @@ SELECT * FROM (
 )
 WHERE fmt IN UNNEST(agg_date_formats);
 
+-- ============================================================================
 -- Step 5: Parse constraint specifications from JSON parameter
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_constraint_specs` AS
 SELECT
   OFFSET AS constraint_idx,
@@ -154,7 +164,9 @@ SELECT
   IFNULL(SAFE_CAST(JSON_VALUE(c, '$.wildcard') AS BOOL), FALSE) AS is_wildcard
 FROM UNNEST(JSON_QUERY_ARRAY(constraints_json)) AS c WITH OFFSET;
 
+-- ============================================================================
 -- Step 6: Assign slice_id and formatted constraint descriptions
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_slices` AS
 SELECT
   *,
@@ -172,7 +184,9 @@ SELECT
   END AS val_str
 FROM `temp_constraint_specs`;
 
+-- ============================================================================
 -- Step 7: Evaluate constraint matches per entity
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_entity_constraint_matches` AS
 SELECT
   e.entity_id,
@@ -190,7 +204,9 @@ WHERE
   OR (s.min_val IS NOT NULL AND s.max_val IS NULL AND SAFE_CAST(e.val AS FLOAT64) >= s.min_val)
   OR (s.max_val IS NOT NULL AND s.min_val IS NULL AND SAFE_CAST(e.val AS FLOAT64) <= s.max_val);
 
+-- ============================================================================
 -- Step 8: Filter entities that satisfy all required constraints of a slice
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_valid_slice_entities` AS
 WITH SliceRequirements AS (
   SELECT slice_id, COUNT(DISTINCT prop) AS req_count
@@ -211,7 +227,9 @@ SELECT entity_id, 0 AS slice_id
 FROM `temp_entities`
 WHERE (SELECT COUNT(*) FROM `temp_slices`) = 0;
 
+-- ============================================================================
 -- Step 9: Define StatisticalVariables generated across all slices and map entities to SVs
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_slice_entity_props` AS
 SELECT DISTINCT
   v.slice_id,
@@ -277,7 +295,9 @@ FROM (
   GROUP BY slice_id, entity_type, wildcard_key
 );
 
+-- ============================================================================
 -- Step 10: Extract all constraint edges for generated StatisticalVariables
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_sv_edges` AS
 SELECT DISTINCT
   sv_dcid,
@@ -286,7 +306,9 @@ SELECT DISTINCT
 FROM `temp_slice_svs`, UNNEST(sv_props_array) AS prop_kv
 WHERE SPLIT(prop_kv, '=')[OFFSET(0)] NOT IN ('populationType', 'measuredProperty', 'statType');
 
+-- ============================================================================
 -- Step 11: Map each valid entity to its exact StatisticalVariable
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_entity_sv_map` AS
 SELECT DISTINCT
   ep.entity_id,
@@ -299,7 +321,9 @@ JOIN `temp_slice_svs` sv
  AND ep.entity_type = sv.entity_type
  AND ep.wildcard_key = sv.wildcard_key;
 
+-- ============================================================================
 -- Step 12: Aggregate event counts across locations and date buckets
+-- ============================================================================
 CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_with_sv` AS
 WITH EntityDates AS (
   SELECT DISTINCT e.entity_id, d.val AS raw_date
@@ -335,7 +359,9 @@ GROUP BY
 -- Step 13: Export Generated Data to Cloud Spanner
 -- ============================================================================
 
--- Export SV Nodes
+-- ============================================================================
+-- Step 13a: Export SV Nodes
+-- ============================================================================
 EXPORT DATA
   OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Node"}}' ) AS
 SELECT DISTINCT
@@ -346,7 +372,9 @@ SELECT DISTINCT
   ['StatisticalVariable'] AS types
 FROM `temp_aggregated_with_sv`;
 
--- Export SV Edges
+-- ============================================================================
+-- Step 13b: Export SV Edges
+-- ============================================================================
 EXPORT DATA
   OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Edge"}}' ) AS
 SELECT DISTINCT sv_dcid AS subject_id, 'typeOf' AS predicate, 'StatisticalVariable' AS object_id, output_provenance AS provenance FROM `temp_aggregated_with_sv`
@@ -359,7 +387,9 @@ SELECT DISTINCT sv_dcid AS subject_id, 'statType' AS predicate, 'measuredValue' 
 UNION ALL
 SELECT DISTINCT sv_dcid AS subject_id, predicate, object_id, output_provenance AS provenance FROM `temp_sv_edges`;
 
--- Export TimeSeries
+-- ============================================================================
+-- Step 13c: Export TimeSeries
+-- ============================================================================
 EXPORT DATA
   OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "TimeSeries"}}' ) AS
 WITH UniqueTimeSeries AS (
@@ -396,7 +426,9 @@ SELECT
   facet
 FROM PreparedTS;
 
--- Export Observations
+-- ============================================================================
+-- Step 13d: Export Observations
+-- ============================================================================
 EXPORT DATA
   OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Observation"}}' ) AS
 SELECT
