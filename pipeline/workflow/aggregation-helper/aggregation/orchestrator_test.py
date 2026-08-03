@@ -498,8 +498,8 @@ class TestOrchestratorOrdering(unittest.TestCase):
         """Verifies calculations are sorted deterministically by (stage, priority)."""
         types_in_order = [calc["type"] for calc in self.orchestrator.calculations]
         expected_order = [
-            "LINKED_EDGES",
             "STAT_VAR_GROUPS",
+            "LINKED_EDGES",
             "PROVENANCE_SUMMARY",
             "PLACE_AGGREGATION"
         ]
