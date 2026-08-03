@@ -240,9 +240,16 @@ resource "google_cloud_run_v2_job" "aggregation_helper" {
 
   template {
     template {
+      timeout = "86400s"
       service_account = google_service_account.automation_sa.email
       containers {
         image = "${var.artifact_registry_url}/datacommons-aggregation-helper:latest"
+        resources {
+          limits = {
+            cpu    = "4"
+            memory = "16Gi"
+          }
+        }
         env {
           name  = "PROJECT_ID"
           value = var.project_id
