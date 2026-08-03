@@ -96,6 +96,7 @@ class OrchestratorConfig:
     project_id: str
     instance_id: str
     database_id: str
+    spanner_project_id: Optional[str] = None
     location: Optional[str] = None
     is_base_dc: bool = True
     config_dir: Optional[str] = None
@@ -117,6 +118,7 @@ class AggregationOrchestrator:
             config: OrchestratorConfig dataclass instance containing connection and execution parameters.
         """
         self.config = config
+        spanner_proj = self.config.spanner_project_id or self.config.project_id
 
         self.executor = BigQueryExecutor(
             connection_id=self.config.connection_id,
@@ -126,12 +128,13 @@ class AggregationOrchestrator:
             location=self.config.location,
             run_sequential=self.config.run_sequential,
             enable_embeddings=self.config.enable_embeddings,
-            bq_dataset_id=self.config.bq_dataset_id
+            bq_dataset_id=self.config.bq_dataset_id,
+            spanner_project_id=spanner_proj,
         )
         self.is_base_dc = self.config.is_base_dc
         self.poll_interval = self.config.poll_interval
         self.deleter = AggregationDeleter(
-            project_id=self.config.project_id,
+            project_id=spanner_proj,
             instance_id=self.config.instance_id,
             database_id=self.config.database_id,
             is_base_dc=self.config.is_base_dc

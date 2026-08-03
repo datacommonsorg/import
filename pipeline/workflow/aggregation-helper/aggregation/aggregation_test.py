@@ -83,6 +83,20 @@ class TestBigQueryExecutor(unittest.TestCase):
         self.assertFalse(executor.enable_embeddings)
         self.assertEqual(executor.bq_dataset_id, "datacommons")
 
+    def test_init_with_spanner_project_id(self, mock_bq_client):
+        executor = BigQueryExecutor(connection_id="conn",
+                                    project_id="bq_proj",
+                                    spanner_project_id="spanner_proj",
+                                    instance_id="inst",
+                                    database_id="db",
+                                    location="loc")
+        _ = executor.client
+        mock_bq_client.assert_called_once_with(project="bq_proj", location="loc")
+        self.assertEqual(
+            executor.get_spanner_destination_uri(),
+            "https://spanner.googleapis.com/projects/spanner_proj/instances/inst/databases/db"
+        )
+
     def test_init_failure(self, mock_bq_client):
         mock_bq_client.side_effect = Exception("Auth error")
         with self.assertRaises(Exception):

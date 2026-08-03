@@ -110,7 +110,7 @@ class EmbeddingGenerator:
     def spanner_database(self):
         """Lazily initializes and returns the Spanner Database client."""
         if self._spanner_database is None:
-            spanner_client = spanner.Client(project=self.executor.project_id)
+            spanner_client = spanner.Client(project=self.executor.spanner_project_id)
             instance = spanner_client.instance(self.executor.instance_id)
             self._spanner_database = instance.database(self.executor.database_id)
             logging.info(f"Initialized Spanner client for EmbeddingGenerator: {self._spanner_database.name}")
@@ -226,6 +226,7 @@ class EmbeddingGenerator:
         dest = self.executor.get_spanner_destination_uri()
         conn_id = self.executor.connection_id
         project_id = self.executor.project_id
+        model_project_id = self.executor.spanner_project_id
         bq_dataset_id = self.executor.bq_dataset_id
         location = self.executor.location
 
@@ -336,7 +337,7 @@ class EmbeddingGenerator:
           node_types, 
           ml_generate_embedding_result AS embeddings
         FROM ML.GENERATE_EMBEDDING(
-          MODEL `{project_id}.{bq_dataset_id}.{model_name}`,
+          MODEL `{model_project_id}.{bq_dataset_id}.{model_name}`,
           ({select_nodes_sql}),
           STRUCT("{task_type}" AS task_type)
         );

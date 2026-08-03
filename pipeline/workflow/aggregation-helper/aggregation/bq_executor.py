@@ -30,10 +30,12 @@ class BigQueryExecutor:
                  location: Optional[str] = None,
                  run_sequential: bool = True,
                  enable_embeddings: bool = False,
-                 bq_dataset_id: Optional[str] = None) -> None:
+                 bq_dataset_id: Optional[str] = None,
+                 spanner_project_id: Optional[str] = None) -> None:
         """Initializes the BigQueryExecutor with connection and destination details."""
         self.connection_id = connection_id
         self.project_id = project_id
+        self.spanner_project_id = spanner_project_id or project_id
         self.instance_id = instance_id
         self.database_id = database_id
         self.location = location
@@ -52,7 +54,7 @@ class BigQueryExecutor:
 
     def get_spanner_destination_uri(self) -> str:
         """Returns the Spanner destination URI for EXPORT DATA."""
-        return f"https://spanner.googleapis.com/projects/{self.project_id}/instances/{self.instance_id}/databases/{self.database_id}"
+        return f"https://spanner.googleapis.com/projects/{self.spanner_project_id}/instances/{self.instance_id}/databases/{self.database_id}"
 
     def execute(
         self,
