@@ -217,8 +217,13 @@ class AggregationOrchestrator:
                 continue
 
             if dry_run:
+                active_calcs = [
+                    f"{calc.get('name', calc.get('type', 'Unknown'))} ({calc.get('type', '')})"
+                    for calc in self.calculations
+                    if self._calc_applies_to_import(calc, single_import)
+                ]
                 logging.info(
-                    f"Detected active stage(s) {active_stages} for import '{single_import}'. Skipping execution because dry_run=True."
+                    f"Detected active stage(s) {active_stages} for import '{single_import}'. [Dry Run] Would execute calculation step(s): {active_calcs}. Skipping execution because dry_run=True."
                 )
                 run_result.import_results[single_import] = ImportExecutionResult(
                     import_name=single_import,

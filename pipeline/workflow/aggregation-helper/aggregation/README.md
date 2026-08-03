@@ -66,13 +66,14 @@ Aggregates raw statistical variables into a summarized ancestor variable.
     ```
 
 #### 3. Common Aggregations (`LINKED_EDGES`, `PROVENANCE_SUMMARY`, `STAT_VAR_GROUPS`)
-Common graph structure, lineage, and UI group hierarchy rollups defined in `common.yaml`.
+Common graph structure, lineage, and UI group hierarchy rollups defined in `common.yaml` (for DCP where `LINKED_EDGES` applies to `*`) and `base_dc/common.yaml` (for Base Data Commons where `LINKED_EDGES` applies to `Schema` and `Place`).
 *   **Example**:
     ```yaml
     - type: LINKED_EDGES
-      stage: 1
+      stage: 0
       input_imports:
-        - "*"
+        - "Schema"
+        - "Place"
     ```
 
 ---
