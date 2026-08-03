@@ -172,6 +172,17 @@ run_aggregation_job:
         switch:
           - condition: ${import_list == null or len(import_list) == 0}
             return: 'SKIPPED'
+    - init_import_names:
+        assign:
+          - import_names: []
+    - loop_import_list:
+        for:
+          value: item
+          in: ${import_list}
+          steps:
+            - extract_import_name:
+                assign:
+                  - import_names: ${list.concat(import_names, [item.importName])}
     - run_aggregation:
         call: googleapis.run.v2.projects.locations.jobs.run
         args:
@@ -181,7 +192,7 @@ run_aggregation_job:
               containerOverrides:
                 - args:
                     - "--import_list"
-                    - ${json.encode_to_string(import_list)}
+                    - ${json.encode_to_string(import_names)}
                     - "--no-dry_run"
                     - "--config_path"
                     - "aggregation/configs/base_dc/common.yaml"
