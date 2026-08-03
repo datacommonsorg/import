@@ -78,9 +78,11 @@ def _escape_sql_literal(val: str) -> str:
 #
 # Tier 2 (20): Global Post-Processing
 #   - EMBEDDING_GENERATION (20): Computes vector embeddings across finalized node properties.
+#
+# Note: The priority values are arbitrary and relative, used only to establish execution order.
 CALCULATION_TYPE_PRIORITY = {
-    "LINKED_EDGES": 0,
-    "STAT_VAR_GROUPS": 1,
+    "STAT_VAR_GROUPS": 0,
+    "LINKED_EDGES": 1,
     "PROVENANCE_SUMMARY": 2,
     "PLACE_AGGREGATION": 10,
     "STAT_VAR_AGGREGATION": 11,
