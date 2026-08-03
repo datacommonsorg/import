@@ -182,7 +182,7 @@ run_aggregation_job:
           steps:
             - extract_import_name:
                 assign:
-                  - import_names: ${list.concat(import_names, [item.importName])}
+                  - import_names: ${list.concat(import_names, item.importName)}
     - run_aggregation:
         call: googleapis.run.v2.projects.locations.jobs.run
         args:
