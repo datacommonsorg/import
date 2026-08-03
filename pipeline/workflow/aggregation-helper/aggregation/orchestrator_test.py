@@ -640,6 +640,26 @@ class TestOrchestratorFiltering(unittest.TestCase):
         ))
         self.assertEqual(orchestrator_enabled._get_active_stages_for_import("USFed_Census"), [1])
 
+    def test_global_calculations_ignore_import_filter(self, mock_executor):
+        """Verifies global calculations are not filtered out by import-level select filters."""
+        global_path = os.path.join(self.tmpdir.name, "global.yaml")
+        with open(global_path, "w") as f:
+            f.write(GLOBAL_CALCS_CONFIG_YAML)
+
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=global_path,
+            select_imports=["SomeImport"]
+        ))
+        global_calcs = [
+            calc for calc in orchestrator.calculations
+            if calc.get("type") in {"EMBEDDING_GENERATION"} and orchestrator._calc_matches_filters(calc)
+        ]
+        self.assertEqual(len(global_calcs), 1)
+
 
 class TestConfigSanity(unittest.TestCase):
     """Sanity checks for calculation configurations and metadata."""

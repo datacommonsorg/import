@@ -635,6 +635,9 @@ class AggregationOrchestrator:
         if self.config.select_types and calc_type not in self.config.select_types:
             return False
 
+        if calc_type in GLOBAL_CALCULATION_TYPES:
+            return True
+
         configured_imports = set(calc.get("input_imports") or calc.get("imports", []))
         output_import = calc.get("output_import")
         if output_import:
