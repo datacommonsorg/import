@@ -183,6 +183,8 @@ run_aggregation_job:
                     - "--import_list"
                     - ${json.encode_to_string(import_list)}
                     - "--no-dry_run"
+                    - "--config_path"
+                    - "aggregation/configs/base_dc/common.yaml"
           connector_params:
             timeout: 21600
         result: aggregation_response
