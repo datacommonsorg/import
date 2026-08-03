@@ -197,7 +197,7 @@ run_aggregation_job:
                     - "--config_path"
                     - "aggregation/configs/base_dc/common.yaml"
           connector_params:
-            timeout: 86400
+            timeout: 21600
         result: aggregation_response
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.

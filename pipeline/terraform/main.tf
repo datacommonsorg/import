@@ -240,7 +240,7 @@ resource "google_cloud_run_v2_job" "aggregation_helper" {
 
   template {
     template {
-      timeout = "86400s"
+      timeout = "21600s"
       service_account = google_service_account.automation_sa.email
       containers {
         image = "${var.artifact_registry_url}/datacommons-aggregation-helper:latest"
