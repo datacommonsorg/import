@@ -423,7 +423,8 @@ class TestOrchestratorGlobalCalculations(unittest.TestCase):
             location=None,
             run_sequential=False,
             enable_embeddings=True,
-            bq_dataset_id="test-dataset"
+            bq_dataset_id="test-dataset",
+            spanner_project_id="proj"
         )
 
     def test_run_global_calcs_failure(self, mock_embedding_gen, mock_executor_cls):

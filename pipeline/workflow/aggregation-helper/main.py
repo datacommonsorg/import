@@ -44,6 +44,7 @@ def create_orchestrator_config(
     """Creates an OrchestratorConfig from CLI arguments and environment variables."""
     connection_id = env.get("BQ_SPANNER_CONN_ID")
     project_id = env.get("PROJECT_ID")
+    spanner_project_id = env.get("SPANNER_PROJECT_ID", project_id)
     instance_id = env.get("SPANNER_INSTANCE_ID")
     database_id = env.get("SPANNER_DATABASE_ID")
     location = env.get("LOCATION")
@@ -61,6 +62,7 @@ def create_orchestrator_config(
     return OrchestratorConfig(
         connection_id=connection_id,
         project_id=project_id,
+        spanner_project_id=spanner_project_id,
         instance_id=instance_id,
         database_id=database_id,
         location=location,
