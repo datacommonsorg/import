@@ -31,7 +31,7 @@ substitutions:
   _ENABLE_EMBEDDINGS: 'true'
   _VERSION: '${SHORT_SHA}'
   _DATAFLOW_TEMPLATE_PATH: 'gs://datcom-templates/templates/flex/'
-  _DEFAULT_SKIP_AGGREGATION: 'true'
+  _DEFAULT_SKIP_AGGREGATION: 'false'
 
 steps:
 - id: 'ingestion-helper-service'

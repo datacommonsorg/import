@@ -15,7 +15,7 @@ main:
           - helper_url: ${"https://ingestion-helper-service-" + sys.get_env("PROJECT_NUMBER") + "." + location + ".run.app"}
           - workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
           - import_list: ${default(map.get(args, "importList"), [])}
-          - default_skip_aggregation: ${default(sys.get_env("DEFAULT_SKIP_AGGREGATION"), "true") == "true"}
+          - default_skip_aggregation: ${default(sys.get_env("DEFAULT_SKIP_AGGREGATION"), "false") == "true"}
           - skip_aggregation: ${default(map.get(args, "skipAggregation"), default_skip_aggregation)}
           - dataflow_job_id: null
           - execution_error: null
