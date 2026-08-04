@@ -19,6 +19,7 @@ import logging
 import os
 import time
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -106,6 +107,7 @@ class OrchestratorConfig:
     enable_embeddings: bool = False
     bq_dataset_id: str = "datacommons"
     generate_stat_var_groups: bool = True
+    max_parallel_imports: int = 10
 
 
 class AggregationOrchestrator:
@@ -195,54 +197,30 @@ class AggregationOrchestrator:
         )
         run_result = AggregationRunResult()
 
-        for single_import in expanded_imports:
-            logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
-            active_stages = self._get_active_stages_for_import(single_import)
-
-            if not active_stages:
-                logging.info(f"No aggregation steps configured for import '{single_import}'. Skipping.")
-                run_result.import_results[single_import] = ImportExecutionResult(
-                    import_name=single_import,
-                    success=True,
-                    stages_executed=[]
-                )
-                continue
-
-            if dry_run:
-                active_calcs = [
-                    f"{calc.get('name', calc.get('type', 'Unknown'))} ({calc.get('type', '')})"
-                    for calc in self.calculations
-                    if self._calc_applies_to_import(calc, single_import)
-                ]
-                logging.info(
-                    f"Detected active stage(s) {active_stages} for import '{single_import}'. [Dry Run] Would execute calculation step(s): {active_calcs}. Skipping execution because dry_run=True."
-                )
-                run_result.import_results[single_import] = ImportExecutionResult(
-                    import_name=single_import,
-                    success=True,
-                    stages_executed=active_stages
-                )
-                continue
-
-            try:
-                for stage_num in active_stages:
-                    logging.info(f"--- Triggering Stage {stage_num} for import '{single_import}' ---")
-                    self._execute_and_synchronize_stage(single_import, stage_num)
-
-                logging.info(f"=== Successfully completed all aggregation stages for Import: '{single_import}' ===")
-                run_result.import_results[single_import] = ImportExecutionResult(
-                    import_name=single_import,
-                    success=True,
-                    stages_executed=active_stages
-                )
-            except Exception as e:
-                logging.error(f"Aggregation pipeline failed for import '{single_import}': {e}")
-                run_result.import_results[single_import] = ImportExecutionResult(
-                    import_name=single_import,
-                    success=False,
-                    stages_executed=active_stages,
-                    error_message=str(e)
-                )
+        if expanded_imports:
+            # Eagerly initialize BigQuery client on main thread to prevent thread race conditions
+            _ = self.executor.client
+            max_workers = min(len(expanded_imports), max(1, self.config.max_parallel_imports))
+            logging.info(
+                f"Executing aggregation pipelines for {len(expanded_imports)} import(s) in parallel using up to {max_workers} worker thread(s)..."
+            )
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_import = {
+                    executor.submit(self._process_single_import, single_import, dry_run): single_import
+                    for single_import in expanded_imports
+                }
+                for future in as_completed(future_to_import):
+                    single_import = future_to_import[future]
+                    try:
+                        res = future.result()
+                        run_result.import_results[single_import] = res
+                    except Exception as e:
+                        logging.error(f"Unexpected error executing import '{single_import}': {e}")
+                        run_result.import_results[single_import] = ImportExecutionResult(
+                            import_name=single_import,
+                            success=False,
+                            error_message=str(e)
+                        )
 
         # Execute global, import-independent calculation steps once
         global_result = self._run_global_calculations(dry_run=dry_run)
@@ -250,6 +228,54 @@ class AggregationOrchestrator:
             run_result.import_results["GLOBAL"] = global_result
 
         return run_result
+
+    def _process_single_import(self, single_import: str, dry_run: bool) -> ImportExecutionResult:
+        """Executes all aggregation stages for a single import dataset."""
+        logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
+        active_stages = self._get_active_stages_for_import(single_import)
+
+        if not active_stages:
+            logging.info(f"No aggregation steps configured for import '{single_import}'. Skipping.")
+            return ImportExecutionResult(
+                import_name=single_import,
+                success=True,
+                stages_executed=[]
+            )
+
+        if dry_run:
+            active_calcs = [
+                f"{calc.get('name', calc.get('type', 'Unknown'))} ({calc.get('type', '')})"
+                for calc in self.calculations
+                if self._calc_applies_to_import(calc, single_import)
+            ]
+            logging.info(
+                f"Detected active stage(s) {active_stages} for import '{single_import}'. [Dry Run] Would execute calculation step(s): {active_calcs}. Skipping execution because dry_run=True."
+            )
+            return ImportExecutionResult(
+                import_name=single_import,
+                success=True,
+                stages_executed=active_stages
+            )
+
+        try:
+            for stage_num in active_stages:
+                logging.info(f"--- Triggering Stage {stage_num} for import '{single_import}' ---")
+                self._execute_and_synchronize_stage(single_import, stage_num)
+
+            logging.info(f"=== Successfully completed all aggregation stages for Import: '{single_import}' ===")
+            return ImportExecutionResult(
+                import_name=single_import,
+                success=True,
+                stages_executed=active_stages
+            )
+        except Exception as e:
+            logging.error(f"Aggregation pipeline failed for import '{single_import}': {e}")
+            return ImportExecutionResult(
+                import_name=single_import,
+                success=False,
+                stages_executed=active_stages,
+                error_message=str(e)
+            )
 
     def _run_global_calculations(self, dry_run: bool = True) -> Optional[ImportExecutionResult]:
         """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION)."""
