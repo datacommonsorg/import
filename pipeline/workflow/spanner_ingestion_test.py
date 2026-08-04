@@ -158,7 +158,7 @@ def main(argv):
                                                  import_workflow_args)
 
         # 2. Trigger Spanner Ingestion Workflow
-        ingestion_workflow_args = {"importList": [short_import_name]}
+        ingestion_workflow_args = {"importList": [{"importName": short_import_name}]}
 
         logging.info("Step 2: Running Spanner Ingestion Workflow...")
         cloud_workflow.trigger_workflow_and_wait(PROJECT_ID, LOCATION,

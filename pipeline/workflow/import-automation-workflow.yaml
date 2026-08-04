@@ -23,7 +23,7 @@ main:
           - runIngestion: ${default(map.get(args, "runIngestion"), false)}
           - ingestionArgs:
               importList:
-                - ${text.split(importName, ":")[1]}
+                - importName: ${text.split(importName, ":")[1]}
     - runImportJob:
         try:
           call: googleapis.batch.v1.projects.locations.jobs.create

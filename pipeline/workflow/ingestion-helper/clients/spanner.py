@@ -228,49 +228,74 @@ class SpannerClient:
             logging.error(f'Error releasing lock for {workflow_id}: {e}')
             raise
 
-    def get_import_info(self, import_list: list) -> list:
+    def get_import_info(self, import_list: list | None) -> list:
         """Get the details of imports to ingest.
 
-        If import_list is empty, return info for ready imports (STAGING).
-        If import_list is not empty, return info for the imports in the list that are in 'STAGING' status.
+        If import_list is empty, return info for ready imports (STAGING) from Spanner DB.
+        Otherwise, import_list is a list of dicts (or ImportItem objects) containing 'importName'
+        and optional 'latestVersion' (which contains the full GCS graph path).
 
         Args:
-            import_list: A list of import names to fetch details for.
+            import_list: A list of dicts or objects containing 'importName' and optional 'latestVersion'.
 
         Returns:
-            A list of dictionaries, where each dictionary contains 'importName', 'latestVersion', and 'graphPath'.
+            A list of dictionaries, where each dictionary contains 'importName' and 'latestVersion' (full GCS graph path).
         """
-        pending_imports = []
-        logging.info(f"Fetching imports from import list {import_list}.")
+        if not import_list:
+            import_list = []
 
+        pending_imports = []
+        imports_to_fetch = []
+
+        for item in import_list:
+            if isinstance(item, dict):
+                import_name = item.get("importName")
+                provided_version = item.get("latestVersion")
+            elif hasattr(item, "importName"):
+                import_name = getattr(item, "importName", None)
+                provided_version = getattr(item, "latestVersion", None)
+            else:
+                continue
+
+            if not import_name:
+                continue
+
+            if provided_version:
+                pending_imports.append({
+                    "importName": import_name,
+                    "latestVersion": provided_version,
+                })
+            else:
+                imports_to_fetch.append(import_name)
+
+        logging.info(f"Fetching import details. Provided directly: {len(pending_imports)}, Needing DB fetch: {len(imports_to_fetch)}, Empty list: {not import_list}")
+
+        sql = None
         params = {}
         param_types = {}
-        if import_list:
-            sql = "SELECT ImportName, LatestVersion, GraphPath FROM ImportStatus WHERE State = 'STAGING' AND ImportName IN UNNEST(@importNames)"
-            params = {"importNames": import_list}
-            param_types = {"importNames": Array(STRING)}
-        else:
+
+        if not import_list:
             sql = "SELECT ImportName, LatestVersion, GraphPath FROM ImportStatus WHERE State = 'STAGING'"
+        elif imports_to_fetch:
+            sql = "SELECT ImportName, LatestVersion, GraphPath FROM ImportStatus WHERE State = 'STAGING' AND ImportName IN UNNEST(@importNames)"
+            params = {"importNames": imports_to_fetch}
+            param_types = {"importNames": Array(STRING)}
 
-        # Use a read-only snapshot for this query
-        try:
-            with self.database.snapshot() as snapshot:
-                results = snapshot.execute_sql(sql,
-                                               params=params,
-                                               param_types=param_types)
-                for row in results:
-                    import_json = {}
-                    import_json['importName'] = row[0]
-                    import_json['latestVersion'] = os.path.basename(row[1])
-                    import_json[
-                        'graphPath'] = f"{row[1].rstrip('/')}/{row[2].lstrip('/')}"
-                    pending_imports.append(import_json)
+        if sql:
+            try:
+                with self.database.snapshot() as snapshot:
+                    results = snapshot.execute_sql(sql, params=params, param_types=param_types)
+                    for row in results:
+                        pending_imports.append({
+                            "importName": row[0],
+                            "latestVersion": f"{row[1].rstrip('/')}/{row[2].lstrip('/')}",
+                        })
+            except Exception as e:
+                logging.error(f'Error getting import list: {e}')
+                raise
 
-            logging.info(f"Found {len(pending_imports)} import jobs.")
-            return pending_imports
-        except Exception as e:
-            logging.error(f'Error getting import list: {e}')
-            raise
+        logging.info(f"Found {len(pending_imports)} import jobs.")
+        return pending_imports
 
     def update_ingestion_status(self, import_names: list, workflow_id: str,
                                 status: str):

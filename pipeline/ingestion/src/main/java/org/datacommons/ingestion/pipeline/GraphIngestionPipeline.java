@@ -91,7 +91,10 @@ public class GraphIngestionPipeline {
     // Iterate through each import configuration and process it.
     for (JsonElement element : jsonArray) {
       JsonElement importElement = element.getAsJsonObject().get("importName");
-      JsonElement pathElement = element.getAsJsonObject().get("graphPath");
+      JsonElement pathElement =
+          element.getAsJsonObject().has("graphPath")
+              ? element.getAsJsonObject().get("graphPath")
+              : element.getAsJsonObject().get("latestVersion");
       if (isJsonNullOrEmpty(importElement)) {
         LOGGER.error("Invalid import input json, missing importName: {}", element.toString());
         continue;
@@ -100,7 +103,7 @@ public class GraphIngestionPipeline {
       String graphPath = isJsonNullOrEmpty(pathElement) ? null : pathElement.getAsString();
 
       if (graphPath == null) {
-        LOGGER.error("Invalid import input json, missing graphPath: {}", element.toString());
+        LOGGER.error("Invalid import input json, missing latestVersion: {}", element.toString());
         continue;
       }
 
