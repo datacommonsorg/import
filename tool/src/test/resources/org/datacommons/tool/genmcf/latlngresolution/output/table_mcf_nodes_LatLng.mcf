@@ -3,51 +3,51 @@ latitude: 53
 name: "British–Columbia"
 typeOf: dcid:Place
 longitude: -127
-dcid: "country/CAN"
+dcid: "wikidataId/Q1053752"
 
 Node: SVTest/E0/1
 observationDate: 2019
-observationAbout: dcid:country/CAN
+observationAbout: dcid:wikidataId/Q1053752
 variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
-keyString: "observationAbout=country/CANvariableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
-dcid: "dc/o/6v44zdhbcq8"
+keyString: "observationAbout=wikidataId/Q1053752variableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/zbm7jebjysv38"
 
 Node: SVTest/E3/2
 latitude: 43
 name: "Saskatchewan"
 typeOf: dcid:Place
 longitude: -116
-dcid: "geoId/16039"
+dcid: "geoId/16073"
 
 Node: SVTest/E0/2
 observationDate: 2019
-observationAbout: dcid:geoId/16039
+observationAbout: dcid:geoId/16073
 variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 5
 typeOf: dcid:StatVarObservation
-keyString: "observationAbout=geoId/16039variableMeasured=SV1observationDate=2019value=5measurementMethod=SVTest"
-dcid: "dc/o/27n51l03lx8m2"
+keyString: "observationAbout=geoId/16073variableMeasured=SV1observationDate=2019value=5measurementMethod=SVTest"
+dcid: "dc/o/9l803c6ycprld"
 
 Node: SVTest/E3/3
-latitude: 37.77493
-name: "San Francisco"
+latitude: 37.7395
+name: "San Francisco County"
 typeOf: dcid:Place
-longitude: -122.41942
-dcid: "geoId/0667000"
+longitude: -122.4014
+dcid: "geoId/06075"
 
 Node: SVTest/E0/3
 observationDate: 2019
-observationAbout: dcid:geoId/0667000
+observationAbout: dcid:geoId/06075
 variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
-keyString: "observationAbout=geoId/0667000variableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
-dcid: "dc/o/x2yjls2lfd6d"
+keyString: "observationAbout=geoId/06075variableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/scj9whrycyvv3"
 
 Node: SVTest/E3/4
 latitude: 36

@@ -32,7 +32,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.datacommons.util.LogWrapper;
 import org.datacommons.util.SummaryReportGenerator;
 import org.datacommons.util.TmcfCsvParser;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -80,7 +79,6 @@ public class GenMcfTest {
   private static final String ARGS_TXT_FNAME = "args.txt";
 
   @Test
-  @Ignore
   public void GenMcfTest() throws IOException {
     // Set this so that the generated node IDs are deterministic
     TmcfCsvParser.TEST_mode = true;
