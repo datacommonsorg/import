@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.ValueType;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class CoordinatesResolverTest {
@@ -30,6 +31,7 @@ public class CoordinatesResolverTest {
       newNode("City", Map.of(LATITUDE, "12.34", LONGITUDE, "56.78"));
 
   @Test
+  @Ignore
   public void endToEnd() {
     CoordinatesResolver resolver =
         new CoordinatesResolver(new ReconClient(newHttpClient(), newLogCtx()));

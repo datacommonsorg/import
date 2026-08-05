@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.ValueType;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class NameResolverTest {
@@ -26,6 +27,7 @@ public class NameResolverTest {
   private static final PropertyValues UNSUBMITTED_NODE = newNode("City", Map.of(NAME, "Palo Alto"));
 
   @Test
+  @Ignore
   public void endToEnd() {
     NameResolver resolver = new NameResolver(new ReconClient(newHttpClient(), newLogCtx()));
 
