@@ -16,7 +16,7 @@ public class ReconClientTest {
   private static final String USA_DCID = "country/USA";
   private static final String GBR_DCID = "country/GBR";
 
-  private static final String SF_COORDINATES_NODE = "37.77493#-122.41942";
+  private static final String SF_COUNTY_COORDINATES_NODE = "37.7395#-122.4014";
   private static final String BIG_BEN_COORDINATES_NODE = "51.510357#-0.116773";
 
   @Test
@@ -26,7 +26,7 @@ public class ReconClientTest {
 
     ResolveRequest request =
         ResolveRequest.newBuilder()
-            .addNodes(SF_COORDINATES_NODE)
+            .addNodes(SF_COUNTY_COORDINATES_NODE)
             .addNodes(BIG_BEN_COORDINATES_NODE)
             .setProperty("<-geoCoordinate->dcid")
             .build();
@@ -34,12 +34,11 @@ public class ReconClientTest {
     ResolveResponse result = client.resolve(request);
 
     assertThat(result.getEntitiesCount()).isEqualTo(2);
-    // TODO: Re-enable after Spanner S2 cell 0x8085810000000000 has containment data.
-    // assertThat(
-    //         result.getEntities(0).getCandidatesList().stream()
-    //             .map(Candidate::getDcid)
-    //             .collect(toList()))
-    //     .contains(USA_DCID);
+    assertThat(
+            result.getEntities(0).getCandidatesList().stream()
+                .map(Candidate::getDcid)
+                .collect(toList()))
+        .contains(USA_DCID);
     assertThat(
             result.getEntities(1).getCandidatesList().stream()
                 .map(Candidate::getDcid)
@@ -55,7 +54,7 @@ public class ReconClientTest {
 
     ResolveRequest request =
         ResolveRequest.newBuilder()
-            .addNodes(SF_COORDINATES_NODE)
+            .addNodes(SF_COUNTY_COORDINATES_NODE)
             .addNodes(BIG_BEN_COORDINATES_NODE)
             .setProperty("<-geoCoordinate->dcid")
             .build();
@@ -63,12 +62,11 @@ public class ReconClientTest {
     ResolveResponse result = client.resolve(request);
 
     assertThat(result.getEntitiesCount()).isEqualTo(2);
-    // TODO: Re-enable after Spanner S2 cell 0x8085810000000000 has containment data.
-    // assertThat(
-    //         result.getEntities(0).getCandidatesList().stream()
-    //             .map(Candidate::getDcid)
-    //             .collect(toList()))
-    //     .contains(USA_DCID);
+    assertThat(
+            result.getEntities(0).getCandidatesList().stream()
+                .map(Candidate::getDcid)
+                .collect(toList()))
+        .contains(USA_DCID);
     assertThat(
             result.getEntities(1).getCandidatesList().stream()
                 .map(Candidate::getDcid)
