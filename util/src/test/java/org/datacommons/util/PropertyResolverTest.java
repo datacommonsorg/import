@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.ValueType;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class PropertyResolverTest {
@@ -38,7 +37,6 @@ public class PropertyResolverTest {
       List.of(SF, VZ, IN, UNK, DIVERGING_NODE, NON_RESOLVABLE_NODE);
 
   @Test
-  @Ignore
   public void endToEnd() {
     PropertyResolver resolver =
         new PropertyResolver(new ReconClient(newHttpClient(), newLogCtx()), newLogCtx());
