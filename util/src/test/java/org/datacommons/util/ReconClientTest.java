@@ -10,25 +10,23 @@ import java.net.http.HttpClient;
 import org.datacommons.proto.Resolve.ResolveRequest;
 import org.datacommons.proto.Resolve.ResolveResponse;
 import org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ReconClientTest {
   private static final String USA_DCID = "country/USA";
   private static final String GBR_DCID = "country/GBR";
 
-  private static final String SF_COORDINATES_NODE = "37.77493#-122.41942";
+  private static final String SF_COUNTY_COORDINATES_NODE = "37.7395#-122.4014";
   private static final String BIG_BEN_COORDINATES_NODE = "51.510357#-0.116773";
 
   @Test
-  @Ignore
   public void resolve_geoCoordinates() {
     LogWrapper logWrapper = newLogCtx();
     ReconClient client = new ReconClient(HttpClient.newHttpClient(), logWrapper);
 
     ResolveRequest request =
         ResolveRequest.newBuilder()
-            .addNodes(SF_COORDINATES_NODE)
+            .addNodes(SF_COUNTY_COORDINATES_NODE)
             .addNodes(BIG_BEN_COORDINATES_NODE)
             .setProperty("<-geoCoordinate->dcid")
             .build();
@@ -50,14 +48,13 @@ public class ReconClientTest {
   }
 
   @Test
-  @Ignore
   public void resolve_geoCoordinates_chunked() {
     LogWrapper logWrapper = newLogCtx();
     ReconClient client = new ReconClient(HttpClient.newHttpClient(), logWrapper, 1);
 
     ResolveRequest request =
         ResolveRequest.newBuilder()
-            .addNodes(SF_COORDINATES_NODE)
+            .addNodes(SF_COUNTY_COORDINATES_NODE)
             .addNodes(BIG_BEN_COORDINATES_NODE)
             .setProperty("<-geoCoordinate->dcid")
             .build();

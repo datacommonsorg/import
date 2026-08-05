@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class McfCheckerTest {
@@ -501,7 +500,6 @@ public class McfCheckerTest {
 
   // NOTE: This test actually makes RPCs to staging mixer.
   @Test
-  @Ignore
   public void checkExistence() throws IOException, InterruptedException {
     // SVObs with a legitimate StatVar (Count_Person_Male)
     String mcf =
