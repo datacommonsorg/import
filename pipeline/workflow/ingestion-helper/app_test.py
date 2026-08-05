@@ -293,8 +293,9 @@ class TestMain(unittest.TestCase):
 
     def test_revert_single_import(self):
         mock_spanner_client = MagicMock()
-        mock_spanner_client.get_import_version_history.return_value = ["v2", "v1"]
-        mock_spanner_client.get_import_latest_version.return_value = "gs://bucket/path/v2"
+        mock_spanner_client.get_import_version_history.return_value = [
+            "gs://bucket/path/v2/*/*.mcf", "gs://bucket/path/v1/*/*.mcf"
+        ]
         mock_spanner_client.revert_import_state.return_value = True
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -307,25 +308,26 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["status"], "OK")
-        self.assertEqual(data["message"], "Reverted foo:bar:imp1: v2 -> v1")
+        self.assertEqual(data["message"], "Reverted foo:bar:imp1: gs://bucket/path/v2/*/*.mcf -> gs://bucket/path/v1/*/*.mcf")
         self.assertTrue(data["reverted"])
         self.assertEqual(len(data["revertedImports"]), 1)
         self.assertEqual(data["revertedImports"][0]["importName"], "foo:bar:imp1")
-        self.assertEqual(data["revertedImports"][0]["failedVersion"], "v2")
-        self.assertEqual(data["revertedImports"][0]["restoredVersion"], "v1")
+        self.assertEqual(data["revertedImports"][0]["failedVersion"], "gs://bucket/path/v2/*/*.mcf")
+        self.assertEqual(data["revertedImports"][0]["restoredVersion"], "gs://bucket/path/v1/*/*.mcf")
         mock_spanner_client.get_import_version_history.assert_called_once_with("imp1")
         mock_spanner_client.revert_import_state.assert_called_once_with(
             import_name="imp1",
-            new_latest_version_path="gs://bucket/path/v1",
-            previous_version="v1",
+            new_latest_version_path="gs://bucket/path/v1/*/*.mcf",
+            previous_version="gs://bucket/path/v1/*/*.mcf",
             workflow_id="wf-123",
             comment="Reverted batch workflow (wf-123)"
         )
 
     def test_revert_single_import_without_workflow_id(self):
         mock_spanner_client = MagicMock()
-        mock_spanner_client.get_import_version_history.return_value = ["v2", "v1"]
-        mock_spanner_client.get_import_latest_version.return_value = "gs://bucket/path/v2"
+        mock_spanner_client.get_import_version_history.return_value = [
+            "gs://bucket/path/v2/*/*.mcf", "gs://bucket/path/v1/*/*.mcf"
+        ]
         mock_spanner_client.revert_import_state.return_value = True
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -337,12 +339,12 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["status"], "OK")
-        self.assertEqual(data["message"], "Reverted foo:bar:imp1: v2 -> v1")
+        self.assertEqual(data["message"], "Reverted foo:bar:imp1: gs://bucket/path/v2/*/*.mcf -> gs://bucket/path/v1/*/*.mcf")
         self.assertTrue(data["reverted"])
         mock_spanner_client.revert_import_state.assert_called_once_with(
             import_name="imp1",
-            new_latest_version_path="gs://bucket/path/v1",
-            previous_version="v1",
+            new_latest_version_path="gs://bucket/path/v1/*/*.mcf",
+            previous_version="gs://bucket/path/v1/*/*.mcf",
             workflow_id=None,
             comment="Reverted import state"
         )
@@ -350,8 +352,11 @@ class TestMain(unittest.TestCase):
     def test_revert_multiple_imports(self):
         mock_spanner_client = MagicMock()
         mock_spanner_client.get_imports_for_workflow.return_value = ["imp1", "imp2"]
-        mock_spanner_client.get_import_version_history.side_effect = lambda name: ["v2", "v1"] if name == "imp1" else ["v3", "v2"]
-        mock_spanner_client.get_import_latest_version.return_value = "gs://bucket/path/latest"
+        mock_spanner_client.get_import_version_history.side_effect = lambda name: [
+            "gs://bucket/path/v2/*/*.mcf", "gs://bucket/path/v1/*/*.mcf"
+        ] if name == "imp1" else [
+            "gs://bucket/path/v3/*/*.mcf", "gs://bucket/path/v2/*/*.mcf"
+        ]
         mock_spanner_client.revert_import_state.return_value = True
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -363,15 +368,15 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["status"], "OK")
-        self.assertEqual(data["message"], "Reverted imp1: v2 -> v1, imp2: v3 -> v2")
+        self.assertEqual(data["message"], "Reverted imp1: gs://bucket/path/v2/*/*.mcf -> gs://bucket/path/v1/*/*.mcf, imp2: gs://bucket/path/v3/*/*.mcf -> gs://bucket/path/v2/*/*.mcf")
         self.assertTrue(data["reverted"])
         self.assertEqual(len(data["revertedImports"]), 2)
         self.assertEqual(data["revertedImports"][0]["importName"], "imp1")
-        self.assertEqual(data["revertedImports"][0]["failedVersion"], "v2")
-        self.assertEqual(data["revertedImports"][0]["restoredVersion"], "v1")
+        self.assertEqual(data["revertedImports"][0]["failedVersion"], "gs://bucket/path/v2/*/*.mcf")
+        self.assertEqual(data["revertedImports"][0]["restoredVersion"], "gs://bucket/path/v1/*/*.mcf")
         self.assertEqual(data["revertedImports"][1]["importName"], "imp2")
-        self.assertEqual(data["revertedImports"][1]["failedVersion"], "v3")
-        self.assertEqual(data["revertedImports"][1]["restoredVersion"], "v2")
+        self.assertEqual(data["revertedImports"][1]["failedVersion"], "gs://bucket/path/v3/*/*.mcf")
+        self.assertEqual(data["revertedImports"][1]["restoredVersion"], "gs://bucket/path/v2/*/*.mcf")
         mock_spanner_client.get_imports_for_workflow.assert_called_once_with("wf-123")
 
     def test_revert_neither_import_name_nor_workflow_id(self):
@@ -558,6 +563,40 @@ class TestMain(unittest.TestCase):
             ingested_imports=["import1"],
             metrics=mock_metrics
         )
+
+    def test_get_import_info_list_of_dicts(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_info.return_value = [{
+            "importName": "EurostatData",
+            "latestVersion": "gs://bucket/path/*/*.mcf"
+        }]
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        payload = {
+            "importList": [{
+                "importName": "EurostatData",
+                "latestVersion": "gs://bucket/path/*/*.mcf",
+            }]
+        }
+        response = client.post("/imports/info", json=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(response.json()[0]["importName"], "EurostatData")
+        mock_spanner_client.get_import_info.assert_called_once()
+
+    def test_get_import_info_dict_import_name_only(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_info.return_value = [{
+            "importName": "import1",
+            "latestVersion": "gs://bucket/import1/*/*.mcf"
+        }]
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        payload = {"importList": [{"importName": "import1"}]}
+        response = client.post("/imports/info", json=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()), 1)
+        mock_spanner_client.get_import_info.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()

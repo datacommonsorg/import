@@ -14,7 +14,6 @@
 """Rollback helper logic for dataset ingestion."""
 
 import logging
-import posixpath
 from typing import Any
 
 
@@ -55,24 +54,16 @@ def revert_import(spanner_client: Any,
             f"No previous different version found in ImportVersionHistory for '{short_name}'. Cannot revert.")
         return False, latest_version, None
 
-    # 2. Get current LatestVersion path from ImportStatus to preserve GCS parent directory.
-    # TODO: Add Path column to ImportVersionHistory table and fetch path directly from history.
-    current_latest_version_path = spanner_client.get_import_latest_version(short_name) or ""
-
-    if current_latest_version_path:
-        parent_dir = posixpath.dirname(current_latest_version_path)
-        new_latest_version_path = posixpath.join(parent_dir, previous_version)
-    else:
-        new_latest_version_path = previous_version
+    new_latest_version_path = previous_version
 
     if dry_run:
         logging.info(
-            f"[DRY RUN] Would revert '{short_name}' from '{latest_version}' to last known good version: '{previous_version}' (Path: '{new_latest_version_path}')"
+            f"[DRY RUN] Would revert '{short_name}' from '{latest_version}' to last known good version: '{previous_version}'"
         )
         return True, latest_version, previous_version
 
     logging.info(
-        f"Reverting '{short_name}' from '{latest_version}' to last known good version: '{previous_version}' (Path: '{new_latest_version_path}')"
+        f"Reverting '{short_name}' from '{latest_version}' to last known good version: '{previous_version}'"
     )
 
     # 3. Update ImportStatus to point to previous version and set state to STAGING, and record audit history.

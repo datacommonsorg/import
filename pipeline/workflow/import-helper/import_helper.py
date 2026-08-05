@@ -41,7 +41,7 @@ def invoke_spanner_ingestion_workflow(import_name: str):
     Args:
         import_name: The name of the import.
     """
-    workflow_args = {"importList": [import_name.split(':')[-1]]}
+    workflow_args = {"importList": [{"importName": import_name.split(':')[-1]}]}
 
     logging.info(f"Invoking {SPANNER_INGESTION_WORKFLOW_ID} for {import_name}")
     execution_client = executions_v1.ExecutionsClient()

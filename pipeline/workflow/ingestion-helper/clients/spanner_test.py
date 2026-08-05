@@ -820,6 +820,69 @@ class TestSpannerClient(unittest.TestCase):
         imports = client.get_imports_for_workflow("wf-123")
         self.assertEqual(imports, ["imp1", "imp2"])
 
+    @patch('google.cloud.spanner.Client')
+    def test_get_import_info_with_provided_dict(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        client = SpannerClient("project", "instance", "database")
+        import_list = [{
+            "importName": "EurostatData",
+            "latestVersion": "gs://datcom-prod-imports/scripts/eurostat/2026_08_03T19_03_05_074661_07_00/*/*.mcf"
+        }]
+
+        result = client.get_import_info(import_list)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["importName"], "EurostatData")
+        self.assertEqual(result[0]["latestVersion"], "gs://datcom-prod-imports/scripts/eurostat/2026_08_03T19_03_05_074661_07_00/*/*.mcf")
+        mock_db.snapshot.assert_not_called()
+
+    @patch('google.cloud.spanner.Client')
+    def test_get_import_info_with_dict_import_name_only(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_results = [
+            ["EurostatData", "gs://bucket/version1", "/*/*.mcf"]
+        ]
+        mock_snapshot.execute_sql.return_value = mock_results
+
+        client = SpannerClient("project", "instance", "database")
+        result = client.get_import_info([{"importName": "EurostatData"}])
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["importName"], "EurostatData")
+        self.assertEqual(result[0]["latestVersion"], "gs://bucket/version1/*/*.mcf")
+        mock_snapshot.execute_sql.assert_called_once()
+
+    @patch('google.cloud.spanner.Client')
+    def test_get_import_info_empty_list(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_results = [
+            ["ImportA", "gs://bucket/v1", "/*/*.mcf"]
+        ]
+        mock_snapshot.execute_sql.return_value = mock_results
+
+        client = SpannerClient("project", "instance", "database")
+        result = client.get_import_info([])
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["importName"], "ImportA")
+        self.assertEqual(result[0]["latestVersion"], "gs://bucket/v1/*/*.mcf")
+        mock_snapshot.execute_sql.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()

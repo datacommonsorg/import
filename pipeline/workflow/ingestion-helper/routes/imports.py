@@ -40,7 +40,7 @@ class ImportItem(BaseModel):
 
 
 class ImportInfoRequest(BaseModel):
-    importList: Optional[List[str]] = Field(default_factory=list)
+    importList: Optional[List[ImportItem]] = Field(default_factory=list)
 
 
 class UpdateIngestionStatusRequest(BaseModel):
@@ -86,9 +86,7 @@ class UpdateImportVersionRequest(BaseModel):
 
 class ImportInfoItem(BaseModel):
     importName: str = Field(description="The name of the import")
-    latestVersion: str = Field(description="The latest version GCS filename")
-    graphPath: str = Field(
-        description="The full GCS path to the import graph files")
+    latestVersion: str = Field(description="The latest version full GCS graph path")
 
 
 class RevertImportRequest(BaseModel):
