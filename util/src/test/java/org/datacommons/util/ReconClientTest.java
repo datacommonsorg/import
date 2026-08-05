@@ -36,11 +36,12 @@ public class ReconClientTest {
     ResolveResponse result = client.resolve(request);
 
     assertThat(result.getEntitiesCount()).isEqualTo(2);
-    assertThat(
-            result.getEntities(0).getCandidatesList().stream()
-                .map(Candidate::getDcid)
-                .collect(toList()))
-        .contains(USA_DCID);
+    // TODO: Re-enable after Spanner S2 cell 0x8085810000000000 has containment data.
+    // assertThat(
+    //         result.getEntities(0).getCandidatesList().stream()
+    //             .map(Candidate::getDcid)
+    //             .collect(toList()))
+    //     .contains(USA_DCID);
     assertThat(
             result.getEntities(1).getCandidatesList().stream()
                 .map(Candidate::getDcid)
@@ -65,11 +66,12 @@ public class ReconClientTest {
     ResolveResponse result = client.resolve(request);
 
     assertThat(result.getEntitiesCount()).isEqualTo(2);
-    assertThat(
-            result.getEntities(0).getCandidatesList().stream()
-                .map(Candidate::getDcid)
-                .collect(toList()))
-        .contains(USA_DCID);
+    // TODO: Re-enable after Spanner S2 cell 0x8085810000000000 has containment data.
+    // assertThat(
+    //         result.getEntities(0).getCandidatesList().stream()
+    //             .map(Candidate::getDcid)
+    //             .collect(toList()))
+    //     .contains(USA_DCID);
     assertThat(
             result.getEntities(1).getCandidatesList().stream()
                 .map(Candidate::getDcid)
