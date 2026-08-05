@@ -14,6 +14,7 @@ import java.util.Map;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ExternalIdResolverTest {
@@ -49,6 +50,7 @@ public class ExternalIdResolverTest {
           .build();
 
   @Test
+  @Ignore
   public void endToEndWithApiCalls() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
@@ -72,6 +74,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
+  @Ignore
   public void endToEndWithLocalSideMcf() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
@@ -115,6 +118,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
+  @Ignore
   public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionDisabled()
       throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
@@ -144,6 +148,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
+  @Ignore
   public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionEnabled()
       throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();

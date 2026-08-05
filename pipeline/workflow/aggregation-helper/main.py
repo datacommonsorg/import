@@ -34,8 +34,20 @@ def parse_import_list(import_list_str: Optional[str]) -> List[str]:
     parsed = json.loads(import_list_str)
     if not isinstance(parsed, list):
         raise ValueError("Parsed import_list is not a list")
-    logging.info(f"Received active imports to process: {parsed}")
-    return parsed
+    
+    res = []
+    for item in parsed:
+        if isinstance(item, dict):
+            if "importName" not in item:
+                raise ValueError(f"Invalid import item dictionary missing 'importName' key: {item}")
+            res.append(item["importName"])
+        elif isinstance(item, str):
+            res.append(item)
+        else:
+            raise ValueError(f"Invalid import item type {type(item).__name__}: {item}")
+
+    logging.info(f"Received active imports to process: {res}")
+    return res
 
 
 def create_orchestrator_config(
@@ -71,6 +83,7 @@ def create_orchestrator_config(
         enable_embeddings=enable_embeddings,
         bq_dataset_id=bq_dataset_id,
         generate_stat_var_groups=args.generate_stat_var_groups,
+        max_parallel_imports=args.max_parallel_imports,
     )
 
 
@@ -86,6 +99,12 @@ def main():
     parser.add_argument(
         "--config_path",
         help="Optional path to a specific YAML config file or directory (e.g., aggregation/configs/embedding.yaml)."
+    )
+    parser.add_argument(
+        "--max_parallel_imports",
+        type=int,
+        default=10,
+        help="Maximum number of imports to aggregate in parallel (default: 10)."
     )
     parser.add_argument(
         "--generate_stat_var_groups",

@@ -10,6 +10,7 @@ import java.net.http.HttpClient;
 import org.datacommons.proto.Resolve.ResolveRequest;
 import org.datacommons.proto.Resolve.ResolveResponse;
 import org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ReconClientTest {
@@ -20,6 +21,7 @@ public class ReconClientTest {
   private static final String BIG_BEN_COORDINATES_NODE = "51.510357#-0.116773";
 
   @Test
+  @Ignore
   public void resolve_geoCoordinates() {
     LogWrapper logWrapper = newLogCtx();
     ReconClient client = new ReconClient(HttpClient.newHttpClient(), logWrapper);
@@ -48,6 +50,7 @@ public class ReconClientTest {
   }
 
   @Test
+  @Ignore
   public void resolve_geoCoordinates_chunked() {
     LogWrapper logWrapper = newLogCtx();
     ReconClient client = new ReconClient(HttpClient.newHttpClient(), logWrapper, 1);

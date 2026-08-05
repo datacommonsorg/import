@@ -112,13 +112,15 @@ class ProvenanceSummaryGenerator:
         SET place_count = (SELECT COUNT(*) FROM `temp_dataset_places`);
 
         -- Step 3: Fetch place types for places in this dataset directly from Spanner
-        -- If place_count <= 10000, push down IN filter; otherwise stream all typeOf edges
+        -- If place_count <= 10000 and string length <= 100KB, push down IN filter; otherwise stream all typeOf edges
         IF place_count <= 10000 THEN
           SET place_dcids_str = (
             SELECT IFNULL(STRING_AGG(FORMAT("'%s'", REPLACE(observation_about, "'", "\\'")), ','), "''")
             FROM `temp_dataset_places`
           );
+        END IF;
 
+        IF place_count <= 10000 AND BYTE_LENGTH(place_dcids_str) <= 100000 THEN
           EXECUTE IMMEDIATE FORMAT('''
             CREATE OR REPLACE TEMPORARY TABLE `temp_type_edges_filtered` AS
             SELECT subject_id, object_id as place_type

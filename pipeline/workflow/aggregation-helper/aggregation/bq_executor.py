@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import threading
 import time
 from typing import Any, Dict, List, Optional
 
@@ -44,12 +45,15 @@ class BigQueryExecutor:
         # TODO: Remove run_sequential logic once DCP migrates to async execution.
         self.run_sequential = run_sequential
         self._client: Optional[bigquery.Client] = None
+        self._client_lock = threading.Lock()
 
     @property
     def client(self) -> bigquery.Client:
         """Lazily initializes and returns the BigQuery client."""
         if self._client is None:
-            self._client = bigquery.Client(project=self.project_id, location=self.location)
+            with self._client_lock:
+                if self._client is None:
+                    self._client = bigquery.Client(project=self.project_id, location=self.location)
         return self._client
 
     def get_spanner_destination_uri(self) -> str:

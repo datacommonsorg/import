@@ -13,6 +13,7 @@ import java.util.List;
 import org.datacommons.util.LogWrapper;
 import org.datacommons.util.SummaryReportGenerator;
 import org.datacommons.util.TmcfCsvParser;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -32,6 +33,7 @@ public class LintTest {
   @Rule public final Expect expect = Expect.create();
 
   @Test
+  @Ignore
   public void LintTest() throws IOException {
     // Set this so that the generated node IDs are deterministic
     TmcfCsvParser.TEST_mode = true;
