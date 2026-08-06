@@ -14,6 +14,7 @@
 """Generates and runs entity aggregations using BigQuery Federation."""
 
 import logging
+import json
 import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
@@ -43,6 +44,21 @@ class EntityAggregationGenerator:
         self.executor = executor
         self.is_base_dc = is_base_dc
 
+    def _create_job_config(self, config: EntityAggregationConfig) -> bigquery.QueryJobConfig:
+        """Creates the QueryJobConfig with query parameters for variable injection."""
+        output_provenance = get_provenance_name(config.output_import, self.is_base_dc)
+        return bigquery.QueryJobConfig(
+            use_query_cache=False,
+            query_parameters=[
+                bigquery.ScalarQueryParameter("output_provenance", "STRING", output_provenance),
+                bigquery.ScalarQueryParameter("date_prop", "STRING", config.date_prop or ""),
+                bigquery.ScalarQueryParameter("constraints_json", "STRING", json.dumps(config.constraints)),
+                bigquery.ArrayQueryParameter("entity_types", "STRING", config.entity_types),
+                bigquery.ArrayQueryParameter("location_props", "STRING", config.location_props),
+                bigquery.ArrayQueryParameter("agg_date_formats", "STRING", config.agg_date_formats),
+            ]
+        )
+
     def aggregate_entities(
             self,
             configs: List[EntityAggregationConfig]
@@ -54,420 +70,380 @@ class EntityAggregationGenerator:
                 f"Generating entity aggregation for types: {config.entity_types}"
             )
             query = self._generate_sql(config)
-            job = self.executor.execute(query)
+            job_config = self._create_job_config(config)
+            job = self.executor.execute(query, job_config=job_config)
             if job:
                 jobs.append(job)
         return jobs
 
-    def _parse_constraints(self, constraints: List[Dict]) -> List[Dict]:
-        """Parses structured constraint dictionaries into metadata and SQL clauses."""
-        parsed = []
-        for i, c in enumerate(constraints):
-            if not isinstance(c, dict) or 'property' not in c:
-                continue
-            prop = c['property']
-            unit_suffix = f" {c['unit']}" if c.get('unit') else ""
-            val_col = f"{prop}_{i}_val"
-            table_alias = f"c_{i}"
-            temp_table = f"temp_constraint_{i}_{prop}"
-
-            if c.get('wildcard'):
-                parsed.append({
-                    'prop': prop,
-                    'index': i,
-                    'val_col': val_col,
-                    'table_alias': table_alias,
-                    'temp_table': temp_table,
-                    'is_wildcard': True,
-                    'sql_filter': None,
-                    'val_str': '*'
-                })
-            elif 'min' in c and 'max' in c:
-                val_str = f"[{c['min']} {c['max']}{unit_suffix}]"
-                parsed.append({
-                    'prop': prop,
-                    'index': i,
-                    'val_col': val_col,
-                    'table_alias': table_alias,
-                    'temp_table': temp_table,
-                    'is_wildcard': False,
-                    'sql_filter': f"SAFE_CAST({val_col} AS FLOAT64) >= {c['min']} AND SAFE_CAST({val_col} AS FLOAT64) <= {c['max']}",
-                    'val_str': val_str
-                })
-            elif 'min' in c:
-                val_str = f"[{c['min']} -{unit_suffix}]"
-                parsed.append({
-                    'prop': prop,
-                    'index': i,
-                    'val_col': val_col,
-                    'table_alias': table_alias,
-                    'temp_table': temp_table,
-                    'is_wildcard': False,
-                    'sql_filter': f"SAFE_CAST({val_col} AS FLOAT64) >= {c['min']}",
-                    'val_str': val_str
-                })
-            elif 'max' in c:
-                val_str = f"[- {c['max']}{unit_suffix}]"
-                parsed.append({
-                    'prop': prop,
-                    'index': i,
-                    'val_col': val_col,
-                    'table_alias': table_alias,
-                    'temp_table': temp_table,
-                    'is_wildcard': False,
-                    'sql_filter': f"SAFE_CAST({val_col} AS FLOAT64) <= {c['max']}",
-                    'val_str': val_str
-                })
-            elif 'value' in c:
-                val_str = str(c['value'])
-                parsed.append({
-                    'prop': prop,
-                    'index': i,
-                    'val_col': val_col,
-                    'table_alias': table_alias,
-                    'temp_table': temp_table,
-                    'is_wildcard': False,
-                    'sql_filter': f"{val_col} = '{_escape_sql_literal(val_str)}'",
-                    'val_str': val_str
-                })
-        return parsed
-
     def _generate_sql(self, config: EntityAggregationConfig) -> str:
-        """Generates the multi-statement SQL script for a single aggregation config."""
+        """Generates a cohesive BigQuery procedural SQL script for entity aggregation."""
         connection_id = self.executor.connection_id
         dest = self.executor.get_spanner_destination_uri()
-        
-        output_provenance = get_provenance_name(config.output_import, self.is_base_dc)
-        
+
         safe_input_imports = [_escape_sql_literal(name) for name in config.input_imports]
-        input_provenances = [f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_input_imports]
-        input_provenances_str = ", ".join(input_provenances)
+        input_provenances_sql = ", ".join([f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_input_imports])
+        entity_types_sql = ", ".join([f"'{_escape_sql_literal(t)}'" for t in config.entity_types])
 
-        entity_types_str = ", ".join([f"'{_escape_sql_literal(t)}'" for t in config.entity_types])
-        
-        # Parse constraints
-        parsed_constraints = self._parse_constraints(config.constraints)
-        location_props_str = ", ".join([f'"{_escape_sql_literal(p)}"' for p in config.location_props])
-        
-        # Group constraints into independent slices
-        # Multiple range/value conditions on the same property belong to separate slices,
-        # while conditions on distinct properties are combined in the same slice.
-        slices: List[List[Dict]] = []
-        if not parsed_constraints:
-            slices = [[]]
-        else:
-            for c in parsed_constraints:
-                placed = False
-                for s in slices:
-                    if not any(sc['prop'] == c['prop'] and not sc['is_wildcard'] for sc in s):
-                        s.append(c)
-                        placed = True
-                        break
-                if not placed:
-                    slices.append([c])
-
-        # 1. Step 1: Extract Raw Entities and Properties
-        sql_parts = []
-        sql_parts.append(f"""
-        -- Step 1: Extract raw entity IDs of the target types
-        CREATE OR REPLACE TEMPORARY TABLE `temp_entities` AS
-        SELECT DISTINCT subject_id AS entity_id, object_id AS entity_type
-        FROM EXTERNAL_QUERY("{connection_id}",
-          '''SELECT subject_id, object_id FROM Edge 
-             WHERE predicate = "typeOf" 
-               AND object_id IN ({entity_types_str}) 
-               AND provenance IN ({input_provenances_str})''');
-
-        -- Extract locations (supporting multiple location_props, filtering out latLong/ nodes)
-        CREATE OR REPLACE TEMPORARY TABLE `temp_locations` AS
-        SELECT DISTINCT subject_id AS entity_id, object_id AS location_id
-        FROM EXTERNAL_QUERY("{connection_id}",
-          '''SELECT subject_id, object_id FROM Edge 
-             WHERE predicate IN ({location_props_str})''')
-        WHERE subject_id IN (SELECT entity_id FROM `temp_entities`)
-          AND NOT STARTS_WITH(object_id, 'latLong/');
-        """)
-
+        all_props = set(config.location_props)
         if config.date_prop:
-            sql_parts.append(f"""
-            -- Extract dates
-            CREATE OR REPLACE TEMPORARY TABLE `temp_dates` AS
-            SELECT DISTINCT subject_id AS entity_id, object_id AS raw_date
-            FROM EXTERNAL_QUERY("{connection_id}",
-              '''SELECT subject_id, object_id FROM Edge 
-                 WHERE predicate = "{_escape_sql_literal(config.date_prop)}"''')
-            WHERE subject_id IN (SELECT entity_id FROM `temp_entities`);
-            """)
+            all_props.add(config.date_prop)
+        for c in config.constraints:
+            if isinstance(c, dict) and 'property' in c:
+                all_props.add(c['property'])
+        all_props_sql = ", ".join([f"'{_escape_sql_literal(p)}'" for p in sorted(all_props)])
 
-        # Extract constraint values for all unique constraint conditions
-        for c in parsed_constraints:
-            sql_parts.append(f"""
-            -- Extract constraint: {c['prop']} (index {c['index']})
-            CREATE OR REPLACE TEMPORARY TABLE `{c['temp_table']}` AS
-            SELECT DISTINCT subject_id AS entity_id, object_id AS {c['val_col']}
-            FROM EXTERNAL_QUERY("{connection_id}",
-              '''SELECT subject_id, object_id FROM Edge 
-                 WHERE predicate = "{_escape_sql_literal(c['prop'])}"''')
-            WHERE subject_id IN (SELECT entity_id FROM `temp_entities`);
-            """)
+        return rf"""-- ============================================================================
+-- Entity Aggregation Script
+-- Entity Types: {config.entity_types}
+-- Location Properties: {config.location_props}
+-- Date Property: {config.date_prop or 'DEFAULT_CURRENT_DATE'}
+-- ============================================================================
 
-        # 2. Step 2: Apply Constraints and Buckets
-        date_select_raw = "d.raw_date" if config.date_prop else "FORMAT_DATE('%Y-%m-%d', CURRENT_DATE())"
-        date_join = "LEFT JOIN `temp_dates` d ON e.entity_id = d.entity_id" if config.date_prop else ""
-        date_null_filter = "\n            AND d.raw_date IS NOT NULL" if config.date_prop else ""
-        
-        # Format date buckets and periods
-        date_bucket_cols = []
-        for fmt in config.agg_date_formats:
-            if fmt == 'YYYY':
-                date_bucket_cols.append("LEFT(raw_date, 4) AS date_YYYY, 'P1Y' AS period_YYYY")
-            elif fmt == 'YYYY-MM':
-                date_bucket_cols.append("LEFT(raw_date, 7) AS date_YYYY_MM, 'P1M' AS period_YYYY_MM")
-            elif fmt == 'YYYY-MM-DD':
-                date_bucket_cols.append("LEFT(raw_date, 10) AS date_YYYY_MM_DD, 'P1D' AS period_YYYY_MM_DD")
-        date_bucket_select = ", ".join(date_bucket_cols)
+DECLARE output_provenance STRING DEFAULT @output_provenance;
+DECLARE date_prop STRING DEFAULT @date_prop;
+DECLARE constraints_json STRING DEFAULT @constraints_json;
+DECLARE entity_types ARRAY<STRING> DEFAULT @entity_types;
+DECLARE location_props ARRAY<STRING> DEFAULT @location_props;
+DECLARE agg_date_formats ARRAY<STRING> DEFAULT @agg_date_formats;
 
-        slice_sv_tables = []
-        for s_idx, slice_cons in enumerate(slices):
-            # Constraint selects and joins for this slice
-            cte_cons_selects = ", ".join([f"{c['table_alias']}.{c['val_col']}" for c in slice_cons])
-            if cte_cons_selects:
-                cte_cons_selects = ", " + cte_cons_selects
-                
-            outer_cons_selects = ", ".join([f"{c['val_col']}" for c in slice_cons])
-            if outer_cons_selects:
-                outer_cons_selects = ", " + outer_cons_selects
+-- ============================================================================
+-- Step 1: Extract raw entity IDs of target types from Spanner
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_entities` AS
+SELECT DISTINCT subject_id AS entity_id, object_id AS entity_type
+FROM EXTERNAL_QUERY("{connection_id}",
+  '''SELECT subject_id, object_id FROM Edge 
+     WHERE predicate = "typeOf" 
+       AND object_id IN ({entity_types_sql}) 
+       AND provenance IN ({input_provenances_sql})''');
 
-            cons_joins = "\n".join([f"JOIN `{c['temp_table']}` {c['table_alias']} ON e.entity_id = {c['table_alias']}.entity_id" for c in slice_cons])
-            
-            # Constraint filters for non-wildcard constraints in this slice
-            filters = [c['sql_filter'] for c in slice_cons if c['sql_filter']]
-            filter_clause = "AND " + " AND ".join(filters) if filters else ""
+-- ============================================================================
+-- Step 2: Two-Stage Fetch - pull all relevant property triples for target entities
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_entity_edges` AS
+SELECT DISTINCT subject_id AS entity_id, predicate, object_id AS val
+FROM EXTERNAL_QUERY("{connection_id}",
+  '''SELECT subject_id, predicate, object_id FROM Edge 
+     WHERE predicate IN ({all_props_sql})''')
+WHERE subject_id IN (SELECT entity_id FROM `temp_entities`);
 
-            sql_parts.append(f"""
-            -- Step 2: Apply Constraints and Buckets (Slice {s_idx})
-            CREATE OR REPLACE TEMPORARY TABLE `temp_filtered_events_{s_idx}` AS
-            WITH RawEvents AS (
-              SELECT 
-                e.entity_id,
-                e.entity_type,
-                l.location_id,
-                {date_select_raw} AS raw_date
-                {cte_cons_selects}
-              FROM `temp_entities` e
-              JOIN `temp_locations` l ON e.entity_id = l.entity_id
-              {date_join}
-              {cons_joins}
-              WHERE TRUE
-                {filter_clause}{date_null_filter}
-            )
-            SELECT 
-              entity_id,
-              entity_type,
-              location_id,
-              raw_date,
-              {date_bucket_select}
-              {outer_cons_selects}
-            FROM RawEvents;
-            """)
+-- ============================================================================
+-- Step 3: Filter locations (excluding latLong/ nodes)
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_locations` AS
+SELECT DISTINCT entity_id, val AS location_id
+FROM `temp_entity_edges`
+WHERE predicate IN UNNEST(location_props)
+  AND NOT STARTS_WITH(val, 'latLong/');
 
-            # Step 3: Group and Count for Slice s_idx
-            group_parts = []
-            for fmt in config.agg_date_formats:
-                fmt_clean = fmt.replace('-', '_')
-                wildcard_cols = [f"{c['val_col']}" for c in slice_cons if c['is_wildcard']]
-                wildcard_select = ", ".join(wildcard_cols)
-                if wildcard_select:
-                    wildcard_select = ", " + wildcard_select
-                    
-                group_by_cols = f"location_id, entity_type, date_{fmt_clean}, period_{fmt_clean}"
-                if wildcard_cols:
-                    group_by_cols += ", " + ", ".join(wildcard_cols)
+-- ============================================================================
+-- Step 4: Define date formatting reference buckets
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_date_formats` AS
+SELECT * FROM (
+  SELECT 'YYYY' AS fmt, 4 AS char_len, 'P1Y' AS obs_period
+  UNION ALL
+  SELECT 'YYYY-MM', 7, 'P1M'
+  UNION ALL
+  SELECT 'YYYY-MM-DD', 10, 'P1D'
+)
+WHERE fmt IN UNNEST(agg_date_formats);
 
-                group_parts.append(f"""
-                SELECT 
-                  location_id,
-                  entity_type,
-                  date_{fmt_clean} AS obs_date,
-                  period_{fmt_clean} AS obs_period,
-                  COUNT(entity_id) AS event_count
-                  {wildcard_select}
-                FROM `temp_filtered_events_{s_idx}`
-                GROUP BY {group_by_cols}
-                """)
-                
-            union_groups_query = "\nUNION ALL\n".join(group_parts)
-            
-            sql_parts.append(f"""
-            -- Step 3: Group and Count (Slice {s_idx})
-            CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_counts_{s_idx}` AS
-            {union_groups_query};
-            """)
+-- ============================================================================
+-- Step 5: Parse constraint specifications from JSON parameter
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_constraint_specs` AS
+SELECT
+  OFFSET AS constraint_idx,
+  JSON_VALUE(c, '$.property') AS prop,
+  SAFE_CAST(JSON_VALUE(c, '$.min') AS FLOAT64) AS min_val,
+  SAFE_CAST(JSON_VALUE(c, '$.max') AS FLOAT64) AS max_val,
+  JSON_VALUE(c, '$.unit') AS unit,
+  JSON_VALUE(c, '$.value') AS exact_val,
+  IFNULL(SAFE_CAST(JSON_VALUE(c, '$.wildcard') AS BOOL), FALSE) AS is_wildcard
+FROM UNNEST(JSON_QUERY_ARRAY(constraints_json)) AS c WITH OFFSET;
 
-            # Step 4: Deterministic SV DCID Generation for Slice s_idx
-            sv_props = {
-                'measuredProperty': 'count',
-                'statType': 'measuredValue'
-            }
-            for c in slice_cons:
-                if not c['is_wildcard']:
-                    sv_props[c['prop']] = c['val_str']
-                    
-            all_keys = ['populationType'] + list(sv_props.keys()) + [c['prop'] for c in slice_cons if c['is_wildcard']]
-            sorted_keys = sorted(all_keys)
-            
-            flat_args = []
-            for i, key in enumerate(sorted_keys):
-                if i > 0:
-                    flat_args.append("','")
-                if key == 'populationType':
-                    flat_args.append("'populationType='")
-                    flat_args.append("entity_type")
-                elif key in sv_props:
-                    flat_args.append(f"'{key}={sv_props[key]}'")
-                else:
-                    # Match wildcard property using its val_col
-                    wc = next(c for c in slice_cons if c['prop'] == key)
-                    flat_args.append(f"'{key}='")
-                    flat_args.append(f"COALESCE({wc['val_col']}, '')")
-                    
-            concat_expr = f"CONCAT({', '.join(flat_args)})"
-            
-            # SV Name SQL expression
-            name_flat_args = ["'Count of '", "entity_type"]
-            static_cons_desc = " and ".join([f"{c['prop']} {c['val_str']}" for c in slice_cons if not c['is_wildcard']])
-            if static_cons_desc:
-                name_flat_args.append(f"' with {static_cons_desc}'")
-                
-            wildcard_constraints = [c for c in slice_cons if c['is_wildcard']]
-            for c in wildcard_constraints:
-                name_flat_args.append(f"', {c['prop']}='")
-                name_flat_args.append(f"COALESCE({c['val_col']}, 'unknown')")
-                
-            name_expr = f"CONCAT({', '.join(name_flat_args)})"
+-- ============================================================================
+-- Step 6: Assign slice_id and formatted constraint descriptions
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_slices` AS
+SELECT
+  *,
+  CASE 
+    WHEN is_wildcard THEN 0
+    ELSE ROW_NUMBER() OVER(PARTITION BY prop, CASE WHEN is_wildcard THEN 1 ELSE 0 END ORDER BY constraint_idx) - 1
+  END AS slice_id,
+  CASE
+    WHEN is_wildcard THEN '*'
+    WHEN exact_val IS NOT NULL THEN exact_val
+    WHEN min_val IS NOT NULL AND max_val IS NOT NULL THEN CONCAT('[', min_val, ' ', max_val, IF(unit IS NOT NULL, CONCAT(' ', unit), ''), ']')
+    WHEN min_val IS NOT NULL THEN CONCAT('[', min_val, ' -', IF(unit IS NOT NULL, CONCAT(' ', unit), ''), ']')
+    WHEN max_val IS NOT NULL THEN CONCAT('[- ', max_val, IF(unit IS NOT NULL, CONCAT(' ', unit), ''), ']')
+    ELSE ''
+  END AS val_str
+FROM `temp_constraint_specs`;
 
-            sql_parts.append(f"""
-            -- Step 4: Generate SV DCIDs and Names (Slice {s_idx})
-            CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_with_sv_{s_idx}` AS
-            SELECT 
-              *,
-              CONCAT('dc/sv/gp/', CAST(FARM_FINGERPRINT({concat_expr}) AS STRING)) AS sv_dcid,
-              {name_expr} AS sv_name
-            FROM `temp_aggregated_counts_{s_idx}`;
-            """)
-            slice_sv_tables.append(f"SELECT * FROM `temp_aggregated_with_sv_{s_idx}`")
+-- ============================================================================
+-- Step 7: Evaluate constraint matches per entity
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_entity_constraint_matches` AS
+SELECT
+  e.entity_id,
+  s.slice_id,
+  s.prop,
+  s.is_wildcard,
+  s.val_str,
+  e.val AS matched_val
+FROM `temp_entity_edges` e
+JOIN `temp_slices` s ON e.predicate = s.prop
+WHERE
+  (s.is_wildcard AND e.val IS NOT NULL)
+  OR (s.exact_val IS NOT NULL AND e.val = s.exact_val)
+  OR (s.min_val IS NOT NULL AND s.max_val IS NOT NULL AND SAFE_CAST(e.val AS FLOAT64) >= s.min_val AND SAFE_CAST(e.val AS FLOAT64) <= s.max_val)
+  OR (s.min_val IS NOT NULL AND s.max_val IS NULL AND SAFE_CAST(e.val AS FLOAT64) >= s.min_val)
+  OR (s.max_val IS NOT NULL AND s.min_val IS NULL AND SAFE_CAST(e.val AS FLOAT64) <= s.max_val);
 
-        union_slice_sv_query = "\nUNION ALL\n".join(slice_sv_tables)
-        sql_parts.append(f"""
-        -- Combine all constraint slices into temp_aggregated_with_sv
-        CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_with_sv` AS
-        {union_slice_sv_query};
-        """)
+-- ============================================================================
+-- Step 8: Filter entities that satisfy all required constraints of a slice
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_valid_slice_entities` AS
+WITH SliceRequirements AS (
+  SELECT slice_id, COUNT(DISTINCT prop) AS req_count
+  FROM `temp_slices`
+  GROUP BY slice_id
+),
+EntityMatchCounts AS (
+  SELECT entity_id, slice_id, COUNT(DISTINCT prop) AS match_count
+  FROM `temp_entity_constraint_matches`
+  GROUP BY entity_id, slice_id
+)
+SELECT emc.entity_id, emc.slice_id
+FROM EntityMatchCounts emc
+JOIN SliceRequirements sr ON emc.slice_id = sr.slice_id
+WHERE emc.match_count = sr.req_count
+UNION ALL
+SELECT entity_id, 0 AS slice_id
+FROM `temp_entities`
+WHERE (SELECT COUNT(*) FROM `temp_slices`) = 0;
 
-        # 5. Step 5: Export to Spanner
-        
-        # 5.1 Export SV Nodes
-        sql_parts.append(f"""
-        -- Export SV Nodes to Spanner Node table
-        EXPORT DATA
-          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Node"}}' ) AS
-        SELECT DISTINCT
-          sv_dcid AS subject_id,
-          sv_name AS name,
-          CAST(NULL AS STRING) AS value,
-          CAST(NULL AS BYTES) AS bytes,
-          ['StatisticalVariable'] AS types
-        FROM `temp_aggregated_with_sv`;
-        """)
+-- ============================================================================
+-- Step 9: Define StatisticalVariables generated across all slices and map entities to SVs
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_slice_entity_props` AS
+SELECT DISTINCT
+  v.slice_id,
+  v.entity_id,
+  e.entity_type,
+  s.prop,
+  s.is_wildcard,
+  s.val_str,
+  m.matched_val,
+  IF(s.is_wildcard, CONCAT(s.prop, '=', m.matched_val), '') AS wildcard_key
+FROM `temp_valid_slice_entities` v
+JOIN `temp_entities` e ON v.entity_id = e.entity_id
+LEFT JOIN `temp_slices` s ON v.slice_id = s.slice_id
+LEFT JOIN `temp_entity_constraint_matches` m 
+  ON v.slice_id = m.slice_id AND s.prop = m.prop AND v.entity_id = m.entity_id;
 
-        # 5.2 Export SV Edges
-        edge_selects = []
-        edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'typeOf' AS predicate, 'StatisticalVariable' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
-        edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'populationType' AS predicate, entity_type AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
-        edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'measuredProperty' AS predicate, 'count' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
-        edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, 'statType' AS predicate, 'measuredValue' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv`")
-        
-        # For each constraint slice, export its exact static/wildcard edges from its slice temp table
-        for s_idx, slice_cons in enumerate(slices):
-            for c in slice_cons:
-                if not c['is_wildcard']:
-                    edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, '{c['prop']}' AS predicate, '{_escape_sql_literal(c['val_str'])}' AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv_{s_idx}`")
-                else:
-                    edge_selects.append(f"SELECT DISTINCT sv_dcid AS subject_id, '{c['prop']}' AS predicate, {c['val_col']} AS object_id, '{output_provenance}' AS provenance FROM `temp_aggregated_with_sv_{s_idx}` WHERE {c['val_col']} IS NOT NULL")
-            
-        union_edges_query = "\nUNION ALL\n".join(edge_selects)
-
-        sql_parts.append(f"""
-        -- Export SV Edges to Spanner Edge table
-        EXPORT DATA
-          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Edge"}}' ) AS
-        {union_edges_query};
-        """)
-
-        # 5.3 Export TimeSeries
-        sql_parts.append(f"""
-        -- Export TimeSeries to Spanner TimeSeries table
-        EXPORT DATA
-          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "TimeSeries"}}' ) AS
-        WITH UniqueTimeSeries AS (
-          SELECT DISTINCT
-            sv_dcid,
-            location_id,
-            obs_period
-          FROM `temp_aggregated_with_sv`
+CREATE OR REPLACE TEMPORARY TABLE `temp_slice_svs` AS
+SELECT
+  slice_id,
+  entity_type,
+  wildcard_key,
+  CONCAT('dc/sv/gp/', CAST(FARM_FINGERPRINT(ARRAY_TO_STRING(sv_props_array, ',')) AS STRING)) AS sv_dcid,
+  CONCAT(
+    'Count of ', entity_type,
+    IF(ARRAY_LENGTH(static_name_parts) > 0, CONCAT(' with ', ARRAY_TO_STRING(static_name_parts, ' and ')), ''),
+    ARRAY_TO_STRING(wildcard_name_parts, '')
+  ) AS sv_name,
+  sv_props_array
+FROM (
+  SELECT
+    slice_id,
+    entity_type,
+    wildcard_key,
+    ARRAY_CONCAT(
+      [
+        CONCAT('populationType=', entity_type),
+        'measuredProperty=count',
+        'statType=measuredValue'
+      ],
+      IFNULL(
+        ARRAY_AGG(
+          IF(prop IS NULL, NULL, IF(is_wildcard, CONCAT(prop, '=', matched_val), CONCAT(prop, '=', val_str)))
+          IGNORE NULLS ORDER BY prop
         ),
-        PreparedTS AS (
-          SELECT
-            sv_dcid AS variable_measured,
-            location_id AS entity1,
-            '' AS extra_entities_id,
-            JSON_OBJECT('entity1', location_id) AS entities,
-            JSON_OBJECT(
-              'measurementMethod', 'DataCommonsAggregate',
-              'observationPeriod', obs_period,
-              'provenance', '{output_provenance}',
-              'isDcAggregate', true
-            ) AS facet,
-            obs_period
-          FROM UniqueTimeSeries
-        )
-        SELECT
-          variable_measured,
-          entity1,
-          extra_entities_id,
-          CAST(FARM_FINGERPRINT(CONCAT(
-            '{output_provenance}', '^',
-            'DataCommonsAggregate', '^',
-            obs_period, '^',
-            '', '^', -- scalingFactor
-            '', '^', -- unit
-            'true'   -- isDcAggregate
-          )) AS STRING) AS facet_id,
-          entities,
-          facet
-        FROM PreparedTS;
-        """)
+        []
+      )
+    ) AS sv_props_array,
+    IFNULL(
+      ARRAY_AGG(
+        IF(prop IS NULL OR NOT is_wildcard, NULL, CONCAT(', ', prop, '=', matched_val))
+        IGNORE NULLS ORDER BY prop
+      ),
+      []
+    ) AS wildcard_name_parts,
+    IFNULL(
+      ARRAY_AGG(
+        IF(prop IS NULL OR is_wildcard, NULL, CONCAT(prop, ' ', val_str))
+        IGNORE NULLS ORDER BY prop
+      ),
+      []
+    ) AS static_name_parts
+  FROM `temp_slice_entity_props`
+  GROUP BY slice_id, entity_type, wildcard_key
+);
 
-        # 5.4 Export Observations
-        sql_parts.append(f"""
-        -- Export Observations to Spanner Observation table
-        EXPORT DATA
-          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Observation"}}' ) AS
-        SELECT
-          sv_dcid AS variable_measured,
-          location_id AS entity1,
-          '' AS extra_entities_id,
-          CAST(FARM_FINGERPRINT(CONCAT(
-            '{output_provenance}', '^',
-            'DataCommonsAggregate', '^',
-            obs_period, '^',
-            '', '^',
-            '', '^',
-            'true'
-          )) AS STRING) AS facet_id,
-          obs_date AS date,
-          CAST(event_count AS STRING) AS value
-        FROM `temp_aggregated_with_sv`;
-        """)
+-- ============================================================================
+-- Step 10: Extract all constraint edges for generated StatisticalVariables
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_sv_edges` AS
+SELECT DISTINCT
+  sv_dcid,
+  SPLIT(prop_kv, '=')[OFFSET(0)] AS predicate,
+  SPLIT(prop_kv, '=')[OFFSET(1)] AS object_id
+FROM `temp_slice_svs`, UNNEST(sv_props_array) AS prop_kv
+WHERE SPLIT(prop_kv, '=')[OFFSET(0)] NOT IN ('populationType', 'measuredProperty', 'statType');
 
-        return "\n".join(sql_parts)
+-- ============================================================================
+-- Step 11: Map each valid entity to its exact StatisticalVariable
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_entity_sv_map` AS
+SELECT DISTINCT
+  ep.entity_id,
+  sv.sv_dcid,
+  sv.sv_name,
+  ep.entity_type
+FROM `temp_slice_entity_props` ep
+JOIN `temp_slice_svs` sv
+  ON ep.slice_id = sv.slice_id
+ AND ep.entity_type = sv.entity_type
+ AND ep.wildcard_key = sv.wildcard_key;
+
+-- ============================================================================
+-- Step 12: Aggregate event counts across locations and date buckets
+-- ============================================================================
+CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_with_sv` AS
+WITH EntityDates AS (
+  SELECT DISTINCT e.entity_id, d.val AS raw_date
+  FROM `temp_entity_sv_map` e
+  JOIN `temp_entity_edges` d ON e.entity_id = d.entity_id AND d.predicate = date_prop
+  WHERE date_prop != '' AND d.val IS NOT NULL
+  UNION ALL
+  SELECT DISTINCT entity_id, FORMAT_DATE('%Y-%m-%d', CURRENT_DATE()) AS raw_date
+  FROM `temp_entity_sv_map`
+  WHERE date_prop = ''
+)
+SELECT
+  l.location_id,
+  m.entity_type,
+  LEFT(ed.raw_date, df.char_len) AS obs_date,
+  df.obs_period,
+  COUNT(DISTINCT m.entity_id) AS event_count,
+  m.sv_dcid,
+  m.sv_name
+FROM `temp_entity_sv_map` m
+JOIN `temp_locations` l ON m.entity_id = l.entity_id
+JOIN EntityDates ed ON m.entity_id = ed.entity_id
+CROSS JOIN `temp_date_formats` df
+GROUP BY
+  l.location_id,
+  m.entity_type,
+  obs_date,
+  df.obs_period,
+  m.sv_dcid,
+  m.sv_name;
+
+-- ============================================================================
+-- Step 13: Export Generated Data to Cloud Spanner
+-- ============================================================================
+
+-- ============================================================================
+-- Step 13a: Export SV Nodes
+-- ============================================================================
+EXPORT DATA
+  OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Node"}}' ) AS
+SELECT DISTINCT
+  sv_dcid AS subject_id,
+  sv_name AS name,
+  CAST(NULL AS STRING) AS value,
+  CAST(NULL AS BYTES) AS bytes,
+  ['StatisticalVariable'] AS types
+FROM `temp_aggregated_with_sv`;
+
+-- ============================================================================
+-- Step 13b: Export SV Edges
+-- ============================================================================
+EXPORT DATA
+  OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Edge"}}' ) AS
+SELECT DISTINCT sv_dcid AS subject_id, 'typeOf' AS predicate, 'StatisticalVariable' AS object_id, output_provenance AS provenance FROM `temp_aggregated_with_sv`
+UNION ALL
+SELECT DISTINCT sv_dcid AS subject_id, 'populationType' AS predicate, entity_type AS object_id, output_provenance AS provenance FROM `temp_aggregated_with_sv`
+UNION ALL
+SELECT DISTINCT sv_dcid AS subject_id, 'measuredProperty' AS predicate, 'count' AS object_id, output_provenance AS provenance FROM `temp_aggregated_with_sv`
+UNION ALL
+SELECT DISTINCT sv_dcid AS subject_id, 'statType' AS predicate, 'measuredValue' AS object_id, output_provenance AS provenance FROM `temp_aggregated_with_sv`
+UNION ALL
+SELECT DISTINCT sv_dcid AS subject_id, predicate, object_id, output_provenance AS provenance FROM `temp_sv_edges`;
+
+-- ============================================================================
+-- Step 13c: Export TimeSeries
+-- ============================================================================
+EXPORT DATA
+  OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "TimeSeries"}}' ) AS
+WITH UniqueTimeSeries AS (
+  SELECT DISTINCT sv_dcid, location_id, obs_period FROM `temp_aggregated_with_sv`
+),
+PreparedTS AS (
+  SELECT
+    sv_dcid AS variable_measured,
+    location_id AS entity1,
+    '' AS extra_entities_id,
+    JSON_OBJECT('entity1', location_id) AS entities,
+    JSON_OBJECT(
+      'measurementMethod', 'DataCommonsAggregate',
+      'observationPeriod', obs_period,
+      'provenance', output_provenance,
+      'isDcAggregate', true
+    ) AS facet,
+    obs_period
+  FROM UniqueTimeSeries
+)
+SELECT
+  variable_measured,
+  entity1,
+  extra_entities_id,
+  CAST(FARM_FINGERPRINT(CONCAT(
+    output_provenance, '^',
+    'DataCommonsAggregate', '^',
+    obs_period, '^',
+    '', '^',
+    '', '^',
+    'true'
+  )) AS STRING) AS facet_id,
+  entities,
+  facet
+FROM PreparedTS;
+
+-- ============================================================================
+-- Step 13d: Export Observations
+-- ============================================================================
+EXPORT DATA
+  OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Observation"}}' ) AS
+SELECT
+  sv_dcid AS variable_measured,
+  location_id AS entity1,
+  '' AS extra_entities_id,
+  CAST(FARM_FINGERPRINT(CONCAT(
+    output_provenance, '^',
+    'DataCommonsAggregate', '^',
+    obs_period, '^',
+    '', '^',
+    '', '^',
+    'true'
+  )) AS STRING) AS facet_id,
+  obs_date AS date,
+  CAST(event_count AS STRING) AS value
+FROM `temp_aggregated_with_sv`;
+"""
