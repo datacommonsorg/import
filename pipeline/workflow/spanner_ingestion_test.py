@@ -29,10 +29,17 @@ from google.cloud import spanner
 
 PROJECT_ID = os.environ.get('PROJECT_ID', 'datcom-ci')
 LOCATION = os.environ.get('LOCATION', 'us-central1')
-SPANNER_PROJECT_ID = os.environ.get('SPANNER_PROJECT_ID', 'datcom-ci')
-SPANNER_INSTANCE_ID = os.environ.get('SPANNER_INSTANCE_ID',
-                                     'datcom-spanner-test')
-SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID', 'dc-test-db')
+SPANNER_DATABASE_PATH = os.environ.get('SPANNER_DATABASE_PATH')
+if SPANNER_DATABASE_PATH and len(SPANNER_DATABASE_PATH.split('/')) >= 6:
+    _parts = SPANNER_DATABASE_PATH.split('/')
+    SPANNER_PROJECT_ID = _parts[1]
+    SPANNER_INSTANCE_ID = _parts[3]
+    SPANNER_DATABASE_ID = _parts[5]
+else:
+    SPANNER_PROJECT_ID = os.environ.get('SPANNER_PROJECT_ID', 'datcom-ci')
+    SPANNER_INSTANCE_ID = os.environ.get('SPANNER_INSTANCE_ID',
+                                         'datcom-spanner-test')
+    SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID', 'dc-test-db')
 GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID', 'datcom-ci-test')
 IMPORT_WORKFLOW_ID = 'import-automation-workflow'
 INGESTION_WORKFLOW_ID = 'spanner-ingestion-workflow'

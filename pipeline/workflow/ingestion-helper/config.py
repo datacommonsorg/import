@@ -27,9 +27,16 @@ class EmbeddingSpec(BaseModel):
     node_filter_type: str
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
-SPANNER_PROJECT_ID = os.environ.get('SPANNER_PROJECT_ID')
-SPANNER_INSTANCE_ID = os.environ.get('SPANNER_INSTANCE_ID')
-SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID')
+SPANNER_DATABASE_PATH = os.environ.get('SPANNER_DATABASE_PATH')
+if SPANNER_DATABASE_PATH and len(SPANNER_DATABASE_PATH.split('/')) >= 6:
+    _parts = SPANNER_DATABASE_PATH.split('/')
+    SPANNER_PROJECT_ID = _parts[1]
+    SPANNER_INSTANCE_ID = _parts[3]
+    SPANNER_DATABASE_ID = _parts[5]
+else:
+    SPANNER_PROJECT_ID = os.environ.get('SPANNER_PROJECT_ID')
+    SPANNER_INSTANCE_ID = os.environ.get('SPANNER_INSTANCE_ID')
+    SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID')
 GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID')
 LOCATION = os.environ.get('LOCATION') or os.environ.get('REGION')
 ENABLE_EMBEDDINGS = os.environ.get('ENABLE_EMBEDDINGS', 'false').lower() == 'true'
