@@ -35,13 +35,19 @@ SPANNER_INGESTION_WORKFLOW_ID = 'spanner-ingestion-workflow'
 IMPORT_AUTOMATION_WORKFLOW_ID = 'import-automation-workflow'
 
 
-def invoke_spanner_ingestion_workflow(import_name: str):
+def invoke_spanner_ingestion_workflow(import_name: str, latest_version: str = ""):
     """Triggers the spanner ingestion workflow.
 
     Args:
         import_name: The name of the import.
+        latest_version: The version of the import (optional).
     """
-    workflow_args = {"importList": [{"importName": import_name.split(':')[-1]}]}
+    workflow_args = {
+        "importList": [{
+            "importName": import_name.split(':')[-1],
+            "latestVersion": latest_version
+        }]
+    }
 
     logging.info(f"Invoking {SPANNER_INGESTION_WORKFLOW_ID} for {import_name}")
     execution_client = executions_v1.ExecutionsClient()
@@ -57,8 +63,8 @@ def invoke_spanner_ingestion_workflow(import_name: str):
 def invoke_import_automation_workflow(import_name: str,
                                       latest_version: str,
                                       import_size: str,
-                                      graph_path: str, cron_schedule: str,
-                                      run_ingestion: bool = False):
+                                      graph_path: str,
+                                      cron_schedule: str):
     """Triggers the import automation workflow.
 
     Args:
@@ -67,7 +73,6 @@ def invoke_import_automation_workflow(import_name: str,
         import_size: The size of the import ('small', 'medium', 'large').
         graph_path: The graph path for the import.
         cron_schedule: The cron schedule for the import.
-        run_ingestion: Whether to run the ingestion workflow after the import.
     """
     import_config = {
         "user_script_args": [f"--version={latest_version}"],
@@ -77,8 +82,7 @@ def invoke_import_automation_workflow(import_name: str,
     }
     workflow_args = {
         "importName": import_name,
-        "importConfig": json.dumps(import_config),
-        "runIngestion": run_ingestion
+        "importConfig": json.dumps(import_config)
     }
 
     if import_size == 'large':
