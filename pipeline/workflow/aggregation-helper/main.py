@@ -56,9 +56,16 @@ def create_orchestrator_config(
     """Creates an OrchestratorConfig from CLI arguments and environment variables."""
     connection_id = env.get("BQ_SPANNER_CONN_ID")
     project_id = env.get("PROJECT_ID")
-    spanner_project_id = env.get("SPANNER_PROJECT_ID", project_id)
-    instance_id = env.get("SPANNER_INSTANCE_ID")
-    database_id = env.get("SPANNER_DATABASE_ID")
+    spanner_db_path = env.get("SPANNER_DATABASE_PATH") or env.get("SPANNER_DATABASE_URL")
+    if spanner_db_path and len(spanner_db_path.split("/")) >= 6:
+        _parts = spanner_db_path.split("/")
+        spanner_project_id = _parts[1]
+        instance_id = _parts[3]
+        database_id = _parts[5]
+    else:
+        spanner_project_id = env.get("SPANNER_PROJECT_ID", project_id)
+        instance_id = env.get("SPANNER_INSTANCE_ID")
+        database_id = env.get("SPANNER_DATABASE_ID")
     location = env.get("LOCATION")
 
     if not connection_id or not project_id or not instance_id or not database_id:

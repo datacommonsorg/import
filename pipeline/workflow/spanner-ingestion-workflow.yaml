@@ -9,10 +9,13 @@ main:
           - dataflow_job_name: ${"ingestion-job-" + string(int(sys.now()))}
           - dataflow_gcs_path: '${sys.get_env("DATAFLOW_TEMPLATE_PATH")}'
           - location: '${sys.get_env("LOCATION")}'
-          - spanner_project_id: '${sys.get_env("SPANNER_PROJECT_ID")}'
-          - spanner_instance_id: '${sys.get_env("SPANNER_INSTANCE_ID")}'
-          - spanner_database_id: '${sys.get_env("SPANNER_DATABASE_ID")}'
-          - helper_url: '${"https://ingestion-helper-service-" + sys.get_env("PROJECT_NUMBER") + "." + location + ".run.app"}'
+          - spanner_db_path: '${sys.get_env("SPANNER_DATABASE_PATH")}'
+          - spanner_parts: '${text.split(spanner_db_path, "/")}'
+          - spanner_project_id: '${spanner_parts[1]}'
+          - spanner_instance_id: '${spanner_parts[3]}'
+          - spanner_database_id: '${spanner_parts[5]}'
+          - helper_service: '${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service")}'
+          - helper_url: '${"https://" + helper_service + "-" + sys.get_env("PROJECT_NUMBER") + "." + location + ".run.app"}'
           - workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
           - import_list_input: ${default(map.get(args, "importList"), [])}
           - pipeline_failed: false
@@ -234,11 +237,14 @@ ingestion_subworkflow:
 run_aggregation_job:
   params: [import_list, project_id, location, helper_url, workflow_id]
   steps:
+    - init:
+        assign:
+          - aggregation_job_name: '${default(sys.get_env("AGGREGATION_JOB_NAME"), "aggregation-helper-job")}'
     - run_aggregation:
         try:
           call: googleapis.run.v2.projects.locations.jobs.run
           args:
-            name: ${"projects/" + project_id + "/locations/" + location + "/jobs/aggregation-helper-job"}
+            name: ${"projects/" + project_id + "/locations/" + location + "/jobs/" + aggregation_job_name}
             body:
               overrides:
                 containerOverrides:

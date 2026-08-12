@@ -43,22 +43,35 @@ def handle_feed_event(request):
     latest_version = attributes.get(
         'import_version',
         datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-    import_step = attributes.get('import_step', '')
+    post_process = attributes.get('post_process', 'spanner_ingestion_workflow')
     graph_path = attributes.get('graph_path', "/**/*.mcf*")
-    import_size = attributes.get('import_size', '')
+    import_size = attributes.get('import_size', 'small')
     cron_schedule = attributes.get('cron_schedule', '')
-    if import_step == 'spanner_ingestion_workflow':
+    import_env = attributes.get('import_env', 'STAGING')
+    if post_process == 'spanner_ingestion_workflow':
         import_status = 'STAGING'
         job_id = attributes.get('feed_name', 'cda_feed')
-        helper.update_import_status(import_name, import_status, latest_version,
-                                    graph_path, job_id, cron_schedule)
+        helper.update_import_status(import_name,
+                                    import_status,
+                                    latest_version,
+                                    graph_path,
+                                    job_id,
+                                    cron_schedule,
+                                    env=import_env)
+        full_version_path = helper.get_full_version_path(
+            import_name, latest_version, graph_path)
         # Invoke ingestion workflow to trigger dataflow job
-        helper.invoke_spanner_ingestion_workflow(import_name, latest_version)
-    elif import_step == 'import_automation_workflow':
+        helper.invoke_spanner_ingestion_workflow(import_name,
+                                                 full_version_path,
+                                                 env=import_env)
+    elif post_process == 'import_automation_workflow':
         # Invoke batch import job (which will automatically trigger spanner ingestion workflow upon completion)
-        helper.invoke_import_automation_workflow(import_name, latest_version,
-                                                 import_size, graph_path,
-                                                 cron_schedule)
+        helper.invoke_import_automation_workflow(import_name,
+                                                 latest_version,
+                                                 import_size,
+                                                 graph_path,
+                                                 cron_schedule,
+                                                 env=import_env)
     else:
         logging.info(f"Skipping import post processing.")
 
