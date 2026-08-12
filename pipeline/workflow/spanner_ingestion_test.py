@@ -145,7 +145,7 @@ def main(argv):
         short_import_name = TEST_IMPORT_NAME.split(':')[-1]
         cleanup_spanner(short_import_name)
 
-        # 1. Trigger Import Automation Workflow
+        # 1. Trigger Import Automation Workflow (which automatically invokes Spanner Ingestion Workflow)
         job_name = "test-import"
         import_config = {
             "gcp_project_id": PROJECT_ID,
@@ -164,16 +164,8 @@ def main(argv):
                                                  IMPORT_WORKFLOW_ID,
                                                  import_workflow_args)
 
-        # 2. Trigger Spanner Ingestion Workflow
-        ingestion_workflow_args = {"importList": [{"importName": short_import_name}]}
-
-        logging.info("Step 2: Running Spanner Ingestion Workflow...")
-        cloud_workflow.trigger_workflow_and_wait(PROJECT_ID, LOCATION,
-                                                 INGESTION_WORKFLOW_ID,
-                                                 ingestion_workflow_args)
-
-        # 3. Verify Data in Spanner
-        logging.info("Step 3: Verifying Data in Spanner...")
+        # 2. Verify Data in Spanner
+        logging.info("Step 2: Verifying Data in Spanner...")
         verify_spanner_data(short_import_name)
 
         logging.info("Spanner ingestion test completed successfully.")

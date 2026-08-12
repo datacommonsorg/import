@@ -11,12 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# Child Cloud Build configuration for deploying to a specific environment.
-# Usage:
-#   Staging:    gcloud builds submit . --config=deploy-services.yaml --project=datcom-ci --substitutions-file=config-staging.yaml
-#   Production: gcloud builds submit . --config=deploy-services.yaml --project=datcom-import-automation-prod --substitutions-file=config-prod.yaml
-#   Test:       gcloud builds submit . --config=deploy-services.yaml --project=datcom-ci --substitutions-file=config-test.yaml
 
 substitutions:
   _ENV_SUFFIX: ''
