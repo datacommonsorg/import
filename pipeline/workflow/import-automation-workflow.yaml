@@ -15,6 +15,8 @@ main:
           - helper_service: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service")}
           - helperUrl: ${"https://" + helper_service + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - spanner_workflow: ${default(sys.get_env("SPANNER_INGESTION_WORKFLOW_NAME"), "spanner-ingestion-workflow")}
+          - runStaging: ${default(map.get(args, "runStaging"), true)}
+          - stagingResult: "SKIPPED"
           - runProd: ${default(map.get(args, "runProd"), false)}
           - prodResult: "SKIPPED"
           - startTime: ${sys.now()}
@@ -89,19 +91,23 @@ main:
                 result: functionResponse
             - failWorkflow:
                 raise: ${e}
+    - checkStagingEligible:
+        switch:
+          - condition: ${not runStaging}
+            next: checkProdEligible
     - ingestStaging:
         call: ingestEnvironment
         args:
           projectId: ${projectId}
           region: ${region}
           importName: ${importName}
-          helperService: "ingestion-helper-service-staging"
-          spannerWorkflow: "spanner-ingestion-workflow-staging"
+          helperService: ${helper_service}
+          spannerWorkflow: ${spanner_workflow}
           waitIngestion: true
         result: stagingResult
     - checkProdEligible:
         switch:
-          - condition: ${stagingResult.status != "SUCCESS" or not runProd}
+          - condition: ${not runProd or (runStaging and stagingResult.status != "SUCCESS")}
             next: returnResult
     - ingestProd:
         call: ingestEnvironment
