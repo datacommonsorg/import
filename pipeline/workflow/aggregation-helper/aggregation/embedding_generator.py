@@ -44,7 +44,7 @@ class EmbeddingSpec(BaseModel):
     model_name: str
     model_endpoint: str = "text-embedding-005"
     task_type: str
-    node_types: List[str]
+    node_types: Dict[str, List[str]]
     node_filter_type: str
 
 _DEFAULT_EMBEDDING_SPECS = [
@@ -53,7 +53,10 @@ _DEFAULT_EMBEDDING_SPECS = [
         model_name="NodeEmbeddingModel",
         model_endpoint="text-embedding-005",
         task_type="RETRIEVAL_QUERY",
-        node_types=["StatisticalVariable", "Topic"],
+        node_types={
+            "StatisticalVariable": ["description"],
+            "Topic": ["description"]
+        },
         node_filter_type="NoFilter"
     )
 ]
@@ -198,6 +201,53 @@ class EmbeddingGenerator:
             logging.error(f"Failed to delete existing embeddings in Spanner: {e}")
             raise
 
+    def _generate_spanner_query(nodes: Dict[str, List[str]]) -> str:
+        spanner_query = ""
+        for node_type, predicate_types in nodes.items():
+            # for the first node_type in dict, skip "UNION ALL" prefix that joins the data
+            if not spanner_query:
+                spanner_query += f"""
+                UNION ALL
+                """
+            safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
+            predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
+            spanner_query_template = f"""
+                GRAPH DCGraph
+                MATCH
+                (n:Node WHERE {node_type} IN UNNEST(n.types))
+                OPTIONAL MATCH
+                (n)-[e: Edge
+                    WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
+                (o:Node
+                    WHERE o.value IS NOT NULL
+                    AND o.value <> "")
+                WHERE %1$s #timestamp filter condition
+                WITH n, e.predicate AS pred, STRING_AGG(o.value, ". ") AS values
+                GROUP BY n, pred
+                RETURN
+                n.subject_id AS subject_id,
+                n.types AS node_types,
+                CASE 
+                    WHEN COUNT(pred) > 0 THEN
+                    JSON_OBJECT(
+                        "subject_id", n.subject_id,
+                        "name", n.name,
+                        "properties", JSON_OBJECT(
+                        ARRAY_AGG(pred IGNORE NULLS),
+                        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
+                        )
+                    )
+                    ELSE
+                    JSON_OBJECT(
+                        "subject_id", n.subject_id,
+                        "name", n.name
+                    )
+                END AS embedding_content
+                GROUP BY n
+            """
+            spanner_query += spanner_query_template
+        return spanner_query
+
     def run_all(self,
                 config: EmbeddingGenerationConfig) -> List[bigquery.job.QueryJob]:
         """Runs all embedding generations asynchronously and returns their jobs."""
@@ -240,17 +290,13 @@ class EmbeddingGenerator:
         # 1. Pre-delete existing embeddings in Spanner for updated nodes
         self._delete_existing_embeddings(spec, embedding_table=embedding_table)
 
-        # 1. Format node types list for Spanner
-        safe_types = [f"'{nt.replace(chr(39), chr(92) + chr(39))}'" for nt in node_types]
-        node_types_list_sql = f"[{', '.join(safe_types)}]"
-
         # 2. Build the select query and query parameters for BigQuery
         job_config = None
         if node_filter_type == "NoFilter":
             select_nodes_sql = """
                 SELECT 
                   subject_id, 
-                  CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content, '$.name')) AS STRING) AS embedding_content_key,
+                  CAST(FARM_FINGERPRINT(TO_JSON_STRING(embedding_content)) AS STRING) AS embedding_content_key,
                   TO_JSON_STRING(embedding_content) AS content, 
                   embedding_content, 
                   node_types 
@@ -289,19 +335,7 @@ class EmbeddingGenerator:
             return None
 
         # 3. Construct the query to extract raw nodes from Spanner, generate embeddings in BigQuery, and export back to Spanner
-        spanner_query = f"""
-            SELECT 
-              subject_id, 
-              JSON_OBJECT("title", subject_id, "name", name) AS embedding_content, 
-              types AS node_types
-            FROM Node
-            WHERE name IS NOT NULL
-              AND name <> ''
-              AND %s
-              AND EXISTS (
-                SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST({node_types_list_sql})
-              )
-        """
+        spanner_query = self._generate_spanner_query(node_types)
         spanner_query_str = f'"""{spanner_query}"""'
 
         query = f"""

@@ -80,6 +80,54 @@ class EmbeddingUtils:
             logging.error(f"Unknown node filter type: {node_filter_type}")
             raise ValueError(f"Unknown node filter type: {node_filter_type}")
 
+def _generate_spanner_query(nodes: Dict[str, List[str]], timestamp_condition: str, filter_condition: str) -> str:
+        spanner_query = ""
+        for node_type, predicate_types in nodes.items():
+            # for the first node_type in dict, skip "UNION ALL" prefix that joins the data
+            if not spanner_query:
+                spanner_query += f"""
+                UNION ALL
+                """
+            safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
+            predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
+            spanner_query_template = f"""
+                GRAPH DCGraph
+                MATCH
+                (n:Node WHERE {node_type} IN UNNEST(n.types))
+                OPTIONAL MATCH
+                (n)-[e: Edge
+                    WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
+                (o:Node
+                    WHERE o.value IS NOT NULL
+                    AND o.value <> "")
+                WHERE {timestamp_condition}
+                    AND {filter_condition}
+                WITH n, e.predicate AS pred, STRING_AGG(o.value, ". ") AS values
+                GROUP BY n, pred
+                RETURN
+                n.subject_id AS subject_id,
+                n.types AS node_types,
+                CASE 
+                    WHEN COUNT(pred) > 0 THEN
+                    JSON_OBJECT(
+                        "subject_id", n.subject_id,
+                        "name", n.name,
+                        "properties", JSON_OBJECT(
+                        ARRAY_AGG(pred IGNORE NULLS),
+                        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
+                        )
+                    )
+                    ELSE
+                    JSON_OBJECT(
+                        "subject_id", n.subject_id,
+                        "name", n.name
+                    )
+                END AS embedding_content
+                GROUP BY n
+            """
+            spanner_query += spanner_query_template
+        return spanner_query
+
     def _get_updated_nodes(self, timestamp, node_types, node_filter_type, timeout):
         """Gets subject_ids and names from Node table where last_update_timestamp > timestamp.
         Yields results to avoid loading all into memory.
@@ -99,15 +147,7 @@ class EmbeddingUtils:
         filter_condition = self._get_node_filter_condition(node_filter_type, params, param_types)
         timestamp_condition = "last_update_timestamp > @timestamp" if timestamp else "TRUE"
 
-        updated_node_sql = f"""
-            SELECT subject_id, name, types FROM Node 
-            WHERE name IS NOT NULL
-              AND {timestamp_condition}
-              AND {filter_condition}
-              AND EXISTS (
-                SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST(@node_types)
-              )
-        """
+        updated_node_sql = _generate_spanner_query(node_types, timestamp_condition, filter_condition)
 
         if timestamp:
             logging.info(f"Filtering valid nodes updated after {timestamp}")
@@ -156,14 +196,9 @@ class EmbeddingUtils:
                     yield (subject_id, embedding_content, node.get("types"))
         else:
             for node in nodes_generator:
-                name = node.get("name")
                 subject_id = node.get("subject_id")
-                if name:
-                    embedding_content = json.dumps(OrderedDict([
-                        ("title", subject_id),
-                        ("name", name)
-                    ]))
-                    yield (subject_id, embedding_content, node.get("types"))
+                embedding_content = node.get("embedding_content")
+                yield (subject_id, embedding_content, node.get("node_types"))
 
     def _delete_existing_embeddings(self, embedding_table: str, embedding_label: str, subject_ids_iterable, timeout: int) -> int:
         """Deletes existing embeddings for subject_ids from a generator or iterable in batches.
@@ -254,7 +289,7 @@ class EmbeddingUtils:
 
         insert_sql = f"""
             INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content_key, embedding_content, embeddings, node_types)
-            SELECT subject_id, @embedding_label, CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content, '$.name')) AS STRING), embedding_content, embeddings, node_types
+            SELECT subject_id, @embedding_label, CAST(FARM_FINGERPRINT(TO_JSON_STRING(embedding_content)) AS STRING), embedding_content, embeddings, node_types
             FROM UNNEST(@rows)
         """
 
