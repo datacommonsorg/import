@@ -31,18 +31,7 @@ import org.datacommons.proto.Mcf;
 public class McfMutator {
   private Mcf.McfGraph.Builder graph;
   private LogWrapper logCtx;
-  private boolean isBaseDc = true;
-
-  /**
-   * Mutates the MCF graph with default settings (isBaseDc = true).
-   *
-   * @param graph The MCF graph builder to mutate.
-   * @param logCtx The log context for reporting errors.
-   * @return The mutated MCF graph.
-   */
-  public static Mcf.McfGraph mutate(Mcf.McfGraph.Builder graph, LogWrapper logCtx) {
-    return mutate(graph, logCtx, true);
-  }
+  private boolean isBaseDc;
 
   /**
    * Mutates the MCF graph.

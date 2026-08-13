@@ -10,11 +10,6 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
   private static final LogWrapper DUMMY_LOG_CTX = new LogWrapper(null);
   private final boolean isBaseDc;
 
-  /** Constructs a GraphTransformer defaulting to Base DC behavior (isBaseDc = true). */
-  public GraphTransformer() {
-    this(true);
-  }
-
   /**
    * Constructs a GraphTransformer with the specified Base DC flag.
    *
