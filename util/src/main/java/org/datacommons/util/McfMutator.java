@@ -31,11 +31,34 @@ import org.datacommons.proto.Mcf;
 public class McfMutator {
   private Mcf.McfGraph.Builder graph;
   private LogWrapper logCtx;
+  private boolean isBaseDc = true;
 
+  /**
+   * Mutates the MCF graph with default settings (isBaseDc = true).
+   *
+   * @param graph The MCF graph builder to mutate.
+   * @param logCtx The log context for reporting errors.
+   * @return The mutated MCF graph.
+   */
   public static Mcf.McfGraph mutate(Mcf.McfGraph.Builder graph, LogWrapper logCtx) {
+    return mutate(graph, logCtx, true);
+  }
+
+  /**
+   * Mutates the MCF graph.
+   *
+   * @param graph The MCF graph builder to mutate.
+   * @param logCtx The log context for reporting errors.
+   * @param isBaseDc Whether the run is for Base DC. When false, automatic generation of the
+   *     "definition" field on StatisticalVariables is skipped to avoid creating synthetic edges.
+   * @return The mutated MCF graph.
+   */
+  public static Mcf.McfGraph mutate(
+      Mcf.McfGraph.Builder graph, LogWrapper logCtx, boolean isBaseDc) {
     McfMutator m = new McfMutator();
     m.graph = graph;
     m.logCtx = logCtx;
+    m.isBaseDc = isBaseDc;
     // Make a list of node names because we don't want to be iterating over the map while mutating
     // it.
     List<String> nodeIdList = new ArrayList<>();
@@ -128,7 +151,7 @@ public class McfMutator {
         node.putPvs("constraintProperties", valuesBuilder.build());
       }
 
-      if (!node.containsPvs(Vocabulary.DEFINITION)) {
+      if (isBaseDc && !node.containsPvs(Vocabulary.DEFINITION)) {
         String definition = McfUtil.generateSVDefinition(node, constraintPvs);
         Mcf.McfGraph.Values.Builder valuesBuilder =
             Mcf.McfGraph.Values.newBuilder()

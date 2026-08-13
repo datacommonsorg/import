@@ -216,7 +216,7 @@ public class GraphIngestionPipeline {
       transformedGraph =
           combinedGraph.apply(
               "TransformNodes-" + importName,
-              org.apache.beam.sdk.transforms.ParDo.of(new GraphTransformer()));
+              org.apache.beam.sdk.transforms.ParDo.of(new GraphTransformer(isBaseDc)));
     }
 
     // Convert all nodes to mutations

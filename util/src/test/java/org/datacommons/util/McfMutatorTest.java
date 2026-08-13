@@ -134,4 +134,56 @@ public class McfMutatorTest {
             + "\n";
     assertEquals(McfUtil.serializeMcfGraph(got, true), want);
   }
+
+  @Test
+  public void testStatVarDefinitionSkippedWhenNotBaseDc() throws IOException {
+    String mcf =
+        "Node: dcid:FinancialAid\n"
+            + "typeOf: schema:StatisticalVariable\n"
+            + "populationType: dcs:FinancialTransaction\n"
+            + "measuredProperty: dcs:amount\n"
+            + "observationProperties: dcs:destinationCountry\n"
+            + "someActualConstraint: dcs:someValue\n";
+    Mcf.McfGraph got =
+        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), false);
+
+    String want =
+        "Node: dcid:FinancialAid\n"
+            + "constraintProperties: dcid:someActualConstraint\n"
+            + "dcid: \"FinancialAid\"\n"
+            + "measuredProperty: dcid:amount\n"
+            + "name: \"Amount Of Financial Transaction: Some Value\"\n"
+            + "observationProperties: dcid:destinationCountry\n"
+            + "populationType: dcid:FinancialTransaction\n"
+            + "someActualConstraint: dcid:someValue\n"
+            + "typeOf: dcid:StatisticalVariable\n"
+            + "\n";
+    assertEquals(McfUtil.serializeMcfGraph(got, true), want);
+  }
+
+  @Test
+  public void testStatVarExplicitDefinitionPreservedWhenNotBaseDc() throws IOException {
+    String mcf =
+        "Node: dcid:FinancialAid\n"
+            + "typeOf: schema:StatisticalVariable\n"
+            + "populationType: dcs:FinancialTransaction\n"
+            + "measuredProperty: dcs:amount\n"
+            + "definition: \"custom_definition_string\"\n"
+            + "someActualConstraint: dcs:someValue\n";
+    Mcf.McfGraph got =
+        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), false);
+
+    String want =
+        "Node: dcid:FinancialAid\n"
+            + "constraintProperties: dcid:someActualConstraint\n"
+            + "dcid: \"FinancialAid\"\n"
+            + "definition: \"custom_definition_string\"\n"
+            + "measuredProperty: dcid:amount\n"
+            + "name: \"Amount Of Financial Transaction: Some Value\"\n"
+            + "populationType: dcid:FinancialTransaction\n"
+            + "someActualConstraint: dcid:someValue\n"
+            + "typeOf: dcid:StatisticalVariable\n"
+            + "\n";
+    assertEquals(McfUtil.serializeMcfGraph(got, true), want);
+  }
 }
