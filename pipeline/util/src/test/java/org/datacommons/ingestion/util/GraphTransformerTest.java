@@ -137,8 +137,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -248,8 +247,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -353,8 +351,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -512,8 +509,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -653,8 +649,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -802,8 +797,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -938,8 +932,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -1043,8 +1036,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -1106,7 +1098,8 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    // When isBaseDc is false, "definition" should NOT be generated, but "name" and "constraintProperties" are.
+    // When isBaseDc is false, "definition" should NOT be generated, but "name" and
+    // "constraintProperties" are.
     McfGraph expectedGraph =
         McfGraph.newBuilder()
             .putNodes(
@@ -1177,8 +1170,7 @@ public class GraphTransformerTest {
             .build();
 
     PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph))
-            .apply(ParDo.of(new GraphTransformer(/* isBaseDc= */ false)));
+        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer(/* isBaseDc= */ false)));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
