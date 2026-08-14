@@ -117,7 +117,7 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
       pass
   g.add((subject, DCID["observationDate"], Literal(date)))
 
-  if value is not None and not pd.isna(value):
+  if value is not None and str(value).strip() != "":
     g.add((subject, DCID["value"], Literal(str(value))))
 
   if provenance:
