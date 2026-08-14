@@ -386,7 +386,7 @@ public class GraphReaderTest {
             "testStatVar", "geoId/testPlace", "", "P1Y", "testMethod", "testUnit", "100", facetId);
 
     StatVarObs obs1 =
-        StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setNumber(10.0).build();
+        StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setText("10.0").build();
     StatVarObs obs2 =
         StatVarObs.newBuilder().setDcid("obs2").setDate("2021").setText("someText").build();
     StatVarObs obs3 =

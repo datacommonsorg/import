@@ -238,14 +238,10 @@ public class GraphUtils {
       // Set required PVs.
       setPropVal(Property.dcid.name(), ValueType.TEXT, o.getDcid(), node);
       setPropVal(Property.observationDate.name(), ValueType.TEXT, o.getDate(), node);
-      // Prefer text representation to preserve significant figures (SigFigs).
-      // Fall back to legacy number field for backward compatibility with older serialized protos.
       if (o.hasText()) {
         String valText = o.getText();
         ValueType valType = StringUtil.isNumber(valText) ? ValueType.NUMBER : ValueType.TEXT;
         setPropVal(Property.value.name(), valType, valText, node);
-      } else if (o.hasNumber()) {
-        setPropVal(Property.value.name(), ValueType.NUMBER, Double.toString(o.getNumber()), node);
       }
 
       // Set optional PVs.
