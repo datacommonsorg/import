@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import unittest
-import pandas as pd
 
+import pandas as pd
 from stats.data import _get_flattened_dataclass_field_names
 from stats.data import Event
 from stats.data import filter_invalid_observation_values
@@ -217,16 +217,13 @@ memberOf: svg1""".strip()
     self.assertEqual(filtered_df["value"].tolist(), ["10.5", "20.0"])
 
   def test_validate_numeric_values_success(self):
-    df = pd.DataFrame({
-        "value": ["10.500", "-0.0010", "100000000000000001", "NaN", None, ""]
-    })
+    df = pd.DataFrame(
+        {"value": ["10.500", "-0.0010", "100000000000000001", "NaN", None, ""]})
     # Should not raise any exception
     validate_numeric_values(df, "test.csv")
 
   def test_validate_numeric_values_failure(self):
-    df = pd.DataFrame({
-        "value": ["10.5", "invalid_number", "20.0"]
-    })
+    df = pd.DataFrame({"value": ["10.5", "invalid_number", "20.0"]})
     with self.assertRaises(ValueError) as ctx:
       validate_numeric_values(df, "test.csv")
     self.assertIn("invalid_number", str(ctx.exception))
