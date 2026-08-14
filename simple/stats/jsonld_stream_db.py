@@ -143,7 +143,7 @@ def _write_observation_shard(chunk,
         "@type": "dcid:StatVarObservation",
         "dcid:variableMeasured": var_obj,
         "dcid:observationDate": _parse_numeric(date),
-        "dcid:value": _parse_numeric(value),
+        "dcid:value": str(value) if value is not None and not pd.isna(value) else None,
     }
 
     entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))
