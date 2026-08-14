@@ -33,7 +33,8 @@ public class McfMutatorTest {
             + "income: [dcs:USDollar 1000 2000]\n"
             + "bogusProp: [LatLong 37.3884812 -122.0834373]";
     Mcf.McfGraph got =
-        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx());
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ true);
 
     String want =
         "Node: USDollar1000To2000\n"
@@ -82,7 +83,8 @@ public class McfMutatorTest {
             + "measuredValue: \"1000,0000.0%\"\n"
             + "observationDate: \"2009\"\n";
     Mcf.McfGraph got =
-        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx());
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ true);
     String want =
         "Node: LegacyObs\n"
             + "measuredValue: \"10000000.0\"\n"
@@ -104,7 +106,8 @@ public class McfMutatorTest {
             + "variableMeasured: dcid:Count_Male_18Years_1000To2000USD\n"
             + "\n";
     Mcf.McfGraph got =
-        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx());
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ true);
     assertEquals(McfUtil.serializeMcfGraph(got, true), mcf);
   }
 
@@ -118,7 +121,8 @@ public class McfMutatorTest {
             + "observationProperties: dcs:destinationCountry\n"
             + "someActualConstraint: dcs:someValue\n";
     Mcf.McfGraph got =
-        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx());
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ true);
 
     String want =
         "Node: dcid:FinancialAid\n"
@@ -128,6 +132,60 @@ public class McfMutatorTest {
             + "measuredProperty: dcid:amount\n"
             + "name: \"Amount Of Financial Transaction: Some Value\"\n"
             + "observationProperties: dcid:destinationCountry\n"
+            + "populationType: dcid:FinancialTransaction\n"
+            + "someActualConstraint: dcid:someValue\n"
+            + "typeOf: dcid:StatisticalVariable\n"
+            + "\n";
+    assertEquals(McfUtil.serializeMcfGraph(got, true), want);
+  }
+
+  @Test
+  public void testStatVarDefinitionSkippedWhenNotBaseDc() throws IOException {
+    String mcf =
+        "Node: dcid:FinancialAid\n"
+            + "typeOf: schema:StatisticalVariable\n"
+            + "populationType: dcs:FinancialTransaction\n"
+            + "measuredProperty: dcs:amount\n"
+            + "observationProperties: dcs:destinationCountry\n"
+            + "someActualConstraint: dcs:someValue\n";
+    Mcf.McfGraph got =
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ false);
+
+    String want =
+        "Node: dcid:FinancialAid\n"
+            + "constraintProperties: dcid:someActualConstraint\n"
+            + "dcid: \"FinancialAid\"\n"
+            + "measuredProperty: dcid:amount\n"
+            + "name: \"Amount Of Financial Transaction: Some Value\"\n"
+            + "observationProperties: dcid:destinationCountry\n"
+            + "populationType: dcid:FinancialTransaction\n"
+            + "someActualConstraint: dcid:someValue\n"
+            + "typeOf: dcid:StatisticalVariable\n"
+            + "\n";
+    assertEquals(McfUtil.serializeMcfGraph(got, true), want);
+  }
+
+  @Test
+  public void testStatVarExplicitDefinitionPreservedWhenNotBaseDc() throws IOException {
+    String mcf =
+        "Node: dcid:FinancialAid\n"
+            + "typeOf: schema:StatisticalVariable\n"
+            + "populationType: dcs:FinancialTransaction\n"
+            + "measuredProperty: dcs:amount\n"
+            + "definition: \"custom_definition_string\"\n"
+            + "someActualConstraint: dcs:someValue\n";
+    Mcf.McfGraph got =
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ false);
+
+    String want =
+        "Node: dcid:FinancialAid\n"
+            + "constraintProperties: dcid:someActualConstraint\n"
+            + "dcid: \"FinancialAid\"\n"
+            + "definition: \"custom_definition_string\"\n"
+            + "measuredProperty: dcid:amount\n"
+            + "name: \"Amount Of Financial Transaction: Some Value\"\n"
             + "populationType: dcid:FinancialTransaction\n"
             + "someActualConstraint: dcid:someValue\n"
             + "typeOf: dcid:StatisticalVariable\n"

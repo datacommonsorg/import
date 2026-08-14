@@ -48,7 +48,7 @@ public class Processor {
       long numNodesProcessed = 0;
       List<Observation> cachedObservations = new ArrayList<Observation>();
       while ((g = parser.parseNextRow()) != null) {
-        g = McfMutator.mutate(g.toBuilder(), logCtx);
+        g = McfMutator.mutate(g.toBuilder(), logCtx, /* isBaseDc= */ true);
         // This will set counters/messages in logCtx.
         boolean success = McfChecker.check(g, null, null, logCtx);
         if (success) {
