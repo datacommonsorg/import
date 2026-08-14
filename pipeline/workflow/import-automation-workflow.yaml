@@ -12,9 +12,9 @@ main:
           - gcsMountBucket: ${sys.get_env("GCS_MOUNT_BUCKET")}
           - gcsImportBucket: ${sys.get_env("GCS_BUCKET_ID")}
           - gcsMountPath: "/tmp/gcs"
-          - helper_service: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service")}
-          - helperUrl: ${"https://" + helper_service + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
-          - spanner_workflow: ${default(sys.get_env("SPANNER_INGESTION_WORKFLOW_NAME"), "spanner-ingestion-workflow")}
+          - envSuffix: ${default(sys.get_env("ENV_SUFFIX"), "")}
+          - helperService: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + envSuffix}
+          - helperUrl: ${"https://" + helperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - runStaging: ${default(map.get(args, "runStaging"), true)}
           - stagingResult: "SKIPPED"
           - runProd: ${default(map.get(args, "runProd"), false)}
@@ -101,8 +101,7 @@ main:
           projectId: ${projectId}
           region: ${region}
           importName: ${importName}
-          helperService: ${helper_service}
-          spannerWorkflow: ${spanner_workflow}
+          envSuffix: "-staging"
           waitIngestion: true
         result: stagingResult
     - checkProdEligible:
@@ -115,8 +114,7 @@ main:
           projectId: ${projectId}
           region: ${region}
           importName: ${importName}
-          helperService: ${helper_service}
-          spannerWorkflow: ${spanner_workflow}
+          envSuffix: ""
           waitIngestion: false
         result: prodResult
     - returnResult:
@@ -127,10 +125,12 @@ main:
           prod: ${prodResult}
 
 ingestEnvironment:
-  params: [projectId, region, importName, helperService, spannerWorkflow, waitIngestion]
+  params: [projectId, region, importName, envSuffix, waitIngestion]
   steps:
     - initSub:
         assign:
+          - helperService: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + envSuffix}
+          - spannerWorkflow: ${default(sys.get_env("SPANNER_INGESTION_WORKFLOW_NAME"), "spanner-ingestion-workflow") + envSuffix}
           - helperUrl: ${"https://" + helperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - ingestionArgs:
               importList:
