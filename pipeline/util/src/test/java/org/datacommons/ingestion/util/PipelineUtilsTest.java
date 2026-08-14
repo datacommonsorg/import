@@ -62,10 +62,10 @@ public class PipelineUtilsTest {
     return graph.build();
   }
 
-  private McfStatVarObsSeries.StatVarObs createStatVarObs(String date, double value, String dcid) {
+  private McfStatVarObsSeries.StatVarObs createStatVarObs(String date, String value, String dcid) {
     McfStatVarObsSeries.StatVarObs.Builder svObs = McfStatVarObsSeries.StatVarObs.newBuilder();
     svObs.setDate(date);
-    svObs.setNumber(value);
+    svObs.setText(value);
     svObs.setDcid(dcid);
     svObs.setPvs(PropertyValues.newBuilder().build());
     return svObs.build();
@@ -114,8 +114,8 @@ public class PipelineUtilsTest {
                     "count_person",
                     "country/USA",
                     Arrays.asList(
-                        createStatVarObs("2020", 32.0, "obs1"),
-                        createStatVarObs("2021", 33.0, "obs2"))))
+                        createStatVarObs("2020", "32.0", "obs1"),
+                        createStatVarObs("2021", "33.0", "obs2"))))
             .build();
     McfOptimizedGraph expected2 =
         McfOptimizedGraph.newBuilder()
@@ -123,10 +123,40 @@ public class PipelineUtilsTest {
                 createMcfStatVarObsSeries(
                     "count_person",
                     "country/India",
-                    List.of(createStatVarObs("2022", 36.0, "obs4"))))
+                    List.of(createStatVarObs("2022", "36.0", "obs4"))))
             .build();
 
     PAssert.that(result).containsInAnyOrder(expected1, expected2);
+    PipelineResult.State state = p.run().waitUntilFinish();
+    Assert.assertEquals(PipelineResult.State.DONE, state);
+  }
+
+  @Test
+  public void testBuildOptimizedMcfGraph_preservesSigFigs() {
+    options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
+    p.getCoderRegistry()
+        .registerCoderForClass(
+            McfStatVarObsSeries.Key.class, ProtoCoder.of(McfStatVarObsSeries.Key.class));
+
+    PCollection<McfGraph> input =
+        p.apply(
+            Create.of(
+                createStatVarObservationGraph(
+                    "obsSigFig", "measurement_rate", "country/USA", "2020", "12.5000")));
+
+    PCollection<McfOptimizedGraph> result =
+        PipelineUtils.buildOptimizedMcfGraph("testSigFig", input);
+
+    McfOptimizedGraph expected =
+        McfOptimizedGraph.newBuilder()
+            .setSvObsSeries(
+                createMcfStatVarObsSeries(
+                    "measurement_rate",
+                    "country/USA",
+                    List.of(createStatVarObs("2020", "12.5000", "obsSigFig"))))
+            .build();
+
+    PAssert.that(result).containsInAnyOrder(expected);
     PipelineResult.State state = p.run().waitUntilFinish();
     Assert.assertEquals(PipelineResult.State.DONE, state);
   }

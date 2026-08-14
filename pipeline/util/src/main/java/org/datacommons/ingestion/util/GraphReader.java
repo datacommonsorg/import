@@ -496,10 +496,12 @@ public class GraphReader implements Serializable {
 
   static Observation toObservation(TimeSeriesKey seriesKey, StatVarObs obs) {
     String value = "";
-    if (obs.hasNumber()) {
-      value = Double.toString(obs.getNumber());
-    } else if (obs.hasText()) {
+    // Prefer text representation to preserve significant figures.
+    // Fall back to legacy number field for backward compatibility with older serialized protos.
+    if (obs.hasText()) {
       value = obs.getText();
+    } else if (obs.hasNumber()) {
+      value = Double.toString(obs.getNumber());
     }
 
     return Observation.builder().seriesKey(seriesKey).date(obs.getDate()).value(value).build();

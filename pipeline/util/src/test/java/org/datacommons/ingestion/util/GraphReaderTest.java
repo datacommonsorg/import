@@ -389,6 +389,14 @@ public class GraphReaderTest {
         StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setNumber(10.0).build();
     StatVarObs obs2 =
         StatVarObs.newBuilder().setDcid("obs2").setDate("2021").setText("someText").build();
+    StatVarObs obs3 =
+        StatVarObs.newBuilder().setDcid("obs3").setDate("2022").setText("12.5000").build();
+    StatVarObs obs4 =
+        StatVarObs.newBuilder()
+            .setDcid("obs4")
+            .setDate("2023")
+            .setText("100000000000000001")
+            .build();
 
     Observation expected1 =
         Observation.builder().seriesKey(seriesKey).date("2020").value("10.0").build();
@@ -396,11 +404,23 @@ public class GraphReaderTest {
     Observation expected2 =
         Observation.builder().seriesKey(seriesKey).date("2021").value("someText").build();
 
+    Observation expected3 =
+        Observation.builder().seriesKey(seriesKey).date("2022").value("12.5000").build();
+
+    Observation expected4 =
+        Observation.builder().seriesKey(seriesKey).date("2023").value("100000000000000001").build();
+
     Observation actual1 = GraphReader.toObservation(seriesKey, obs1);
     assertEquals(expected1, actual1);
 
     Observation actual2 = GraphReader.toObservation(seriesKey, obs2);
     assertEquals(expected2, actual2);
+
+    Observation actual3 = GraphReader.toObservation(seriesKey, obs3);
+    assertEquals(expected3, actual3);
+
+    Observation actual4 = GraphReader.toObservation(seriesKey, obs4);
+    assertEquals(expected4, actual4);
   }
 
   @Test

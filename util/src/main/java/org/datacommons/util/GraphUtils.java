@@ -191,25 +191,7 @@ public class GraphUtils {
   }
 
   /**
-   * Gets the double value of a specific property from a graph node.
-   *
-   * @param node The graph node (PropertyValues) to read from.
-   * @param prop The property name whose value should be retrieved as a double.
-   * @return The double value of the property, or Double.NaN if the value is not a valid number.
-   */
-  public static Double nodeDoubleValue(McfGraph.PropertyValues node, String prop) {
-    String str_val = getPropVal(node, prop);
-    if (str_val.isEmpty()) throw new IllegalArgumentException("Failed to get double value.");
-    try {
-      double v = Double.parseDouble(str_val);
-      return v;
-    } catch (NumberFormatException nfe) {
-      return Double.NaN;
-    }
-  }
-
-  /**
-   * Flattens an optimized MCF graph into a list of graph node
+   * Flattens an optimized MCF graph into a list of graph nodes.
    *
    * @param optimized_graph input optimized graph
    * @return list of McfGraph instances, each representing a single StatVarObservation.
@@ -256,10 +238,14 @@ public class GraphUtils {
       // Set required PVs.
       setPropVal(Property.dcid.name(), ValueType.TEXT, o.getDcid(), node);
       setPropVal(Property.observationDate.name(), ValueType.TEXT, o.getDate(), node);
-      if (o.hasNumber()) {
+      // Prefer text representation to preserve significant figures (SigFigs).
+      // Fall back to legacy number field for backward compatibility with older serialized protos.
+      if (o.hasText()) {
+        String valText = o.getText();
+        ValueType valType = StringUtil.isNumber(valText) ? ValueType.NUMBER : ValueType.TEXT;
+        setPropVal(Property.value.name(), valType, valText, node);
+      } else if (o.hasNumber()) {
         setPropVal(Property.value.name(), ValueType.NUMBER, Double.toString(o.getNumber()), node);
-      } else if (o.hasText()) {
-        setPropVal(Property.value.name(), ValueType.TEXT, o.getText(), node);
       }
 
       // Set optional PVs.
@@ -329,12 +315,8 @@ public class GraphUtils {
     if (!useDcidForLocalNodeIdInOptimizedMcf(dcid, nodeId)) {
       svo.setLocalNodeId(nodeId);
     }
-    Double value;
-    if (!(value = nodeDoubleValue(node, "value")).isNaN()) {
-      svo.setNumber(value);
-    } else { // Non-number value.
-      svo.setText(getPropVal(node, "value"));
-    }
+    // Preserve raw string representation to maintain significant figures (SigFigs).
+    svo.setText(getPropVal(node, "value"));
     McfGraph.PropertyValues.Builder pvs = svo.getPvsBuilder();
     for (Map.Entry<String, McfGraph.Values> entry : node.getPvsMap().entrySet()) {
       String prop = entry.getKey();
