@@ -21,6 +21,7 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pandas as pd
+from stats import constants
 from stats.config import Config
 from stats.db import create_and_update_db
 from stats.db import create_sqlite_config
@@ -146,3 +147,30 @@ class TestObservationsImporter(unittest.TestCase):
           importer.df["dcid"].tolist(),
           ["place/custom_1", "geoId/06", "geoId/06"],
       )
+
+  def test_sigfigs_preservation(self):
+    config = Config({"inputFiles": [{"pattern": "data.csv"}]})
+    nodes = Nodes(config)
+    mock_input_file = MagicMock()
+    mock_input_file.path = "data.csv"
+    mock_db = MagicMock()
+    importer = ObservationsImporter(
+        input_file=mock_input_file,
+        db=mock_db,
+        debug_resolve_file=MagicMock(),
+        reporter=MagicMock(),
+        nodes=nodes,
+    )
+    importer.df = pd.DataFrame({
+        constants.COLUMN_DCID: ["geoId/01", "geoId/02", "geoId/03"],
+        constants.COLUMN_DATE: ["2020", "2021", "2022"],
+        "StatVar1": ["12.5000", "0.0010", "100000000000000001"],
+    })
+    importer._write_observations()
+
+    mock_db.insert_observations.assert_called_once()
+    inserted_df = mock_db.insert_observations.call_args[0][0]
+    self.assertEqual(
+        inserted_df[constants.COLUMN_VALUE].tolist(),
+        ["12.5000", "0.0010", "100000000000000001"],
+    )

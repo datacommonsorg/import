@@ -13,15 +13,18 @@
 # limitations under the License.
 
 import unittest
+import pandas as pd
 
 from stats.data import _get_flattened_dataclass_field_names
 from stats.data import Event
+from stats.data import filter_invalid_observation_values
 from stats.data import McfNode
 from stats.data import Observation
 from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
 from stats.data import Triple
+from stats.data import validate_numeric_values
 
 SV_ID1 = "sv_id1"
 SV_NAME1 = "SV Name1"
@@ -204,3 +207,27 @@ memberOf: svg1""".strip()
     ]
     self.assertListEqual(_get_flattened_dataclass_field_names(Observation),
                          expected)
+
+  def test_filter_invalid_observation_values(self):
+    df = pd.DataFrame({
+        "entity": ["E1", "E2", "E3", "E4", "E5"],
+        "value": ["10.5", None, "<NA>", "", "20.0"],
+    })
+    filtered_df = filter_invalid_observation_values(df)
+    self.assertEqual(filtered_df["value"].tolist(), ["10.5", "20.0"])
+
+  def test_validate_numeric_values_success(self):
+    df = pd.DataFrame({
+        "value": ["10.500", "-0.0010", "100000000000000001", "NaN", None, ""]
+    })
+    # Should not raise any exception
+    validate_numeric_values(df, "test.csv")
+
+  def test_validate_numeric_values_failure(self):
+    df = pd.DataFrame({
+        "value": ["10.5", "invalid_number", "20.0"]
+    })
+    with self.assertRaises(ValueError) as ctx:
+      validate_numeric_values(df, "test.csv")
+    self.assertIn("invalid_number", str(ctx.exception))
+    self.assertIn("test.csv", str(ctx.exception))
