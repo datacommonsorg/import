@@ -355,7 +355,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
           if o["dcid:observationAbout"]["@id"] == "dcid:country/ALB"
       ][0]
       self.assertEqual(obs1["dcid:value"], "99")
-      self.assertEqual(obs1["dcid:observationDate"], 2026)
+      self.assertEqual(obs1["dcid:observationDate"], "2026")
       self.assertEqual(obs1["dcid:scalingFactor"], 100)
       self.assertEqual(obs1["dcid:provenanceUrl"],
                        "http://my-provenance.org/url")
@@ -373,7 +373,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
           if o["dcid:observationAbout"]["@id"] == "dcid:country/USA"
       ][0]
       self.assertEqual(obs2["dcid:value"], "123.45")
-      self.assertEqual(obs2["dcid:observationDate"], 2026.5)
+      self.assertEqual(obs2["dcid:observationDate"], "2026.5")
       self.assertEqual(obs2["dcid:scalingFactor"], 10.5)
 
       # 3. Verify third observation (Non-numeric value & Date string)
