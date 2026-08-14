@@ -604,26 +604,28 @@ public class StatChecker {
     }
     Long fp = hasher.hash().asLong();
     String val = McfUtil.getPropVal(node, Vocabulary.VALUE);
-    if (this.svObValues.containsKey(fp) && !this.svObValues.get(fp).equals(val)) {
-      logCtx.addEntry(
-          Level.LEVEL_ERROR,
-          "Sanity_InconsistentSvObsValues",
-          "Found nodes with different values for the same StatVarObservation :: observationAbout: '"
-              + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT)
-              + "', variableMeasured: '"
-              + McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED)
-              + "', observationDate: '"
-              + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE)
-              + "', value1: "
-              + this.svObValues.get(fp)
-              + ", value2: "
-              + val,
-          node.getLocationsList());
-      return false;
-    } else {
-      this.svObValues.put(fp, val);
+    String existingVal = this.svObValues.putIfAbsent(fp, val);
+    if (existingVal != null) {
+      if (!existingVal.equals(val)) {
+        logCtx.addEntry(
+            Level.LEVEL_ERROR,
+            "Sanity_InconsistentSvObsValues",
+            "Found nodes with different values for the same StatVarObservation :: observationAbout: '"
+                + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT)
+                + "', variableMeasured: '"
+                + McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED)
+                + "', observationDate: '"
+                + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE)
+                + "', value1: "
+                + existingVal
+                + ", value2: "
+                + val,
+            node.getLocationsList());
+        return false;
+      }
       return true;
     }
+    return true;
   }
 
   public List<String> getSamplePlaces() {
