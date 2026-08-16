@@ -58,7 +58,7 @@ The tool can generate the following artifacts:
 The `--summary-report` flag defaults to `true` and controls generation of both
 `summary_report.html` and `summary_report.csv`.
 
-If input includes statistics (CSV and TMCF files, or MCF files with [`StatVarObservation`](https://github.com/datacommonsorg/data/blob/master/docs/representing_statistics.md#statvarobservation) nodes are provided), the reports will also include information on statistics from sample places and  time-series charts. In `genmcf` mode, generated instance MCF files are written to `table_mcf_nodes_{CSV_FILE_NAME}.mcf` (if there were no fatal errors).
+If input includes statistics (CSV and TMCF files, or MCF files with [`StatVarObservation`](https://github.com/datacommonsorg/data/blob/master/docs/representing_statistics.md#statvarobservation) nodes are provided), the reports will also include information on statistics from sample places and time-series charts. In `genmcf` mode, generated instance MCF files are written to `table_mcf_nodes_{CSV_FILE_NAME}.mcf` (if there were no fatal errors).
 
 The output files are placed under a new folder in the current working directory named `dc_generated` by default.The `--output-dir` flag (documented below) can be specified to modify the name of this output folder.
 
