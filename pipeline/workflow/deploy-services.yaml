@@ -30,7 +30,7 @@ steps:
 
 - id: 'import-automation-workflow'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['workflows', 'deploy', 'import-automation-workflow${_ENV_SUFFIX}', '--project', '${_PROJECT_ID}', '--location', '${_LOCATION}', '--source', 'import-automation-workflow.yaml', '--set-env-vars', 'LOCATION=${_LOCATION},GCS_BUCKET_ID=${_GCS_BUCKET_ID},GCS_MOUNT_BUCKET=${_GCS_MOUNT_BUCKET},PROJECT_NUMBER=${_PROJECT_NUMBER},INGESTION_HELPER_SERVICE=ingestion-helper-service${_ENV_SUFFIX},SPANNER_INGESTION_WORKFLOW_NAME=spanner-ingestion-workflow${_ENV_SUFFIX}']
+  args: ['workflows', 'deploy', 'import-automation-workflow${_ENV_SUFFIX}', '--project', '${_PROJECT_ID}', '--location', '${_LOCATION}', '--source', 'import-automation-workflow.yaml', '--set-env-vars', 'LOCATION=${_LOCATION},GCS_BUCKET_ID=${_GCS_BUCKET_ID},GCS_MOUNT_BUCKET=${_GCS_MOUNT_BUCKET},PROJECT_NUMBER=${_PROJECT_NUMBER},ENV_SUFFIX=${_ENV_SUFFIX}']
 
 - id: 'spanner-ingestion-workflow'
   name: 'gcr.io/cloud-builders/gcloud'
