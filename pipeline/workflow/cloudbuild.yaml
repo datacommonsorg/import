@@ -40,7 +40,7 @@ steps:
     - 'submit'
     - '.'
     - '--config=deploy-services.yaml'
-    - '--substitutions=_PROJECT_ID=datcom-ci,_SPANNER_DATABASE_PATH=projects/datcom-ci/instances/datcom-spanner-test/databases/dc-test-db,_GCS_BUCKET_ID=datcom-ci-test,_GCS_MOUNT_BUCKET=datcom-ci-test,_BQ_DATASET_ID=spanner_model_dataset,_LOCATION=us-central1,_PROJECT_NUMBER=879489846695,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-ci/locations/us-central1/connections/bq_spanner_conn_test,_ENABLE_EMBEDDINGS=true,_VERSION=${_VERSION},_ENV_SUFFIX=,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/'
+    - '--substitutions=_PROJECT_ID=datcom-ci,_SPANNER_DATABASE_PATH=projects/datcom-ci/instances/datcom-spanner-test/databases/dc-test-db,_GCS_BUCKET_ID=datcom-ci-test,_GCS_MOUNT_BUCKET=datcom-ci-test,_BQ_DATASET_ID=spanner_model_dataset,_LOCATION=us-central1,_PROJECT_NUMBER=879489846695,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-ci/locations/us-central1/connections/bq_spanner_conn_test,_ENABLE_EMBEDDINGS=true,_VERSION=${_VERSION},_ENV_SUFFIX=-staging,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/'
   dir: 'pipeline/workflow'
 
 # 3. Run E2E Tests on Test Environment

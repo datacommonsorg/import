@@ -41,8 +41,10 @@ else:
                                          'datcom-spanner-test')
     SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID', 'dc-test-db')
 GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID', 'datcom-ci-test')
-IMPORT_WORKFLOW_ID = 'import-automation-workflow'
-INGESTION_WORKFLOW_ID = 'spanner-ingestion-workflow'
+IMPORT_WORKFLOW_ID = os.environ.get('IMPORT_WORKFLOW_ID',
+                                    'import-automation-workflow-staging')
+INGESTION_WORKFLOW_ID = os.environ.get('INGESTION_WORKFLOW_ID',
+                                       'spanner-ingestion-workflow-staging')
 
 # Test Import Configuration
 TEST_IMPORT_NAME = 'scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test'
