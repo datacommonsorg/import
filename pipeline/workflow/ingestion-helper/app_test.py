@@ -121,15 +121,11 @@ class TestMain(unittest.TestCase):
 
         # Check second call (updated nodes for deletion)
         args2, kwargs2 = call_args_list[1]
-        self.assertIn("Node", args2[0])
-        self.assertEqual(kwargs2["params"]["timestamp"], expected_timestamp)
-        self.assertEqual(kwargs2["params"]["node_types"], ["StatisticalVariable", "Topic"])
+        self.assertIn("GRAPH DCGraph", args2[0])
 
         # Check third call (updated nodes for embedding generation)
         args3, kwargs3 = call_args_list[2]
-        self.assertIn("Node", args3[0])
-        self.assertEqual(kwargs3["params"]["timestamp"], expected_timestamp)
-        self.assertEqual(kwargs3["params"]["node_types"], ["StatisticalVariable", "Topic"])
+        self.assertIn("GRAPH DCGraph", args3[0])
 
         # Check fourth call (ML.PREDICT)
         args4, kwargs4 = call_args_list[3]

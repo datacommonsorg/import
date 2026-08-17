@@ -353,7 +353,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 model_name="TestModel",
                 model_endpoint="text-embedding-005",
                 task_type="TEST_TASK",
-                node_types=["StatVar"],
+                node_types={"StatVar": ["description"]},
                 node_filter_type="NoFilter"
             )
         ]
@@ -383,7 +383,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 model_name="TestModel",
                 model_endpoint="text-embedding-005",
                 task_type="TEST_TASK",
-                node_types=["StatVar"],
+                node_types={"StatVar": ["description"]},
                 node_filter_type="NLStatisticalVariable"
             )
         ]
@@ -426,7 +426,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
             model_name="TestModel",
             model_endpoint="text-embedding-005",
             task_type="TEST_TASK",
-            node_types=["StatVar"],
+            node_types={"StatVar": ["description"]},
             node_filter_type="NoFilter"
         )
         deleted = generator._delete_existing_embeddings(spec, embedding_table="NodeEmbedding")

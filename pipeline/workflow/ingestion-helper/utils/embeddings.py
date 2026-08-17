@@ -21,6 +21,7 @@ import json
 import logging
 import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 import pandas as pd
 from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON, FLOAT64
 from clients.spanner import SpannerClient
@@ -44,6 +45,77 @@ def _extract_nl_stat_var() -> list[dict[str, str]]:
     return deduped.to_dict(orient='records')
 
 
+def _construct_timelock_condition(timestamp: Optional[str], predicate_types_list_sql: str) -> str:
+    """Helper function to construct the timelock SQL condition string.
+
+    If timestamp is None/NULL, returns "TRUE".
+    Otherwise, returns the timelock condition string using predicate_types_list_sql.
+    """
+    if timestamp is None:
+        return "TRUE"
+
+    return f"""(
+        n.last_update_timestamp > TIMESTAMP('{timestamp}')
+        OR EXISTS {{
+          WITH n
+          MATCH (n)-[e_check:Edge]->(o_check:Node)
+          WHERE e_check.predicate IN UNNEST({predicate_types_list_sql})
+            AND o_check.value IS NOT NULL 
+            AND o_check.value <> ""
+            AND o_check.last_update_timestamp > TIMESTAMP('{timestamp}')
+        }}
+      )"""
+
+
+def _generate_spanner_query(nodes: Dict[str, List[str]], timestamp: Optional[Any], filter_condition: str) -> str:
+    spanner_query = ""
+    for node_type, predicate_types in nodes.items():
+        if spanner_query:
+            spanner_query += f"""
+            UNION ALL
+            """
+        safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
+        predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
+        timelock_cond = _construct_timelock_condition(timestamp, predicate_types_list_sql)
+        spanner_query_template = f"""
+            GRAPH DCGraph
+            MATCH
+            (n:Node WHERE "{node_type}" IN UNNEST(n.types))
+            WHERE {timelock_cond}
+                AND {filter_condition}
+            OPTIONAL MATCH
+            (n)-[e: Edge
+                WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
+            (o:Node
+                WHERE o.value IS NOT NULL
+                AND o.value <> "")
+            WITH n, e.predicate AS pred, STRING_AGG(o.value, ". ") AS values
+            GROUP BY n, pred
+            RETURN
+            n.subject_id AS subject_id,
+            n.types AS node_types,
+            CASE 
+                WHEN COUNT(pred) > 0 THEN
+                JSON_OBJECT(
+                    "subject_id", n.subject_id,
+                    "name", n.name,
+                    "properties", JSON_OBJECT(
+                    ARRAY_AGG(pred IGNORE NULLS),
+                    ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
+                    )
+                )
+                ELSE
+                JSON_OBJECT(
+                    "subject_id", n.subject_id,
+                    "name", n.name
+                )
+            END AS embedding_content
+            GROUP BY n
+        """
+        spanner_query += spanner_query_template
+    return spanner_query
+
+
 class EmbeddingUtils:
     """Orchestrates the embedding ingestion workflow."""
 
@@ -54,14 +126,17 @@ class EmbeddingUtils:
         """Gets the latest AcquiredTimestamp from IngestionLock table.
 
         Returns:
-            The latest AcquiredTimestamp as a datetime object, or None if no entries exist.
+            The latest AcquiredTimestamp as an ISO string, or None if no entries exist.
         """
         time_lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
         try:
             with self.spanner.database.snapshot() as snapshot:
                 results = snapshot.execute_sql(time_lock_sql)
                 for row in results:
-                    return row[0]
+                    val = row[0]
+                    if val is not None:
+                        return val.isoformat() if hasattr(val, "isoformat") else str(val)
+                    return None
         except Exception as e:
             logging.error(f"Error fetching latest lock timestamp: {e}")
             raise
@@ -75,84 +150,32 @@ class EmbeddingUtils:
             dcids = sorted(list({r["dcid"] for r in nl_records}))
             params["nl_stat_vars"] = dcids
             param_types["nl_stat_vars"] = Array(STRING)
-            return "subject_id IN UNNEST(@nl_stat_vars)"
+            return "n.subject_id IN UNNEST(@nl_stat_vars)"
         else:
             logging.error(f"Unknown node filter type: {node_filter_type}")
             raise ValueError(f"Unknown node filter type: {node_filter_type}")
 
-def _generate_spanner_query(nodes: Dict[str, List[str]], timestamp_condition: str, filter_condition: str) -> str:
-        spanner_query = ""
-        for node_type, predicate_types in nodes.items():
-            # for the first node_type in dict, skip "UNION ALL" prefix that joins the data
-            if not spanner_query:
-                spanner_query += f"""
-                UNION ALL
-                """
-            safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
-            predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
-            spanner_query_template = f"""
-                GRAPH DCGraph
-                MATCH
-                (n:Node WHERE {node_type} IN UNNEST(n.types))
-                OPTIONAL MATCH
-                (n)-[e: Edge
-                    WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
-                (o:Node
-                    WHERE o.value IS NOT NULL
-                    AND o.value <> "")
-                WHERE {timestamp_condition}
-                    AND {filter_condition}
-                WITH n, e.predicate AS pred, STRING_AGG(o.value, ". ") AS values
-                GROUP BY n, pred
-                RETURN
-                n.subject_id AS subject_id,
-                n.types AS node_types,
-                CASE 
-                    WHEN COUNT(pred) > 0 THEN
-                    JSON_OBJECT(
-                        "subject_id", n.subject_id,
-                        "name", n.name,
-                        "properties", JSON_OBJECT(
-                        ARRAY_AGG(pred IGNORE NULLS),
-                        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
-                        )
-                    )
-                    ELSE
-                    JSON_OBJECT(
-                        "subject_id", n.subject_id,
-                        "name", n.name
-                    )
-                END AS embedding_content
-                GROUP BY n
-            """
-            spanner_query += spanner_query_template
-        return spanner_query
-
-    def _get_updated_nodes(self, timestamp, node_types, node_filter_type, timeout):
+    def _get_updated_nodes(self, timestamp: Optional[str], node_types: Dict[str, List[str]], node_filter_type: str, timeout: int):
         """Gets subject_ids and names from Node table where last_update_timestamp > timestamp.
         Yields results to avoid loading all into memory.
 
         Args:
-            timestamp: datetime object to filter by.
-            node_types: A list of strings representing the node types to filter by.
+            timestamp: ISO timestamp string or None to filter by.
+            node_types: A dictionary mapping node types to lists of predicate types to filter by.
             node_filter_type: String specifying the node filtering logic.
             timeout: Timeout for the spanner client to execute queries.
 
         Yields:
             Dictionaries containing subject_id and name.
         """
-        params = {"node_types": node_types}
-        param_types = {"node_types": Array(STRING)}
+        params = {}
+        param_types = {}
 
         filter_condition = self._get_node_filter_condition(node_filter_type, params, param_types)
-        timestamp_condition = "last_update_timestamp > @timestamp" if timestamp else "TRUE"
-
-        updated_node_sql = _generate_spanner_query(node_types, timestamp_condition, filter_condition)
+        updated_node_sql = _generate_spanner_query(node_types, timestamp, filter_condition)
 
         if timestamp:
             logging.info(f"Filtering valid nodes updated after {timestamp}")
-            params["timestamp"] = timestamp
-            param_types["timestamp"] = TIMESTAMP
         else:
             logging.info("No timestamp provided, reading all valid nodes.")
 

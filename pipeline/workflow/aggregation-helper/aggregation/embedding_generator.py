@@ -98,6 +98,28 @@ def _extract_nl_stat_var() -> list[dict[str, str]]:
     return records
 
 
+def _construct_timelock_condition(timestamp: Optional[str], predicate_types_list_sql: str) -> str:
+    """Helper function to construct the timelock SQL condition string.
+
+    If timestamp is None/NULL, returns "TRUE".
+    Otherwise, returns the timelock condition string using predicate_types_list_sql.
+    """
+    if timestamp is None:
+        return "TRUE"
+
+    return f"""(
+        n.last_update_timestamp > TIMESTAMP('{timestamp}')
+        OR EXISTS {{
+          WITH n
+          MATCH (n)-[e_check:Edge]->(o_check:Node)
+          WHERE e_check.predicate IN UNNEST({predicate_types_list_sql})
+            AND o_check.value IS NOT NULL 
+            AND o_check.value <> ""
+            AND o_check.last_update_timestamp > TIMESTAMP('{timestamp}')
+        }}
+      )"""
+
+
 class EmbeddingGenerator:
     """Generates Node embeddings asynchronously in BigQuery and ingests them into Spanner."""
 
@@ -119,8 +141,8 @@ class EmbeddingGenerator:
             logging.info(f"Initialized Spanner client for EmbeddingGenerator: {self._spanner_database.name}")
         return self._spanner_database
 
-    def _delete_existing_embeddings(self, spec: EmbeddingSpec, embedding_table: str = "NodeEmbedding") -> int:
-        """Deletes existing embeddings in Spanner for nodes matching the spec before re-generation."""
+    def _get_latest_lock_timestamp(self) -> Optional[str]:
+        """Fetches the latest lock timestamp from IngestionLock table as a formatted string."""
         try:
             db = self.spanner_database
             lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
@@ -129,34 +151,48 @@ class EmbeddingGenerator:
                 results = snapshot.execute_sql(lock_sql)
                 for row in results:
                     latest_lock_timestamp = row[0]
+            if latest_lock_timestamp is not None:
+                val_str = latest_lock_timestamp.isoformat() if hasattr(latest_lock_timestamp, "isoformat") else str(latest_lock_timestamp)
+                return f"'{val_str}'"
+            return None
+        except Exception as e:
+            logging.error(f"Failed to fetch latest lock timestamp from Spanner: {e}")
+            return None
 
-            params = {"node_types": spec.node_types}
-            param_types = {"node_types": spanner.param_types.Array(spanner.param_types.STRING)}
-
-            timestamp_condition = "last_update_timestamp > @timestamp" if latest_lock_timestamp else "TRUE"
-            if latest_lock_timestamp:
-                params["timestamp"] = latest_lock_timestamp
-                param_types["timestamp"] = spanner.param_types.TIMESTAMP
+    def _delete_existing_embeddings(self, spec: EmbeddingSpec, latest_lock_timestamp: Optional[str] = None, embedding_table: str = "NodeEmbedding") -> int:
+        """Deletes existing embeddings in Spanner for nodes matching the spec before re-generation."""
+        try:
+            db = self.spanner_database
+            params = {}
+            param_types = {}
 
             if spec.node_filter_type == "NLStatisticalVariable":
                 nl_records = _extract_nl_stat_var()
                 dcids = sorted(list({r["dcid"] for r in nl_records}))
                 params["nl_stat_vars"] = dcids
                 param_types["nl_stat_vars"] = spanner.param_types.Array(spanner.param_types.STRING)
-                filter_condition = "subject_id IN UNNEST(@nl_stat_vars)"
+                filter_condition = "n.subject_id IN UNNEST(@nl_stat_vars)"
             else:
                 filter_condition = "TRUE"
 
-            node_select_sql = f"""
-                SELECT subject_id FROM Node
-                WHERE name IS NOT NULL
-                  AND name <> ''
-                  AND {timestamp_condition}
-                  AND {filter_condition}
-                  AND EXISTS (
-                    SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST(@node_types)
-                  )
-            """
+            node_types_dict = spec.node_types if isinstance(spec.node_types, dict) else {t: [] for t in spec.node_types}
+
+            node_select_sql = ""
+            for node_type, predicate_types in node_types_dict.items():
+                if node_select_sql:
+                    node_select_sql += "\nUNION DISTINCT\n"
+                safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
+                predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
+                timelock_cond = _construct_timelock_condition(latest_lock_timestamp, predicate_types_list_sql)
+                graph_query = f"""
+                    GRAPH DCGraph
+                    MATCH
+                    (n:Node WHERE "{node_type}" IN UNNEST(n.types))
+                    WHERE {timelock_cond}
+                      AND {filter_condition}
+                    RETURN n.subject_id AS subject_id
+                """
+                node_select_sql += graph_query
 
             subject_ids = []
             with db.snapshot() as snapshot:
@@ -201,27 +237,28 @@ class EmbeddingGenerator:
             logging.error(f"Failed to delete existing embeddings in Spanner: {e}")
             raise
 
-    def _generate_spanner_query(nodes: Dict[str, List[str]]) -> str:
+    @staticmethod
+    def _generate_spanner_query(nodes: Dict[str, List[str]], latest_lock_timestamp: Optional[str] = None) -> str:
         spanner_query = ""
         for node_type, predicate_types in nodes.items():
-            # for the first node_type in dict, skip "UNION ALL" prefix that joins the data
-            if not spanner_query:
+            if spanner_query:
                 spanner_query += f"""
                 UNION ALL
                 """
             safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
             predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
+            timelock_cond = _construct_timelock_condition(latest_lock_timestamp, predicate_types_list_sql)
             spanner_query_template = f"""
                 GRAPH DCGraph
                 MATCH
-                (n:Node WHERE {node_type} IN UNNEST(n.types))
+                (n:Node WHERE "{node_type}" IN UNNEST(n.types))
                 OPTIONAL MATCH
                 (n)-[e: Edge
                     WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
                 (o:Node
                     WHERE o.value IS NOT NULL
                     AND o.value <> "")
-                WHERE %1$s #timestamp filter condition
+                WHERE {timelock_cond}
                 WITH n, e.predicate AS pred, STRING_AGG(o.value, ". ") AS values
                 GROUP BY n, pred
                 RETURN
@@ -287,8 +324,10 @@ class EmbeddingGenerator:
         node_types = spec.node_types
         node_filter_type = spec.node_filter_type
 
+        latest_lock_timestamp = self._get_latest_lock_timestamp()
+
         # 1. Pre-delete existing embeddings in Spanner for updated nodes
-        self._delete_existing_embeddings(spec, embedding_table=embedding_table)
+        self._delete_existing_embeddings(spec, latest_lock_timestamp=latest_lock_timestamp, embedding_table=embedding_table)
 
         # 2. Build the select query and query parameters for BigQuery
         job_config = None
@@ -335,31 +374,13 @@ class EmbeddingGenerator:
             return None
 
         # 3. Construct the query to extract raw nodes from Spanner, generate embeddings in BigQuery, and export back to Spanner
-        spanner_query = self._generate_spanner_query(node_types)
+        spanner_query = self._generate_spanner_query(node_types, latest_lock_timestamp=latest_lock_timestamp)
         spanner_query_str = f'"""{spanner_query}"""'
 
         query = f"""
-        DECLARE latest_lock_timestamp TIMESTAMP;
-        DECLARE timelock_condition STRING;
-
-        SET latest_lock_timestamp = (
-          SELECT MAX(CAST(val AS TIMESTAMP))
-          FROM EXTERNAL_QUERY("{conn_id}", "SELECT AcquiredTimestamp AS val FROM IngestionLock")
-        );
-        
-        IF latest_lock_timestamp IS NOT NULL THEN
-          SET timelock_condition = FORMAT('last_update_timestamp > \\\'%s\\\'', CAST(latest_lock_timestamp AS STRING));
-        ELSE
-          SET timelock_condition = 'TRUE';
-        END IF;
-
-        EXECUTE IMMEDIATE FORMAT('''
-          -- 1. Get raw text from Spanner
-          CREATE TEMP TABLE raw_nodes AS
-          SELECT * FROM EXTERNAL_QUERY("{conn_id}", {spanner_query_str});
-        ''', 
-        timelock_condition
-        );
+        -- 1. Get raw text from Spanner
+        CREATE TEMP TABLE raw_nodes AS
+        SELECT * FROM EXTERNAL_QUERY("{conn_id}", {spanner_query_str});
 
         -- 2. Generate embeddings natively in BigQuery
         CREATE TEMP TABLE embedding_staging AS
