@@ -129,7 +129,7 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertIn("'linkedContainedInPlace'", sql)
         self.assertIn("'relevantVariableList'", sql)
         self.assertIn("'memberList'", sql)
-        self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA"]})
+        self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA", "dc/base/generated/TopicLists"]})
 
 
 if __name__ == '__main__':

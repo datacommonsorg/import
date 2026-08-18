@@ -105,6 +105,7 @@ class AggregationDeleter:
         if not imports_to_delete:
             return 0
         provenance_names = [get_provenance_name(f"generated/{name}", self.is_base_dc) for name in imports_to_delete]
+        provenance_names.append(get_provenance_name("generated/TopicLists", self.is_base_dc))
         sql = (
             "DELETE FROM Edge "
             "WHERE provenance IN UNNEST(@provenances) "

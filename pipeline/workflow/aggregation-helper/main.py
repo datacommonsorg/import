@@ -90,7 +90,7 @@ def create_orchestrator_config(
         enable_embeddings=enable_embeddings,
         bq_dataset_id=bq_dataset_id,
         generate_stat_var_groups=args.generate_stat_var_groups,
-        generate_topic_list_edges=getattr(args, "generate_topic_list_edges", True),
+        generate_topic_list_edges=getattr(args, "generate_topic_list_edges", False),
         max_parallel_imports=args.max_parallel_imports,
     )
 

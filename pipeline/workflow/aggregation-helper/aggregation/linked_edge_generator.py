@@ -55,8 +55,10 @@ class LinkedEdgeGenerator:
             self.run_linked_member_of(import_names),
             self.run_linked_member(import_names)
         ]
-        if getattr(config, "generate_topic_list_edges", True):
-            jobs.append(self.run_topic_list_edges(import_names))
+        if getattr(config, "generate_topic_list_edges", False):
+            topic_job = self.run_topic_list_edges(import_names)
+            if topic_job:
+                jobs.append(topic_job)
         return [job for job in jobs if job]
 
     def run_linked_member_of(
