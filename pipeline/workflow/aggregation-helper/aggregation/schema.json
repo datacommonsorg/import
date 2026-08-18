@@ -43,7 +43,8 @@
           "stat_var_calculation": { "type": "object" },
           "embedding_generation": { "type": "object" },
           "disabled": { "type": "boolean" },
-          "should_prune_single_child_svgs": { "type": "boolean" }
+          "should_prune_single_child_svgs": { "type": "boolean" },
+          "generate_topic_list_edges": { "type": "boolean" }
         },
         "allOf": [
           {
