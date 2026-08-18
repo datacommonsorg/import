@@ -89,7 +89,7 @@ def create_orchestrator_config(
         enable_embeddings=enable_embeddings,
         bq_dataset_id=bq_dataset_id,
         generate_stat_var_groups=args.generate_stat_var_groups,
-        generate_topic_list_edges=getattr(args, "generate_topic_list_edges", True),
+        generate_topic_list_edges=getattr(args, "generate_topic_list_edges", False),
         max_parallel_imports=args.max_parallel_imports,
     )
 
@@ -122,8 +122,8 @@ def main():
     parser.add_argument(
         "--generate_topic_list_edges",
         action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Whether to materialize topic relevantVariableList and memberList edges (default: True, use --no-generate_topic_list_edges to disable)."
+        default=False,
+        help="Whether to materialize topic relevantVariableList and memberList edges (default: False, use --generate_topic_list_edges to enable)."
     )
     parser.add_argument(
         "--dry_run",

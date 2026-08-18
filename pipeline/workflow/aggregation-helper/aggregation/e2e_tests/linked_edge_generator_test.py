@@ -331,7 +331,8 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 "name": "Linked Edges With Topic Lists",
                 "type": "LINKED_EDGES",
                 "stage": 1,
-                "input_imports": [import_name]
+                "input_imports": [import_name],
+                "generate_topic_list_edges": True
             }
         ]
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])

@@ -26,7 +26,7 @@ from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_sql_generat
 class LinkedEdgeConfig:
     """Configuration for linked edge generation."""
     import_names: Optional[List[str]] = None
-    generate_topic_list_edges: bool = True
+    generate_topic_list_edges: bool = False
 
 
 class LinkedEdgeGenerator:
@@ -55,7 +55,7 @@ class LinkedEdgeGenerator:
             self.run_linked_member_of(import_names),
             self.run_linked_member(import_names)
         ]
-        if getattr(config, "generate_topic_list_edges", True):
+        if getattr(config, "generate_topic_list_edges", False):
             topic_job = self.run_topic_list_edges(import_names)
             if topic_job:
                 jobs.append(topic_job)

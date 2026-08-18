@@ -107,7 +107,7 @@ class OrchestratorConfig:
     enable_embeddings: bool = False
     bq_dataset_id: str = "datacommons"
     generate_stat_var_groups: bool = True
-    generate_topic_list_edges: bool = True
+    generate_topic_list_edges: bool = False
     max_parallel_imports: int = 10
 
 
@@ -578,7 +578,7 @@ class AggregationOrchestrator:
         generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
         generate_list_edges = config.get(
             "generate_topic_list_edges",
-            getattr(self.config, "generate_topic_list_edges", True)
+            getattr(self.config, "generate_topic_list_edges", False)
         )
         edge_config = LinkedEdgeConfig(
             import_names=applicable_imports,
