@@ -161,8 +161,8 @@ def update_ingestion_history(
     metrics = None
     if req.status in (
             IngestionState.SUCCESS, IngestionState.RETRY
-    ) and req.stage == IngestionStage.DATAFLOW and req.jobId and req.jobId != "N/A":
-        # Only update metrics for successful or retried jobs running after the dataflow stage.
+    ) and req.jobId and req.jobId != "N/A":
+        # Only update metrics for successful or retried jobs when a valid Dataflow jobId is provided.
         try:
             metrics = import_utils.get_ingestion_metrics(
                 config.PROJECT_ID, config.LOCATION, req.jobId)
@@ -221,7 +221,7 @@ def update_import_status(req: UpdateImportStatusRequest,
                                         version,
                                         is_staging=True)
             storage.update_provenance_file(item.importName, version)
-            storage.update_import_summary(params)
+            storage.update_import_summary(params, version=version)
             storage.update_version_file(item.importName,
                                         version,
                                         is_staging=False)
@@ -229,8 +229,9 @@ def update_import_status(req: UpdateImportStatusRequest,
             comment = f"import-workflow:{wf_id or ''}"
             status_val = item.status.value if hasattr(item.status,
                                                       'value') else item.status
+            version_path = params.get('latest_version') or item.latestVersion or version
             spanner.update_version_history(item.importName,
-                                           version,
+                                           version_path,
                                            comment,
                                            workflow_id=wf_id,
                                            status=status_val)
@@ -268,8 +269,9 @@ def update_import_version(req: UpdateImportVersionRequest,
             storage.update_provenance_file(import_name, version)
             storage.update_version_file(import_name, version, is_staging=False)
             wf_id = req.workflowId or req.jobId
+            version_path = params.get('latest_version') or version
             spanner.update_version_history(import_name,
-                                           version,
+                                           version_path,
                                            comment,
                                            workflow_id=wf_id,
                                            status="STAGING")

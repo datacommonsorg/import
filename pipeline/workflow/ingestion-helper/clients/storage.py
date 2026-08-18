@@ -67,15 +67,25 @@ class StorageClient:
                 f'Error reading import summary file {summary_file}: {e}')
             raise
 
-    def update_import_summary(self, import_summary: dict):
+    def update_import_summary(self, import_summary: dict, version: str = None):
         """Updates the import summary in GCS.
 
         Args:
             import_summary: A dictionary containing the summary of the import.
+            version: Optional version string.
         """
-        latest_version = import_summary.get('latest_version')
-        path = latest_version.removeprefix('gs://').split('/', 1)
-        summary_file = os.path.join(path[1], _IMPORT_SUMMARY_JSON)
+        import_name = import_summary.get('import_name')
+        if not version:
+            version = import_summary.get('version')
+
+        if import_name and version:
+            output_dir = self._get_output_dir(import_name)
+            summary_file = os.path.join(output_dir, version, _IMPORT_SUMMARY_JSON)
+        else:
+            latest_version = import_summary.get('latest_version') or ''
+            path = latest_version.removeprefix('gs://').split('/', 1)
+            summary_file = os.path.join(path[1] if len(path) > 1 else path[0], _IMPORT_SUMMARY_JSON)
+
         logging.info(
             f'Updating import summary at {summary_file} {import_summary}')
         blob = self.bucket.blob(summary_file)

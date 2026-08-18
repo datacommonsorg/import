@@ -106,6 +106,14 @@ def get_import_params(request) -> dict:
     next_refresh = request_json.get('next_refresh',
                                     datetime.now(timezone.utc).isoformat())
 
+    if graph_path:
+        if graph_path.startswith('gs://'):
+            latest_version = graph_path
+        elif latest_version:
+            clean_graph_path = graph_path.lstrip('/')
+            if not latest_version.rstrip('/').endswith(clean_graph_path.rstrip('/')):
+                latest_version = f"{latest_version.rstrip('/')}/{clean_graph_path}"
+
     return {
         'import_name': import_name,
         'status': status,
