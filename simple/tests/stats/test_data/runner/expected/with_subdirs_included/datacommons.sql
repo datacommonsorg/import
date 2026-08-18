@@ -27,8 +27,8 @@ INSERT INTO "observations" VALUES('country/YEM','var1','2023','0.21','c/p/1','',
 INSERT INTO "observations" VALUES('country/AGO','var1','2023','0.29','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/ZMB','var1','2023','0.31','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/ZWE','var1','2023','0.37','c/p/1','','','','','{}');
-INSERT INTO "observations" VALUES('country/ALB','var1','2023','0.5','c/p/1','','','','','{}');
-INSERT INTO "observations" VALUES('wikidataId/Q22062741','var1','2023','0.5','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/ALB','var1','2023','0.50','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('wikidataId/Q22062741','var1','2023','0.50','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/DZA','var1','2023','0.52','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/AND','var1','2023','0.76','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/AFG','var2','2023','6','c/p/1','','','','','{}');

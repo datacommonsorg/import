@@ -96,7 +96,7 @@ class TestJsonLdExporter(unittest.TestCase):
         self.assertTrue(
             len(obs_nodes) > 0, "No observation node found in shard")
         obs_node_id = obs_nodes[0]
-        self.assertEqual(nodes[obs_node_id]['dcid:value'], 100.0)
+        self.assertEqual(nodes[obs_node_id]['dcid:value'], "100")
         self.assertEqual(nodes[obs_node_id]['dcid:provenanceUrl'],
                          "http://example.com/p1")
 
