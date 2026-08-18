@@ -127,6 +127,8 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertIn("DELETE FROM Edge", sql)
         self.assertIn("provenance IN UNNEST(@provenances)", sql)
         self.assertIn("'linkedContainedInPlace'", sql)
+        self.assertIn("'relevantVariableList'", sql)
+        self.assertIn("'memberList'", sql)
         self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA"]})
 
 

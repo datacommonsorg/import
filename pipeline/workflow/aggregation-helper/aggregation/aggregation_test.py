@@ -236,20 +236,87 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
 
-        jobs = generator.run_all(LinkedEdgeConfig(import_names=["import1", "import2"]))
+        jobs = generator.run_all(LinkedEdgeConfig(
+            import_names=["import1", "import2"],
+            generate_topic_list_edges=True
+        ))
 
-        self.assertEqual(len(jobs), 3)  # Should run 3 queries
-        self.assertEqual(self.mock_executor.execute.call_count, 3)
+        self.assertEqual(len(jobs), 4)  # Should run 4 queries including topic list edges
+        self.assertEqual(self.mock_executor.execute.call_count, 4)
 
-        # Verify queries contain import names and connection id
+        # Verify queries contain connection id and spanner destination uri
         calls = self.mock_executor.execute.call_args_list
         for call in calls:
             query = call[0][0]
             self.assertIn("test-conn", query)
-            self.assertIn("import1", query)
-            self.assertIn("import2", query)
             self.assertIn("spanner-uri", query)
-            self.assertIn("dc/base/import1", query)  # Since is_base_dc=True
+
+    def test_run_all_disabled_topic_list_edges(self):
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        jobs = generator.run_all(LinkedEdgeConfig(
+            import_names=["import1", "import2"],
+            generate_topic_list_edges=False
+        ))
+
+        self.assertEqual(len(jobs), 3)  # Only the 3 base linked edge queries
+        self.assertEqual(self.mock_executor.execute.call_count, 3)
+
+    def test_run_topic_list_edges(self):
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_topic_list_edges()
+        self.assertEqual(job, mock_job)
+        self.mock_executor.execute.assert_called_once()
+
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("temp_raw_topic_edges", query)
+        self.assertIn("temp_topic_types", query)
+        self.assertIn("temp_topic_nodes", query)
+        self.assertIn("temp_svpg_nodes", query)
+        self.assertIn("relevantVariableList", query)
+        self.assertIn("memberList", query)
+        self.assertIn("STRING_AGG(DISTINCT e.object_id, ',' ORDER BY e.object_id)", query)
+        self.assertIn("CONCAT(SUBSTR(TRIM(list_value), 1, 16), ':', TO_HEX(SHA256(TRIM(list_value))))", query)
+        self.assertIn('spanner_options = \'{"table": "Node"}\'', query)
+        self.assertIn('spanner_options = \'{"table": "Edge"}\'', query)
+        self.assertIn("dc/base/generated/TopicLists", query)
+
+    def test_run_topic_list_edges_not_base_dc(self):
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=False)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_topic_list_edges()
+        self.assertEqual(job, mock_job)
+
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("generated/TopicLists", query)
+        self.assertNotIn("dc/base/generated/TopicLists", query)
+
+    def test_run_linked_member(self):
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_linked_member(import_names=["import1"])
+        self.assertEqual(job, mock_job)
+
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("temp_topic_types", query)
+        self.assertIn("temp_topic_nodes", query)
+        self.assertIn("temp_svpg_nodes", query)
+        self.assertIn("%/topic/%", query)
+        self.assertIn("%/svpg/%", query)
+        self.assertIn("linkedMember", query)
 
 
 class TestProvenanceSummaryGenerator(unittest.TestCase):

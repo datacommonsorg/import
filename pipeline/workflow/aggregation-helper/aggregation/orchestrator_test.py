@@ -531,6 +531,36 @@ class TestOrchestratorOrdering(unittest.TestCase):
         ))
         self.assertTrue(orchestrator_enabled._calc_applies_to_import(svg_calc, "schema"))
 
+    @patch('aggregation.orchestrator.LinkedEdgeGenerator')
+    def test_trigger_linked_edges_forwards_generate_topic_list_edges(self, mock_linked_gen, mock_executor):
+        """Verifies _trigger_linked_edges passes generate_topic_list_edges flag to LinkedEdgeConfig."""
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            generate_topic_list_edges=True
+        ))
+        orchestrator._trigger_linked_edges({}, ["import1"])
+        mock_linked_gen.return_value.run_all.assert_called_once()
+        config_passed = mock_linked_gen.return_value.run_all.call_args[1]["config"]
+        self.assertTrue(config_passed.generate_topic_list_edges)
+
+        mock_linked_gen.reset_mock()
+        orchestrator_disabled = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            generate_topic_list_edges=False
+        ))
+        orchestrator_disabled._trigger_linked_edges({}, ["import1"])
+        mock_linked_gen.return_value.run_all.assert_called_once()
+        config_passed = mock_linked_gen.return_value.run_all.call_args[1]["config"]
+        self.assertFalse(config_passed.generate_topic_list_edges)
+
 
 class TestConfigSanity(unittest.TestCase):
     """Sanity checks for calculation configurations and metadata."""

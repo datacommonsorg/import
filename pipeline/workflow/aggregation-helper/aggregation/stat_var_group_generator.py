@@ -88,7 +88,7 @@ class StatVarGroupGenerator:
         needed_predicates = ['populationType', 'measuredProperty', 'constraintProperties'] + constraint_props
 
         # Format into a SQL-safe string for Spanner injection
-        sv_predicates = [f"'{p.replace('\'', '')}'" for p in needed_predicates]
+        sv_predicates = ["'" + p.replace("'", "") + "'" for p in needed_predicates]
         sv_predicates_sql = ", ".join(sv_predicates)
         logging.info(f"Optimizing Spanner fetch. Pulling {len(sv_predicates)} specific predicates.")
         # =====================================================================

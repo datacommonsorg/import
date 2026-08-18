@@ -108,7 +108,7 @@ class AggregationDeleter:
         sql = (
             "DELETE FROM Edge "
             "WHERE provenance IN UNNEST(@provenances) "
-            "AND predicate IN ('linkedContainedInPlace', 'linkedMemberOf', 'linkedMember')"
+            "AND predicate IN ('linkedContainedInPlace', 'linkedMemberOf', 'linkedMember', 'relevantVariableList', 'memberList')"
         )
         params = {"provenances": provenance_names}
         param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}

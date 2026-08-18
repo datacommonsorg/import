@@ -107,6 +107,7 @@ class OrchestratorConfig:
     enable_embeddings: bool = False
     bq_dataset_id: str = "datacommons"
     generate_stat_var_groups: bool = True
+    generate_topic_list_edges: bool = False
     max_parallel_imports: int = 10
 
 
@@ -575,7 +576,14 @@ class AggregationOrchestrator:
         """Triggers linked edge aggregations."""
         logging.info(f"  -> Linked Edges Aggregation for imports {applicable_imports}")
         generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
-        edge_config = LinkedEdgeConfig(import_names=applicable_imports)
+        generate_list_edges = config.get(
+            "generate_topic_list_edges",
+            getattr(self.config, "generate_topic_list_edges", True)
+        )
+        edge_config = LinkedEdgeConfig(
+            import_names=applicable_imports,
+            generate_topic_list_edges=generate_list_edges
+        )
         return generator.run_all(config=edge_config)
 
     def _trigger_provenance_summary(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:

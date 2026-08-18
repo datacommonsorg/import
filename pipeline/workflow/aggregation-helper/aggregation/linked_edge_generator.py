@@ -26,6 +26,7 @@ from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_sql_generat
 class LinkedEdgeConfig:
     """Configuration for linked edge generation."""
     import_names: Optional[List[str]] = None
+    generate_topic_list_edges: bool = False
 
 
 class LinkedEdgeGenerator:
@@ -54,6 +55,8 @@ class LinkedEdgeGenerator:
             self.run_linked_member_of(import_names),
             self.run_linked_member(import_names)
         ]
+        if getattr(config, "generate_topic_list_edges", True):
+            jobs.append(self.run_topic_list_edges(import_names))
         return [job for job in jobs if job]
 
     def run_linked_member_of(
@@ -219,10 +222,31 @@ class LinkedEdgeGenerator:
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate IN ('relevantVariable', 'member'){provenance_filter}");
 
+        CREATE OR REPLACE TEMPORARY TABLE `temp_topic_types` AS
+        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
+          "SELECT subject_id, object_id FROM Edge WHERE predicate = 'typeOf' AND object_id IN ('Topic', 'StatVarPeerGroup')");
+
+        CREATE OR REPLACE TEMPORARY TABLE `temp_topic_nodes` AS
+        SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'Topic'
+        UNION DISTINCT
+        SELECT DISTINCT subject_id FROM `temp_base_member` 
+        WHERE subject_id LIKE '%/topic/%' OR subject_id LIKE 'dc/topic%';
+
+        CREATE OR REPLACE TEMPORARY TABLE `temp_svpg_nodes` AS
+        SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'StatVarPeerGroup'
+        UNION DISTINCT
+        SELECT DISTINCT subject_id FROM `temp_base_member` 
+        WHERE subject_id LIKE '%/svpg/%' OR subject_id LIKE 'dc/svpg%';
+
+        CREATE OR REPLACE TEMPORARY TABLE `temp_all_topic_svpg_nodes` AS
+        SELECT subject_id FROM `temp_topic_nodes`
+        UNION DISTINCT
+        SELECT subject_id FROM `temp_svpg_nodes`;
+
         CREATE OR REPLACE TEMPORARY TABLE `temp_topic_hierarchy` AS
-        SELECT DISTINCT subject_id, object_id, provenance
-        FROM `temp_base_member`
-        WHERE (subject_id LIKE 'dc/topic%' OR subject_id LIKE 'dc/svpg%');
+        SELECT DISTINCT b.subject_id, b.object_id, b.provenance
+        FROM `temp_base_member` b
+        JOIN `temp_all_topic_svpg_nodes` n ON b.subject_id = n.subject_id;
 
         EXPORT DATA
           OPTIONS( uri="{dest}",
@@ -259,9 +283,8 @@ class LinkedEdgeGenerator:
             {prov_expr} as provenance
           FROM
             Descendants
-          WHERE subject_id LIKE 'dc/topic%'
-          AND descendant NOT LIKE 'dc/topic%'
-          AND descendant NOT LIKE 'dc/svpg%'
+          WHERE subject_id IN (SELECT subject_id FROM temp_topic_nodes)
+          AND descendant NOT IN (SELECT subject_id FROM temp_all_topic_svpg_nodes)
         )
         SELECT
           subject_id,
@@ -270,5 +293,106 @@ class LinkedEdgeGenerator:
           provenance
         FROM
           NewEdges
+        """
+        return self.executor.execute(query)
+
+    def run_topic_list_edges(
+            self,
+            import_names: Optional[List[str]] = None) -> Optional[bigquery.job.QueryJob]:
+        """Materializes relevantVariableList on Topics and memberList on SVPGs."""
+        dest = self.executor.get_spanner_destination_uri()
+        prefix = BASE_PROVENANCE_PREFIX if self.is_base_dc else ""
+        output_provenance = f"{prefix}generated/TopicLists"
+
+        query = f"""  # nosec
+        -- Pull raw relevantVariable and member arcs across all active topics
+        CREATE OR REPLACE TEMPORARY TABLE `temp_raw_topic_edges` AS
+        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
+          "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN ('relevantVariable', 'member')");
+
+        -- Pull global topic & SVPG type definitions to support cross-import schemas
+        CREATE OR REPLACE TEMPORARY TABLE `temp_topic_types` AS
+        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
+          "SELECT subject_id, object_id FROM Edge WHERE predicate = 'typeOf' AND object_id IN ('Topic', 'StatVarPeerGroup')");
+
+        CREATE OR REPLACE TEMPORARY TABLE `temp_topic_nodes` AS
+        SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'Topic'
+        UNION DISTINCT
+        SELECT DISTINCT subject_id FROM `temp_raw_topic_edges` 
+        WHERE subject_id LIKE '%/topic/%' OR subject_id LIKE 'dc/topic%';
+
+        CREATE OR REPLACE TEMPORARY TABLE `temp_svpg_nodes` AS
+        SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'StatVarPeerGroup'
+        UNION DISTINCT
+        SELECT DISTINCT subject_id FROM `temp_raw_topic_edges` 
+        WHERE subject_id LIKE '%/svpg/%' OR subject_id LIKE 'dc/svpg%';
+
+        -- Aggregate relevantVariable -> relevantVariableList for Topic nodes
+        CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_relevant_variable_list` AS
+        SELECT 
+          e.subject_id,
+          'relevantVariableList' AS predicate,
+          STRING_AGG(DISTINCT e.object_id, ',' ORDER BY e.object_id) AS list_value,
+          '{output_provenance}' AS provenance
+        FROM `temp_raw_topic_edges` e
+        JOIN `temp_topic_nodes` t ON e.subject_id = t.subject_id
+        WHERE e.predicate = 'relevantVariable'
+        GROUP BY e.subject_id;
+
+        -- Aggregate member -> memberList for StatVarPeerGroup nodes
+        CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_member_list` AS
+        SELECT 
+          e.subject_id,
+          'memberList' AS predicate,
+          STRING_AGG(DISTINCT e.object_id, ',' ORDER BY e.object_id) AS list_value,
+          '{output_provenance}' AS provenance
+        FROM `temp_raw_topic_edges` e
+        JOIN `temp_svpg_nodes` s ON e.subject_id = s.subject_id
+        WHERE e.predicate = 'member'
+        GROUP BY e.subject_id;
+
+        -- Generate DCGraph hashed keys for terminal literal nodes
+        CREATE OR REPLACE TEMPORARY TABLE `temp_all_list_edges` AS
+        WITH combined AS (
+          SELECT subject_id, predicate, list_value, provenance FROM `temp_aggregated_relevant_variable_list`
+          UNION ALL
+          SELECT subject_id, predicate, list_value, provenance FROM `temp_aggregated_member_list`
+        )
+        SELECT 
+          subject_id,
+          predicate,
+          list_value,
+          CONCAT(SUBSTR(TRIM(list_value), 1, 16), ':', TO_HEX(SHA256(TRIM(list_value)))) AS object_id,
+          provenance
+        FROM combined;
+
+        -- Export Node records (stores raw CSV string in Node.value)
+        EXPORT DATA
+          OPTIONS(
+            uri="{dest}",
+            format='CLOUD_SPANNER',
+            spanner_options = '{{"table": "Node"}}'
+          ) AS
+        SELECT DISTINCT
+          object_id AS subject_id,
+          list_value AS value,
+          CAST(NULL AS BYTES) AS bytes,
+          '' AS name,
+          CAST([] AS ARRAY<STRING>) AS types
+        FROM `temp_all_list_edges`;
+
+        -- Export Edge records (links Topic/SVPG to Node key)
+        EXPORT DATA
+          OPTIONS(
+            uri="{dest}",
+            format='CLOUD_SPANNER',
+            spanner_options = '{{"table": "Edge"}}'
+          ) AS
+        SELECT DISTINCT
+          subject_id,
+          predicate,
+          object_id,
+          provenance
+        FROM `temp_all_list_edges`;
         """
         return self.executor.execute(query)
