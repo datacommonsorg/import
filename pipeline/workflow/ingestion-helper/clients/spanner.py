@@ -618,7 +618,7 @@ class SpannerClient:
         Args:
             params: A dictionary containing import parameters.
         """
-        import_name = params['import_name']
+        import_name = params['import_name'].split(':')[-1]
         job_id = params['job_id']
         execution_time = params['execution_time']
         data_volume = params['data_volume']

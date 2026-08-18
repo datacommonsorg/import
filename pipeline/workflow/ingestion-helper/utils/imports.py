@@ -96,7 +96,7 @@ def get_import_params(request) -> dict:
         for k, v in request.items()
     }
 
-    import_name = request_json.get('import_name', '').split(':')[-1]
+    import_name = request_json.get('import_name', '')
     status = request_json.get('status', '').removeprefix('ImportStatus.')
     job_id = request_json.get('job_id', '')
     execution_time = request_json.get('execution_time', 0)
