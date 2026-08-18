@@ -286,9 +286,15 @@ class SpannerClient:
                 with self.database.snapshot() as snapshot:
                     results = snapshot.execute_sql(sql, params=params, param_types=param_types)
                     for row in results:
+                        latest_ver = (row[1] or "").rstrip('/')
+                        graph_p = (row[2] or "").lstrip('/')
+                        if graph_p and not latest_ver.endswith(graph_p.rstrip('/')):
+                            full_version = f"{latest_ver}/{graph_p}"
+                        else:
+                            full_version = latest_ver
                         pending_imports.append({
                             "importName": row[0],
-                            "latestVersion": f"{row[1].rstrip('/')}/{row[2].lstrip('/')}",
+                            "latestVersion": full_version,
                         })
             except Exception as e:
                 logging.error(f'Error getting import list: {e}')
@@ -449,7 +455,7 @@ class SpannerClient:
                 counts = import_metrics.get(short_name) or import_json
 
                 version_history_values.append([
-                    import_name, import_json.get('latestVersion'),
+                    short_name, import_json.get('latestVersion'),
                     spanner.COMMIT_TIMESTAMP, workflow_id, status,
                     m.get('execution_time'),
                     counts.get('node_count') or counts.get('nodeCount'),
@@ -612,7 +618,7 @@ class SpannerClient:
         Args:
             params: A dictionary containing import parameters.
         """
-        import_name = params['import_name']
+        import_name = params['import_name'].split(':')[-1]
         job_id = params['job_id']
         execution_time = params['execution_time']
         data_volume = params['data_volume']

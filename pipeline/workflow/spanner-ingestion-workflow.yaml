@@ -87,6 +87,7 @@ main:
                   workflow_id: '${workflow_id}'
                   status: 'SUCCESS'
                   import_list: ${import_info_list}
+                  job_id: ${prod_job_id}
                 result: final_state_response
         except:
           as: pipeline_err
@@ -164,13 +165,14 @@ initialize_imports:
           workflow_id: '${workflow_id}'
           status: '${status}'
           import_list: ${resolved_imports}
+          job_id: null
         result: state_response
     - return_imports:
         return: ${resolved_imports}
 
 # Reusable sub-workflow that updates ingestion-history, and conditionally ingestion-status for SUCCESS or RETRY
 update_state_subworkflow:
-  params: [helper_url, workflow_id, status, import_list]
+  params: [helper_url, workflow_id, status, import_list, job_id]
   steps:
     - check_update_status:
         switch:
@@ -187,6 +189,7 @@ update_state_subworkflow:
             workflowId: '${workflow_id}'
             status: '${status}'
             importList: ${import_list}
+            jobId: ${job_id}
         result: status_response
     - update_history:
         call: http.post
@@ -198,6 +201,7 @@ update_state_subworkflow:
             workflowId: '${workflow_id}'
             status: '${status}'
             importList: ${import_list}
+            jobId: ${job_id}
         result: history_response
     - return_result:
         return: ${history_response}
