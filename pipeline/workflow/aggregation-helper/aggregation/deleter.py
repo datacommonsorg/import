@@ -14,6 +14,7 @@
 
 """Deletes aggregated data in Spanner using Partitioned DML."""
 
+import concurrent.futures
 import logging
 from typing import List
 from google.cloud import spanner
@@ -66,15 +67,25 @@ class AggregationDeleter:
             ("KeyValueStore", "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "")
         ]
 
-        for table_name, sql, extra_desc in delete_queries:
-            try:
-                rows = db.execute_partitioned_dml(
-                    sql, params=params, param_types=param_types
-                )
-                logging.info(f"Deleted {rows} rows from {table_name} table{extra_desc}.")
-            except Exception as e:
-                logging.error(f"Failed to execute partitioned DML for deletions on {table_name}: {e}")
-                raise
+        def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
+            rows = db.execute_partitioned_dml(
+                sql, params=params, param_types=param_types
+            )
+            logging.info(f"Deleted {rows} rows from {table_name} table{extra_desc}.")
+            return rows
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(delete_queries)) as executor:
+                futures = [
+                    executor.submit(_execute_delete, table, sql, desc)
+                    for table, sql, desc in delete_queries
+                ]
+                for future in concurrent.futures.as_completed(futures):
+                    future.result()  # Propagate any worker thread exceptions to main thread
+        except Exception as e:
+            logging.error(f"Failed to execute partitioned DML for deletions: {e}")
+            raise
+
 
     def delete_stat_var_group_edges(self) -> int:
         """Deletes all generated StatVarGroup edges across all provenances in Spanner."""
