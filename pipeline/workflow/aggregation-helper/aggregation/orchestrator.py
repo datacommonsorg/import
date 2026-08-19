@@ -284,7 +284,11 @@ class AggregationOrchestrator:
             calc for calc in self.calculations
             if calc.get("type") in GLOBAL_CALCULATION_TYPES and not calc.get("disabled", False)
         ]
-        should_generate_topic_lists = getattr(self.config, "generate_topic_list_edges", False)
+        should_generate_topic_lists = getattr(self.config, "generate_topic_list_edges", False) or any(
+            calc.get("generate_topic_list_edges", False)
+            for calc in self.calculations
+            if not calc.get("disabled", False)
+        )
         if not global_calcs and not should_generate_topic_lists:
             return None
 
@@ -361,7 +365,11 @@ class AggregationOrchestrator:
         to_delete = set()
         linked_to_delete = set()
         delete_stat_var_groups = False
-        should_delete_topic_lists = getattr(self.config, "generate_topic_list_edges", False)
+        should_delete_topic_lists = getattr(self.config, "generate_topic_list_edges", False) or any(
+            calc.get("generate_topic_list_edges", False)
+            for calc in self.calculations
+            if not calc.get("disabled", False)
+        )
         for single_import in imports:
             for calc in self.calculations:
                 if self._calc_applies_to_import(calc, single_import):
