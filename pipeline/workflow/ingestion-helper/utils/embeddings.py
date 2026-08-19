@@ -33,67 +33,64 @@ _NL_STAT_VAR_FILE = f"gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/emb
 
 @lru_cache(maxsize=1)
 def _extract_nl_stat_var() -> list[dict[str, str]]:
-    """Extracts deduplicated (dcid, sentence) pairs from NL stat var CSV file."""
     output_df = pd.read_csv(_NL_STAT_VAR_FILE)
-    output_df = output_df.dropna(subset=['dcid', 'sentence'])
-    output_df['dcid'] = output_df['dcid'].apply(lambda x: [item.strip() for item in str(x).split(';') if item.strip()])
-    output_df['sentence'] = output_df['sentence'].astype(str).str.strip()
-    
-    exploded = output_df.explode('dcid')
-    exploded = exploded[(exploded['dcid'] != '') & (exploded['sentence'] != '')]
-    deduped = exploded[['dcid', 'sentence']].drop_duplicates()
-    return deduped.to_dict(orient='records')
+    seen = set()
+    records = []
+    for _, row in output_df.iterrows():
+        dcid_str = row.get("dcid")
+        sentence = row.get("sentence")
+        if pd.notna(dcid_str) and pd.notna(sentence):
+            dcid_str = str(dcid_str)
+            sentence = str(sentence).strip()
+            for item in dcid_str.split(";"):
+                item = item.strip()
+                if item and sentence:
+                    pair = (item, sentence)
+                    if pair not in seen:
+                        seen.add(pair)
+                        records.append({"dcid": item, "sentence": sentence})
+    return records
 
 
-def _construct_timelock_condition(timestamp: Optional[str], predicate_types_list_sql: str) -> str:
+def _fresh_data_condition(timestamp: Optional[str], predicate_types_list_sql: str) -> tuple[str, str]:
     """Helper function to construct the timelock SQL condition string.
 
     If timestamp is None/NULL, returns "TRUE".
     Otherwise, returns the timelock condition string using predicate_types_list_sql.
     """
     if timestamp is None:
-        return "TRUE"
+        return "TRUE", "TRUE"
 
-    return f"""(
-        n.last_update_timestamp > TIMESTAMP('{timestamp}')
-        OR EXISTS {{
-          WITH n
-          MATCH (n)-[e_check:Edge]->(o_check:Node)
-          WHERE e_check.predicate IN UNNEST({predicate_types_list_sql})
-            AND o_check.value IS NOT NULL 
-            AND o_check.value <> ""
-            AND o_check.last_update_timestamp > TIMESTAMP('{timestamp}')
-        }}
-      )"""
+    update_node_cond = f"n.last_update_timestamp > TIMESTAMP('{timestamp}')"
+    update_property_cond = f"LOGICAL_OR(o.last_update_timestamp > TIMESTAMP('{timestamp}'))"
+    return update_node_cond, update_property_cond
 
 
 def _generate_spanner_query(nodes: Dict[str, List[str]], timestamp: Optional[Any], filter_condition: str) -> str:
-    spanner_query = ""
+    match_clauses = []
     for node_type, predicate_types in nodes.items():
-        if spanner_query:
-            spanner_query += f"""
-            UNION ALL
-            """
         safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
         predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
-        timelock_cond = _construct_timelock_condition(timestamp, predicate_types_list_sql)
+        update_node_cond, update_property_cond = _fresh_data_condition(timestamp, predicate_types_list_sql)
         spanner_query_template = f"""
-            GRAPH DCGraph
             MATCH
-            (n:Node WHERE "{node_type}" IN UNNEST(n.types))
-            WHERE {timelock_cond}
-                AND {filter_condition}
+            (n:Node WHERE "{node_type}" IN UNNEST(n.types) AND {filter_condition})
             OPTIONAL MATCH
             (n)-[e: Edge
                 WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
             (o:Node
                 WHERE o.value IS NOT NULL
                 AND o.value <> "")
-            WITH n, e.predicate AS pred, STRING_AGG(o.value, ". ") AS values
+            WITH
+                n,
+                e.predicate AS pred,
+                STRING_AGG(o.value, ". ") AS values,
+                {update_property_cond} AS update_property_data
             GROUP BY n, pred
             RETURN
             n.subject_id AS subject_id,
             n.types AS node_types,
+            {update_node_cond} AS update_node_data,
             CASE 
                 WHEN COUNT(pred) > 0 THEN
                 JSON_OBJECT(
@@ -109,11 +106,28 @@ def _generate_spanner_query(nodes: Dict[str, List[str]], timestamp: Optional[Any
                     "subject_id", n.subject_id,
                     "name", n.name
                 )
-            END AS embedding_content
+            END AS embedding_content,
+            CASE 
+                WHEN COUNT(pred) > 0 THEN
+                    LOGICAL_OR(update_property_data)
+                ELSE
+                    FALSE
+            END AS update_property_data
             GROUP BY n
         """
-        spanner_query += spanner_query_template
-    return spanner_query
+        match_clauses.append(spanner_query_template)
+
+    inner_gql = "\nUNION ALL\n".join(match_clauses)
+    return f"""
+    SELECT
+        subject_id,
+        node_types,
+        embedding_content
+    FROM GRAPH_TABLE(DCGraph
+        {inner_gql}
+    )
+    WHERE update_node_data OR update_property_data
+    """
 
 
 class EmbeddingUtils:
@@ -135,7 +149,7 @@ class EmbeddingUtils:
                 for row in results:
                     val = row[0]
                     if val is not None:
-                        return val.isoformat() if hasattr(val, "isoformat") else str(val)
+                        return val.isoformat().replace("+00:00", "Z") if hasattr(val, "isoformat") else str(val)
                     return None
         except Exception as e:
             logging.error(f"Error fetching latest lock timestamp: {e}")
@@ -214,7 +228,7 @@ class EmbeddingUtils:
                 for sentence in sentences:
                     embedding_content = json.dumps(OrderedDict([
                         ("title", subject_id),
-                        ("name", sentence)
+                        ("sentence", sentence)
                     ]))
                     yield (subject_id, embedding_content, node.get("types"))
         else:
@@ -281,7 +295,7 @@ class EmbeddingUtils:
         logging.info(f"Deleted {total_deleted} existing embedding rows (embedding_label: {embedding_label}).")
         return total_deleted
 
-    def _generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_table, embedding_label, task_type, timeout):
+    def _generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_table, embedding_label, task_type, node_filter_type, timeout):
         """Generates embeddings in batches using standard transactions.
         Processes nodes in chunks of 500 to avoid transaction size limits.
         Accepts a generator or list to avoid loading all nodes into memory.
@@ -302,13 +316,22 @@ class EmbeddingUtils:
 
         logging.info(f"Generating embeddings in batches of {_BATCH_SIZE}.")
 
-        predict_sql = f"""
-            SELECT subject_id, embedding_content, embeddings.values AS embeddings, node_types
-            FROM ML.PREDICT(
-                MODEL {model_name},
-                (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
-            )
-        """
+        if node_filter_type == "NLStatisticalVariable":
+            predict_sql = f"""
+                SELECT subject_id, embedding_content, embeddings.values AS embeddings, node_types
+                FROM ML.PREDICT(
+                    MODEL {model_name},
+                    (SELECT subject_id, JSON_VALUE(embedding_content, "$.sentence") AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
+                )
+            """
+        else:
+            predict_sql = f"""
+                SELECT subject_id, embedding_content, embeddings.values AS embeddings, node_types
+                FROM ML.PREDICT(
+                    MODEL {model_name},
+                    (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
+                )
+            """
 
         insert_sql = f"""
             INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content_key, embedding_content, embeddings, node_types)
@@ -436,6 +459,7 @@ class EmbeddingUtils:
                 embedding_table=self.spanner.embedding_table,
                 embedding_label=embedding_label,
                 task_type=task_type,
+                node_filter_type=node_filter_type,
                 timeout=config.TIMEOUT
             )
             total_affected_rows += affected_rows
