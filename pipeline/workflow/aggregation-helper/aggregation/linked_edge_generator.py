@@ -294,9 +294,7 @@ class LinkedEdgeGenerator:
         """
         return self.executor.execute(query)
 
-    def run_topic_list_edges(
-            self,
-            import_names: Optional[List[str]] = None) -> Optional[bigquery.job.QueryJob]:
+    def run_topic_list_edges(self) -> Optional[bigquery.job.QueryJob]:
         """Materializes relevantVariableList on Topics and memberList on SVPGs."""
         dest = self.executor.get_spanner_destination_uri()
         prefix = BASE_PROVENANCE_PREFIX if self.is_base_dc else ""
