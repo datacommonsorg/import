@@ -54,6 +54,11 @@ def revert_import(spanner_client: Any,
             f"No previous different version found in ImportVersionHistory for '{short_name}'. Cannot revert.")
         return False, latest_version, None
 
+    if not previous_version.startswith('gs://'):
+        logging.error(
+            f"Cannot revert '{short_name}': previous version '{previous_version}' is not a valid GCS path.")
+        return False, latest_version, None
+
     new_latest_version_path = previous_version
 
     if dry_run:

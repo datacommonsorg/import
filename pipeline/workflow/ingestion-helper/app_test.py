@@ -180,13 +180,13 @@ class TestMain(unittest.TestCase):
                     "importName": "import1",
                     "status": "STAGING",
                     "latestVersion": "gs://bucket/import1/version1.csv",
-                    "graphPath": "gs://bucket/import1/graph/"
+                    "graphPath": "graph"
                 },
                 {
                     "importName": "import2",
                     "status": "STAGING",
                     "latestVersion": "gs://bucket/import2/version2.csv",
-                    "graphPath": "gs://bucket/import2/graph/"
+                    "graphPath": "graph"
                 }
             ],
             "jobId": "job123",
@@ -206,6 +206,12 @@ class TestMain(unittest.TestCase):
         self.assertEqual(mock_storage_client.update_import_summary.call_count, 2)
         
         # Verify spanner was called for both imports
+        mock_spanner_client.update_version_history.assert_any_call(
+            "import1", "gs://bucket/import1/version1.csv/graph", "import-workflow:job123", workflow_id="job123", status="STAGING"
+        )
+        mock_spanner_client.update_version_history.assert_any_call(
+            "import2", "gs://bucket/import2/version2.csv/graph", "import-workflow:job123", workflow_id="job123", status="STAGING"
+        )
         self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
         self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)
 
@@ -244,6 +250,12 @@ class TestMain(unittest.TestCase):
         self.assertEqual(mock_storage_client.update_version_file.call_count, 2)
 
         # Verify spanner was called
+        mock_spanner_client.update_version_history.assert_any_call(
+            "import1", "gs://bucket/import1/ver_import1.csv", "release-comment", workflow_id=None, status="STAGING"
+        )
+        mock_spanner_client.update_version_history.assert_any_call(
+            "import2", "gs://bucket/import2/ver_import2.csv", "release-comment", workflow_id=None, status="STAGING"
+        )
         self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
         self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)
 
@@ -285,10 +297,10 @@ class TestMain(unittest.TestCase):
 
         # Verify spanner was called with the overridden comment containing caller
         mock_spanner_client.update_version_history.assert_any_call(
-            "import1", "ver_import1", "version-override:test-caller release-comment", workflow_id=None, status="STAGING"
+            "import1", "gs://bucket/import1/ver_import1.csv", "version-override:test-caller release-comment", workflow_id=None, status="STAGING"
         )
         mock_spanner_client.update_version_history.assert_any_call(
-            "import2", "ver_import2", "version-override:test-caller release-comment", workflow_id=None, status="STAGING"
+            "import2", "gs://bucket/import2/ver_import2.csv", "version-override:test-caller release-comment", workflow_id=None, status="STAGING"
         )
         self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
         self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)
@@ -602,6 +614,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 1)
         mock_spanner_client.get_import_info.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()

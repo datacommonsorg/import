@@ -112,7 +112,7 @@ class ProvenanceSummaryGenerator:
         SET place_count = (SELECT COUNT(*) FROM `temp_dataset_places`);
 
         -- Step 3: Fetch place types for places in this dataset directly from Spanner
-        -- If place_count <= 10000 and string length <= 100KB, push down IN filter; otherwise stream all typeOf edges
+        -- If place_count <= 10000 and string length <= 20KB, push down IN filter; otherwise stream all typeOf edges
         IF place_count <= 10000 THEN
           SET place_dcids_str = (
             SELECT IFNULL(STRING_AGG(FORMAT("'%s'", REPLACE(observation_about, "'", "\\'")), ','), "''")
@@ -120,7 +120,7 @@ class ProvenanceSummaryGenerator:
           );
         END IF;
 
-        IF place_count <= 10000 AND BYTE_LENGTH(place_dcids_str) <= 100000 THEN
+        IF place_count <= 10000 AND BYTE_LENGTH(place_dcids_str) <= 20000 THEN
           EXECUTE IMMEDIATE FORMAT('''
             CREATE OR REPLACE TEMPORARY TABLE `temp_type_edges_filtered` AS
             SELECT subject_id, object_id as place_type
@@ -173,13 +173,32 @@ class ProvenanceSummaryGenerator:
           CROSS JOIN UNNEST(top_dcids) as dcid
         );
 
-        EXECUTE IMMEDIATE FORMAT('''
-          CREATE OR REPLACE TEMPORARY TABLE `temp_node_names_filtered` AS
-          SELECT subject_id, name
-          FROM EXTERNAL_QUERY("{connection_id}",
-            "SELECT subject_id, name FROM Node WHERE subject_id IN (%s)"
+        IF BYTE_LENGTH(sample_dcids_str) > 20000 THEN
+          SET sample_dcids_str = (
+            SELECT IFNULL(STRING_AGG(FORMAT("'%s'", REPLACE(dcid, "'", "\\'")), ','), "''")
+            FROM (
+              SELECT DISTINCT dcid
+              FROM `temp_top_place_dcids`
+              CROSS JOIN UNNEST(top_dcids) as dcid
+              LIMIT 500
+            )
           );
-        ''', sample_dcids_str);
+        END IF;
+
+        IF sample_dcids_str != "''" AND sample_dcids_str != "" THEN
+          EXECUTE IMMEDIATE FORMAT('''
+            CREATE OR REPLACE TEMPORARY TABLE `temp_node_names_filtered` AS
+            SELECT subject_id, name
+            FROM EXTERNAL_QUERY("{connection_id}",
+              "SELECT subject_id, name FROM Node WHERE subject_id IN (%s)"
+            );
+          ''', sample_dcids_str);
+        ELSE
+          CREATE OR REPLACE TEMPORARY TABLE `temp_node_names_filtered` (
+            subject_id STRING,
+            name STRING
+          );
+        END IF;
 
         -- Step 7: Aggregate Place Type Summaries and attach names to top 3 sample places
         CREATE OR REPLACE TEMPORARY TABLE `temp_place_type_summary` AS

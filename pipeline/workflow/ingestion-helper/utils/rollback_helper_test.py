@@ -75,6 +75,19 @@ class TestRollbackHelper(unittest.TestCase):
         self.assertIsNone(prev_ver)
         mock_spanner.revert_import_state.assert_not_called()
 
+    def test_revert_import_legacy_non_gs_version(self):
+        mock_spanner = MagicMock()
+        mock_spanner.get_import_version_history.return_value = [
+            "gs://bucket/path/v2/*/*.mcf", "v1"
+        ]
+
+        status, cur_ver, prev_ver = revert_import(mock_spanner, "foo:bar:imp1", "wf-123")
+
+        self.assertFalse(status)
+        self.assertEqual(cur_ver, "gs://bucket/path/v2/*/*.mcf")
+        self.assertIsNone(prev_ver)
+        mock_spanner.revert_import_state.assert_not_called()
+
     def test_revert_imports_list(self):
         mock_spanner = MagicMock()
         mock_spanner.get_import_version_history.side_effect = lambda name: [

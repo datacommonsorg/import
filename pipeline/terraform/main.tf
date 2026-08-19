@@ -11,14 +11,15 @@
 # - DC API key
 #
 # This file sets up:
-# - Necessary GCP APIs
+# - Necessary GCP APIs (including BigQuery and BigQuery Connection)
 # - Secret Manager for the import-config secret
-# - GCS Buckets for imports, mounting, and Dataflow templates
-# - Spanner Instance and Database
+# - GCS Buckets for imports and mounting
+# - BigQuery Dataset and Federated Cloud Spanner Connection
+# - Optional Spanner Instance and Database (or external Spanner DB path)
 # - Artifact Registry for hosting Docker images (Flex Template & Executor)
 # - Pub/Sub Topic and Subscription for triggering imports
-# - Cloud Functions, Workflows, and Ingestion Pipeline
-# - Unified Service Account with necessary IAM roles for Workflows, Functions, and Pub/Sub
+# - Cloud Run Services, Cloud Run Job, and Cloud Workflows
+# - Unified Service Account with necessary IAM roles for Workflows, Cloud Run, and BigQuery
 
 terraform {
   required_providers {
@@ -43,16 +44,28 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "create_spanner_instance" {
+  description = "Whether to provision a new Spanner instance and database in this project"
+  type        = bool
+  default     = true
+}
+
 variable "spanner_instance_id" {
-  description = "Spanner Instance ID"
+  description = "Spanner Instance ID (used if create_spanner_instance is true)"
   type        = string
   default     = "datcom-import-instance"
 }
 
 variable "spanner_database_id" {
-  description = "Spanner Database ID"
+  description = "Spanner Database ID (used if create_spanner_instance is true)"
   type        = string
   default     = "dc-import-db"
+}
+
+variable "spanner_database_path" {
+  description = "Full Spanner database path (e.g. projects/datcom-store/instances/dc-graph-staging/databases/dc_graph). If provided, overrides local spanner instance/db."
+  type        = string
+  default     = ""
 }
 
 variable "bq_dataset_id" {
@@ -61,10 +74,17 @@ variable "bq_dataset_id" {
   default     = "datacommons"
 }
 
+variable "bq_connection_id" {
+  description = "BigQuery Spanner Connection ID"
+  type        = string
+  default     = "bq_spanner_conn"
+}
+
 variable "dc_api_key" {
   description = "Data Commons API Key"
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "artifact_registry_url" {
@@ -73,12 +93,36 @@ variable "artifact_registry_url" {
   default     = "us-docker.pkg.dev/datcom-ci/gcr.io"
 }
 
-# --- APIs ---
+variable "image_version" {
+  description = "Container image tag version for services and jobs"
+  type        = string
+  default     = "stable"
+}
+
+variable "dataflow_template_path" {
+  description = "GCS path prefix for Dataflow templates"
+  type        = string
+  default     = "gs://datcom-templates/templates/flex/"
+}
+
+# --- Project Data ---
+
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+# --- Locals ---
 
 locals {
+  spanner_database_path = var.spanner_database_path != "" ? var.spanner_database_path : (
+    var.create_spanner_instance ? "projects/${var.project_id}/instances/${var.spanner_instance_id}/databases/${var.spanner_database_id}" : ""
+  )
+
   services = [
     "artifactregistry.googleapis.com",
     "batch.googleapis.com",
+    "bigquery.googleapis.com",
+    "bigqueryconnection.googleapis.com",
     "cloudbuild.googleapis.com",
     "cloudfunctions.googleapis.com",
     "cloudscheduler.googleapis.com",
@@ -94,6 +138,8 @@ locals {
   ]
 }
 
+# --- APIs ---
+
 resource "google_project_service" "services" {
   for_each = toset(local.services)
   project  = var.project_id
@@ -105,6 +151,7 @@ resource "google_project_service" "services" {
 # --- Secret Manager ---
 
 resource "google_secret_manager_secret" "import_config" {
+  count     = var.dc_api_key != "" ? 1 : 0
   secret_id = "import-config"
   project   = var.project_id
 
@@ -116,13 +163,15 @@ resource "google_secret_manager_secret" "import_config" {
 }
 
 resource "google_secret_manager_secret_version" "import_config_v1" {
-  secret      = google_secret_manager_secret.import_config.id
+  count       = var.dc_api_key != "" ? 1 : 0
+  secret      = google_secret_manager_secret.import_config[0].id
   secret_data = jsonencode({
     dc_api_key = var.dc_api_key
   })
 }
 
 resource "google_secret_manager_secret" "dc_api_key" {
+  count     = var.dc_api_key != "" ? 1 : 0
   secret_id = "dc-api-key"
   project   = var.project_id
 
@@ -134,33 +183,60 @@ resource "google_secret_manager_secret" "dc_api_key" {
 }
 
 resource "google_secret_manager_secret_version" "dc_api_key_v1" {
-  secret      = google_secret_manager_secret.dc_api_key.id
+  count       = var.dc_api_key != "" ? 1 : 0
+  secret      = google_secret_manager_secret.dc_api_key[0].id
   secret_data = var.dc_api_key
 }
 
 # --- GCS Buckets ---
 
 resource "google_storage_bucket" "import_bucket" {
-  name     = "${var.project_id}-imports"
-  location = var.region
-  project  = var.project_id
+  name                        = "${var.project_id}-imports"
+  location                    = var.region
+  project                     = var.project_id
   uniform_bucket_level_access = true
 
   depends_on = [google_project_service.services]
 }
 
 resource "google_storage_bucket" "mount_bucket" {
-  name     = "${var.project_id}-mount"
-  location = var.region
-  project  = var.project_id
+  name                        = "${var.project_id}-mount"
+  location                    = var.region
+  project                     = var.project_id
   uniform_bucket_level_access = true
 
   depends_on = [google_project_service.services]
 }
 
-# --- Cloud Functions Source Packaging ---
+# --- BigQuery Dataset & Spanner Connection ---
 
-# --- Cloud Functions ---
+resource "google_bigquery_dataset" "aggregation_dataset" {
+  dataset_id                  = var.bq_dataset_id
+  friendly_name               = "Data Commons Aggregation Dataset"
+  description                 = "Dataset used for Data Commons import aggregations"
+  location                    = var.region
+  project                     = var.project_id
+  delete_contents_on_destroy  = false
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_bigquery_connection" "spanner_connection" {
+  connection_id = var.bq_connection_id
+  location      = var.region
+  project       = var.project_id
+  friendly_name = "Cloud Spanner Connection"
+  description   = "Federated connection from BigQuery to Cloud Spanner"
+
+  cloud_spanner {
+    database        = local.spanner_database_path
+    use_parallelism = true
+  }
+
+  depends_on = [google_project_service.services]
+}
+
+# --- Cloud Run Services ---
 
 resource "google_cloud_run_v2_service" "ingestion_helper" {
   name     = "ingestion-helper-service"
@@ -169,31 +245,24 @@ resource "google_cloud_run_v2_service" "ingestion_helper" {
 
   template {
     service_account = google_service_account.automation_sa.email
+    timeout         = "3600s"
     containers {
-      image = "${var.artifact_registry_url}/datacommons-ingestion-helper:latest"
+      image = "${var.artifact_registry_url}/datacommons-ingestion-helper:${var.image_version}"
       env {
         name  = "PROJECT_ID"
         value = var.project_id
       }
       env {
-        name  = "SPANNER_PROJECT_ID"
-        value = var.project_id
+        name  = "LOCATION"
+        value = var.region
       }
       env {
-        name  = "SPANNER_INSTANCE_ID"
-        value = var.spanner_instance_id
-      }
-      env {
-        name  = "SPANNER_DATABASE_ID"
-        value = var.spanner_database_id
+        name  = "SPANNER_DATABASE_PATH"
+        value = local.spanner_database_path
       }
       env {
         name  = "GCS_BUCKET_ID"
         value = google_storage_bucket.import_bucket.name
-      }
-      env {
-        name  = "LOCATION"
-        value = var.region
       }
     }
   }
@@ -209,7 +278,7 @@ resource "google_cloud_run_v2_service" "import_helper" {
   template {
     service_account = google_service_account.automation_sa.email
     containers {
-      image = "${var.artifact_registry_url}/datacommons-import-helper:latest"
+      image = "${var.artifact_registry_url}/datacommons-import-helper:${var.image_version}"
       env {
         name  = "PROJECT_ID"
         value = var.project_id
@@ -219,12 +288,12 @@ resource "google_cloud_run_v2_service" "import_helper" {
         value = var.region
       }
       env {
-        name  = "GCS_BUCKET_ID"
-        value = google_storage_bucket.import_bucket.name
+        name  = "PROJECT_NUMBER"
+        value = data.google_project.project.number
       }
       env {
-        name  = "INGESTION_HELPER_URL"
-        value = google_cloud_run_v2_service.ingestion_helper.uri
+        name  = "GCS_BUCKET_ID"
+        value = google_storage_bucket.import_bucket.name
       }
     }
   }
@@ -233,17 +302,17 @@ resource "google_cloud_run_v2_service" "import_helper" {
 }
 
 resource "google_cloud_run_v2_job" "aggregation_helper" {
-  name     = "aggregation-helper-job"
-  location = var.region
-  project  = var.project_id
+  name                = "aggregation-helper-job"
+  location            = var.region
+  project             = var.project_id
   deletion_protection = false
 
   template {
     template {
-      timeout = "21600s"
+      timeout         = "21600s"
       service_account = google_service_account.automation_sa.email
       containers {
-        image = "${var.artifact_registry_url}/datacommons-aggregation-helper:latest"
+        image = "${var.artifact_registry_url}/datacommons-aggregation-helper:${var.image_version}"
         resources {
           limits = {
             cpu    = "4"
@@ -255,28 +324,28 @@ resource "google_cloud_run_v2_job" "aggregation_helper" {
           value = var.project_id
         }
         env {
-          name  = "SPANNER_PROJECT_ID"
-          value = var.project_id
+          name  = "LOCATION"
+          value = var.region
         }
         env {
-          name  = "SPANNER_INSTANCE_ID"
-          value = var.spanner_instance_id
-        }
-        env {
-          name  = "SPANNER_DATABASE_ID"
-          value = var.spanner_database_id
+          name  = "SPANNER_DATABASE_PATH"
+          value = local.spanner_database_path
         }
         env {
           name  = "GCS_BUCKET_ID"
           value = google_storage_bucket.import_bucket.name
         }
         env {
-          name  = "LOCATION"
-          value = var.region
+          name  = "BQ_DATASET_ID"
+          value = google_bigquery_dataset.aggregation_dataset.dataset_id
         }
         env {
-          name  = "BQ_DATASET_ID"
-          value = var.bq_dataset_id
+          name  = "BQ_SPANNER_CONN_ID"
+          value = google_bigquery_connection.spanner_connection.name
+        }
+        env {
+          name  = "ENABLE_EMBEDDINGS"
+          value = "true"
         }
       }
     }
@@ -296,10 +365,10 @@ resource "google_workflows_workflow" "import_automation_workflow" {
   source_contents = file("${path.module}/../workflow/import-automation-workflow.yaml")
 
   user_env_vars = {
-    LOCATION             = var.region
-    GCS_BUCKET_ID        = google_storage_bucket.import_bucket.name
-    GCS_MOUNT_BUCKET     = google_storage_bucket.mount_bucket.name
-    INGESTION_HELPER_URL = google_cloud_run_v2_service.ingestion_helper.uri
+    LOCATION         = var.region
+    GCS_BUCKET_ID    = google_storage_bucket.import_bucket.name
+    GCS_MOUNT_BUCKET = google_storage_bucket.mount_bucket.name
+    PROJECT_NUMBER   = data.google_project.project.number
   }
 
   depends_on = [google_project_service.services]
@@ -316,19 +385,18 @@ resource "google_workflows_workflow" "spanner_ingestion_workflow" {
   user_env_vars = {
     LOCATION               = var.region
     PROJECT_ID             = var.project_id
-    SPANNER_PROJECT_ID     = var.project_id
-    SPANNER_INSTANCE_ID    = var.spanner_instance_id
-    SPANNER_DATABASE_ID    = var.spanner_database_id
-    INGESTION_HELPER_URL   = google_cloud_run_v2_service.ingestion_helper.uri
-    DEFAULT_SKIP_AGGREGATION = "false"
+    SPANNER_DATABASE_PATH  = local.spanner_database_path
+    PROJECT_NUMBER         = data.google_project.project.number
+    DATAFLOW_TEMPLATE_PATH = "${var.dataflow_template_path}ingestion-${var.image_version}.json"
   }
 
   depends_on = [google_project_service.services]
 }
 
-# --- Spanner ---
+# --- Spanner (Optional / Local Provisioning) ---
 
 resource "google_spanner_instance" "import_instance" {
+  count        = var.create_spanner_instance ? 1 : 0
   name         = var.spanner_instance_id
   config       = "regional-${var.region}"
   display_name = "Import Automation"
@@ -339,9 +407,10 @@ resource "google_spanner_instance" "import_instance" {
 }
 
 resource "google_spanner_database" "import_db" {
-  instance = google_spanner_instance.import_instance.name
-  name     = var.spanner_database_id
-  project  = var.project_id
+  count               = var.create_spanner_instance ? 1 : 0
+  instance            = google_spanner_instance.import_instance[0].name
+  name                = var.spanner_database_id
+  project             = var.project_id
   deletion_protection = false
 }
 
@@ -365,8 +434,8 @@ resource "google_project_iam_member" "automation_roles" {
     "roles/storage.objectAdmin",
     "roles/iam.serviceAccountUser",
     "roles/spanner.databaseAdmin",
-    "roles/bigquery.dataEditor",
-    "roles/bigquery.jobUser",
+    "roles/bigquery.admin",
+    "roles/bigquery.connectionUser",
     "roles/artifactregistry.admin",
     "roles/secretmanager.secretAccessor",
     "roles/cloudbuild.builds.builder",
@@ -410,10 +479,29 @@ resource "google_pubsub_subscription" "import_automation_sub" {
   }
 }
 
-# Outputs
+# --- Outputs ---
+
 output "automation_service_account_email" {
   value       = google_service_account.automation_sa.email
   description = "The email of the service account used for import automation."
 }
 
+output "bq_dataset_id" {
+  value       = google_bigquery_dataset.aggregation_dataset.dataset_id
+  description = "BigQuery dataset ID for aggregations"
+}
 
+output "bq_spanner_connection_id" {
+  value       = google_bigquery_connection.spanner_connection.name
+  description = "BigQuery Spanner external connection name"
+}
+
+output "gcs_import_bucket" {
+  value       = google_storage_bucket.import_bucket.name
+  description = "GCS bucket name for import artifacts"
+}
+
+output "gcs_mount_bucket" {
+  value       = google_storage_bucket.mount_bucket.name
+  description = "GCS bucket name for mounting inside batch jobs"
+}

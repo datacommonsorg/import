@@ -30,35 +30,81 @@ PROJECT_ID = os.environ.get('PROJECT_ID')
 PROJECT_NUMBER = os.environ.get('PROJECT_NUMBER')
 LOCATION = os.environ.get('LOCATION')
 GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID')
-INGESTION_HELPER_URL = f"https://ingestion-helper-service-{PROJECT_NUMBER}.{LOCATION}.run.app"
-SPANNER_INGESTION_WORKFLOW_ID = 'spanner-ingestion-workflow'
-IMPORT_AUTOMATION_WORKFLOW_ID = 'import-automation-workflow'
+INGESTION_HELPER_SERVICE = os.environ.get('INGESTION_HELPER_SERVICE', 'ingestion-helper-service')
+INGESTION_HELPER_URL = f"https://{INGESTION_HELPER_SERVICE}-{PROJECT_NUMBER}.{LOCATION}.run.app"
+SPANNER_INGESTION_WORKFLOW_ID = os.environ.get('SPANNER_INGESTION_WORKFLOW_NAME', 'spanner-ingestion-workflow')
+IMPORT_AUTOMATION_WORKFLOW_ID = os.environ.get('IMPORT_AUTOMATION_WORKFLOW_NAME', 'import-automation-workflow')
 
 
-def invoke_spanner_ingestion_workflow(import_name: str):
+def _get_env_suffix(env: str) -> str:
+    if not env:
+        return ""
+    env_lower = env.lower().strip()
+    if env_lower in ("staging", "test"):
+        return "-staging"
+    if env_lower in ("prod", "production"):
+        return ""
+    return f"-{env_lower}"
+
+
+def _get_spanner_ingestion_workflow_id(env: str = "") -> str:
+    if env:
+        return f"spanner-ingestion-workflow{_get_env_suffix(env)}"
+    return SPANNER_INGESTION_WORKFLOW_ID
+
+
+def _get_import_automation_workflow_id(env: str = "") -> str:
+    return IMPORT_AUTOMATION_WORKFLOW_ID
+
+
+def _get_ingestion_helper_url(env: str = "") -> str:
+    if env:
+        service_name = f"ingestion-helper-service{_get_env_suffix(env)}"
+        return f"https://{service_name}-{PROJECT_NUMBER}.{LOCATION}.run.app"
+    return INGESTION_HELPER_URL
+
+
+def get_full_version_path(import_name: str, import_version: str, graph_path: str = "/**/*.mcf*") -> str:
+    """Constructs the full GCS path including the graph path pattern."""
+    base_path = f"gs://{GCS_BUCKET_ID}/{import_name.replace(':', '/')}/{import_version}"
+    return f"{base_path.rstrip('/')}/{graph_path.lstrip('/')}"
+
+
+def invoke_spanner_ingestion_workflow(import_name: str,
+                                      latest_version: str = "",
+                                      env: str = ""):
     """Triggers the spanner ingestion workflow.
 
     Args:
         import_name: The name of the import.
+        latest_version: The version of the import (optional).
+        env: Target environment ('staging', 'prod', etc.) (optional).
     """
-    workflow_args = {"importList": [{"importName": import_name.split(':')[-1]}]}
+    workflow_id = _get_spanner_ingestion_workflow_id(env)
+    workflow_args = {
+        "importList": [{
+            "importName": import_name.split(':')[-1],
+            "latestVersion": latest_version
+        }]
+    }
 
-    logging.info(f"Invoking {SPANNER_INGESTION_WORKFLOW_ID} for {import_name}")
+    logging.info(f"Invoking {workflow_id} for {import_name}")
     execution_client = executions_v1.ExecutionsClient()
-    parent = f"projects/{PROJECT_ID}/locations/{LOCATION}/workflows/{SPANNER_INGESTION_WORKFLOW_ID}"
+    parent = f"projects/{PROJECT_ID}/locations/{LOCATION}/workflows/{workflow_id}"
     execution_req = executions_v1.Execution(argument=json.dumps(workflow_args))
     response = execution_client.create_execution(parent=parent,
                                                  execution=execution_req)
     logging.info(
-        f"Triggered workflow {SPANNER_INGESTION_WORKFLOW_ID} for {import_name}. Execution ID: {response.name}"
+        f"Triggered workflow {workflow_id} for {import_name}. Execution ID: {response.name}"
     )
 
 
 def invoke_import_automation_workflow(import_name: str,
                                       latest_version: str,
-                                      import_size: str,
-                                      graph_path: str, cron_schedule: str,
-                                      run_ingestion: bool = False):
+                                      import_size: str = 'small',
+                                      graph_path: str = "/**/*.mcf*",
+                                      cron_schedule: str = "",
+                                      env: str = ""):
     """Triggers the import automation workflow.
 
     Args:
@@ -67,8 +113,9 @@ def invoke_import_automation_workflow(import_name: str,
         import_size: The size of the import ('small', 'medium', 'large').
         graph_path: The graph path for the import.
         cron_schedule: The cron schedule for the import.
-        run_ingestion: Whether to run the ingestion workflow after the import.
+        env: Target environment ('staging', 'prod', etc.) (optional).
     """
+    workflow_id = _get_import_automation_workflow_id(env)
     import_config = {
         "user_script_args": [f"--version={latest_version}"],
         "import_version_override": latest_version,
@@ -77,8 +124,7 @@ def invoke_import_automation_workflow(import_name: str,
     }
     workflow_args = {
         "importName": import_name,
-        "importConfig": json.dumps(import_config),
-        "runIngestion": run_ingestion
+        "importConfig": json.dumps(import_config)
     }
 
     if import_size == 'large':
@@ -88,15 +134,30 @@ def invoke_import_automation_workflow(import_name: str,
             "memory": 131072,
             "disk": 100
         }
+    elif import_size == 'medium':
+        workflow_args["resources"] = {
+            "machine": "n2-highmem-8",
+            "cpu": 8000,
+            "memory": 65536,
+            "disk": 100
+        }
+    else:
+        # Default to 'small'
+        workflow_args["resources"] = {
+            "machine": "n2-standard-8",
+            "cpu": 8000,
+            "memory": 32768,
+            "disk": 100
+        }
 
-    logging.info(f"Invoking {IMPORT_AUTOMATION_WORKFLOW_ID} for {import_name}")
+    logging.info(f"Invoking {workflow_id} for {import_name}")
     execution_client = executions_v1.ExecutionsClient()
-    parent = f"projects/{PROJECT_ID}/locations/{LOCATION}/workflows/{IMPORT_AUTOMATION_WORKFLOW_ID}"
+    parent = f"projects/{PROJECT_ID}/locations/{LOCATION}/workflows/{workflow_id}"
     execution_req = executions_v1.Execution(argument=json.dumps(workflow_args))
     response = execution_client.create_execution(parent=parent,
                                                  execution=execution_req)
     logging.info(
-        f"Triggered workflow {IMPORT_AUTOMATION_WORKFLOW_ID} for {import_name}. Execution ID: {response.name}"
+        f"Triggered workflow {workflow_id} for {import_name}. Execution ID: {response.name}"
     )
 
 
@@ -105,7 +166,8 @@ def update_import_status(import_name,
                          import_version,
                          graph_path,
                          job_id,
-                         cron_schedule=None):
+                         cron_schedule=None,
+                         env: str = ""):
     """Updates the status for the specified import job.
 
     Args:
@@ -115,8 +177,10 @@ def update_import_status(import_name,
         graph_path: The graph path for the import.
         job_id: The job ID associated with the import.
         cron_schedule: The cron schedule for the import (optional).
+        env: Target environment ('staging', 'prod', etc.) (optional).
     """
-    logging.info(f"Updating {import_name} status: {import_status}")
+    ingestion_helper_url = _get_ingestion_helper_url(env)
+    logging.info(f"Updating {import_name} status: {import_status} using {ingestion_helper_url}")
     latest_version = 'gs://' + GCS_BUCKET_ID + '/' + import_name.replace(
         ':', '/') + '/' + import_version
     import_item = {
@@ -141,9 +205,9 @@ def update_import_status(import_name,
             )
     logging.info(f"Update request: {request}")
     auth_req = Request()
-    token = id_token.fetch_id_token(auth_req, INGESTION_HELPER_URL)
+    token = id_token.fetch_id_token(auth_req, ingestion_helper_url)
     headers = {'Authorization': f'Bearer {token}'}
-    response = requests.post(INGESTION_HELPER_URL + '/imports/status',
+    response = requests.post(ingestion_helper_url + '/imports/status',
                              json=request,
                              headers=headers)
     response.raise_for_status()

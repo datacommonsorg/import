@@ -12,29 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Parent Cloud Build configuration that orchestrates Staging and Production deployments.
+# Parent Cloud Build configuration that orchestrates Test and Production deployments.
 # Usage: gcloud builds submit . --config=cloudbuild.yaml --project=datcom-ci
 
 substitutions:
-  # Staging Configuration (Overrides defaults in child build)
-  _PROJECT_ID: 'datcom-ci'
-  _SPANNER_PROJECT_ID: 'datcom-ci'
-  _SPANNER_INSTANCE_ID: 'datcom-spanner-test'
-  _SPANNER_DATABASE_ID: 'dc-test-db'
-  _GCS_BUCKET_ID: 'datcom-ci-test'
-  _GCS_MOUNT_BUCKET: 'datcom-ci-test'
-  _BQ_DATASET_ID: 'spanner_model_dataset'
-  _LOCATION: 'us-central1'
-  _PROJECT_NUMBER: '879489846695'
   _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
-  _BQ_SPANNER_CONN_ID: 'projects/datcom-ci/locations/us-central1/connections/bq_spanner_conn_test'
-  _ENABLE_EMBEDDINGS: 'true'
   _VERSION: '${SHORT_SHA}'
   _PROD_TAG: 'stable'
-  _DEFAULT_SKIP_AGGREGATION: 'false'
 
 steps:
-
 
 # 1. Build services and helper images
 - id: 'build-services'
@@ -46,21 +32,19 @@ steps:
     - '--config=pipeline/workflow/build-services.yaml'
     - '--substitutions=_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}'
 
-# 2. Trigger Staging Build (Child)
-# Overrides default (Production) values with Staging values.
-- id: 'deploy-staging'
+# 2. Trigger Test Build (Child)
+- id: 'deploy-test'
   name: 'gcr.io/cloud-builders/gcloud'
   args:
     - 'builds'
     - 'submit'
     - '.'
     - '--config=deploy-services.yaml'
-    - '--project=${_PROJECT_ID}'
-    - '--substitutions=_PROJECT_ID=${_PROJECT_ID},_SPANNER_PROJECT_ID=${_SPANNER_PROJECT_ID},_SPANNER_INSTANCE_ID=${_SPANNER_INSTANCE_ID},_SPANNER_DATABASE_ID=${_SPANNER_DATABASE_ID},_GCS_BUCKET_ID=${_GCS_BUCKET_ID},_LOCATION=${_LOCATION},_GCS_MOUNT_BUCKET=${_GCS_MOUNT_BUCKET},_BQ_DATASET_ID=${_BQ_DATASET_ID},_PROJECT_NUMBER=${_PROJECT_NUMBER},_BQ_SPANNER_CONN_ID=${_BQ_SPANNER_CONN_ID},_ENABLE_EMBEDDINGS=${_ENABLE_EMBEDDINGS},_VERSION=${_VERSION},_DEFAULT_SKIP_AGGREGATION=${_DEFAULT_SKIP_AGGREGATION}'
+    - '--substitutions=_PROJECT_ID=datcom-ci,_SPANNER_DATABASE_PATH=projects/datcom-ci/instances/datcom-spanner-test/databases/dc-test-db,_GCS_BUCKET_ID=datcom-ci-test,_GCS_MOUNT_BUCKET=datcom-ci-test,_BQ_DATASET_ID=spanner_model_dataset,_LOCATION=us-central1,_PROJECT_NUMBER=879489846695,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-ci/locations/us-central1/connections/bq_spanner_conn_test,_ENABLE_EMBEDDINGS=true,_VERSION=${_VERSION},_ENV_SUFFIX=-staging,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/'
   dir: 'pipeline/workflow'
 
-# 3. Run E2E Tests on Staging
-- id: 'e2e-test-staging'
+# 3. Run E2E Tests on Test Environment
+- id: 'e2e-test'
   name: 'ghcr.io/astral-sh/uv:python3.11-bookworm'
   entrypoint: 'sh'
   args:
@@ -68,22 +52,30 @@ steps:
     - |
       uv run python spanner_ingestion_test.py
   env:
-    - 'PROJECT_ID=${_PROJECT_ID}'
-    - 'LOCATION=${_LOCATION}'
-    - 'SPANNER_PROJECT_ID=${_SPANNER_PROJECT_ID}'
-    - 'SPANNER_INSTANCE_ID=${_SPANNER_INSTANCE_ID}'
-    - 'SPANNER_DATABASE_ID=${_SPANNER_DATABASE_ID}'
-    - 'GCS_BUCKET_ID=${_GCS_BUCKET_ID}'
+    - 'PROJECT_ID=datcom-ci'
+    - 'LOCATION=us-central1'
+    - 'SPANNER_DATABASE_PATH=projects/datcom-ci/instances/datcom-spanner-test/databases/dc-test-db'
+    - 'GCS_BUCKET_ID=datcom-ci-test'
   dir: 'pipeline/workflow'
 
-# 4. Promote prod version
+# 4. Trigger Staging Build (Child)
+- id: 'deploy-staging'
+  name: 'gcr.io/cloud-builders/gcloud'
+  args:
+    - 'builds'
+    - 'submit'
+    - '.'
+    - '--config=deploy-services.yaml'
+    - '--substitutions=_PROJECT_ID=datcom-import-automation-prod,_SPANNER_DATABASE_PATH=projects/datcom-store/instances/dc-graph-staging/databases/dc_graph,_GCS_BUCKET_ID=datcom-prod-imports,_GCS_MOUNT_BUCKET=datcom-volume-mount,_BQ_DATASET_ID=datacommons,_LOCATION=us-central1,_PROJECT_NUMBER=965988403328,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-import-automation-prod/locations/us-central1/connections/bq_spanner_conn_staging,_ENABLE_EMBEDDINGS=true,_VERSION=${_VERSION},_ENV_SUFFIX=-staging,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/'
+  dir: 'pipeline/workflow'
+
+# 5. Promote prod version
 - id: 'update-version'
   name: 'gcr.io/cloud-builders/gcloud'
   args: ['builds', 'submit', '.', '--config', 'update-version.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_PROD_TAG=${_PROD_TAG},_VERSION=${_VERSION}']
   dir: 'pipeline/workflow'
 
-# 5. Trigger Production Build (Child)
-# Uses default (Production) values defined in cloudbuild.yaml.
+# 6. Trigger Production Build (Child)
 - id: 'deploy-prod'
   name: 'gcr.io/cloud-builders/gcloud'
   args:
@@ -91,8 +83,7 @@ steps:
     - 'submit'
     - '.'
     - '--config=deploy-services.yaml'
-    - '--project=${_PROJECT_ID}'  # Build runs in CI project, deploys to Prod
-    - '--substitutions=_VERSION=${_PROD_TAG}'
+    - '--substitutions=_PROJECT_ID=datcom-import-automation-prod,_SPANNER_DATABASE_PATH=projects/datcom-store/instances/dc-graph-prod/databases/dc_graph,_GCS_BUCKET_ID=datcom-prod-imports,_GCS_MOUNT_BUCKET=datcom-volume-mount,_BQ_DATASET_ID=datacommons,_LOCATION=us-central1,_PROJECT_NUMBER=965988403328,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-import-automation-prod/locations/us-central1/connections/bq_spanner_conn_prod,_ENABLE_EMBEDDINGS=true,_VERSION=${_PROD_TAG},_ENV_SUFFIX=,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/'
   dir: 'pipeline/workflow'
 
 options:

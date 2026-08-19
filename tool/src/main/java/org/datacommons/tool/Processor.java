@@ -212,7 +212,7 @@ public class Processor {
 
   private void processLoadedGraph(Mcf.McfGraph n, Mcf.McfType type)
       throws IOException, InterruptedException {
-    n = McfMutator.mutate(n.toBuilder(), logCtx);
+    n = McfMutator.mutate(n.toBuilder(), logCtx, /* isBaseDc= */ true);
 
     if (idResolver != null && type == Mcf.McfType.INSTANCE_MCF) {
       idResolver.addLocalGraph(n);
@@ -324,7 +324,7 @@ public class Processor {
     Map<Mcf.McfStatVarObsSeries.Key, Mcf.McfStatVarObsSeries.Builder> groupedObservations =
         new HashMap<>();
     while ((g = parser.get()) != null) {
-      g = McfMutator.mutate(g.toBuilder(), logCtx);
+      g = McfMutator.mutate(g.toBuilder(), logCtx, /* isBaseDc= */ true);
 
       // This will set counters/messages in logCtx.
       boolean success =

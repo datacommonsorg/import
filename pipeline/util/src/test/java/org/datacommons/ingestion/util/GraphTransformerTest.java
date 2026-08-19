@@ -19,6 +19,7 @@ import org.junit.runners.JUnit4;
 public class GraphTransformerTest {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
+  private final GraphTransformer graphTransformer = new GraphTransformer(/* isBaseDc= */ true);
 
   @Test
   public void testQuantityTransformation() {
@@ -136,8 +137,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -247,8 +247,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -352,8 +351,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -511,8 +509,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -652,8 +649,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -801,8 +797,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -937,8 +932,7 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
-    PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
@@ -1042,8 +1036,141 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
+    PCollection<McfGraph> output = p.apply(Create.of(inputGraph)).apply(ParDo.of(graphTransformer));
+
+    PCollection<McfGraph> mergedOutput =
+        output.apply(
+            org.apache.beam.sdk.transforms.Combine.globally(
+                    new PipelineUtilsTest.MergeMcfGraphsCombineFn())
+                .withoutDefaults());
+
+    PAssert.that(mergedOutput).containsInAnyOrder(expectedGraph);
+    p.run().waitUntilFinish();
+  }
+
+  @Test
+  public void testStatVarTransformationWhenNotBaseDc() {
+    McfGraph inputGraph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "NYTCovid19CumulativeCases",
+                PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:StatisticalVariable")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "populationType",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:MedicalConditionIncident")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "measuredProperty",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:cumulativeCount")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "incidentType",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:COVID_19")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "medicalStatus",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:ConfirmedCase")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .build())
+            .build();
+
+    // When isBaseDc is false, "definition" should NOT be generated, but "name" and
+    // "constraintProperties" are.
+    McfGraph expectedGraph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "NYTCovid19CumulativeCases",
+                PropertyValues.newBuilder()
+                    .putPvs(
+                        "typeOf",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:StatisticalVariable")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "populationType",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:MedicalConditionIncident")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "measuredProperty",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:cumulativeCount")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "incidentType",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:COVID_19")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "medicalStatus",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("dcid:ConfirmedCase")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "constraintProperties",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("incidentType")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue("medicalStatus")
+                                    .setType(ValueType.RESOLVED_REF))
+                            .build())
+                    .putPvs(
+                        "name",
+                        Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setValue(
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
+                                    .setType(ValueType.TEXT))
+                            .build())
+                    .build())
+            .build();
+
     PCollection<McfGraph> output =
-        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer()));
+        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer(/* isBaseDc= */ false)));
 
     PCollection<McfGraph> mergedOutput =
         output.apply(

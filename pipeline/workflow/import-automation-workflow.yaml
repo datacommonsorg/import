@@ -12,7 +12,13 @@ main:
           - gcsMountBucket: ${sys.get_env("GCS_MOUNT_BUCKET")}
           - gcsImportBucket: ${sys.get_env("GCS_BUCKET_ID")}
           - gcsMountPath: "/tmp/gcs"
-          - helperUrl: ${"https://ingestion-helper-service-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
+          - envSuffix: ${default(sys.get_env("ENV_SUFFIX"), "")}
+          - helperService: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + envSuffix}
+          - helperUrl: ${"https://" + helperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
+          - runStaging: ${default(map.get(args, "runStaging"), true)}
+          - stagingResult: "SKIPPED"
+          - runProd: ${default(map.get(args, "runProd"), false)}
+          - prodResult: "SKIPPED"
           - startTime: ${sys.now()}
           - defaultResources:
               machine: "n2-standard-8"
@@ -20,10 +26,6 @@ main:
               memory: 32768
               disk: 100
           - resources: ${default(map.get(args, "resources"), defaultResources)}
-          - runIngestion: ${default(map.get(args, "runIngestion"), false)}
-          - ingestionArgs:
-              importList:
-                - importName: ${text.split(importName, ":")[1]}
     - runImportJob:
         try:
           call: googleapis.batch.v1.projects.locations.jobs.create
@@ -89,6 +91,51 @@ main:
                 result: functionResponse
             - failWorkflow:
                 raise: ${e}
+    - checkStagingEligible:
+        switch:
+          - condition: ${not runStaging}
+            next: checkProdEligible
+    - ingestStaging:
+        call: ingestEnvironment
+        args:
+          projectId: ${projectId}
+          region: ${region}
+          importName: ${importName}
+          envSuffix: "-staging"
+          waitIngestion: true
+        result: stagingResult
+    - checkProdEligible:
+        switch:
+          - condition: ${not runProd or (runStaging and stagingResult.status != "SUCCESS")}
+            next: returnResult
+    - ingestProd:
+        call: ingestEnvironment
+        args:
+          projectId: ${projectId}
+          region: ${region}
+          importName: ${importName}
+          envSuffix: ""
+          waitIngestion: false
+        result: prodResult
+    - returnResult:
+        return:
+          jobId: ${jobId}
+          importName: ${importName}
+          staging: ${stagingResult}
+          prod: ${prodResult}
+
+ingestEnvironment:
+  params: [projectId, region, importName, envSuffix, waitIngestion]
+  steps:
+    - initSub:
+        assign:
+          - helperService: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + envSuffix}
+          - spannerWorkflow: ${default(sys.get_env("SPANNER_INGESTION_WORKFLOW_NAME"), "spanner-ingestion-workflow") + envSuffix}
+          - helperUrl: ${"https://" + helperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
+          - ingestionArgs:
+              importList:
+                - importName: ${text.split(importName, ":")[len(text.split(importName, ":")) - 1]}
+          - ingestionExecutionResponse: null
     - updateImportVersion:
         call: http.post
         args:
@@ -102,19 +149,25 @@ main:
             override: false
             comment: '${"import-workflow:" + sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
         result: functionResponse
-    - runIngestion:
+    - checkSkipIngestion:
         switch:
-          - condition: ${runIngestion}
-            steps:
-              - runSpannerIngestion:
-                  call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
-                  args:
-                    parent: ${"projects/" + projectId + "/locations/" + region + "/workflows/spanner-ingestion-workflow"}
-                    body:
-                      argument: ${json.encode_to_string(ingestionArgs)}
-                    connector_params:
-                      skip_polling: true
-    - returnResult:
+          - condition: '${not text.match_regex(functionResponse.body.message, ".*Status: STAGING.*")}'
+            return:
+              importName: ${importName}
+              status: "SKIPPED"
+              message: '${"Import status is not STAGING (" + functionResponse.body.message + "); skipped Spanner ingestion."}'
+    - runSpannerIngestion:
+        call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
+        args:
+          parent: ${"projects/" + projectId + "/locations/" + region + "/workflows/" + spannerWorkflow}
+          body:
+            argument: ${json.encode_to_string(ingestionArgs)}
+          connector_params:
+            timeout: 21600
+            skip_polling: ${not waitIngestion}
+        result: ingestionExecutionResponse
+    - returnSubResult:
         return:
-          jobId: ${jobId}
           importName: ${importName}
+          status: "SUCCESS"
+          ingestionExecution: ${ingestionExecutionResponse}

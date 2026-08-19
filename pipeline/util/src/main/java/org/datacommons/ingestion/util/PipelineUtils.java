@@ -24,7 +24,6 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
@@ -151,11 +150,7 @@ public class PipelineUtils {
     String delimiter = "\n\n";
     PCollection<String> nodes =
         p.apply(
-            "ReadMcfFiles-" + name,
-            TextIO.read()
-                .withDelimiter(delimiter.getBytes())
-                .from(files)
-                .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW));
+            "ReadMcfFiles-" + name, TextIO.read().withDelimiter(delimiter.getBytes()).from(files));
 
     PCollection<McfGraph> mcf =
         nodes.apply(
