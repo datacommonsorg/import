@@ -279,15 +279,16 @@ class AggregationOrchestrator:
             )
 
     def _run_global_calculations(self, dry_run: bool = True) -> Optional[ImportExecutionResult]:
-        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION)."""
+        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION, TOPIC_LIST_EDGES)."""
         global_calcs = [
             calc for calc in self.calculations
             if calc.get("type") in GLOBAL_CALCULATION_TYPES and not calc.get("disabled", False)
         ]
-        if not global_calcs:
+        should_generate_topic_lists = getattr(self.config, "generate_topic_list_edges", False)
+        if not global_calcs and not should_generate_topic_lists:
             return None
 
-        logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} step(s)) ===")
+        logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} config step(s)) ===")
         for calc in global_calcs:
             step_type = calc.get("type")
             if dry_run:
@@ -307,6 +308,31 @@ class AggregationOrchestrator:
                         )
                 except Exception as e:
                     logging.error(f"Global calculation step '{step_type}' failed: {e}")
+                    return ImportExecutionResult(
+                        import_name="GLOBAL",
+                        success=False,
+                        stages_executed=[],
+                        error_message=str(e)
+                    )
+
+        if should_generate_topic_lists:
+            logging.info("Triggering global step: 'TOPIC_LIST_EDGES' (Consolidated relevantVariableList & memberList)...")
+            if dry_run:
+                logging.info("[DRY RUN] Would execute global step: Topic & SVPG List Edges")
+            else:
+                try:
+                    generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
+                    topic_job = generator.run_topic_list_edges()
+                    if topic_job and hasattr(topic_job, "job_id"):
+                        logging.info(f"Submitted global topic list edge job: {topic_job.job_id}")
+                        self._wait_for_jobs(
+                            job_ids=[topic_job.job_id],
+                            poll_interval=self.poll_interval,
+                            step_name="Topic & SVPG List Edges",
+                            single_import="GLOBAL"
+                        )
+                except Exception as e:
+                    logging.error(f"Global topic list edge generation failed: {e}")
                     return ImportExecutionResult(
                         import_name="GLOBAL",
                         success=False,
@@ -335,6 +361,7 @@ class AggregationOrchestrator:
         to_delete = set()
         linked_to_delete = set()
         delete_stat_var_groups = False
+        should_delete_topic_lists = getattr(self.config, "generate_topic_list_edges", False)
         for single_import in imports:
             for calc in self.calculations:
                 if self._calc_applies_to_import(calc, single_import):
@@ -346,7 +373,7 @@ class AggregationOrchestrator:
                     if calc.get("type") == CalculationType.STAT_VAR_GROUPS:
                         delete_stat_var_groups = True
 
-        if not to_delete and not linked_to_delete and not delete_stat_var_groups:
+        if not to_delete and not linked_to_delete and not delete_stat_var_groups and not should_delete_topic_lists:
             logging.info("No existing aggregated data resolved for deletion.")
             return
 
@@ -359,6 +386,8 @@ class AggregationOrchestrator:
                 logging.info(f"[Dry Run] Would delete linked relationship edges for imports: {linked_to_delete_list}")
             if delete_stat_var_groups:
                 logging.info("[Dry Run] Would delete StatVarGroup edges across all provenances.")
+            if should_delete_topic_lists:
+                logging.info("[Dry Run] Would delete topic and peer group list edges across all provenances.")
         else:
             if to_delete_list:
                 self.deleter.delete_aggregated_data(to_delete_list)
@@ -366,6 +395,8 @@ class AggregationOrchestrator:
                 self.deleter.delete_linked_edges(linked_to_delete_list)
             if delete_stat_var_groups:
                 self.deleter.delete_stat_var_group_edges()
+            if should_delete_topic_lists:
+                self.deleter.delete_topic_list_edges()
 
     def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.
@@ -576,14 +607,7 @@ class AggregationOrchestrator:
         """Triggers linked edge aggregations."""
         logging.info(f"  -> Linked Edges Aggregation for imports {applicable_imports}")
         generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
-        generate_list_edges = config.get(
-            "generate_topic_list_edges",
-            getattr(self.config, "generate_topic_list_edges", False)
-        )
-        edge_config = LinkedEdgeConfig(
-            import_names=applicable_imports,
-            generate_topic_list_edges=generate_list_edges
-        )
+        edge_config = LinkedEdgeConfig(import_names=applicable_imports)
         return generator.run_all(config=edge_config)
 
     def _trigger_provenance_summary(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:

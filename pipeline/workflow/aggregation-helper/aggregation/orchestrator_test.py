@@ -531,9 +531,14 @@ class TestOrchestratorOrdering(unittest.TestCase):
         ))
         self.assertTrue(orchestrator_enabled._calc_applies_to_import(svg_calc, "schema"))
 
+    @patch('aggregation.orchestrator.AggregationDeleter')
     @patch('aggregation.orchestrator.LinkedEdgeGenerator')
-    def test_trigger_linked_edges_forwards_generate_topic_list_edges(self, mock_linked_gen, mock_executor):
-        """Verifies _trigger_linked_edges passes generate_topic_list_edges flag to LinkedEdgeConfig."""
+    def test_global_topic_list_edges_execution(self, mock_linked_gen, mock_deleter, mock_executor):
+        """Verifies global topic list edge consolidation runs when generate_topic_list_edges is True."""
+        mock_job = MagicMock()
+        mock_job.job_id = "job-topic-1"
+        mock_linked_gen.return_value.run_topic_list_edges.return_value = mock_job
+
         orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
             project_id="proj",
@@ -542,24 +547,15 @@ class TestOrchestratorOrdering(unittest.TestCase):
             config_file_path=self.config_path,
             generate_topic_list_edges=True
         ))
-        orchestrator._trigger_linked_edges({}, ["import1"])
-        mock_linked_gen.return_value.run_all.assert_called_once()
-        config_passed = mock_linked_gen.return_value.run_all.call_args[1]["config"]
-        self.assertTrue(config_passed.generate_topic_list_edges)
+        orchestrator.executor = MagicMock()
+        orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
 
-        mock_linked_gen.reset_mock()
-        orchestrator_disabled = AggregationOrchestrator(OrchestratorConfig(
-            connection_id="conn",
-            project_id="proj",
-            instance_id="inst",
-            database_id="db",
-            config_file_path=self.config_path,
-            generate_topic_list_edges=False
-        ))
-        orchestrator_disabled._trigger_linked_edges({}, ["import1"])
-        mock_linked_gen.return_value.run_all.assert_called_once()
-        config_passed = mock_linked_gen.return_value.run_all.call_args[1]["config"]
-        self.assertFalse(config_passed.generate_topic_list_edges)
+        result = orchestrator.run(active_imports=[], dry_run=False)
+        self.assertTrue(result.success)
+        self.assertIn("GLOBAL", result.import_results)
+        self.assertTrue(result.import_results["GLOBAL"].success)
+        mock_deleter.return_value.delete_topic_list_edges.assert_called_once()
+        mock_linked_gen.return_value.run_topic_list_edges.assert_called_once()
 
 
 class TestConfigSanity(unittest.TestCase):

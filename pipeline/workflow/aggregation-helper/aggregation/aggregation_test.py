@@ -237,12 +237,11 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.mock_executor.execute.return_value = mock_job
 
         jobs = generator.run_all(LinkedEdgeConfig(
-            import_names=["import1", "import2"],
-            generate_topic_list_edges=True
+            import_names=["import1", "import2"]
         ))
 
-        self.assertEqual(len(jobs), 4)  # Should run 4 queries including topic list edges
-        self.assertEqual(self.mock_executor.execute.call_count, 4)
+        self.assertEqual(len(jobs), 3)  # Runs the 3 scoped linked edge queries
+        self.assertEqual(self.mock_executor.execute.call_count, 3)
 
         # Verify queries contain connection id and spanner destination uri
         calls = self.mock_executor.execute.call_args_list
@@ -250,20 +249,6 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
             query = call[0][0]
             self.assertIn("test-conn", query)
             self.assertIn("spanner-uri", query)
-
-    def test_run_all_disabled_topic_list_edges(self):
-        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
-
-        mock_job = MagicMock()
-        self.mock_executor.execute.return_value = mock_job
-
-        jobs = generator.run_all(LinkedEdgeConfig(
-            import_names=["import1", "import2"],
-            generate_topic_list_edges=False
-        ))
-
-        self.assertEqual(len(jobs), 3)  # Only the 3 base linked edge queries
-        self.assertEqual(self.mock_executor.execute.call_count, 3)
 
     def test_run_topic_list_edges(self):
         generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)

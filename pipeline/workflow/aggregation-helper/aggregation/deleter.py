@@ -95,14 +95,27 @@ class AggregationDeleter:
         if not imports_to_delete:
             return 0
         provenance_names = [get_provenance_name(f"generated/{name}", self.is_base_dc) for name in imports_to_delete]
-        provenance_names.append(get_provenance_name("generated/TopicLists", self.is_base_dc))
         sql = (
             "DELETE FROM Edge "
             "WHERE provenance IN UNNEST(@provenances) "
-            "AND predicate IN ('linkedContainedInPlace', 'linkedMemberOf', 'linkedMember', 'relevantVariableList', 'memberList')"
+            "AND predicate IN ('linkedContainedInPlace', 'linkedMemberOf', 'linkedMember')"
         )
         params = {"provenances": provenance_names}
         param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
         rows = self.spanner_database.execute_partitioned_dml(sql, params=params, param_types=param_types)
         logging.info(f"Deleted {rows} linked relationship edges for imports: {imports_to_delete}")
+        return rows
+
+    def delete_topic_list_edges(self) -> int:
+        """Deletes consolidated topic and peer group list edges from Spanner."""
+        provenance_name = get_provenance_name("generated/TopicLists", self.is_base_dc)
+        sql = (
+            "DELETE FROM Edge "
+            "WHERE provenance = @provenance "
+            "AND predicate IN ('relevantVariableList', 'memberList')"
+        )
+        params = {"provenance": provenance_name}
+        param_types = {"provenance": spanner.param_types.STRING}
+        rows = self.spanner_database.execute_partitioned_dml(sql, params=params, param_types=param_types)
+        logging.info(f"Deleted {rows} topic and peer group list edges for provenance: {provenance_name}")
         return rows

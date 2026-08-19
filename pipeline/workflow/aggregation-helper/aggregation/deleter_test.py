@@ -129,9 +129,47 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertIn("DELETE FROM Edge", sql)
         self.assertIn("provenance IN UNNEST(@provenances)", sql)
         self.assertIn("'linkedContainedInPlace'", sql)
+        self.assertIn("'linkedMemberOf'", sql)
+        self.assertIn("'linkedMember'", sql)
+        self.assertNotIn("'relevantVariableList'", sql)
+        self.assertNotIn("'memberList'", sql)
+        self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA"]})
+
+    @patch('aggregation.deleter.spanner.Client')
+    def test_delete_topic_list_edges_base_dc(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value.database.return_value = mock_db
+        
+        deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=True)
+        deleter.delete_topic_list_edges()
+        
+        mock_db.execute_partitioned_dml.assert_called_once()
+        call_args = mock_db.execute_partitioned_dml.call_args
+        sql = call_args[0][0]
+        params = call_args[1]["params"]
+        self.assertIn("DELETE FROM Edge", sql)
+        self.assertIn("provenance = @provenance", sql)
         self.assertIn("'relevantVariableList'", sql)
         self.assertIn("'memberList'", sql)
-        self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA", "dc/base/generated/TopicLists"]})
+        self.assertEqual(params, {"provenance": "dc/base/generated/TopicLists"})
+
+    @patch('aggregation.deleter.spanner.Client')
+    def test_delete_topic_list_edges_custom_dc(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value.database.return_value = mock_db
+        
+        deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=False)
+        deleter.delete_topic_list_edges()
+        
+        mock_db.execute_partitioned_dml.assert_called_once()
+        call_args = mock_db.execute_partitioned_dml.call_args
+        sql = call_args[0][0]
+        params = call_args[1]["params"]
+        self.assertIn("DELETE FROM Edge", sql)
+        self.assertIn("provenance = @provenance", sql)
+        self.assertIn("'relevantVariableList'", sql)
+        self.assertIn("'memberList'", sql)
+        self.assertEqual(params, {"provenance": "generated/TopicLists"})
 
 
 if __name__ == '__main__':
