@@ -13,13 +13,21 @@
 # limitations under the License.
 
 import json
+import os
 from collections import OrderedDict
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 from google.cloud.spanner_v1.param_types import STRING, Array
 
-from utils.embeddings import EmbeddingUtils
+from utils.embeddings import EmbeddingUtils, _generate_spanner_query
+
+
+def _load_test_query(filename: str) -> str:
+    path = os.path.join(os.path.dirname(__file__), "test_data", filename)
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read().strip()
+
 
 class TestEmbeddingUtils(unittest.TestCase):
 
@@ -29,6 +37,14 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.mock_spanner.database = self.mock_database
         self.mock_spanner.embedding_table = "NodeEmbedding"
         self.utils = EmbeddingUtils(self.mock_spanner)
+
+    def test_generate_spanner_query_full_structure(self):
+        query = _generate_spanner_query({
+            "StatisticalVariable": ["description"],
+            "Topic": ["description"]
+        }, None, "TRUE")
+        expected_query = _load_test_query("generate_spanner_query_full_structure.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
 
     def test_get_latest_lock_timestamp(self):
         mock_snapshot = MagicMock()
@@ -89,13 +105,12 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         nodes = list(self.utils._get_updated_nodes(None, {"Topic": ["description"]}, "NoFilter", 3600))
         
-        # Verify Spanner call
+        # Verify Spanner call with full SQL validation
         mock_snapshot.execute_sql.assert_called_once()
         args, kwargs = mock_snapshot.execute_sql.call_args
         query = args[0]
-        self.assertIn("GRAPH DCGraph", query)
-        self.assertIn("\"Topic\" IN UNNEST(n.types)", query)
-        self.assertIn("WHERE TRUE", query)
+        expected_query = _load_test_query("get_updated_nodes.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
         self.assertEqual(kwargs["params"], {})
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/1")
@@ -126,13 +141,12 @@ class TestEmbeddingUtils(unittest.TestCase):
         test_timestamp = datetime(2026, 4, 25, 0, 0, 0)
         nodes = list(self.utils._get_updated_nodes(test_timestamp, {"Topic": ["description"]}, "NoFilter", 3600))
         
-        # Verify Spanner call
+        # Verify Spanner call with full SQL validation
         mock_snapshot.execute_sql.assert_called_once()
         args, kwargs = mock_snapshot.execute_sql.call_args
         query = args[0]
-        self.assertIn("GRAPH DCGraph", query)
-        self.assertIn("\"Topic\" IN UNNEST(n.types)", query)
-        self.assertIn("last_update_timestamp > TIMESTAMP('2026-04-25 00:00:00')", query)
+        expected_query = _load_test_query("get_updated_nodes_with_timestamp.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
         self.assertEqual(kwargs["params"], {})
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/2")
@@ -165,12 +179,14 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         nodes = list(self.utils._get_updated_nodes(None, {"Topic": ["description"]}, "NLStatisticalVariable", 3600))
 
-        # Verify Spanner call
+        # Verify Spanner call with full SQL validation
         mock_snapshot.execute_sql.assert_called_once()
         args, kwargs = mock_snapshot.execute_sql.call_args
         query = args[0]
-        self.assertIn("GRAPH DCGraph", query)
+        expected_query = _load_test_query("get_updated_nodes_with_nl_filter.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
         self.assertIn("n.subject_id IN UNNEST(@nl_stat_vars)", query)
+        self.assertIn("JSON_OBJECT", query)
         self.assertEqual(kwargs["params"], {"nl_stat_vars": ["dc/1", "dc/2"]})
         self.assertEqual(kwargs["param_types"], {"nl_stat_vars": Array(STRING)})
         self.assertEqual(len(nodes), 1)
@@ -252,6 +268,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             embedding_table="NodeEmbedding",
             embedding_label="base_text_embedding",
             task_type="RETRIEVAL_QUERY",
+            node_filter_type="NoFilter",
             timeout=3600
         )
         self.assertEqual(affected_rows, 8)

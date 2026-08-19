@@ -116,6 +116,13 @@ class TestConfig(unittest.TestCase):
                 model_name="NodeEmbeddingModel",
                 task_type="RETRIEVAL_QUERY",
                 node_types={"StatisticalVariable": ["description"], "Topic": ["description"]},
+                node_filter_type="NoFilter"
+            ),
+            config.EmbeddingSpec(
+                embedding_label="nl_stat_var_embedding",
+                model_name="NodeEmbeddingModel",
+                task_type="RETRIEVAL_QUERY",
+                node_types={"StatisticalVariable": [], "Topic": []},
                 node_filter_type="NLStatisticalVariable"
             )
         ]

@@ -226,68 +226,75 @@ class EmbeddingGenerator:
             raise
 
     @staticmethod
-    def _generate_spanner_query(nodes: Dict[str, List[str]], latest_lock_timestamp: Optional[str] = None) -> str:
+    def _generate_spanner_query(nodes: Any, latest_lock_timestamp: Optional[str] = None, filter_condition: str = "TRUE") -> str:
+        """Generates the Spanner GQL query for extracting node data and JSON embedding_content."""
+        if hasattr(nodes, 'node_types'):
+            spec = nodes
+            nodes = spec.node_types
+            if getattr(spec, 'node_filter_type', None) == "NLStatisticalVariable":
+                nl_records = _extract_nl_stat_var()
+                dcids = sorted(list({r["dcid"] for r in nl_records}))
+                quoted_dcids = ", ".join([f"'{d}'" for d in dcids])
+                filter_condition = f"n.subject_id IN ({quoted_dcids})"
+
         match_clauses = []
         for node_type, predicate_types in nodes.items():
             safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
             predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
             update_node_cond, update_property_cond = _fresh_data_condition(latest_lock_timestamp, predicate_types_list_sql)
-            spanner_query_template = f"""
-                MATCH
-                (n:Node WHERE "{node_type}" IN UNNEST(n.types))
-                OPTIONAL MATCH
-                (n)-[e: Edge
-                    WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
-                (o:Node
-                    WHERE o.value IS NOT NULL
-                    AND o.value <> "")
-                WITH
-                    n,
-                    e.predicate AS pred,
-                    STRING_AGG(o.value, ". ") AS values,
-                    {update_property_cond} AS update_property_data
-                GROUP BY n, pred
-                RETURN
-                n.subject_id AS subject_id,
-                n.types AS node_types,
-                {update_node_cond} AS update_node_data,
-                CASE 
-                    WHEN COUNT(pred) > 0 THEN
-                    JSON_OBJECT(
-                        "subject_id", n.subject_id,
-                        "name", n.name,
-                        "properties", JSON_OBJECT(
-                        ARRAY_AGG(pred IGNORE NULLS),
-                        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
-                        )
-                    )
-                    ELSE
-                    JSON_OBJECT(
-                        "subject_id", n.subject_id,
-                        "name", n.name
-                    )
-                END AS embedding_content,
-                CASE 
-                    WHEN COUNT(pred) > 0 THEN
-                        LOGICAL_OR(update_property_data)
-                    ELSE
-                        FALSE
-                END AS update_property_data
-                GROUP BY n
-            """
+            spanner_query_template = f"""    MATCH
+    (n:Node WHERE "{node_type}" IN UNNEST(n.types) AND {filter_condition})
+    OPTIONAL MATCH
+    (n)-[e: Edge
+        WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
+    (o:Node
+        WHERE o.value IS NOT NULL
+        AND o.value <> "")
+    WITH
+        n,
+        e.predicate AS pred,
+        STRING_AGG(o.value, ". ") AS values,
+        {update_property_cond} AS update_property_data
+    GROUP BY n, pred
+    RETURN
+    n.subject_id AS subject_id,
+    n.types AS node_types,
+    {update_node_cond} AS update_node_data,
+    CASE 
+        WHEN COUNT(pred) > 0 THEN
+        JSON_OBJECT(
+            "subject_id", n.subject_id,
+            "name", n.name,
+            "properties", JSON_OBJECT(
+            ARRAY_AGG(pred IGNORE NULLS),
+            ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
+            )
+        )
+        ELSE
+        JSON_OBJECT(
+            "subject_id", n.subject_id,
+            "name", n.name
+        )
+    END AS embedding_content,
+    CASE 
+        WHEN COUNT(pred) > 0 THEN
+            LOGICAL_OR(update_property_data)
+        ELSE
+            FALSE
+    END AS update_property_data
+    GROUP BY n"""
             match_clauses.append(spanner_query_template)
 
         inner_gql = "\nUNION ALL\n".join(match_clauses)
         return f"""
-            SELECT
-                subject_id,
-                node_types,
-                embedding_content
-            FROM GRAPH_TABLE(DCGraph
-                {inner_gql}
-            )
-            WHERE update_node_data OR update_property_data
-        """
+SELECT
+    subject_id,
+    node_types,
+    embedding_content
+FROM GRAPH_TABLE(DCGraph
+{inner_gql}
+)
+WHERE update_node_data OR update_property_data"""
 
     def _stream_spanner_to_bq(self, spanner_query: str, raw_nodes_table_id: str, batch_size: int = 5000) -> None:
         """Streams Spanner query results in batches into a BigQuery table."""

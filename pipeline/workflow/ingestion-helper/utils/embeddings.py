@@ -72,62 +72,59 @@ def _generate_spanner_query(nodes: Dict[str, List[str]], timestamp: Optional[Any
         safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
         predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
         update_node_cond, update_property_cond = _fresh_data_condition(timestamp, predicate_types_list_sql)
-        spanner_query_template = f"""
-            MATCH
-            (n:Node WHERE "{node_type}" IN UNNEST(n.types) AND {filter_condition})
-            OPTIONAL MATCH
-            (n)-[e: Edge
-                WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
-            (o:Node
-                WHERE o.value IS NOT NULL
-                AND o.value <> "")
-            WITH
-                n,
-                e.predicate AS pred,
-                STRING_AGG(o.value, ". ") AS values,
-                {update_property_cond} AS update_property_data
-            GROUP BY n, pred
-            RETURN
-            n.subject_id AS subject_id,
-            n.types AS node_types,
-            {update_node_cond} AS update_node_data,
-            CASE 
-                WHEN COUNT(pred) > 0 THEN
-                JSON_OBJECT(
-                    "subject_id", n.subject_id,
-                    "name", n.name,
-                    "properties", JSON_OBJECT(
-                    ARRAY_AGG(pred IGNORE NULLS),
-                    ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
-                    )
-                )
-                ELSE
-                JSON_OBJECT(
-                    "subject_id", n.subject_id,
-                    "name", n.name
-                )
-            END AS embedding_content,
-            CASE 
-                WHEN COUNT(pred) > 0 THEN
-                    LOGICAL_OR(update_property_data)
-                ELSE
-                    FALSE
-            END AS update_property_data
-            GROUP BY n
-        """
+        spanner_query_template = f"""    MATCH
+    (n:Node WHERE "{node_type}" IN UNNEST(n.types) AND {filter_condition})
+    OPTIONAL MATCH
+    (n)-[e: Edge
+        WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
+    (o:Node
+        WHERE o.value IS NOT NULL
+        AND o.value <> "")
+    WITH
+        n,
+        e.predicate AS pred,
+        STRING_AGG(o.value, ". ") AS values,
+        {update_property_cond} AS update_property_data
+    GROUP BY n, pred
+    RETURN
+    n.subject_id AS subject_id,
+    n.types AS node_types,
+    {update_node_cond} AS update_node_data,
+    CASE 
+        WHEN COUNT(pred) > 0 THEN
+        JSON_OBJECT(
+            "subject_id", n.subject_id,
+            "name", n.name,
+            "properties", JSON_OBJECT(
+            ARRAY_AGG(pred IGNORE NULLS),
+            ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
+            )
+        )
+        ELSE
+        JSON_OBJECT(
+            "subject_id", n.subject_id,
+            "name", n.name
+        )
+    END AS embedding_content,
+    CASE 
+        WHEN COUNT(pred) > 0 THEN
+            LOGICAL_OR(update_property_data)
+        ELSE
+            FALSE
+    END AS update_property_data
+    GROUP BY n"""
         match_clauses.append(spanner_query_template)
 
     inner_gql = "\nUNION ALL\n".join(match_clauses)
     return f"""
-    SELECT
-        subject_id,
-        node_types,
-        embedding_content
-    FROM GRAPH_TABLE(DCGraph
-        {inner_gql}
-    )
-    WHERE update_node_data OR update_property_data
-    """
+SELECT
+    subject_id,
+    node_types,
+    embedding_content
+FROM GRAPH_TABLE(DCGraph
+{inner_gql}
+)
+WHERE update_node_data OR update_property_data"""
 
 
 class EmbeddingUtils:
