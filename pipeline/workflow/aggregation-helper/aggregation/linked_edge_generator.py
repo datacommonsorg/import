@@ -227,14 +227,10 @@ class LinkedEdgeGenerator:
         CREATE OR REPLACE TEMPORARY TABLE `temp_topic_nodes` AS
         SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'Topic'
         UNION DISTINCT
-        SELECT DISTINCT subject_id FROM `temp_base_member` 
-        WHERE subject_id LIKE '%/topic/%' OR subject_id LIKE 'dc/topic%';
+        SELECT DISTINCT subject_id FROM `temp_base_member` WHERE predicate = 'relevantVariable';
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_svpg_nodes` AS
-        SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'StatVarPeerGroup'
-        UNION DISTINCT
-        SELECT DISTINCT subject_id FROM `temp_base_member` 
-        WHERE subject_id LIKE '%/svpg/%' OR subject_id LIKE 'dc/svpg%';
+        SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'StatVarPeerGroup';
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_all_topic_svpg_nodes` AS
         SELECT subject_id FROM `temp_topic_nodes`
@@ -250,7 +246,8 @@ class LinkedEdgeGenerator:
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "Edge"}}' ) AS
-        WITH RECURSIVE Descendants AS (
+        WITH RECURSIVE
+        Descendants AS (
           SELECT
             subject_id,
             object_id AS descendant,
@@ -314,14 +311,10 @@ class LinkedEdgeGenerator:
         CREATE OR REPLACE TEMPORARY TABLE `temp_topic_nodes` AS
         SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'Topic'
         UNION DISTINCT
-        SELECT DISTINCT subject_id FROM `temp_raw_topic_edges` 
-        WHERE subject_id LIKE '%/topic/%' OR subject_id LIKE 'dc/topic%';
+        SELECT DISTINCT subject_id FROM `temp_raw_topic_edges` WHERE predicate = 'relevantVariable';
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_svpg_nodes` AS
-        SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'StatVarPeerGroup'
-        UNION DISTINCT
-        SELECT DISTINCT subject_id FROM `temp_raw_topic_edges` 
-        WHERE subject_id LIKE '%/svpg/%' OR subject_id LIKE 'dc/svpg%';
+        SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'StatVarPeerGroup';
 
         -- Aggregate relevantVariable -> relevantVariableList for Topic nodes
         CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_relevant_variable_list` AS

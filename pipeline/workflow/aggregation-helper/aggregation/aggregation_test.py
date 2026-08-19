@@ -299,8 +299,7 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.assertIn("temp_topic_types", query)
         self.assertIn("temp_topic_nodes", query)
         self.assertIn("temp_svpg_nodes", query)
-        self.assertIn("%/topic/%", query)
-        self.assertIn("%/svpg/%", query)
+        self.assertIn("relevantVariable", query)
         self.assertIn("linkedMember", query)
 
 
