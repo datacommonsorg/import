@@ -203,7 +203,7 @@ class LinkedEdgeGenerator:
     def run_linked_member(
             self,
             import_names: List[str] = None) -> Optional[bigquery.job.QueryJob]:
-        """Expands topic/SVGP descendants to identify leaf members."""
+        """Expands topic/SVGP descendants to identify leaf members and build reverse lookup edges."""
         if not import_names:
             return None
 
@@ -215,11 +215,12 @@ class LinkedEdgeGenerator:
         prov_expr = get_sql_generated_provenance_expr(self.is_base_dc, "provenance")
 
         query = f"""  # nosec
-        -- Pull base edges needed for member aggregation
+        -- Step 1: Extract raw parent-child arcs (relevantVariable for Topics, member for SVPGs)
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_member` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate IN ('relevantVariable', 'member'){provenance_filter}");
 
+        -- Step 2: Fetch Topic and StatVarPeerGroup type definitions to identify valid container nodes
         CREATE OR REPLACE TEMPORARY TABLE `temp_topic_types` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
           "SELECT subject_id, object_id FROM Edge WHERE predicate = 'typeOf' AND object_id IN ('Topic', 'StatVarPeerGroup')");
@@ -237,11 +238,14 @@ class LinkedEdgeGenerator:
         UNION DISTINCT
         SELECT subject_id FROM `temp_svpg_nodes`;
 
+        -- Step 3: Build the hierarchy tree connecting container nodes to their child subtopics or variables
         CREATE OR REPLACE TEMPORARY TABLE `temp_topic_hierarchy` AS
         SELECT DISTINCT b.subject_id, b.object_id, b.provenance
         FROM `temp_base_member` b
         JOIN `temp_all_topic_svpg_nodes` n ON b.subject_id = n.subject_id;
 
+        -- Step 4: Recursively traverse from parent topics down to leaf statistical variables (up to 20 levels)
+        -- Then invert the edge direction to create a reverse index: Variable -> linkedMember -> AncestorTopic
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
@@ -298,12 +302,12 @@ class LinkedEdgeGenerator:
         output_provenance = f"{prefix}generated/TopicLists"
 
         query = f"""  # nosec
-        -- Pull raw relevantVariable and member arcs across all active topics
+        -- Step 1: Pull raw 1-to-1 arcs from Spanner (relevantVariable for Topics, member for SVPGs)
         CREATE OR REPLACE TEMPORARY TABLE `temp_raw_topic_edges` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
           "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate IN ('relevantVariable', 'member')");
 
-        -- Pull global topic & SVPG type definitions to support cross-import schemas
+        -- Step 2: Fetch container type definitions (Topic and StatVarPeerGroup) across all active schemas
         CREATE OR REPLACE TEMPORARY TABLE `temp_topic_types` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
           "SELECT subject_id, object_id FROM Edge WHERE predicate = 'typeOf' AND object_id IN ('Topic', 'StatVarPeerGroup')");
@@ -316,7 +320,8 @@ class LinkedEdgeGenerator:
         CREATE OR REPLACE TEMPORARY TABLE `temp_svpg_nodes` AS
         SELECT DISTINCT subject_id FROM `temp_topic_types` WHERE object_id = 'StatVarPeerGroup';
 
-        -- Aggregate relevantVariable -> relevantVariableList for Topic nodes
+        -- Step 3: Aggregate direct 1-to-1 arcs into sorted, comma-separated strings (no recursion)
+        -- For Topics: relevantVariable -> relevantVariableList (e.g. "VarA,VarB,SubTopicC")
         CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_relevant_variable_list` AS
         SELECT 
           e.subject_id,
@@ -328,7 +333,7 @@ class LinkedEdgeGenerator:
         WHERE e.predicate = 'relevantVariable'
         GROUP BY e.subject_id;
 
-        -- Aggregate member -> memberList for StatVarPeerGroup nodes
+        -- For Peer Groups: member -> memberList (e.g. "VarA,VarB")
         CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_member_list` AS
         SELECT 
           e.subject_id,
@@ -340,7 +345,8 @@ class LinkedEdgeGenerator:
         WHERE e.predicate = 'member'
         GROUP BY e.subject_id;
 
-        -- Generate DCGraph hashed keys for terminal literal nodes
+        -- Step 4: Hash the CSV string values into deterministic node keys (CONCAT(prefix, ':', sha256))
+        -- In Spanner DCGraph schema, string literals are stored in Node.value, linked via Edge.object_id
         CREATE OR REPLACE TEMPORARY TABLE `temp_all_list_edges` AS
         WITH combined AS (
           SELECT subject_id, predicate, list_value, provenance FROM `temp_aggregated_relevant_variable_list`
@@ -355,7 +361,7 @@ class LinkedEdgeGenerator:
           provenance
         FROM combined;
 
-        -- Export Node records (stores raw CSV string in Node.value)
+        -- Step 5: Export terminal Node records to Spanner (stores raw CSV string in Node.value)
         EXPORT DATA
           OPTIONS(
             uri="{dest}",
@@ -370,7 +376,7 @@ class LinkedEdgeGenerator:
           CAST([] AS ARRAY<STRING>) AS types
         FROM `temp_all_list_edges`;
 
-        -- Export Edge records (links Topic/SVPG to Node key)
+        -- Step 6: Export Edge records to Spanner (links Topic/SVPG subject to the hashed Node key)
         EXPORT DATA
           OPTIONS(
             uri="{dest}",

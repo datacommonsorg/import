@@ -323,26 +323,31 @@ class AggregationOrchestrator:
             logging.info("Triggering global step: 'TOPIC_LIST_EDGES' (Consolidated relevantVariableList & memberList)...")
             if dry_run:
                 logging.info("[DRY RUN] Would execute global step: Topic & SVPG List Edges")
-            else:
-                try:
-                    generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
-                    topic_job = generator.run_topic_list_edges()
-                    if topic_job and hasattr(topic_job, "job_id"):
-                        logging.info(f"Submitted global topic list edge job: {topic_job.job_id}")
-                        self._wait_for_jobs(
-                            job_ids=[topic_job.job_id],
-                            poll_interval=self.poll_interval,
-                            step_name="Topic & SVPG List Edges",
-                            single_import="GLOBAL"
-                        )
-                except Exception as e:
-                    logging.error(f"Global topic list edge generation failed: {e}")
-                    return ImportExecutionResult(
-                        import_name="GLOBAL",
-                        success=False,
-                        stages_executed=[],
-                        error_message=str(e)
+                return ImportExecutionResult(
+                    import_name="GLOBAL",
+                    success=True,
+                    stages_executed=[]
+                )
+
+            try:
+                generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
+                topic_job = generator.run_topic_list_edges()
+                if topic_job and hasattr(topic_job, "job_id"):
+                    logging.info(f"Submitted global topic list edge job: {topic_job.job_id}")
+                    self._wait_for_jobs(
+                        job_ids=[topic_job.job_id],
+                        poll_interval=self.poll_interval,
+                        step_name="Topic & SVPG List Edges",
+                        single_import="GLOBAL"
                     )
+            except Exception as e:
+                logging.error(f"Global topic list edge generation failed: {e}")
+                return ImportExecutionResult(
+                    import_name="GLOBAL",
+                    success=False,
+                    stages_executed=[],
+                    error_message=str(e)
+                )
 
         return ImportExecutionResult(
             import_name="GLOBAL",
