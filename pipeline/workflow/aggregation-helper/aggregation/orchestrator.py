@@ -108,6 +108,7 @@ class OrchestratorConfig:
     bq_dataset_id: str = "datacommons"
     generate_stat_var_groups: bool = True
     max_parallel_imports: int = 10
+    deletion_timeout: float = 21600.0
 
 
 class AggregationOrchestrator:
@@ -139,7 +140,8 @@ class AggregationOrchestrator:
             project_id=spanner_proj,
             instance_id=self.config.instance_id,
             database_id=self.config.database_id,
-            is_base_dc=self.config.is_base_dc
+            is_base_dc=self.config.is_base_dc,
+            timeout=self.config.deletion_timeout,
         )
 
         # Resolve paths for config directory and schema
