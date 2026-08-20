@@ -751,11 +751,8 @@ class StatVarGroupGenerator:
           -- specializationOf: SVG child → SVG parent
           -- memberOf: SV child → SVG parent
           CREATE OR REPLACE TEMP TABLE ParentChild AS (
-            SELECT subject_id AS child, object_id AS parent, predicate
-            FROM Edge WHERE predicate = 'specializationOf'
-            UNION ALL
-            SELECT subject_id AS child, object_id AS parent, predicate
-            FROM Edge WHERE predicate = 'memberOf'
+            SELECT DISTINCT subject_id AS child, object_id AS parent, predicate
+            FROM Edge WHERE predicate IN ('specializationOf', 'memberOf')
           );
 
           -- Iteratively identify all prunable SVGs (generated SVGs with <= 1 child).
