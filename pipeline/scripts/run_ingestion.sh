@@ -12,9 +12,10 @@
 
 set -e
 
-IMPORT_NAME="$1"
-ENV="$2"
-LATEST_VERSION="${3:-STAGING}"
+IMPORT_NAME="$(echo "$1" | xargs)"
+ENV="$(echo "$2" | xargs)"
+LATEST_VERSION="$(echo "$3" | xargs)"
+LATEST_VERSION="${LATEST_VERSION:-STAGING}"
 
 if [ -z "$IMPORT_NAME" ] || [ -z "$ENV" ]; then
   echo "Usage: $0 <importName> <env: staging|prod> [latestVersion: default STAGING]"
@@ -46,8 +47,19 @@ HELPER_URL="https://${HELPER_SERVICE}-${PROJECT_NUMBER}.${LOCATION}.run.app"
 # Clean import name if passed with script path prefix (e.g. scripts/foo:Bar -> Bar)
 CLEAN_IMPORT_NAME="${IMPORT_NAME##*:}"
 
+# Extract version directory name if a full GCS path or glob pattern was passed
+IMPORT_PATH="${IMPORT_NAME//://}"
+if [ "$LATEST_VERSION" = "STAGING" ]; then
+  VERSION_NAME="STAGING"
+elif [[ "$LATEST_VERSION" =~ $IMPORT_PATH/([^/]+) ]]; then
+  VERSION_NAME="${BASH_REMATCH[1]}"
+else
+  CLEAN_VERSION="${LATEST_VERSION%%\**}"
+  CLEAN_VERSION="${CLEAN_VERSION%/}"
+  VERSION_NAME="$(basename "${CLEAN_VERSION}")"
+fi
+
 # Update import version and version history in Spanner/GCS
-VERSION_NAME="$(basename "${LATEST_VERSION}")"
 echo "Updating version history for ${IMPORT_NAME} to version ${VERSION_NAME} via ${HELPER_URL}..."
 
 curl -X POST "${HELPER_URL}/imports/version" \
