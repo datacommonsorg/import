@@ -87,7 +87,7 @@ class TestAggregationDeleter(unittest.TestCase):
 
     @patch('aggregation.deleter.spanner.Client')
     def test_delete_aggregated_data_exception_propagates(self, mock_spanner_client):
-        """Verifies that an exception raised during partitioned DML is re-raised by delete_aggregated_data."""
+        """Verifies that an exception raised in a worker thread is re-raised by delete_aggregated_data."""
         mock_db = MagicMock()
         mock_db.execute_partitioned_dml.side_effect = RuntimeError("Spanner deletion error")
         mock_spanner_client.return_value.instance.return_value.database.return_value = mock_db
