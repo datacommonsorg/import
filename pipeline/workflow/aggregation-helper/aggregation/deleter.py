@@ -16,26 +16,41 @@
 
 import concurrent.futures
 import logging
-from typing import List
+from typing import List, Optional
 from google.cloud import spanner
 
 from .common import get_provenance_name, get_provenance_prefix
 
+# Default timeout for partitioned DML streaming RPCs (6 hours = 21600 seconds),
+# matching Cloud Run Job / Workflow execution limits.
+DEFAULT_DELETION_TIMEOUT_SECONDS = 21600.0
+
 class AggregationDeleter:
     """Handles deletion of aggregated data in Spanner."""
 
-    def __init__(self, project_id: str, instance_id: str, database_id: str, is_base_dc: bool = True):
+    def __init__(
+        self,
+        project_id: str,
+        instance_id: str,
+        database_id: str,
+        is_base_dc: bool = True,
+        timeout: float = DEFAULT_DELETION_TIMEOUT_SECONDS,
+    ):
         self.project_id = project_id
         self.instance_id = instance_id
         self.database_id = database_id
         self.is_base_dc = is_base_dc
+        self.timeout = timeout
         self._spanner_database = None
 
     @property
     def spanner_database(self):
         """Lazily initializes and returns the Spanner Database client."""
         if self._spanner_database is None:
-            spanner_client = spanner.Client(project=self.project_id)
+            spanner_client = spanner.Client(
+                project=self.project_id,
+                disable_builtin_metrics=True,
+            )
             instance = spanner_client.instance(self.instance_id)
             self._spanner_database = instance.database(self.database_id)
             logging.info(f"Initialized Spanner client for deleter: {self._spanner_database.name}")
@@ -96,7 +111,9 @@ class AggregationDeleter:
         )
         params = {"prefix": prefix}
         param_types = {"prefix": spanner.param_types.STRING}
-        rows = self.spanner_database.execute_partitioned_dml(sql, params=params, param_types=param_types)
+        rows = self.spanner_database.execute_partitioned_dml(
+            sql, params=params, param_types=param_types
+        )
         logging.info(f"Deleted {rows} StatVarGroup edges across all provenances.")
         return rows
 
@@ -107,11 +124,12 @@ class AggregationDeleter:
         provenance_names = [get_provenance_name(f"generated/{name}", self.is_base_dc) for name in imports_to_delete]
         sql = (
             "DELETE FROM Edge "
-            "WHERE provenance IN UNNEST(@provenances) "
-            "AND predicate IN ('linkedContainedInPlace', 'linkedMemberOf', 'linkedMember')"
+            "WHERE provenance IN UNNEST(@provenances)"
         )
         params = {"provenances": provenance_names}
         param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
-        rows = self.spanner_database.execute_partitioned_dml(sql, params=params, param_types=param_types)
+        rows = self.spanner_database.execute_partitioned_dml(
+            sql, params=params, param_types=param_types
+        )
         logging.info(f"Deleted {rows} linked relationship edges for imports: {imports_to_delete}")
         return rows

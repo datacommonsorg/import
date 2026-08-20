@@ -91,6 +91,7 @@ def create_orchestrator_config(
         bq_dataset_id=bq_dataset_id,
         generate_stat_var_groups=args.generate_stat_var_groups,
         max_parallel_imports=args.max_parallel_imports,
+        deletion_timeout=args.deletion_timeout,
     )
 
 
@@ -130,6 +131,12 @@ def main():
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Skip deleting existing aggregated data before running new aggregations."
+    )
+    parser.add_argument(
+        "--deletion_timeout",
+        type=float,
+        default=21600.0,
+        help="Timeout in seconds for Spanner deletion operations (default: 21600.0)."
     )
     parser.add_argument(
         "--is_base_dc",
