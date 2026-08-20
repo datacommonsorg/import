@@ -645,7 +645,7 @@ class StatVarGroupGenerator:
             FROM AllResults
             WHERE node3 IS NOT NULL
               AND NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
-              AND ARRAY_LENGTH(constraintProperties) = 0
+              AND ARRAY_LENGTH(attributes) = 0
           ),
           BaseJoined AS (
             SELECT
