@@ -189,8 +189,9 @@ public class StatVarNameGenerator {
     }
 
     // Apply special case overrides.
-    if (MEASURE_AND_POP_OVERRIDES.containsKey(measureAndPop)) {
-      measureAndPop = MEASURE_AND_POP_OVERRIDES.get(measureAndPop);
+    String override = MEASURE_AND_POP_OVERRIDES.get(measureAndPop);
+    if (override != null) {
+      measureAndPop = override;
     }
 
     return measureAndPop;
