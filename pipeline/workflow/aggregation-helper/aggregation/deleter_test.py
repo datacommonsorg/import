@@ -133,39 +133,72 @@ class TestAggregationDeleter(unittest.TestCase):
     @patch('aggregation.deleter.spanner.Client')
     def test_delete_topic_list_edges_base_dc(self, mock_spanner_client):
         mock_db = MagicMock()
+        mock_snapshot = MagicMock()
+        mock_snapshot.execute_sql.return_value = [("literal_node_1",)]
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_spanner_client.return_value.instance.return_value.database.return_value = mock_db
         
         deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=True)
         deleter.delete_topic_list_edges()
         
-        mock_db.execute_partitioned_dml.assert_called_once()
-        call_args = mock_db.execute_partitioned_dml.call_args
-        sql = call_args[0][0]
-        params = call_args[1]["params"]
-        self.assertIn("DELETE FROM Edge", sql)
-        self.assertIn("provenance = @provenance", sql)
-        self.assertIn("'relevantVariableList'", sql)
-        self.assertIn("'memberList'", sql)
-        self.assertEqual(params, {"provenance": "dc/base/generated/TopicLists"})
+        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 2)
+        
+        edge_call = mock_db.execute_partitioned_dml.call_args_list[0]
+        edge_sql = edge_call[0][0]
+        edge_params = edge_call[1]["params"]
+        self.assertIn("DELETE FROM Edge", edge_sql)
+        self.assertIn("provenance IN (@provenance, @legacy_provenance)", edge_sql)
+        self.assertIn("'relevantVariableList'", edge_sql)
+        self.assertIn("'memberList'", edge_sql)
+        self.assertEqual(
+            edge_params,
+            {
+                "provenance": "dc/base/generated/TopicHierarchyLists",
+                "legacy_provenance": "dc/base/generated/TopicLists",
+            },
+        )
+
+        node_call = mock_db.execute_partitioned_dml.call_args_list[1]
+        node_sql = node_call[0][0]
+        node_params = node_call[1]["params"]
+        self.assertIn("DELETE FROM Node", node_sql)
+        self.assertEqual(node_params, {"node_ids": ["literal_node_1"]})
 
     @patch('aggregation.deleter.spanner.Client')
     def test_delete_topic_list_edges_custom_dc(self, mock_spanner_client):
         mock_db = MagicMock()
+        mock_snapshot = MagicMock()
+        mock_snapshot.execute_sql.return_value = [("literal_node_1",)]
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_spanner_client.return_value.instance.return_value.database.return_value = mock_db
         
         deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=False)
         deleter.delete_topic_list_edges()
         
-        mock_db.execute_partitioned_dml.assert_called_once()
-        call_args = mock_db.execute_partitioned_dml.call_args
-        sql = call_args[0][0]
-        params = call_args[1]["params"]
-        self.assertIn("DELETE FROM Edge", sql)
-        self.assertIn("provenance = @provenance", sql)
-        self.assertIn("'relevantVariableList'", sql)
-        self.assertIn("'memberList'", sql)
-        self.assertEqual(params, {"provenance": "generated/TopicLists"})
+        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 2)
+        
+        edge_call = mock_db.execute_partitioned_dml.call_args_list[0]
+        edge_sql = edge_call[0][0]
+        edge_params = edge_call[1]["params"]
+        self.assertIn("DELETE FROM Edge", edge_sql)
+        self.assertIn("provenance IN (@provenance, @legacy_provenance)", edge_sql)
+        self.assertIn("'relevantVariableList'", edge_sql)
+        self.assertIn("'memberList'", edge_sql)
+        self.assertEqual(
+            edge_params,
+            {
+                "provenance": "generated/TopicHierarchyLists",
+                "legacy_provenance": "generated/TopicLists",
+            },
+        )
+
+        node_call = mock_db.execute_partitioned_dml.call_args_list[1]
+        node_sql = node_call[0][0]
+        node_params = node_call[1]["params"]
+        self.assertIn("DELETE FROM Node", node_sql)
+        self.assertEqual(node_params, {"node_ids": ["literal_node_1"]})
 
 
 if __name__ == '__main__':
     unittest.main()
+

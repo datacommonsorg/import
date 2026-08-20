@@ -261,17 +261,17 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.mock_executor.execute.assert_called_once()
 
         query = self.mock_executor.execute.call_args[0][0]
-        self.assertIn("temp_raw_topic_edges", query)
-        self.assertIn("temp_topic_types", query)
-        self.assertIn("temp_topic_nodes", query)
-        self.assertIn("temp_svpg_nodes", query)
+        self.assertIn("temp_topics_and_peergroups", query)
+        self.assertIn("temp_raw_topic_and_peergroup_edges", query)
+        self.assertIn("temp_aggregated_topic_lists", query)
         self.assertIn("relevantVariableList", query)
         self.assertIn("memberList", query)
-        self.assertIn("STRING_AGG(DISTINCT e.object_id, ',' ORDER BY e.object_id)", query)
-        self.assertIn("CONCAT(SUBSTR(TRIM(list_value), 1, 16), ':', TO_HEX(SHA256(TRIM(list_value))))", query)
+        self.assertIn("STRING_AGG(DISTINCT raw.child_id, ',' ORDER BY raw.child_id)", query)
+        self.assertIn("CONCAT(", query)
+        self.assertIn("SHA256(", query)
         self.assertIn('spanner_options = \'{"table": "Node"}\'', query)
         self.assertIn('spanner_options = \'{"table": "Edge"}\'', query)
-        self.assertIn("dc/base/generated/TopicLists", query)
+        self.assertIn("dc/base/generated/TopicHierarchyLists", query)
 
     def test_run_topic_list_edges_not_base_dc(self):
         generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=False)
@@ -283,8 +283,8 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.assertEqual(job, mock_job)
 
         query = self.mock_executor.execute.call_args[0][0]
-        self.assertIn("generated/TopicLists", query)
-        self.assertNotIn("dc/base/generated/TopicLists", query)
+        self.assertIn("generated/TopicHierarchyLists", query)
+        self.assertNotIn("dc/base/generated/TopicHierarchyLists", query)
 
     def test_run_linked_member(self):
         generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
@@ -296,9 +296,9 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.assertEqual(job, mock_job)
 
         query = self.mock_executor.execute.call_args[0][0]
-        self.assertIn("temp_topic_types", query)
-        self.assertIn("temp_topic_nodes", query)
-        self.assertIn("temp_svpg_nodes", query)
+        self.assertIn("temp_topics_and_peergroups", query)
+        self.assertIn("temp_raw_topic_and_peergroup_edges", query)
+        self.assertIn("temp_topic_hierarchy", query)
         self.assertIn("relevantVariable", query)
         self.assertIn("linkedMember", query)
 

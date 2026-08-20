@@ -46,6 +46,7 @@ from aggregation.e2e_tests.base import (
     BQ_LOCATION,
 )
 from aggregation import BigQueryExecutor, LinkedEdgeGenerator
+from aggregation.common import TOPIC_LIST_PROVENANCE_SUBPATH, get_provenance_name
 
 
 class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
@@ -338,7 +339,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
         self.assertTrue(res.success)
         
-        expected_provenance = f'dc/base/generated/TopicLists' if self.is_base_dc else 'generated/TopicLists'
+        expected_provenance = get_provenance_name(TOPIC_LIST_PROVENANCE_SUBPATH, self.is_base_dc)
         
         with self.database.snapshot(multi_use=True) as snapshot:
             # Verify Edge records

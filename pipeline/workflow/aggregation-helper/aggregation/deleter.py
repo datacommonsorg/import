@@ -19,7 +19,7 @@ import logging
 from typing import List, Optional
 from google.cloud import spanner
 
-from .common import get_provenance_name, get_provenance_prefix
+from .common import TOPIC_LIST_PROVENANCE_SUBPATH, get_provenance_name, get_provenance_prefix
 
 # Default timeout for partitioned DML streaming RPCs (6 hours = 21600 seconds),
 # matching Cloud Run Job / Workflow execution limits.
@@ -136,15 +136,50 @@ class AggregationDeleter:
         return rows
 
     def delete_topic_list_edges(self) -> int:
-        """Deletes consolidated topic and peer group list edges from Spanner."""
-        provenance_name = get_provenance_name("generated/TopicLists", self.is_base_dc)
-        sql = (
-            "DELETE FROM Edge "
-            "WHERE provenance = @provenance "
+        """Deletes consolidated topic and peer group list edges and literal nodes from Spanner."""
+        provenance_name = get_provenance_name(TOPIC_LIST_PROVENANCE_SUBPATH, self.is_base_dc)
+        legacy_provenance_name = get_provenance_name("generated/TopicLists", self.is_base_dc)
+
+        # 1. Query literal node IDs referenced by topic list edges across active & legacy provenances
+        sql_fetch_nodes = (
+            "SELECT DISTINCT object_id "
+            "FROM Edge "
+            "WHERE provenance IN (@provenance, @legacy_provenance) "
             "AND predicate IN ('relevantVariableList', 'memberList')"
         )
-        params = {"provenance": provenance_name}
-        param_types = {"provenance": spanner.param_types.STRING}
-        rows = self.spanner_database.execute_partitioned_dml(sql, params=params, param_types=param_types)
-        logging.info(f"Deleted {rows} topic and peer group list edges for provenance: {provenance_name}")
-        return rows
+        params = {
+            "provenance": provenance_name,
+            "legacy_provenance": legacy_provenance_name,
+        }
+        param_types = {
+            "provenance": spanner.param_types.STRING,
+            "legacy_provenance": spanner.param_types.STRING,
+        }
+
+        with self.spanner_database.snapshot() as snapshot:
+            results = snapshot.execute_sql(sql_fetch_nodes, params=params, param_types=param_types)
+            node_ids = [row[0] for row in results]
+
+        # 2. Delete the edges from Edge table
+        sql_delete_edges = (
+            "DELETE FROM Edge "
+            "WHERE provenance IN (@provenance, @legacy_provenance) "
+            "AND predicate IN ('relevantVariableList', 'memberList')"
+        )
+        edge_rows = self.spanner_database.execute_partitioned_dml(
+            sql_delete_edges, params=params, param_types=param_types
+        )
+
+        # 3. Delete the corresponding literal nodes from Node table
+        if node_ids:
+            sql_delete_nodes = "DELETE FROM Node WHERE subject_id IN UNNEST(@node_ids)"
+            node_params = {"node_ids": node_ids}
+            node_param_types = {"node_ids": spanner.param_types.Array(spanner.param_types.STRING)}
+            self.spanner_database.execute_partitioned_dml(
+                sql_delete_nodes, params=node_params, param_types=node_param_types
+            )
+
+        logging.info(
+            f"Deleted {edge_rows} topic and peer group list edges and {len(node_ids)} literal nodes for provenance: {provenance_name}"
+        )
+        return edge_rows
