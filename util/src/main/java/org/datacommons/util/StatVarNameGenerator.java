@@ -2,34 +2,48 @@ package org.datacommons.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 
 /**
- * Utility class to generate readable names for StatisticalVariable nodes when the name property is
+ * Utility class to generate readable names for StatisticalVariable nodes when
+ * the name property is
  * missing.
  *
- * <p>The generated name is constructed from the various schema properties of the variable:
+ * <p>
+ * The generated name is constructed from the various schema properties of the
+ * variable:
  *
- * <p><strong>Format:</strong> {@code [Prefix] [MeasureAndPop] [Qualifiers]: [Constraints]
+ * <p>
+ * <strong>Format:</strong>
+ * {@code [Prefix] [MeasureAndPop] [Qualifiers]: [Constraints]
  * [Denominator]}
  *
  * <ul>
- *   <li><b>Prefix:</b> Derived from {@code statType} (e.g., "Median") and time-based {@code
+ * <li><b>Prefix:</b> Derived from {@code statType} (e.g., "Median") and
+ * time-based {@code
  *       measurementQualifier}s (e.g., "Annual").
- *   <li><b>MeasureAndPop:</b> Combines {@code measuredProperty} and {@code populationType}. For
- *       example, "Count Of Person". If they overlap, redundancy is avoided.
- *   <li><b>Qualifiers:</b> Non-time {@code measurementQualifier}s in parentheses, e.g., "(Real)".
- *   <li><b>Constraints:</b> A comma-separated list of values for filtering properties like {@code
+ * <li><b>MeasureAndPop:</b> Combines {@code measuredProperty} and
+ * {@code populationType}. For
+ * example, "Count of Student". If they overlap, redundancy is avoided.
+ * <li><b>Qualifiers:</b> Non-time {@code measurementQualifier}s in parentheses,
+ * e.g., "(Real)".
+ * <li><b>Constraints:</b> A comma-separated list of values for filtering
+ * properties like {@code
  *       gender}, {@code race}, etc., prepended with a colon.
- *   <li><b>Denominator:</b> Derived from {@code measurementDenominator}, typically resulting in
- *       "(Per capita)" or "(As fraction of ...)".
+ * <li><b>Denominator:</b> Derived from {@code measurementDenominator},
+ * typically resulting in
+ * "(Per capita)" or "(As fraction of ...)".
  * </ul>
  *
- * <p><strong>Example:</strong> "Annual Count Of Person (Real): Female, White (Per capita)"
+ * <p>
+ * <strong>Example:</strong> "Annual Count of Student (Real): Female, White (Per
+ * capita)"
  */
 public class StatVarNameGenerator {
 
@@ -40,16 +54,16 @@ public class StatVarNameGenerator {
   private static final Pattern MULTI_SPACE = Pattern.compile("\\s+");
 
   private static final Splitter SPACE_SPLITTER = Splitter.on(' ').omitEmptyStrings();
-  private static final Splitter UNDERSCORE_SPLITTER =
-      Splitter.on('_').omitEmptyStrings().trimResults();
-  private static final Splitter MQUAL_SPLITTER =
-      Splitter.onPattern("[,\\s&]+").omitEmptyStrings().trimResults();
+  private static final Splitter UNDERSCORE_SPLITTER = Splitter.on('_').omitEmptyStrings().trimResults();
+  private static final Splitter MQUAL_SPLITTER = Splitter.onPattern("[,\\s&]+").omitEmptyStrings().trimResults();
 
   private static final Joiner SPACE_JOINER = Joiner.on(" ");
   private static final Joiner COMMA_JOINER = Joiner.on(", ");
   private static final Joiner AND_JOINER = Joiner.on(" & ");
 
-  /** Checks whether the given node types indicate a StatisticalVariable or slice. */
+  /**
+   * Checks whether the given node types indicate a StatisticalVariable or slice.
+   */
   public static boolean isStatVar(List<String> types) {
     if (types == null || types.isEmpty()) {
       return false;
@@ -64,7 +78,8 @@ public class StatVarNameGenerator {
   }
 
   /**
-   * Formats a DCID or token string into readable Title Case words without needing schema lookups.
+   * Formats a DCID or token string into readable Title Case words without needing
+   * schema lookups.
    */
   public static String formatToken(String token) {
     if (token == null || token.isEmpty()) {
@@ -89,7 +104,10 @@ public class StatVarNameGenerator {
     return popType == null || popType.isEmpty() || "Thing".equalsIgnoreCase(popType);
   }
 
-  /** Computes a readable display name for a StatisticalVariable based on its property values. */
+  /**
+   * Computes a readable display name for a StatisticalVariable based on its
+   * property values.
+   */
   public static String generateName(PropertyValues pvs) {
     if (pvs == null || pvs.getPvsMap() == null) {
       return "";
@@ -129,8 +147,7 @@ public class StatVarNameGenerator {
   private static List<String> buildMeasurementQualifiers(
       PropertyValues pvs, List<String> prefixList) {
     List<String> mqualList = new ArrayList<>();
-    List<String> mquals =
-        GraphUtils.getPropertyValues(pvs.getPvsMap(), Vocabulary.MEASUREMENT_QUALIFIER);
+    List<String> mquals = GraphUtils.getPropertyValues(pvs.getPvsMap(), Vocabulary.MEASUREMENT_QUALIFIER);
     if (!mquals.isEmpty()) {
       List<String> effectiveMqualParts = new ArrayList<>();
       for (String q : mquals) {
@@ -153,6 +170,9 @@ public class StatVarNameGenerator {
     return mqualList;
   }
 
+  // Curated map of overrides for measure + population combinations.
+  private static final Map<String, String> MEASURE_AND_POP_OVERRIDES = ImmutableMap.of("Count of Person", "Population");
+
   private static String buildMeasureAndPop(String measuredProperty, String populationType) {
     String formattedMeasure = formatToken(measuredProperty);
     String formattedPopType = formatToken(populationType);
@@ -167,19 +187,25 @@ public class StatVarNameGenerator {
       } else if (!measureAndPop.equalsIgnoreCase(formattedPopType)
           && !measureAndPop.toLowerCase().contains(formattedPopType.toLowerCase())
           && !formattedPopType.toLowerCase().contains(measureAndPop.toLowerCase())) {
-        // If measure and popType are distinct, combine them (e.g., "Count Of Person").
-        measureAndPop = measureAndPop + " Of " + formattedPopType;
+        // If measure and popType are distinct, combine them (e.g., "Count of Student").
+        measureAndPop = measureAndPop + " of " + formattedPopType;
       } else if (formattedPopType.toLowerCase().contains(measureAndPop.toLowerCase())
           && !measureAndPop.equalsIgnoreCase(formattedPopType)) {
         // If popType contains the measure (e.g., popType="Person With Age",
         // measure="Age"),
-        // use popType to avoid redundancy like "Age Of Person With Age".
+        // use popType to avoid redundancy like "Age of Person With Age".
         measureAndPop = formattedPopType;
       }
-      // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count Of
-      // Person"
-      // contains "Person"), it skips appending to avoid "Count Of Person Of Person".
+      // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count of
+      // Student"
+      // contains "Student"), it skips appending to avoid "Count of Person of Person".
     }
+
+    // Apply special case overrides
+    if (MEASURE_AND_POP_OVERRIDES.containsKey(measureAndPop)) {
+      measureAndPop = MEASURE_AND_POP_OVERRIDES.get(measureAndPop);
+    }
+
     return measureAndPop;
   }
 
