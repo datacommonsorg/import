@@ -201,7 +201,7 @@ public class StatVarNameGenerator {
       // contains "Student"), it skips appending to avoid "Count of Person of Person".
     }
 
-    // Apply special case overrides
+    // Apply special case overrides.
     if (MEASURE_AND_POP_OVERRIDES.containsKey(measureAndPop)) {
       measureAndPop = MEASURE_AND_POP_OVERRIDES.get(measureAndPop);
     }
