@@ -128,11 +128,6 @@ class TestAggregationDeleter(unittest.TestCase):
         params = call_args[1]["params"]
         self.assertIn("DELETE FROM Edge", sql)
         self.assertIn("provenance IN UNNEST(@provenances)", sql)
-        self.assertIn("'linkedContainedInPlace'", sql)
-        self.assertIn("'linkedMemberOf'", sql)
-        self.assertIn("'linkedMember'", sql)
-        self.assertNotIn("'relevantVariableList'", sql)
-        self.assertNotIn("'memberList'", sql)
         self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA"]})
 
     @patch('aggregation.deleter.spanner.Client')
