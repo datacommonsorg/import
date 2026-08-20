@@ -61,6 +61,9 @@ public class StatVarNameGenerator {
   private static final Joiner COMMA_JOINER = Joiner.on(", ");
   private static final Joiner AND_JOINER = Joiner.on(" & ");
 
+  // Curated map of overrides for measuredProperty + populationType combinations.
+  private static final Map<String, String> MEASURE_AND_POP_OVERRIDES = ImmutableMap.of("Count of Person", "Population");
+
   /**
    * Checks whether the given node types indicate a StatisticalVariable or slice.
    */
@@ -170,9 +173,6 @@ public class StatVarNameGenerator {
     return mqualList;
   }
 
-  // Curated map of overrides for measure + population combinations.
-  private static final Map<String, String> MEASURE_AND_POP_OVERRIDES = ImmutableMap.of("Count of Person", "Population");
-
   private static String buildMeasureAndPop(String measuredProperty, String populationType) {
     String formattedMeasure = formatToken(measuredProperty);
     String formattedPopType = formatToken(populationType);
@@ -198,7 +198,8 @@ public class StatVarNameGenerator {
       }
       // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count of
       // Student"
-      // contains "Student"), it skips appending to avoid "Count of Person of Person".
+      // contains "Student"), it skips appending to avoid "Count of Student of
+      // Student".
     }
 
     // Apply special case overrides.
