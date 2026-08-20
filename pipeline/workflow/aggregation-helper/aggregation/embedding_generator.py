@@ -22,6 +22,7 @@ import pandas as pd
 
 from google.cloud import bigquery
 from google.cloud import spanner
+from google.cloud import storage
 from pydantic import BaseModel
 from .bq_executor import BigQueryExecutor
 
@@ -79,7 +80,7 @@ def _extract_nl_stat_var() -> list[dict[str, str]]:
     return records
 
 
-def _fresh_data_condition(timestamp: Optional[str], predicate_types_list_sql: str) -> tuple[str, str]:
+def _fresh_data_condition(timestamp: Optional[str]) -> tuple[str, str]:
     """Helper function to construct the timelock SQL condition string.
 
     If timestamp is None/NULL, returns "TRUE".
@@ -152,7 +153,7 @@ class EmbeddingGenerator:
             for node_type, predicate_types in spec.node_types.items():
                 safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
                 predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
-                update_node_cond, update_property_cond = _fresh_data_condition(latest_lock_timestamp, predicate_types_list_sql)
+                update_node_cond, update_property_cond = _fresh_data_condition(latest_lock_timestamp)
                 graph_query = f"""
                     MATCH
                     (n:Node WHERE "{node_type}" IN UNNEST(n.types) AND {filter_condition})
@@ -226,24 +227,15 @@ class EmbeddingGenerator:
             raise
 
     @staticmethod
-    def _generate_spanner_query(nodes: Any, latest_lock_timestamp: Optional[str] = None, filter_condition: str = "TRUE") -> str:
+    def _generate_spanner_query(node_types: Dict[str, List[str]], latest_lock_timestamp: Optional[str] = None) -> str:
         """Generates the Spanner GQL query for extracting node data and JSON embedding_content."""
-        if hasattr(nodes, 'node_types'):
-            spec = nodes
-            nodes = spec.node_types
-            if getattr(spec, 'node_filter_type', None) == "NLStatisticalVariable":
-                nl_records = _extract_nl_stat_var()
-                dcids = sorted(list({r["dcid"] for r in nl_records}))
-                quoted_dcids = ", ".join([f"'{d}'" for d in dcids])
-                filter_condition = f"n.subject_id IN ({quoted_dcids})"
-
         match_clauses = []
-        for node_type, predicate_types in nodes.items():
+        for node_type, predicate_types in node_types.items():
             safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
             predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
-            update_node_cond, update_property_cond = _fresh_data_condition(latest_lock_timestamp, predicate_types_list_sql)
+            update_node_cond, update_property_cond = _fresh_data_condition(latest_lock_timestamp)
             spanner_query_template = f"""    MATCH
-    (n:Node WHERE "{node_type}" IN UNNEST(n.types) AND {filter_condition})
+    (n:Node WHERE "{node_type}" IN UNNEST(n.types))
     OPTIONAL MATCH
     (n)-[e: Edge
         WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
@@ -337,11 +329,15 @@ WHERE update_node_data OR update_property_data"""
                     first_batch = False
                     batch = []
 
-            if batch or first_batch:
+            if batch:
                 write_disp = "WRITE_TRUNCATE" if first_batch else "WRITE_APPEND"
                 load_config = bigquery.LoadJobConfig(schema=bq_schema, write_disposition=write_disp)
                 load_job = bq_client.load_table_from_json(batch, raw_nodes_table_id, job_config=load_config)
                 load_job.result()
+            elif first_batch:
+                bq_client.delete_table(raw_nodes_table_id, not_found_ok=True)
+                table = bigquery.Table(raw_nodes_table_id, schema=bq_schema)
+                bq_client.create_table(table)
 
         logging.info(f"Successfully finished streaming to BigQuery table {raw_nodes_table_id}. Total ingested: {total_rows} rows.")
 
@@ -469,11 +465,7 @@ WHERE update_node_data OR update_property_data"""
         if job:
             try:
                 job.result()
-            except Exception:
-                pass
-            try:
+            finally:
                 self.executor.client.delete_table(raw_nodes_table_id, not_found_ok=True)
-            except Exception as e:
-                logging.warning(f"Failed to delete temp table {raw_nodes_table_id}: {e}")
 
         return job

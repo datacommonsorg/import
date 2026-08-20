@@ -362,7 +362,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
             },
             node_filter_type="NoFilter"
         )
-        query = generator._generate_spanner_query(spec)
+        query = generator._generate_spanner_query(spec.node_types)
         expected_query = _load_test_query("generate_spanner_query.sql")
         self.assertEqual(query.strip(), expected_query.strip())
 

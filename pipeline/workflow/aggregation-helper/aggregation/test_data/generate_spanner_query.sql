@@ -4,7 +4,7 @@ SELECT
     embedding_content
 FROM GRAPH_TABLE(DCGraph
     MATCH
-    (n:Node WHERE "StatisticalVariable" IN UNNEST(n.types) AND TRUE)
+    (n:Node WHERE "StatisticalVariable" IN UNNEST(n.types))
     OPTIONAL MATCH
     (n)-[e: Edge
         WHERE e.predicate IN UNNEST(['description'])]->
@@ -46,7 +46,7 @@ FROM GRAPH_TABLE(DCGraph
     GROUP BY n
 UNION ALL
     MATCH
-    (n:Node WHERE "Topic" IN UNNEST(n.types) AND TRUE)
+    (n:Node WHERE "Topic" IN UNNEST(n.types))
     OPTIONAL MATCH
     (n)-[e: Edge
         WHERE e.predicate IN UNNEST(['description'])]->
