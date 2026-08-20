@@ -138,23 +138,16 @@ class AggregationDeleter:
     def delete_topic_list_edges(self) -> int:
         """Deletes consolidated topic and peer group list edges and literal nodes from Spanner."""
         provenance_name = get_provenance_name(TOPIC_LIST_PROVENANCE_SUBPATH, self.is_base_dc)
-        legacy_provenance_name = get_provenance_name("generated/TopicLists", self.is_base_dc)
 
-        # 1. Query literal node IDs referenced by topic list edges across active & legacy provenances
+        # 1. Query literal node IDs referenced by topic list edges
         sql_fetch_nodes = (
             "SELECT DISTINCT object_id "
             "FROM Edge "
-            "WHERE provenance IN (@provenance, @legacy_provenance) "
+            "WHERE provenance = @provenance "
             "AND predicate IN ('relevantVariableList', 'memberList')"
         )
-        params = {
-            "provenance": provenance_name,
-            "legacy_provenance": legacy_provenance_name,
-        }
-        param_types = {
-            "provenance": spanner.param_types.STRING,
-            "legacy_provenance": spanner.param_types.STRING,
-        }
+        params = {"provenance": provenance_name}
+        param_types = {"provenance": spanner.param_types.STRING}
 
         with self.spanner_database.snapshot() as snapshot:
             results = snapshot.execute_sql(sql_fetch_nodes, params=params, param_types=param_types)
@@ -163,7 +156,7 @@ class AggregationDeleter:
         # 2. Delete the edges from Edge table
         sql_delete_edges = (
             "DELETE FROM Edge "
-            "WHERE provenance IN (@provenance, @legacy_provenance) "
+            "WHERE provenance = @provenance "
             "AND predicate IN ('relevantVariableList', 'memberList')"
         )
         edge_rows = self.spanner_database.execute_partitioned_dml(
@@ -183,3 +176,4 @@ class AggregationDeleter:
             f"Deleted {edge_rows} topic and peer group list edges and {len(node_ids)} literal nodes for provenance: {provenance_name}"
         )
         return edge_rows
+

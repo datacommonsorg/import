@@ -147,16 +147,10 @@ class TestAggregationDeleter(unittest.TestCase):
         edge_sql = edge_call[0][0]
         edge_params = edge_call[1]["params"]
         self.assertIn("DELETE FROM Edge", edge_sql)
-        self.assertIn("provenance IN (@provenance, @legacy_provenance)", edge_sql)
+        self.assertIn("provenance = @provenance", edge_sql)
         self.assertIn("'relevantVariableList'", edge_sql)
         self.assertIn("'memberList'", edge_sql)
-        self.assertEqual(
-            edge_params,
-            {
-                "provenance": "dc/base/generated/TopicHierarchyLists",
-                "legacy_provenance": "dc/base/generated/TopicLists",
-            },
-        )
+        self.assertEqual(edge_params, {"provenance": "dc/base/generated/TopicHierarchyLists"})
 
         node_call = mock_db.execute_partitioned_dml.call_args_list[1]
         node_sql = node_call[0][0]
@@ -181,16 +175,10 @@ class TestAggregationDeleter(unittest.TestCase):
         edge_sql = edge_call[0][0]
         edge_params = edge_call[1]["params"]
         self.assertIn("DELETE FROM Edge", edge_sql)
-        self.assertIn("provenance IN (@provenance, @legacy_provenance)", edge_sql)
+        self.assertIn("provenance = @provenance", edge_sql)
         self.assertIn("'relevantVariableList'", edge_sql)
         self.assertIn("'memberList'", edge_sql)
-        self.assertEqual(
-            edge_params,
-            {
-                "provenance": "generated/TopicHierarchyLists",
-                "legacy_provenance": "generated/TopicLists",
-            },
-        )
+        self.assertEqual(edge_params, {"provenance": "generated/TopicHierarchyLists"})
 
         node_call = mock_db.execute_partitioned_dml.call_args_list[1]
         node_sql = node_call[0][0]
@@ -201,4 +189,5 @@ class TestAggregationDeleter(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
 
