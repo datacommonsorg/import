@@ -349,11 +349,16 @@ class AggregationOrchestrator:
         to_delete = set()
         linked_to_delete = set()
         delete_stat_var_groups = False
-        should_delete_topic_lists = getattr(self.config, "generate_topic_list_edges", False) or any(
-            calc.get("type") == CalculationType.MATERIALIZED_EDGES
-            for calc in self.calculations
-            if not calc.get("disabled", False)
+        should_delete_topic_lists = (
+            getattr(self.config, "generate_topic_list_edges", False)
+            or any(
+                calc.get("type") == CalculationType.MATERIALIZED_EDGES
+                and not calc.get("disabled", False)
+                and calc.get("materialized_edges", {}).get("enable_topic_hierarchy_lists", True)
+                for calc in self.calculations
+            )
         )
+
 
         for single_import in imports:
             for calc in self.calculations:

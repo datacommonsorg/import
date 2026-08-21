@@ -557,6 +557,22 @@ class TestOrchestratorOrdering(unittest.TestCase):
         mock_deleter.return_value.delete_topic_list_edges.assert_called_once()
         mock_mat_gen.return_value.run_all.assert_called_once()
 
+    @patch('aggregation.orchestrator.AggregationDeleter')
+    @patch('aggregation.orchestrator.MaterializedEdgeGenerator')
+    def test_global_topic_list_edges_not_deleted_when_disabled(self, mock_mat_gen, mock_deleter, mock_executor):
+        """Verifies global topic list edge deletion does NOT run when generate_topic_list_edges is False."""
+        orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path,
+            generate_topic_list_edges=False
+        ))
+        orchestrator._delete_previous_aggregations(["TestImport"], dry_run=False)
+        mock_deleter.return_value.delete_topic_list_edges.assert_not_called()
+
+
 
 
 class TestConfigSanity(unittest.TestCase):
