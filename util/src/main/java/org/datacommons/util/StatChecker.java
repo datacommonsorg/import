@@ -81,10 +81,9 @@ public class StatChecker {
   private final ConcurrentMap<String, Set<String>> samplePlaces;
   private final boolean shouldGenerateSamplePlaces;
   // Tracks global state on StatVarObservations to detect whether there are multiple of the
-  // same StatVarObservation with inconsistent values. The key is a hash made up of a set of
-  // properties that distinguish a StatVarObservation and the value is the first value seen of that
-  // StatVarObservation.
-  private final ConcurrentMap<Long, Float> svObValues;
+  // same StatVarObservation with inconsistent values. Stored as raw String to preserve
+  // significant figures (SigFigs) and avoid floating-point precision collisions.
+  private final ConcurrentMap<Long, String> svObValues;
   private final String EMPTY_PROP_STRING = "EMPTY_PROP";
   private StatVarState statVarState;
   private ExistenceChecker existenceChecker;
@@ -604,13 +603,9 @@ public class StatChecker {
       }
     }
     Long fp = hasher.hash().asLong();
-    Float val = null;
-    try {
-      val = Float.parseFloat(McfUtil.getPropVal(node, Vocabulary.VALUE));
-    } catch (NumberFormatException e) {
-      // If value is not a float, val will stay as null and this will be handled later.
-    }
-    if (this.svObValues.containsKey(fp) && !this.svObValues.get(fp).equals(val)) {
+    String val = McfUtil.getPropVal(node, Vocabulary.VALUE);
+    String existingVal = this.svObValues.putIfAbsent(fp, val);
+    if (existingVal != null && !existingVal.equals(val)) {
       logCtx.addEntry(
           Level.LEVEL_ERROR,
           "Sanity_InconsistentSvObsValues",
@@ -621,15 +616,13 @@ public class StatChecker {
               + "', observationDate: '"
               + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE)
               + "', value1: "
-              + this.svObValues.get(fp)
+              + existingVal
               + ", value2: "
               + val,
           node.getLocationsList());
       return false;
-    } else {
-      this.svObValues.put(fp, val);
-      return true;
     }
+    return true;
   }
 
   public List<String> getSamplePlaces() {
