@@ -21,8 +21,9 @@ class TestRollbackHelper(unittest.TestCase):
 
     def test_revert_import_success(self):
         mock_spanner = MagicMock()
+        mock_spanner.get_import_latest_version.return_value = "gs://bucket/path/v2/*/*.mcf"
         mock_spanner.get_import_version_history.return_value = [
-            "gs://bucket/path/v2/*/*.mcf", "gs://bucket/path/v1/*/*.mcf"
+            "gs://bucket/path/v1/*/*.mcf"
         ]
         mock_spanner.revert_import_state.return_value = True
 
@@ -31,7 +32,8 @@ class TestRollbackHelper(unittest.TestCase):
         self.assertTrue(status)
         self.assertEqual(cur_ver, "gs://bucket/path/v2/*/*.mcf")
         self.assertEqual(prev_ver, "gs://bucket/path/v1/*/*.mcf")
-        mock_spanner.get_import_version_history.assert_called_once_with("imp1")
+        mock_spanner.get_import_latest_version.assert_called_once_with("imp1")
+        mock_spanner.get_import_version_history.assert_called_once_with("imp1", limit=1, status="SUCCESS")
         mock_spanner.revert_import_state.assert_called_once_with(
             import_name="imp1",
             new_latest_version_path="gs://bucket/path/v1/*/*.mcf",
@@ -42,8 +44,9 @@ class TestRollbackHelper(unittest.TestCase):
 
     def test_revert_import_dry_run(self):
         mock_spanner = MagicMock()
+        mock_spanner.get_import_latest_version.return_value = "gs://bucket/path/v2/*/*.mcf"
         mock_spanner.get_import_version_history.return_value = [
-            "gs://bucket/path/v2/*/*.mcf", "gs://bucket/path/v1/*/*.mcf"
+            "gs://bucket/path/v1/*/*.mcf"
         ]
 
         status, cur_ver, prev_ver = revert_import(mock_spanner, "foo:bar:imp1", "wf-123", dry_run=True)
@@ -51,47 +54,42 @@ class TestRollbackHelper(unittest.TestCase):
         self.assertTrue(status)
         self.assertEqual(cur_ver, "gs://bucket/path/v2/*/*.mcf")
         self.assertEqual(prev_ver, "gs://bucket/path/v1/*/*.mcf")
+        mock_spanner.get_import_latest_version.assert_called_once_with("imp1")
         mock_spanner.revert_import_state.assert_not_called()
 
     def test_revert_import_no_history(self):
         mock_spanner = MagicMock()
+        mock_spanner.get_import_latest_version.return_value = "gs://bucket/path/v2/*/*.mcf"
         mock_spanner.get_import_version_history.return_value = []
-
-        status, cur_ver, prev_ver = revert_import(mock_spanner, "foo:bar:imp1", "wf-123")
-
-        self.assertFalse(status)
-        self.assertIsNone(cur_ver)
-        self.assertIsNone(prev_ver)
-        mock_spanner.revert_import_state.assert_not_called()
-
-    def test_revert_import_no_previous_version(self):
-        mock_spanner = MagicMock()
-        mock_spanner.get_import_version_history.return_value = ["gs://bucket/path/v1/*/*.mcf"]
-
-        status, cur_ver, prev_ver = revert_import(mock_spanner, "foo:bar:imp1", "wf-123")
-
-        self.assertFalse(status)
-        self.assertEqual(cur_ver, "gs://bucket/path/v1/*/*.mcf")
-        self.assertIsNone(prev_ver)
-        mock_spanner.revert_import_state.assert_not_called()
-
-    def test_revert_import_legacy_non_gs_version(self):
-        mock_spanner = MagicMock()
-        mock_spanner.get_import_version_history.return_value = [
-            "gs://bucket/path/v2/*/*.mcf", "v1"
-        ]
 
         status, cur_ver, prev_ver = revert_import(mock_spanner, "foo:bar:imp1", "wf-123")
 
         self.assertFalse(status)
         self.assertEqual(cur_ver, "gs://bucket/path/v2/*/*.mcf")
         self.assertIsNone(prev_ver)
+        mock_spanner.get_import_latest_version.assert_called_once_with("imp1")
+        mock_spanner.revert_import_state.assert_not_called()
+
+    def test_revert_import_legacy_non_gs_version(self):
+        mock_spanner = MagicMock()
+        mock_spanner.get_import_latest_version.return_value = "gs://bucket/path/v2/*/*.mcf"
+        mock_spanner.get_import_version_history.return_value = ["v1"]
+
+        status, cur_ver, prev_ver = revert_import(mock_spanner, "foo:bar:imp1", "wf-123")
+
+        self.assertFalse(status)
+        self.assertEqual(cur_ver, "gs://bucket/path/v2/*/*.mcf")
+        self.assertIsNone(prev_ver)
+        mock_spanner.get_import_latest_version.assert_called_once_with("imp1")
         mock_spanner.revert_import_state.assert_not_called()
 
     def test_revert_imports_list(self):
         mock_spanner = MagicMock()
-        mock_spanner.get_import_version_history.side_effect = lambda name: [
-            "gs://bucket/path/v2/*/*.mcf", "gs://bucket/path/v1/*/*.mcf"
+        mock_spanner.get_import_latest_version.side_effect = lambda name: (
+            "gs://bucket/path/v2/*/*.mcf" if name == "imp1" else "gs://bucket/path/v3/*/*.mcf"
+        )
+        mock_spanner.get_import_version_history.side_effect = lambda name, **kwargs: [
+            "gs://bucket/path/v1/*/*.mcf"
         ] if name == "imp1" else []
         mock_spanner.revert_import_state.return_value = True
 
@@ -102,9 +100,9 @@ class TestRollbackHelper(unittest.TestCase):
         self.assertEqual(results[0]["importName"], "imp1")
         self.assertEqual(results[0]["failedVersion"], "gs://bucket/path/v2/*/*.mcf")
         self.assertEqual(results[0]["restoredVersion"], "gs://bucket/path/v1/*/*.mcf")
-
         self.assertFalse(results[1]["reverted"])
         self.assertEqual(results[1]["importName"], "imp2")
+        self.assertEqual(results[1]["failedVersion"], "gs://bucket/path/v3/*/*.mcf")
         self.assertIsNone(results[1]["restoredVersion"])
         mock_spanner.update_ingestion_status.assert_not_called()
 

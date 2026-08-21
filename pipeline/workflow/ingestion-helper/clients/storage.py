@@ -166,14 +166,15 @@ class StorageClient:
                              'import_metadata_mcf.mcf'))
             new_blob.upload_from_string(default_provenance)
 
-        provenance_file = import_name.split(':')[-1] + '.mcf'
-        provenance_blob = self.bucket.blob(
-            os.path.join('provenance', provenance_file))
-        if provenance_blob.exists():
-            self.bucket.copy_blob(
-                provenance_blob, self.bucket,
-                os.path.join(output_dir, version, 'provenance', 'genmcf',
-                             provenance_file))
+        # TODO: Ingested using provenance import. Provenance file should be copied to the import folder.
+        # provenance_file = import_name.split(':')[-1] + '.mcf'
+        # provenance_blob = self.bucket.blob(
+        #     os.path.join('provenance', provenance_file))
+        # if provenance_blob.exists():
+        #     self.bucket.copy_blob(
+        #         provenance_blob, self.bucket,
+        #         os.path.join(output_dir, version, 'provenance', 'genmcf',
+        #                      provenance_file))
         logging.info(
             f'Updated provenance file for import {import_name} to add {version}'
         )

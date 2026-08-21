@@ -514,21 +514,32 @@ class SpannerClient:
             logging.error(f"Error querying IngestionHistory for workflow '{workflow_id}': {e}")
         return []
 
-    def get_import_version_history(self, import_name: str, limit: int = 10) -> list[str]:
+    def get_import_version_history(self,
+                                   import_name: str,
+                                   limit: int = 10,
+                                   status: str = "SUCCESS") -> list[str]:
         """Queries ImportVersionHistory for an import's version history."""
         short_name = import_name.split(':')[-1]
 
         def _query(transaction: Transaction):
             sql_history = """
                 SELECT Version FROM ImportVersionHistory
-                WHERE ImportName = @importName
+                WHERE ImportName = @importName AND Status = @status
                 ORDER BY UpdateTimestamp DESC
                 LIMIT @limit
             """
             results = transaction.execute_sql(
                 sql_history,
-                params={'importName': short_name, 'limit': limit},
-                param_types={'importName': STRING, 'limit': INT64})
+                params={
+                    'importName': short_name,
+                    'limit': limit,
+                    'status': status
+                },
+                param_types={
+                    'importName': STRING,
+                    'limit': INT64,
+                    'status': STRING
+                })
             return [row[0] for row in results]
 
         try:
