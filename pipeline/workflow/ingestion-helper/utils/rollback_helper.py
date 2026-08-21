@@ -34,57 +34,55 @@ def revert_import(spanner_client: Any,
     """
     short_name = import_name.split(':')[-1]
 
-    # 1. Fetch recent version history to determine current and previous version.
-    history = spanner_client.get_import_version_history(short_name)
-    if not history:
+    # 1. Fetch current latest version (active before rollback).
+    current_version = spanner_client.get_import_latest_version(short_name)
+
+    # 2. Fetch the latest version with status SUCCESS.
+    success_history = spanner_client.get_import_version_history(short_name, limit=1, status="SUCCESS")
+    if not success_history:
         logging.warning(
-            f"No version history found in ImportVersionHistory for '{short_name}'. Cannot revert.")
-        return False, None, None
+            f"No version with status SUCCESS found in ImportVersionHistory for '{short_name}'. Cannot revert.")
+        return False, current_version, None
 
-    latest_version = history[0]
+    last_successful_version = success_history[0]
 
-    previous_version = None
-    for ver in history[1:]:
-        if ver != latest_version:
-            previous_version = ver
-            break
-
-    if not previous_version:
+    # 3. Ensure current version is not already equal to the rollback version.
+    if current_version == last_successful_version:
         logging.warning(
-            f"No previous different version found in ImportVersionHistory for '{short_name}'. Cannot revert.")
-        return False, latest_version, None
+            f"Current version '{current_version}' for '{short_name}' is already equal to rollback version. Cannot revert."
+        )
+        return False, current_version, None
 
-    if not previous_version.startswith('gs://'):
+    if not last_successful_version.startswith('gs://'):
         logging.error(
-            f"Cannot revert '{short_name}': previous version '{previous_version}' is not a valid GCS path.")
-        return False, latest_version, None
-
-    new_latest_version_path = previous_version
+            f"Cannot revert '{short_name}': previous version '{last_successful_version}' is not a valid GCS path."
+        )
+        return False, current_version, None
 
     if dry_run:
         logging.info(
-            f"[DRY RUN] Would revert '{short_name}' from '{latest_version}' to last known good version: '{previous_version}'"
+            f"[DRY RUN] Would revert '{short_name}' from '{current_version}' to last successful version: '{last_successful_version}'"
         )
-        return True, latest_version, previous_version
+        return True, current_version, last_successful_version
 
     logging.info(
-        f"Reverting '{short_name}' from '{latest_version}' to last known good version: '{previous_version}'"
+        f"Reverting '{short_name}' from '{current_version}' to last successful version: '{last_successful_version}'"
     )
 
-    # 3. Update ImportStatus to point to previous version and set state to STAGING, and record audit history.
+    # 3. Update ImportStatus to point to the last successful version and set state to STAGING, and record audit history.
     comment_str = f"Reverted batch workflow ({workflow_id})" if workflow_id else "Reverted import state"
     success = spanner_client.revert_import_state(
         import_name=short_name,
-        new_latest_version_path=new_latest_version_path,
-        previous_version=previous_version,
+        new_latest_version_path=last_successful_version,
+        previous_version=last_successful_version,
         workflow_id=workflow_id,
         comment=comment_str
     )
 
     if success:
-        return True, latest_version, previous_version
+        return True, current_version, last_successful_version
     else:
-        return False, latest_version, None
+        return False, current_version, None
 
 
 def revert_imports(spanner_client: Any,

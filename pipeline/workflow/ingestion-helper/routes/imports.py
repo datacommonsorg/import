@@ -315,7 +315,12 @@ def revert_imports(
 
     reverted_successful = [r for r in results if r.get("reverted", False)]
     if reverted_successful:
-        summaries = [f"{r['importName']}: {r.get('failedVersion')} -> {r.get('restoredVersion')}" for r in reverted_successful]
+        summaries = [
+            f"{r['importName']}: {r.get('restoredVersion')}"
+            if not r.get('failedVersion')
+            else f"{r['importName']}: {r.get('failedVersion')} -> {r.get('restoredVersion')}"
+            for r in reverted_successful
+        ]
         msg = f"Reverted {', '.join(summaries)}"
     else:
         errors = [r["error"] for r in results if "error" in r]
