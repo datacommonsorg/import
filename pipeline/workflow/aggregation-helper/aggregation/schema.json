@@ -25,7 +25,8 @@
               "LINKED_EDGES",
               "PROVENANCE_SUMMARY",
               "STAT_VAR_GROUPS",
-              "EMBEDDING_GENERATION"
+              "EMBEDDING_GENERATION",
+              "MATERIALIZED_EDGES"
             ]
           },
           "input_imports": {
@@ -42,14 +43,20 @@
           "stat_var_series_aggregation": { "type": "object" },
           "stat_var_calculation": { "type": "object" },
           "embedding_generation": { "type": "object" },
+          "materialized_edges": { "type": "object" },
           "disabled": { "type": "boolean" },
-          "should_prune_single_child_svgs": { "type": "boolean" }
+          "should_prune_single_child_svgs": { "type": "boolean" },
+          "generate_topic_list_edges": { "type": "boolean" }
         },
         "allOf": [
           {
             "if": {
               "not": {
-                "properties": { "type": { "const": "EMBEDDING_GENERATION" } }
+                "properties": {
+                  "type": {
+                    "enum": ["EMBEDDING_GENERATION", "MATERIALIZED_EDGES"]
+                  }
+                }
               }
             },
             "then": {

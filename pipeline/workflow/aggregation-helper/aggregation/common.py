@@ -13,6 +13,7 @@
 # limitations under the License.
 
 BASE_PROVENANCE_PREFIX = "dc/base/"
+TOPIC_LIST_PROVENANCE = "generated/TopicHierarchyLists"
 
 
 def get_provenance_prefix(is_base_dc: bool) -> str:
@@ -30,12 +31,16 @@ def get_generated_provenance_name(import_name: str, is_base_dc: bool) -> str:
     return f"{get_provenance_prefix(is_base_dc)}generated/{import_name}"
 
 
-def get_sql_generated_provenance_expr(is_base_dc: bool, source_col: str = "provenance") -> str:
+def get_sql_generated_provenance_expr(
+    is_base_dc: bool, source_col: str = "provenance"
+) -> str:
     """Returns a SQL expression that transforms a source provenance into a scoped generated provenance."""
     if is_base_dc:
         return f"CONCAT('dc/base/generated/', REGEXP_REPLACE({source_col}, r'^dc/base/(generated/)?', ''))"
     else:
-        return f"CONCAT('generated/', REGEXP_REPLACE({source_col}, r'^(generated/)?', ''))"
+        return (
+            f"CONCAT('generated/', REGEXP_REPLACE({source_col}, r'^(generated/)?', ''))"
+        )
 
 
 def _escape_sql_literal(val: str) -> str:
@@ -53,7 +58,7 @@ def _escape_sql_literal(val: str) -> str:
       Double quotes (") are escaped to \\" to prevent terminating BQ string.
     - Single quotes (') are escaped to '' to prevent terminating Spanner string.
     """
-    return val.replace('\\', '\\\\\\\\').replace('"', '\\"').replace("'", "''")
+    return val.replace("\\", "\\\\\\\\").replace('"', '\\"').replace("'", "''")
 
 
 # Execution priority ranks for calculation types within a stage.
@@ -91,5 +96,5 @@ CALCULATION_TYPE_PRIORITY = {
     "STAT_VAR_CALCULATION": 14,
     "SUPER_ENUM_AGGREGATION": 15,
     "EMBEDDING_GENERATION": 20,
+    "MATERIALIZED_EDGES": 20,
 }
-
