@@ -156,7 +156,7 @@ class TestAggregationDeleter(unittest.TestCase):
         node_sql = node_call[0][0]
         node_params = node_call[1]["params"]
         self.assertIn("DELETE FROM Node", node_sql)
-        self.assertEqual(node_params, {"node_ids": ["literal_node_1"]})
+        self.assertEqual(node_params, {"literal_node_ids": ["literal_node_1"]})
 
     @patch('aggregation.deleter.spanner.Client')
     def test_delete_topic_list_edges_custom_dc(self, mock_spanner_client):
@@ -184,7 +184,8 @@ class TestAggregationDeleter(unittest.TestCase):
         node_sql = node_call[0][0]
         node_params = node_call[1]["params"]
         self.assertIn("DELETE FROM Node", node_sql)
-        self.assertEqual(node_params, {"node_ids": ["literal_node_1"]})
+        self.assertEqual(node_params, {"literal_node_ids": ["literal_node_1"]})
+
 
 
 if __name__ == '__main__':

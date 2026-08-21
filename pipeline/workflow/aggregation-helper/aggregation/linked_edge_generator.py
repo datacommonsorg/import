@@ -21,11 +21,12 @@ from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
 from .common import (
     BASE_PROVENANCE_PREFIX,
-    TOPIC_LIST_PROVENANCE_SUBPATH,
+    TOPIC_LIST_PROVENANCE,
     _escape_sql_literal,
     get_provenance_name,
     get_sql_generated_provenance_expr,
 )
+
 
 
 @dataclass
@@ -327,7 +328,7 @@ class LinkedEdgeGenerator:
             BigQuery QueryJob executing the global aggregation and Spanner export.
         """
         dest = self.executor.get_spanner_destination_uri()
-        output_provenance = get_provenance_name(TOPIC_LIST_PROVENANCE_SUBPATH, self.is_base_dc)
+        output_provenance = get_provenance_name(TOPIC_LIST_PROVENANCE, self.is_base_dc)
 
         query = f"""  # nosec
         -- Step 1: Extract all Topic and StatVarPeerGroup definitions across Spanner (InEdge covering index scan).

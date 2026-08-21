@@ -13,7 +13,7 @@
 # limitations under the License.
 
 BASE_PROVENANCE_PREFIX = "dc/base/"
-TOPIC_LIST_PROVENANCE_SUBPATH = "generated/TopicHierarchyLists"
+TOPIC_LIST_PROVENANCE = "generated/TopicHierarchyLists"
 
 
 def get_provenance_prefix(is_base_dc: bool) -> str:

@@ -19,7 +19,7 @@ import logging
 from typing import List, Optional
 from google.cloud import spanner
 
-from .common import TOPIC_LIST_PROVENANCE_SUBPATH, get_provenance_name, get_provenance_prefix
+from .common import TOPIC_LIST_PROVENANCE, get_provenance_name, get_provenance_prefix
 
 # Default timeout for partitioned DML streaming RPCs (6 hours = 21600 seconds),
 # matching Cloud Run Job / Workflow execution limits.
@@ -136,8 +136,8 @@ class AggregationDeleter:
         return rows
 
     def delete_topic_list_edges(self) -> int:
-        """Deletes consolidated topic and peer group list edges and literal nodes from Spanner."""
-        provenance_name = get_provenance_name(TOPIC_LIST_PROVENANCE_SUBPATH, self.is_base_dc)
+        """Deletes generated topic and peer group list edges and their literal nodes from Spanner."""
+        provenance_name = get_provenance_name(TOPIC_LIST_PROVENANCE, self.is_base_dc)
 
         # 1. Query literal node IDs referenced by topic list edges
         sql_fetch_nodes = (
@@ -151,7 +151,7 @@ class AggregationDeleter:
 
         with self.spanner_database.snapshot() as snapshot:
             results = snapshot.execute_sql(sql_fetch_nodes, params=params, param_types=param_types)
-            node_ids = [row[0] for row in results]
+            string_literal_node_ids = [row[0] for row in results]
 
         # 2. Delete the edges from Edge table
         sql_delete_edges = (
@@ -164,16 +164,17 @@ class AggregationDeleter:
         )
 
         # 3. Delete the corresponding literal nodes from Node table
-        if node_ids:
-            sql_delete_nodes = "DELETE FROM Node WHERE subject_id IN UNNEST(@node_ids)"
-            node_params = {"node_ids": node_ids}
-            node_param_types = {"node_ids": spanner.param_types.Array(spanner.param_types.STRING)}
+        if string_literal_node_ids:
+            sql_delete_nodes = "DELETE FROM Node WHERE subject_id IN UNNEST(@literal_node_ids)"
+            node_params = {"literal_node_ids": string_literal_node_ids}
+            node_param_types = {"literal_node_ids": spanner.param_types.Array(spanner.param_types.STRING)}
             self.spanner_database.execute_partitioned_dml(
                 sql_delete_nodes, params=node_params, param_types=node_param_types
             )
 
         logging.info(
-            f"Deleted {edge_rows} topic and peer group list edges and {len(node_ids)} literal nodes for provenance: {provenance_name}"
+            f"Deleted {edge_rows} topic and peer group list edges and {len(string_literal_node_ids)} literal nodes for provenance: {provenance_name}"
         )
         return edge_rows
+
 
