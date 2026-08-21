@@ -25,6 +25,7 @@ from aggregation import LinkedEdgeGenerator, LinkedEdgeConfig
 from aggregation import StatVarGroupGenerator, StatVarGroupConfig
 from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from aggregation import PlaceAggregationGenerator, PlaceAggregationConfig
+from aggregation import StatVarAggregator, StatVarAggregationConfig
 from aggregation import EmbeddingGenerator, EmbeddingGenerationConfig
 from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.common import (
@@ -467,5 +468,69 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         self.assertIn("generated_provenance_prefix", query)
 
 
+class TestStatVarAggregator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_aggregate_stat_vars_empty(self):
+        generator = StatVarAggregator(self.mock_executor)
+        jobs = generator.aggregate_stat_vars(
+            StatVarAggregationConfig(
+                ancestor_sv="SV_Parent",
+                source_svs=[],
+                import_names=["import1"]
+            )
+        )
+        self.assertEqual(jobs, [])
+        self.mock_executor.execute.assert_not_called()
+
+    def test_aggregate_stat_vars_calls_executor(self):
+        generator = StatVarAggregator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        jobs = generator.aggregate_stat_vars(
+            StatVarAggregationConfig(
+                ancestor_sv="SV_Parent",
+                source_svs=["SV_A", "SV_B"],
+                import_names=["import1"],
+                output_import_name="import1_StatVarAgg",
+                skip_all_sources_present_check=True
+            )
+        )
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0], mock_job)
+        self.mock_executor.execute.assert_called_once()
+
+        query, = self.mock_executor.execute.call_args[0]
+        kwargs = self.mock_executor.execute.call_args[1]
+        job_config = kwargs.get("job_config")
+
+        self.assertIn("DECLARE ancestor_sv STRING DEFAULT @ancestor_sv;", query)
+        self.assertIn("CREATE TEMP FUNCTION GetNewMeasurementMethod", query)
+        self.assertIn("CREATE TEMP FUNCTION CalculateFacetId", query)
+        self.assertIn("CREATE TEMP FUNCTION UpdateFacet", query)
+        self.assertIn("CREATE OR REPLACE TEMP TABLE SourceObservations AS (", query)
+        self.assertIn("CREATE OR REPLACE TEMP TABLE AggregatedObs AS (", query)
+        self.assertIn("CREATE OR REPLACE TEMP TABLE ValidObs AS (", query)
+        self.assertIn("IF (SELECT COUNT(*) FROM ValidObs) > 0 THEN", query)
+        self.assertIn("CREATE OR REPLACE TEMP TABLE ValidTimeSeries AS (", query)
+        self.assertIn("CREATE OR REPLACE TEMP TABLE ValidObservations AS (", query)
+        self.assertIn("ELSE", query)
+        self.assertIn("Skipped Spanner EXPORT DATA.", query)
+
+        self.assertIsNotNone(job_config)
+        param_map = {p.name: p.value for p in job_config.query_parameters}
+        self.assertEqual(param_map.get("ancestor_sv"), "SV_Parent")
+        self.assertEqual(param_map.get("output_provenance"), "dc/base/import1_StatVarAgg")
+        self.assertEqual(param_map.get("skip_check"), True)
+        self.assertEqual(param_map.get("source_count"), 2)
+
+
 if __name__ == '__main__':
     unittest.main()
+

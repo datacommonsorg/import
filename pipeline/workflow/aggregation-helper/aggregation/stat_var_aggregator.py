@@ -86,212 +86,97 @@ class StatVarAggregator:
             f"-> output import: {output_import_name} (skip_check={skip_all_sources_present_check})"
         )
 
-        # 1. Generate TimeSeries parent query
-        ts_query = self._get_timeseries_query(
-            ancestor_sv, source_svs, import_names, output_import_name, skip_all_sources_present_check
-        )
-        
-        # 2. Generate Observation child query
-        obs_query = self._get_observations_query(
-            ancestor_sv, source_svs, import_names, output_import_name, skip_all_sources_present_check
-        )
+        dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
+        conn_id = _escape_sql_literal(self.executor.connection_id)
 
-        # 3. Combine into a single multi-statement SQL script (sequentially executed in a single job)
-        combined_query = f"{ts_query}\n\n{obs_query}"
-        job = self.executor.execute(combined_query)
-
-        return [job]
-
-    def _get_timeseries_query(
-        self,
-        ancestor_sv: str,
-        source_svs: List[str],
-        import_names: List[str],
-        output_import_name: str,
-        skip_all_sources_present_check: bool
-    ) -> str:
-        """Creates TimeSeries entries for the ancestor StatVar."""
-        dest = self.executor.get_spanner_destination_uri()
-        connection_id = self.executor.connection_id
-
-        safe_ancestor_sv = _escape_sql_literal(ancestor_sv)
         safe_sources = [_escape_sql_literal(sv) for sv in source_svs]
         safe_imports = [_escape_sql_literal(name) for name in import_names]
 
         sources_str = ", ".join([f"'{sv}'" for sv in safe_sources])
         imports_str = ", ".join([f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_imports])
-        
+
         output_provenance = get_provenance_name(output_import_name, self.is_base_dc)
-        safe_output_provenance = _escape_sql_literal(output_provenance)
 
-        if skip_all_sources_present_check:
-            filter_condition = "TRUE"
-        else:
-            filter_condition = f"contribution_count = {len(source_svs)}"
+        query = rf"""  # nosec
+        DECLARE ancestor_sv STRING DEFAULT @ancestor_sv;
+        DECLARE output_provenance STRING DEFAULT @output_provenance;
+        DECLARE skip_check BOOL DEFAULT @skip_check;
+        DECLARE source_count INT64 DEFAULT @source_count;
 
-        new_method_sql = """
+        -- ============================================================================
+        -- UDFs
+        -- ============================================================================
+        CREATE TEMP FUNCTION GetNewMeasurementMethod(method STRING) AS (
+          IF(
+            method IS NULL OR method = '' OR method = 'DataCommonsAggregate',
+            'DataCommonsAggregate',
             IF(
-              JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
-              'DataCommonsAggregate',
-              IF(
-                STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
-                JSON_VALUE(facet, '$.measurementMethod'),
-                CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
-              )
+              STARTS_WITH(method, 'dcAggregate/'),
+              method,
+              CONCAT('dcAggregate/', method)
             )
-        """
-        facet_expr = f"""
+          )
+        );
+
+        CREATE TEMP FUNCTION CalculateFacetId(
+          provenance STRING,
+          method STRING,
+          period STRING,
+          scaling_factor STRING,
+          unit STRING,
+          is_dc_aggregate STRING
+        ) AS (
+          CAST(FARM_FINGERPRINT(CONCAT(
+            COALESCE(provenance, ''), '^',
+            COALESCE(method, ''), '^',
+            COALESCE(period, ''), '^',
+            COALESCE(scaling_factor, ''), '^',
+            COALESCE(unit, ''), '^',
+            COALESCE(is_dc_aggregate, 'true')
+          )) AS STRING)
+        );
+
+        CREATE TEMP FUNCTION UpdateFacet(
+          facet JSON,
+          new_method STRING,
+          new_provenance STRING
+        ) AS (
           JSON_SET(
-            JSON_SET(
-              JSON_SET(facet, '$.measurementMethod', {new_method_sql}),
-              '$.provenance', '{safe_output_provenance}'
-            ),
+            facet,
+            '$.measurementMethod', new_method,
+            '$.provenance', new_provenance,
             '$.isDcAggregate', true
           )
-        """
+        );
 
-        # SQL to insert new TimeSeries rows.
-        query = f"""  # nosec
-        EXPORT DATA
-          OPTIONS( uri="{dest}",
-            format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "TimeSeries"}}' ) AS
-        WITH MappedObservations AS (
+        -- ============================================================================
+        -- Step 1: Fetch Source Observations and TimeSeries from Spanner
+        -- ============================================================================
+        CREATE OR REPLACE TEMP TABLE SourceObservations AS (
           SELECT
             o.variable_measured,
             o.entity1,
             o.extra_entities_id,
+            o.facet_id,
             o.date,
-            TO_JSON_STRING(o.entities) as entities_str,
-            TO_JSON_STRING({facet_expr}) as facet_str
-          FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.date, ts.entities AS entities, ts.facet AS facet
-               FROM Observation o
-               JOIN TimeSeries ts ON o.variable_measured = ts.variable_measured
-                 AND o.entity1 = ts.entity1
-                 AND o.extra_entities_id = ts.extra_entities_id
-                 AND o.facet_id = ts.facet_id
-               WHERE o.variable_measured IN ({sources_str})
-                 AND ts.provenance IN ({imports_str})''') AS o
-        ),
-        AggregatedCounts AS (
-          SELECT
-            entity1,
-            extra_entities_id,
-            entities_str,
-            facet_str,
-            date,
-            COUNT(DISTINCT variable_measured) as contribution_count
-          FROM MappedObservations
-          GROUP BY entity1, extra_entities_id, date, entities_str, facet_str
-        ),
-        ValidFacets AS (
-          SELECT
-            extra_entities_id,
-            entities_str,
-            facet_str
-          FROM AggregatedCounts
-          WHERE {filter_condition}
-        ),
-        UniqueTS AS (
-          SELECT DISTINCT
-            extra_entities_id,
-            entities_str,
-            facet_str
-          FROM ValidFacets
-        ),
-        ParsedTS AS (
-          SELECT
-            extra_entities_id,
-            SAFE.PARSE_JSON(entities_str) AS entities,
-            SAFE.PARSE_JSON(facet_str) AS facet
-          FROM UniqueTS
-        )
-        SELECT
-          '{safe_ancestor_sv}' AS variable_measured,
-          extra_entities_id,
-          -- Replicate Java TimeSeries.calculateFacetId logic using Farm Fingerprint
-          CAST(FARM_FINGERPRINT(CONCAT(
-            COALESCE(JSON_VALUE(facet, '$.provenance'), ''), '^',
-            COALESCE(JSON_VALUE(facet, '$.measurementMethod'), ''), '^',
-            COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), '^',
-            COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), '^',
-            COALESCE(JSON_VALUE(facet, '$.unit'), ''), '^',
-            COALESCE(JSON_VALUE(facet, '$.isDcAggregate'), 'true')
-          )) AS STRING) AS facet_id,
-          entities,
-          facet
-        FROM ParsedTS;
-        """
-        return query
-
-    def _get_observations_query(
-        self,
-        ancestor_sv: str,
-        source_svs: List[str],
-        import_names: List[str],
-        output_import_name: str,
-        skip_all_sources_present_check: bool
-    ) -> str:
-        """Aggregates child Observations and writes them to Spanner."""
-        dest = self.executor.get_spanner_destination_uri()
-        connection_id = self.executor.connection_id
-
-        safe_ancestor_sv = _escape_sql_literal(ancestor_sv)
-        safe_sources = [_escape_sql_literal(sv) for sv in source_svs]
-        safe_imports = [_escape_sql_literal(name) for name in import_names]
-
-        sources_str = ", ".join([f"'{sv}'" for sv in safe_sources])
-        imports_str = ", ".join([f"'{get_provenance_name(name, self.is_base_dc)}'" for name in safe_imports])
-
-        output_provenance = get_provenance_name(output_import_name, self.is_base_dc)
-        safe_output_provenance = _escape_sql_literal(output_provenance)
-
-        # Filter condition for completeness check
-        if skip_all_sources_present_check:
-            filter_condition = "TRUE"
-        else:
-            filter_condition = f"contribution_count = {len(source_svs)}"
-
-        new_method_sql = """
-            IF(
-              JSON_VALUE(facet, '$.measurementMethod') IS NULL OR JSON_VALUE(facet, '$.measurementMethod') = '' OR JSON_VALUE(facet, '$.measurementMethod') = 'DataCommonsAggregate',
-              'DataCommonsAggregate',
-              IF(
-                STARTS_WITH(JSON_VALUE(facet, '$.measurementMethod'), 'dcAggregate/'),
-                JSON_VALUE(facet, '$.measurementMethod'),
-                CONCAT('dcAggregate/', JSON_VALUE(facet, '$.measurementMethod'))
-              )
-            )
-        """
-
-        query = f"""  # nosec
-        EXPORT DATA
-          OPTIONS( uri="{dest}",
-            format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Observation"}}' ) AS
-        WITH MappedObservations AS (
-          SELECT
-            o.variable_measured,
-            o.entity1,
-            o.extra_entities_id,
-            o.date,
-            SAFE_CAST(o.value AS FLOAT64) as val_num,
-            -- Replicate Java TimeSeries.calculateFacetId logic using Farm Fingerprint
-            CAST(FARM_FINGERPRINT(CONCAT(
-              -- New provenance
-              '{safe_output_provenance}', '^',
-              -- New measurementMethod
-              {new_method_sql}, '^',
-              -- Preserved fields
-              COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), '^',
-              COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), '^',
-              COALESCE(JSON_VALUE(facet, '$.unit'), ''), '^',
-              -- It is a DC aggregate
+            SAFE_CAST(o.value AS FLOAT64) AS val_num,
+            o.entities,
+            o.facet,
+            CalculateFacetId(
+              output_provenance,
+              GetNewMeasurementMethod(JSON_VALUE(o.facet, '$.measurementMethod')),
+              JSON_VALUE(o.facet, '$.observationPeriod'),
+              JSON_VALUE(o.facet, '$.scalingFactor'),
+              JSON_VALUE(o.facet, '$.unit'),
               'true'
-            )) AS STRING) AS new_facet_id
-          FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value, ts.facet AS facet
+            ) AS new_facet_id,
+            UpdateFacet(
+              o.facet,
+              GetNewMeasurementMethod(JSON_VALUE(o.facet, '$.measurementMethod')),
+              output_provenance
+            ) AS new_facet
+          FROM EXTERNAL_QUERY("{conn_id}",
+            '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value, ts.entities AS entities, ts.facet AS facet
                FROM Observation o
                JOIN TimeSeries ts ON o.variable_measured = ts.variable_measured
                  AND o.entity1 = ts.entity1
@@ -299,27 +184,119 @@ class StatVarAggregator:
                  AND o.facet_id = ts.facet_id
                WHERE o.variable_measured IN ({sources_str})
                  AND ts.provenance IN ({imports_str})''') AS o
-        ),
-        AggregatedObs AS (
+        );
+
+        -- ============================================================================
+        -- Step 2: Aggregate Observations per Entity, Date, and Facet
+        -- ============================================================================
+        CREATE OR REPLACE TEMP TABLE AggregatedObs AS (
           SELECT
             entity1,
             extra_entities_id,
             new_facet_id AS facet_id,
             date,
-            SUM(val_num) as total_val,
-            COUNT(DISTINCT variable_measured) as contribution_count
-          FROM MappedObservations
+            SUM(val_num) AS total_val,
+            COUNT(DISTINCT variable_measured) AS contribution_count,
+            ANY_VALUE(entities) AS entities,
+            ANY_VALUE(new_facet) AS facet
+          FROM SourceObservations
           GROUP BY entity1, extra_entities_id, new_facet_id, date
-        )
-        SELECT
-          '{safe_ancestor_sv}' AS variable_measured,
-          entity1,
-          extra_entities_id,
-          facet_id,
-          date,
-          -- Cast back to string as Spanner Observation.value is STRING(MAX)
-          CAST(total_val AS STRING) AS value
-        FROM AggregatedObs
-        WHERE {filter_condition} AND total_val IS NOT NULL;
+        );
+
+        -- ============================================================================
+        -- Step 3: Filter Valid Aggregations based on Strict/Lenient Mode
+        -- ============================================================================
+        CREATE OR REPLACE TEMP TABLE ValidObs AS (
+          SELECT
+            entity1,
+            extra_entities_id,
+            facet_id,
+            date,
+            total_val,
+            entities,
+            facet
+          FROM AggregatedObs
+          WHERE (skip_check OR contribution_count = source_count)
+            AND total_val IS NOT NULL
+        );
+
+        -- ============================================================================
+        -- Step 4: Export Aggregated TimeSeries and Observations to Spanner
+        -- ============================================================================
+        IF (SELECT COUNT(*) FROM ValidObs) > 0 THEN
+          -- ============================================================================
+          -- Step 4a: Export Aggregated TimeSeries Headers
+          -- ============================================================================
+          CREATE OR REPLACE TEMP TABLE ValidTimeSeries AS (
+            SELECT
+              ancestor_sv AS variable_measured,
+              extra_entities_id,
+              facet_id,
+              ANY_VALUE(entities) AS entities,
+              ANY_VALUE(facet) AS facet
+            FROM ValidObs
+            GROUP BY extra_entities_id, facet_id
+          );
+
+          EXPORT DATA
+            OPTIONS(
+              uri="{dest_uri}",
+              format='CLOUD_SPANNER',
+              spanner_options = '{{"table": "TimeSeries"}}'
+            ) AS (SELECT * FROM ValidTimeSeries);
+
+          -- ============================================================================
+          -- Step 4b: Export Aggregated Observations
+          -- ============================================================================
+          CREATE OR REPLACE TEMP TABLE ValidObservations AS (
+            SELECT
+              ancestor_sv AS variable_measured,
+              entity1,
+              extra_entities_id,
+              facet_id,
+              date,
+              CAST(total_val AS STRING) AS value
+            FROM ValidObs
+          );
+
+          EXPORT DATA
+            OPTIONS(
+              uri="{dest_uri}",
+              format='CLOUD_SPANNER',
+              spanner_options = '{{"table": "Observation"}}'
+            ) AS (SELECT * FROM ValidObservations);
+
+          -- ============================================================================
+          -- Step 4c: Emit Success Diagnostic Log Message
+          -- ============================================================================
+          SELECT CONCAT(
+            'Successfully aggregated and exported observations for ancestor StatVar: ',
+            ancestor_sv
+          ) AS log_message;
+        ELSE
+          -- ============================================================================
+          -- Step 4d: Emit Skipped Diagnostic Log Message
+          -- ============================================================================
+          SELECT CONCAT(
+            'No valid observations found for ancestor StatVar: ',
+            ancestor_sv,
+            ' (skip_check=',
+            CAST(skip_check AS STRING),
+            ', required_source_count=',
+            CAST(source_count AS STRING),
+            '). Skipped Spanner EXPORT DATA.'
+          ) AS log_message;
+        END IF;
         """
-        return query
+        job_config = bigquery.QueryJobConfig(
+            use_query_cache=False,
+            query_parameters=[
+                bigquery.ScalarQueryParameter("ancestor_sv", "STRING", ancestor_sv),
+                bigquery.ScalarQueryParameter("output_provenance", "STRING", output_provenance),
+                bigquery.ScalarQueryParameter("skip_check", "BOOL", skip_all_sources_present_check),
+                bigquery.ScalarQueryParameter("source_count", "INT64", len(source_svs)),
+            ]
+        )
+        job = self.executor.execute(query, job_config=job_config)
+
+        return [job]
