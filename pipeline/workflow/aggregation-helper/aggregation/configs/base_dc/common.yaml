@@ -24,3 +24,4 @@ calculations:
     stage: 0
     input_imports:
       - "Schema"
+    should_prune_single_child_svgs: true
