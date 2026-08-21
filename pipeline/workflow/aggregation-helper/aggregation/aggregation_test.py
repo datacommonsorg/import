@@ -25,6 +25,7 @@ from aggregation import LinkedEdgeGenerator, LinkedEdgeConfig
 from aggregation import StatVarGroupGenerator, StatVarGroupConfig
 from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from aggregation import PlaceAggregationGenerator, PlaceAggregationConfig
+from aggregation import EntityAggregationGenerator, EntityAggregationConfig
 from aggregation import EmbeddingGenerator, EmbeddingGenerationConfig
 from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.common import (
@@ -465,6 +466,76 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         self.assertIn("EffectiveParent", query)
         self.assertIn("HAVING COUNT(DISTINCT pc.child) <= 1", query)
         self.assertIn("generated_provenance_prefix", query)
+
+
+class TestEntityAggregationGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_aggregate_entities_empty(self):
+        generator = EntityAggregationGenerator(self.mock_executor)
+        jobs = generator.aggregate_entities([])
+        self.assertEqual(jobs, [])
+        self.mock_executor.execute.assert_not_called()
+
+    def test_aggregate_entities_and_sql_generation(self):
+        generator = EntityAggregationGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        config = EntityAggregationConfig(
+            entity_types=["EarthquakeEvent"],
+            location_props=["affectedPlace"],
+            date_prop="occurrenceTime",
+            agg_date_formats=["YYYY", "YYYY-MM"],
+            constraints=[{"property": "magnitude", "min": 7, "unit": "M"}],
+            output_import="EarthquakeUSGS_Agg",
+            input_imports=["EarthquakeUSGS"],
+        )
+
+        jobs = generator.aggregate_entities([config])
+        self.assertEqual(len(jobs), 1)
+        self.mock_executor.execute.assert_called_once()
+
+        query, kwargs = self.mock_executor.execute.call_args[0][0], self.mock_executor.execute.call_args[1]
+        job_config = kwargs.get("job_config")
+        self.assertIsNotNone(job_config)
+
+        # Check query parameters
+        param_map = {p.name: p for p in job_config.query_parameters}
+        self.assertIn("output_provenance", param_map)
+        self.assertIn("date_prop", param_map)
+        self.assertIn("constraints_json", param_map)
+        self.assertIn("entity_types", param_map)
+        self.assertIn("location_props", param_map)
+        self.assertIn("agg_date_formats", param_map)
+        self.assertEqual(param_map["output_provenance"].value, "dc/base/EarthquakeUSGS_Agg")
+        self.assertEqual(param_map["date_prop"].value, "occurrenceTime")
+
+        # Check SQL script structure and procedural tables
+        self.assertIn("DECLARE output_provenance STRING DEFAULT @output_provenance;", query)
+        self.assertIn("DECLARE constraints_json STRING DEFAULT @constraints_json;", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_entities` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_entity_edges` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_locations` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_date_formats` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_constraint_specs` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_slices` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_entity_constraint_matches` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_valid_slice_entities` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_slice_entity_props` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_slice_svs` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_sv_edges` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_entity_sv_map` AS", query)
+        self.assertIn("CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_with_sv` AS", query)
+        self.assertIn("EXPORT DATA", query)
+        self.assertIn('{"table": "Node"}', query)
+        self.assertIn('{"table": "Edge"}', query)
+        self.assertIn('{"table": "TimeSeries"}', query)
+        self.assertIn('{"table": "Observation"}', query)
 
 
 if __name__ == '__main__':
