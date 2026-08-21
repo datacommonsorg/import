@@ -26,7 +26,8 @@
               "PROVENANCE_SUMMARY",
               "STAT_VAR_GROUPS",
               "EMBEDDING_GENERATION",
-              "MATERIALIZED_EDGES"
+              "MATERIALIZED_EDGES",
+              "NODE_PROPERTIES"
             ]
           },
           "input_imports": {

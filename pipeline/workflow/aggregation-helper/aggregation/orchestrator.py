@@ -44,12 +44,11 @@ from .stat_var_calculation_generator import (
     StatVarCalculationGenerator,
     StatVarCalculationConfig,
 )
-from .stat_var_group_generator import StatVarGroupGenerator
+from .stat_var_group_generator import StatVarGroupGenerator, StatVarGroupConfig
 from .stat_var_series_aggregator import (
     StatVarSeriesAggregator,
     StatVarSeriesAggregationConfig,
 )
-
 from .entity_aggregation_generator import (
     EntityAggregationGenerator,
     EntityAggregationConfig,
@@ -58,6 +57,7 @@ from .super_enum_aggregation_generator import (
     SuperEnumAggregationGenerator,
     SuperEnumAggregationConfig,
 )
+from .node_properties_generator import NodePropertiesGenerator, NodePropertiesConfig
 from .common import CALCULATION_TYPE_PRIORITY
 from .validator import validate_config
 from .deleter import AggregationDeleter
@@ -106,6 +106,7 @@ class CalculationType(str, Enum):
     SUPER_ENUM_AGGREGATION = "SUPER_ENUM_AGGREGATION"
     EMBEDDING_GENERATION = "EMBEDDING_GENERATION"
     MATERIALIZED_EDGES = "MATERIALIZED_EDGES"
+    NODE_PROPERTIES = "NODE_PROPERTIES"
 
 
 GLOBAL_CALCULATION_TYPES = {
@@ -565,6 +566,8 @@ class AggregationOrchestrator:
             return self._trigger_stat_var_series_aggregation(calc, applicable_imports)
         elif step_type == CalculationType.SUPER_ENUM_AGGREGATION:
             return self._trigger_super_enum_aggregation(calc, applicable_imports)
+        elif step_type == CalculationType.NODE_PROPERTIES:
+            return self._trigger_node_properties(calc, applicable_imports)
         elif step_type == CalculationType.EMBEDDING_GENERATION:
             return self._trigger_embeddings(calc)
         elif step_type == CalculationType.MATERIALIZED_EDGES:
@@ -770,6 +773,13 @@ class AggregationOrchestrator:
         generator = SuperEnumAggregationGenerator(self.executor, self.is_base_dc)
         super_config = SuperEnumAggregationConfig(import_names=applicable_imports)
         return generator.run(config=super_config)
+
+    def _trigger_node_properties(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers node properties aggregations (types and names rollup)."""
+        logging.info(f"  -> Node Properties Aggregation for imports {applicable_imports}")
+        generator = NodePropertiesGenerator(self.executor, self.is_base_dc)
+        node_config = NodePropertiesConfig(import_names=applicable_imports)
+        return generator.run_all(config=node_config)
 
     def _trigger_embeddings(self, config: Dict[str, Any]) -> List[Any]:
         """Triggers node embedding generation."""
