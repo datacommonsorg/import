@@ -13,13 +13,21 @@
 # limitations under the License.
 
 import json
+import os
 from collections import OrderedDict
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 from google.cloud.spanner_v1.param_types import STRING, Array
 
-from utils.embeddings import EmbeddingUtils
+from utils.embeddings import EmbeddingUtils, _generate_spanner_query
+
+
+def _load_test_query(filename: str) -> str:
+    path = os.path.join(os.path.dirname(__file__), "test_data", filename)
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read().strip()
+
 
 class TestEmbeddingUtils(unittest.TestCase):
 
@@ -30,6 +38,14 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.mock_spanner.embedding_table = "NodeEmbedding"
         self.utils = EmbeddingUtils(self.mock_spanner)
 
+    def test_generate_spanner_query_full_structure(self):
+        query = _generate_spanner_query({
+            "StatisticalVariable": ["description"],
+            "Topic": ["description"]
+        }, None, "TRUE")
+        expected_query = _load_test_query("generate_spanner_query_full_structure.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
+
     def test_get_latest_lock_timestamp(self):
         mock_snapshot = MagicMock()
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
@@ -37,7 +53,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         mock_snapshot.execute_sql.return_value = [(expected_timestamp,)]
 
         timestamp = self.utils._get_latest_lock_timestamp()
-        self.assertEqual(timestamp, expected_timestamp)
+        self.assertEqual(timestamp, expected_timestamp.isoformat())
 
     def test_get_node_filter_condition_no_filter(self):
         params = {}
@@ -56,7 +72,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         params = {}
         param_types = {}
         condition = self.utils._get_node_filter_condition("NLStatisticalVariable", params, param_types)
-        self.assertEqual(condition, "subject_id IN UNNEST(@nl_stat_vars)")
+        self.assertEqual(condition, "n.subject_id IN UNNEST(@nl_stat_vars)")
         self.assertEqual(params["nl_stat_vars"], ["Count_Person", "Median_Age"])
         self.assertEqual(param_types["nl_stat_vars"], Array(STRING))
 
@@ -87,16 +103,15 @@ class TestEmbeddingUtils(unittest.TestCase):
             field_names=["subject_id", "name", "types"]
         )
 
-        nodes = list(self.utils._get_updated_nodes(None, ["Topic"], "NoFilter", 3600))
+        nodes = list(self.utils._get_updated_nodes(None, {"Topic": ["description"]}, "NoFilter", 3600))
         
-        # Verify Spanner call
+        # Verify Spanner call with full SQL validation
         mock_snapshot.execute_sql.assert_called_once()
         args, kwargs = mock_snapshot.execute_sql.call_args
         query = args[0]
-        self.assertIn("SELECT subject_id, name, types FROM Node", query)
-        self.assertIn("TRUE", query)
-        self.assertEqual(kwargs["params"], {"node_types": ["Topic"]})
-
+        expected_query = _load_test_query("get_updated_nodes.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
+        self.assertEqual(kwargs["params"], {})
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/1")
         self.assertEqual(nodes[0]["name"], "Node 1")
@@ -124,16 +139,15 @@ class TestEmbeddingUtils(unittest.TestCase):
         )
 
         test_timestamp = datetime(2026, 4, 25, 0, 0, 0)
-        nodes = list(self.utils._get_updated_nodes(test_timestamp, ["Topic"], "NoFilter", 3600))
+        nodes = list(self.utils._get_updated_nodes(test_timestamp, {"Topic": ["description"]}, "NoFilter", 3600))
         
-        # Verify Spanner call
+        # Verify Spanner call with full SQL validation
         mock_snapshot.execute_sql.assert_called_once()
         args, kwargs = mock_snapshot.execute_sql.call_args
         query = args[0]
-        self.assertIn("SELECT subject_id, name, types FROM Node", query)
-        self.assertIn("last_update_timestamp > @timestamp", query)
-        self.assertEqual(kwargs["params"], {"node_types": ["Topic"], "timestamp": test_timestamp})
-
+        expected_query = _load_test_query("get_updated_nodes_with_timestamp.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
+        self.assertEqual(kwargs["params"], {})
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/2")
 
@@ -163,26 +177,25 @@ class TestEmbeddingUtils(unittest.TestCase):
             field_names=["subject_id", "name", "types"]
         )
 
-        nodes = list(self.utils._get_updated_nodes(None, ["Topic"], "NLStatisticalVariable", 3600))
+        nodes = list(self.utils._get_updated_nodes(None, {"Topic": ["description"]}, "NLStatisticalVariable", 3600))
 
-        # Verify Spanner call
+        # Verify Spanner call with full SQL validation
         mock_snapshot.execute_sql.assert_called_once()
         args, kwargs = mock_snapshot.execute_sql.call_args
         query = args[0]
-        self.assertIn("SELECT subject_id, name, types FROM Node", query)
-        self.assertIn("subject_id IN UNNEST(@nl_stat_vars)", query)
-        self.assertEqual(kwargs["params"], {"node_types": ["Topic"], "nl_stat_vars": ["dc/1", "dc/2"]})
-        self.assertEqual(kwargs["param_types"], {"node_types": Array(STRING), "nl_stat_vars": Array(STRING)})
-
+        expected_query = _load_test_query("get_updated_nodes_with_nl_filter.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
+        self.assertIn("n.subject_id IN UNNEST(@nl_stat_vars)", query)
+        self.assertIn("JSON_OBJECT", query)
+        self.assertEqual(kwargs["params"], {"nl_stat_vars": ["dc/1", "dc/2"]})
+        self.assertEqual(kwargs["param_types"], {"nl_stat_vars": Array(STRING)})
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/1")
 
     def test_filter_and_convert_nodes(self):
         nodes = [
-            {"subject_id": "dc/1", "name": "Node 1", "types": ["Topic"]},
-            {"subject_id": "dc/2", "name": None, "types": ["StatisticalVariable"]},
-            {"subject_id": "dc/3", "name": "Node 3", "types": ["Topic", "StatisticalVariable"]},
-            {"subject_id": "dc/4", "name": "", "types": ["StatisticalVariable"]}
+            {"subject_id": "dc/1", "embedding_content": json.dumps({"title": "dc/1", "name": "Node 1"}), "node_types": ["Topic"]},
+            {"subject_id": "dc/3", "embedding_content": json.dumps({"title": "dc/3", "name": "Node 3"}), "node_types": ["Topic", "StatisticalVariable"]}
         ]
 
         converted = list(self.utils._filter_and_convert_nodes(nodes))
@@ -191,7 +204,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.assertEqual(converted[1], ("dc/3", json.dumps({"title": "dc/3", "name": "Node 3"}), ["Topic", "StatisticalVariable"]))
 
     def test_filter_and_convert_nodes_json_order(self):
-        nodes = [{"subject_id": "dc/order_test", "name": "Test Name", "types": ["Topic"]}]
+        nodes = [{"subject_id": "dc/order_test", "embedding_content": json.dumps(OrderedDict([("title", "dc/order_test"), ("name", "Test Name")])), "node_types": ["Topic"]}]
         converted = list(self.utils._filter_and_convert_nodes(nodes))
         self.assertEqual(len(converted), 1)
 
@@ -255,6 +268,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             embedding_table="NodeEmbedding",
             embedding_label="base_text_embedding",
             task_type="RETRIEVAL_QUERY",
+            node_filter_type="NoFilter",
             timeout=3600
         )
         self.assertEqual(affected_rows, 8)
@@ -311,7 +325,7 @@ class TestEmbeddingUtils(unittest.TestCase):
     @patch('utils.embeddings.config')
     def test_ingest_embeddings_content_change(self, mock_config):
         mock_spec = MagicMock()
-        mock_spec.node_types = ["StatisticalVariable"]
+        mock_spec.node_types = {"StatisticalVariable": ["description"]}
         mock_spec.model_name = "NodeEmbeddingModel"
         mock_spec.embedding_label = "base_text_embedding"
         mock_spec.task_type = "RETRIEVAL_DOCUMENT"
@@ -395,7 +409,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         ]
 
         mock_spec = MagicMock()
-        mock_spec.node_types = ["StatisticalVariable"]
+        mock_spec.node_types = {"StatisticalVariable": ["description"]}
         mock_spec.model_name = "NodeEmbeddingModel"
         mock_spec.embedding_label = "base_text_embedding"
         mock_spec.task_type = "RETRIEVAL_DOCUMENT"

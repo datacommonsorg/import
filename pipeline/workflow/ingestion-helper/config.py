@@ -15,7 +15,7 @@
 import os
 import json
 import logging
-from typing import List
+from typing import List, Dict
 from pydantic import BaseModel, Field
 import yaml
 
@@ -23,7 +23,7 @@ class EmbeddingSpec(BaseModel):
     embedding_label: str
     model_name: str
     task_type: str
-    node_types: List[str]
+    node_types: Dict[str, List[str]]
     node_filter_type: str
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
@@ -69,7 +69,10 @@ _DEFAULT_EMBEDDING_SPECS = [
         embedding_label="base_text_embedding",
         model_name="NodeEmbeddingModel",
         task_type="RETRIEVAL_QUERY",
-        node_types=["StatisticalVariable", "Topic"],
+        node_types={
+            "StatisticalVariable": ["description"],
+            "Topic": ["description"]
+        },
         node_filter_type="NoFilter"
     )
 ]
