@@ -350,7 +350,9 @@ class AggregationOrchestrator:
         linked_to_delete = set()
         delete_stat_var_groups = False
         should_delete_topic_lists = (
+            # Delete if topic list edge materialization is enabled via CLI flag
             getattr(self.config, "generate_topic_list_edges", False)
+            # Or if enabled via configuration YAML file
             or any(
                 calc.get("type") == CalculationType.MATERIALIZED_EDGES
                 and not calc.get("disabled", False)
@@ -358,6 +360,7 @@ class AggregationOrchestrator:
                 for calc in self.calculations
             )
         )
+
 
 
         for single_import in imports:
