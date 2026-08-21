@@ -25,21 +25,21 @@ from .common import TOPIC_LIST_PROVENANCE, get_provenance_name
 @dataclass
 class MaterializedEdgeConfig:
     """Configuration for materialized edge generation."""
+
     enable_topic_hierarchy_lists: bool = True
 
 
 class MaterializedEdgeGenerator:
     """Generates global materialized edges and literal nodes in Spanner for O(1) query lookups."""
 
-    def __init__(self,
-                 executor: BigQueryExecutor,
-                 is_base_dc: bool = True) -> None:
+    def __init__(self, executor: BigQueryExecutor, is_base_dc: bool = True) -> None:
         """Initializes the MaterializedEdgeGenerator with the executor."""
         self.executor = executor
         self.is_base_dc = is_base_dc
 
-    def run_all(self,
-                config: Optional[MaterializedEdgeConfig] = None) -> List[bigquery.job.QueryJob]:
+    def run_all(
+        self, config: Optional[MaterializedEdgeConfig] = None
+    ) -> List[bigquery.job.QueryJob]:
         """Runs all enabled global edge materializations asynchronously and returns their jobs."""
         config = config or MaterializedEdgeConfig()
         jobs = []
@@ -68,8 +68,12 @@ class MaterializedEdgeGenerator:
         """
         dest = self.executor.get_spanner_destination_uri()
         output_provenance = get_provenance_name(TOPIC_LIST_PROVENANCE, self.is_base_dc)
+        logging.info(
+            f"Generating topic and peer group list edges with output provenance '{output_provenance}'..."
+        )
 
         query = f"""  # nosec
+
         -- Step 1: Extract all Topic and StatVarPeerGroup definitions across Spanner (InEdge covering index scan).
         CREATE OR REPLACE TEMPORARY TABLE `temp_topics_and_peergroups` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 

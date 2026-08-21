@@ -29,21 +29,19 @@ from .common import (
 @dataclass
 class LinkedEdgeConfig:
     """Configuration for linked edge generation."""
+
     import_names: Optional[List[str]] = None
 
 
 class LinkedEdgeGenerator:
     """Generates and ingests linked relationship edges (e.g., transitive closures) into Spanner for faster lookup."""
 
-    def __init__(self,
-                 executor: BigQueryExecutor,
-                 is_base_dc: bool = True) -> None:
+    def __init__(self, executor: BigQueryExecutor, is_base_dc: bool = True) -> None:
         """Initializes the LinkedEdgeGenerator with the executor."""
         self.executor = executor
         self.is_base_dc = is_base_dc
 
-    def run_all(self,
-                config: LinkedEdgeConfig) -> List[bigquery.job.QueryJob]:
+    def run_all(self, config: LinkedEdgeConfig) -> List[bigquery.job.QueryJob]:
         """Runs all global aggregations asynchronously and returns their jobs."""
         import_names = config.import_names
 
@@ -56,13 +54,13 @@ class LinkedEdgeGenerator:
         jobs = [
             self.run_linked_contained_in_place(import_names),
             self.run_linked_member_of(import_names),
-            self.run_linked_member(import_names)
+            self.run_linked_member(import_names),
         ]
         return [job for job in jobs if job]
 
     def run_linked_member_of(
-            self,
-            import_names: List[str] = None) -> Optional[bigquery.job.QueryJob]:
+        self, import_names: List[str] = None
+    ) -> Optional[bigquery.job.QueryJob]:
         """Expands membership hierarchies using memberOf and specializationOf."""
         if not import_names:
             return None
@@ -134,8 +132,8 @@ class LinkedEdgeGenerator:
         return self.executor.execute(query)
 
     def run_linked_contained_in_place(
-            self,
-            import_names: List[str] = None) -> Optional[bigquery.job.QueryJob]:
+        self, import_names: List[str] = None
+    ) -> Optional[bigquery.job.QueryJob]:
         """Expands place containment hierarchies."""
         if not import_names:
             return None
@@ -204,8 +202,8 @@ class LinkedEdgeGenerator:
         return self.executor.execute(query)
 
     def run_linked_member(
-            self,
-            import_names: List[str] = None) -> Optional[bigquery.job.QueryJob]:
+        self, import_names: List[str] = None
+    ) -> Optional[bigquery.job.QueryJob]:
         """Materializes reverse index 'linkedMember' edges from leaf variables to ancestor topics.
 
         Mixer uses 'linkedMember' for O(1) place existence checks without in-memory tree traversal.
@@ -306,4 +304,3 @@ class LinkedEdgeGenerator:
           NewEdges
         """
         return self.executor.execute(query)
-
