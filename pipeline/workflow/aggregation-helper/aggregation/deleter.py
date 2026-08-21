@@ -189,7 +189,7 @@ class AggregationDeleter:
 
         # 3. Delete the corresponding literal nodes from Node table
         if string_literal_node_ids:
-            chunk_size = 500
+            chunk_size = 5000
             for i in range(0, len(string_literal_node_ids), chunk_size):
                 chunk = string_literal_node_ids[i : i + chunk_size]
                 keyset = spanner.KeySet(keys=[[node_id] for node_id in chunk])

@@ -226,7 +226,9 @@ class TestAggregationDeleter(unittest.TestCase):
     def test_delete_topic_list_edges_chunked_nodes(self, mock_spanner_client):
         mock_db = MagicMock()
         mock_snapshot = MagicMock()
-        mock_snapshot.execute_sql.return_value = [(f"literal_node_{i}",) for i in range(750)]
+        mock_snapshot.execute_sql.return_value = [
+            (f"literal_node_{i}",) for i in range(7500)
+        ]
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
             mock_db
