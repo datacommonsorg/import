@@ -189,18 +189,15 @@ class AggregationDeleter:
 
         # 3. Delete the corresponding literal nodes from Node table
         if string_literal_node_ids:
-            sql_delete_nodes = (
-                "DELETE FROM Node WHERE subject_id IN UNNEST(@literal_node_ids)"
-            )
-            node_params = {"literal_node_ids": string_literal_node_ids}
-            node_param_types = {
-                "literal_node_ids": spanner.param_types.Array(
-                    spanner.param_types.STRING
-                )
-            }
-            self.spanner_database.execute_partitioned_dml(
-                sql_delete_nodes, params=node_params, param_types=node_param_types
-            )
+            chunk_size = 500
+            for i in range(0, len(string_literal_node_ids), chunk_size):
+                chunk = string_literal_node_ids[i : i + chunk_size]
+                keyset = spanner.KeySet(keys=[[node_id] for node_id in chunk])
+
+                def _delete_chunk(transaction, k=keyset):
+                    transaction.delete("Node", k)
+
+                self.spanner_database.run_in_transaction(_delete_chunk)
 
         logging.info(
             f"Deleted {edge_rows} topic and peer group list edges and {len(string_literal_node_ids)} literal nodes for provenance: {provenance_name}"

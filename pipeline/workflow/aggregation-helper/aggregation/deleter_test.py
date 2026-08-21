@@ -153,9 +153,9 @@ class TestAggregationDeleter(unittest.TestCase):
         deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=True)
         deleter.delete_topic_list_edges()
 
-        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 2)
-
-        edge_call = mock_db.execute_partitioned_dml.call_args_list[0]
+        # Edge table deletion via partitioned DML
+        mock_db.execute_partitioned_dml.assert_called_once()
+        edge_call = mock_db.execute_partitioned_dml.call_args
         edge_sql = edge_call[0][0]
         edge_params = edge_call[1]["params"]
         self.assertIn("DELETE FROM Edge", edge_sql)
@@ -166,14 +166,17 @@ class TestAggregationDeleter(unittest.TestCase):
             edge_params, {"provenance": "dc/base/generated/TopicHierarchyLists"}
         )
 
-        node_call = mock_db.execute_partitioned_dml.call_args_list[1]
-        node_sql = node_call[0][0]
-        node_params = node_call[1]["params"]
-        self.assertIn("DELETE FROM Node", node_sql)
-        self.assertEqual(node_params, {"literal_node_ids": ["literal_node_1"]})
+        # Node table deletion via KeySet transaction
+        mock_db.run_in_transaction.assert_called_once()
+        mock_tx = MagicMock()
+        mock_db.run_in_transaction.call_args[0][0](mock_tx)
+        mock_tx.delete.assert_called_once()
+        call_args = mock_tx.delete.call_args[0]
+        self.assertEqual(call_args[0], "Node")
+        self.assertEqual(call_args[1].keys, [["literal_node_1"]])
 
     @patch("aggregation.deleter.spanner.Client")
-    def test_delete_topic_list_edges_custom_dc(self, mock_spanner_client):
+    def test_delete_topic_list_edges_dcp(self, mock_spanner_client):
         mock_db = MagicMock()
         mock_snapshot = MagicMock()
         mock_snapshot.execute_sql.return_value = [("literal_node_1",)]
@@ -185,9 +188,8 @@ class TestAggregationDeleter(unittest.TestCase):
         deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=False)
         deleter.delete_topic_list_edges()
 
-        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 2)
-
-        edge_call = mock_db.execute_partitioned_dml.call_args_list[0]
+        mock_db.execute_partitioned_dml.assert_called_once()
+        edge_call = mock_db.execute_partitioned_dml.call_args
         edge_sql = edge_call[0][0]
         edge_params = edge_call[1]["params"]
         self.assertIn("DELETE FROM Edge", edge_sql)
@@ -196,11 +198,45 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertIn("'memberList'", edge_sql)
         self.assertEqual(edge_params, {"provenance": "generated/TopicHierarchyLists"})
 
-        node_call = mock_db.execute_partitioned_dml.call_args_list[1]
-        node_sql = node_call[0][0]
-        node_params = node_call[1]["params"]
-        self.assertIn("DELETE FROM Node", node_sql)
-        self.assertEqual(node_params, {"literal_node_ids": ["literal_node_1"]})
+        mock_db.run_in_transaction.assert_called_once()
+        mock_tx = MagicMock()
+        mock_db.run_in_transaction.call_args[0][0](mock_tx)
+        mock_tx.delete.assert_called_once()
+        call_args = mock_tx.delete.call_args[0]
+        self.assertEqual(call_args[0], "Node")
+        self.assertEqual(call_args[1].keys, [["literal_node_1"]])
+
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_topic_list_edges_empty_nodes(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_snapshot = MagicMock()
+        mock_snapshot.execute_sql.return_value = []
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+
+        deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=False)
+        deleter.delete_topic_list_edges()
+
+        mock_db.execute_partitioned_dml.assert_called_once()
+        mock_db.run_in_transaction.assert_not_called()
+
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_topic_list_edges_chunked_nodes(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_snapshot = MagicMock()
+        mock_snapshot.execute_sql.return_value = [(f"literal_node_{i}",) for i in range(750)]
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+
+        deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=False)
+        deleter.delete_topic_list_edges()
+
+        mock_db.execute_partitioned_dml.assert_called_once()
+        self.assertEqual(mock_db.run_in_transaction.call_count, 2)
 
 
 if __name__ == "__main__":

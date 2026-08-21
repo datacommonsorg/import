@@ -514,7 +514,6 @@ class AggregationOrchestrator:
         self, single_import: str, stage_num: int
     ) -> None:
         """Executes a single stage for a single import and blocks until all jobs complete."""
-        stage_jobs = []
         for calc in self.calculations:
             calc_stage = calc.get("stage", 1)
             if calc_stage != stage_num:

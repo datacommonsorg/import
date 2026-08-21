@@ -84,10 +84,10 @@ class MaterializedEdgeGenerator:
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
           "SELECT subject_id AS parent_id, predicate, object_id AS child_id FROM Edge WHERE predicate IN ('relevantVariable', 'member')");
 
-        -- Step 3: Aggregate direct child arcs into sorted CSV strings and compute SHA256 literal node keys:
+        -- Step 3a: Aggregate direct child arcs into sorted CSV strings:
         --   • Topic + relevantVariable       -> relevantVariableList (e.g. "VarA,VarB,SubTopicC")
         --   • StatVarPeerGroup + member      -> memberList (e.g. "VarA,VarB")
-        CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_topic_lists` AS
+        CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_topic_lists_raw` AS
         SELECT 
           raw.parent_id,
           -- Map to target list predicate based on container type
@@ -97,18 +97,26 @@ class MaterializedEdgeGenerator:
           END AS list_predicate,
           -- Combine distinct child DCIDs into a single alphabetically sorted CSV string
           STRING_AGG(DISTINCT raw.child_id, ',' ORDER BY raw.child_id) AS csv_member_list,
-          -- Deterministic SHA256 node key: prefix(first 16 chars) + ':' + hex(sha256(csv_string))
-          CONCAT(
-            SUBSTR(TRIM(STRING_AGG(DISTINCT raw.child_id, ',' ORDER BY raw.child_id)), 1, 16),
-            ':', 
-            TO_HEX(SHA256(TRIM(STRING_AGG(DISTINCT raw.child_id, ',' ORDER BY raw.child_id))))
-          ) AS literal_node_key,
           '{output_provenance}' AS provenance
         FROM `temp_raw_topic_and_peergroup_edges` raw
         JOIN `temp_topics_and_peergroups` types ON raw.parent_id = types.entity_id
         WHERE (types.type_name = 'Topic' AND raw.predicate = 'relevantVariable')
            OR (types.type_name = 'StatVarPeerGroup' AND raw.predicate = 'member')
         GROUP BY raw.parent_id, list_predicate;
+
+        -- Step 3b: Derive deterministic literal node keys: prefix(first 16 chars) + ':' + hex(sha256(csv_string))
+        CREATE OR REPLACE TEMPORARY TABLE `temp_aggregated_topic_lists` AS
+        SELECT
+          parent_id,
+          list_predicate,
+          csv_member_list,
+          CONCAT(
+            SUBSTR(TRIM(csv_member_list), 1, 16),
+            ':',
+            TO_HEX(SHA256(TRIM(csv_member_list)))
+          ) AS literal_node_key,
+          provenance
+        FROM `temp_aggregated_topic_lists_raw`;
 
         -- Step 4: Create the string literal nodes in Spanner Node table (stores CSV list in Node.value).
         EXPORT DATA
