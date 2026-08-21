@@ -22,6 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator, LinkedEdgeConfig
+from aggregation import MaterializedEdgeGenerator, MaterializedEdgeConfig
 from aggregation import StatVarGroupGenerator, StatVarGroupConfig
 from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from aggregation import PlaceAggregationGenerator, PlaceAggregationConfig
@@ -250,13 +251,37 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
             self.assertIn("test-conn", query)
             self.assertIn("spanner-uri", query)
 
-    def test_run_topic_list_edges(self):
+    def test_run_linked_member(self):
         generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
 
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
 
-        job = generator.run_topic_list_edges()
+        job = generator.run_linked_member(import_names=["import1"])
+        self.assertEqual(job, mock_job)
+
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("temp_topics_and_peergroups", query)
+        self.assertIn("temp_raw_topic_and_peergroup_edges", query)
+        self.assertIn("temp_topic_hierarchy", query)
+        self.assertIn("relevantVariable", query)
+        self.assertIn("linkedMember", query)
+
+
+class TestMaterializedEdgeGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_generate_topic_hierarchy_list_edges(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.generate_topic_hierarchy_list_edges()
         self.assertEqual(job, mock_job)
         self.mock_executor.execute.assert_called_once()
 
@@ -273,34 +298,34 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.assertIn('spanner_options = \'{"table": "Edge"}\'', query)
         self.assertIn("dc/base/generated/TopicHierarchyLists", query)
 
-    def test_run_topic_list_edges_not_base_dc(self):
-        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=False)
+    def test_generate_topic_hierarchy_list_edges_not_base_dc(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=False)
 
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
 
-        job = generator.run_topic_list_edges()
+        job = generator.generate_topic_hierarchy_list_edges()
         self.assertEqual(job, mock_job)
 
         query = self.mock_executor.execute.call_args[0][0]
         self.assertIn("generated/TopicHierarchyLists", query)
         self.assertNotIn("dc/base/generated/TopicHierarchyLists", query)
 
-    def test_run_linked_member(self):
-        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
+    def test_run_all(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=True)
 
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
 
-        job = generator.run_linked_member(import_names=["import1"])
-        self.assertEqual(job, mock_job)
+        jobs = generator.run_all(MaterializedEdgeConfig(enable_topic_hierarchy_lists=True))
+        self.assertEqual(jobs, [mock_job])
 
-        query = self.mock_executor.execute.call_args[0][0]
-        self.assertIn("temp_topics_and_peergroups", query)
-        self.assertIn("temp_raw_topic_and_peergroup_edges", query)
-        self.assertIn("temp_topic_hierarchy", query)
-        self.assertIn("relevantVariable", query)
-        self.assertIn("linkedMember", query)
+    def test_run_all_disabled(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=True)
+        jobs = generator.run_all(MaterializedEdgeConfig(enable_topic_hierarchy_lists=False))
+        self.assertEqual(jobs, [])
+        self.mock_executor.execute.assert_not_called()
+
 
 
 class TestProvenanceSummaryGenerator(unittest.TestCase):

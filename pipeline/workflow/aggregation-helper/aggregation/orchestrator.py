@@ -27,6 +27,7 @@ from typing import Any, Dict, List, Optional
 from .bq_executor import BigQueryExecutor
 from .embedding_generator import EmbeddingGenerator, EmbeddingGenerationConfig
 from .linked_edge_generator import LinkedEdgeGenerator, LinkedEdgeConfig
+from .materialized_edge_generator import MaterializedEdgeGenerator, MaterializedEdgeConfig
 from .place_aggregation_generator import PlaceAggregationGenerator, PlaceAggregationConfig
 from .provenance_summary_generator import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from .stat_var_aggregator import StatVarAggregator, StatVarAggregationConfig
@@ -79,11 +80,14 @@ class CalculationType(str, Enum):
     STAT_VAR_SERIES_AGGREGATION = "STAT_VAR_SERIES_AGGREGATION"
     SUPER_ENUM_AGGREGATION = "SUPER_ENUM_AGGREGATION"
     EMBEDDING_GENERATION = "EMBEDDING_GENERATION"
+    MATERIALIZED_EDGES = "MATERIALIZED_EDGES"
 
 
 GLOBAL_CALCULATION_TYPES = {
     CalculationType.EMBEDDING_GENERATION,
+    CalculationType.MATERIALIZED_EDGES,
 }
+
 
 SCOPED_GRAPH_CALCULATION_TYPES = {
     CalculationType.LINKED_EDGES,
@@ -160,6 +164,13 @@ class AggregationOrchestrator:
         else:
             self.calculations = validate_config(target_config, schema_file_path)
 
+        if getattr(self.config, "generate_topic_list_edges", False):
+            self.calculations.append({
+                "name": "Materialized Topic Hierarchy Lists",
+                "type": CalculationType.MATERIALIZED_EDGES,
+                "stage": 20,
+            })
+
         # Deterministically sort calculations by stage and calculation priority tier
         self.calculations.sort(
             key=lambda c: (
@@ -167,6 +178,7 @@ class AggregationOrchestrator:
                 CALCULATION_TYPE_PRIORITY.get(c.get("type", ""), 99)
             )
         )
+
 
 
     def run(self, active_imports: Optional[List[str]] = None, dry_run: bool = True, skip_deletions: bool = False) -> AggregationRunResult:
@@ -281,17 +293,12 @@ class AggregationOrchestrator:
             )
 
     def _run_global_calculations(self, dry_run: bool = True) -> Optional[ImportExecutionResult]:
-        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION, TOPIC_LIST_EDGES)."""
+        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION, MATERIALIZED_EDGES)."""
         global_calcs = [
             calc for calc in self.calculations
             if calc.get("type") in GLOBAL_CALCULATION_TYPES and not calc.get("disabled", False)
         ]
-        should_generate_topic_lists = getattr(self.config, "generate_topic_list_edges", False) or any(
-            calc.get("generate_topic_list_edges", False)
-            for calc in self.calculations
-            if not calc.get("disabled", False)
-        )
-        if not global_calcs and not should_generate_topic_lists:
+        if not global_calcs:
             return None
 
         logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} config step(s)) ===")
@@ -321,36 +328,6 @@ class AggregationOrchestrator:
                         error_message=str(e)
                     )
 
-        if should_generate_topic_lists:
-            logging.info("Triggering global step: 'TOPIC_LIST_EDGES' (Consolidated relevantVariableList & memberList)...")
-            if dry_run:
-                logging.info("[DRY RUN] Would execute global step: Topic & SVPG List Edges")
-                return ImportExecutionResult(
-                    import_name="GLOBAL",
-                    success=True,
-                    stages_executed=[]
-                )
-
-            try:
-                generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
-                topic_job = generator.run_topic_list_edges()
-                if topic_job and hasattr(topic_job, "job_id"):
-                    logging.info(f"Submitted global topic list edge job: {topic_job.job_id}")
-                    self._wait_for_jobs(
-                        job_ids=[topic_job.job_id],
-                        poll_interval=self.poll_interval,
-                        step_name="Topic & SVPG List Edges",
-                        single_import="GLOBAL"
-                    )
-            except Exception as e:
-                logging.error(f"Global topic list edge generation failed: {e}")
-                return ImportExecutionResult(
-                    import_name="GLOBAL",
-                    success=False,
-                    stages_executed=[],
-                    error_message=str(e)
-                )
-
         return ImportExecutionResult(
             import_name="GLOBAL",
             success=True,
@@ -373,10 +350,11 @@ class AggregationOrchestrator:
         linked_to_delete = set()
         delete_stat_var_groups = False
         should_delete_topic_lists = getattr(self.config, "generate_topic_list_edges", False) or any(
-            calc.get("generate_topic_list_edges", False)
+            calc.get("type") == CalculationType.MATERIALIZED_EDGES
             for calc in self.calculations
             if not calc.get("disabled", False)
         )
+
         for single_import in imports:
             for calc in self.calculations:
                 if self._calc_applies_to_import(calc, single_import):
@@ -506,6 +484,8 @@ class AggregationOrchestrator:
             return self._trigger_super_enum_aggregation(calc, applicable_imports)
         elif step_type == CalculationType.EMBEDDING_GENERATION:
             return self._trigger_embeddings(calc)
+        elif step_type == CalculationType.MATERIALIZED_EDGES:
+            return self._trigger_materialized_edges(calc)
         else:
             logging.warning(
                 f"Calculation type '{step_type}' configured for imports '{applicable_imports}' has no active generator handler."
@@ -689,6 +669,16 @@ class AggregationOrchestrator:
             embedding_table=embedding_table
         )
         return generator.run_all(config=embed_config)
+
+    def _trigger_materialized_edges(self, config: Dict[str, Any]) -> List[Any]:
+        """Triggers global materialized edge generation."""
+        logging.info("  -> Materialized Edges Aggregation (Global)")
+        edge_cfg = config.get("materialized_edges", {})
+        mat_config = MaterializedEdgeConfig(
+            enable_topic_hierarchy_lists=edge_cfg.get("enable_topic_hierarchy_lists", True)
+        )
+        generator = MaterializedEdgeGenerator(self.executor, self.is_base_dc)
+        return generator.run_all(config=mat_config)
 
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""

@@ -532,12 +532,12 @@ class TestOrchestratorOrdering(unittest.TestCase):
         self.assertTrue(orchestrator_enabled._calc_applies_to_import(svg_calc, "schema"))
 
     @patch('aggregation.orchestrator.AggregationDeleter')
-    @patch('aggregation.orchestrator.LinkedEdgeGenerator')
-    def test_global_topic_list_edges_execution(self, mock_linked_gen, mock_deleter, mock_executor):
+    @patch('aggregation.orchestrator.MaterializedEdgeGenerator')
+    def test_global_topic_list_edges_execution(self, mock_mat_gen, mock_deleter, mock_executor):
         """Verifies global topic list edge consolidation runs when generate_topic_list_edges is True."""
         mock_job = MagicMock()
         mock_job.job_id = "job-topic-1"
-        mock_linked_gen.return_value.run_topic_list_edges.return_value = mock_job
+        mock_mat_gen.return_value.run_all.return_value = [mock_job]
 
         orchestrator = AggregationOrchestrator(OrchestratorConfig(
             connection_id="conn",
@@ -555,7 +555,8 @@ class TestOrchestratorOrdering(unittest.TestCase):
         self.assertIn("GLOBAL", result.import_results)
         self.assertTrue(result.import_results["GLOBAL"].success)
         mock_deleter.return_value.delete_topic_list_edges.assert_called_once()
-        mock_linked_gen.return_value.run_topic_list_edges.assert_called_once()
+        mock_mat_gen.return_value.run_all.assert_called_once()
+
 
 
 class TestConfigSanity(unittest.TestCase):

@@ -19,6 +19,7 @@ linked relationship edges and provenance summaries in Spanner.
 
 from .bq_executor import BigQueryExecutor
 from .linked_edge_generator import LinkedEdgeGenerator, LinkedEdgeConfig
+from .materialized_edge_generator import MaterializedEdgeGenerator, MaterializedEdgeConfig
 from .provenance_summary_generator import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from .stat_var_aggregator import StatVarAggregator, StatVarAggregationConfig
 from .place_aggregation_generator import PlaceAggregationGenerator, PlaceAggregationConfig
@@ -41,6 +42,8 @@ __all__ = [
     'BigQueryExecutor',
     'LinkedEdgeGenerator',
     'LinkedEdgeConfig',
+    'MaterializedEdgeGenerator',
+    'MaterializedEdgeConfig',
     'ProvenanceSummaryGenerator',
     'ProvenanceSummaryConfig',
     'StatVarAggregator',
