@@ -761,6 +761,29 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(history, ["v2", "v1"])
 
     @patch('google.cloud.spanner.Client')
+    def test_get_import_version_history_with_status(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_txn = MagicMock()
+        def run_in_transaction_side_effect(callback, *args, **kwargs):
+            return callback(mock_txn, *args, **kwargs)
+        mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        mock_results = MagicMock()
+        mock_results.__iter__.return_value = [["v1"]]
+        mock_txn.execute_sql.return_value = mock_results
+
+        client = SpannerClient("project", "instance", "database")
+        history = client.get_import_version_history("foo:bar:imp1", limit=5, status="SUCCESS")
+        self.assertEqual(history, ["v1"])
+        call_args = mock_txn.execute_sql.call_args
+        self.assertIn("Status = @status", call_args[0][0])
+        self.assertEqual(call_args[1]["params"]["status"], "SUCCESS")
+
+    @patch('google.cloud.spanner.Client')
     def test_get_import_latest_version(self, mock_spanner_client):
         mock_instance = MagicMock()
         mock_db = MagicMock()

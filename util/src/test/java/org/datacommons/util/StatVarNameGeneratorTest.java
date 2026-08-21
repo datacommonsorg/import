@@ -47,7 +47,7 @@ public class StatVarNameGeneratorTest {
                 "measurementQualifier", Values.newBuilder().addTypedValues(tv("Annual")).build())
             .build();
 
-    assertEquals("Growth Rate Annual Count Of Person", StatVarNameGenerator.generateName(pvs));
+    assertEquals("Growth Rate Annual Population", StatVarNameGenerator.generateName(pvs));
   }
 
   @Test
@@ -67,7 +67,7 @@ public class StatVarNameGeneratorTest {
             .build();
 
     assertEquals(
-        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case",
+        "Cumulative Count of Medical Condition Incident: COVID 19, Confirmed Case",
         StatVarNameGenerator.generateName(pvs));
   }
 
@@ -84,7 +84,7 @@ public class StatVarNameGeneratorTest {
                 Values.newBuilder().addTypedValues(tv("Count_Person")).build())
             .build();
 
-    assertEquals("Count Of Person: Is Urban (Per capita)", StatVarNameGenerator.generateName(pvs));
+    assertEquals("Population: Is Urban (Per capita)", StatVarNameGenerator.generateName(pvs));
   }
 
   @Test

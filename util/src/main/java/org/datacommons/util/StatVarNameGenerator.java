@@ -2,9 +2,11 @@ package org.datacommons.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 
@@ -21,7 +23,7 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
  *   <li><b>Prefix:</b> Derived from {@code statType} (e.g., "Median") and time-based {@code
  *       measurementQualifier}s (e.g., "Annual").
  *   <li><b>MeasureAndPop:</b> Combines {@code measuredProperty} and {@code populationType}. For
- *       example, "Count Of Person". If they overlap, redundancy is avoided.
+ *       example, "Count of Student". If they overlap, redundancy is avoided.
  *   <li><b>Qualifiers:</b> Non-time {@code measurementQualifier}s in parentheses, e.g., "(Real)".
  *   <li><b>Constraints:</b> A comma-separated list of values for filtering properties like {@code
  *       gender}, {@code race}, etc., prepended with a colon.
@@ -29,7 +31,7 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
  *       "(Per capita)" or "(As fraction of ...)".
  * </ul>
  *
- * <p><strong>Example:</strong> "Annual Count Of Person (Real): Female, White (Per capita)"
+ * <p><strong>Example:</strong> "Annual Count of Student (Real): Female, White (Per capita)"
  */
 public class StatVarNameGenerator {
 
@@ -48,6 +50,10 @@ public class StatVarNameGenerator {
   private static final Joiner SPACE_JOINER = Joiner.on(" ");
   private static final Joiner COMMA_JOINER = Joiner.on(", ");
   private static final Joiner AND_JOINER = Joiner.on(" & ");
+
+  // Curated map of overrides for measuredProperty + populationType combinations.
+  private static final Map<String, String> MEASURE_AND_POP_OVERRIDES =
+      ImmutableMap.of("Count of Person", "Population");
 
   /** Checks whether the given node types indicate a StatisticalVariable or slice. */
   public static boolean isStatVar(List<String> types) {
@@ -167,19 +173,27 @@ public class StatVarNameGenerator {
       } else if (!measureAndPop.equalsIgnoreCase(formattedPopType)
           && !measureAndPop.toLowerCase().contains(formattedPopType.toLowerCase())
           && !formattedPopType.toLowerCase().contains(measureAndPop.toLowerCase())) {
-        // If measure and popType are distinct, combine them (e.g., "Count Of Person").
-        measureAndPop = measureAndPop + " Of " + formattedPopType;
+        // If measure and popType are distinct, combine them (e.g., "Count of Student").
+        measureAndPop = measureAndPop + " of " + formattedPopType;
       } else if (formattedPopType.toLowerCase().contains(measureAndPop.toLowerCase())
           && !measureAndPop.equalsIgnoreCase(formattedPopType)) {
         // If popType contains the measure (e.g., popType="Person With Age",
         // measure="Age"),
-        // use popType to avoid redundancy like "Age Of Person With Age".
+        // use popType to avoid redundancy like "Age of Person With Age".
         measureAndPop = formattedPopType;
       }
-      // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count Of
-      // Person"
-      // contains "Person"), it skips appending to avoid "Count Of Person Of Person".
+      // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count of
+      // Student"
+      // contains "Student"), it skips appending to avoid "Count of Student of
+      // Student".
     }
+
+    // Apply special case overrides.
+    String override = MEASURE_AND_POP_OVERRIDES.get(measureAndPop);
+    if (override != null) {
+      measureAndPop = override;
+    }
+
     return measureAndPop;
   }
 
