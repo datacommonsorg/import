@@ -538,6 +538,10 @@ ORDERING_CONFIG_YAML = textwrap.dedent("""\
       - type: STAT_VAR_GROUPS
         input_imports: ["schema"]
         stage: 0
+
+      - type: NODE_PROPERTIES
+        input_imports: ["schema"]
+        stage: 0
 """)
 
 
@@ -575,6 +579,7 @@ class TestOrchestratorOrdering(unittest.TestCase):
             "STAT_VAR_GROUPS",
             "LINKED_EDGES",
             "PROVENANCE_SUMMARY",
+            "NODE_PROPERTIES",
             "PLACE_AGGREGATION",
         ]
         self.assertEqual(types_in_order, expected_order)
@@ -662,6 +667,54 @@ class TestOrchestratorOrdering(unittest.TestCase):
         )
         orchestrator._delete_previous_aggregations(["TestImport"], dry_run=False)
         mock_deleter.return_value.delete_topic_list_edges.assert_not_called()
+
+
+NODE_PROPERTIES_CONFIG_YAML = textwrap.dedent("""\
+    calculations:
+      - type: NODE_PROPERTIES
+        input_imports:
+          - Schema
+        stage: 0
+""")
+
+
+@patch('aggregation.orchestrator.BigQueryExecutor')
+@patch('aggregation.orchestrator.NodePropertiesGenerator')
+class TestOrchestratorNodeProperties(unittest.TestCase):
+    """Tests execution of NODE_PROPERTIES aggregation step."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+
+        self.config_path = os.path.join(self.tmpdir.name, "node_properties_config.yaml")
+        with open(self.config_path, "w") as f:
+            f.write(NODE_PROPERTIES_CONFIG_YAML)
+
+        self.orchestrator = AggregationOrchestrator(OrchestratorConfig(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            config_file_path=self.config_path
+        ))
+
+    def test_run_node_properties_dry_run_false(self, mock_node_gen, mock_executor_cls):
+        mock_job1 = MagicMock()
+        mock_job1.job_id = "job-node-1"
+        mock_job2 = MagicMock()
+        mock_job2.job_id = "job-node-2"
+        mock_node_gen.return_value.run_all.return_value = [mock_job1, mock_job2]
+
+        self.orchestrator.executor = MagicMock()
+        self.orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
+
+        result = self.orchestrator.run(active_imports=["Schema"], dry_run=False)
+        self.assertTrue(result.success)
+        self.assertIn("Schema", result.import_results)
+        self.assertEqual(result.import_results["Schema"].stages_executed, [0])
+
+        mock_node_gen.return_value.run_all.assert_called_once()
 
 
 class TestConfigSanity(unittest.TestCase):

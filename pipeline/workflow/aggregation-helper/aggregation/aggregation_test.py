@@ -27,6 +27,7 @@ from aggregation import StatVarGroupGenerator
 from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from aggregation import PlaceAggregationGenerator, PlaceAggregationConfig
 from aggregation import EmbeddingGenerator, EmbeddingGenerationConfig
+from aggregation import NodePropertiesGenerator, NodePropertiesConfig
 from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.common import (
     BASE_PROVENANCE_PREFIX,
@@ -585,6 +586,56 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         self.assertIn("EffectiveParent", query)
         self.assertIn("HAVING COUNT(DISTINCT pc.child) <= 1", query)
         self.assertIn("generated_provenance_prefix", query)
+
+
+class TestNodePropertiesGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_run_all(self):
+        generator = NodePropertiesGenerator(self.mock_executor, is_base_dc=True)
+        mock_job1 = MagicMock()
+        mock_job2 = MagicMock()
+        self.mock_executor.execute.side_effect = [mock_job1, mock_job2]
+
+        jobs = generator.run_all(NodePropertiesConfig(import_names=["Schema"]))
+        self.assertEqual(len(jobs), 2)
+        self.assertEqual(self.mock_executor.execute.call_count, 2)
+
+    def test_run_node_types(self):
+        generator = NodePropertiesGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_node_types()
+        self.assertEqual(job, mock_job)
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("test-conn", query)
+        self.assertIn("spanner-uri", query)
+        self.assertIn("predicate = 'typeOf'", query)
+        self.assertIn("SELECT subject_id, ARRAY_AGG(object_id ORDER BY object_id) AS types", query)
+        self.assertIn('spanner_options = \'{"table": "Node"}\'', query)
+
+    def test_run_node_names(self):
+        generator = NodePropertiesGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_node_names()
+        self.assertEqual(job, mock_job)
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("test-conn", query)
+        self.assertIn("spanner-uri", query)
+        self.assertIn("predicate = 'name'", query)
+        self.assertIn("SELECT subject_id, value FROM Node WHERE types IS NULL OR ARRAY_LENGTH(types) = 0", query)
+        self.assertIn("JOIN nodes ON edges.object_id = nodes.subject_id", query)
+        self.assertIn("SELECT subject_id, ARRAY_AGG(value ORDER BY value)[SAFE_OFFSET(0)] AS name", query)
+        self.assertIn('spanner_options = \'{"table": "Node"}\'', query)
 
 
 if __name__ == "__main__":

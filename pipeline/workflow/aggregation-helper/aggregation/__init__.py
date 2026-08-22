@@ -50,6 +50,7 @@ from .entity_aggregation_generator import (
     EntityAggregationConfig,
 )
 from .embedding_generator import EmbeddingGenerator, EmbeddingGenerationConfig
+from .node_properties_generator import NodePropertiesGenerator, NodePropertiesConfig
 from .orchestrator import (
     AggregationOrchestrator,
     AggregationRunResult,
@@ -83,6 +84,8 @@ __all__ = [
     "EntityAggregationConfig",
     "EmbeddingGenerator",
     "EmbeddingGenerationConfig",
+    "NodePropertiesGenerator",
+    "NodePropertiesConfig",
     "AggregationOrchestrator",
     "OrchestratorConfig",
     "AggregationDeleter",
