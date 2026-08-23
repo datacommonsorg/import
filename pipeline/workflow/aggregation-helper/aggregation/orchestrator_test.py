@@ -545,11 +545,21 @@ ORDERING_CONFIG_YAML = textwrap.dedent("""\
 """)
 
 
-@patch("aggregation.orchestrator.BigQueryExecutor")
 class TestOrchestratorOrdering(unittest.TestCase):
     """Tests for stage 0 prerequisite resolution and deterministic priority ordering."""
 
     def setUp(self):
+        self.executor_patcher = patch("aggregation.orchestrator.BigQueryExecutor")
+        self.mock_executor = self.executor_patcher.start()
+        self.mock_executor.return_value.get_jobs_status.return_value = {
+            "status": "DONE"
+        }
+        self.addCleanup(self.executor_patcher.stop)
+
+        self.deleter_patcher = patch("aggregation.orchestrator.AggregationDeleter")
+        self.mock_deleter = self.deleter_patcher.start()
+        self.addCleanup(self.deleter_patcher.stop)
+
         self.tmpdir = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmpdir.cleanup)
 
@@ -567,12 +577,12 @@ class TestOrchestratorOrdering(unittest.TestCase):
             )
         )
 
-    def test_active_stages_includes_stage_0(self, mock_executor):
+    def test_active_stages_includes_stage_0(self):
         """Verifies stage 0 is included in active stages for matching imports."""
         active_stages = self.orchestrator._get_active_stages_for_import("TestImport")
         self.assertEqual(active_stages, [0, 1])
 
-    def test_calculation_priority_sorting(self, mock_executor):
+    def test_calculation_priority_sorting(self):
         """Verifies calculations are sorted deterministically by (stage, priority)."""
         types_in_order = [calc["type"] for calc in self.orchestrator.calculations]
         expected_order = [
@@ -584,7 +594,7 @@ class TestOrchestratorOrdering(unittest.TestCase):
         ]
         self.assertEqual(types_in_order, expected_order)
 
-    def test_generate_stat_var_groups_disabled(self, mock_executor):
+    def test_generate_stat_var_groups_disabled(self):
         """Verifies STAT_VAR_GROUPS calculation step is skipped when generate_stat_var_groups is set to False."""
         orchestrator = AggregationOrchestrator(
             OrchestratorConfig(
@@ -622,7 +632,7 @@ class TestOrchestratorOrdering(unittest.TestCase):
     @patch("aggregation.orchestrator.AggregationDeleter")
     @patch("aggregation.orchestrator.MaterializedEdgeGenerator")
     def test_global_topic_list_edges_execution(
-        self, mock_mat_gen, mock_deleter, mock_executor
+        self, mock_mat_gen, mock_deleter
     ):
         """Verifies global topic list edge consolidation runs when generate_topic_list_edges is True."""
         mock_job = MagicMock()
@@ -652,7 +662,7 @@ class TestOrchestratorOrdering(unittest.TestCase):
     @patch("aggregation.orchestrator.AggregationDeleter")
     @patch("aggregation.orchestrator.MaterializedEdgeGenerator")
     def test_global_topic_list_edges_not_deleted_when_disabled(
-        self, mock_mat_gen, mock_deleter, mock_executor
+        self, mock_mat_gen, mock_deleter
     ):
         """Verifies global topic list edge deletion does NOT run when generate_topic_list_edges is False."""
         orchestrator = AggregationOrchestrator(
@@ -667,6 +677,106 @@ class TestOrchestratorOrdering(unittest.TestCase):
         )
         orchestrator._delete_previous_aggregations(["TestImport"], dry_run=False)
         mock_deleter.return_value.delete_topic_list_edges.assert_not_called()
+
+    def test_dynamic_global_calculation_types(self):
+        """Verifies LINKED_EDGES is in global_calculation_types only when enable_global_linked_edges=True."""
+        disabled_orchestrator = AggregationOrchestrator(
+            OrchestratorConfig(
+                connection_id="conn",
+                project_id="proj",
+                instance_id="inst",
+                database_id="db",
+                config_file_path=self.config_path,
+                enable_global_linked_edges=False,
+            )
+        )
+        self.assertNotIn(
+            CalculationType.LINKED_EDGES,
+            disabled_orchestrator.global_calculation_types,
+        )
+
+        enabled_orchestrator = AggregationOrchestrator(
+            OrchestratorConfig(
+                connection_id="conn",
+                project_id="proj",
+                instance_id="inst",
+                database_id="db",
+                config_file_path=self.config_path,
+                enable_global_linked_edges=True,
+            )
+        )
+        self.assertIn(
+            CalculationType.LINKED_EDGES,
+            enabled_orchestrator.global_calculation_types,
+        )
+
+    @patch("aggregation.orchestrator.LinkedEdgeGenerator")
+    def test_dcp_linked_edges_dispatched_in_phase2(
+        self, mock_linked_gen
+    ):
+        """Verifies DCP runs LINKED_EDGES as a global step in Phase 2 when enable_global_linked_edges=True."""
+        mock_job = MagicMock()
+        mock_job.job_id = "job-linked-1"
+        mock_linked_gen.return_value.run_all.return_value = [mock_job]
+
+        dcp_orchestrator = AggregationOrchestrator(
+            OrchestratorConfig(
+                connection_id="conn",
+                project_id="proj",
+                instance_id="inst",
+                database_id="db",
+                config_file_path=self.config_path,
+                is_base_dc=False,
+                enable_global_linked_edges=True,
+            )
+        )
+
+        # In DCP, LINKED_EDGES should not apply to worker imports
+        linked_calc = next(
+            c
+            for c in dcp_orchestrator.calculations
+            if c.get("type") == CalculationType.LINKED_EDGES
+        )
+        self.assertFalse(
+            dcp_orchestrator._calc_applies_to_import(linked_calc, "TestImport")
+        )
+
+        result = dcp_orchestrator.run(
+            active_imports=["TestImport"], dry_run=False, skip_deletions=True
+        )
+        self.assertTrue(result.success)
+        self.assertIn("GLOBAL", result.import_results)
+        self.assertTrue(result.import_results["GLOBAL"].success)
+        mock_linked_gen.return_value.run_all.assert_called_once()
+
+    @patch("aggregation.orchestrator.PlaceAggregationGenerator")
+    def test_phase2_aborted_when_phase1_import_fails(
+        self, mock_place_gen
+    ):
+        """Verifies Phase 2 global calculation steps are aborted when a Phase 1 import worker fails."""
+        mock_place_gen.return_value.aggregate_places.side_effect = Exception(
+            "Worker error"
+        )
+
+        orchestrator = AggregationOrchestrator(
+            OrchestratorConfig(
+                connection_id="conn",
+                project_id="proj",
+                instance_id="inst",
+                database_id="db",
+                config_file_path=self.config_path,
+                is_base_dc=False,
+            )
+        )
+        with patch.object(orchestrator, "_run_global_calculations") as mock_global:
+            result = orchestrator.run(
+                active_imports=["TestImport"], dry_run=False, skip_deletions=True
+            )
+            self.assertFalse(result.success)
+            self.assertIn("TestImport", result.import_results)
+            self.assertFalse(result.import_results["TestImport"].success)
+            # Global Phase 2 must NOT have run
+            mock_global.assert_not_called()
 
 
 NODE_PROPERTIES_CONFIG_YAML = textwrap.dedent("""\

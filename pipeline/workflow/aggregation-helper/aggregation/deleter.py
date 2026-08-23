@@ -19,7 +19,14 @@ import logging
 from typing import List
 from google.cloud import spanner
 
-from .common import TOPIC_LIST_PROVENANCE, get_provenance_name, get_provenance_prefix
+from .common import (
+    LINKED_PLACES_PROVENANCE,
+    LINKED_SVGS_PROVENANCE,
+    LINKED_TOPICS_PROVENANCE,
+    TOPIC_LIST_PROVENANCE,
+    get_provenance_name,
+    get_provenance_prefix,
+)
 
 # Default timeout for partitioned DML streaming RPCs (6 hours = 21600 seconds),
 # matching Cloud Run Job / Workflow execution limits.
@@ -155,6 +162,24 @@ class AggregationDeleter:
         logging.info(
             f"Deleted {rows} linked relationship edges for imports: {imports_to_delete}"
         )
+        return rows
+
+    def delete_domain_linked_edges(self) -> int:
+        """Deletes generated linked relationship edges across the canonical domain singletons."""
+        provenance_names = [
+            get_provenance_name(LINKED_PLACES_PROVENANCE, self.is_base_dc),
+            get_provenance_name(LINKED_TOPICS_PROVENANCE, self.is_base_dc),
+            get_provenance_name(LINKED_SVGS_PROVENANCE, self.is_base_dc),
+        ]
+        sql = "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)"
+        params = {"provenances": provenance_names}
+        param_types = {
+            "provenances": spanner.param_types.Array(spanner.param_types.STRING)
+        }
+        rows = self.spanner_database.execute_partitioned_dml(
+            sql, params=params, param_types=param_types
+        )
+        logging.info(f"Deleted {rows} domain linked edges across canonical provenances.")
         return rows
 
     def delete_topic_list_edges(self) -> int:

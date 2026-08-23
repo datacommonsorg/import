@@ -22,7 +22,7 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from .bq_executor import BigQueryExecutor
 from .embedding_generator import EmbeddingGenerator, EmbeddingGenerationConfig
@@ -139,6 +139,7 @@ class OrchestratorConfig:
     bq_dataset_id: str = "datacommons"
     generate_stat_var_groups: bool = True
     generate_topic_list_edges: bool = False
+    enable_global_linked_edges: bool = False
     max_parallel_imports: int = 10
     deletion_timeout: float = 21600.0
 
@@ -282,8 +283,16 @@ class AggregationOrchestrator:
                             )
                         )
 
-        # Execute global, import-independent calculation steps once
-        global_result = self._run_global_calculations(dry_run=dry_run)
+        # Execute global, import-independent calculation steps once (only if Phase 1 succeeded)
+        if not run_result.success:
+            logging.error(
+                f"Skipping Phase 2 global calculations because one or more imports failed: {run_result.failed_imports}"
+            )
+            return run_result
+
+        global_result = self._run_global_calculations(
+            active_imports=expanded_imports, dry_run=dry_run
+        )
         if global_result:
             run_result.import_results["GLOBAL"] = global_result
 
@@ -343,14 +352,25 @@ class AggregationOrchestrator:
                 error_message=str(e),
             )
 
+    @property
+    def global_calculation_types(self) -> Set[CalculationType]:
+        """Dynamically returns calculation types that run in Phase 2."""
+        types = {
+            CalculationType.EMBEDDING_GENERATION,
+            CalculationType.MATERIALIZED_EDGES,
+        }
+        if self.config.enable_global_linked_edges:
+            types.add(CalculationType.LINKED_EDGES)
+        return types
+
     def _run_global_calculations(
-        self, dry_run: bool = True
+        self, active_imports: Optional[List[str]] = None, dry_run: bool = True
     ) -> Optional[ImportExecutionResult]:
-        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION, MATERIALIZED_EDGES)."""
+        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION, MATERIALIZED_EDGES, LINKED_EDGES in DCP)."""
         global_calcs = [
             calc
             for calc in self.calculations
-            if calc.get("type") in GLOBAL_CALCULATION_TYPES
+            if calc.get("type") in self.global_calculation_types
             and not calc.get("disabled", False)
         ]
         if not global_calcs:
@@ -368,7 +388,9 @@ class AggregationOrchestrator:
             else:
                 logging.info(f"Triggering global step: '{step_type}'...")
                 try:
-                    step_jobs = self._dispatch_stage_steps(calc)
+                    step_jobs = self._dispatch_stage_steps(
+                        calc, applicable_imports=active_imports
+                    )
                     if step_jobs:
                         job_ids = [
                             job.job_id for job in step_jobs if hasattr(job, "job_id")
@@ -706,7 +728,10 @@ class AggregationOrchestrator:
         """Triggers linked edge aggregations."""
         logging.info(f"  -> Linked Edges Aggregation for imports {applicable_imports}")
         generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
-        edge_config = LinkedEdgeConfig(import_names=applicable_imports)
+        edge_config = LinkedEdgeConfig(
+            import_names=applicable_imports,
+            enable_global_linked_edges=self.config.enable_global_linked_edges,
+        )
         return generator.run_all(config=edge_config)
 
     def _trigger_provenance_summary(
@@ -818,7 +843,7 @@ class AggregationOrchestrator:
         ):
             return False
 
-        if calc.get("type") in GLOBAL_CALCULATION_TYPES:
+        if calc.get("type") in self.global_calculation_types:
             return False
 
         configured_imports = calc.get("input_imports") or calc.get("imports", [])

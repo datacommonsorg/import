@@ -81,6 +81,10 @@ def create_orchestrator_config(
 
     config_path = args.config_path or env.get("CONFIG_PATH")
     enable_embeddings = env.get("ENABLE_EMBEDDINGS", "false").lower() == "true"
+    enable_global_linked_edges = (
+        getattr(args, "enable_global_linked_edges", False)
+        or env.get("ENABLE_GLOBAL_LINKED_EDGES", "false").lower() == "true"
+    )
     bq_dataset_id = env.get("BQ_DATASET_ID", "datacommons")
 
     return OrchestratorConfig(
@@ -93,6 +97,7 @@ def create_orchestrator_config(
         is_base_dc=args.is_base_dc,
         config_file_path=config_path,
         enable_embeddings=enable_embeddings,
+        enable_global_linked_edges=enable_global_linked_edges,
         bq_dataset_id=bq_dataset_id,
         generate_stat_var_groups=args.generate_stat_var_groups,
         generate_topic_list_edges=getattr(args, "generate_topic_list_edges", False),
@@ -130,6 +135,12 @@ def main():
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Whether to materialize topic relevantVariableList and memberList edges (default: False, use --generate_topic_list_edges to enable).",
+    )
+    parser.add_argument(
+        "--enable_global_linked_edges",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to enable global cross-provenance linked edge calculation and delta sync (default: False, use --enable_global_linked_edges to enable).",
     )
     parser.add_argument(
         "--dry_run",

@@ -141,6 +141,33 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA"]})
 
     @patch("aggregation.deleter.spanner.Client")
+    def test_delete_domain_linked_edges_dcp(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+
+        deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=False)
+        deleter.delete_domain_linked_edges()
+
+        mock_db.execute_partitioned_dml.assert_called_once()
+        call_args = mock_db.execute_partitioned_dml.call_args
+        sql = call_args[0][0]
+        params = call_args[1]["params"]
+        self.assertIn("DELETE FROM Edge", sql)
+        self.assertIn("provenance IN UNNEST(@provenances)", sql)
+        self.assertEqual(
+            params,
+            {
+                "provenances": [
+                    "generated/LinkedPlaces",
+                    "generated/LinkedTopics",
+                    "generated/LinkedSVGs",
+                ]
+            },
+        )
+
+    @patch("aggregation.deleter.spanner.Client")
     def test_delete_topic_list_edges_base_dc(self, mock_spanner_client):
         mock_db = MagicMock()
         mock_snapshot = MagicMock()
