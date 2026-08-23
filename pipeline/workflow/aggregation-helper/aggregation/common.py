@@ -14,6 +14,9 @@
 
 BASE_PROVENANCE_PREFIX = "dc/base/"
 TOPIC_LIST_PROVENANCE = "generated/TopicHierarchyLists"
+LINKED_PLACES_PROVENANCE = "generated/LinkedPlaces"
+LINKED_TOPICS_PROVENANCE = "generated/LinkedTopics"
+LINKED_SVGS_PROVENANCE = "generated/LinkedSVGs"
 
 
 def get_provenance_prefix(is_base_dc: bool) -> str:

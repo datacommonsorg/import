@@ -251,14 +251,17 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.mock_executor = MagicMock()
         self.mock_executor.connection_id = "test-conn"
         self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+        self.mock_executor.spanner_project_id = "test-spanner-proj"
+        self.mock_executor.instance_id = "test-inst"
+        self.mock_executor.database_id = "test-db"
 
     def test_run_all_empty(self):
-        generator = LinkedEdgeGenerator(self.mock_executor)
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
         jobs = generator.run_all(LinkedEdgeConfig(import_names=[]))
         self.assertEqual(jobs, [])
         self.mock_executor.execute.assert_not_called()
 
-    def test_run_all(self):
+    def test_run_all_base_dc(self):
         generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
 
         mock_job = MagicMock()
@@ -269,14 +272,16 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.assertEqual(len(jobs), 3)  # Runs the 3 scoped linked edge queries
         self.assertEqual(self.mock_executor.execute.call_count, 3)
 
-        # Verify queries contain connection id and spanner destination uri
+        # Verify queries contain connection id, spanner destination uri, and scoped provenance
         calls = self.mock_executor.execute.call_args_list
         for call in calls:
             query = call[0][0]
             self.assertIn("test-conn", query)
             self.assertIn("spanner-uri", query)
+            self.assertIn("'dc/base/import1'", query)
+            self.assertIn("'dc/base/import2'", query)
 
-    def test_run_linked_member(self):
+    def test_run_linked_member_base_dc(self):
         generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
 
         mock_job = MagicMock()
@@ -291,6 +296,105 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.assertIn("temp_topic_hierarchy", query)
         self.assertIn("relevantVariable", query)
         self.assertIn("linkedMember", query)
+        self.assertIn("'dc/base/import1'", query)
+
+    @patch.object(LinkedEdgeGenerator, "_active_imports_have_predicates", return_value=False)
+    def test_dcp_early_return_when_no_schema_predicates(self, mock_check):
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=False)
+        jobs = generator.run_all(
+            LinkedEdgeConfig(
+                import_names=["data_only_csv"], enable_global_linked_edges=True
+            )
+        )
+        self.assertEqual(jobs, [])
+        self.mock_executor.execute.assert_not_called()
+        self.assertEqual(mock_check.call_count, 3)
+
+    @patch.object(LinkedEdgeGenerator, "_active_imports_have_predicates", return_value=True)
+    def test_dcp_delta_sync_full_flow(self, mock_check):
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=False)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        # Mock BigQuery row results: 2 rows to delete, 5 rows to insert
+        mock_delete_row_1 = {
+            "subject_id": "geoId/06001",
+            "predicate": "linkedContainedInPlace",
+            "object_id": "country/USA",
+            "provenance": "generated/custom_import",
+        }
+        mock_delete_row_2 = {
+            "subject_id": "geoId/06002",
+            "predicate": "linkedContainedInPlace",
+            "object_id": "country/USA",
+            "provenance": "generated/custom_import",
+        }
+
+        mock_bq_client = MagicMock()
+        self.mock_executor.client = mock_bq_client
+
+        def query_side_effect(sql):
+            mock_res = MagicMock()
+            if "temp_delete_" in sql:
+                mock_res.result.return_value = [mock_delete_row_1, mock_delete_row_2]
+            elif "temp_insert_" in sql:
+                mock_res.result.return_value = [MagicMock()]
+            return mock_res
+
+        mock_bq_client.query.side_effect = query_side_effect
+
+        mock_spanner_db = MagicMock()
+        mock_batch = MagicMock()
+        mock_spanner_db.batch.return_value.__enter__.return_value = mock_batch
+        generator._spanner_database = mock_spanner_db
+
+        jobs = generator.run_all(
+            LinkedEdgeConfig(
+                import_names=["custom_import"], enable_global_linked_edges=True
+            )
+        )
+        self.assertEqual(len(jobs), 3)
+
+        # Verify batch.delete was called with 4-part composite primary key
+        self.assertEqual(mock_batch.delete.call_count, 3)
+        delete_call_args = mock_batch.delete.call_args[0]
+        self.assertEqual(delete_call_args[0], "Edge")
+        keyset = delete_call_args[1]
+        self.assertEqual(
+            keyset.keys,
+            [
+                ["geoId/06001", "linkedContainedInPlace", "country/USA", "generated/custom_import"],
+                ["geoId/06002", "linkedContainedInPlace", "country/USA", "generated/custom_import"],
+            ],
+        )
+
+        # Verify queries checked STARTS_WITH(provenance, 'generated/') for migration
+        queries = [call[0][0] for call in self.mock_executor.execute.call_args_list]
+        diff_queries = [q for q in queries if "EXCEPT DISTINCT" in q]
+        for dq in diff_queries:
+            self.assertIn("STARTS_WITH(provenance, 'generated/')", dq)
+
+    @patch.object(LinkedEdgeGenerator, "_active_imports_have_predicates", return_value=False)
+    def test_explicit_enable_global_linked_edges_flag(self, mock_check):
+        """Verifies enable_global_linked_edges in config explicitly overrides is_base_dc."""
+        # is_base_dc=True, but enable_global_linked_edges=True -> Runs global path
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
+        jobs = generator.run_all(
+            LinkedEdgeConfig(import_names=["import1"], enable_global_linked_edges=True)
+        )
+        self.assertEqual(jobs, [])
+        self.assertEqual(mock_check.call_count, 3)
+
+        # is_base_dc=False, but enable_global_linked_edges=False -> Runs scoped path
+        mock_check.reset_mock()
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+        generator_dcp = LinkedEdgeGenerator(self.mock_executor, is_base_dc=False)
+        jobs = generator_dcp.run_all(
+            LinkedEdgeConfig(import_names=["import1"], enable_global_linked_edges=False)
+        )
+        self.assertEqual(len(jobs), 3)
+        mock_check.assert_not_called()
 
 
 class TestMaterializedEdgeGenerator(unittest.TestCase):
