@@ -34,6 +34,7 @@ class ImportState(str, Enum):
     SUCCESS = "SUCCESS"
     RETRY = "RETRY"
     SKIP = "SKIP"
+    VALIDATION = "VALIDATION"
 
 
 class ImportItem(BaseModel):
@@ -88,9 +89,7 @@ class UpdateImportVersionRequest(BaseModel):
 
 class ImportVersionItem(BaseModel):
     importName: str
-    cleanImportName: str
     status: ImportState
-    version: str
     latestVersion: Optional[str] = None
 
 
@@ -145,16 +144,16 @@ def update_ingestion_status(
     status_str = req.status.value if hasattr(req.status, 'value') else req.status
     spanner.update_ingestion_status(ingested_imports, req.workflowId, status_str)
 
-    metrics = None
-    if req.jobId and req.jobId != "N/A":
-        try:
-            metrics = import_utils.get_ingestion_metrics(
-                config.PROJECT_ID, config.LOCATION, req.jobId)
-        except Exception as e:
-            logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
-            metrics = None
-
     if req.status == IngestionState.SUCCESS:
+        metrics = None
+        if req.jobId and req.jobId != "N/A":
+            try:
+                metrics = import_utils.get_ingestion_metrics(
+                    config.PROJECT_ID, config.LOCATION, req.jobId)
+            except Exception as e:
+                logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
+                metrics = None
+
         import_list_dicts = [item.model_dump() for item in req.importList]
         spanner.update_import_version_history(import_list_dicts,
                                               req.workflowId,
@@ -307,13 +306,10 @@ def update_import_version(req: UpdateImportVersionRequest,
 
         spanner.update_import_status(params)
         
-        clean_name = import_name.split(':')[-1]
         import_items.append(
             ImportVersionItem(
                 importName=import_name,
-                cleanImportName=clean_name,
                 status=params.get('status', 'RETRY'),
-                version=version,
                 latestVersion=params.get('latest_version')
             )
         )
