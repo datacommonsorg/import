@@ -139,7 +139,7 @@ class OrchestratorConfig:
     bq_dataset_id: str = "datacommons"
     generate_stat_var_groups: bool = True
     generate_topic_list_edges: bool = False
-    max_parallel_imports: int = 10
+    max_parallel_imports: int = 3
     deletion_timeout: float = 21600.0
 
 

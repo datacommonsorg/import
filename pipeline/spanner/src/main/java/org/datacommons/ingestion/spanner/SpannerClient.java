@@ -148,7 +148,8 @@ public class SpannerClient implements Serializable {
             // .withMaxNumRows(SPANNER_MAX_NUM_ROWS)
             // .withGroupingFactor(SPANNER_GROUPING_FACTOR)
             // .withMaxNumMutations(SPANNER_MAX_NUM_MUTATIONS)
-            .withCommitDeadline(Duration.standardSeconds(SPANNER_COMMIT_DEADLINE_SECONDS));
+            .withCommitDeadline(Duration.standardSeconds(SPANNER_COMMIT_DEADLINE_SECONDS))
+            .withLowPriority();
 
     if (emulatorHost != null) {
       write = write.withEmulatorHost(emulatorHost);

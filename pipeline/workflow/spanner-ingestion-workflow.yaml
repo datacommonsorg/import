@@ -276,6 +276,7 @@ run_dataflow_job:
           - jobName: ${job_name}
           - machineType: 'n2-highmem-8'
           - numWorkers: 3
+          - maxWorkers: 20
     - launch_job:
         call: googleapis.dataflow.v1b3.projects.locations.flexTemplates.launch
         args:
@@ -292,6 +293,7 @@ run_dataflow_job:
                 spannerDatabaseId: '${spanner_database_id}'
               environment:
                 numWorkers: ${numWorkers}
+                maxWorkers: ${maxWorkers}
                 machineType: ${machineType}
         result: launch_result
 

@@ -69,7 +69,7 @@ class NodePropertiesGenerator:
           OPTIONS(
             uri="{dest_uri}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Node"}}'
+            spanner_options = '{{"table": "Node", "priority": "LOW"}}'
           ) AS
         SELECT * FROM types;
         """
@@ -109,7 +109,7 @@ class NodePropertiesGenerator:
           OPTIONS(
             uri="{dest_uri}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Node"}}'
+            spanner_options = '{{"table": "Node", "priority": "LOW"}}'
           ) AS
         SELECT * FROM name;
         """
