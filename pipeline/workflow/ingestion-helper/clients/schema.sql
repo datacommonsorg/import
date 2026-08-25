@@ -159,8 +159,7 @@ CREATE PROPERTY GRAPH DCGraph
         name,
         subject_id,
         types,
-        value,
-        last_update_timestamp)
+        value)
   )
   EDGE TABLES(
     Edge
