@@ -246,7 +246,7 @@ class ProvenanceSummaryGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "KeyValueStore"}}' ) AS
+            spanner_options = '{{"table": "KeyValueStore", "priority": "LOW"}}' ) AS
         WITH facet_base AS (
           SELECT 
             variable_measured, provenance as provenance_dcid, facet_id,

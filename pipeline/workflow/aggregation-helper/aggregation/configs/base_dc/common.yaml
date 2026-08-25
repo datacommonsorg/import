@@ -25,3 +25,12 @@ calculations:
     input_imports:
       - "Schema"
     should_prune_single_child_svgs: true
+
+  # Generates node properties (types rollup and resolved names) into Node table
+  - name: "Global: Node Properties (Types & Names Rollup)"
+    type: NODE_PROPERTIES
+    stage: 0
+    input_imports:
+      - "Schema"
+      - "Place"
+

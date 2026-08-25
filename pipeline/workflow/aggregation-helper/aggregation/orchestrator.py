@@ -27,14 +27,37 @@ from typing import Any, Dict, List, Optional
 from .bq_executor import BigQueryExecutor
 from .embedding_generator import EmbeddingGenerator, EmbeddingGenerationConfig
 from .linked_edge_generator import LinkedEdgeGenerator, LinkedEdgeConfig
-from .place_aggregation_generator import PlaceAggregationGenerator, PlaceAggregationConfig
-from .provenance_summary_generator import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
+from .materialized_edge_generator import (
+    MaterializedEdgeGenerator,
+    MaterializedEdgeConfig,
+)
+from .place_aggregation_generator import (
+    PlaceAggregationGenerator,
+    PlaceAggregationConfig,
+)
+from .provenance_summary_generator import (
+    ProvenanceSummaryGenerator,
+    ProvenanceSummaryConfig,
+)
 from .stat_var_aggregator import StatVarAggregator, StatVarAggregationConfig
-from .stat_var_calculation_generator import StatVarCalculationGenerator, StatVarCalculationConfig
+from .stat_var_calculation_generator import (
+    StatVarCalculationGenerator,
+    StatVarCalculationConfig,
+)
 from .stat_var_group_generator import StatVarGroupGenerator, StatVarGroupConfig
-from .stat_var_series_aggregator import StatVarSeriesAggregator, StatVarSeriesAggregationConfig
-from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
-from .super_enum_aggregation_generator import SuperEnumAggregationGenerator, SuperEnumAggregationConfig
+from .stat_var_series_aggregator import (
+    StatVarSeriesAggregator,
+    StatVarSeriesAggregationConfig,
+)
+from .entity_aggregation_generator import (
+    EntityAggregationGenerator,
+    EntityAggregationConfig,
+)
+from .super_enum_aggregation_generator import (
+    SuperEnumAggregationGenerator,
+    SuperEnumAggregationConfig,
+)
+from .node_properties_generator import NodePropertiesGenerator, NodePropertiesConfig
 from .common import CALCULATION_TYPE_PRIORITY
 from .validator import validate_config
 from .deleter import AggregationDeleter
@@ -45,6 +68,7 @@ _OUTPUT_IMPORT_KEY = "output_import"
 @dataclass
 class ImportExecutionResult:
     """Execution status and metadata for a single import dataset."""
+
     import_name: str
     success: bool
     stages_executed: List[int] = field(default_factory=list)
@@ -54,6 +78,7 @@ class ImportExecutionResult:
 @dataclass
 class AggregationRunResult:
     """Summary result of an overall AggregationOrchestrator run across imports."""
+
     import_results: Dict[str, ImportExecutionResult] = field(default_factory=dict)
 
     @property
@@ -69,6 +94,7 @@ class AggregationRunResult:
 
 class CalculationType(str, Enum):
     """Supported aggregation calculation step types."""
+
     PLACE_AGGREGATION = "PLACE_AGGREGATION"
     STAT_VAR_AGGREGATION = "STAT_VAR_AGGREGATION"
     ENTITY_AGGREGATION = "ENTITY_AGGREGATION"
@@ -79,11 +105,15 @@ class CalculationType(str, Enum):
     STAT_VAR_SERIES_AGGREGATION = "STAT_VAR_SERIES_AGGREGATION"
     SUPER_ENUM_AGGREGATION = "SUPER_ENUM_AGGREGATION"
     EMBEDDING_GENERATION = "EMBEDDING_GENERATION"
+    MATERIALIZED_EDGES = "MATERIALIZED_EDGES"
+    NODE_PROPERTIES = "NODE_PROPERTIES"
 
 
 GLOBAL_CALCULATION_TYPES = {
     CalculationType.EMBEDDING_GENERATION,
+    CalculationType.MATERIALIZED_EDGES,
 }
+
 
 SCOPED_GRAPH_CALCULATION_TYPES = {
     CalculationType.LINKED_EDGES,
@@ -93,6 +123,7 @@ SCOPED_GRAPH_CALCULATION_TYPES = {
 @dataclass
 class OrchestratorConfig:
     """Configuration settings for initializing AggregationOrchestrator."""
+
     connection_id: str
     project_id: str
     instance_id: str
@@ -107,7 +138,8 @@ class OrchestratorConfig:
     enable_embeddings: bool = False
     bq_dataset_id: str = "datacommons"
     generate_stat_var_groups: bool = True
-    max_parallel_imports: int = 10
+    generate_topic_list_edges: bool = False
+    max_parallel_imports: int = 3
     deletion_timeout: float = 21600.0
 
 
@@ -146,7 +178,11 @@ class AggregationOrchestrator:
 
         # Resolve paths for config directory and schema
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        target_config = self.config.config_dir or self.config.config_file_path or os.path.join(curr_dir, "configs")
+        target_config = (
+            self.config.config_dir
+            or self.config.config_file_path
+            or os.path.join(curr_dir, "configs")
+        )
         schema_file_path = os.path.join(curr_dir, "schema.json")
 
         # self.calculations holds the complete list of validated calculation step
@@ -159,16 +195,29 @@ class AggregationOrchestrator:
         else:
             self.calculations = validate_config(target_config, schema_file_path)
 
+        if getattr(self.config, "generate_topic_list_edges", False):
+            self.calculations.append(
+                {
+                    "name": "Materialized Topic Hierarchy Lists",
+                    "type": CalculationType.MATERIALIZED_EDGES,
+                    "stage": 20,
+                }
+            )
+
         # Deterministically sort calculations by stage and calculation priority tier
         self.calculations.sort(
             key=lambda c: (
                 c.get("stage", 1),
-                CALCULATION_TYPE_PRIORITY.get(c.get("type", ""), 99)
+                CALCULATION_TYPE_PRIORITY.get(c.get("type", ""), 99),
             )
         )
 
-
-    def run(self, active_imports: Optional[List[str]] = None, dry_run: bool = True, skip_deletions: bool = False) -> AggregationRunResult:
+    def run(
+        self,
+        active_imports: Optional[List[str]] = None,
+        dry_run: bool = True,
+        skip_deletions: bool = False,
+    ) -> AggregationRunResult:
         """Executes aggregations independently for each active import.
 
         Blocks and synchronizes stage progression for each import:
@@ -185,14 +234,15 @@ class AggregationOrchestrator:
         """
         active_imports = active_imports or []
         expanded_imports = self._expand_active_imports(active_imports)
-        
+
         if not skip_deletions:
             self._delete_previous_aggregations(
-                imports=expanded_imports,
-                dry_run=dry_run
+                imports=expanded_imports, dry_run=dry_run
             )
         else:
-            logging.info("Skipping deletion of existing aggregated data as skip_deletions=True.")
+            logging.info(
+                "Skipping deletion of existing aggregated data as skip_deletions=True."
+            )
 
         logging.info(
             f"Starting Aggregation Orchestrator run (dry_run={dry_run}, skip_deletions={skip_deletions}) for active imports: {active_imports} (expanded: {expanded_imports})"
@@ -202,13 +252,17 @@ class AggregationOrchestrator:
         if expanded_imports:
             # Eagerly initialize BigQuery client on main thread to prevent thread race conditions
             _ = self.executor.client
-            max_workers = min(len(expanded_imports), max(1, self.config.max_parallel_imports))
+            max_workers = min(
+                len(expanded_imports), max(1, self.config.max_parallel_imports)
+            )
             logging.info(
                 f"Executing aggregation pipelines for {len(expanded_imports)} import(s) in parallel using up to {max_workers} worker thread(s)..."
             )
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 future_to_import = {
-                    executor.submit(self._process_single_import, single_import, dry_run): single_import
+                    executor.submit(
+                        self._process_single_import, single_import, dry_run
+                    ): single_import
                     for single_import in expanded_imports
                 }
                 for future in as_completed(future_to_import):
@@ -217,11 +271,15 @@ class AggregationOrchestrator:
                         res = future.result()
                         run_result.import_results[single_import] = res
                     except Exception as e:
-                        logging.error(f"Unexpected error executing import '{single_import}': {e}")
-                        run_result.import_results[single_import] = ImportExecutionResult(
-                            import_name=single_import,
-                            success=False,
-                            error_message=str(e)
+                        logging.error(
+                            f"Unexpected error executing import '{single_import}': {e}"
+                        )
+                        run_result.import_results[single_import] = (
+                            ImportExecutionResult(
+                                import_name=single_import,
+                                success=False,
+                                error_message=str(e),
+                            )
                         )
 
         # Execute global, import-independent calculation steps once
@@ -231,17 +289,21 @@ class AggregationOrchestrator:
 
         return run_result
 
-    def _process_single_import(self, single_import: str, dry_run: bool) -> ImportExecutionResult:
+    def _process_single_import(
+        self, single_import: str, dry_run: bool
+    ) -> ImportExecutionResult:
         """Executes all aggregation stages for a single import dataset."""
-        logging.info(f"=== Starting Aggregation Pipeline for Import: '{single_import}' ===")
+        logging.info(
+            f"=== Starting Aggregation Pipeline for Import: '{single_import}' ==="
+        )
         active_stages = self._get_active_stages_for_import(single_import)
 
         if not active_stages:
-            logging.info(f"No aggregation steps configured for import '{single_import}'. Skipping.")
+            logging.info(
+                f"No aggregation steps configured for import '{single_import}'. Skipping."
+            )
             return ImportExecutionResult(
-                import_name=single_import,
-                success=True,
-                stages_executed=[]
+                import_name=single_import, success=True, stages_executed=[]
             )
 
         if dry_run:
@@ -254,57 +316,71 @@ class AggregationOrchestrator:
                 f"Detected active stage(s) {active_stages} for import '{single_import}'. [Dry Run] Would execute calculation step(s): {active_calcs}. Skipping execution because dry_run=True."
             )
             return ImportExecutionResult(
-                import_name=single_import,
-                success=True,
-                stages_executed=active_stages
+                import_name=single_import, success=True, stages_executed=active_stages
             )
 
         try:
             for stage_num in active_stages:
-                logging.info(f"--- Triggering Stage {stage_num} for import '{single_import}' ---")
+                logging.info(
+                    f"--- Triggering Stage {stage_num} for import '{single_import}' ---"
+                )
                 self._execute_and_synchronize_stage(single_import, stage_num)
 
-            logging.info(f"=== Successfully completed all aggregation stages for Import: '{single_import}' ===")
+            logging.info(
+                f"=== Successfully completed all aggregation stages for Import: '{single_import}' ==="
+            )
             return ImportExecutionResult(
-                import_name=single_import,
-                success=True,
-                stages_executed=active_stages
+                import_name=single_import, success=True, stages_executed=active_stages
             )
         except Exception as e:
-            logging.error(f"Aggregation pipeline failed for import '{single_import}': {e}")
+            logging.error(
+                f"Aggregation pipeline failed for import '{single_import}': {e}"
+            )
             return ImportExecutionResult(
                 import_name=single_import,
                 success=False,
                 stages_executed=active_stages,
-                error_message=str(e)
+                error_message=str(e),
             )
 
-    def _run_global_calculations(self, dry_run: bool = True) -> Optional[ImportExecutionResult]:
-        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION)."""
+    def _run_global_calculations(
+        self, dry_run: bool = True
+    ) -> Optional[ImportExecutionResult]:
+        """Runs global, import-independent calculation steps (e.g., EMBEDDING_GENERATION, MATERIALIZED_EDGES)."""
         global_calcs = [
-            calc for calc in self.calculations
-            if calc.get("type") in GLOBAL_CALCULATION_TYPES and not calc.get("disabled", False)
+            calc
+            for calc in self.calculations
+            if calc.get("type") in GLOBAL_CALCULATION_TYPES
+            and not calc.get("disabled", False)
         ]
         if not global_calcs:
             return None
 
-        logging.info(f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} step(s)) ===")
+        logging.info(
+            f"=== Starting Global Import-Independent Calculations ({len(global_calcs)} config step(s)) ==="
+        )
         for calc in global_calcs:
             step_type = calc.get("type")
             if dry_run:
-                logging.info(f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}")
+                logging.info(
+                    f"[DRY RUN] Would execute global step: {calc.get('name', step_type)}"
+                )
             else:
                 logging.info(f"Triggering global step: '{step_type}'...")
                 try:
                     step_jobs = self._dispatch_stage_steps(calc)
                     if step_jobs:
-                        job_ids = [job.job_id for job in step_jobs if hasattr(job, "job_id")]
-                        logging.info(f"Submitted {len(job_ids)} global job(s): {job_ids}")
+                        job_ids = [
+                            job.job_id for job in step_jobs if hasattr(job, "job_id")
+                        ]
+                        logging.info(
+                            f"Submitted {len(job_ids)} global job(s): {job_ids}"
+                        )
                         self._wait_for_jobs(
                             job_ids=job_ids,
                             poll_interval=self.poll_interval,
                             step_name=calc.get("name", str(step_type)),
-                            single_import="GLOBAL"
+                            single_import="GLOBAL",
                         )
                 except Exception as e:
                     logging.error(f"Global calculation step '{step_type}' failed: {e}")
@@ -312,19 +388,15 @@ class AggregationOrchestrator:
                         import_name="GLOBAL",
                         success=False,
                         stages_executed=[],
-                        error_message=str(e)
+                        error_message=str(e),
                     )
 
         return ImportExecutionResult(
-            import_name="GLOBAL",
-            success=True,
-            stages_executed=[]
+            import_name="GLOBAL", success=True, stages_executed=[]
         )
 
     def _delete_previous_aggregations(
-        self,
-        imports: List[str],
-        dry_run: bool = True
+        self, imports: List[str], dry_run: bool = True
     ) -> None:
         """Deletes existing aggregated data for the specified imports before running aggregations.
 
@@ -336,6 +408,20 @@ class AggregationOrchestrator:
         to_delete = set()
         linked_to_delete = set()
         delete_stat_var_groups = False
+        should_delete_topic_lists = (
+            # Delete if topic list edge materialization is enabled via CLI flag
+            getattr(self.config, "generate_topic_list_edges", False)
+            # Or if enabled via configuration YAML file
+            or any(
+                calc.get("type") == CalculationType.MATERIALIZED_EDGES
+                and not calc.get("disabled", False)
+                and calc.get("materialized_edges", {}).get(
+                    "enable_topic_hierarchy_lists", True
+                )
+                for calc in self.calculations
+            )
+        )
+
         for single_import in imports:
             for calc in self.calculations:
                 if self._calc_applies_to_import(calc, single_import):
@@ -347,7 +433,12 @@ class AggregationOrchestrator:
                     if calc.get("type") == CalculationType.STAT_VAR_GROUPS:
                         delete_stat_var_groups = True
 
-        if not to_delete and not linked_to_delete and not delete_stat_var_groups:
+        if (
+            not to_delete
+            and not linked_to_delete
+            and not delete_stat_var_groups
+            and not should_delete_topic_lists
+        ):
             logging.info("No existing aggregated data resolved for deletion.")
             return
 
@@ -355,11 +446,21 @@ class AggregationOrchestrator:
         linked_to_delete_list = sorted(list(linked_to_delete))
         if dry_run:
             if to_delete_list:
-                logging.info(f"[Dry Run] Would delete aggregated data for imports: {to_delete_list}")
+                logging.info(
+                    f"[Dry Run] Would delete aggregated data for imports: {to_delete_list}"
+                )
             if linked_to_delete_list:
-                logging.info(f"[Dry Run] Would delete linked relationship edges for imports: {linked_to_delete_list}")
+                logging.info(
+                    f"[Dry Run] Would delete linked relationship edges for imports: {linked_to_delete_list}"
+                )
             if delete_stat_var_groups:
-                logging.info("[Dry Run] Would delete StatVarGroup edges across all provenances.")
+                logging.info(
+                    "[Dry Run] Would delete StatVarGroup edges across all provenances."
+                )
+            if should_delete_topic_lists:
+                logging.info(
+                    "[Dry Run] Would delete topic and peer group list edges across all provenances."
+                )
         else:
             if to_delete_list:
                 self.deleter.delete_aggregated_data(to_delete_list)
@@ -367,6 +468,8 @@ class AggregationOrchestrator:
                 self.deleter.delete_linked_edges(linked_to_delete_list)
             if delete_stat_var_groups:
                 self.deleter.delete_stat_var_group_edges()
+            if should_delete_topic_lists:
+                self.deleter.delete_topic_list_edges()
 
     def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.
@@ -405,13 +508,13 @@ class AggregationOrchestrator:
                         seen.add(output)
                         queue.append(output)
                         expanded.append(output)
-                        
+
         return expanded
 
-
-    def _execute_and_synchronize_stage(self, single_import: str, stage_num: int) -> None:
+    def _execute_and_synchronize_stage(
+        self, single_import: str, stage_num: int
+    ) -> None:
         """Executes a single stage for a single import and blocks until all jobs complete."""
-        stage_jobs = []
         for calc in self.calculations:
             calc_stage = calc.get("stage", 1)
             if calc_stage != stage_num:
@@ -428,15 +531,19 @@ class AggregationOrchestrator:
 
             if step_jobs:
                 job_ids = [job.job_id for job in step_jobs if hasattr(job, "job_id")]
-                logging.info(f"Submitted {len(job_ids)} job(s) for Stage {stage_num} (import: '{single_import}'): {job_ids}")
+                logging.info(
+                    f"Submitted {len(job_ids)} job(s) for Stage {stage_num} (import: '{single_import}'): {job_ids}"
+                )
                 self._wait_for_jobs(
                     job_ids=job_ids,
                     poll_interval=self.poll_interval,
                     step_name=f"{step_type} (Stage {stage_num})",
-                    single_import=single_import
+                    single_import=single_import,
                 )
 
-    def _dispatch_stage_steps(self, calc: Dict[str, Any], applicable_imports: Optional[List[str]] = None) -> List[Any]:
+    def _dispatch_stage_steps(
+        self, calc: Dict[str, Any], applicable_imports: Optional[List[str]] = None
+    ) -> List[Any]:
         """Dispatches job execution based on step calculation type."""
         applicable_imports = applicable_imports or []
         step_type = calc.get("type")
@@ -459,8 +566,12 @@ class AggregationOrchestrator:
             return self._trigger_stat_var_series_aggregation(calc, applicable_imports)
         elif step_type == CalculationType.SUPER_ENUM_AGGREGATION:
             return self._trigger_super_enum_aggregation(calc, applicable_imports)
+        elif step_type == CalculationType.NODE_PROPERTIES:
+            return self._trigger_node_properties(calc, applicable_imports)
         elif step_type == CalculationType.EMBEDDING_GENERATION:
             return self._trigger_embeddings(calc)
+        elif step_type == CalculationType.MATERIALIZED_EDGES:
+            return self._trigger_materialized_edges(calc)
         else:
             logging.warning(
                 f"Calculation type '{step_type}' configured for imports '{applicable_imports}' has no active generator handler."
@@ -472,7 +583,7 @@ class AggregationOrchestrator:
         job_ids: List[str],
         poll_interval: int = 60,
         step_name: str = "Aggregation",
-        single_import: str = ""
+        single_import: str = "",
     ) -> None:
         """Blocks until all specified BigQuery job IDs complete successfully.
 
@@ -502,9 +613,15 @@ class AggregationOrchestrator:
                 )
                 return
             elif status == "FAILED":
-                error_msg = status_info.get("error", "One or more BigQuery jobs failed.")
-                logging.error(f"Step '{step_name}' (import: '{single_import}') execution failed: {error_msg}")
-                raise RuntimeError(f"Aggregation execution failed for step '{step_name}': {error_msg}")
+                error_msg = status_info.get(
+                    "error", "One or more BigQuery jobs failed."
+                )
+                logging.error(
+                    f"Step '{step_name}' (import: '{single_import}') execution failed: {error_msg}"
+                )
+                raise RuntimeError(
+                    f"Aggregation execution failed for step '{step_name}': {error_msg}"
+                )
 
             time.sleep(poll_interval)
             elapsed += poll_interval
@@ -512,13 +629,17 @@ class AggregationOrchestrator:
                 f"Waiting for {len(job_ids)} BigQuery job(s) for step '{step_name}' (import: '{single_import}') - elapsed: {elapsed}s..."
             )
 
-    def _trigger_place(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_place(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers place-level rollup aggregations."""
         place_cfg = config.get("place_aggregation", {})
         from_type = place_cfg["from_place_types"]
         to_type = place_cfg["to_place_types"]
 
-        logging.info(f"  -> Place Rollup: {from_type} -> {to_type} for imports {applicable_imports}")
+        logging.info(
+            f"  -> Place Rollup: {from_type} -> {to_type} for imports {applicable_imports}"
+        )
         generator = PlaceAggregationGenerator(self.executor, self.is_base_dc)
         output_import_name = config.get(_OUTPUT_IMPORT_KEY)
         place_config = PlaceAggregationConfig(
@@ -526,12 +647,14 @@ class AggregationOrchestrator:
             source_type=from_type,
             destination_type=to_type,
             output_import_name=output_import_name,
-            allow_multiple_to_places=place_cfg.get("allow_multiple_to_places", False)
+            allow_multiple_to_places=place_cfg.get("allow_multiple_to_places", False),
         )
         job = generator.aggregate_places(config=place_config)
         return [job] if job else []
 
-    def _trigger_stat_var(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_stat_var(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers statistical variable aggregations."""
         stat_cfg = config.get("stat_var_aggregation", {})
         aggregations = stat_cfg.get("aggregations", [])
@@ -551,14 +674,18 @@ class AggregationOrchestrator:
                 source_svs=source_svs,
                 import_names=applicable_imports,
                 output_import_name=output_import_name,
-                skip_all_sources_present_check=item.get("skip_all_sources_present_check", False)
+                skip_all_sources_present_check=item.get(
+                    "skip_all_sources_present_check", False
+                ),
             )
             item_jobs = generator.aggregate_stat_vars(config=sv_config)
             jobs.extend(item_jobs)
 
         return jobs
 
-    def _trigger_stat_var_calculation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_stat_var_calculation(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers statistical variable calculations."""
         calc_cfg = config.get("stat_var_calculation", {})
         calculations = calc_cfg.get("calculations", [])
@@ -569,44 +696,57 @@ class AggregationOrchestrator:
         calc_config = StatVarCalculationConfig(
             calculations=calculations,
             import_names=applicable_imports,
-            output_import_name=output_import_name
+            output_import_name=output_import_name,
         )
         return generator.calculate_stat_vars(config=calc_config)
 
-    def _trigger_linked_edges(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_linked_edges(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers linked edge aggregations."""
         logging.info(f"  -> Linked Edges Aggregation for imports {applicable_imports}")
         generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
         edge_config = LinkedEdgeConfig(import_names=applicable_imports)
         return generator.run_all(config=edge_config)
 
-    def _trigger_provenance_summary(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_provenance_summary(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers provenance summary aggregations."""
-        logging.info(f"  -> Provenance Summary Aggregation for imports {applicable_imports}")
+        logging.info(
+            f"  -> Provenance Summary Aggregation for imports {applicable_imports}"
+        )
         generator = ProvenanceSummaryGenerator(self.executor, self.is_base_dc)
         prov_config = ProvenanceSummaryConfig(import_names=applicable_imports)
         return generator.run_all(config=prov_config)
 
-    def _trigger_stat_var_groups(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_stat_var_groups(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers statistical variable group aggregations across all DB provenances."""
         logging.info("  -> Stat Var Groups Aggregation for all DB provenances")
         should_prune = config.get("should_prune_single_child_svgs", False)
         generator = StatVarGroupGenerator(
-            self.executor, self.is_base_dc,
-            should_prune_single_child_svgs=should_prune
+            self.executor, self.is_base_dc, should_prune_single_child_svgs=should_prune
         )
         return generator.run_all()
 
-    def _trigger_stat_var_series_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_stat_var_series_aggregation(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers statistical variable series aggregations."""
-        logging.info(f"  -> Stat Var Series Aggregation for imports {applicable_imports}")
+        logging.info(
+            f"  -> Stat Var Series Aggregation for imports {applicable_imports}"
+        )
         calc = config.copy()
         calc["input_imports"] = applicable_imports
         generator = StatVarSeriesAggregator(self.executor, self.is_base_dc)
         series_config = StatVarSeriesAggregationConfig(calculations=[calc])
         return generator.aggregate_series(config=series_config)
 
-    def _trigger_entity(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_entity(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers entity aggregations."""
         entity_cfg = config.get("entity_aggregation", {})
         output_import = config.get(_OUTPUT_IMPORT_KEY, "")
@@ -618,39 +758,64 @@ class AggregationOrchestrator:
             agg_date_formats=entity_cfg.get("agg_date_formats", []),
             constraints=entity_cfg.get("constraints", []),
             output_import=output_import,
-            input_imports=applicable_imports
+            input_imports=applicable_imports,
         )
 
         logging.info(f"  -> Entity Aggregation for imports {applicable_imports}")
         generator = EntityAggregationGenerator(self.executor, self.is_base_dc)
         return generator.aggregate_entities([cfg])
 
-    def _trigger_super_enum_aggregation(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+    def _trigger_super_enum_aggregation(
+        self, config: Dict[str, Any], applicable_imports: List[str]
+    ) -> List[Any]:
         """Triggers super enum aggregations."""
         logging.info(f"  -> Super Enum Aggregation for imports {applicable_imports}")
         generator = SuperEnumAggregationGenerator(self.executor, self.is_base_dc)
         super_config = SuperEnumAggregationConfig(import_names=applicable_imports)
         return generator.run(config=super_config)
 
+    def _trigger_node_properties(self, config: Dict[str, Any], applicable_imports: List[str]) -> List[Any]:
+        """Triggers node properties aggregations (types and names rollup)."""
+        logging.info(f"  -> Node Properties Aggregation for imports {applicable_imports}")
+        generator = NodePropertiesGenerator(self.executor, self.is_base_dc)
+        node_config = NodePropertiesConfig(import_names=applicable_imports)
+        return generator.run_all(config=node_config)
+
     def _trigger_embeddings(self, config: Dict[str, Any]) -> List[Any]:
         """Triggers node embedding generation."""
         embed_cfg = config.get("embedding_generation", {})
         specs = embed_cfg.get("specs", [])
         embedding_table = config.get("embedding_table", "NodeEmbedding")
-        logging.info(f"  -> Node Embeddings Generation (specs: {len(specs)}, table: {embedding_table})")
+        logging.info(
+            f"  -> Node Embeddings Generation (specs: {len(specs)}, table: {embedding_table})"
+        )
         generator = EmbeddingGenerator(self.executor, self.is_base_dc)
         embed_config = EmbeddingGenerationConfig(
-            specs=specs,
-            embedding_table=embedding_table
+            specs=specs, embedding_table=embedding_table
         )
         return generator.run_all(config=embed_config)
+
+    def _trigger_materialized_edges(self, config: Dict[str, Any]) -> List[Any]:
+        """Triggers global materialized edge generation."""
+        logging.info("  -> Materialized Edges Aggregation (Global)")
+        edge_cfg = config.get("materialized_edges", {})
+        mat_config = MaterializedEdgeConfig(
+            enable_topic_hierarchy_lists=edge_cfg.get(
+                "enable_topic_hierarchy_lists", True
+            )
+        )
+        generator = MaterializedEdgeGenerator(self.executor, self.is_base_dc)
+        return generator.run_all(config=mat_config)
 
     def _calc_applies_to_import(self, calc: Dict[str, Any], single_import: str) -> bool:
         """Determines if a calculation step applies to a single import."""
         if calc.get("disabled", False):
             return False
 
-        if not self.config.generate_stat_var_groups and calc.get("type") == CalculationType.STAT_VAR_GROUPS:
+        if (
+            not self.config.generate_stat_var_groups
+            and calc.get("type") == CalculationType.STAT_VAR_GROUPS
+        ):
             return False
 
         if calc.get("type") in GLOBAL_CALCULATION_TYPES:

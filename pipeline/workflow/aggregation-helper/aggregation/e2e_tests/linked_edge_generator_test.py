@@ -46,6 +46,7 @@ from aggregation.e2e_tests.base import (
     BQ_LOCATION,
 )
 from aggregation import BigQueryExecutor, LinkedEdgeGenerator
+from aggregation.common import TOPIC_LIST_PROVENANCE, get_provenance_name
 
 
 class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
@@ -300,6 +301,98 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             res_b = list(snapshot.execute_sql(f"SELECT subject_id FROM Edge WHERE provenance = '{prov_b}' AND predicate = 'linkedContainedInPlace'"))
             self.assertEqual(len(res_a), 3, "ImportA should have 3 scoped linked edges.")
             self.assertEqual(len(res_b), 3, "ImportB should have 3 scoped linked edges.")
+
+
+    def test_topic_and_svpg_list_edges(self):
+        """Tests materialization of relevantVariableList and memberList edges and literal nodes."""
+        import_name = 'TopicTest_Import'
+        
+        # 1. Setup mock topics and SVPGs
+        self.add_node('dc/topic/Environment', 'Environment', types=['Topic'])
+        self.add_node('custom/topic/AirQuality', 'Air Quality')  # Type provided via typeOf edge
+        self.add_node('dc/svpg/AgeGroups', 'Age Groups', types=['StatVarPeerGroup'])
+        
+        self.add_edge('custom/topic/AirQuality', 'typeOf', 'Topic', import_name)
+        self.add_edge('dc/svpg/AgeGroups', 'typeOf', 'StatVarPeerGroup', import_name)
+        
+        # Add relevantVariable and member arcs
+        self.add_edge('dc/topic/Environment', 'relevantVariable', 'Count_Person', import_name)
+        self.add_edge('dc/topic/Environment', 'relevantVariable', 'dc/topic/Water', import_name)
+        
+        self.add_edge('custom/topic/AirQuality', 'relevantVariable', 'AirPollution_PM25', import_name)
+        self.add_edge('custom/topic/AirQuality', 'relevantVariable', 'AirPollution_O3', import_name)
+        
+        self.add_edge('dc/svpg/AgeGroups', 'member', 'Count_Person_18To64', import_name)
+        self.add_edge('dc/svpg/AgeGroups', 'member', 'Count_Person_0To17', import_name)
+        
+        self.flush_to_spanner()
+        
+        calculations = [
+            {
+                "name": "Materialized Topic Lists",
+                "type": "MATERIALIZED_EDGES",
+                "stage": 20,
+            }
+        ]
+
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+        
+        expected_provenance = get_provenance_name(TOPIC_LIST_PROVENANCE, self.is_base_dc)
+        
+        with self.database.snapshot(multi_use=True) as snapshot:
+            # Verify Edge records
+            edge_query = """
+                SELECT subject_id, predicate, provenance
+                FROM Edge
+                WHERE predicate IN ('relevantVariableList', 'memberList')
+                ORDER BY subject_id
+            """
+            edges = list(snapshot.execute_sql(edge_query))
+            self.assertEqual(len(edges), 3)
+            self.assertEqual(tuple(edges[0]), ('custom/topic/AirQuality', 'relevantVariableList', expected_provenance))
+            self.assertEqual(tuple(edges[1]), ('dc/svpg/AgeGroups', 'memberList', expected_provenance))
+            self.assertEqual(tuple(edges[2]), ('dc/topic/Environment', 'relevantVariableList', expected_provenance))
+            
+            # Verify Node records contain the aggregated CSV string values
+            node_query = """
+                SELECT n.value
+                FROM Node n
+                JOIN Edge e ON n.subject_id = e.object_id
+                WHERE e.predicate IN ('relevantVariableList', 'memberList')
+                ORDER BY e.subject_id
+            """
+            nodes = [r[0] for r in snapshot.execute_sql(node_query)]
+            self.assertEqual(nodes, [
+                'AirPollution_O3,AirPollution_PM25',
+                'Count_Person_0To17,Count_Person_18To64',
+                'Count_Person,dc/topic/Water'
+            ])
+
+    def test_topic_list_edges_disabled(self):
+        """Tests that disabling generate_topic_list_edges skips topic/SVPG list edge materialization."""
+        import_name = 'TopicDisabledTest_Import'
+        
+        self.add_node('dc/topic/Environment', 'Environment', types=['Topic'])
+        self.add_edge('dc/topic/Environment', 'relevantVariable', 'Count_Person', import_name)
+        self.flush_to_spanner()
+        
+        calculations = [
+            {
+                "name": "Linked Edges Without Topic Lists",
+                "type": "LINKED_EDGES",
+                "stage": 1,
+                "input_imports": [import_name],
+                "generate_topic_list_edges": False
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+        
+        with self.database.snapshot() as snapshot:
+            query = "SELECT count(*) FROM Edge WHERE predicate = 'relevantVariableList'"
+            count = list(snapshot.execute_sql(query))[0][0]
+            self.assertEqual(count, 0)
 
 
 class LinkedEdgeGeneratorCustomDcTest(LinkedEdgeGeneratorIntegrationTest):

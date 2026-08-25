@@ -491,6 +491,10 @@ class TestSpannerClient(unittest.TestCase):
             return callback(mock_transaction, *args, **kwargs)
         mock_db.run_in_transaction.side_effect = run_in_transaction_side_effect
 
+        from datetime import datetime, timezone, timedelta
+        creation_time = datetime.now(timezone.utc) - timedelta(seconds=120)
+        mock_transaction.execute_sql.return_value = [[creation_time]]
+
         client = SpannerClient("project", "instance", "database")
         client.update_ingestion_history(
             workflow_id="wf-123",
@@ -498,7 +502,6 @@ class TestSpannerClient(unittest.TestCase):
             stage=IngestionStage.DATAFLOW,
             job_id="job-456",
             metrics={
-                'execution_time': 120,
                 'node_count': 1000,
                 'edge_count': 2000,
                 'obs_count': 500,
@@ -526,6 +529,7 @@ class TestSpannerClient(unittest.TestCase):
         status_idx = kwargs['columns'].index("Status")
         failure_idx = kwargs['columns'].index("IngestionFailure")
         job_idx = kwargs['columns'].index("DataflowJobID")
+        exec_idx = kwargs['columns'].index("ExecutionTime")
         node_idx = kwargs['columns'].index("NodeCount")
         ts_idx = kwargs['columns'].index("TimeSeriesCount")
         comp_time_idx = kwargs['columns'].index("CompletionTimestamp")
@@ -535,6 +539,7 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(values[status_idx], "SUCCESS")
         self.assertEqual(values[failure_idx], False)
         self.assertEqual(values[job_idx], "job-456")
+        self.assertAlmostEqual(values[exec_idx], 120, delta=5)
         self.assertEqual(values[node_idx], 1000)
         self.assertEqual(values[ts_idx], 300)
         self.assertEqual(values[comp_time_idx], spanner.COMMIT_TIMESTAMP)

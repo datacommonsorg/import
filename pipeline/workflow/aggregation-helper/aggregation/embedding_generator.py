@@ -455,7 +455,7 @@ WHERE update_node_data OR update_property_data"""
         EXPORT DATA OPTIONS(
           uri="{dest}",
           format="CLOUD_SPANNER",
-          spanner_options='{{"table": "{embedding_table}"}}'
+          spanner_options='{{"table": "{embedding_table}", "priority": "LOW"}}'
         ) AS
         SELECT * FROM embedding_staging;
         """

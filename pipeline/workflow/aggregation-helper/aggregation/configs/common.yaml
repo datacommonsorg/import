@@ -20,3 +20,12 @@ calculations:
     input_imports:
       - "schema"
 
+  # Generates node properties (types rollup and resolved names) into Node table
+  - name: "Global: Node Properties (Types & Names Rollup)"
+    type: NODE_PROPERTIES
+    stage: 0
+    input_imports:
+      - "schema"
+      - "place"
+
+

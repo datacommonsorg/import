@@ -227,7 +227,7 @@ class StatVarCalculationGenerator:
             EXPORT DATA
               OPTIONS( uri="{dest}",
                 format='CLOUD_SPANNER',
-                spanner_options = '{{"table": "TimeSeries"}}' ) AS
+                spanner_options = '{{"table": "TimeSeries", "priority": "LOW"}}' ) AS
             WITH I1 AS (
               SELECT 
                 o.entity1,
@@ -299,7 +299,7 @@ class StatVarCalculationGenerator:
             EXPORT DATA
               OPTIONS( uri="{dest}",
                 format='CLOUD_SPANNER',
-                spanner_options = '{{"table": "Observation"}}' ) AS
+                spanner_options = '{{"table": "Observation", "priority": "LOW"}}' ) AS
             WITH I1 AS (
               SELECT 
                 o.entity1,

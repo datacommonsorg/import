@@ -32,6 +32,9 @@ class ImportState(str, Enum):
     STAGING = "STAGING"
     FAILURE = "FAILURE"
     SUCCESS = "SUCCESS"
+    RETRY = "RETRY"
+    SKIP = "SKIP"
+    VALIDATION = "VALIDATION"
 
 
 class ImportItem(BaseModel):
@@ -84,6 +87,16 @@ class UpdateImportVersionRequest(BaseModel):
     triggerIngestion: Optional[bool] = False
 
 
+class ImportVersionItem(BaseModel):
+    importName: str
+    status: ImportState
+    latestVersion: Optional[str] = None
+
+
+class UpdateImportVersionResponse(BaseResponse):
+    imports: List[ImportVersionItem] = Field(default_factory=list)
+
+
 class ImportInfoItem(BaseModel):
     importName: str = Field(description="The name of the import")
     latestVersion: str = Field(description="The latest version full GCS graph path")
@@ -131,16 +144,16 @@ def update_ingestion_status(
     status_str = req.status.value if hasattr(req.status, 'value') else req.status
     spanner.update_ingestion_status(ingested_imports, req.workflowId, status_str)
 
-    metrics = None
-    if req.jobId and req.jobId != "N/A":
-        try:
-            metrics = import_utils.get_ingestion_metrics(
-                config.PROJECT_ID, config.LOCATION, req.jobId)
-        except Exception as e:
-            logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
-            metrics = None
-
     if req.status == IngestionState.SUCCESS:
+        metrics = None
+        if req.jobId and req.jobId != "N/A":
+            try:
+                metrics = import_utils.get_ingestion_metrics(
+                    config.PROJECT_ID, config.LOCATION, req.jobId)
+            except Exception as e:
+                logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
+                metrics = None
+
         import_list_dicts = [item.model_dump() for item in req.importList]
         spanner.update_import_version_history(import_list_dicts,
                                               req.workflowId,
@@ -240,13 +253,14 @@ def update_import_status(req: UpdateImportStatusRequest,
     return BaseResponse(status=ResponseStatus.OK)
 
 
-@router.post("/version", response_model=BaseResponse)
+@router.post("/version", response_model=UpdateImportVersionResponse)
 def update_import_version(req: UpdateImportVersionRequest,
                           request: Request,
                           spanner: SpannerClient = Depends(get_spanner_client),
                           storage: StorageClient = Depends(get_storage_client)):
     """Updates the version and status of multiple imports."""
     updated_imports = []
+    import_items = []
     caller = import_utils.get_caller_identity(request) if req.override else None
     for import_name in req.imports:
         logging.info(
@@ -264,6 +278,17 @@ def update_import_version(req: UpdateImportVersionRequest,
         if req.override:
             params['status'] = 'STAGING'
             comment = f'version-override:{caller} {comment}'
+        elif params.get('status') in ('SKIP', 'SKIPPED'):
+            history = spanner.get_import_version_history(import_name, limit=1, status="SUCCESS")
+            if not history:
+                logging.info(
+                    f"Import {import_name} is {params.get('status')} in GCS, but has no prior SUCCESS history "
+                    f"in database '{spanner.database.name}'. Promoting to STAGING for initial load."
+                )
+                params['status'] = 'STAGING'
+                comment = f'initial-load {comment}'
+            else:
+                params['status'] = 'SKIP'
 
         if params['status'] == 'STAGING':
             storage.update_provenance_file(import_name, version)
@@ -280,12 +305,21 @@ def update_import_version(req: UpdateImportVersionRequest,
             logging.info(f"Skipping {import_name} version update")
 
         spanner.update_import_status(params)
+        
+        import_items.append(
+            ImportVersionItem(
+                importName=import_name,
+                status=params.get('status', 'RETRY'),
+                latestVersion=params.get('latest_version')
+            )
+        )
         updated_imports.append(
             f"Import: {import_name} Version: {version} Status: {params['status']}"
         )
 
-    return BaseResponse(status=ResponseStatus.OK,
-                        message="; ".join(updated_imports))
+    return UpdateImportVersionResponse(status=ResponseStatus.OK,
+                                       message="; ".join(updated_imports),
+                                       imports=import_items)
 
 
 @router.post("/revert", response_model=RevertImportResponse)

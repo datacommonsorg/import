@@ -13,6 +13,7 @@
 # limitations under the License.
 
 BASE_PROVENANCE_PREFIX = "dc/base/"
+TOPIC_LIST_PROVENANCE = "generated/TopicHierarchyLists"
 
 
 def get_provenance_prefix(is_base_dc: bool) -> str:
@@ -30,12 +31,16 @@ def get_generated_provenance_name(import_name: str, is_base_dc: bool) -> str:
     return f"{get_provenance_prefix(is_base_dc)}generated/{import_name}"
 
 
-def get_sql_generated_provenance_expr(is_base_dc: bool, source_col: str = "provenance") -> str:
+def get_sql_generated_provenance_expr(
+    is_base_dc: bool, source_col: str = "provenance"
+) -> str:
     """Returns a SQL expression that transforms a source provenance into a scoped generated provenance."""
     if is_base_dc:
         return f"CONCAT('dc/base/generated/', REGEXP_REPLACE({source_col}, r'^dc/base/(generated/)?', ''))"
     else:
-        return f"CONCAT('generated/', REGEXP_REPLACE({source_col}, r'^(generated/)?', ''))"
+        return (
+            f"CONCAT('generated/', REGEXP_REPLACE({source_col}, r'^(generated/)?', ''))"
+        )
 
 
 def _escape_sql_literal(val: str) -> str:
@@ -53,19 +58,20 @@ def _escape_sql_literal(val: str) -> str:
       Double quotes (") are escaped to \\" to prevent terminating BQ string.
     - Single quotes (') are escaped to '' to prevent terminating Spanner string.
     """
-    return val.replace('\\', '\\\\\\\\').replace('"', '\\"').replace("'", "''")
+    return val.replace("\\", "\\\\\\\\").replace('"', '\\"').replace("'", "''")
 
 
 # Execution priority ranks for calculation types within a stage.
 # Deterministically resolves execution order when multiple calculation types exist in the same stage.
 #
-# Tier 0 (0-2): Graph Topology & Schema Prerequisite Generation
+# Tier 0 (0-3): Graph Topology & Schema Prerequisite Generation
 #   - LINKED_EDGES (0): Computes transitive graph closures (linkedContainedInPlace, linkedMemberOf, linkedMember).
 #     Must run first as place rollups rely on containment graph edges to determine target places.
 #   - STAT_VAR_GROUPS (1): Constructs StatVarGroup nodes and hierarchy edges (specializationOf, memberOf).
 #     Queries specializationOf and curated memberOf edges.
 #   - PROVENANCE_SUMMARY (2): Generates summary statistics for observation tables in KeyValueStore.
 #     Summary over observation data and place type edges.
+#   - NODE_PROPERTIES (3): Aggregates node properties (types and resolved names) into Node table.
 #
 # Tier 1 (10-15): Data Rollups, Series, & Derived Calculations
 #   - PLACE_AGGREGATION (10): Primary spatial rollup aggregating raw observations up geographic containment trees.
@@ -84,6 +90,7 @@ CALCULATION_TYPE_PRIORITY = {
     "STAT_VAR_GROUPS": 0,
     "LINKED_EDGES": 1,
     "PROVENANCE_SUMMARY": 2,
+    "NODE_PROPERTIES": 3,
     "PLACE_AGGREGATION": 10,
     "STAT_VAR_AGGREGATION": 11,
     "ENTITY_AGGREGATION": 12,
@@ -91,5 +98,5 @@ CALCULATION_TYPE_PRIORITY = {
     "STAT_VAR_CALCULATION": 14,
     "SUPER_ENUM_AGGREGATION": 15,
     "EMBEDDING_GENERATION": 20,
+    "MATERIALIZED_EDGES": 20,
 }
-

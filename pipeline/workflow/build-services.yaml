@@ -16,6 +16,7 @@
 #
 
 substitutions:
+  _PROJECT_ID: '${PROJECT_ID}'
   _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
   _VERSION: '${SHORT_SHA}'
 
@@ -24,19 +25,19 @@ steps:
 # 1. Build and push helper images
 - id: 'build-ingestion-helper'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['builds', 'submit', 'ingestion-helper', '--config', 'ingestion-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
+  args: ['builds', 'submit', 'ingestion-helper', '--config', 'ingestion-helper/cloudbuild.yaml', '--project', '${_PROJECT_ID}', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
   dir: 'pipeline/workflow'
   waitFor: ['-']
 
 - id: 'build-import-helper'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['builds', 'submit', 'import-helper', '--config', 'import-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
+  args: ['builds', 'submit', 'import-helper', '--config', 'import-helper/cloudbuild.yaml', '--project', '${_PROJECT_ID}', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
   dir: 'pipeline/workflow'
   waitFor: ['-']
 
 - id: 'build-aggregation-helper'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['builds', 'submit', 'aggregation-helper', '--config', 'aggregation-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
+  args: ['builds', 'submit', 'aggregation-helper', '--config', 'aggregation-helper/cloudbuild.yaml', '--project', '${_PROJECT_ID}', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
   dir: 'pipeline/workflow'
   waitFor: ['-']
 
@@ -47,6 +48,7 @@ steps:
     - 'submit'
     - '.'
     - '--config=pipeline/ingestion/cloudbuild.yaml'
+    - '--project=${_PROJECT_ID}'
     - '--substitutions=_VERSION=${_VERSION},_IMAGE_GCR_PATH=${_AR_REPO_URL}/dataflow-templates/ingestion'
   waitFor: ['-']
 

@@ -22,10 +22,12 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator, LinkedEdgeConfig
-from aggregation import StatVarGroupGenerator, StatVarGroupConfig
+from aggregation import MaterializedEdgeGenerator, MaterializedEdgeConfig
+from aggregation import StatVarGroupGenerator
 from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
 from aggregation import PlaceAggregationGenerator, PlaceAggregationConfig
 from aggregation import EmbeddingGenerator, EmbeddingGenerationConfig
+from aggregation import NodePropertiesGenerator, NodePropertiesConfig
 from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.common import (
     BASE_PROVENANCE_PREFIX,
@@ -38,11 +40,10 @@ from aggregation.common import (
 
 
 class TestCommonUtils(unittest.TestCase):
-
     def test_escape_sql_literal(self):
         self.assertEqual(_escape_sql_literal("normal"), "normal")
         self.assertEqual(_escape_sql_literal(r"back\slash"), r"back\\\\slash")
-        self.assertEqual(_escape_sql_literal('double"quote'), r'double\"quote')
+        self.assertEqual(_escape_sql_literal('double"quote'), r"double\"quote")
         self.assertEqual(_escape_sql_literal("single'quote"), "single''quote")
 
     def test_base_provenance_prefix(self):
@@ -53,57 +54,77 @@ class TestCommonUtils(unittest.TestCase):
         self.assertEqual(get_provenance_prefix(is_base_dc=False), "")
 
     def test_get_provenance_name(self):
-        self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=True), "dc/base/USFed_Census")
-        self.assertEqual(get_provenance_name("USFed_Census", is_base_dc=False), "USFed_Census")
+        self.assertEqual(
+            get_provenance_name("USFed_Census", is_base_dc=True), "dc/base/USFed_Census"
+        )
+        self.assertEqual(
+            get_provenance_name("USFed_Census", is_base_dc=False), "USFed_Census"
+        )
 
     def test_get_generated_provenance_name(self):
-        self.assertEqual(get_generated_provenance_name("USFed_Census", is_base_dc=True), "dc/base/generated/USFed_Census")
-        self.assertEqual(get_generated_provenance_name("USFed_Census", is_base_dc=False), "generated/USFed_Census")
+        self.assertEqual(
+            get_generated_provenance_name("USFed_Census", is_base_dc=True),
+            "dc/base/generated/USFed_Census",
+        )
+        self.assertEqual(
+            get_generated_provenance_name("USFed_Census", is_base_dc=False),
+            "generated/USFed_Census",
+        )
 
     def test_get_sql_generated_provenance_expr(self):
-        self.assertIn("CONCAT('dc/base/generated/'", get_sql_generated_provenance_expr(True, "prov"))
-        self.assertIn("CONCAT('generated/'", get_sql_generated_provenance_expr(False, "prov"))
+        self.assertIn(
+            "CONCAT('dc/base/generated/'",
+            get_sql_generated_provenance_expr(True, "prov"),
+        )
+        self.assertIn(
+            "CONCAT('generated/'", get_sql_generated_provenance_expr(False, "prov")
+        )
 
 
-@patch('aggregation.bq_executor.bigquery.Client')
+@patch("aggregation.bq_executor.bigquery.Client")
 class TestBigQueryExecutor(unittest.TestCase):
-
     def test_init(self, mock_bq_client):
-        executor = BigQueryExecutor(connection_id="conn",
-                                    project_id="proj",
-                                    instance_id="inst",
-                                    database_id="db",
-                                    location="loc")
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            location="loc",
+        )
         _ = executor.client
         mock_bq_client.assert_called_once_with(project="proj", location="loc")
         self.assertEqual(
             executor.get_spanner_destination_uri(),
-            "https://spanner.googleapis.com/projects/proj/instances/inst/databases/db"
+            "https://spanner.googleapis.com/projects/proj/instances/inst/databases/db",
         )
         self.assertFalse(executor.enable_embeddings)
         self.assertEqual(executor.bq_dataset_id, "datacommons")
 
     def test_init_with_spanner_project_id(self, mock_bq_client):
-        executor = BigQueryExecutor(connection_id="conn",
-                                    project_id="bq_proj",
-                                    spanner_project_id="spanner_proj",
-                                    instance_id="inst",
-                                    database_id="db",
-                                    location="loc")
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="bq_proj",
+            spanner_project_id="spanner_proj",
+            instance_id="inst",
+            database_id="db",
+            location="loc",
+        )
         _ = executor.client
         mock_bq_client.assert_called_once_with(project="bq_proj", location="loc")
         self.assertEqual(
             executor.get_spanner_destination_uri(),
-            "https://spanner.googleapis.com/projects/spanner_proj/instances/inst/databases/db"
+            "https://spanner.googleapis.com/projects/spanner_proj/instances/inst/databases/db",
         )
 
     def test_init_failure(self, mock_bq_client):
         mock_bq_client.side_effect = Exception("Auth error")
         with self.assertRaises(Exception):
-            executor = BigQueryExecutor(connection_id="conn",
-                             project_id="proj",
-                             instance_id="inst",
-                             database_id="db")
+            executor = BigQueryExecutor(
+                connection_id="conn",
+                project_id="proj",
+                instance_id="inst",
+                database_id="db",
+            )
             _ = executor.client
 
     def test_execute_sequential(self, mock_bq_client):
@@ -114,16 +135,17 @@ class TestBigQueryExecutor(unittest.TestCase):
         mock_job.job_id = "job_123"
         mock_client_instance.query.return_value = mock_job
 
-        executor = BigQueryExecutor(connection_id="conn",
-                                    project_id="proj",
-                                    instance_id="inst",
-                                    database_id="db",
-                                    run_sequential=True)
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            run_sequential=True,
+        )
 
         job = executor.execute("SELECT 1")
 
-        mock_client_instance.query.assert_called_once_with("SELECT 1",
-                                                           job_config=None)
+        mock_client_instance.query.assert_called_once_with("SELECT 1", job_config=None)
         mock_job.result.assert_called_once()  # Should block in sequential
         self.assertEqual(job.job_id, "job_123")
 
@@ -135,16 +157,17 @@ class TestBigQueryExecutor(unittest.TestCase):
         mock_job.job_id = "job_123"
         mock_client_instance.query.return_value = mock_job
 
-        executor = BigQueryExecutor(connection_id="conn",
-                                    project_id="proj",
-                                    instance_id="inst",
-                                    database_id="db",
-                                    run_sequential=False)
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            run_sequential=False,
+        )
 
         job = executor.execute("SELECT 1")
 
-        mock_client_instance.query.assert_called_once_with("SELECT 1",
-                                                           job_config=None)
+        mock_client_instance.query.assert_called_once_with("SELECT 1", job_config=None)
         mock_job.result.assert_not_called()  # Should NOT block in async
         self.assertEqual(job.job_id, "job_123")
 
@@ -162,10 +185,12 @@ class TestBigQueryExecutor(unittest.TestCase):
 
         mock_client_instance.get_job.side_effect = [mock_job1, mock_job2]
 
-        executor = BigQueryExecutor(connection_id="conn",
-                                    project_id="proj",
-                                    instance_id="inst",
-                                    database_id="db")
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+        )
 
         status = executor.get_jobs_status(["job1", "job2"])
         self.assertEqual(status, {"status": "DONE"})
@@ -184,10 +209,12 @@ class TestBigQueryExecutor(unittest.TestCase):
 
         mock_client_instance.get_job.side_effect = [mock_job1, mock_job2]
 
-        executor = BigQueryExecutor(connection_id="conn",
-                                    project_id="proj",
-                                    instance_id="inst",
-                                    database_id="db")
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+        )
 
         status = executor.get_jobs_status(["job1", "job2"])
         self.assertEqual(status, {"status": "RUNNING"})
@@ -206,10 +233,12 @@ class TestBigQueryExecutor(unittest.TestCase):
 
         mock_client_instance.get_job.side_effect = [mock_job1, mock_job2]
 
-        executor = BigQueryExecutor(connection_id="conn",
-                                    project_id="proj",
-                                    instance_id="inst",
-                                    database_id="db")
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+        )
 
         status = executor.get_jobs_status(["job1", "job2"])
         self.assertEqual(status["status"], "FAILED")
@@ -218,7 +247,6 @@ class TestBigQueryExecutor(unittest.TestCase):
 
 
 class TestLinkedEdgeGenerator(unittest.TestCase):
-
     def setUp(self):
         self.mock_executor = MagicMock()
         self.mock_executor.connection_id = "test-conn"
@@ -238,22 +266,98 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
 
         jobs = generator.run_all(LinkedEdgeConfig(import_names=["import1", "import2"]))
 
-        self.assertEqual(len(jobs), 3)  # Should run 3 queries
+        self.assertEqual(len(jobs), 3)  # Runs the 3 scoped linked edge queries
         self.assertEqual(self.mock_executor.execute.call_count, 3)
 
-        # Verify queries contain import names and connection id
+        # Verify queries contain connection id and spanner destination uri
         calls = self.mock_executor.execute.call_args_list
         for call in calls:
             query = call[0][0]
             self.assertIn("test-conn", query)
-            self.assertIn("import1", query)
-            self.assertIn("import2", query)
             self.assertIn("spanner-uri", query)
-            self.assertIn("dc/base/import1", query)  # Since is_base_dc=True
+
+    def test_run_linked_member(self):
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_linked_member(import_names=["import1"])
+        self.assertEqual(job, mock_job)
+
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("temp_topics_and_peergroups", query)
+        self.assertIn("temp_raw_topic_and_peergroup_edges", query)
+        self.assertIn("temp_topic_hierarchy", query)
+        self.assertIn("relevantVariable", query)
+        self.assertIn("linkedMember", query)
+
+
+class TestMaterializedEdgeGenerator(unittest.TestCase):
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_generate_topic_hierarchy_list_edges(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.generate_topic_hierarchy_list_edges()
+        self.assertEqual(job, mock_job)
+        self.mock_executor.execute.assert_called_once()
+
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("temp_topics_and_peergroups", query)
+        self.assertIn("temp_raw_topic_and_peergroup_edges", query)
+        self.assertIn("temp_aggregated_topic_lists", query)
+        self.assertIn("relevantVariableList", query)
+        self.assertIn("memberList", query)
+        self.assertIn(
+            "STRING_AGG(DISTINCT raw.child_id, ',' ORDER BY raw.child_id)", query
+        )
+        self.assertIn("CONCAT(", query)
+        self.assertIn("SHA256(", query)
+        self.assertIn('spanner_options = \'{"table": "Node", "priority": "LOW"}\'', query)
+        self.assertIn('spanner_options = \'{"table": "Edge", "priority": "LOW"}\'', query)
+        self.assertIn("dc/base/generated/TopicHierarchyLists", query)
+
+    def test_generate_topic_hierarchy_list_edges_not_base_dc(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=False)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.generate_topic_hierarchy_list_edges()
+        self.assertEqual(job, mock_job)
+
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("generated/TopicHierarchyLists", query)
+        self.assertNotIn("dc/base/generated/TopicHierarchyLists", query)
+
+    def test_run_all(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        jobs = generator.run_all(
+            MaterializedEdgeConfig(enable_topic_hierarchy_lists=True)
+        )
+        self.assertEqual(jobs, [mock_job])
+
+    def test_run_all_disabled(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=True)
+        jobs = generator.run_all(
+            MaterializedEdgeConfig(enable_topic_hierarchy_lists=False)
+        )
+        self.assertEqual(jobs, [])
+        self.mock_executor.execute.assert_not_called()
 
 
 class TestProvenanceSummaryGenerator(unittest.TestCase):
-
     def setUp(self):
         self.mock_executor = MagicMock()
         self.mock_executor.connection_id = "test-conn"
@@ -266,8 +370,7 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         self.mock_executor.execute.assert_not_called()
 
     def test_run_all(self):
-        generator = ProvenanceSummaryGenerator(self.mock_executor,
-                                               is_base_dc=True)
+        generator = ProvenanceSummaryGenerator(self.mock_executor, is_base_dc=True)
 
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -281,12 +384,10 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         self.assertIn("test-conn", query)
         self.assertIn("import1", query)
         self.assertIn("spanner-uri", query)
-        self.assertIn("'dc/base/import1'",
-                      query)  # Since is_base_dc=True
+        self.assertIn("'dc/base/import1'", query)  # Since is_base_dc=True
 
 
 class TestPlaceAggregationGenerator(unittest.TestCase):
-
     def setUp(self):
         self.mock_executor = MagicMock()
         self.mock_executor.connection_id = "test-conn"
@@ -300,7 +401,7 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
                 import_names=[],
                 source_type="County",
                 destination_type="State",
-                output_import_name="import1_AggState"
+                output_import_name="import1_AggState",
             )
         )
         self.assertIsNone(job)
@@ -318,7 +419,7 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
                 import_names=["import1"],
                 source_type="County",
                 destination_type="State",
-                output_import_name="import1_AggState"
+                output_import_name="import1_AggState",
             )
         )
 
@@ -339,7 +440,6 @@ def _load_test_query(filename: str) -> str:
 
 
 class TestEmbeddingGenerator(unittest.TestCase):
-
     def setUp(self):
         self.mock_executor = MagicMock()
         self.mock_executor.connection_id = "test-conn"
@@ -368,7 +468,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
 
     @patch.object(EmbeddingGenerator, '_stream_spanner_to_bq')
     @patch.object(EmbeddingGenerator, '_delete_existing_embeddings')
-    def test_run_all(self, mock_delete, mock_stream):
+    def test_run_all(self, mock_delete):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -383,7 +483,11 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 node_filter_type="NoFilter"
             )
         ]
-        jobs = generator.run_all(EmbeddingGenerationConfig(specs=specs, embedding_table="CustomEmbeddingTable"))
+        jobs = generator.run_all(
+            EmbeddingGenerationConfig(
+                specs=specs, embedding_table="CustomEmbeddingTable"
+            )
+        )
 
         self.assertEqual(len(jobs), 1)
         mock_delete.assert_called_once()
@@ -393,9 +497,15 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertEqual(query.strip(), expected_query.strip())
 
     @patch.object(EmbeddingGenerator, '_stream_spanner_to_bq')
-    @patch.object(EmbeddingGenerator, '_delete_existing_embeddings')
-    @patch('aggregation.embedding_generator._extract_nl_stat_var', return_value=[{'dcid': 'statVar1', 'sentence': 'sentence1'}, {'dcid': 'statVar2', 'sentence': 'sentence2'}])
-    def test_run_all_nl_stat_var(self, mock_extract, mock_delete, mock_stream):
+    @patch.object(EmbeddingGenerator, "_delete_existing_embeddings")
+    @patch(
+        "aggregation.embedding_generator._extract_nl_stat_var",
+        return_value=[
+            {"dcid": "statVar1", "sentence": "sentence1"},
+            {"dcid": "statVar2", "sentence": "sentence2"},
+        ],
+    )
+    def test_run_all_nl_stat_var(self, mock_extract, mock_delete):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -410,7 +520,11 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 node_filter_type="NLStatisticalVariable"
             )
         ]
-        jobs = generator.run_all(EmbeddingGenerationConfig(specs=specs, embedding_table="CustomEmbeddingTable"))
+        jobs = generator.run_all(
+            EmbeddingGenerationConfig(
+                specs=specs, embedding_table="CustomEmbeddingTable"
+            )
+        )
 
         self.assertEqual(len(jobs), 1)
         mock_delete.assert_called_once()
@@ -418,30 +532,34 @@ class TestEmbeddingGenerator(unittest.TestCase):
         query = self.mock_executor.execute.call_args[0][0]
         expected_query = _load_test_query("run_all_nl_stat_var.sql")
         self.assertEqual(query.strip(), expected_query.strip())
-        job_config = self.mock_executor.execute.call_args[1].get('job_config') or self.mock_executor.execute.call_args.kwargs.get('job_config')
+        job_config = self.mock_executor.execute.call_args[1].get(
+            "job_config"
+        ) or self.mock_executor.execute.call_args.kwargs.get("job_config")
         self.assertIsNotNone(job_config)
         self.assertIsNotNone(job_config)
-        struct_params = [p.values for p in job_config.query_parameters if p.name == 'nl_stat_vars'][0]
-        
+        struct_params = [
+            p.values for p in job_config.query_parameters if p.name == "nl_stat_vars"
+        ][0]
+
         dcids = []
         sentences = []
         for sp in struct_params:
             dcids.append(sp.struct_values.get("dcid"))
             sentences.append(sp.struct_values.get("sentence"))
-                    
+
         self.assertIn("statVar1", dcids)
         self.assertIn("statVar2", dcids)
         self.assertIn("sentence1", sentences)
         self.assertIn("sentence2", sentences)
 
-    @patch.object(EmbeddingGenerator, 'spanner_database')
+    @patch.object(EmbeddingGenerator, "spanner_database")
     def test_delete_existing_embeddings(self, mock_db):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_snapshot = MagicMock()
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_snapshot.execute_sql.side_effect = [
             [(None,)],  # IngestionLock query
-            [("dcid/1",), ("dcid/2",)]  # Node query
+            [("dcid/1",), ("dcid/2",)],  # Node query
         ]
         mock_db.execute_partitioned_dml.return_value = 2
 
@@ -453,13 +571,14 @@ class TestEmbeddingGenerator(unittest.TestCase):
             node_types={"StatVar": ["description"]},
             node_filter_type="NoFilter"
         )
-        deleted = generator._delete_existing_embeddings(spec, embedding_table="NodeEmbedding")
+        deleted = generator._delete_existing_embeddings(
+            spec, embedding_table="NodeEmbedding"
+        )
         self.assertEqual(deleted, 2)
         mock_db.execute_partitioned_dml.assert_called_once()
 
 
 class TestStatVarGroupGenerator(unittest.TestCase):
-
     def setUp(self):
         self.mock_executor = MagicMock()
         self.mock_executor.connection_id = "test-conn"
@@ -476,7 +595,9 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         self.assertEqual(self.mock_executor.execute.call_count, 2)
 
     def test_run_stat_var_group(self):
-        generator = StatVarGroupGenerator(self.mock_executor, is_base_dc=True, should_prune_single_child_svgs=True)
+        generator = StatVarGroupGenerator(
+            self.mock_executor, is_base_dc=True, should_prune_single_child_svgs=True
+        )
         mock_prep_job = [MagicMock(object_id="gender"), MagicMock(object_id="age")]
         mock_exec_job = MagicMock()
         self.mock_executor.execute.side_effect = [mock_prep_job, mock_exec_job]
@@ -491,5 +612,55 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         self.assertIn("generated_provenance_prefix", query)
 
 
-if __name__ == '__main__':
+class TestNodePropertiesGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_run_all(self):
+        generator = NodePropertiesGenerator(self.mock_executor, is_base_dc=True)
+        mock_job1 = MagicMock()
+        mock_job2 = MagicMock()
+        self.mock_executor.execute.side_effect = [mock_job1, mock_job2]
+
+        jobs = generator.run_all(NodePropertiesConfig(import_names=["Schema"]))
+        self.assertEqual(len(jobs), 2)
+        self.assertEqual(self.mock_executor.execute.call_count, 2)
+
+    def test_run_node_types(self):
+        generator = NodePropertiesGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_node_types()
+        self.assertEqual(job, mock_job)
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("test-conn", query)
+        self.assertIn("spanner-uri", query)
+        self.assertIn("predicate = 'typeOf'", query)
+        self.assertIn("SELECT subject_id, ARRAY_AGG(object_id ORDER BY object_id) AS types", query)
+        self.assertIn('spanner_options = \'{"table": "Node", "priority": "LOW"}\'', query)
+
+    def test_run_node_names(self):
+        generator = NodePropertiesGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_node_names()
+        self.assertEqual(job, mock_job)
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIn("test-conn", query)
+        self.assertIn("spanner-uri", query)
+        self.assertIn("predicate = 'name'", query)
+        self.assertIn("SELECT subject_id, value FROM Node WHERE types IS NULL OR ARRAY_LENGTH(types) = 0", query)
+        self.assertIn("JOIN nodes ON edges.object_id = nodes.subject_id", query)
+        self.assertIn("SELECT subject_id, ARRAY_AGG(value ORDER BY value)[SAFE_OFFSET(0)] AS name", query)
+        self.assertIn('spanner_options = \'{"table": "Node", "priority": "LOW"}\'', query)
+
+
+if __name__ == "__main__":
     unittest.main()

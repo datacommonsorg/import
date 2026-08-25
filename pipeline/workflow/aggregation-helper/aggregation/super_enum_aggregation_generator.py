@@ -303,7 +303,7 @@ class SuperEnumAggregationGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Node"}}' ) AS
+            spanner_options = '{{"table": "Node", "priority": "LOW"}}' ) AS
         SELECT DISTINCT
           target_sv AS subject_id,
           CAST(NULL AS STRING) AS value,
@@ -319,7 +319,7 @@ class SuperEnumAggregationGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Edge"}}' ) AS
+            spanner_options = '{{"table": "Edge", "priority": "LOW"}}' ) AS
         WITH ReconstructedEdges AS (
           SELECT 
             g.target_sv AS subject_id,
@@ -348,7 +348,7 @@ class SuperEnumAggregationGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "TimeSeries"}}' ) AS
+            spanner_options = '{{"table": "TimeSeries", "priority": "LOW"}}' ) AS
         WITH SourceTS AS (
           SELECT
             ts.variable_measured,
@@ -422,7 +422,7 @@ class SuperEnumAggregationGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Observation"}}' ) AS
+            spanner_options = '{{"table": "Observation", "priority": "LOW"}}' ) AS
         WITH MappedObservations AS (
           SELECT
             g.target_sv AS variable_measured,

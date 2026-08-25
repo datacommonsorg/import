@@ -19,15 +19,38 @@ linked relationship edges and provenance summaries in Spanner.
 
 from .bq_executor import BigQueryExecutor
 from .linked_edge_generator import LinkedEdgeGenerator, LinkedEdgeConfig
-from .provenance_summary_generator import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
+from .materialized_edge_generator import (
+    MaterializedEdgeGenerator,
+    MaterializedEdgeConfig,
+)
+from .provenance_summary_generator import (
+    ProvenanceSummaryGenerator,
+    ProvenanceSummaryConfig,
+)
 from .stat_var_aggregator import StatVarAggregator, StatVarAggregationConfig
-from .place_aggregation_generator import PlaceAggregationGenerator, PlaceAggregationConfig
+from .place_aggregation_generator import (
+    PlaceAggregationGenerator,
+    PlaceAggregationConfig,
+)
 from .stat_var_group_generator import StatVarGroupGenerator, StatVarGroupConfig
-from .stat_var_calculation_generator import StatVarCalculationGenerator, StatVarCalculationConfig
-from .stat_var_series_aggregator import StatVarSeriesAggregator, StatVarSeriesAggregationConfig
-from .super_enum_aggregation_generator import SuperEnumAggregationGenerator, SuperEnumAggregationConfig
-from .entity_aggregation_generator import EntityAggregationGenerator, EntityAggregationConfig
+from .stat_var_calculation_generator import (
+    StatVarCalculationGenerator,
+    StatVarCalculationConfig,
+)
+from .stat_var_series_aggregator import (
+    StatVarSeriesAggregator,
+    StatVarSeriesAggregationConfig,
+)
+from .super_enum_aggregation_generator import (
+    SuperEnumAggregationGenerator,
+    SuperEnumAggregationConfig,
+)
+from .entity_aggregation_generator import (
+    EntityAggregationGenerator,
+    EntityAggregationConfig,
+)
 from .embedding_generator import EmbeddingGenerator, EmbeddingGenerationConfig
+from .node_properties_generator import NodePropertiesGenerator, NodePropertiesConfig
 from .orchestrator import (
     AggregationOrchestrator,
     AggregationRunResult,
@@ -38,32 +61,35 @@ from .validator import validate_config
 from .deleter import AggregationDeleter
 
 __all__ = [
-    'BigQueryExecutor',
-    'LinkedEdgeGenerator',
-    'LinkedEdgeConfig',
-    'ProvenanceSummaryGenerator',
-    'ProvenanceSummaryConfig',
-    'StatVarAggregator',
-    'StatVarAggregationConfig',
-    'PlaceAggregationGenerator',
-    'PlaceAggregationConfig',
-    'StatVarGroupGenerator',
-    'StatVarGroupConfig',
-    'StatVarCalculationGenerator',
-    'StatVarCalculationConfig',
-    'StatVarSeriesAggregator',
-    'StatVarSeriesAggregationConfig',
-    'SuperEnumAggregationGenerator',
-    'SuperEnumAggregationConfig',
-    'EntityAggregationGenerator',
-    'EntityAggregationConfig',
-    'EmbeddingGenerator',
-    'EmbeddingGenerationConfig',
-    'AggregationOrchestrator',
-    'OrchestratorConfig',
-    'AggregationDeleter',
-    'AggregationRunResult',
-    'ImportExecutionResult',
-    'validate_config',
+    "BigQueryExecutor",
+    "LinkedEdgeGenerator",
+    "LinkedEdgeConfig",
+    "MaterializedEdgeGenerator",
+    "MaterializedEdgeConfig",
+    "ProvenanceSummaryGenerator",
+    "ProvenanceSummaryConfig",
+    "StatVarAggregator",
+    "StatVarAggregationConfig",
+    "PlaceAggregationGenerator",
+    "PlaceAggregationConfig",
+    "StatVarGroupGenerator",
+    "StatVarGroupConfig",
+    "StatVarCalculationGenerator",
+    "StatVarCalculationConfig",
+    "StatVarSeriesAggregator",
+    "StatVarSeriesAggregationConfig",
+    "SuperEnumAggregationGenerator",
+    "SuperEnumAggregationConfig",
+    "EntityAggregationGenerator",
+    "EntityAggregationConfig",
+    "EmbeddingGenerator",
+    "EmbeddingGenerationConfig",
+    "NodePropertiesGenerator",
+    "NodePropertiesConfig",
+    "AggregationOrchestrator",
+    "OrchestratorConfig",
+    "AggregationDeleter",
+    "AggregationRunResult",
+    "ImportExecutionResult",
+    "validate_config",
 ]
-

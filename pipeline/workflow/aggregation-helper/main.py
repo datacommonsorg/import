@@ -19,7 +19,6 @@ import json
 import logging
 import os
 import sys
-from dataclasses import dataclass
 from typing import List, Optional
 
 from aggregation import AggregationOrchestrator, OrchestratorConfig
@@ -28,18 +27,22 @@ from aggregation import AggregationOrchestrator, OrchestratorConfig
 def parse_import_list(import_list_str: Optional[str]) -> List[str]:
     """Parses and validates the JSON string representing active imports."""
     if not import_list_str:
-        logging.info("No --import_list provided. Proceeding with global import-independent calculations only.")
+        logging.info(
+            "No --import_list provided. Proceeding with global import-independent calculations only."
+        )
         return []
 
     parsed = json.loads(import_list_str)
     if not isinstance(parsed, list):
         raise ValueError("Parsed import_list is not a list")
-    
+
     res = []
     for item in parsed:
         if isinstance(item, dict):
             if "importName" not in item:
-                raise ValueError(f"Invalid import item dictionary missing 'importName' key: {item}")
+                raise ValueError(
+                    f"Invalid import item dictionary missing 'importName' key: {item}"
+                )
             res.append(item["importName"])
         elif isinstance(item, str):
             res.append(item)
@@ -56,7 +59,9 @@ def create_orchestrator_config(
     """Creates an OrchestratorConfig from CLI arguments and environment variables."""
     connection_id = env.get("BQ_SPANNER_CONN_ID")
     project_id = env.get("PROJECT_ID")
-    spanner_db_path = env.get("SPANNER_DATABASE_PATH") or env.get("SPANNER_DATABASE_URL")
+    spanner_db_path = env.get("SPANNER_DATABASE_PATH") or env.get(
+        "SPANNER_DATABASE_URL"
+    )
     if spanner_db_path and len(spanner_db_path.split("/")) >= 6:
         _parts = spanner_db_path.split("/")
         spanner_project_id = _parts[1]
@@ -89,7 +94,9 @@ def create_orchestrator_config(
         config_file_path=config_path,
         enable_embeddings=enable_embeddings,
         bq_dataset_id=bq_dataset_id,
+        run_sequential=args.run_sequential,
         generate_stat_var_groups=args.generate_stat_var_groups,
+        generate_topic_list_edges=getattr(args, "generate_topic_list_edges", False),
         max_parallel_imports=args.max_parallel_imports,
         deletion_timeout=args.deletion_timeout,
     )
@@ -101,48 +108,59 @@ def main():
 
     parser = argparse.ArgumentParser(description="Run aggregation helper job.")
     parser.add_argument(
-        "--import_list",
-        help="JSON string representing the list of imports to process."
+        "--import_list", help="JSON string representing the list of imports to process."
     )
     parser.add_argument(
         "--config_path",
-        help="Optional path to a specific YAML config file or directory (e.g., aggregation/configs/embedding.yaml)."
+        help="Optional path to a specific YAML config file or directory (e.g., aggregation/configs/embedding.yaml).",
     )
     parser.add_argument(
         "--max_parallel_imports",
         type=int,
-        default=10,
-        help="Maximum number of imports to aggregate in parallel (default: 10)."
+        default=3,
+        help="Maximum number of imports to aggregate in parallel (default: 3).",
+    )
+    parser.add_argument(
+        "--run_sequential",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to execute BigQuery queries sequentially (default: False, use --run_sequential for sequential execution).",
     )
     parser.add_argument(
         "--generate_stat_var_groups",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Whether to auto-generate StatVarGroup hierarchy tree (default: True, use --no-generate_stat_var_groups to disable)."
+        help="Whether to auto-generate StatVarGroup hierarchy tree (default: True, use --no-generate_stat_var_groups to disable).",
+    )
+    parser.add_argument(
+        "--generate_topic_list_edges",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to materialize topic relevantVariableList and memberList edges (default: False, use --generate_topic_list_edges to enable).",
     )
     parser.add_argument(
         "--dry_run",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Run in dry-run mode without executing jobs (use --no-dry_run to execute)."
+        help="Run in dry-run mode without executing jobs (use --no-dry_run to execute).",
     )
     parser.add_argument(
         "--skip_deletions",
         action=argparse.BooleanOptionalAction,
         default=False,
-        help="Skip deleting existing aggregated data before running new aggregations."
+        help="Skip deleting existing aggregated data before running new aggregations.",
     )
     parser.add_argument(
         "--deletion_timeout",
         type=float,
         default=21600.0,
-        help="Timeout in seconds for Spanner deletion operations (default: 21600.0)."
+        help="Timeout in seconds for Spanner deletion operations (default: 21600.0).",
     )
     parser.add_argument(
         "--is_base_dc",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Whether running in base Data Commons environment (default: True, use --no-is_base_dc for DCP)."
+        help="Whether running in base Data Commons environment (default: True, use --no-is_base_dc for DCP).",
     )
 
     args = parser.parse_args()
@@ -162,7 +180,7 @@ def main():
     run_result = orchestrator.run(
         active_imports=import_list,
         dry_run=args.dry_run,
-        skip_deletions=args.skip_deletions
+        skip_deletions=args.skip_deletions,
     )
 
     if not run_result.success:

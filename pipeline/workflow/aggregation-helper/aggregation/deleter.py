@@ -16,14 +16,15 @@
 
 import concurrent.futures
 import logging
-from typing import List, Optional
+from typing import List
 from google.cloud import spanner
 
-from .common import get_provenance_name, get_provenance_prefix
+from .common import TOPIC_LIST_PROVENANCE, get_provenance_name, get_provenance_prefix
 
 # Default timeout for partitioned DML streaming RPCs (6 hours = 21600 seconds),
 # matching Cloud Run Job / Workflow execution limits.
 DEFAULT_DELETION_TIMEOUT_SECONDS = 21600.0
+
 
 class AggregationDeleter:
     """Handles deletion of aggregated data in Spanner."""
@@ -53,7 +54,9 @@ class AggregationDeleter:
             )
             instance = spanner_client.instance(self.instance_id)
             self._spanner_database = instance.database(self.database_id)
-            logging.info(f"Initialized Spanner client for deleter: {self._spanner_database.name}")
+            logging.info(
+                f"Initialized Spanner client for deleter: {self._spanner_database.name}"
+            )
         return self._spanner_database
 
     def delete_aggregated_data(self, imports_to_delete: List[str]) -> None:
@@ -68,18 +71,32 @@ class AggregationDeleter:
         if not imports_to_delete:
             return
 
-        logging.info(f"Deleting existing aggregated data for imports: {imports_to_delete}")
+        logging.info(
+            f"Deleting existing aggregated data for imports: {imports_to_delete}"
+        )
 
-        provenance_names = [get_provenance_name(name, self.is_base_dc) for name in imports_to_delete]
-        
+        provenance_names = [
+            get_provenance_name(name, self.is_base_dc) for name in imports_to_delete
+        ]
+
         db = self.spanner_database
         params = {"provenances": provenance_names}
-        param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
+        param_types = {
+            "provenances": spanner.param_types.Array(spanner.param_types.STRING)
+        }
 
         delete_queries = [
             ("Edge", "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)", ""),
-            ("TimeSeries", "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)", " (and cascaded Observations)"),
-            ("KeyValueStore", "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)", "")
+            (
+                "TimeSeries",
+                "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)",
+                " (and cascaded Observations)",
+            ),
+            (
+                "KeyValueStore",
+                "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)",
+                "",
+            ),
         ]
 
         def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
@@ -90,7 +107,9 @@ class AggregationDeleter:
             return rows
 
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(delete_queries)) as executor:
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=len(delete_queries)
+            ) as executor:
                 futures = [
                     executor.submit(_execute_delete, table, sql, desc)
                     for table, sql, desc in delete_queries
@@ -121,15 +140,66 @@ class AggregationDeleter:
         """Deletes generated linked relationship edges for the specified imports from Spanner."""
         if not imports_to_delete:
             return 0
-        provenance_names = [get_provenance_name(f"generated/{name}", self.is_base_dc) for name in imports_to_delete]
-        sql = (
-            "DELETE FROM Edge "
-            "WHERE provenance IN UNNEST(@provenances)"
-        )
+        provenance_names = [
+            get_provenance_name(f"generated/{name}", self.is_base_dc)
+            for name in imports_to_delete
+        ]
+        sql = "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)"
         params = {"provenances": provenance_names}
-        param_types = {"provenances": spanner.param_types.Array(spanner.param_types.STRING)}
+        param_types = {
+            "provenances": spanner.param_types.Array(spanner.param_types.STRING)
+        }
         rows = self.spanner_database.execute_partitioned_dml(
             sql, params=params, param_types=param_types
         )
-        logging.info(f"Deleted {rows} linked relationship edges for imports: {imports_to_delete}")
+        logging.info(
+            f"Deleted {rows} linked relationship edges for imports: {imports_to_delete}"
+        )
         return rows
+
+    def delete_topic_list_edges(self) -> int:
+        """Deletes generated topic and peer group list edges and their literal nodes from Spanner."""
+        provenance_name = get_provenance_name(TOPIC_LIST_PROVENANCE, self.is_base_dc)
+
+        # 1. Query literal node IDs referenced by topic list edges
+        sql_fetch_nodes = (
+            "SELECT DISTINCT object_id "
+            "FROM Edge "
+            "WHERE provenance = @provenance "
+            "AND predicate IN ('relevantVariableList', 'memberList')"
+        )
+        params = {"provenance": provenance_name}
+        param_types = {"provenance": spanner.param_types.STRING}
+
+        with self.spanner_database.snapshot() as snapshot:
+            results = snapshot.execute_sql(
+                sql_fetch_nodes, params=params, param_types=param_types
+            )
+            string_literal_node_ids = [row[0] for row in results]
+
+        # 2. Delete the edges from Edge table
+        sql_delete_edges = (
+            "DELETE FROM Edge "
+            "WHERE provenance = @provenance "
+            "AND predicate IN ('relevantVariableList', 'memberList')"
+        )
+        edge_rows = self.spanner_database.execute_partitioned_dml(
+            sql_delete_edges, params=params, param_types=param_types
+        )
+
+        # 3. Delete the corresponding literal nodes from Node table
+        if string_literal_node_ids:
+            chunk_size = 5000
+            for i in range(0, len(string_literal_node_ids), chunk_size):
+                chunk = string_literal_node_ids[i : i + chunk_size]
+                keyset = spanner.KeySet(keys=[[node_id] for node_id in chunk])
+
+                def _delete_chunk(transaction, k=keyset):
+                    transaction.delete("Node", k)
+
+                self.spanner_database.run_in_transaction(_delete_chunk)
+
+        logging.info(
+            f"Deleted {edge_rows} topic and peer group list edges and {len(string_literal_node_ids)} literal nodes for provenance: {provenance_name}"
+        )
+        return edge_rows

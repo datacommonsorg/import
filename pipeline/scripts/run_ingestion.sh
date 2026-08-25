@@ -1,24 +1,24 @@
 #!/bin/bash
 #
 # Triggers the Spanner ingestion workflow for a specific import.
-# Optionally updates the import version and version history via ingestion-helper.
+# Updates the import version and version history via ingestion-helper.
 #
 # Usage:
-#   ./pipeline/scripts/run_ingestion.sh <importName> <env> [latestVersion]
+#   ./pipeline/scripts/run_ingestion.sh <importName> <env> <latestVersion: full GCS path with wildcard>
 #
 # Example:
 #   ./pipeline/scripts/run_ingestion.sh \
-#     scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test staging
+#     scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test staging \
+#     'gs://datcom-prod-imports/scripts/us_fed/treasury_constant_maturity_rates/USFed_ConstantMaturityRates_Test/2025_12_17T02_30_27_233484_08_00/**/*.mcf*'
 
 set -e
 
 IMPORT_NAME="$(echo "$1" | xargs)"
 ENV="$(echo "$2" | xargs)"
 LATEST_VERSION="$(echo "$3" | xargs)"
-LATEST_VERSION="${LATEST_VERSION:-STAGING}"
 
-if [ -z "$IMPORT_NAME" ] || [ -z "$ENV" ]; then
-  echo "Usage: $0 <importName> <env: staging|prod> [latestVersion: default STAGING]"
+if [ -z "$IMPORT_NAME" ] || [ -z "$ENV" ] || [ -z "$LATEST_VERSION" ]; then
+  echo "Usage: $0 <importName> <env: staging|prod> <latestVersion: full GCS path with wildcard>"
   exit 1
 fi
 
@@ -79,7 +79,7 @@ DATA="{\"importList\":[${IMPORT_ITEM}]}"
 
 echo "Triggering ${WORKFLOW} in ${ENV} (${PROJECT}/${LOCATION}) with payload: ${DATA}"
 
-gcloud workflows run "${WORKFLOW}" \
+gcloud workflows execute "${WORKFLOW}" \
   --project="${PROJECT}" \
   --location="${LOCATION}" \
   --data="${DATA}"

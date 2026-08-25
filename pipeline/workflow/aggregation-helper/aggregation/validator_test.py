@@ -99,6 +99,10 @@ class TestValidatorSuccess(unittest.TestCase):
                 input_imports:
                   - CensusACS5YearSurvey
                 output_import: CensusACS5YearSurvey_SuperEnum
+
+              - type: NODE_PROPERTIES
+                input_imports:
+                  - Schema
         """)
 
         with open(self.config_path, "w") as f:
@@ -106,13 +110,14 @@ class TestValidatorSuccess(unittest.TestCase):
 
         calculations = validate_config(self.config_path, self.schema_path)
 
-        self.assertEqual(len(calculations), 6)
+        self.assertEqual(len(calculations), 7)
         self.assertEqual(calculations[0]["type"], "PLACE_AGGREGATION")
         self.assertEqual(calculations[1]["type"], "STAT_VAR_AGGREGATION")
         self.assertEqual(calculations[2]["type"], "ENTITY_AGGREGATION")
         self.assertEqual(calculations[3]["type"], "STAT_VAR_SERIES_AGGREGATION")
         self.assertEqual(calculations[4]["type"], "STAT_VAR_CALCULATION")
         self.assertEqual(calculations[5]["type"], "SUPER_ENUM_AGGREGATION")
+        self.assertEqual(calculations[6]["type"], "NODE_PROPERTIES")
 
 
 class TestValidatorSchemaConstraints(unittest.TestCase):
