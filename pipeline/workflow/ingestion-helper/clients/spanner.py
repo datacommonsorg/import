@@ -383,6 +383,22 @@ class SpannerClient:
                 values.append(status in (IngestionState.FAILURE,
                                          IngestionState.RETRY))
 
+                # Calculate workflow execution time from CreationTimestamp
+                try:
+                    res = list(transaction.execute_sql(
+                        "SELECT CreationTimestamp FROM IngestionHistory WHERE WorkflowExecutionID = @workflowId",
+                        params={"workflowId": workflow_id},
+                        param_types={"workflowId": STRING}
+                    ))
+                    if res and len(res) > 0 and res[0] and len(res[0]) > 0:
+                        creation_time = res[0][0]
+                        if isinstance(creation_time, datetime):
+                            columns.append("ExecutionTime")
+                            values.append(
+                                max(0, int((datetime.now(timezone.utc) - creation_time).total_seconds())))
+                except Exception as e:
+                    logging.warning(f"Could not calculate execution time from CreationTimestamp: {e}")
+
             if job_id:
                 columns.append("DataflowJobID")
                 values.append(job_id)
@@ -393,7 +409,6 @@ class SpannerClient:
 
             if metrics:
                 metric_map = {
-                    'execution_time': 'ExecutionTime',
                     'node_count': 'NodeCount',
                     'edge_count': 'EdgeCount',
                     'obs_count': 'ObservationCount',

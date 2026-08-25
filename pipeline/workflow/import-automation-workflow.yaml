@@ -15,9 +15,10 @@ main:
           - envSuffix: ${default(sys.get_env("ENV_SUFFIX"), "")}
           - helperService: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + envSuffix}
           - helperUrl: ${"https://" + helperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
-          - runStaging: ${default(map.get(args, "runStaging"), true)}
+          - skipImportJob: ${string(default(map.get(args, "skipImportJob"), false)) == "true"}
+          - runStaging: ${string(default(map.get(args, "runStaging"), true)) == "true"}
           - stagingResult: "SKIPPED"
-          - runProd: ${default(map.get(args, "runProd"), false)}
+          - runProd: ${string(default(map.get(args, "runProd"), false)) == "true"}
           - prodResult: "SKIPPED"
           - startTime: ${sys.now()}
           - defaultResources:
@@ -26,6 +27,10 @@ main:
               memory: 32768
               disk: 100
           - resources: ${default(map.get(args, "resources"), defaultResources)}
+    - checkImportJobEligible:
+        switch:
+          - condition: ${skipImportJob}
+            next: checkStagingEligible
     - runImportJob:
         try:
           call: googleapis.batch.v1.projects.locations.jobs.create
@@ -157,7 +162,7 @@ ingestEnvironment:
         assign:
           - targetImport: ${versionResponse.body.imports[0]}
           - importEntry:
-              importName: ${targetImport.cleanImportName}
+              importName: ${text.split(targetImport.importName, ":")[1]}
               latestVersion: ${targetImport.latestVersion}
           - ingestionArgs:
               importList:
