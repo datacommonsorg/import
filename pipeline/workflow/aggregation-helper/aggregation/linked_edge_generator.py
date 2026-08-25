@@ -85,7 +85,7 @@ class LinkedEdgeGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Edge"}}' ) AS
+            spanner_options = '{{"table": "Edge", "priority": "LOW"}}' ) AS
         WITH RECURSIVE Ancestors AS (
           SELECT
             subject_id,
@@ -158,7 +158,7 @@ class LinkedEdgeGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Edge"}}' ) AS
+            spanner_options = '{{"table": "Edge", "priority": "LOW"}}' ) AS
         with RECURSIVE Ancestors AS (
           SELECT
             subject_id,
@@ -257,7 +257,7 @@ class LinkedEdgeGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Edge"}}' ) AS
+            spanner_options = '{{"table": "Edge", "priority": "LOW"}}' ) AS
         WITH RECURSIVE Descendants AS (
           -- Base case: direct children (depth 1)
           SELECT

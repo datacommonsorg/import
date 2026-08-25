@@ -94,6 +94,7 @@ def create_orchestrator_config(
         config_file_path=config_path,
         enable_embeddings=enable_embeddings,
         bq_dataset_id=bq_dataset_id,
+        run_sequential=args.run_sequential,
         generate_stat_var_groups=args.generate_stat_var_groups,
         generate_topic_list_edges=getattr(args, "generate_topic_list_edges", False),
         max_parallel_imports=args.max_parallel_imports,
@@ -116,8 +117,14 @@ def main():
     parser.add_argument(
         "--max_parallel_imports",
         type=int,
-        default=10,
-        help="Maximum number of imports to aggregate in parallel (default: 10).",
+        default=3,
+        help="Maximum number of imports to aggregate in parallel (default: 3).",
+    )
+    parser.add_argument(
+        "--run_sequential",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to execute BigQuery queries sequentially (default: False, use --run_sequential for sequential execution).",
     )
     parser.add_argument(
         "--generate_stat_var_groups",

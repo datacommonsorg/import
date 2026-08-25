@@ -370,7 +370,7 @@ class EntityAggregationGenerator:
         sql_parts.append(f"""
         -- Export SV Nodes to Spanner Node table
         EXPORT DATA
-          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Node"}}' ) AS
+          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Node", "priority": "LOW"}}' ) AS
         SELECT DISTINCT
           sv_dcid AS subject_id,
           sv_name AS name,
@@ -400,7 +400,7 @@ class EntityAggregationGenerator:
         sql_parts.append(f"""
         -- Export SV Edges to Spanner Edge table
         EXPORT DATA
-          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Edge"}}' ) AS
+          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Edge", "priority": "LOW"}}' ) AS
         {union_edges_query};
         """)
 
@@ -408,7 +408,7 @@ class EntityAggregationGenerator:
         sql_parts.append(f"""
         -- Export TimeSeries to Spanner TimeSeries table
         EXPORT DATA
-          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "TimeSeries"}}' ) AS
+          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "TimeSeries", "priority": "LOW"}}' ) AS
         WITH UniqueTimeSeries AS (
           SELECT DISTINCT
             sv_dcid,
@@ -452,7 +452,7 @@ class EntityAggregationGenerator:
         sql_parts.append(f"""
         -- Export Observations to Spanner Observation table
         EXPORT DATA
-          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Observation"}}' ) AS
+          OPTIONS( uri="{dest}", format='CLOUD_SPANNER', spanner_options = '{{"table": "Observation", "priority": "LOW"}}' ) AS
         SELECT
           sv_dcid AS variable_measured,
           location_id AS entity1,

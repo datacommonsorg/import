@@ -887,14 +887,14 @@ class StatVarGroupGenerator:
           OPTIONS(
             uri="{dest_uri}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Node"}}'
+            spanner_options = '{{"table": "Node", "priority": "LOW"}}'
           ) AS (SELECT * FROM Node);
 
         EXPORT DATA
           OPTIONS(
             uri="{dest_uri}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Edge"}}'
+            spanner_options = '{{"table": "Edge", "priority": "LOW"}}'
           ) AS (SELECT * FROM Edge);
         """
 

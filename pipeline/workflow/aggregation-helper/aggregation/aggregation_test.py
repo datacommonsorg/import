@@ -320,8 +320,8 @@ class TestMaterializedEdgeGenerator(unittest.TestCase):
         )
         self.assertIn("CONCAT(", query)
         self.assertIn("SHA256(", query)
-        self.assertIn('spanner_options = \'{"table": "Node"}\'', query)
-        self.assertIn('spanner_options = \'{"table": "Edge"}\'', query)
+        self.assertIn('spanner_options = \'{"table": "Node", "priority": "LOW"}\'', query)
+        self.assertIn('spanner_options = \'{"table": "Edge", "priority": "LOW"}\'', query)
         self.assertIn("dc/base/generated/TopicHierarchyLists", query)
 
     def test_generate_topic_hierarchy_list_edges_not_base_dc(self):
@@ -618,7 +618,7 @@ class TestNodePropertiesGenerator(unittest.TestCase):
         self.assertIn("spanner-uri", query)
         self.assertIn("predicate = 'typeOf'", query)
         self.assertIn("SELECT subject_id, ARRAY_AGG(object_id ORDER BY object_id) AS types", query)
-        self.assertIn('spanner_options = \'{"table": "Node"}\'', query)
+        self.assertIn('spanner_options = \'{"table": "Node", "priority": "LOW"}\'', query)
 
     def test_run_node_names(self):
         generator = NodePropertiesGenerator(self.mock_executor, is_base_dc=True)
@@ -635,7 +635,7 @@ class TestNodePropertiesGenerator(unittest.TestCase):
         self.assertIn("SELECT subject_id, value FROM Node WHERE types IS NULL OR ARRAY_LENGTH(types) = 0", query)
         self.assertIn("JOIN nodes ON edges.object_id = nodes.subject_id", query)
         self.assertIn("SELECT subject_id, ARRAY_AGG(value ORDER BY value)[SAFE_OFFSET(0)] AS name", query)
-        self.assertIn('spanner_options = \'{"table": "Node"}\'', query)
+        self.assertIn('spanner_options = \'{"table": "Node", "priority": "LOW"}\'', query)
 
 
 if __name__ == "__main__":

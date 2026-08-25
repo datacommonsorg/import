@@ -289,7 +289,7 @@ class PlaceAggregationGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "TimeSeries"}}' ) AS
+            spanner_options = '{{"table": "TimeSeries", "priority": "LOW"}}' ) AS
         WITH SourceTS AS (
           SELECT
             ts.variable_measured,
@@ -354,7 +354,7 @@ class PlaceAggregationGenerator:
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Observation"}}' ) AS
+            spanner_options = '{{"table": "Observation", "priority": "LOW"}}' ) AS
         WITH MappedObservations AS (
           SELECT
             obs.variable_measured,

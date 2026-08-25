@@ -123,7 +123,7 @@ class MaterializedEdgeGenerator:
           OPTIONS(
             uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Node"}}'
+            spanner_options = '{{"table": "Node", "priority": "LOW"}}'
           ) AS
         SELECT DISTINCT
           literal_node_key AS subject_id,
@@ -138,7 +138,7 @@ class MaterializedEdgeGenerator:
           OPTIONS(
             uri="{dest}",
             format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Edge"}}'
+            spanner_options = '{{"table": "Edge", "priority": "LOW"}}'
           ) AS
         SELECT DISTINCT
           parent_id AS subject_id,

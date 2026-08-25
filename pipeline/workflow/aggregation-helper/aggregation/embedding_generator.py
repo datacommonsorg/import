@@ -346,7 +346,7 @@ class EmbeddingGenerator:
         EXPORT DATA OPTIONS(
           uri="{dest}",
           format="CLOUD_SPANNER",
-          spanner_options='{{"table": "{embedding_table}"}}'
+          spanner_options='{{"table": "{embedding_table}", "priority": "LOW"}}'
         ) AS
         SELECT * FROM embedding_staging;
         """
