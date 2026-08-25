@@ -468,7 +468,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
 
     @patch.object(EmbeddingGenerator, '_stream_spanner_to_bq')
     @patch.object(EmbeddingGenerator, '_delete_existing_embeddings')
-    def test_run_all(self, mock_delete):
+    def test_run_all(self, mock_delete, mock_stream):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -505,7 +505,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
             {"dcid": "statVar2", "sentence": "sentence2"},
         ],
     )
-    def test_run_all_nl_stat_var(self, mock_extract, mock_delete):
+    def test_run_all_nl_stat_var(self, mock_extract, mock_delete, mock_stream):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
