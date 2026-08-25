@@ -26,6 +26,6 @@
         EXPORT DATA OPTIONS(
           uri="spanner-uri",
           format="CLOUD_SPANNER",
-          spanner_options='{"table": "CustomEmbeddingTable"}'
+          spanner_options='{"table": "CustomEmbeddingTable", "priority": "LOW"}'
         ) AS
         SELECT * FROM embedding_staging;
