@@ -7,6 +7,7 @@ main:
           - wait_period: 300 # seconds
           - project_id: '${sys.get_env("PROJECT_ID")}'
           - dataflow_job_name: ${"ingestion-job-" + string(int(sys.now()))}
+          - aggregation_job_name: '${default(sys.get_env("AGGREGATION_JOB_NAME"), "aggregation-helper-job")}'
           - dataflow_gcs_path: '${sys.get_env("DATAFLOW_TEMPLATE_PATH")}'
           - location: '${sys.get_env("LOCATION")}'
           - spanner_db_path: '${sys.get_env("SPANNER_DATABASE_PATH")}'
@@ -78,7 +79,8 @@ main:
                   wait_period: ${wait_period}
                   helper_url: ${helper_url}
                   workflow_id: ${workflow_id}
-                result: prod_job_id
+                  aggregation_job_name: ${aggregation_job_name}
+                result: ingestion_res
             # SUCCESS state update on normal deployment completion
             - update_final_success_state:
                 call: update_state_subworkflow
@@ -87,7 +89,7 @@ main:
                   workflow_id: '${workflow_id}'
                   status: 'SUCCESS'
                   import_list: ${import_info_list}
-                  job_id: ${prod_job_id}
+                  job_id: ${ingestion_res.dataflowJobId}
                 result: final_state_response
         except:
           as: pipeline_err
@@ -106,6 +108,7 @@ main:
                   spanner_instance_id: ${spanner_instance_id}
                   spanner_database_id: ${spanner_database_id}
                   wait_period: ${wait_period}
+                  aggregation_job_name: ${aggregation_job_name}
                 result: rollback_result
             - mark_pipeline_failed:
                 assign:
@@ -131,6 +134,11 @@ main:
 
     - return_result:
         return:
+          status: "SUCCESS"
+          workflowId: ${workflow_id}
+          dataflowJobId: ${ingestion_res.dataflowJobId}
+          aggregationJobRunId: ${ingestion_res.aggregationJobRunId}
+          database: ${spanner_db_path}
           importList: ${import_info_list}
 
 # Sub-workflow that fetches import details from /imports/info, logs, and registers initial state
@@ -208,7 +216,7 @@ update_state_subworkflow:
 
 # Sub-workflow that executes Dataflow ingestion and Aggregation for a target Spanner database.
 ingestion_subworkflow:
-  params: [import_list, project_id, job_name, template_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period, helper_url, workflow_id]
+  params: [import_list, project_id, job_name, template_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period, helper_url, workflow_id, aggregation_job_name]
   steps:
     - run_ingestion_job:
         call: run_dataflow_job
@@ -233,17 +241,22 @@ ingestion_subworkflow:
           location: ${location}
           helper_url: ${helper_url}
           workflow_id: ${workflow_id}
-        result: aggregation_job_res
-    - return_job_id:
-        return: ${default(dataflow_job_id, "N/A")}
+          aggregation_job_name: ${aggregation_job_name}
+        result: aggregation_job_run_id
+    - log_jobs:
+        call: sys.log
+        args:
+          text: '${"Ingestion jobs - Dataflow Job ID: " + string(dataflow_job_id) + ", Aggregation Job Run ID: " + string(aggregation_job_run_id)}'
+          severity: INFO
+    - return_sub_result:
+        return:
+          dataflowJobId: ${default(dataflow_job_id, "N/A")}
+          aggregationJobRunId: ${default(aggregation_job_run_id, "N/A")}
 
 # This sub-workflow runs aggregation jobs and waits for them to complete.
 run_aggregation_job:
-  params: [import_list, project_id, location, helper_url, workflow_id]
+  params: [import_list, project_id, location, helper_url, workflow_id, aggregation_job_name]
   steps:
-    - init:
-        assign:
-          - aggregation_job_name: '${default(sys.get_env("AGGREGATION_JOB_NAME"), "aggregation-helper-job")}'
     - run_aggregation:
         try:
           call: googleapis.run.v2.projects.locations.jobs.run
@@ -266,6 +279,8 @@ run_aggregation_job:
           raise:
             message: '${"Aggregation job failed: " + json.encode_to_string(agg_err)}'
             code: 500
+    - return_aggregation_result:
+        return: ${default(aggregation_response.response.name, default(aggregation_response.metadata.name, default(aggregation_response.name, "N/A")))}
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.
 run_dataflow_job:
@@ -327,7 +342,7 @@ run_dataflow_job:
 # This sub-workflow performs rollback: sets state to RETRY, reverts imports, and retriggers ingestion.
 # If rollback fails, it raises an error so the parent workflow skips lock release and alerts oncall.
 rollback_subworkflow:
-  params: [workflow_id, helper_url, import_list, project_id, dataflow_job_name, dataflow_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period]
+  params: [workflow_id, helper_url, import_list, project_id, dataflow_job_name, dataflow_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period, aggregation_job_name]
   steps:
     - try_rollback_execution:
         try:
@@ -369,6 +384,7 @@ rollback_subworkflow:
                   wait_period: ${wait_period}
                   helper_url: ${helper_url}
                   workflow_id: ${workflow_id}
+                  aggregation_job_name: ${aggregation_job_name}
                 result: retry_ingestion_result
             - return_rollback_success:
                 return:
