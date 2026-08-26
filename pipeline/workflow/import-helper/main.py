@@ -47,7 +47,6 @@ def handle_feed_event(request):
     graph_path = attributes.get('graph_path', "/**/*.mcf*")
     import_size = attributes.get('import_size', 'small')
     cron_schedule = attributes.get('cron_schedule', '')
-    import_env = attributes.get('import_env', 'STAGING')
     if post_process == 'spanner_ingestion_workflow':
         import_status = 'STAGING'
         job_id = attributes.get('feed_name', 'cda_feed')
@@ -56,22 +55,19 @@ def handle_feed_event(request):
                                     latest_version,
                                     graph_path,
                                     job_id,
-                                    cron_schedule,
-                                    env=import_env)
+                                    cron_schedule)
         full_version_path = helper.get_full_version_path(
             import_name, latest_version, graph_path)
         # Invoke ingestion workflow to trigger dataflow job
         helper.invoke_spanner_ingestion_workflow(import_name,
-                                                 full_version_path,
-                                                 env=import_env)
+                                                 full_version_path)
     elif post_process == 'import_automation_workflow':
         # Invoke batch import job (which will automatically trigger spanner ingestion workflow upon completion)
         helper.invoke_import_automation_workflow(import_name,
                                                  latest_version,
                                                  import_size,
                                                  graph_path,
-                                                 cron_schedule,
-                                                 env=import_env)
+                                                 cron_schedule)
     else:
         logging.info(f"Skipping import post processing.")
 

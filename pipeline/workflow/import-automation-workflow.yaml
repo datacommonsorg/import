@@ -12,14 +12,12 @@ main:
           - gcsMountBucket: ${sys.get_env("GCS_MOUNT_BUCKET")}
           - gcsImportBucket: ${sys.get_env("GCS_BUCKET_ID")}
           - gcsMountPath: "/tmp/gcs"
-          - envSuffix: ${default(sys.get_env("ENV_SUFFIX"), "")}
-          - helperService: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + envSuffix}
-          - helperUrl: ${"https://" + helperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
+          - stagingHelperUrl: ${"https://" + default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + "-staging-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - skipImportJob: ${string(default(map.get(args, "skipImportJob"), false)) == "true"}
-          - runStaging: ${string(default(map.get(args, "runStaging"), true)) == "true"}
-          - stagingResult: "SKIPPED"
-          - runProd: ${string(default(map.get(args, "runProd"), false)) == "true"}
-          - prodResult: "SKIPPED"
+          - skipStagingIngestion: ${string(default(map.get(args, "skipStagingIngestion"), false)) == "true"}
+          - skipProdIngestion: ${string(default(map.get(args, "skipProdIngestion"), true)) == "true"}
+          - defaultResult:
+              status: "SKIPPED"
           - startTime: ${sys.now()}
           - defaultResources:
               machine: "n2-standard-8"
@@ -83,7 +81,7 @@ main:
             - updateImportStatus:
                 call: http.post
                 args:
-                  url: ${helperUrl + "/imports/status"}
+                  url: ${stagingHelperUrl + "/imports/status"}
                   auth:
                     type: OIDC
                   body:
@@ -98,7 +96,7 @@ main:
                 raise: ${e}
     - checkStagingEligible:
         switch:
-          - condition: ${not runStaging}
+          - condition: ${skipStagingIngestion}
             next: checkProdEligible
     - ingestStaging:
         call: ingestEnvironment
@@ -111,7 +109,7 @@ main:
         result: stagingResult
     - checkProdEligible:
         switch:
-          - condition: ${not runProd or (runStaging and (stagingResult.status != "SUCCESS" and stagingResult.status != "SKIPPED"))}
+          - condition: ${skipProdIngestion or (not skipStagingIngestion and (stagingResult.status != "SUCCESS" and stagingResult.status != "SKIPPED"))}
             next: returnResult
     - ingestProd:
         call: ingestEnvironment
@@ -126,8 +124,8 @@ main:
         return:
           jobId: ${jobId}
           importName: ${importName}
-          staging: ${stagingResult}
-          prod: ${prodResult}
+          staging: ${default(stagingResult, defaultResult)}
+          prod: ${default(prodResult, defaultResult)}
 
 ingestEnvironment:
   params: [projectId, region, importName, envSuffix, waitIngestion]
@@ -155,7 +153,6 @@ ingestEnvironment:
         switch:
           - condition: ${len(versionResponse.body.imports) == 0 or versionResponse.body.imports[0].status != "STAGING"}
             return:
-              importName: ${importName}
               status: "SKIPPED"
               message: '${"Import status is not STAGING (" + versionResponse.body.message + "); skipped Spanner ingestion."}'
     - prepareIngestionArgs:
@@ -179,6 +176,5 @@ ingestEnvironment:
         result: ingestionExecutionResponse
     - returnSubResult:
         return:
-          importName: ${importName}
           status: "SUCCESS"
-          ingestionExecution: ${ingestionExecutionResponse}
+          executionName: ${ingestionExecutionResponse.name}
