@@ -142,8 +142,8 @@ def _write_observation_shard(chunk,
         "@id": f"dcid:obs_{obs_hash}",
         "@type": "dcid:StatVarObservation",
         "dcid:variableMeasured": var_obj,
-        "dcid:observationDate": _parse_numeric(date),
-        "dcid:value": _parse_numeric(value),
+        "dcid:observationDate": str(date),
+        "dcid:value": str(value),
     }
 
     entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))

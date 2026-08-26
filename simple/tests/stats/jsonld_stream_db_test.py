@@ -183,7 +183,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
         graph = data["@graph"]
         self.assertEqual(len(graph), 1)
         self.assertEqual(graph[0]["dcid:observationAbout"]["@id"], "dcid:e1")
-        self.assertEqual(graph[0]["dcid:value"], 100)
+        self.assertEqual(graph[0]["dcid:value"], "100")
 
       # Validate node shard content
       with open(node_shard, "r") as f:
@@ -354,8 +354,8 @@ class TestJsonLdStreamDb(unittest.TestCase):
           o for o in graph
           if o["dcid:observationAbout"]["@id"] == "dcid:country/ALB"
       ][0]
-      self.assertEqual(obs1["dcid:value"], 99)
-      self.assertEqual(obs1["dcid:observationDate"], 2026)
+      self.assertEqual(obs1["dcid:value"], "99")
+      self.assertEqual(obs1["dcid:observationDate"], "2026")
       self.assertEqual(obs1["dcid:scalingFactor"], 100)
       self.assertEqual(obs1["dcid:provenanceUrl"],
                        "http://my-provenance.org/url")
@@ -372,8 +372,8 @@ class TestJsonLdStreamDb(unittest.TestCase):
           o for o in graph
           if o["dcid:observationAbout"]["@id"] == "dcid:country/USA"
       ][0]
-      self.assertEqual(obs2["dcid:value"], 123.45)
-      self.assertEqual(obs2["dcid:observationDate"], 2026.5)
+      self.assertEqual(obs2["dcid:value"], "123.45")
+      self.assertEqual(obs2["dcid:observationDate"], "2026.5")
       self.assertEqual(obs2["dcid:scalingFactor"], 10.5)
 
       # 3. Verify third observation (Non-numeric value & Date string)

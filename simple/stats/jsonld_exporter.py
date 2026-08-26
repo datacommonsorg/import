@@ -117,10 +117,8 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
       pass
   g.add((subject, DCID["observationDate"], Literal(date)))
 
-  try:
-    g.add((subject, DCID["value"], Literal(float(value))))
-  except ValueError:
-    g.add((subject, DCID["value"], Literal(value)))
+  if value is not None and str(value).strip() != "":
+    g.add((subject, DCID["value"], Literal(str(value))))
 
   if provenance:
     g.add((subject, DCID["provenance"], expand_id(provenance)))

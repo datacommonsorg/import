@@ -71,9 +71,10 @@ class ObservationsImporter(Importer):
     debug_dfs = []
 
     with self.input_file.open_stream() as stream:
+      # Read all columns as strings to preserve significant figures.
       reader = pd.read_csv(
           stream,
-          dtype={0: str},
+          dtype=str,
           skipinitialspace=True,
           thousands=",",
           na_values=constants.STANDARD_NA_VALUES,
@@ -95,7 +96,6 @@ class ObservationsImporter(Importer):
                       chunk_df.columns[0])
         date_col = mappings.get("dcid:observationDate") or chunk_df.columns[1]
 
-        chunk_df = chunk_df.convert_dtypes()
         chunk_df = chunk_df.astype({date_col: str})
 
         if first_chunk:
@@ -128,8 +128,7 @@ class ObservationsImporter(Importer):
       self.debug_resolve_df = pd.concat(debug_dfs, ignore_index=True)
 
   def _write_observations(self) -> None:
-    observations_df = self.df.astype(str)
-    observations_df = observations_df.melt(
+    observations_df = self.df.melt(
         id_vars=[constants.COLUMN_DCID, constants.COLUMN_DATE],
         var_name=constants.COLUMN_VARIABLE,
         value_name=constants.COLUMN_VALUE,
