@@ -23,7 +23,8 @@ public class GraphTransformer extends DoFn<McfGraph, McfGraph> {
   @ProcessElement
   public void processElement(@Element McfGraph inputGraph, OutputReceiver<McfGraph> receiver) {
     McfGraph.Builder graphBuilder = inputGraph.toBuilder();
-    McfGraph mutated = McfMutator.mutate(graphBuilder, DUMMY_LOG_CTX, isBaseDc);
+    McfGraph mutated =
+        McfMutator.mutate(graphBuilder, DUMMY_LOG_CTX, isBaseDc, /* generateFallbacks= */ true);
     if (mutated.getNodesCount() > 0) {
       receiver.output(mutated);
     }

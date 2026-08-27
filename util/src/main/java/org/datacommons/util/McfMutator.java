@@ -32,6 +32,7 @@ public class McfMutator {
   private Mcf.McfGraph.Builder graph;
   private LogWrapper logCtx;
   private boolean isBaseDc;
+  private boolean generateFallbacks;
 
   /**
    * Mutates the MCF graph.
@@ -40,15 +41,18 @@ public class McfMutator {
    * @param logCtx The log context for reporting errors.
    * @param isBaseDc Whether the run is for Base DC. When false, automatic generation of the
    *     "definition" field on StatisticalVariables is skipped to avoid creating synthetic edges.
+   * @param generateFallbacks Whether to generate fallback properties like name and definition.
    * @return The mutated MCF graph.
    */
   public static Mcf.McfGraph mutate(
-      Mcf.McfGraph.Builder graph, LogWrapper logCtx, boolean isBaseDc) {
+      Mcf.McfGraph.Builder graph, LogWrapper logCtx, boolean isBaseDc, boolean generateFallbacks) {
     McfMutator m = new McfMutator();
     m.graph = graph;
     m.logCtx = logCtx;
     m.isBaseDc = isBaseDc;
-    // Make a list of node names because we don't want to be iterating over the map while mutating
+    m.generateFallbacks = generateFallbacks;
+    // Make a list of node names because we don't want to be iterating over the map
+    // while mutating
     // it.
     List<String> nodeIdList = new ArrayList<>();
     graph.getNodesMap().forEach((k, v) -> nodeIdList.add(k));
@@ -140,29 +144,31 @@ public class McfMutator {
         node.putPvs("constraintProperties", valuesBuilder.build());
       }
 
-      if (isBaseDc && !node.containsPvs(Vocabulary.DEFINITION)) {
-        String definition = McfUtil.generateSVDefinition(node, constraintPvs);
-        Mcf.McfGraph.Values.Builder valuesBuilder =
-            Mcf.McfGraph.Values.newBuilder()
-                .addTypedValues(
-                    Mcf.McfGraph.TypedValue.newBuilder()
-                        .setValue(definition)
-                        .setType(Mcf.ValueType.TEXT)
-                        .build());
-        node.putPvs(Vocabulary.DEFINITION, valuesBuilder.build());
-      }
-
-      if (!node.containsPvs(Vocabulary.NAME)) {
-        String name = StatVarNameGenerator.generateName(node.build());
-        if (!name.isEmpty()) {
+      if (generateFallbacks) {
+        if (isBaseDc && !node.containsPvs(Vocabulary.DEFINITION)) {
+          String definition = McfUtil.generateSVDefinition(node, constraintPvs);
           Mcf.McfGraph.Values.Builder valuesBuilder =
               Mcf.McfGraph.Values.newBuilder()
                   .addTypedValues(
                       Mcf.McfGraph.TypedValue.newBuilder()
-                          .setValue(name)
+                          .setValue(definition)
                           .setType(Mcf.ValueType.TEXT)
                           .build());
-          node.putPvs(Vocabulary.NAME, valuesBuilder.build());
+          node.putPvs(Vocabulary.DEFINITION, valuesBuilder.build());
+        }
+
+        if (!node.containsPvs(Vocabulary.NAME)) {
+          String name = StatVarNameGenerator.generateName(node.build());
+          if (!name.isEmpty()) {
+            Mcf.McfGraph.Values.Builder valuesBuilder =
+                Mcf.McfGraph.Values.newBuilder()
+                    .addTypedValues(
+                        Mcf.McfGraph.TypedValue.newBuilder()
+                            .setValue(name)
+                            .setType(Mcf.ValueType.TEXT)
+                            .build());
+            node.putPvs(Vocabulary.NAME, valuesBuilder.build());
+          }
         }
       }
     }
