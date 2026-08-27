@@ -86,9 +86,21 @@ public class StatVarNameGenerator {
 
     List<String> words = new ArrayList<>();
     for (String w : SPACE_SPLITTER.split(s)) {
-      // Preserve acronyms (words with no lowercase letters but at least one uppercase
-      // letter)
-      if (w.matches(".*[A-Z].*") && !w.matches(".*[a-z].*")) {
+      // Identify acronyms (words with at least one uppercase letter and no lowercase
+      // letters).
+      boolean hasUpper = false;
+      boolean hasLower = false;
+      for (int i = 0; i < w.length(); i++) {
+        char c = w.charAt(i);
+        if (c >= 'a' && c <= 'z') {
+          hasLower = true;
+          break;
+        }
+        if (c >= 'A' && c <= 'Z') {
+          hasUpper = true;
+        }
+      }
+      if (hasUpper && !hasLower) {
         words.add(w);
       } else {
         words.add(w.toLowerCase());

@@ -194,11 +194,8 @@ public class McfMutatorTest {
         McfMutator.mutate(
             TestUtil.graphFromMcf(mcf).toBuilder(),
             TestUtil.newLogCtx(),
-            /* isBaseDc= */ false, /*
-                                    * generateFallbacks
-                                    * =
-                                    */
-            true);
+            /* isBaseDc= */ false,
+            /* generateFallbacks= */ true);
 
     String want =
         "Node: dcid:FinancialAid\n"
