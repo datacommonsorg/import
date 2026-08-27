@@ -24,7 +24,7 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
  *       measurementQualifier}s (e.g., "Annual").
  *   <li><b>MeasureAndPop:</b> Combines {@code measuredProperty} and {@code populationType}. For
  *       example, "Count of student". If they overlap, redundancy is avoided.
- *   <li><b>Qualifiers:</b> Non-time {@code measurementQualifier}s in parentheses, e.g., "(Real)".
+ *   <li><b>Qualifiers:</b> Non-time {@code measurementQualifier}s in parentheses, e.g., "(real)".
  *   <li><b>Constraints:</b> A comma-separated list of values for filtering properties like {@code
  *       gender}, {@code race}, etc., prepended with a colon.
  *   <li><b>Denominator:</b> Derived from {@code measurementDenominator}, typically resulting in
