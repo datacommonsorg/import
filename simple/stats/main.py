@@ -49,6 +49,11 @@ flags.DEFINE_string(
     constants.DEFAULT_FROZEN_TIME,
     "If freeze_time is True, the time that the run is frozen at.",
 )
+flags.DEFINE_bool(
+    "import_proxy_entities",
+    os.getenv("IMPORT_PROXY_ENTITIES", "true").lower() == "true",
+    "Whether to generate proxy entity nodes in the graph for entities resolved from Base Data Commons (default: True).",
+)
 
 # If running with time frozen, the packages to be ignored.
 # i.e. packages where time should not be frozen if it leads to errant behavior.
@@ -62,11 +67,14 @@ def _run():
   initialize_logger()
   logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
 
-  Runner(config_file_path=FLAGS.config_file,
-         input_dir_path=FLAGS.input_dir,
-         output_dir_path=FLAGS.output_dir,
-         mode=FLAGS.mode,
-         import_names=FLAGS.imports).run()
+  Runner(
+      config_file_path=FLAGS.config_file,
+      input_dir_path=FLAGS.input_dir,
+      output_dir_path=FLAGS.output_dir,
+      mode=FLAGS.mode,
+      import_names=FLAGS.imports,
+      import_proxy_entities=FLAGS.import_proxy_entities,
+  ).run()
   logging.info("Runner finished successfully.")
 
 

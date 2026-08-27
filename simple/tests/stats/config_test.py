@@ -476,3 +476,11 @@ class TestConfig(unittest.TestCase):
       Config({
           "svHierarchyPropsBlocklist": ["gender", 123]
       }).sv_hierarchy_props_blocklist()
+
+  def test_import_proxy_entities(self):
+    # Default is True
+    self.assertTrue(Config({}).import_proxy_entities())
+    # Explicit True in config
+    self.assertTrue(Config({"importProxyEntities": True}).import_proxy_entities())
+    # Explicit False in config
+    self.assertFalse(Config({"importProxyEntities": False}).import_proxy_entities())

@@ -63,6 +63,7 @@ _SV_HIERARCHY_PROPS_BLOCKLIST_FIELD = "svHierarchyPropsBlocklist"
 _CUSTOM_SVG_PREFIX_FIELD = "customSvgPrefix"
 _DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD = "defaultCustomRootStatVarGroupName"
 _CUSTOM_ID_NAMESPACE_FIELD = "customIdNamespace"
+_IMPORT_PROXY_ENTITIES_PROPERTY = "importProxyEntities"
 
 
 class Config:
@@ -223,6 +224,9 @@ class Config:
 
   def include_input_subdirs(self) -> bool:
     return self.data.get(_INCLUDE_INPUT_SUBDIRS_PROPERTY) or False
+
+  def import_proxy_entities(self) -> bool:
+    return self.data.get(_IMPORT_PROXY_ENTITIES_PROPERTY, True)
 
   def special_files(self) -> dict[str, str]:
     special_files: dict[str, str] = {}
