@@ -89,10 +89,8 @@ public class McfMutatorTest {
         McfMutator.mutate(
             TestUtil.graphFromMcf(mcf).toBuilder(),
             TestUtil.newLogCtx(),
-            /* isBaseDc= */ true, /*
-                                   * generateFallbacks=
-                                   */
-            true);
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
     String want =
         "Node: LegacyObs\n"
             + "measuredValue: \"10000000.0\"\n"
@@ -117,10 +115,8 @@ public class McfMutatorTest {
         McfMutator.mutate(
             TestUtil.graphFromMcf(mcf).toBuilder(),
             TestUtil.newLogCtx(),
-            /* isBaseDc= */ true, /*
-                                   * generateFallbacks=
-                                   */
-            true);
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
     assertEquals(McfUtil.serializeMcfGraph(got, true), mcf);
   }
 
@@ -137,10 +133,8 @@ public class McfMutatorTest {
         McfMutator.mutate(
             TestUtil.graphFromMcf(mcf).toBuilder(),
             TestUtil.newLogCtx(),
-            /* isBaseDc= */ true, /*
-                                   * generateFallbacks=
-                                   */
-            true);
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
 
     String want =
         "Node: dcid:FinancialAid\n"
@@ -170,10 +164,8 @@ public class McfMutatorTest {
         McfMutator.mutate(
             TestUtil.graphFromMcf(mcf).toBuilder(),
             TestUtil.newLogCtx(),
-            /* isBaseDc= */ false, /*
-                                    * generateFallbacks=
-                                    */
-            true);
+            /* isBaseDc= */ false,
+            /* generateFallbacks= */ true);
 
     String want =
         "Node: dcid:FinancialAid\n"
