@@ -34,7 +34,10 @@ public class McfMutatorTest {
             + "bogusProp: [LatLong 37.3884812 -122.0834373]";
     Mcf.McfGraph got =
         McfMutator.mutate(
-            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ true);
+            TestUtil.graphFromMcf(mcf).toBuilder(),
+            TestUtil.newLogCtx(),
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
 
     String want =
         "Node: USDollar1000To2000\n"
@@ -60,7 +63,7 @@ public class McfMutatorTest {
             + "definition: \"mp=count,pt=Person,age=Year18,bogusProp=latLong/3738848_-12208344,income=USDollar1000To2000\"\n"
             + "income: dcid:USDollar1000To2000\n"
             + "measuredProperty: dcid:count\n"
-            + "name: \"Population: Year 18, Lat Long/3738848 -12208344, US Dollar 1000 To 2000\"\n"
+            + "name: \"Population: year 18, lat long/3738848 -12208344, US dollar 1000 to 2000\"\n"
             + "populationType: dcid:Person\n"
             + "statType: dcid:measuredValue\n"
             + "typeOf: dcid:StatisticalVariable\n"
@@ -84,7 +87,10 @@ public class McfMutatorTest {
             + "observationDate: \"2009\"\n";
     Mcf.McfGraph got =
         McfMutator.mutate(
-            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ true);
+            TestUtil.graphFromMcf(mcf).toBuilder(),
+            TestUtil.newLogCtx(),
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
     String want =
         "Node: LegacyObs\n"
             + "measuredValue: \"10000000.0\"\n"
@@ -107,7 +113,10 @@ public class McfMutatorTest {
             + "\n";
     Mcf.McfGraph got =
         McfMutator.mutate(
-            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ true);
+            TestUtil.graphFromMcf(mcf).toBuilder(),
+            TestUtil.newLogCtx(),
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
     assertEquals(McfUtil.serializeMcfGraph(got, true), mcf);
   }
 
@@ -122,7 +131,10 @@ public class McfMutatorTest {
             + "someActualConstraint: dcs:someValue\n";
     Mcf.McfGraph got =
         McfMutator.mutate(
-            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ true);
+            TestUtil.graphFromMcf(mcf).toBuilder(),
+            TestUtil.newLogCtx(),
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
 
     String want =
         "Node: dcid:FinancialAid\n"
@@ -130,7 +142,7 @@ public class McfMutatorTest {
             + "dcid: \"FinancialAid\"\n"
             + "definition: \"mp=amount,pt=FinancialTransaction,someActualConstraint=someValue\"\n"
             + "measuredProperty: dcid:amount\n"
-            + "name: \"Amount of Financial Transaction: Some Value\"\n"
+            + "name: \"Amount of financial transaction: some value\"\n"
             + "observationProperties: dcid:destinationCountry\n"
             + "populationType: dcid:FinancialTransaction\n"
             + "someActualConstraint: dcid:someValue\n"
@@ -150,14 +162,17 @@ public class McfMutatorTest {
             + "someActualConstraint: dcs:someValue\n";
     Mcf.McfGraph got =
         McfMutator.mutate(
-            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ false);
+            TestUtil.graphFromMcf(mcf).toBuilder(),
+            TestUtil.newLogCtx(),
+            /* isBaseDc= */ false,
+            /* generateFallbacks= */ true);
 
     String want =
         "Node: dcid:FinancialAid\n"
             + "constraintProperties: dcid:someActualConstraint\n"
             + "dcid: \"FinancialAid\"\n"
             + "measuredProperty: dcid:amount\n"
-            + "name: \"Amount of Financial Transaction: Some Value\"\n"
+            + "name: \"Amount of financial transaction: some value\"\n"
             + "observationProperties: dcid:destinationCountry\n"
             + "populationType: dcid:FinancialTransaction\n"
             + "someActualConstraint: dcid:someValue\n"
@@ -177,7 +192,10 @@ public class McfMutatorTest {
             + "someActualConstraint: dcs:someValue\n";
     Mcf.McfGraph got =
         McfMutator.mutate(
-            TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx(), /* isBaseDc= */ false);
+            TestUtil.graphFromMcf(mcf).toBuilder(),
+            TestUtil.newLogCtx(),
+            /* isBaseDc= */ false,
+            /* generateFallbacks= */ true);
 
     String want =
         "Node: dcid:FinancialAid\n"
@@ -185,7 +203,7 @@ public class McfMutatorTest {
             + "dcid: \"FinancialAid\"\n"
             + "definition: \"custom_definition_string\"\n"
             + "measuredProperty: dcid:amount\n"
-            + "name: \"Amount of Financial Transaction: Some Value\"\n"
+            + "name: \"Amount of financial transaction: some value\"\n"
             + "populationType: dcid:FinancialTransaction\n"
             + "someActualConstraint: dcid:someValue\n"
             + "typeOf: dcid:StatisticalVariable\n"
