@@ -15,7 +15,55 @@ main:
           - stagingHelperUrl: ${"https://" + default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + "-staging-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - skipImportJob: ${string(default(map.get(args, "skipImportJob"), false)) == "true"}
           - skipStagingIngestion: ${string(default(map.get(args, "skipStagingIngestion"), false)) == "true"}
-          - skipProdIngestion: ${string(default(map.get(args, "skipProdIngestion"), true)) == "true"}
+          - prodDenylist:
+              "BLS_CES": true
+              "BLS_CES_State": true
+              "BLS_CPI": true
+              "CDC500": true
+              "CDC_OzoneCounty": true
+              "CDC_PM25County": true
+              "CensusCountyBusinessPatterns": true
+              "CensusSAHIE": true
+              "EIA_Coal": true
+              "EIA_Electricity": true
+              "EPA_EJSCREEN": true
+              "EPA_GHGRP": true
+              "EurostatData_Education_Attainment": true
+              "EurostatData_Education_Enrollment": true
+              "EurostatData_Employment_Per_Sector": true
+              "FAO_Currency_statvar": true
+              "FARS_CrashData": true
+              "FBIGovCrime": true
+              "FBIHateCrimePublications": true
+              "IndiaNSS_HealthAilments": true
+              "India_RBIStateDomesticProduct": true
+              "NASA_VIIRSActiveFiresEvents": true
+              "NCES_HBCU_Enrollment_Import": true
+              "NCES_PrivateSchool": true
+              "NCES_PublicSchool": true
+              "NCES_STEM_Degrees_Import": true
+              "NCES_SchoolDistrict": true
+              "NCHS_BRFSS_Asthma": true
+              "NCSES_Demographics_SEH_Import": true
+              "NCSES_Median_Annual_Salary_Import": true
+              "NOAA_GPCC_StandardardizedPrecipitationIndex": true
+              "NOAA_GlobalForecastSystem": true
+              "OECDRegionalDemography_Deaths": true
+              "OECDRegionalDemography_LifeExpectancy": true
+              "OECDRegionalDemography_Mortality": true
+              "OECDRegionalDemography_Population": true
+              "OECDRegionalDemography_PopulationDensity": true
+              "UNEnergy": true
+              "USCensusPEP_AgeSexRaceHispanicOrigin": true
+              "USDA_AgricultureCensus": true
+              "USDA_AgricultureSurvey": true
+              "USFed_ConstantMaturityRates_Test": true
+              "USNationalPrisonerStatistics": true
+              "WorldBankDatasets": true
+              "WorldDevelopmentIndicators": true
+          - shortImportName: ${text.split(importName, ":")[len(text.split(importName, ":")) - 1]}
+          - isProdDenylisted: ${default(map.get(prodDenylist, importName), false) or default(map.get(prodDenylist, shortImportName), false)}
+          - skipProdIngestion: ${isProdDenylisted or string(default(map.get(args, "skipProdIngestion"), true)) == "true"}
           - defaultResult:
               status: "SKIPPED"
           - startTime: ${sys.now()}
