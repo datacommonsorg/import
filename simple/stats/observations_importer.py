@@ -186,7 +186,7 @@ class ObservationsImporter(Importer):
                                                        sc.PREDICATE_TYPE_OF)
 
     if dcid2type:
-      logging.info("Importing %s of %s entities.", len(dcid2type),
+      logging.info("Importing %s of %s proxy nodes.", len(dcid2type),
                    len(new_entity_dcids))
       self.nodes.entities_with_types(dcid2type, provenance_id=prov_id)
     elif self.entity_type:
