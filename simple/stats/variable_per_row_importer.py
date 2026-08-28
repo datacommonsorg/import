@@ -343,6 +343,17 @@ class VariablePerRowImporter(Importer):
     return df
 
   def _add_entity_nodes(self) -> None:
+    # NOTE: Generation of proxy entity nodes from Base Data Commons is controlled
+    # by import_proxy_entities. Observation nodes already reference the place/entity
+    # DCID directly in observationAbout, and disabling proxy node creation prevents
+    # generating redundant proxy entity nodes in the custom graph and avoids unnecessary
+    # Base DC API calls during ingestion.
+    if not self.config.import_proxy_entities():
+      logging.debug(
+          "Skipping proxy entity node generation (import_proxy_entities is disabled)."
+      )
+      return
+
     # Get entity nodes that are not already recorded.
     new_entity_dcids = [
         strip_namespace(dcid)

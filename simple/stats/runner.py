@@ -258,6 +258,7 @@ class Runner:
       mode: RunMode = RunMode.CUSTOM_DC,
       import_names: Optional[list[str]] = None,
       use_multiprocessing: bool = True,
+      import_proxy_entities: Optional[bool] = None,
   ) -> None:
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
@@ -338,6 +339,10 @@ class Runner:
             config_file_path=constants.CONFIG_JSON_FILE_NAME,
             config_file_dir=input_store.as_dir(),
         )
+
+    # Special file handlers and flags
+    if import_proxy_entities is not None:
+      self.config.data["importProxyEntities"] = import_proxy_entities
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json

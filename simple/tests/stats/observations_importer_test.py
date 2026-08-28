@@ -146,3 +146,55 @@ class TestObservationsImporter(unittest.TestCase):
           importer.df["dcid"].tolist(),
           ["place/custom_1", "geoId/06", "geoId/06"],
       )
+
+  def test_add_entity_nodes_disabled(self):
+    config = Config({
+        "inputFiles": [{
+            "pattern": "data.csv"
+        }],
+        "importProxyEntities": False,
+    })
+    nodes = Nodes(config)
+    mock_input_file = MagicMock()
+    mock_input_file.path = "data.csv"
+    importer = ObservationsImporter(
+        input_file=mock_input_file,
+        db=MagicMock(),
+        debug_resolve_file=MagicMock(),
+        reporter=MagicMock(),
+        nodes=nodes,
+    )
+    importer.df = pd.DataFrame({"dcid": ["country/USA", "country/FRA"]})
+    with mock.patch.object(dc_client,
+                           "get_property_of_entities") as mock_get_props:
+      importer._add_entity_nodes()
+      mock_get_props.assert_not_called()
+      self.assertEqual(len(nodes.entities), 0)
+
+  def test_add_entity_nodes_enabled(self):
+    config = Config({
+        "inputFiles": [{
+            "pattern": "data.csv"
+        }],
+        "importProxyEntities": True,
+    })
+    nodes = Nodes(config)
+    mock_input_file = MagicMock()
+    mock_input_file.path = "data.csv"
+    importer = ObservationsImporter(
+        input_file=mock_input_file,
+        db=MagicMock(),
+        debug_resolve_file=MagicMock(),
+        reporter=MagicMock(),
+        nodes=nodes,
+    )
+    importer.df = pd.DataFrame({"dcid": ["country/USA", "country/FRA"]})
+    with mock.patch.object(dc_client,
+                           "get_property_of_entities",
+                           return_value={
+                               "country/USA": "Country",
+                               "country/FRA": "Country"
+                           }) as mock_get_props:
+      importer._add_entity_nodes()
+      mock_get_props.assert_called_once()
+      self.assertEqual(len(nodes.entities), 2)
