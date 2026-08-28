@@ -165,7 +165,8 @@ class TestObservationsImporter(unittest.TestCase):
         nodes=nodes,
     )
     importer.df = pd.DataFrame({"dcid": ["country/USA", "country/FRA"]})
-    with mock.patch.object(dc_client, "get_property_of_entities") as mock_get_props:
+    with mock.patch.object(dc_client,
+                           "get_property_of_entities") as mock_get_props:
       importer._add_entity_nodes()
       mock_get_props.assert_not_called()
       self.assertEqual(len(nodes.entities), 0)
@@ -188,13 +189,12 @@ class TestObservationsImporter(unittest.TestCase):
         nodes=nodes,
     )
     importer.df = pd.DataFrame({"dcid": ["country/USA", "country/FRA"]})
-    with mock.patch.object(
-        dc_client,
-        "get_property_of_entities",
-        return_value={
-            "country/USA": "Country",
-            "country/FRA": "Country"
-        }) as mock_get_props:
+    with mock.patch.object(dc_client,
+                           "get_property_of_entities",
+                           return_value={
+                               "country/USA": "Country",
+                               "country/FRA": "Country"
+                           }) as mock_get_props:
       importer._add_entity_nodes()
       mock_get_props.assert_called_once()
       self.assertEqual(len(nodes.entities), 2)

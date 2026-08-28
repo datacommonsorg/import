@@ -226,7 +226,10 @@ class Config:
     return self.data.get(_INCLUDE_INPUT_SUBDIRS_PROPERTY) or False
 
   def import_proxy_entities(self) -> bool:
-    return self.data.get(_IMPORT_PROXY_ENTITIES_PROPERTY, True)
+    val = self.data.get(_IMPORT_PROXY_ENTITIES_PROPERTY, True)
+    if isinstance(val, str):
+      return val.lower() in ("true", "1", "yes")
+    return bool(val)
 
   def special_files(self) -> dict[str, str]:
     special_files: dict[str, str] = {}
