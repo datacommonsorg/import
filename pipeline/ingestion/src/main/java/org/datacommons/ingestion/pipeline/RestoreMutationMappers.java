@@ -1,0 +1,151 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package org.datacommons.ingestion.pipeline;
+
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Struct;
+import com.google.cloud.spanner.Value;
+import java.io.Serializable;
+
+/**
+ * Utility functions for mapping historical Spanner {@link Struct} records to safe restore {@link
+ * Mutation}s.
+ *
+ * <p>Encapsulates all column projection rules, null-safety guards, and Spanner datatype mappings
+ * (e.g. omitting STORED generated columns in TimeSeries, serializing JSON, and handling byte
+ * arrays).
+ */
+public final class RestoreMutationMappers implements Serializable {
+  private RestoreMutationMappers() {}
+
+  public static Mutation toNodeRestoreMutation(Struct struct, String nodeTableName) {
+    Mutation.WriteBuilder builder =
+        Mutation.newInsertOrUpdateBuilder(nodeTableName)
+            .set("subject_id")
+            .to(struct.getString("subject_id"))
+            .set("last_update_timestamp")
+            .to(Value.COMMIT_TIMESTAMP);
+
+    if (!struct.isNull("value")) {
+      builder.set("value").to(struct.getString("value"));
+    }
+    if (!struct.isNull("bytes")) {
+      builder.set("bytes").to(struct.getBytes("bytes"));
+    }
+    if (!struct.isNull("name")) {
+      builder.set("name").to(struct.getString("name"));
+    }
+    if (!struct.isNull("types")) {
+      builder.set("types").toStringArray(struct.getStringList("types"));
+    }
+    return builder.build();
+  }
+
+  public static Mutation toEdgeRestoreMutation(Struct struct, String edgeTableName) {
+    return Mutation.newInsertOrUpdateBuilder(edgeTableName)
+        .set("subject_id")
+        .to(struct.getString("subject_id"))
+        .set("predicate")
+        .to(struct.getString("predicate"))
+        .set("object_id")
+        .to(struct.getString("object_id"))
+        .set("provenance")
+        .to(struct.getString("provenance"))
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
+        .build();
+  }
+
+  public static Mutation toTimeSeriesRestoreMutation(Struct struct, String timeSeriesTableName) {
+    Mutation.WriteBuilder builder =
+        Mutation.newInsertOrUpdateBuilder(timeSeriesTableName)
+            .set("variable_measured")
+            .to(struct.getString("variable_measured"))
+            // entity1 is a STORED generated column; DO NOT write to it directly!
+            .set("extra_entities_id")
+            .to(struct.getString("extra_entities_id"))
+            .set("facet_id")
+            .to(struct.getString("facet_id"))
+            .set("last_update_timestamp")
+            .to(Value.COMMIT_TIMESTAMP);
+
+    if (!struct.isNull("entities")) {
+      builder.set("entities").to(Value.json(struct.getJson("entities")));
+    }
+    if (!struct.isNull("facet")) {
+      builder.set("facet").to(Value.json(struct.getJson("facet")));
+    }
+    return builder.build();
+  }
+
+  public static Mutation toObservationRestoreMutation(Struct struct, String observationTableName) {
+    return Mutation.newInsertOrUpdateBuilder(observationTableName)
+        .set("variable_measured")
+        .to(struct.getString("variable_measured"))
+        .set("entity1")
+        .to(struct.getString("entity1"))
+        .set("extra_entities_id")
+        .to(struct.getString("extra_entities_id"))
+        .set("facet_id")
+        .to(struct.getString("facet_id"))
+        .set("date")
+        .to(struct.getString("date"))
+        .set("value")
+        .to(struct.getString("value"))
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
+        .build();
+  }
+
+  public static Mutation toKeyValueStoreRestoreMutation(
+      Struct struct, String keyValueStoreTableName) {
+    Mutation.WriteBuilder builder =
+        Mutation.newInsertOrUpdateBuilder(keyValueStoreTableName)
+            .set("type")
+            .to(struct.getString("type"))
+            .set("key")
+            .to(struct.getString("key"))
+            .set("provenance")
+            .to(struct.getString("provenance"));
+
+    if (!struct.isNull("value")) {
+      builder.set("value").to(Value.json(struct.getJson("value")));
+    }
+    return builder.build();
+  }
+
+  public static Mutation toNodeEmbeddingRestoreMutation(
+      Struct struct, String nodeEmbeddingTableName) {
+    Mutation.WriteBuilder builder =
+        Mutation.newInsertOrUpdateBuilder(nodeEmbeddingTableName)
+            .set("subject_id")
+            .to(struct.getString("subject_id"))
+            .set("embedding_label")
+            .to(struct.getString("embedding_label"))
+            .set("embedding_content_key")
+            .to(struct.getString("embedding_content_key"));
+
+    if (!struct.isNull("embedding_content")) {
+      builder.set("embedding_content").to(Value.json(struct.getJson("embedding_content")));
+    }
+    if (!struct.isNull("node_types")) {
+      builder.set("node_types").toStringArray(struct.getStringList("node_types"));
+    }
+    if (!struct.isNull("embeddings")) {
+      builder.set("embeddings").toFloat64Array(struct.getDoubleList("embeddings"));
+    }
+    return builder.build();
+  }
+}
