@@ -923,16 +923,16 @@ class TestSpannerClient(unittest.TestCase):
           Run the following shell command to compute the new SHA256 hash:
             sha256sum pipeline/workflow/ingestion-helper/clients/schema.sql
           or via Python:
-            python3 -c "import hashlib; print(hashlib.sha256(open('pipeline/workflow/ingestion-helper/clients/schema.sql', 'rb').read()).hexdigest())"
+            python3 -c "import hashlib; print(hashlib.sha256(open('pipeline/workflow/ingestion-helper/clients/schema.sql', 'r', encoding='utf-8').read().encode('utf-8')).hexdigest())"
         """
         import hashlib
 
         schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
-        with open(schema_path, "rb") as f:
+        with open(schema_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         expected_hash = "4a2560c8c72486e744be7026cfaf14a67b5abc43e3a510539aff4b77aef524fb"
-        actual_hash = hashlib.sha256(content).hexdigest()
+        actual_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
         self.assertEqual(
             actual_hash,
             expected_hash,
