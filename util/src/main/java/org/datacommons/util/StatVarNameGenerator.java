@@ -23,15 +23,15 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
  *   <li><b>Prefix:</b> Derived from {@code statType} (e.g., "Median") and time-based {@code
  *       measurementQualifier}s (e.g., "Annual").
  *   <li><b>MeasureAndPop:</b> Combines {@code measuredProperty} and {@code populationType}. For
- *       example, "Count of student". If they overlap, redundancy is avoided.
- *   <li><b>Qualifiers:</b> Non-time {@code measurementQualifier}s in parentheses, e.g., "(real)".
+ *       example, "Count Of Student". If they overlap, redundancy is avoided.
+ *   <li><b>Qualifiers:</b> Non-time {@code measurementQualifier}s in parentheses, e.g., "(Real)".
  *   <li><b>Constraints:</b> A comma-separated list of values for filtering properties like {@code
  *       gender}, {@code race}, etc., prepended with a colon.
  *   <li><b>Denominator:</b> Derived from {@code measurementDenominator}, typically resulting in
- *       "(per capita)" or "(as fraction of ...)".
+ *       "(Per Capita)" or "(As Fraction Of ...)".
  * </ul>
  *
- * <p><strong>Example:</strong> "Annual count of student (real): female, white (per capita)"
+ * <p><strong>Example:</strong> "Annual Count Of Student (Real): Female, White (Per Capita)"
  */
 public class StatVarNameGenerator {
 
@@ -53,7 +53,7 @@ public class StatVarNameGenerator {
 
   // Curated map of overrides for measuredProperty + populationType combinations.
   private static final Map<String, String> MEASURE_AND_POP_OVERRIDES =
-      ImmutableMap.of("count of person", "population");
+      ImmutableMap.of("Count Of Person", "Population");
 
   /** Checks whether the given node types indicate a StatisticalVariable or slice. */
   public static boolean isStatVar(List<String> types) {
@@ -86,25 +86,7 @@ public class StatVarNameGenerator {
 
     List<String> words = new ArrayList<>();
     for (String w : SPACE_SPLITTER.split(s)) {
-      // Identify acronyms (words with at least one uppercase letter and no lowercase
-      // letters).
-      boolean hasUpper = false;
-      boolean hasLower = false;
-      for (int i = 0; i < w.length(); i++) {
-        char c = w.charAt(i);
-        if (c >= 'a' && c <= 'z') {
-          hasLower = true;
-          break;
-        }
-        if (c >= 'A' && c <= 'Z') {
-          hasUpper = true;
-        }
-      }
-      if (hasUpper && !hasLower) {
-        words.add(w);
-      } else {
-        words.add(w.toLowerCase());
-      }
+      words.add(Character.toUpperCase(w.charAt(0)) + (w.length() > 1 ? w.substring(1) : ""));
     }
     return SPACE_JOINER.join(words);
   }
@@ -191,18 +173,18 @@ public class StatVarNameGenerator {
       } else if (!measureAndPop.equalsIgnoreCase(formattedPopType)
           && !measureAndPop.toLowerCase().contains(formattedPopType.toLowerCase())
           && !formattedPopType.toLowerCase().contains(measureAndPop.toLowerCase())) {
-        // If measure and popType are distinct, combine them (e.g., "Count of Student").
-        measureAndPop = measureAndPop + " of " + formattedPopType;
+        // If measure and popType are distinct, combine them (e.g., "Count Of Student").
+        measureAndPop = measureAndPop + " Of " + formattedPopType;
       } else if (formattedPopType.toLowerCase().contains(measureAndPop.toLowerCase())
           && !measureAndPop.equalsIgnoreCase(formattedPopType)) {
         // If popType contains the measure (e.g., popType="Person With Age",
         // measure="Age"),
-        // use popType to avoid redundancy like "Age of Person With Age".
+        // use popType to avoid redundancy like "Age Of Person With Age".
         measureAndPop = formattedPopType;
       }
-      // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count of
+      // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count Of
       // Student"
-      // contains "Student"), it skips appending to avoid "Count of Student of
+      // contains "Student"), it skips appending to avoid "Count Of Student Of
       // Student".
     }
 
@@ -231,7 +213,7 @@ public class StatVarNameGenerator {
         if ("true".equalsIgnoreCase(val)) {
           constraintVals.add(formatToken(prop));
         } else if ("false".equalsIgnoreCase(val)) {
-          constraintVals.add(formatToken(prop) + " (false)");
+          constraintVals.add(formatToken(prop) + " (False)");
         } else {
           String formattedVal = formatToken(val);
           if (!formattedVal.isEmpty()) {
@@ -250,13 +232,13 @@ public class StatVarNameGenerator {
       // Simplify human population denominators to "Per capita"
       if ("Count_Person".equalsIgnoreCase(measurementDenominator)
           || "Person".equalsIgnoreCase(measurementDenominator)) {
-        mdenomList.add("(per capita)");
+        mdenomList.add("(Per capita)");
       } else {
         List<String> denomParts = new ArrayList<>();
         for (String p : UNDERSCORE_SPLITTER.split(measurementDenominator)) {
           denomParts.add(formatToken(p));
         }
-        mdenomList.add("(As fraction of " + SPACE_JOINER.join(denomParts) + ")");
+        mdenomList.add("(As Fraction Of " + SPACE_JOINER.join(denomParts) + ")");
       }
     }
     return mdenomList;
@@ -294,10 +276,6 @@ public class StatVarNameGenerator {
       }
     }
 
-    baseName = baseName.trim();
-    if (!baseName.isEmpty()) {
-      baseName = Character.toUpperCase(baseName.charAt(0)) + baseName.substring(1);
-    }
-    return baseName;
+    return baseName.trim();
   }
 }
