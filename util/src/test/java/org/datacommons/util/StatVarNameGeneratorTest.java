@@ -84,7 +84,7 @@ public class StatVarNameGeneratorTest {
                 Values.newBuilder().addTypedValues(tv("Count_Person")).build())
             .build();
 
-    assertEquals("Population: Is Urban (Per capita)", StatVarNameGenerator.generateName(pvs));
+    assertEquals("Population: Is Urban (Per Capita)", StatVarNameGenerator.generateName(pvs));
   }
 
   @Test

@@ -229,10 +229,10 @@ public class StatVarNameGenerator {
     // Measurement Denominator
     List<String> mdenomList = new ArrayList<>();
     if (!measurementDenominator.isEmpty()) {
-      // Simplify human population denominators to "Per capita"
+      // Simplify human population denominators to "Per Capita"
       if ("Count_Person".equalsIgnoreCase(measurementDenominator)
           || "Person".equalsIgnoreCase(measurementDenominator)) {
-        mdenomList.add("(Per capita)");
+        mdenomList.add("(Per Capita)");
       } else {
         List<String> denomParts = new ArrayList<>();
         for (String p : UNDERSCORE_SPLITTER.split(measurementDenominator)) {
