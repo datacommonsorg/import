@@ -643,7 +643,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue(
-                                                                            "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
@@ -791,7 +791,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue(
-                                                                            "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
@@ -926,8 +926,7 @@ public class GraphTransformerTest {
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
-                                                                    .setValue(
-                                                                            "Amount Of Financial Transaction: Some Value")
+                                    .setValue("Amount Of Financial Transaction: Some Value")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
@@ -1164,7 +1163,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue(
-                                                                            "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
