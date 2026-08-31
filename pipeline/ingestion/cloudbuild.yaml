@@ -45,12 +45,12 @@ steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
-      - 'container'
-      - 'images'
-      - 'add-tag'
+      - 'artifacts'
+      - 'docker'
+      - 'tags'
+      - 'add'
       - '${_IMAGE_GCR_PATH}:${_VERSION}'
       - '${_IMAGE_GCR_PATH}:latest'
-      - '--quiet'
     id: 'tag-image-latest'
 
 availableSecrets:
