@@ -77,6 +77,28 @@
             "helpText": "Whether to skip wait operations between pipeline stages.",
             "paramType": "TEXT",
             "isOptional": true
+        },
+        {
+            "name": "isRollback",
+            "label": "Is Rollback Mode",
+            "helpText": "Whether to run in Rollback Mode instead of Normal Ingestion.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "rollbackTimestamp",
+            "label": "Rollback Pre-run Timestamp",
+            "helpText": "Historical pre-run timestamp (T_pre) to restore from (RFC 3339 / ISO 8601).",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "targetProvenances",
+            "label": "Target Provenances",
+            "helpText": "Optional JSON list or comma-separated string of explicit target provenances to roll back.",
+            "paramType": "TEXT",
+            "isOptional": true
         }
     ]
 }
+
