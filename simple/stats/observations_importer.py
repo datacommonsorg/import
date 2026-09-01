@@ -146,6 +146,16 @@ class ObservationsImporter(Importer):
     self.db.insert_observations(observations_df, self.input_file)
 
   def _add_entity_nodes(self) -> None:
+    # NOTE: Generation of proxy entity nodes from Base Data Commons is controlled
+    # by import_proxy_entities. Observation nodes already reference the place/entity
+    # DCID directly, and disabling proxy node creation prevents generating redundant
+    # proxy entity nodes in the custom graph and avoids unnecessary Base DC API calls.
+    if not self.config.import_proxy_entities():
+      logging.debug(
+          "Skipping proxy entity node generation (import_proxy_entities is disabled)."
+      )
+      return
+
     # Convert entity dcids to dict.
     # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
     entity_dcids: dict[str, bool] = {
@@ -176,7 +186,7 @@ class ObservationsImporter(Importer):
                                                        sc.PREDICATE_TYPE_OF)
 
     if dcid2type:
-      logging.info("Importing %s of %s entities.", len(dcid2type),
+      logging.info("Importing %s of %s proxy nodes.", len(dcid2type),
                    len(new_entity_dcids))
       self.nodes.entities_with_types(dcid2type, provenance_id=prov_id)
     elif self.entity_type:

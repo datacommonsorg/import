@@ -16,10 +16,8 @@ typeOf: dcid:Song
 # From misc.mcf:15
 # Error: Failed to assign DCID :: type: 'StatisticalVariable', node: 'SVId'
 Node: SVId
-definition: "mp=count,pt=Person"
 populationType: dcid:Person
 measuredProperty: dcid:count
-name: "Population"
 typeOf: dcid:StatisticalVariable
 
 # From misc.mcf:45

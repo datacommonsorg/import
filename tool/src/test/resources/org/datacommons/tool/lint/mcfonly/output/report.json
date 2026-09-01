@@ -2,7 +2,7 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "Existence_NumChecks": "211",
+        "Existence_NumChecks": "192",
         "NumNodeSuccesses": "6",
         "Existence_NumDcCalls": "1"
       }

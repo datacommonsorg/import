@@ -23,15 +23,15 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
  *   <li><b>Prefix:</b> Derived from {@code statType} (e.g., "Median") and time-based {@code
  *       measurementQualifier}s (e.g., "Annual").
  *   <li><b>MeasureAndPop:</b> Combines {@code measuredProperty} and {@code populationType}. For
- *       example, "Count of Student". If they overlap, redundancy is avoided.
+ *       example, "Count Of Student". If they overlap, redundancy is avoided.
  *   <li><b>Qualifiers:</b> Non-time {@code measurementQualifier}s in parentheses, e.g., "(Real)".
  *   <li><b>Constraints:</b> A comma-separated list of values for filtering properties like {@code
  *       gender}, {@code race}, etc., prepended with a colon.
  *   <li><b>Denominator:</b> Derived from {@code measurementDenominator}, typically resulting in
- *       "(Per capita)" or "(As fraction of ...)".
+ *       "(Per Capita)" or "(As Fraction Of ...)".
  * </ul>
  *
- * <p><strong>Example:</strong> "Annual Count of Student (Real): Female, White (Per capita)"
+ * <p><strong>Example:</strong> "Annual Count Of Student (Real): Female, White (Per Capita)"
  */
 public class StatVarNameGenerator {
 
@@ -53,7 +53,7 @@ public class StatVarNameGenerator {
 
   // Curated map of overrides for measuredProperty + populationType combinations.
   private static final Map<String, String> MEASURE_AND_POP_OVERRIDES =
-      ImmutableMap.of("Count of Person", "Population");
+      ImmutableMap.of("Count Of Person", "Population");
 
   /** Checks whether the given node types indicate a StatisticalVariable or slice. */
   public static boolean isStatVar(List<String> types) {
@@ -173,18 +173,18 @@ public class StatVarNameGenerator {
       } else if (!measureAndPop.equalsIgnoreCase(formattedPopType)
           && !measureAndPop.toLowerCase().contains(formattedPopType.toLowerCase())
           && !formattedPopType.toLowerCase().contains(measureAndPop.toLowerCase())) {
-        // If measure and popType are distinct, combine them (e.g., "Count of Student").
-        measureAndPop = measureAndPop + " of " + formattedPopType;
+        // If measure and popType are distinct, combine them (e.g., "Count Of Student").
+        measureAndPop = measureAndPop + " Of " + formattedPopType;
       } else if (formattedPopType.toLowerCase().contains(measureAndPop.toLowerCase())
           && !measureAndPop.equalsIgnoreCase(formattedPopType)) {
         // If popType contains the measure (e.g., popType="Person With Age",
         // measure="Age"),
-        // use popType to avoid redundancy like "Age of Person With Age".
+        // use popType to avoid redundancy like "Age Of Person With Age".
         measureAndPop = formattedPopType;
       }
-      // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count of
+      // Implicitly, if measureAndPop contains formattedPopType (e.g., "Count Of
       // Student"
-      // contains "Student"), it skips appending to avoid "Count of Student of
+      // contains "Student"), it skips appending to avoid "Count Of Student Of
       // Student".
     }
 
@@ -229,16 +229,16 @@ public class StatVarNameGenerator {
     // Measurement Denominator
     List<String> mdenomList = new ArrayList<>();
     if (!measurementDenominator.isEmpty()) {
-      // Simplify human population denominators to "Per capita"
+      // Simplify human population denominators to "Per Capita"
       if ("Count_Person".equalsIgnoreCase(measurementDenominator)
           || "Person".equalsIgnoreCase(measurementDenominator)) {
-        mdenomList.add("(Per capita)");
+        mdenomList.add("(Per Capita)");
       } else {
         List<String> denomParts = new ArrayList<>();
         for (String p : UNDERSCORE_SPLITTER.split(measurementDenominator)) {
           denomParts.add(formatToken(p));
         }
-        mdenomList.add("(As fraction of " + SPACE_JOINER.join(denomParts) + ")");
+        mdenomList.add("(As Fraction Of " + SPACE_JOINER.join(denomParts) + ")");
       }
     }
     return mdenomList;
