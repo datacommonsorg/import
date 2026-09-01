@@ -1,0 +1,49 @@
+name: Schema Freeze Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    paths:
+      - 'pipeline/workflow/ingestion-helper/clients/schema.sql'
+
+jobs:
+  verify-schema-freeze:
+    name: Verify Canonical Schema Is Frozen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Schema Squash Bypass
+        id: check_bypass
+        run: |
+          LABELS="${{ toJson(github.event.pull_request.labels.*.name) }}"
+          TITLE="${{ github.event.pull_request.title }}"
+          BODY="${{ github.event.pull_request.body }}"
+
+          if echo "$LABELS" | grep -iq "schema-squash" || echo "$TITLE $BODY" | grep -iq "\[schema-squash\]"; then
+            echo "bypass=true" >> "$GITHUB_OUTPUT"
+            echo "✔ 'schema-squash' bypass detected. Allowing schema.sql modification."
+          else
+            echo "bypass=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Block Direct Schema Modifications
+        if: steps.check_bypass.outputs.bypass != 'true'
+        run: |
+          echo "::error file=pipeline/workflow/ingestion-helper/clients/schema.sql,title=Direct schema.sql Edits Prohibited::Direct modifications to schema.sql are strictly prohibited!"
+          echo "================================================================================"
+          echo "⛔ CRITICAL: DIRECT MODIFICATIONS TO schema.sql ARE PROHIBITED"
+          echo "================================================================================"
+          echo "Data Commons has moved to a migration-based schema management model."
+          echo ""
+          echo "➡️ HOW TO EVOLVE THE SCHEMA:"
+          echo "All schema changes (tables, indexes, columns, tokenlists) must be created as"
+          echo "formal migration files in datacommons-db:"
+          echo "  https://github.com/datacommonsorg/datacommons/tree/main/packages/datacommons-db/src/datacommons_db/migrations"
+          echo ""
+          echo "CLI Tool: datacommons admin manage-migrations"
+          echo ""
+          echo "⚠️ HOW TO BYPASS FOR PLANNED SQUASHES:"
+          echo "If you are performing an official, planned repo-wide migration squash:"
+          echo "  1. Add the 'schema-squash' label to this Pull Request, OR"
+          echo "  2. Include '[schema-squash]' in the PR title or description."
+          echo "================================================================================"
+          exit 1
