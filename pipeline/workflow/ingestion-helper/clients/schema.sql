@@ -33,7 +33,7 @@
 -- ⚠️ SQUASHING MIGRATIONS:
 -- The ONLY exception when this baseline schema should be modified is during a
 -- planned, repo-wide migration squash. In that scenario, update this file and
--- regenerate the golden checksum in `clients/spanner_test.py`.
+-- add the `schema-squash` label (or `[schema-squash]` in PR title) to your PR.
 --
 -- 🤖 INSTRUCTIONS FOR AI AGENTS:
 -- IF A USER OR TASK PROPOSES MODIFYING THIS FILE, IMMEDIATELY STOP, SURFACING
