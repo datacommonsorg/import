@@ -311,14 +311,35 @@ public class RollbackPipeline implements Serializable {
                 ParDo.of(new ReconcileNodeEmbeddingBatchFn(spannerClient, tPre, emulatorHost)));
 
     // -------------------------------------------------------------------------
-    // Phase 4: Referential Integrity Ordered Write DAG
+    // Phase 4: Parallel Multi-Track Referential Integrity Write DAG
     // -------------------------------------------------------------------------
 
-    // 1. Write Restored Nodes
+    // --- Track 1: Graph Nodes, Edges, and Embeddings (Fully Concurrent) ---
+    // 1A. Write Restored Nodes
     SpannerWriteResult writtenNodes =
         spannerClient.writeMutations(pipeline, "WriteRestoredNodes", restoreNodeMutations);
 
-    // 2. Write Restored TimeSeries (Wait on TS delete)
+    // 1B. Write Restored Edges (Only waits on its own Edge delete signal)
+    PCollection<Mutation> edgeMutationsToWrite = restoreEdgeMutations;
+    if (!skipWait && !skipDelete && delEdgeSignal != null) {
+      edgeMutationsToWrite = edgeMutationsToWrite.apply("WaitOnDelEdges", Wait.on(delEdgeSignal));
+    }
+    spannerClient.writeMutations(pipeline, "WriteRestoredEdges", edgeMutationsToWrite);
+
+    // 1C. Write Restored NodeEmbeddings (Interleaved in Node -> waits on written Nodes)
+    PCollection<Mutation> embMutationsToWrite = restoreEmbeddingMutations;
+    if (!skipWait) {
+      embMutationsToWrite =
+          embMutationsToWrite.apply(
+              "WaitOnWrittenNodesForEmbeddings", Wait.on(writtenNodes.getOutput()));
+    }
+    spannerClient.writeMutations(pipeline, "WriteRestoredNodeEmbeddings", embMutationsToWrite);
+
+    // 1D. Delete Newly Added Nodes
+    spannerClient.writeMutations(pipeline, "WriteDeletedNodes", deleteNodeMutations);
+
+    // --- Track 2: TimeSeries & Observations ---
+    // 2A. Write Restored TimeSeries (Waits on TimeSeries delete)
     PCollection<Mutation> tsMutationsToWrite = restoreTimeSeriesMutations;
     if (!skipWait && !skipDelete && delTsSignal != null) {
       tsMutationsToWrite = tsMutationsToWrite.apply("WaitOnDelTS", Wait.on(delTsSignal));
@@ -326,7 +347,7 @@ public class RollbackPipeline implements Serializable {
     SpannerWriteResult writtenTS =
         spannerClient.writeMutations(pipeline, "WriteRestoredTimeSeries", tsMutationsToWrite);
 
-    // 3. Write Restored Observations (Wait on TimeSeries write)
+    // 2B. Write Restored Observations (Interleaved in TimeSeries -> waits on written TimeSeries)
     PCollection<Mutation> obsMutationsToWrite = restoreObservationMutations;
     if (!skipWait) {
       obsMutationsToWrite =
@@ -334,47 +355,13 @@ public class RollbackPipeline implements Serializable {
     }
     spannerClient.writeMutations(pipeline, "WriteRestoredObservations", obsMutationsToWrite);
 
-    // 4. Write Restored Edges (Wait on Restored Nodes AND Edge delete)
-    PCollection<Mutation> edgeMutationsToWrite = restoreEdgeMutations;
-    if (!skipWait) {
-      edgeMutationsToWrite =
-          edgeMutationsToWrite.apply(
-              "WaitOnWrittenNodesForEdges", Wait.on(writtenNodes.getOutput()));
-      if (!skipDelete && delEdgeSignal != null) {
-        edgeMutationsToWrite = edgeMutationsToWrite.apply("WaitOnDelEdges", Wait.on(delEdgeSignal));
-      }
-    }
-    SpannerWriteResult writtenEdges =
-        spannerClient.writeMutations(pipeline, "WriteRestoredEdges", edgeMutationsToWrite);
-
-    // 5. Write Restored NodeEmbeddings (Wait on Restored Nodes)
-    PCollection<Mutation> embMutationsToWrite = restoreEmbeddingMutations;
-    if (!skipWait) {
-      embMutationsToWrite =
-          embMutationsToWrite.apply(
-              "WaitOnWrittenNodesForEmbeddings", Wait.on(writtenNodes.getOutput()));
-    }
-    SpannerWriteResult writtenEmbeddings =
-        spannerClient.writeMutations(pipeline, "WriteRestoredNodeEmbeddings", embMutationsToWrite);
-
-    // 6. Write Restored KeyValueStore (Wait on KV delete)
+    // --- Track 3: KeyValueStore (Fully Concurrent) ---
+    // 3A. Write Restored KeyValueStore (Waits on KV delete)
     PCollection<Mutation> kvMutationsToWrite = restoreKvMutations;
     if (!skipWait && !skipDelete && delKvSignal != null) {
       kvMutationsToWrite = kvMutationsToWrite.apply("WaitOnDelKV", Wait.on(delKvSignal));
     }
     spannerClient.writeMutations(pipeline, "WriteRestoredKeyValueStore", kvMutationsToWrite);
-
-    // 7. Delete Newly Added Nodes (Wait on written edges & embeddings to prevent FK violations)
-    PCollection<Mutation> nodeDeletesToWrite = deleteNodeMutations;
-    if (!skipWait) {
-      nodeDeletesToWrite =
-          nodeDeletesToWrite
-              .apply("WaitOnWrittenEdgesBeforeNodeDeletes", Wait.on(writtenEdges.getOutput()))
-              .apply(
-                  "WaitOnWrittenEmbeddingsBeforeNodeDeletes",
-                  Wait.on(writtenEmbeddings.getOutput()));
-    }
-    spannerClient.writeMutations(pipeline, "WriteDeletedNodes", nodeDeletesToWrite);
   }
 
   /** Resolves the complete list of target provenances for the rollback. */
