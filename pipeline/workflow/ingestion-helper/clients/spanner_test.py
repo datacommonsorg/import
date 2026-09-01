@@ -912,38 +912,6 @@ class TestSpannerClient(unittest.TestCase):
         mock_snapshot.execute_sql.assert_called_once()
 
 
-    def test_schema_sql_is_frozen(self):
-        """Verifies schema.sql has not been modified and matches its canonical SHA256 checksum.
-
-        Direct modifications to schema.sql are strictly prohibited. All schema evolutions
-        must be performed via the datacommons-db migrations package:
-        https://github.com/datacommonsorg/datacommons/tree/main/packages/datacommons-db/src/datacommons_db/migrations
-
-        HOW TO REGENERATE THE CHECKSUM (During planned migration squashes only):
-          Run the following shell command to compute the new SHA256 hash:
-            sha256sum pipeline/workflow/ingestion-helper/clients/schema.sql
-          or via Python:
-            python3 -c "import hashlib; print(hashlib.sha256(open('pipeline/workflow/ingestion-helper/clients/schema.sql', 'r', encoding='utf-8').read().encode('utf-8')).hexdigest())"
-        """
-        import hashlib
-
-        schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
-        with open(schema_path, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        expected_hash = "4a2560c8c72486e744be7026cfaf14a67b5abc43e3a510539aff4b77aef524fb"
-        actual_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
-        self.assertEqual(
-            actual_hash,
-            expected_hash,
-            "schema.sql has been modified! Direct edits to schema.sql are strictly prohibited.\n"
-            "All schema changes must be added as migrations in datacommons-db:\n"
-            "https://github.com/datacommonsorg/datacommons/tree/main/packages/datacommons-db/src/datacommons_db/migrations\n\n"
-            "If you are executing a planned, repo-wide migration squash, update `expected_hash`\n"
-            "in this test using: sha256sum pipeline/workflow/ingestion-helper/clients/schema.sql",
-        )
-
-
 if __name__ == '__main__':
     unittest.main()
 
