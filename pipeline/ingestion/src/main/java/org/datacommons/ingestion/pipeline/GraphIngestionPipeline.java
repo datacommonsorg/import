@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.util.List;
+import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
@@ -45,6 +46,8 @@ public class GraphIngestionPipeline {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
 
+    configureUncaughtExceptionHandler(options);
+
     String isBaseDcEnv = System.getenv("IS_BASE_DC");
     if (isBaseDcEnv != null) {
       options.setIsBaseDc(Boolean.parseBoolean(isBaseDcEnv));
@@ -74,6 +77,21 @@ public class GraphIngestionPipeline {
     Pipeline pipeline = Pipeline.create(options);
     buildPipeline(pipeline, options, spannerClient);
     pipeline.run();
+  }
+
+  static boolean configureUncaughtExceptionHandler(IngestionPipelineOptions options) {
+    if (DirectRunner.class.isAssignableFrom(options.getRunner())) {
+      Thread.setDefaultUncaughtExceptionHandler(
+          (thread, throwable) -> {
+            LOGGER.error(
+                "Fatal uncaught exception in DirectRunner [thread: {}]: ",
+                thread.getName(),
+                throwable);
+            System.exit(1);
+          });
+      return true;
+    }
+    return false;
   }
 
   public static void buildPipeline(
