@@ -22,11 +22,14 @@ ENV PYTHONUNBUFFERED True
 
 WORKDIR /app
 
+# Copy dependency definition files to leverage Docker layer caching
+COPY pyproject.toml __init__.py ./
+
+# Install production dependencies using uv
+RUN uv pip install --system --no-cache .
+
 # Copy local code to the container image.
 COPY . .
 
-# Install production dependencies using uv.
-RUN uv pip install --system --no-cache -r requirements.txt
-
-# Run the functions framework
-CMD ["functions-framework", "--target", "handle_feed_event"]
+# Run the FastAPI service with Uvicorn
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]

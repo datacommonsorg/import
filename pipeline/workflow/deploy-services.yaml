@@ -22,7 +22,7 @@ steps:
 
 - id: 'import-helper-service'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['run', 'deploy', 'import-helper-service${_ENV_SUFFIX}', '--image', '${_AR_REPO_URL}/datacommons-import-helper:${_VERSION}', '--region', '${_LOCATION}', '--project', '${_PROJECT_ID}', '--no-allow-unauthenticated', '--set-env-vars', 'PROJECT_ID=${_PROJECT_ID},LOCATION=${_LOCATION},PROJECT_NUMBER=${_PROJECT_NUMBER},GCS_BUCKET_ID=${_GCS_BUCKET_ID},INGESTION_HELPER_SERVICE=ingestion-helper-service${_ENV_SUFFIX},SPANNER_INGESTION_WORKFLOW_NAME=spanner-ingestion-workflow${_ENV_SUFFIX},IMPORT_AUTOMATION_WORKFLOW_NAME=import-automation-workflow${_ENV_SUFFIX}']
+  args: ['run', 'deploy', 'import-helper-service${_ENV_SUFFIX}', '--image', '${_AR_REPO_URL}/datacommons-import-helper:${_VERSION}', '--region', '${_LOCATION}', '--project', '${_PROJECT_ID}', '--no-allow-unauthenticated', '--set-env-vars', 'PROJECT_ID=${_PROJECT_ID},LOCATION=${_LOCATION},PROJECT_NUMBER=${_PROJECT_NUMBER},SPANNER_DATABASE_PATH=${_SPANNER_DATABASE_PATH},GCS_BUCKET_ID=${_GCS_BUCKET_ID},INGESTION_HELPER_SERVICE=ingestion-helper-service${_ENV_SUFFIX},SPANNER_INGESTION_WORKFLOW_NAME=spanner-ingestion-workflow${_ENV_SUFFIX},IMPORT_AUTOMATION_WORKFLOW_NAME=import-automation-workflow${_ENV_SUFFIX}']
 
 - id: 'aggregation-helper-job'
   name: 'gcr.io/cloud-builders/gcloud'
@@ -30,7 +30,7 @@ steps:
 
 - id: 'import-automation-workflow'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['workflows', 'deploy', 'import-automation-workflow${_ENV_SUFFIX}', '--project', '${_PROJECT_ID}', '--location', '${_LOCATION}', '--source', 'import-automation-workflow.yaml', '--set-env-vars', 'LOCATION=${_LOCATION},GCS_BUCKET_ID=${_GCS_BUCKET_ID},GCS_MOUNT_BUCKET=${_GCS_MOUNT_BUCKET},PROJECT_NUMBER=${_PROJECT_NUMBER},ENV_SUFFIX=${_ENV_SUFFIX}']
+  args: ['workflows', 'deploy', 'import-automation-workflow${_ENV_SUFFIX}', '--project', '${_PROJECT_ID}', '--location', '${_LOCATION}', '--source', 'import-automation-workflow.yaml', '--set-env-vars', 'LOCATION=${_LOCATION},GCS_BUCKET_ID=${_GCS_BUCKET_ID},GCS_MOUNT_BUCKET=${_GCS_MOUNT_BUCKET},PROJECT_NUMBER=${_PROJECT_NUMBER},ENV_SUFFIX=${_ENV_SUFFIX},IMPORT_HELPER_SERVICE=import-helper-service${_ENV_SUFFIX}']
 
 - id: 'spanner-ingestion-workflow'
   name: 'gcr.io/cloud-builders/gcloud'

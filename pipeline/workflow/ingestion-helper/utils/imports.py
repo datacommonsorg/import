@@ -1,4 +1,4 @@
-# Copyright 2025 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,122 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Utility functions for the ingestion helper."""
+"""Utility functions for ingestion helper."""
 
+from datetime import datetime
 import logging
 import re
-from datetime import datetime, timezone
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.oauth2 import id_token
-from google.auth.transport import requests
-from google.auth import jwt
 
 
-def get_next_refresh(project_id: str, location: str, import_name: str) -> str:
-    """Fetches the next scheduled run time for the import job from Cloud Scheduler.
-
-    Args:
-        project_id: The GCP project ID.
-        location: The location of the Cloud Scheduler job.
-        import_name: The name of the import (used as the job name).
-
-    Returns:
-        The next scheduled run time as an ISO formatted string, or None if not found/error.
-    """
-    try:
-        scheduler = build('cloudscheduler', 'v1', cache_discovery=False)
-        job_id = import_name.split(':')[-1]
-        job_name = f"projects/{project_id}/locations/{location}/jobs/{job_id}"
-        job = scheduler.projects().locations().jobs().get(
-            name=job_name).execute()
-        return job.get('scheduleTime')
-    except HttpError as e:
-        logging.warning(f"Could not fetch scheduler job {import_name}: {e}")
-        return None
-
-
-def get_caller_identity(request):
-    """Extracts the caller's email from the Authorization header (JWT).
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        The email of the caller, or an error string/warning if extraction fails.
-    """
-    auth_header = request.headers.get('Authorization')
-    if auth_header:
-        parts = auth_header.split()
-        if len(parts) == 2 and parts[0].lower() == 'bearer':
-            token = parts[1]
-            unverified_claims = {}
-            try:
-                unverified_claims = jwt.decode(token, verify=False)
-                id_info = id_token.verify_oauth2_token(token,
-                                                       requests.Request())
-                return id_info.get('email', 'unknown_email')
-            except Exception as e:
-                if unverified_claims:
-                    logging.warning(
-                        f"Could not decode unverified token for debugging: {e}")
-                    email = unverified_claims.get('email', 'unknown_email')
-                    return f"{email}"
-                return 'decode_error'
-        else:
-            logging.warning(
-                f"Invalid Authorization header format. Parts: {len(parts)}")
-    else:
-        logging.warning("No Authorization header received.")
-    return 'no_auth_header'
-
-
-def get_import_params(request) -> dict:
-    """Extracts and calculates import parameters from the request JSON.
-
-    Args:
-        request_json: A dictionary containing request parameters.
-
-    Returns:
-        A dictionary with import params.
-    """
-    # Convert CamelCase or mixedCase to snake_case.
-    request_json = {
-        re.sub(r'(?<!^)(?=[A-Z])', '_', k).lower(): v
-        for k, v in request.items()
-    }
-
-    import_name = request_json.get('import_name', '')
-    status = request_json.get('status', '').removeprefix('ImportStatus.')
-    job_id = request_json.get('job_id', '')
-    execution_time = request_json.get('execution_time', 0)
-    data_volume = request_json.get('data_volume', 0)
-    latest_version = request_json.get('latest_version', '')
-    graph_path = request_json.get('graph_path', '')
-    next_refresh = request_json.get('next_refresh',
-                                    datetime.now(timezone.utc).isoformat())
-
-    if graph_path:
-        if graph_path.startswith('gs://'):
-            latest_version = graph_path
-        elif latest_version:
-            clean_graph_path = graph_path.lstrip('/')
-            if not latest_version.rstrip('/').endswith(clean_graph_path.rstrip('/')):
-                latest_version = f"{latest_version.rstrip('/')}/{clean_graph_path}"
-
-    return {
-        'import_name': import_name,
-        'status': status,
-        'job_id': job_id,
-        'execution_time': execution_time,
-        'data_volume': data_volume,
-        'latest_version': latest_version,
-        'graph_path': graph_path,
-        'next_refresh': next_refresh
-    }
-
-
-def get_ingestion_metrics(project_id, location, job_id):
+def get_ingestion_metrics(project_id: str, location: str, job_id: str) -> dict:
     """Fetches graph metrics (nodes, edges, observations) and execution time from a Dataflow job.
 
     Args:
@@ -139,7 +33,6 @@ def get_ingestion_metrics(project_id, location, job_id):
         and 'import_metrics'.
     """
     dataflow = build('dataflow', 'v1b3', cache_discovery=False)
-    # Fetch Dataflow metrics
     node_count = 0
     edge_count = 0
     obs_count = 0
@@ -148,7 +41,6 @@ def get_ingestion_metrics(project_id, location, job_id):
     import_metrics = {}
     if project_id and job_id:
         try:
-            # Fetch Job details for execution time
             job = dataflow.projects().locations().jobs().get(
                 projectId=project_id, location=location,
                 jobId=job_id).execute()
@@ -157,7 +49,6 @@ def get_ingestion_metrics(project_id, location, job_id):
             current_state_time_str = job.get('currentStateTime')
 
             if start_time_str and current_state_time_str:
-                # Handle potential 'Z' suffix by replacing it with '+00:00' for compatibility
                 start_time = datetime.fromisoformat(
                     start_time_str.replace('Z', '+00:00'))
                 end_time = datetime.fromisoformat(
@@ -199,8 +90,7 @@ def get_ingestion_metrics(project_id, location, job_id):
                     if imp_name:
                         import_metrics[imp_name]['ts_count'] += scalar
         except HttpError as e:
-            logging.error(
-                f"Error fetching dataflow metrics for job {job_id}: {e}")
+            logging.error(f"Error fetching dataflow metrics for job {job_id}: {e}")
     return {
         'obs_count': obs_count,
         'node_count': node_count,
