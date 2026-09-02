@@ -88,8 +88,7 @@ public class RollbackPipelineTest implements Serializable {
             IllegalArgumentException.class,
             () -> RollbackPipeline.resolveTargetProvenances(options));
 
-    assertTrue(
-        exception.getMessage().contains("Invalid --importList format: expected a JSON array"));
+    assertTrue(exception.getMessage().contains("Failed to parse --importList as JSON array"));
   }
 
   @Test

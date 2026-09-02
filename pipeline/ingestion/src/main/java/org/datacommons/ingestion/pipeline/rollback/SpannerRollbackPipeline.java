@@ -18,15 +18,14 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Statement;
 import com.google.common.collect.Lists;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.ListCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -428,32 +427,14 @@ public class SpannerRollbackPipeline implements Serializable {
 
   private static Set<String> parseImportNames(String rawInput) {
     try {
-      JsonElement jsonElement = JsonParser.parseString(rawInput);
-      if (!jsonElement.isJsonArray()) {
-        throw new IllegalArgumentException(
-            "Invalid --importList format: expected a JSON array (e.g. [{\"importName\": \"Census\"}]), but got: "
-                + rawInput);
-      }
-      JsonArray array = jsonElement.getAsJsonArray();
-      Set<String> importNames = new LinkedHashSet<>();
-      for (JsonElement element : array) {
-        if (!element.isJsonObject()) {
-          throw new IllegalArgumentException(
-              "Invalid element in --importList JSON array: expected a JSON object with 'importName', got: "
-                  + element);
-        }
-        JsonElement nameElement = element.getAsJsonObject().get("importName");
-        if (nameElement == null
-            || nameElement.isJsonNull()
-            || nameElement.getAsString().trim().isEmpty()) {
-          throw new IllegalArgumentException(
-              "Invalid element in --importList: missing or empty 'importName' in: " + element);
-        }
-        importNames.add(nameElement.getAsString().trim());
-      }
-      return importNames;
-    } catch (JsonParseException e) {
-      throw new IllegalArgumentException("Failed to parse --importList as JSON: " + rawInput, e);
+      return StreamSupport.stream(
+              JsonParser.parseString(rawInput).getAsJsonArray().spliterator(), false)
+          .map(e -> e.getAsJsonObject().get("importName").getAsString().trim())
+          .filter(name -> !name.isEmpty())
+          .collect(Collectors.toCollection(LinkedHashSet::new));
+    } catch (Exception e) {
+      throw new IllegalArgumentException(
+          "Failed to parse --importList as JSON array: " + rawInput, e);
     }
   }
 
