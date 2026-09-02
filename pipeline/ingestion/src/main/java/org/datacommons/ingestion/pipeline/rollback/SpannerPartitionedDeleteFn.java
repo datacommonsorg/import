@@ -47,10 +47,9 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
   }
 
   @ProcessElement
-  public void processElement(ProcessContext c) {
-    List<String> values = c.element();
+  public void processElement(@Element List<String> values, OutputReceiver<Void> receiver) {
     if (values == null || values.isEmpty()) {
-      c.output(null);
+      receiver.output(null);
       return;
     }
     SpannerOptions.Builder builder =
@@ -73,7 +72,7 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
           Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
       long rowCount = dbClient.executePartitionedUpdate(statement);
       LOGGER.info("Deleted {} rows from {} for {} IN {}", rowCount, tableName, columnName, values);
-      c.output(null);
+      receiver.output(null);
     }
   }
 }

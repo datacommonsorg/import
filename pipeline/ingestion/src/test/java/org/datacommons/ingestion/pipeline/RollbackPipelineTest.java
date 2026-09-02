@@ -117,6 +117,74 @@ public class RollbackPipelineTest implements Serializable {
     assertTrue(exception.getMessage().contains("--rollbackTimestamp must be specified"));
   }
 
+  @Test
+  public void testResolveTargetProvenances_empty_throwsException() {
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList(null);
+    options.setTargetProvenances(null);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.resolveTargetProvenances(options));
+
+    assertTrue(
+        exception.getMessage().contains("Could not resolve any target provenances for rollback"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_fromCommaSeparatedTargetProvenances() {
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setTargetProvenances("dc/base/CensusACS5YearSurvey, dc/base/BLS_Data");
+
+    List<String> provenances = RollbackPipeline.resolveTargetProvenances(options);
+    assertEquals(2, provenances.size());
+    assertTrue(provenances.contains("dc/base/CensusACS5YearSurvey"));
+    assertTrue(provenances.contains("dc/base/BLS_Data"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_fromImportList_customDc() {
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList("CustomSurvey");
+    options.setIsBaseDc(false);
+
+    List<String> provenances = RollbackPipeline.resolveTargetProvenances(options);
+    assertTrue(provenances.contains("CustomSurvey"));
+    assertTrue(provenances.contains("generated/CustomSurvey"));
+    assertEquals(2, provenances.size());
+  }
+
+  @Test
+  public void testApplyHeadDeletions_skipDeleteTrue_returnsNullSignals() {
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setSkipDelete(true);
+
+    SpannerClient spannerClient =
+        SpannerClient.builder()
+            .gcpProjectId("test")
+            .spannerInstanceId("test")
+            .spannerDatabaseId("test")
+            .build();
+
+    var signals =
+        org.datacommons.ingestion.pipeline.rollback.SpannerRollbackPipeline.applyHeadDeletions(
+            pipeline, options, List.of("dc/base/Test"), spannerClient);
+
+    org.junit.Assert.assertNull(signals.delTsSignal());
+    org.junit.Assert.assertNull(signals.delEdgeSignal());
+    org.junit.Assert.assertNull(signals.delKvSignal());
+  }
+
+  @Test
+  public void testValidateRetentionWindow_recentTimestamp_succeeds() {
+    com.google.cloud.Timestamp recent =
+        com.google.cloud.Timestamp.ofTimeSecondsAndNanos(
+            java.time.Instant.now().minus(java.time.Duration.ofHours(1)).getEpochSecond(), 0);
+    // Should not throw
+    RollbackPipeline.validateRetentionWindow(recent);
+  }
+
   static class MockRollbackSpannerClient extends SpannerClient {
     private final transient SpannerWriteResult mockWriteResult;
 

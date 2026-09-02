@@ -526,6 +526,12 @@ public class SpannerRollbackPipeline implements Serializable {
       }
     }
 
+    if (provenances.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Could not resolve any target provenances for rollback. Please specify --importList or"
+              + " --targetProvenances.");
+    }
+
     return new ArrayList<>(provenances);
   }
 
