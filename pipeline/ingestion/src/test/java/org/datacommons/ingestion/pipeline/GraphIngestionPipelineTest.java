@@ -271,6 +271,7 @@ public class GraphIngestionPipelineTest implements Serializable {
             "--spannerInstanceId=test-instance",
             "--spannerDatabaseId=test-db");
 
+    builder.inheritIO();
     Process process = builder.start();
     boolean finished = process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
 
