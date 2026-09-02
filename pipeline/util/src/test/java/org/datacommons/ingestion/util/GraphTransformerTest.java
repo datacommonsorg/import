@@ -643,7 +643,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue(
-                                        "Cumulative count of medical condition incident: COVID 19, confirmed case")
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
@@ -791,7 +791,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue(
-                                        "Cumulative count of medical condition incident: COVID 19, confirmed case")
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
@@ -926,7 +926,7 @@ public class GraphTransformerTest {
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
-                                    .setValue("Amount of financial transaction: some value")
+                                    .setValue("Amount Of Financial Transaction: Some Value")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
@@ -1163,7 +1163,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue(
-                                        "Cumulative count of medical condition incident: COVID 19, confirmed case")
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
