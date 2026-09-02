@@ -7,7 +7,6 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
-import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
@@ -162,72 +161,23 @@ public class SpannerClient implements Serializable {
     return write;
   }
 
-  // --- Canonical Column Name Constants ---
-  public static final String COL_SUBJECT_ID = "subject_id";
-  public static final String COL_VALUE = "value";
-  public static final String COL_BYTES = "bytes";
-  public static final String COL_NAME = "name";
-  public static final String COL_TYPES = "types";
-  public static final String COL_PREDICATE = "predicate";
-  public static final String COL_OBJECT_ID = "object_id";
-  public static final String COL_PROVENANCE = "provenance";
-  public static final String COL_VARIABLE_MEASURED = "variable_measured";
-  public static final String COL_ENTITY1 = "entity1";
-  public static final String COL_EXTRA_ENTITIES_ID = "extra_entities_id";
-  public static final String COL_FACET_ID = "facet_id";
-  public static final String COL_ENTITIES = "entities";
-  public static final String COL_FACET = "facet";
-  public static final String COL_DATE = "date";
-  public static final String COL_TYPE = "type";
-  public static final String COL_KEY = "key";
-  public static final String COL_EMBEDDING_LABEL = "embedding_label";
-  public static final String COL_EMBEDDING_CONTENT_KEY = "embedding_content_key";
-  public static final String COL_EMBEDDING_CONTENT = "embedding_content";
-  public static final String COL_NODE_TYPES = "node_types";
-  public static final String COL_EMBEDDINGS = "embeddings";
-  public static final String COL_LAST_UPDATE_TIMESTAMP = "last_update_timestamp";
-
   // --- Canonical Writable Columns for Spanner Tables ---
-  public static final Set<String> NODE_WRITABLE_COLUMNS =
-      Set.of(COL_SUBJECT_ID, COL_VALUE, COL_BYTES, COL_NAME, COL_TYPES, COL_LAST_UPDATE_TIMESTAMP);
-  public static final Set<String> EDGE_WRITABLE_COLUMNS =
-      Set.of(
-          COL_SUBJECT_ID, COL_PREDICATE, COL_OBJECT_ID, COL_PROVENANCE, COL_LAST_UPDATE_TIMESTAMP);
-  public static final Set<String> TIME_SERIES_WRITABLE_COLUMNS =
-      Set.of(
-          COL_VARIABLE_MEASURED,
-          COL_EXTRA_ENTITIES_ID,
-          COL_FACET_ID,
-          COL_ENTITIES,
-          COL_FACET,
-          COL_LAST_UPDATE_TIMESTAMP);
-  public static final Set<String> OBSERVATION_WRITABLE_COLUMNS =
-      Set.of(
-          COL_VARIABLE_MEASURED,
-          COL_ENTITY1,
-          COL_EXTRA_ENTITIES_ID,
-          COL_FACET_ID,
-          COL_DATE,
-          COL_VALUE,
-          COL_LAST_UPDATE_TIMESTAMP);
+  public static final Set<String> NODE_WRITABLE_COLUMNS = NodeRecord.WRITABLE_COLUMNS;
+  public static final Set<String> EDGE_WRITABLE_COLUMNS = EdgeRecord.WRITABLE_COLUMNS;
+  public static final Set<String> TIME_SERIES_WRITABLE_COLUMNS = TimeSeriesRecord.WRITABLE_COLUMNS;
+  public static final Set<String> OBSERVATION_WRITABLE_COLUMNS = ObservationRecord.WRITABLE_COLUMNS;
   public static final Set<String> KEY_VALUE_STORE_WRITABLE_COLUMNS =
-      Set.of(COL_TYPE, COL_KEY, COL_PROVENANCE, COL_VALUE);
+      KeyValueStoreRecord.WRITABLE_COLUMNS;
   public static final Set<String> NODE_EMBEDDING_WRITABLE_COLUMNS =
-      Set.of(
-          COL_SUBJECT_ID,
-          COL_EMBEDDING_LABEL,
-          COL_EMBEDDING_CONTENT_KEY,
-          COL_EMBEDDING_CONTENT,
-          COL_NODE_TYPES,
-          COL_EMBEDDINGS);
+      NodeEmbeddingRecord.WRITABLE_COLUMNS;
 
   public Mutation toNodeMutation(Node node) {
     // Only update subject_id for provisional nodes.
     if (node.getTypes().size() == 1 && node.getTypes().contains("ProvisionalNode")) {
       return Mutation.newInsertOrUpdateBuilder(nodeTableName)
-          .set(COL_SUBJECT_ID)
+          .set(NodeRecord.COL_SUBJECT_ID)
           .to(node.getSubjectId())
-          .set(COL_LAST_UPDATE_TIMESTAMP)
+          .set(NodeRecord.COL_LAST_UPDATE_TIMESTAMP)
           .to(Value.COMMIT_TIMESTAMP)
           .build();
     }
@@ -267,44 +217,6 @@ public class SpannerClient implements Serializable {
 
   public static Mutation toObservationMutation(ObservationRecord row, String observationTableName) {
     return row.toMutation(observationTableName);
-  }
-
-  // --- Symmetrical Restore Mutation Mappers for Rollback ---
-
-  public static Mutation toNodeRestoreMutation(Struct struct, String nodeTableName) {
-    return toNodeMutation(NodeRecord.from(struct), nodeTableName);
-  }
-
-  public static Mutation toEdgeRestoreMutation(Struct struct, String edgeTableName) {
-    return toEdgeMutation(EdgeRecord.from(struct), edgeTableName);
-  }
-
-  public static Mutation toTimeSeriesRestoreMutation(Struct struct, String timeSeriesTableName) {
-    return toTimeSeriesMutation(TimeSeriesRecord.from(struct), timeSeriesTableName);
-  }
-
-  public static Mutation toObservationRestoreMutation(Struct struct, String observationTableName) {
-    return toObservationMutation(ObservationRecord.from(struct), observationTableName);
-  }
-
-  public static Mutation toKeyValueStoreMutation(
-      KeyValueStoreRecord row, String keyValueStoreTableName) {
-    return row.toMutation(keyValueStoreTableName);
-  }
-
-  public static Mutation toKeyValueStoreRestoreMutation(
-      Struct struct, String keyValueStoreTableName) {
-    return toKeyValueStoreMutation(KeyValueStoreRecord.from(struct), keyValueStoreTableName);
-  }
-
-  public static Mutation toNodeEmbeddingMutation(
-      NodeEmbeddingRecord row, String nodeEmbeddingTableName) {
-    return row.toMutation(nodeEmbeddingTableName);
-  }
-
-  public static Mutation toNodeEmbeddingRestoreMutation(
-      Struct struct, String nodeEmbeddingTableName) {
-    return toNodeEmbeddingMutation(NodeEmbeddingRecord.from(struct), nodeEmbeddingTableName);
   }
 
   /**

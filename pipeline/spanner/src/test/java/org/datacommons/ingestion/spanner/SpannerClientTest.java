@@ -12,6 +12,12 @@ import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.data.TimeSeriesKey;
+import org.datacommons.ingestion.spanner.model.EdgeRecord;
+import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
+import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
+import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.model.ObservationRecord;
+import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -162,7 +168,7 @@ public class SpannerClientTest {
             .to(com.google.cloud.Timestamp.now())
             .build();
 
-    Mutation mutation = SpannerClient.toNodeRestoreMutation(struct, "Node");
+    Mutation mutation = NodeRecord.from(struct).toMutation("Node");
     assertEquals("Node", mutation.getTable());
     var map = mutation.asMap();
     assertEquals("geoId/06", map.get("subject_id").getString());
@@ -188,7 +194,7 @@ public class SpannerClientTest {
             .to(com.google.cloud.Timestamp.now())
             .build();
 
-    Mutation mutation = SpannerClient.toEdgeRestoreMutation(struct, "Edge");
+    Mutation mutation = EdgeRecord.from(struct).toMutation("Edge");
     assertEquals("Edge", mutation.getTable());
     var map = mutation.asMap();
     assertEquals("geoId/06", map.get("subject_id").getString());
@@ -215,7 +221,7 @@ public class SpannerClientTest {
             .to(com.google.cloud.Timestamp.now())
             .build();
 
-    Mutation mutation = SpannerClient.toTimeSeriesRestoreMutation(struct, "TimeSeries");
+    Mutation mutation = TimeSeriesRecord.from(struct).toMutation("TimeSeries");
     assertEquals("TimeSeries", mutation.getTable());
     var map = mutation.asMap();
     assertEquals("Count_Person", map.get("variable_measured").getString());
@@ -243,7 +249,7 @@ public class SpannerClientTest {
             .to(com.google.cloud.Timestamp.now())
             .build();
 
-    Mutation mutation = SpannerClient.toObservationRestoreMutation(struct, "Observation");
+    Mutation mutation = ObservationRecord.from(struct).toMutation("Observation");
     assertEquals("Observation", mutation.getTable());
     var map = mutation.asMap();
     assertEquals("Count_Person", map.get("variable_measured").getString());
@@ -266,7 +272,7 @@ public class SpannerClientTest {
             .to(com.google.cloud.spanner.Value.json("{\"enabled\":true}"))
             .build();
 
-    Mutation mutation = SpannerClient.toKeyValueStoreRestoreMutation(struct, "KeyValueStore");
+    Mutation mutation = KeyValueStoreRecord.from(struct).toMutation("KeyValueStore");
     assertEquals("KeyValueStore", mutation.getTable());
     var map = mutation.asMap();
     assertEquals("Config", map.get("type").getString());
@@ -293,7 +299,7 @@ public class SpannerClientTest {
             .toFloat64Array(List.of(0.1, 0.2, 0.3))
             .build();
 
-    Mutation mutation = SpannerClient.toNodeEmbeddingRestoreMutation(struct, "NodeEmbedding");
+    Mutation mutation = NodeEmbeddingRecord.from(struct).toMutation("NodeEmbedding");
     assertEquals("NodeEmbedding", mutation.getTable());
     var map = mutation.asMap();
     assertEquals("geoId/06", map.get("subject_id").getString());

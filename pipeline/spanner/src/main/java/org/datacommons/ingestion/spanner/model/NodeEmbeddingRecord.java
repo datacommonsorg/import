@@ -19,7 +19,7 @@ import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import java.io.Serializable;
 import java.util.List;
-import org.datacommons.ingestion.spanner.SpannerClient;
+import java.util.Set;
 
 /** Immutable canonical record representing a single row in the Spanner NodeEmbedding table. */
 public record NodeEmbeddingRecord(
@@ -31,46 +31,56 @@ public record NodeEmbeddingRecord(
     List<Double> embeddings)
     implements Serializable {
 
+  public static final String COL_SUBJECT_ID = "subject_id";
+  public static final String COL_EMBEDDING_LABEL = "embedding_label";
+  public static final String COL_EMBEDDING_CONTENT_KEY = "embedding_content_key";
+  public static final String COL_EMBEDDING_CONTENT = "embedding_content";
+  public static final String COL_NODE_TYPES = "node_types";
+  public static final String COL_EMBEDDINGS = "embeddings";
+
   public static final List<String> READ_COLUMNS =
       List.of(
-          SpannerClient.COL_SUBJECT_ID,
-          SpannerClient.COL_EMBEDDING_LABEL,
-          SpannerClient.COL_EMBEDDING_CONTENT_KEY,
-          SpannerClient.COL_EMBEDDING_CONTENT,
-          SpannerClient.COL_NODE_TYPES,
-          SpannerClient.COL_EMBEDDINGS);
+          COL_SUBJECT_ID,
+          COL_EMBEDDING_LABEL,
+          COL_EMBEDDING_CONTENT_KEY,
+          COL_EMBEDDING_CONTENT,
+          COL_NODE_TYPES,
+          COL_EMBEDDINGS);
+
+  public static final Set<String> WRITABLE_COLUMNS =
+      Set.of(
+          COL_SUBJECT_ID,
+          COL_EMBEDDING_LABEL,
+          COL_EMBEDDING_CONTENT_KEY,
+          COL_EMBEDDING_CONTENT,
+          COL_NODE_TYPES,
+          COL_EMBEDDINGS);
 
   /** Adapts a historical Spanner {@link Struct} row from a snapshot read. */
   public static NodeEmbeddingRecord from(Struct struct) {
     return new NodeEmbeddingRecord(
-        struct.getString(SpannerClient.COL_SUBJECT_ID),
-        struct.getString(SpannerClient.COL_EMBEDDING_LABEL),
-        struct.getString(SpannerClient.COL_EMBEDDING_CONTENT_KEY),
-        struct.isNull(SpannerClient.COL_EMBEDDING_CONTENT)
-            ? null
-            : struct.getJson(SpannerClient.COL_EMBEDDING_CONTENT),
-        struct.isNull(SpannerClient.COL_NODE_TYPES)
-            ? null
-            : struct.getStringList(SpannerClient.COL_NODE_TYPES),
-        struct.isNull(SpannerClient.COL_EMBEDDINGS)
-            ? null
-            : struct.getDoubleList(SpannerClient.COL_EMBEDDINGS));
+        struct.getString(COL_SUBJECT_ID),
+        struct.getString(COL_EMBEDDING_LABEL),
+        struct.getString(COL_EMBEDDING_CONTENT_KEY),
+        struct.isNull(COL_EMBEDDING_CONTENT) ? null : struct.getJson(COL_EMBEDDING_CONTENT),
+        struct.isNull(COL_NODE_TYPES) ? null : struct.getStringList(COL_NODE_TYPES),
+        struct.isNull(COL_EMBEDDINGS) ? null : struct.getDoubleList(COL_EMBEDDINGS));
   }
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
     return Mutation.newInsertOrUpdateBuilder(tableName)
-        .set(SpannerClient.COL_SUBJECT_ID)
+        .set(COL_SUBJECT_ID)
         .to(subjectId)
-        .set(SpannerClient.COL_EMBEDDING_LABEL)
+        .set(COL_EMBEDDING_LABEL)
         .to(embeddingLabel)
-        .set(SpannerClient.COL_EMBEDDING_CONTENT_KEY)
+        .set(COL_EMBEDDING_CONTENT_KEY)
         .to(embeddingContentKey)
-        .set(SpannerClient.COL_EMBEDDING_CONTENT)
+        .set(COL_EMBEDDING_CONTENT)
         .to(embeddingContent != null ? Value.json(embeddingContent) : Value.json(null))
-        .set(SpannerClient.COL_NODE_TYPES)
+        .set(COL_NODE_TYPES)
         .toStringArray(nodeTypes)
-        .set(SpannerClient.COL_EMBEDDINGS)
+        .set(COL_EMBEDDINGS)
         .toFloat64Array(embeddings)
         .build();
   }

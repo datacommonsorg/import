@@ -19,9 +19,9 @@ import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeriesKey;
-import org.datacommons.ingestion.spanner.SpannerClient;
 
 /**
  * Immutable canonical record representing a single row in the Spanner Observation table.
@@ -38,14 +38,32 @@ public record ObservationRecord(
     String value)
     implements Serializable {
 
+  public static final String COL_VARIABLE_MEASURED = "variable_measured";
+  public static final String COL_ENTITY1 = "entity1";
+  public static final String COL_EXTRA_ENTITIES_ID = "extra_entities_id";
+  public static final String COL_FACET_ID = "facet_id";
+  public static final String COL_DATE = "date";
+  public static final String COL_VALUE = "value";
+  public static final String COL_LAST_UPDATE_TIMESTAMP = "last_update_timestamp";
+
   public static final List<String> READ_COLUMNS =
       List.of(
-          SpannerClient.COL_VARIABLE_MEASURED,
-          SpannerClient.COL_ENTITY1,
-          SpannerClient.COL_EXTRA_ENTITIES_ID,
-          SpannerClient.COL_FACET_ID,
-          SpannerClient.COL_DATE,
-          SpannerClient.COL_VALUE);
+          COL_VARIABLE_MEASURED,
+          COL_ENTITY1,
+          COL_EXTRA_ENTITIES_ID,
+          COL_FACET_ID,
+          COL_DATE,
+          COL_VALUE);
+
+  public static final Set<String> WRITABLE_COLUMNS =
+      Set.of(
+          COL_VARIABLE_MEASURED,
+          COL_ENTITY1,
+          COL_EXTRA_ENTITIES_ID,
+          COL_FACET_ID,
+          COL_DATE,
+          COL_VALUE,
+          COL_LAST_UPDATE_TIMESTAMP);
 
   /** Adapts forward ingestion's domain {@link Observation} POJO. */
   public static ObservationRecord from(Observation obs) {
@@ -62,30 +80,30 @@ public record ObservationRecord(
   /** Adapts a historical Spanner {@link Struct} row from a snapshot read. */
   public static ObservationRecord from(Struct struct) {
     return new ObservationRecord(
-        struct.getString(SpannerClient.COL_VARIABLE_MEASURED),
-        struct.getString(SpannerClient.COL_ENTITY1),
-        struct.getString(SpannerClient.COL_EXTRA_ENTITIES_ID),
-        struct.getString(SpannerClient.COL_FACET_ID),
-        struct.getString(SpannerClient.COL_DATE),
-        struct.getString(SpannerClient.COL_VALUE));
+        struct.getString(COL_VARIABLE_MEASURED),
+        struct.getString(COL_ENTITY1),
+        struct.getString(COL_EXTRA_ENTITIES_ID),
+        struct.getString(COL_FACET_ID),
+        struct.getString(COL_DATE),
+        struct.getString(COL_VALUE));
   }
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
     return Mutation.newInsertOrUpdateBuilder(tableName)
-        .set(SpannerClient.COL_VARIABLE_MEASURED)
+        .set(COL_VARIABLE_MEASURED)
         .to(variableMeasured)
-        .set(SpannerClient.COL_ENTITY1)
+        .set(COL_ENTITY1)
         .to(entity1)
-        .set(SpannerClient.COL_EXTRA_ENTITIES_ID)
+        .set(COL_EXTRA_ENTITIES_ID)
         .to(extraEntitiesId)
-        .set(SpannerClient.COL_FACET_ID)
+        .set(COL_FACET_ID)
         .to(facetId)
-        .set(SpannerClient.COL_DATE)
+        .set(COL_DATE)
         .to(date)
-        .set(SpannerClient.COL_VALUE)
+        .set(COL_VALUE)
         .to(value)
-        .set(SpannerClient.COL_LAST_UPDATE_TIMESTAMP)
+        .set(COL_LAST_UPDATE_TIMESTAMP)
         .to(Value.COMMIT_TIMESTAMP)
         .build();
   }

@@ -21,9 +21,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.data.TimeSeries;
-import org.datacommons.ingestion.spanner.SpannerClient;
 
 /**
  * Immutable canonical record representing a single row in the Spanner TimeSeries table.
@@ -37,13 +37,26 @@ public record TimeSeriesRecord(
 
   private static final Gson GSON = new Gson();
 
+  public static final String COL_VARIABLE_MEASURED = "variable_measured";
+  public static final String COL_EXTRA_ENTITIES_ID = "extra_entities_id";
+  public static final String COL_FACET_ID = "facet_id";
+  public static final String COL_ENTITIES = "entities";
+  public static final String COL_FACET = "facet";
+  public static final String COL_LAST_UPDATE_TIMESTAMP = "last_update_timestamp";
+  public static final String COL_ENTITY1 = "entity1";
+  public static final String COL_PROVENANCE = "provenance";
+
   public static final List<String> READ_COLUMNS =
-      List.of(
-          SpannerClient.COL_VARIABLE_MEASURED,
-          SpannerClient.COL_EXTRA_ENTITIES_ID,
-          SpannerClient.COL_FACET_ID,
-          SpannerClient.COL_ENTITIES,
-          SpannerClient.COL_FACET);
+      List.of(COL_VARIABLE_MEASURED, COL_EXTRA_ENTITIES_ID, COL_FACET_ID, COL_ENTITIES, COL_FACET);
+
+  public static final Set<String> WRITABLE_COLUMNS =
+      Set.of(
+          COL_VARIABLE_MEASURED,
+          COL_EXTRA_ENTITIES_ID,
+          COL_FACET_ID,
+          COL_ENTITIES,
+          COL_FACET,
+          COL_LAST_UPDATE_TIMESTAMP);
 
   /** Adapts forward ingestion's domain {@link TimeSeries} POJO. */
   public static TimeSeriesRecord from(TimeSeries obs) {
@@ -54,7 +67,7 @@ public record TimeSeriesRecord(
 
     // Create entities JSON
     JsonObject entitiesJson = new JsonObject();
-    entitiesJson.addProperty(SpannerClient.COL_ENTITY1, entity1);
+    entitiesJson.addProperty(COL_ENTITY1, entity1);
     List<String> extra = obs.getExtraEntities();
     if (extra != null) {
       if (extra.size() > 0) {
@@ -68,8 +81,7 @@ public record TimeSeriesRecord(
     // Create facet JSON
     JsonObject facetJson = new JsonObject();
     facetJson.addProperty(
-        SpannerClient.COL_PROVENANCE,
-        ProvenanceUtils.getProvenanceDcid(obs.getImportName(), obs.getIsBaseDc()));
+        COL_PROVENANCE, ProvenanceUtils.getProvenanceDcid(obs.getImportName(), obs.getIsBaseDc()));
     addPropertyIfNotEmpty(facetJson, "measurementMethod", obs.getMeasurementMethod());
     addPropertyIfNotEmpty(facetJson, "observationPeriod", obs.getObservationPeriod());
     addPropertyIfNotEmpty(facetJson, "scalingFactor", obs.getScalingFactor());
@@ -87,30 +99,28 @@ public record TimeSeriesRecord(
   /** Adapts a historical Spanner {@link Struct} row from a snapshot read. */
   public static TimeSeriesRecord from(Struct struct) {
     return new TimeSeriesRecord(
-        struct.getString(SpannerClient.COL_VARIABLE_MEASURED),
-        struct.getString(SpannerClient.COL_EXTRA_ENTITIES_ID),
-        struct.getString(SpannerClient.COL_FACET_ID),
-        struct.isNull(SpannerClient.COL_ENTITIES)
-            ? null
-            : struct.getJson(SpannerClient.COL_ENTITIES),
-        struct.isNull(SpannerClient.COL_FACET) ? null : struct.getJson(SpannerClient.COL_FACET));
+        struct.getString(COL_VARIABLE_MEASURED),
+        struct.getString(COL_EXTRA_ENTITIES_ID),
+        struct.getString(COL_FACET_ID),
+        struct.isNull(COL_ENTITIES) ? null : struct.getJson(COL_ENTITIES),
+        struct.isNull(COL_FACET) ? null : struct.getJson(COL_FACET));
   }
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
     return Mutation.newInsertOrUpdateBuilder(tableName)
-        .set(SpannerClient.COL_VARIABLE_MEASURED)
+        .set(COL_VARIABLE_MEASURED)
         .to(variableMeasured)
         // entity1 is a STORED generated column in TimeSeries, DO NOT write to it directly!
-        .set(SpannerClient.COL_EXTRA_ENTITIES_ID)
+        .set(COL_EXTRA_ENTITIES_ID)
         .to(extraEntitiesId)
-        .set(SpannerClient.COL_FACET_ID)
+        .set(COL_FACET_ID)
         .to(facetId)
-        .set(SpannerClient.COL_ENTITIES)
+        .set(COL_ENTITIES)
         .to(entities != null ? Value.json(entities) : Value.json(null))
-        .set(SpannerClient.COL_FACET)
+        .set(COL_FACET)
         .to(facet != null ? Value.json(facet) : Value.json(null))
-        .set(SpannerClient.COL_LAST_UPDATE_TIMESTAMP)
+        .set(COL_LAST_UPDATE_TIMESTAMP)
         .to(Value.COMMIT_TIMESTAMP)
         .build();
   }

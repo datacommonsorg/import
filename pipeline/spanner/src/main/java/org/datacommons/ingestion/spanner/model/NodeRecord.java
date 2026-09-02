@@ -20,8 +20,8 @@ import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 import org.datacommons.ingestion.data.Node;
-import org.datacommons.ingestion.spanner.SpannerClient;
 
 /**
  * Immutable canonical record representing a single row in the Spanner Node table.
@@ -33,13 +33,18 @@ public record NodeRecord(
     String subjectId, String value, ByteArray bytes, String name, List<String> types)
     implements Serializable {
 
+  public static final String COL_SUBJECT_ID = "subject_id";
+  public static final String COL_VALUE = "value";
+  public static final String COL_BYTES = "bytes";
+  public static final String COL_NAME = "name";
+  public static final String COL_TYPES = "types";
+  public static final String COL_LAST_UPDATE_TIMESTAMP = "last_update_timestamp";
+
   public static final List<String> READ_COLUMNS =
-      List.of(
-          SpannerClient.COL_SUBJECT_ID,
-          SpannerClient.COL_NAME,
-          SpannerClient.COL_TYPES,
-          SpannerClient.COL_VALUE,
-          SpannerClient.COL_BYTES);
+      List.of(COL_SUBJECT_ID, COL_NAME, COL_TYPES, COL_VALUE, COL_BYTES);
+
+  public static final Set<String> WRITABLE_COLUMNS =
+      Set.of(COL_SUBJECT_ID, COL_VALUE, COL_BYTES, COL_NAME, COL_TYPES, COL_LAST_UPDATE_TIMESTAMP);
 
   /** Adapts forward ingestion's domain {@link Node} POJO. */
   public static NodeRecord from(Node node) {
@@ -50,29 +55,27 @@ public record NodeRecord(
   /** Adapts a historical Spanner {@link Struct} row from a snapshot read. */
   public static NodeRecord from(Struct struct) {
     return new NodeRecord(
-        struct.getString(SpannerClient.COL_SUBJECT_ID),
-        struct.isNull(SpannerClient.COL_VALUE) ? null : struct.getString(SpannerClient.COL_VALUE),
-        struct.isNull(SpannerClient.COL_BYTES) ? null : struct.getBytes(SpannerClient.COL_BYTES),
-        struct.isNull(SpannerClient.COL_NAME) ? null : struct.getString(SpannerClient.COL_NAME),
-        struct.isNull(SpannerClient.COL_TYPES)
-            ? null
-            : struct.getStringList(SpannerClient.COL_TYPES));
+        struct.getString(COL_SUBJECT_ID),
+        struct.isNull(COL_VALUE) ? null : struct.getString(COL_VALUE),
+        struct.isNull(COL_BYTES) ? null : struct.getBytes(COL_BYTES),
+        struct.isNull(COL_NAME) ? null : struct.getString(COL_NAME),
+        struct.isNull(COL_TYPES) ? null : struct.getStringList(COL_TYPES));
   }
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
     return Mutation.newInsertOrUpdateBuilder(tableName)
-        .set(SpannerClient.COL_SUBJECT_ID)
+        .set(COL_SUBJECT_ID)
         .to(subjectId)
-        .set(SpannerClient.COL_LAST_UPDATE_TIMESTAMP)
+        .set(COL_LAST_UPDATE_TIMESTAMP)
         .to(Value.COMMIT_TIMESTAMP)
-        .set(SpannerClient.COL_VALUE)
+        .set(COL_VALUE)
         .to(value)
-        .set(SpannerClient.COL_BYTES)
+        .set(COL_BYTES)
         .to(bytes)
-        .set(SpannerClient.COL_NAME)
+        .set(COL_NAME)
         .to(name)
-        .set(SpannerClient.COL_TYPES)
+        .set(COL_TYPES)
         .toStringArray(types)
         .build();
   }

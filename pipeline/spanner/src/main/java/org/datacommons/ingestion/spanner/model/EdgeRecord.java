@@ -19,8 +19,8 @@ import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 import org.datacommons.ingestion.data.Edge;
-import org.datacommons.ingestion.spanner.SpannerClient;
 
 /**
  * Immutable canonical record representing a single row in the Spanner Edge table.
@@ -31,12 +31,18 @@ import org.datacommons.ingestion.spanner.SpannerClient;
 public record EdgeRecord(String subjectId, String predicate, String objectId, String provenance)
     implements Serializable {
 
+  public static final String COL_SUBJECT_ID = "subject_id";
+  public static final String COL_PREDICATE = "predicate";
+  public static final String COL_OBJECT_ID = "object_id";
+  public static final String COL_PROVENANCE = "provenance";
+  public static final String COL_LAST_UPDATE_TIMESTAMP = "last_update_timestamp";
+
   public static final List<String> READ_COLUMNS =
-      List.of(
-          SpannerClient.COL_SUBJECT_ID,
-          SpannerClient.COL_PREDICATE,
-          SpannerClient.COL_OBJECT_ID,
-          SpannerClient.COL_PROVENANCE);
+      List.of(COL_SUBJECT_ID, COL_PREDICATE, COL_OBJECT_ID, COL_PROVENANCE);
+
+  public static final Set<String> WRITABLE_COLUMNS =
+      Set.of(
+          COL_SUBJECT_ID, COL_PREDICATE, COL_OBJECT_ID, COL_PROVENANCE, COL_LAST_UPDATE_TIMESTAMP);
 
   /** Adapts forward ingestion's domain {@link Edge} POJO. */
   public static EdgeRecord from(Edge edge) {
@@ -47,24 +53,24 @@ public record EdgeRecord(String subjectId, String predicate, String objectId, St
   /** Adapts a historical Spanner {@link Struct} row from a snapshot read. */
   public static EdgeRecord from(Struct struct) {
     return new EdgeRecord(
-        struct.getString(SpannerClient.COL_SUBJECT_ID),
-        struct.getString(SpannerClient.COL_PREDICATE),
-        struct.getString(SpannerClient.COL_OBJECT_ID),
-        struct.getString(SpannerClient.COL_PROVENANCE));
+        struct.getString(COL_SUBJECT_ID),
+        struct.getString(COL_PREDICATE),
+        struct.getString(COL_OBJECT_ID),
+        struct.getString(COL_PROVENANCE));
   }
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
     return Mutation.newInsertOrUpdateBuilder(tableName)
-        .set(SpannerClient.COL_SUBJECT_ID)
+        .set(COL_SUBJECT_ID)
         .to(subjectId)
-        .set(SpannerClient.COL_PREDICATE)
+        .set(COL_PREDICATE)
         .to(predicate)
-        .set(SpannerClient.COL_OBJECT_ID)
+        .set(COL_OBJECT_ID)
         .to(objectId)
-        .set(SpannerClient.COL_PROVENANCE)
+        .set(COL_PROVENANCE)
         .to(provenance)
-        .set(SpannerClient.COL_LAST_UPDATE_TIMESTAMP)
+        .set(COL_LAST_UPDATE_TIMESTAMP)
         .to(Value.COMMIT_TIMESTAMP)
         .build();
   }
