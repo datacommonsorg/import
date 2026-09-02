@@ -20,6 +20,10 @@ on:
     paths:
       - 'pipeline/workflow/ingestion-helper/clients/schema.sql'
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   verify-schema-freeze:
     name: Verify Canonical Schema Is Frozen
@@ -27,12 +31,12 @@ jobs:
     steps:
       - name: Check for Schema Squash Bypass
         id: check_bypass
+        env:
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          LABELS="${{ toJson(github.event.pull_request.labels.*.name) }}"
-          TITLE="${{ github.event.pull_request.title }}"
-          BODY="${{ github.event.pull_request.body }}"
-
-          if echo "$LABELS" | grep -iq "schema-squash" || echo "$TITLE $BODY" | grep -iq "\[schema-squash\]"; then
+          if echo "$PR_LABELS" | grep -iq "schema-squash" || echo "$PR_TITLE $PR_BODY" | grep -iq "\[schema-squash\]"; then
             echo "bypass=true" >> "$GITHUB_OUTPUT"
             echo "✔ 'schema-squash' bypass detected. Allowing schema.sql modification."
           else
