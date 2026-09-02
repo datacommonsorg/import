@@ -300,6 +300,11 @@ public class SpannerRollbackPipeline implements Serializable {
     SpannerIO.Read baseRead = createBaseRead(spannerClient, options.getEmulatorHost());
     String emulatorHost = options.getEmulatorHost();
 
+    // TODO: Optimize node reconciliation for very large Node tables.
+    // Querying Node by last_update_timestamp >= @tPre scans the Node table. As a future
+    // scalability optimization, candidate subject_ids can be extracted directly from the
+    // failed import's Edge and TimeSeries tables at HEAD prior to deletion, avoiding a
+    // table scan over unmodified nodes.
     String modifiedNodesQuery =
         spannerClient.formatPartitionQuery(
             "SELECT subject_id FROM %s WHERE last_update_timestamp >= @tPre",
