@@ -143,4 +143,39 @@ public class SpannerClientTest {
     assertEquals("100", map.get("value").getString());
     assertEquals("spanner.commit_timestamp()", map.get("last_update_timestamp").toString());
   }
+
+  @Test
+  public void testFormatPartitionQuery_production_preservesCleanSql() {
+    SpannerClient prodClient =
+        SpannerClient.builder()
+            .gcpProjectId("test-project")
+            .spannerInstanceId("test-instance")
+            .spannerDatabaseId("test-db")
+            .build();
+
+    String query =
+        prodClient.formatPartitionQuery(
+            "SELECT * FROM TimeSeries WHERE provenance = '%s'", "dc/base/Test");
+    assertEquals("SELECT * FROM TimeSeries WHERE provenance = 'dc/base/Test'", query);
+    assertFalse(query.contains("spanner_emulator"));
+  }
+
+  @Test
+  public void testFormatPartitionQuery_emulator_prependsHint() {
+    SpannerClient emulatorClient =
+        SpannerClient.builder()
+            .gcpProjectId("test-project")
+            .spannerInstanceId("test-instance")
+            .spannerDatabaseId("test-db")
+            .emulatorHost("localhost:9010")
+            .build();
+
+    String query =
+        emulatorClient.formatPartitionQuery(
+            "SELECT * FROM TimeSeries WHERE provenance = '%s'", "dc/base/Test");
+    assertEquals(
+        "@{spanner_emulator.disable_query_partitionability_check=true} SELECT * FROM TimeSeries WHERE provenance = 'dc/base/Test'",
+        query);
+    assertTrue(query.startsWith("@{spanner_emulator.disable_query_partitionability_check=true}"));
+  }
 }

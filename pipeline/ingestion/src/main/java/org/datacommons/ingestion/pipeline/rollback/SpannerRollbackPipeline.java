@@ -179,9 +179,8 @@ public class SpannerRollbackPipeline implements Serializable {
     // A. Read Historical TimeSeries
     String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
     String tsQuery =
-        String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT %s FROM %s WHERE"
-                + " provenance IN UNNEST(@provenances)",
+        spannerClient.formatPartitionQuery(
+            "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)",
             tsColumns, spannerClient.getTimeSeriesTableName());
     PCollection<Mutation> restoreTimeSeriesMutations =
         pipeline
@@ -208,8 +207,8 @@ public class SpannerRollbackPipeline implements Serializable {
             .map(c -> "o." + c)
             .collect(java.util.stream.Collectors.joining(", "));
     String obsQuery =
-        String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT %s FROM %s o JOIN %s ts ON o.variable_measured = ts.variable_measured AND"
+        spannerClient.formatPartitionQuery(
+            "SELECT %s FROM %s o JOIN %s ts ON o.variable_measured = ts.variable_measured AND"
                 + " o.entity1 = ts.entity1 AND o.extra_entities_id = ts.extra_entities_id AND"
                 + " o.facet_id = ts.facet_id WHERE ts.provenance IN UNNEST(@provenances)",
             obsColumns,
@@ -237,9 +236,8 @@ public class SpannerRollbackPipeline implements Serializable {
     // C. Read Historical Edges
     String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
     String edgeQuery =
-        String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT %s FROM %s WHERE"
-                + " provenance IN UNNEST(@provenances)",
+        spannerClient.formatPartitionQuery(
+            "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)",
             edgeColumns, spannerClient.getEdgeTableName());
     PCollection<Mutation> restoreEdgeMutations =
         pipeline
@@ -262,9 +260,9 @@ public class SpannerRollbackPipeline implements Serializable {
     // D. Read Historical KeyValueStore (type = 'ProvenanceSummary')
     String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
     String kvQuery =
-        String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT %s FROM %s WHERE type = 'ProvenanceSummary' AND"
-                + " provenance IN UNNEST(@provenances)",
+        spannerClient.formatPartitionQuery(
+            "SELECT %s FROM %s WHERE type = 'ProvenanceSummary' AND provenance IN"
+                + " UNNEST(@provenances)",
             kvColumns, KEY_VALUE_STORE_TABLE);
     PCollection<Mutation> restoreKvMutations =
         pipeline
@@ -303,8 +301,8 @@ public class SpannerRollbackPipeline implements Serializable {
     String emulatorHost = options.getEmulatorHost();
 
     String modifiedNodesQuery =
-        String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT subject_id FROM %s WHERE last_update_timestamp >= @tPre",
+        spannerClient.formatPartitionQuery(
+            "SELECT subject_id FROM %s WHERE last_update_timestamp >= @tPre",
             spannerClient.getNodeTableName());
     PCollection<String> modifiedSubjectIds =
         pipeline

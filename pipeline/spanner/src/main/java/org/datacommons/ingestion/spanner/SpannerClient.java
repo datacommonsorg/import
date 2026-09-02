@@ -273,6 +273,20 @@ public class SpannerClient implements Serializable {
     return observationTableName;
   }
 
+  /**
+   * Prepares a SQL query for SpannerIO partitioned reads by conditionally prepending the
+   * emulator-specific hint ({@code @{spanner_emulator.disable_query_partitionability_check=true}})
+   * when running against the Cloud Spanner Emulator. In production Cloud Spanner, standard SQL is
+   * preserved.
+   */
+  public String formatPartitionQuery(String format, Object... args) {
+    String query = (args == null || args.length == 0) ? format : String.format(format, args);
+    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
+      return "@{spanner_emulator.disable_query_partitionability_check=true} " + query;
+    }
+    return query;
+  }
+
   public static Builder builder() {
     return new Builder();
   }

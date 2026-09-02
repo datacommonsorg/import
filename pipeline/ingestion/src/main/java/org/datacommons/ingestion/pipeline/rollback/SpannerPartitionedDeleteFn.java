@@ -37,6 +37,8 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
   private final String tableName;
   private final String columnName;
   private final String emulatorHost;
+  private transient Spanner spanner;
+  private transient DatabaseClient dbClient;
 
   public SpannerPartitionedDeleteFn(
       SpannerClient spannerClient, String tableName, String columnName, String emulatorHost) {
@@ -46,33 +48,41 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
     this.emulatorHost = emulatorHost;
   }
 
-  @ProcessElement
-  public void processElement(@Element List<String> values, OutputReceiver<Void> receiver) {
-    if (values == null || values.isEmpty()) {
-      receiver.output(null);
-      return;
-    }
+  @Setup
+  public void setup() {
     SpannerOptions.Builder builder =
         SpannerOptions.newBuilder().setProjectId(spannerClient.getGcpProjectId());
     if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
       builder.setEmulatorHost(emulatorHost.trim());
       builder.setCredentials(NoCredentials.getInstance());
     }
-    try (Spanner spanner = builder.build().getService()) {
-      DatabaseClient dbClient =
-          spanner.getDatabaseClient(
-              DatabaseId.of(
-                  spannerClient.getGcpProjectId(),
-                  spannerClient.getSpannerInstanceId(),
-                  spannerClient.getSpannerDatabaseId()));
-      String dml =
-          String.format(
-              "DELETE FROM %s WHERE %s IN UNNEST(@%s)", tableName, columnName, columnName);
-      Statement statement =
-          Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
-      long rowCount = dbClient.executePartitionedUpdate(statement);
-      LOGGER.info("Deleted {} rows from {} for {} IN {}", rowCount, tableName, columnName, values);
-      receiver.output(null);
+    this.spanner = builder.build().getService();
+    this.dbClient =
+        spanner.getDatabaseClient(
+            DatabaseId.of(
+                spannerClient.getGcpProjectId(),
+                spannerClient.getSpannerInstanceId(),
+                spannerClient.getSpannerDatabaseId()));
+  }
+
+  @Teardown
+  public void teardown() {
+    if (spanner != null) {
+      spanner.close();
     }
+  }
+
+  @ProcessElement
+  public void processElement(@Element List<String> values, OutputReceiver<Void> receiver) {
+    if (values == null || values.isEmpty()) {
+      receiver.output(null);
+      return;
+    }
+    String dml =
+        String.format("DELETE FROM %s WHERE %s IN UNNEST(@%s)", tableName, columnName, columnName);
+    Statement statement = Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
+    long rowCount = dbClient.executePartitionedUpdate(statement);
+    LOGGER.info("Deleted {} rows from {} for {} IN {}", rowCount, tableName, columnName, values);
+    receiver.output(null);
   }
 }
