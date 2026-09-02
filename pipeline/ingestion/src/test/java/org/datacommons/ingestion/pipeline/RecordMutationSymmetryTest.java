@@ -31,12 +31,16 @@ import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.data.TimeSeriesKey;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
+import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
+import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class RestoreMutationMappersTest {
+public class RecordMutationSymmetryTest {
 
   @Test
   public void testMutationSymmetry_rollbackRestoresAllForwardIngestionColumns() {
@@ -129,7 +133,7 @@ public class RestoreMutationMappersTest {
             .to(Value.json("{\"provenance\":\"dc/base/Census\"}"))
             .build();
 
-    Mutation mutation = RestoreMutationMappers.toTimeSeriesRestoreMutation(struct, "TimeSeries");
+    Mutation mutation = TimeSeriesRecord.from(struct).toMutation("TimeSeries");
     assertNotNull(mutation);
     assertEquals("TimeSeries", mutation.getTable());
 
@@ -162,7 +166,7 @@ public class RestoreMutationMappersTest {
             .to((ByteArray) null)
             .build();
 
-    Mutation mutation = RestoreMutationMappers.toNodeRestoreMutation(struct, "Node");
+    Mutation mutation = NodeRecord.from(struct).toMutation("Node");
     assertNotNull(mutation);
     assertEquals("Node", mutation.getTable());
 
@@ -189,8 +193,7 @@ public class RestoreMutationMappersTest {
             .to(Value.json("{\"import_name\":\"Census\"}"))
             .build();
 
-    Mutation mutation =
-        RestoreMutationMappers.toKeyValueStoreRestoreMutation(struct, "KeyValueStore");
+    Mutation mutation = KeyValueStoreRecord.from(struct).toMutation("KeyValueStore");
     assertNotNull(mutation);
     assertEquals("KeyValueStore", mutation.getTable());
 
@@ -219,8 +222,7 @@ public class RestoreMutationMappersTest {
             .toFloat64Array(List.of(0.1, 0.2, 0.3))
             .build();
 
-    Mutation mutation =
-        RestoreMutationMappers.toNodeEmbeddingRestoreMutation(struct, "NodeEmbedding");
+    Mutation mutation = NodeEmbeddingRecord.from(struct).toMutation("NodeEmbedding");
     assertNotNull(mutation);
     assertEquals("NodeEmbedding", mutation.getTable());
 

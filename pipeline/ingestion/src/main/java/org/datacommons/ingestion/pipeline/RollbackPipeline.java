@@ -177,8 +177,8 @@ public class RollbackPipeline implements Serializable {
                 MapElements.into(TypeDescriptor.of(Mutation.class))
                     .via(
                         struct ->
-                            RestoreMutationMappers.toTimeSeriesRestoreMutation(
-                                struct, spannerClient.getTimeSeriesTableName())));
+                            TimeSeriesRecord.from(struct)
+                                .toMutation(spannerClient.getTimeSeriesTableName())));
 
     // B. Read Historical Observations (Time-Travel JOIN via TimeSeries)
     String obsColumns =
@@ -209,8 +209,8 @@ public class RollbackPipeline implements Serializable {
                 MapElements.into(TypeDescriptor.of(Mutation.class))
                     .via(
                         struct ->
-                            RestoreMutationMappers.toObservationRestoreMutation(
-                                struct, spannerClient.getObservationTableName())));
+                            ObservationRecord.from(struct)
+                                .toMutation(spannerClient.getObservationTableName())));
 
     // C. Read Historical Edges
     String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
@@ -235,8 +235,7 @@ public class RollbackPipeline implements Serializable {
                 MapElements.into(TypeDescriptor.of(Mutation.class))
                     .via(
                         struct ->
-                            RestoreMutationMappers.toEdgeRestoreMutation(
-                                struct, spannerClient.getEdgeTableName())));
+                            EdgeRecord.from(struct).toMutation(spannerClient.getEdgeTableName())));
 
     // D. Read Historical KeyValueStore (type = 'ProvenanceSummary')
     String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
@@ -261,8 +260,7 @@ public class RollbackPipeline implements Serializable {
                 MapElements.into(TypeDescriptor.of(Mutation.class))
                     .via(
                         struct ->
-                            RestoreMutationMappers.toKeyValueStoreRestoreMutation(
-                                struct, KEY_VALUE_STORE_TABLE)));
+                            KeyValueStoreRecord.from(struct).toMutation(KEY_VALUE_STORE_TABLE)));
 
     // -------------------------------------------------------------------------
     // Phase 3: Shared Table Reconciliation (Node & NodeEmbedding)
@@ -589,9 +587,7 @@ public class RollbackPipeline implements Serializable {
           restoredIds.add(id);
           receiver
               .get(RESTORE_NODES_TAG)
-              .output(
-                  RestoreMutationMappers.toNodeRestoreMutation(
-                      row, spannerClient.getNodeTableName()));
+              .output(NodeRecord.from(row).toMutation(spannerClient.getNodeTableName()));
         }
       }
 
@@ -665,8 +661,7 @@ public class RollbackPipeline implements Serializable {
                   NODE_EMBEDDING_TABLE, keySetBuilder.build(), NodeEmbeddingRecord.READ_COLUMNS)) {
         while (rs.next()) {
           Struct row = rs.getCurrentRowAsStruct();
-          receiver.output(
-              RestoreMutationMappers.toNodeEmbeddingRestoreMutation(row, NODE_EMBEDDING_TABLE));
+          receiver.output(NodeEmbeddingRecord.from(row).toMutation(NODE_EMBEDDING_TABLE));
         }
       }
     }
