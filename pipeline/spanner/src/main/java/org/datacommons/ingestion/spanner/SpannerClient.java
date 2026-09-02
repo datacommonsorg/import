@@ -14,7 +14,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
@@ -30,8 +29,6 @@ import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.spanner.model.EdgeRecord;
-import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
-import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
 import org.datacommons.ingestion.spanner.model.ObservationRecord;
 import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
@@ -160,16 +157,6 @@ public class SpannerClient implements Serializable {
     }
     return write;
   }
-
-  // --- Canonical Writable Columns for Spanner Tables ---
-  public static final Set<String> NODE_WRITABLE_COLUMNS = NodeRecord.WRITABLE_COLUMNS;
-  public static final Set<String> EDGE_WRITABLE_COLUMNS = EdgeRecord.WRITABLE_COLUMNS;
-  public static final Set<String> TIME_SERIES_WRITABLE_COLUMNS = TimeSeriesRecord.WRITABLE_COLUMNS;
-  public static final Set<String> OBSERVATION_WRITABLE_COLUMNS = ObservationRecord.WRITABLE_COLUMNS;
-  public static final Set<String> KEY_VALUE_STORE_WRITABLE_COLUMNS =
-      KeyValueStoreRecord.WRITABLE_COLUMNS;
-  public static final Set<String> NODE_EMBEDDING_WRITABLE_COLUMNS =
-      NodeEmbeddingRecord.WRITABLE_COLUMNS;
 
   public Mutation toNodeMutation(Node node) {
     // Only update subject_id for provisional nodes.

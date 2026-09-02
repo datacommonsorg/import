@@ -42,6 +42,12 @@ import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.ingestion.spanner.model.EdgeRecord;
+import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
+import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
+import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.model.ObservationRecord;
+import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -376,22 +382,22 @@ public class RollbackPipelineIntegrationTest {
       }
     }
 
-    // 2. Validate against canonical SpannerClient writable column sets
+    // 2. Validate against canonical record model writable column sets
     Map<String, Set<String>> rollbackColsByTable =
         Map.of(
-            "Node", SpannerClient.NODE_WRITABLE_COLUMNS,
-            "Edge", SpannerClient.EDGE_WRITABLE_COLUMNS,
-            "TimeSeries", SpannerClient.TIME_SERIES_WRITABLE_COLUMNS,
-            "Observation", SpannerClient.OBSERVATION_WRITABLE_COLUMNS,
-            "KeyValueStore", SpannerClient.KEY_VALUE_STORE_WRITABLE_COLUMNS,
-            "NodeEmbedding", SpannerClient.NODE_EMBEDDING_WRITABLE_COLUMNS);
+            "Node", NodeRecord.WRITABLE_COLUMNS,
+            "Edge", EdgeRecord.WRITABLE_COLUMNS,
+            "TimeSeries", TimeSeriesRecord.WRITABLE_COLUMNS,
+            "Observation", ObservationRecord.WRITABLE_COLUMNS,
+            "KeyValueStore", KeyValueStoreRecord.WRITABLE_COLUMNS,
+            "NodeEmbedding", NodeEmbeddingRecord.WRITABLE_COLUMNS);
 
     for (Map.Entry<String, Set<String>> entry : writableColsByTable.entrySet()) {
       String tableName = entry.getKey();
       Set<String> schemaCols = entry.getValue();
       Set<String> rollbackCols = rollbackColsByTable.get(tableName);
       assertNotNull(
-          "Table " + tableName + " must have mapped writable columns in SpannerClient",
+          "Table " + tableName + " must have mapped writable columns in record model",
           rollbackCols);
 
       Set<String> missingCols = Sets.difference(schemaCols, rollbackCols);

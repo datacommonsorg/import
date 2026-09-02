@@ -69,19 +69,28 @@ public record NodeEmbeddingRecord(
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
-    return Mutation.newInsertOrUpdateBuilder(tableName)
-        .set(COL_SUBJECT_ID)
-        .to(subjectId)
-        .set(COL_EMBEDDING_LABEL)
-        .to(embeddingLabel)
-        .set(COL_EMBEDDING_CONTENT_KEY)
-        .to(embeddingContentKey)
-        .set(COL_EMBEDDING_CONTENT)
-        .to(embeddingContent != null ? Value.json(embeddingContent) : Value.json(null))
-        .set(COL_NODE_TYPES)
-        .toStringArray(nodeTypes)
-        .set(COL_EMBEDDINGS)
-        .toFloat64Array(embeddings)
-        .build();
+    Mutation mutation =
+        Mutation.newInsertOrUpdateBuilder(tableName)
+            .set(COL_SUBJECT_ID)
+            .to(subjectId)
+            .set(COL_EMBEDDING_LABEL)
+            .to(embeddingLabel)
+            .set(COL_EMBEDDING_CONTENT_KEY)
+            .to(embeddingContentKey)
+            .set(COL_EMBEDDING_CONTENT)
+            .to(embeddingContent != null ? Value.json(embeddingContent) : Value.json(null))
+            .set(COL_NODE_TYPES)
+            .toStringArray(nodeTypes)
+            .set(COL_EMBEDDINGS)
+            .toFloat64Array(embeddings)
+            .build();
+    if (!WRITABLE_COLUMNS.equals(mutation.asMap().keySet())) {
+      throw new IllegalStateException(
+          "Mutation columns "
+              + mutation.asMap().keySet()
+              + " do not match WRITABLE_COLUMNS "
+              + WRITABLE_COLUMNS);
+    }
+    return mutation;
   }
 }

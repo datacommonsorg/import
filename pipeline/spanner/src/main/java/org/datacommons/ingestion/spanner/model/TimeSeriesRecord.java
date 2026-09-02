@@ -108,21 +108,30 @@ public record TimeSeriesRecord(
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
-    return Mutation.newInsertOrUpdateBuilder(tableName)
-        .set(COL_VARIABLE_MEASURED)
-        .to(variableMeasured)
-        // entity1 is a STORED generated column in TimeSeries, DO NOT write to it directly!
-        .set(COL_EXTRA_ENTITIES_ID)
-        .to(extraEntitiesId)
-        .set(COL_FACET_ID)
-        .to(facetId)
-        .set(COL_ENTITIES)
-        .to(entities != null ? Value.json(entities) : Value.json(null))
-        .set(COL_FACET)
-        .to(facet != null ? Value.json(facet) : Value.json(null))
-        .set(COL_LAST_UPDATE_TIMESTAMP)
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
+    Mutation mutation =
+        Mutation.newInsertOrUpdateBuilder(tableName)
+            .set(COL_VARIABLE_MEASURED)
+            .to(variableMeasured)
+            // entity1 is a STORED generated column in TimeSeries, DO NOT write to it directly!
+            .set(COL_EXTRA_ENTITIES_ID)
+            .to(extraEntitiesId)
+            .set(COL_FACET_ID)
+            .to(facetId)
+            .set(COL_ENTITIES)
+            .to(entities != null ? Value.json(entities) : Value.json(null))
+            .set(COL_FACET)
+            .to(facet != null ? Value.json(facet) : Value.json(null))
+            .set(COL_LAST_UPDATE_TIMESTAMP)
+            .to(Value.COMMIT_TIMESTAMP)
+            .build();
+    if (!WRITABLE_COLUMNS.equals(mutation.asMap().keySet())) {
+      throw new IllegalStateException(
+          "Mutation columns "
+              + mutation.asMap().keySet()
+              + " do not match WRITABLE_COLUMNS "
+              + WRITABLE_COLUMNS);
+    }
+    return mutation;
   }
 
   private static void addPropertyIfNotEmpty(JsonObject json, String property, String value) {

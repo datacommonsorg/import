@@ -31,9 +31,11 @@ import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.data.TimeSeriesKey;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.ingestion.spanner.model.EdgeRecord;
 import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
 import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.model.ObservationRecord;
 import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,7 +70,7 @@ public class RecordMutationSymmetryTest {
     Set<String> forwardNodeCols = client.toNodeMutation(sampleNode).asMap().keySet();
     assertEquals(
         "toNodeMutation columns must exactly match NODE_WRITABLE_COLUMNS",
-        SpannerClient.NODE_WRITABLE_COLUMNS,
+        NodeRecord.WRITABLE_COLUMNS,
         forwardNodeCols);
 
     // 2. Edge Symmetry
@@ -83,7 +85,7 @@ public class RecordMutationSymmetryTest {
     Set<String> forwardEdgeCols = client.toEdgeMutation(sampleEdge).asMap().keySet();
     assertEquals(
         "toEdgeMutation columns must exactly match EDGE_WRITABLE_COLUMNS",
-        SpannerClient.EDGE_WRITABLE_COLUMNS,
+        EdgeRecord.WRITABLE_COLUMNS,
         forwardEdgeCols);
 
     // 3. Observation Symmetry
@@ -95,7 +97,7 @@ public class RecordMutationSymmetryTest {
     Set<String> forwardObsCols = client.toObservationMutation(sampleObs).asMap().keySet();
     assertEquals(
         "toObservationMutation columns must exactly match OBSERVATION_WRITABLE_COLUMNS",
-        SpannerClient.OBSERVATION_WRITABLE_COLUMNS,
+        ObservationRecord.WRITABLE_COLUMNS,
         forwardObsCols);
 
     // 4. TimeSeries Symmetry
@@ -113,7 +115,7 @@ public class RecordMutationSymmetryTest {
     Set<String> forwardTsCols = client.toTimeSeriesMutation(sampleTs).asMap().keySet();
     assertEquals(
         "toTimeSeriesMutation columns must exactly match TIME_SERIES_WRITABLE_COLUMNS",
-        SpannerClient.TIME_SERIES_WRITABLE_COLUMNS,
+        TimeSeriesRecord.WRITABLE_COLUMNS,
         forwardTsCols);
   }
 
