@@ -5,7 +5,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.util.List;
-import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
@@ -83,12 +82,12 @@ public class GraphIngestionPipeline {
   }
 
   /**
-   * Returns true if the configured Beam pipeline runner is {@link DirectRunner} (used for local
+   * Returns true if the configured Beam pipeline runner is {@code DirectRunner} (used for local
    * testing and emulated environments).
    */
   static boolean isDirectRunner(IngestionPipelineOptions options) {
     Class<?> runnerClass = options.getRunner();
-    return runnerClass != null && DirectRunner.class.isAssignableFrom(runnerClass);
+    return runnerClass != null && "DirectRunner".equals(runnerClass.getSimpleName());
   }
 
   /**

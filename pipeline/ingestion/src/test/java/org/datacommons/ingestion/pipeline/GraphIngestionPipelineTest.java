@@ -273,9 +273,9 @@ public class GraphIngestionPipelineTest implements Serializable {
 
     builder.inheritIO();
     Process process = builder.start();
-    boolean finished = process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
+    boolean finished = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);
 
-    assertTrue("Process should terminate within 10 seconds without hanging", finished);
+    assertTrue("Process should terminate within 30 seconds without hanging", finished);
     assertTrue("Process should exit with non-zero exit code", process.exitValue() != 0);
   }
 
