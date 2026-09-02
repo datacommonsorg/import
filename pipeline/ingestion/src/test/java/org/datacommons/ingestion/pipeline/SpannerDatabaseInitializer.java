@@ -136,9 +136,16 @@ public class SpannerDatabaseInitializer {
         new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
       List<String> statements = parseDdlStatements(reader);
 
-      // Always filter out templates (embeddings/models) as we don't resolve them in Java tests.
+      // Replace template variables for embeddings in Java tests.
       statements =
           statements.stream()
+              .map(
+                  stmt ->
+                      stmt.replace("{{ embedding_table }}", "NodeEmbedding")
+                          .replace("{{ embedding_space }}", "768")
+                          .replace("{{ embedding_index }}", "NodeEmbeddingIndex")
+                          .replace("{{ embedding_label_index }}", "NodeEmbeddingLabelIndex"))
+              .filter(stmt -> !stmt.contains("VECTOR INDEX"))
               .filter(stmt -> !stmt.contains("{{") && !stmt.contains("{%"))
               .collect(Collectors.toList());
 

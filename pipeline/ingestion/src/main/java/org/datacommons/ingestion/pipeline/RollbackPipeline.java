@@ -151,7 +151,7 @@ public class RollbackPipeline implements Serializable {
     // A. Read Historical TimeSeries
     String tsQuery =
         String.format(
-            "SELECT variable_measured, extra_entities_id, facet_id, entities, facet FROM %s WHERE"
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT variable_measured, extra_entities_id, facet_id, entities, facet FROM %s WHERE"
                 + " provenance IN UNNEST(@provenances)",
             spannerClient.getTimeSeriesTableName());
     PCollection<Mutation> restoreTimeSeriesMutations =
@@ -176,7 +176,7 @@ public class RollbackPipeline implements Serializable {
     // B. Read Historical Observations (Time-Travel JOIN via TimeSeries)
     String obsQuery =
         String.format(
-            "SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date,"
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date,"
                 + " o.value FROM %s o JOIN %s ts ON o.variable_measured = ts.variable_measured AND"
                 + " o.entity1 = ts.entity1 AND o.extra_entities_id = ts.extra_entities_id AND"
                 + " o.facet_id = ts.facet_id WHERE ts.provenance IN UNNEST(@provenances)",
@@ -203,7 +203,7 @@ public class RollbackPipeline implements Serializable {
     // C. Read Historical Edges
     String edgeQuery =
         String.format(
-            "SELECT subject_id, predicate, object_id, provenance FROM %s WHERE provenance IN"
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT subject_id, predicate, object_id, provenance FROM %s WHERE provenance IN"
                 + " UNNEST(@provenances)",
             spannerClient.getEdgeTableName());
     PCollection<Mutation> restoreEdgeMutations =
@@ -228,7 +228,7 @@ public class RollbackPipeline implements Serializable {
     // D. Read Historical KeyValueStore (type = 'ProvenanceSummary')
     String kvQuery =
         String.format(
-            "SELECT type, key, provenance, value FROM %s WHERE type = 'ProvenanceSummary' AND"
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT type, key, provenance, value FROM %s WHERE type = 'ProvenanceSummary' AND"
                 + " provenance IN UNNEST(@provenances)",
             KEY_VALUE_STORE_TABLE);
     PCollection<Mutation> restoreKvMutations =
@@ -255,7 +255,7 @@ public class RollbackPipeline implements Serializable {
     // -------------------------------------------------------------------------
     String modifiedNodesQuery =
         String.format(
-            "SELECT subject_id FROM %s WHERE last_update_timestamp >= @tPre",
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT subject_id FROM %s WHERE last_update_timestamp >= @tPre",
             spannerClient.getNodeTableName());
     PCollection<String> modifiedSubjectIds =
         pipeline
@@ -389,13 +389,38 @@ public class RollbackPipeline implements Serializable {
 
     String importList = options.getImportList();
     if (importList != null && !importList.trim().isEmpty()) {
-      String[] importNames = importList.split(",");
-      for (String name : importNames) {
-        String trimmed = name.trim();
-        if (!trimmed.isEmpty()) {
-          provenances.add(ProvenanceUtils.getProvenanceDcid(trimmed, options.getIsBaseDc()));
-          provenances.add(
-              ProvenanceUtils.getProvenanceDcid("generated/" + trimmed, options.getIsBaseDc()));
+      boolean parsedJson = false;
+      try {
+        com.google.gson.JsonElement jsonElement =
+            com.google.gson.JsonParser.parseString(importList.trim());
+        if (jsonElement.isJsonArray()) {
+          com.google.gson.JsonArray jsonArray = jsonElement.getAsJsonArray();
+          for (com.google.gson.JsonElement element : jsonArray) {
+            if (element.isJsonObject() && element.getAsJsonObject().has("importName")) {
+              String importName = element.getAsJsonObject().get("importName").getAsString();
+              if (importName != null && !importName.trim().isEmpty()) {
+                provenances.add(
+                    ProvenanceUtils.getProvenanceDcid(importName.trim(), options.getIsBaseDc()));
+                provenances.add(
+                    ProvenanceUtils.getProvenanceDcid(
+                        "generated/" + importName.trim(), options.getIsBaseDc()));
+              }
+            }
+          }
+          parsedJson = true;
+        }
+      } catch (Exception e) {
+        // Fall back to comma-separated parsing
+      }
+      if (!parsedJson) {
+        String[] importNames = importList.split(",");
+        for (String name : importNames) {
+          String trimmed = name.trim();
+          if (!trimmed.isEmpty()) {
+            provenances.add(ProvenanceUtils.getProvenanceDcid(trimmed, options.getIsBaseDc()));
+            provenances.add(
+                ProvenanceUtils.getProvenanceDcid("generated/" + trimmed, options.getIsBaseDc()));
+          }
         }
       }
     }
@@ -404,7 +429,7 @@ public class RollbackPipeline implements Serializable {
   }
 
   private static void validateRetentionWindow(com.google.cloud.Timestamp tPre) {
-    Instant tPreInstant = Instant.ofEpochMilli(tPre.toSqlTimestamp().getTime());
+    Instant tPreInstant = Instant.ofEpochSecond(tPre.getSeconds(), tPre.getNanos());
     Instant maxRetentionBoundary = Instant.now().minus(Duration.ofDays(MAX_RETENTION_DAYS));
     if (tPreInstant.isBefore(maxRetentionBoundary)) {
       throw new IllegalArgumentException(
@@ -491,6 +516,8 @@ public class RollbackPipeline implements Serializable {
     private final SpannerClient spannerClient;
     private final com.google.cloud.Timestamp tPre;
     private final String emulatorHost;
+    private transient Spanner spanner;
+    private transient DatabaseClient dbClient;
 
     public ReconcileNodeBatchFn(
         SpannerClient spannerClient, com.google.cloud.Timestamp tPre, String emulatorHost) {
@@ -499,60 +526,68 @@ public class RollbackPipeline implements Serializable {
       this.emulatorHost = emulatorHost;
     }
 
-    @ProcessElement
-    public void processElement(@Element List<String> batch, MultiOutputReceiver receiver) {
-      if (batch == null || batch.isEmpty()) {
-        return;
-      }
-
+    @Setup
+    public void setup() {
       SpannerOptions.Builder builder =
           SpannerOptions.newBuilder().setProjectId(spannerClient.getGcpProjectId());
       if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
         builder.setEmulatorHost(emulatorHost.trim());
         builder.setCredentials(NoCredentials.getInstance());
       }
+      this.spanner = builder.build().getService();
+      this.dbClient =
+          spanner.getDatabaseClient(
+              DatabaseId.of(
+                  spannerClient.getGcpProjectId(),
+                  spannerClient.getSpannerInstanceId(),
+                  spannerClient.getSpannerDatabaseId()));
+    }
 
-      try (Spanner spanner = builder.build().getService()) {
-        DatabaseClient dbClient =
-            spanner.getDatabaseClient(
-                DatabaseId.of(
-                    spannerClient.getGcpProjectId(),
-                    spannerClient.getSpannerInstanceId(),
-                    spannerClient.getSpannerDatabaseId()));
+    @Teardown
+    public void teardown() {
+      if (spanner != null) {
+        spanner.close();
+      }
+    }
 
-        KeySet.Builder keySetBuilder = KeySet.newBuilder();
-        for (String subjectId : batch) {
-          keySetBuilder.addKey(com.google.cloud.spanner.Key.of(subjectId));
+    @ProcessElement
+    public void processElement(@Element List<String> batch, MultiOutputReceiver receiver) {
+      if (batch == null || batch.isEmpty()) {
+        return;
+      }
+
+      KeySet.Builder keySetBuilder = KeySet.newBuilder();
+      for (String subjectId : batch) {
+        keySetBuilder.addKey(com.google.cloud.spanner.Key.of(subjectId));
+      }
+
+      Set<String> restoredIds = new HashSet<>();
+      try (ResultSet rs =
+          dbClient
+              .singleUse(TimestampBound.ofReadTimestamp(tPre))
+              .read(
+                  spannerClient.getNodeTableName(),
+                  keySetBuilder.build(),
+                  Arrays.asList("subject_id", "name", "types", "value", "bytes"))) {
+        while (rs.next()) {
+          Struct row = rs.getCurrentRowAsStruct();
+          String id = row.getString("subject_id");
+          restoredIds.add(id);
+          receiver
+              .get(RESTORE_NODES_TAG)
+              .output(
+                  RestoreMutationMappers.toNodeRestoreMutation(
+                      row, spannerClient.getNodeTableName()));
         }
+      }
 
-        Set<String> restoredIds = new HashSet<>();
-        try (ResultSet rs =
-            dbClient
-                .singleUse(TimestampBound.ofReadTimestamp(tPre))
-                .read(
-                    spannerClient.getNodeTableName(),
-                    keySetBuilder.build(),
-                    Arrays.asList("subject_id", "name", "types", "value", "bytes"))) {
-          while (rs.next()) {
-            Struct row = rs.getCurrentRowAsStruct();
-            String id = row.getString("subject_id");
-            restoredIds.add(id);
-            receiver
-                .get(RESTORE_NODES_TAG)
-                .output(
-                    RestoreMutationMappers.toNodeRestoreMutation(
-                        row, spannerClient.getNodeTableName()));
-          }
-        }
-
-        for (String id : batch) {
-          if (!restoredIds.contains(id)) {
-            receiver
-                .get(DELETE_NODES_TAG)
-                .output(
-                    Mutation.delete(
-                        spannerClient.getNodeTableName(), com.google.cloud.spanner.Key.of(id)));
-          }
+      for (String id : batch) {
+        if (!restoredIds.contains(id)) {
+          receiver
+              .get(DELETE_NODES_TAG)
+              .output(
+                  Mutation.delete(
+                      spannerClient.getNodeTableName(), com.google.cloud.spanner.Key.of(id)));
         }
       }
     }
@@ -563,6 +598,8 @@ public class RollbackPipeline implements Serializable {
     private final SpannerClient spannerClient;
     private final com.google.cloud.Timestamp tPre;
     private final String emulatorHost;
+    private transient Spanner spanner;
+    private transient DatabaseClient dbClient;
 
     public ReconcileNodeEmbeddingBatchFn(
         SpannerClient spannerClient, com.google.cloud.Timestamp tPre, String emulatorHost) {
@@ -571,51 +608,59 @@ public class RollbackPipeline implements Serializable {
       this.emulatorHost = emulatorHost;
     }
 
-    @ProcessElement
-    public void processElement(@Element List<String> batch, OutputReceiver<Mutation> receiver) {
-      if (batch == null || batch.isEmpty()) {
-        return;
-      }
-
+    @Setup
+    public void setup() {
       SpannerOptions.Builder builder =
           SpannerOptions.newBuilder().setProjectId(spannerClient.getGcpProjectId());
       if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
         builder.setEmulatorHost(emulatorHost.trim());
         builder.setCredentials(NoCredentials.getInstance());
       }
+      this.spanner = builder.build().getService();
+      this.dbClient =
+          spanner.getDatabaseClient(
+              DatabaseId.of(
+                  spannerClient.getGcpProjectId(),
+                  spannerClient.getSpannerInstanceId(),
+                  spannerClient.getSpannerDatabaseId()));
+    }
 
-      try (Spanner spanner = builder.build().getService()) {
-        DatabaseClient dbClient =
-            spanner.getDatabaseClient(
-                DatabaseId.of(
-                    spannerClient.getGcpProjectId(),
-                    spannerClient.getSpannerInstanceId(),
-                    spannerClient.getSpannerDatabaseId()));
+    @Teardown
+    public void teardown() {
+      if (spanner != null) {
+        spanner.close();
+      }
+    }
 
-        KeySet.Builder keySetBuilder = KeySet.newBuilder();
-        for (String subjectId : batch) {
-          keySetBuilder.addRange(
-              com.google.cloud.spanner.KeyRange.prefix(com.google.cloud.spanner.Key.of(subjectId)));
-        }
+    @ProcessElement
+    public void processElement(@Element List<String> batch, OutputReceiver<Mutation> receiver) {
+      if (batch == null || batch.isEmpty()) {
+        return;
+      }
 
-        try (ResultSet rs =
-            dbClient
-                .singleUse(TimestampBound.ofReadTimestamp(tPre))
-                .read(
-                    NODE_EMBEDDING_TABLE,
-                    keySetBuilder.build(),
-                    Arrays.asList(
-                        "subject_id",
-                        "embedding_label",
-                        "embedding_content_key",
-                        "embedding_content",
-                        "node_types",
-                        "embeddings"))) {
-          while (rs.next()) {
-            Struct row = rs.getCurrentRowAsStruct();
-            receiver.output(
-                RestoreMutationMappers.toNodeEmbeddingRestoreMutation(row, NODE_EMBEDDING_TABLE));
-          }
+      KeySet.Builder keySetBuilder = KeySet.newBuilder();
+      for (String subjectId : batch) {
+        keySetBuilder.addRange(
+            com.google.cloud.spanner.KeyRange.prefix(com.google.cloud.spanner.Key.of(subjectId)));
+      }
+
+      try (ResultSet rs =
+          dbClient
+              .singleUse(TimestampBound.ofReadTimestamp(tPre))
+              .read(
+                  NODE_EMBEDDING_TABLE,
+                  keySetBuilder.build(),
+                  Arrays.asList(
+                      "subject_id",
+                      "embedding_label",
+                      "embedding_content_key",
+                      "embedding_content",
+                      "node_types",
+                      "embeddings"))) {
+        while (rs.next()) {
+          Struct row = rs.getCurrentRowAsStruct();
+          receiver.output(
+              RestoreMutationMappers.toNodeEmbeddingRestoreMutation(row, NODE_EMBEDDING_TABLE));
         }
       }
     }

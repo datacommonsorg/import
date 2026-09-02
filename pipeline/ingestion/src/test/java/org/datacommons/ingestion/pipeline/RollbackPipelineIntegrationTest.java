@@ -342,7 +342,7 @@ public class RollbackPipelineIntegrationTest {
                 Statement.of(
                     "SELECT value FROM KeyValueStore WHERE key = 'Count_Person' AND provenance = 'dc/base/TestImport'"))) {
       assertTrue("KeyValueStore should exist", rs.next());
-      assertEquals("{\"obs_count\": 1}", rs.getJson("value"));
+      assertEquals("{\"obs_count\":1}", rs.getJson("value").replace(" ", ""));
     }
   }
 }

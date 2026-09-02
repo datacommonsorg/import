@@ -17,6 +17,7 @@ package org.datacommons.ingestion.pipeline;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
@@ -87,8 +88,8 @@ public class RestoreMutationMappersTest {
     assertEquals("geoId/06", map.get("subject_id").getString());
     assertEquals("California", map.get("name").getString());
     assertEquals(List.of("State", "Place"), map.get("types").getStringArray());
-    assertFalse(map.containsKey("value"));
-    assertFalse(map.containsKey("bytes"));
+    assertTrue(map.get("value").isNull());
+    assertTrue(map.get("bytes").isNull());
     assertEquals("spanner.commit_timestamp()", map.get("last_update_timestamp").toString());
   }
 

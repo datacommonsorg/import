@@ -31,26 +31,20 @@ public final class RestoreMutationMappers implements Serializable {
   private RestoreMutationMappers() {}
 
   public static Mutation toNodeRestoreMutation(Struct struct, String nodeTableName) {
-    Mutation.WriteBuilder builder =
-        Mutation.newInsertOrUpdateBuilder(nodeTableName)
-            .set("subject_id")
-            .to(struct.getString("subject_id"))
-            .set("last_update_timestamp")
-            .to(Value.COMMIT_TIMESTAMP);
-
-    if (!struct.isNull("value")) {
-      builder.set("value").to(struct.getString("value"));
-    }
-    if (!struct.isNull("bytes")) {
-      builder.set("bytes").to(struct.getBytes("bytes"));
-    }
-    if (!struct.isNull("name")) {
-      builder.set("name").to(struct.getString("name"));
-    }
-    if (!struct.isNull("types")) {
-      builder.set("types").toStringArray(struct.getStringList("types"));
-    }
-    return builder.build();
+    return Mutation.newInsertOrUpdateBuilder(nodeTableName)
+        .set("subject_id")
+        .to(struct.getString("subject_id"))
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
+        .set("value")
+        .to(struct.isNull("value") ? null : struct.getString("value"))
+        .set("bytes")
+        .to(struct.isNull("bytes") ? null : struct.getBytes("bytes"))
+        .set("name")
+        .to(struct.isNull("name") ? null : struct.getString("name"))
+        .set("types")
+        .toStringArray(struct.isNull("types") ? null : struct.getStringList("types"))
+        .build();
   }
 
   public static Mutation toEdgeRestoreMutation(Struct struct, String edgeTableName) {
@@ -69,25 +63,21 @@ public final class RestoreMutationMappers implements Serializable {
   }
 
   public static Mutation toTimeSeriesRestoreMutation(Struct struct, String timeSeriesTableName) {
-    Mutation.WriteBuilder builder =
-        Mutation.newInsertOrUpdateBuilder(timeSeriesTableName)
-            .set("variable_measured")
-            .to(struct.getString("variable_measured"))
-            // entity1 is a STORED generated column; DO NOT write to it directly!
-            .set("extra_entities_id")
-            .to(struct.getString("extra_entities_id"))
-            .set("facet_id")
-            .to(struct.getString("facet_id"))
-            .set("last_update_timestamp")
-            .to(Value.COMMIT_TIMESTAMP);
-
-    if (!struct.isNull("entities")) {
-      builder.set("entities").to(Value.json(struct.getJson("entities")));
-    }
-    if (!struct.isNull("facet")) {
-      builder.set("facet").to(Value.json(struct.getJson("facet")));
-    }
-    return builder.build();
+    return Mutation.newInsertOrUpdateBuilder(timeSeriesTableName)
+        .set("variable_measured")
+        .to(struct.getString("variable_measured"))
+        // entity1 is a STORED generated column; DO NOT write to it directly!
+        .set("extra_entities_id")
+        .to(struct.getString("extra_entities_id"))
+        .set("facet_id")
+        .to(struct.getString("facet_id"))
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
+        .set("entities")
+        .to(struct.isNull("entities") ? Value.json(null) : Value.json(struct.getJson("entities")))
+        .set("facet")
+        .to(struct.isNull("facet") ? Value.json(null) : Value.json(struct.getJson("facet")))
+        .build();
   }
 
   public static Mutation toObservationRestoreMutation(Struct struct, String observationTableName) {
@@ -111,41 +101,36 @@ public final class RestoreMutationMappers implements Serializable {
 
   public static Mutation toKeyValueStoreRestoreMutation(
       Struct struct, String keyValueStoreTableName) {
-    Mutation.WriteBuilder builder =
-        Mutation.newInsertOrUpdateBuilder(keyValueStoreTableName)
-            .set("type")
-            .to(struct.getString("type"))
-            .set("key")
-            .to(struct.getString("key"))
-            .set("provenance")
-            .to(struct.getString("provenance"));
-
-    if (!struct.isNull("value")) {
-      builder.set("value").to(Value.json(struct.getJson("value")));
-    }
-    return builder.build();
+    return Mutation.newInsertOrUpdateBuilder(keyValueStoreTableName)
+        .set("type")
+        .to(struct.getString("type"))
+        .set("key")
+        .to(struct.getString("key"))
+        .set("provenance")
+        .to(struct.getString("provenance"))
+        .set("value")
+        .to(struct.isNull("value") ? Value.json(null) : Value.json(struct.getJson("value")))
+        .build();
   }
 
   public static Mutation toNodeEmbeddingRestoreMutation(
       Struct struct, String nodeEmbeddingTableName) {
-    Mutation.WriteBuilder builder =
-        Mutation.newInsertOrUpdateBuilder(nodeEmbeddingTableName)
-            .set("subject_id")
-            .to(struct.getString("subject_id"))
-            .set("embedding_label")
-            .to(struct.getString("embedding_label"))
-            .set("embedding_content_key")
-            .to(struct.getString("embedding_content_key"));
-
-    if (!struct.isNull("embedding_content")) {
-      builder.set("embedding_content").to(Value.json(struct.getJson("embedding_content")));
-    }
-    if (!struct.isNull("node_types")) {
-      builder.set("node_types").toStringArray(struct.getStringList("node_types"));
-    }
-    if (!struct.isNull("embeddings")) {
-      builder.set("embeddings").toFloat64Array(struct.getDoubleList("embeddings"));
-    }
-    return builder.build();
+    return Mutation.newInsertOrUpdateBuilder(nodeEmbeddingTableName)
+        .set("subject_id")
+        .to(struct.getString("subject_id"))
+        .set("embedding_label")
+        .to(struct.getString("embedding_label"))
+        .set("embedding_content_key")
+        .to(struct.getString("embedding_content_key"))
+        .set("embedding_content")
+        .to(
+            struct.isNull("embedding_content")
+                ? Value.json(null)
+                : Value.json(struct.getJson("embedding_content")))
+        .set("node_types")
+        .toStringArray(struct.isNull("node_types") ? null : struct.getStringList("node_types"))
+        .set("embeddings")
+        .toFloat64Array(struct.isNull("embeddings") ? null : struct.getDoubleList("embeddings"))
+        .build();
   }
 }
