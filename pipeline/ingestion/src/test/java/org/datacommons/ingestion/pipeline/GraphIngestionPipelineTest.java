@@ -220,39 +220,33 @@ public class GraphIngestionPipelineTest implements Serializable {
   }
 
   @Test
-  public void testConfigureUncaughtExceptionHandler_directRunner() {
-    Thread.UncaughtExceptionHandler originalHandler = Thread.getDefaultUncaughtExceptionHandler();
-    try {
-      Thread.setDefaultUncaughtExceptionHandler(null);
-      IngestionPipelineOptions options =
-          PipelineOptionsFactory.fromArgs("--runner=DirectRunner")
-              .as(IngestionPipelineOptions.class);
-      boolean configured = GraphIngestionPipeline.configureUncaughtExceptionHandler(options);
-      assertTrue("Should configure handler for DirectRunner", configured);
-      assertTrue(
-          "Default uncaught exception handler should be registered",
-          Thread.getDefaultUncaughtExceptionHandler() != null);
-    } finally {
-      Thread.setDefaultUncaughtExceptionHandler(originalHandler);
-    }
+  public void testIsDirectRunner() {
+    IngestionPipelineOptions directOptions =
+        PipelineOptionsFactory.fromArgs("--runner=DirectRunner").as(IngestionPipelineOptions.class);
+    assertTrue(
+        "Should return true for DirectRunner",
+        GraphIngestionPipeline.isDirectRunner(directOptions));
+
+    IngestionPipelineOptions dataflowOptions =
+        PipelineOptionsFactory.fromArgs(
+                "--runner=DataflowRunner",
+                "--project=test-project",
+                "--stagingLocation=gs://test-bucket/staging")
+            .as(IngestionPipelineOptions.class);
+    assertTrue(
+        "Should return false for DataflowRunner",
+        !GraphIngestionPipeline.isDirectRunner(dataflowOptions));
   }
 
   @Test
-  public void testConfigureUncaughtExceptionHandler_dataflowRunner() {
+  public void testConfigureDirectRunnerUncaughtExceptionHandler() {
     Thread.UncaughtExceptionHandler originalHandler = Thread.getDefaultUncaughtExceptionHandler();
     try {
       Thread.setDefaultUncaughtExceptionHandler(null);
-      IngestionPipelineOptions options =
-          PipelineOptionsFactory.fromArgs(
-                  "--runner=DataflowRunner",
-                  "--project=test-project",
-                  "--stagingLocation=gs://test-bucket/staging")
-              .as(IngestionPipelineOptions.class);
-      boolean configured = GraphIngestionPipeline.configureUncaughtExceptionHandler(options);
-      assertTrue("Should NOT configure handler for DataflowRunner", !configured);
+      GraphIngestionPipeline.configureDirectRunnerUncaughtExceptionHandler();
       assertTrue(
-          "Default uncaught exception handler should NOT be registered for DataflowRunner",
-          Thread.getDefaultUncaughtExceptionHandler() == null);
+          "Default uncaught exception handler should be registered",
+          Thread.getDefaultUncaughtExceptionHandler() != null);
     } finally {
       Thread.setDefaultUncaughtExceptionHandler(originalHandler);
     }

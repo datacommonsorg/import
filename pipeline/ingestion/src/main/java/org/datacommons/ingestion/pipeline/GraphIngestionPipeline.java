@@ -46,7 +46,10 @@ public class GraphIngestionPipeline {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
 
-    configureUncaughtExceptionHandler(options);
+    // Install a fail-fast uncaught exception handler exclusively for local DirectRunner runs.
+    if (isDirectRunner(options)) {
+      configureDirectRunnerUncaughtExceptionHandler();
+    }
 
     String isBaseDcEnv = System.getenv("IS_BASE_DC");
     if (isBaseDcEnv != null) {
@@ -79,19 +82,36 @@ public class GraphIngestionPipeline {
     pipeline.run();
   }
 
-  static boolean configureUncaughtExceptionHandler(IngestionPipelineOptions options) {
-    if (DirectRunner.class.isAssignableFrom(options.getRunner())) {
-      Thread.setDefaultUncaughtExceptionHandler(
-          (thread, throwable) -> {
-            LOGGER.error(
-                "Fatal uncaught exception in DirectRunner [thread: {}]: ",
-                thread.getName(),
-                throwable);
-            System.exit(1);
-          });
-      return true;
-    }
-    return false;
+  /**
+   * Returns true if the configured Beam pipeline runner is {@link DirectRunner} (used for local
+   * testing and emulated environments).
+   */
+  static boolean isDirectRunner(IngestionPipelineOptions options) {
+    Class<?> runnerClass = options.getRunner();
+    return runnerClass != null && DirectRunner.class.isAssignableFrom(runnerClass);
+  }
+
+  /**
+   * Registers a default {@link Thread.UncaughtExceptionHandler} for DirectRunner executions.
+   *
+   * <p>In local/emulated DirectRunner pipelines, fatal runtime exceptions (such as Spanner
+   * schema/mutation constraint violations) terminate the executing pipeline worker thread. However,
+   * lingering non-daemon threads in background connection pools (e.g., Spanner session pools and
+   * gRPC workers) prevent the JVM from halting. This causes local test containers to hang
+   * indefinitely.
+   *
+   * <p>This handler forces the JVM process to exit immediately with code 1 upon encountering an
+   * unhandled exception.
+   */
+  static void configureDirectRunnerUncaughtExceptionHandler() {
+    Thread.setDefaultUncaughtExceptionHandler(
+        (thread, throwable) -> {
+          LOGGER.error(
+              "Fatal uncaught exception in DirectRunner [thread: {}]: ",
+              thread.getName(),
+              throwable);
+          System.exit(1);
+        });
   }
 
   public static void buildPipeline(
