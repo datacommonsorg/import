@@ -16,6 +16,7 @@ package org.datacommons.ingestion.pipeline;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.NoCredentials;
@@ -31,8 +32,13 @@ import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Value;
+import com.google.common.collect.Sets;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.datacommons.ingestion.spanner.SpannerClient;
@@ -59,6 +65,7 @@ public class RollbackPipelineIntegrationTest {
   private String databaseId = "test-db";
   private String emulatorHost;
   private SpannerClient spannerClient;
+  private DatabaseClient dbClient;
 
   @Before
   public void setUp() throws Exception {
@@ -118,7 +125,7 @@ public class RollbackPipelineIntegrationTest {
 
     // Clear tables
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
-    DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
+    dbClient = spanner.getDatabaseClient(dbId);
     dbClient
         .readWriteTransaction()
         .run(
@@ -343,6 +350,57 @@ public class RollbackPipelineIntegrationTest {
                     "SELECT value FROM KeyValueStore WHERE key = 'Count_Person' AND provenance = 'dc/base/TestImport'"))) {
       assertTrue("KeyValueStore should exist", rs.next());
       assertEquals("{\"obs_count\":1}", rs.getJson("value").replace(" ", ""));
+    }
+  }
+
+  @Test
+  public void testSchemaCoverage_allWritableColumnsAreMappedInSpannerClient() {
+    // 1. Query INFORMATION_SCHEMA for all columns in the 6 restored tables
+    Map<String, Set<String>> writableColsByTable = new HashMap<>();
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    "SELECT table_name, column_name, is_generated FROM INFORMATION_SCHEMA.COLUMNS "
+                        + "WHERE table_schema = '' AND table_name IN "
+                        + "('Node', 'Edge', 'TimeSeries', 'Observation', 'KeyValueStore', 'NodeEmbedding')"))) {
+      while (rs.next()) {
+        String tableName = rs.getString("table_name");
+        String colName = rs.getString("column_name");
+        String isGenerated = rs.getString("is_generated");
+        if ("ALWAYS".equalsIgnoreCase(isGenerated)) {
+          continue; // Skip STORED generated columns (e.g. TimeSeries.entity1)
+        }
+        writableColsByTable.computeIfAbsent(tableName, k -> new HashSet<>()).add(colName);
+      }
+    }
+
+    // 2. Validate against canonical SpannerClient writable column sets
+    Map<String, Set<String>> rollbackColsByTable =
+        Map.of(
+            "Node", SpannerClient.NODE_WRITABLE_COLUMNS,
+            "Edge", SpannerClient.EDGE_WRITABLE_COLUMNS,
+            "TimeSeries", SpannerClient.TIME_SERIES_WRITABLE_COLUMNS,
+            "Observation", SpannerClient.OBSERVATION_WRITABLE_COLUMNS,
+            "KeyValueStore", SpannerClient.KEY_VALUE_STORE_WRITABLE_COLUMNS,
+            "NodeEmbedding", SpannerClient.NODE_EMBEDDING_WRITABLE_COLUMNS);
+
+    for (Map.Entry<String, Set<String>> entry : writableColsByTable.entrySet()) {
+      String tableName = entry.getKey();
+      Set<String> schemaCols = entry.getValue();
+      Set<String> rollbackCols = rollbackColsByTable.get(tableName);
+      assertNotNull(
+          "Table " + tableName + " must have mapped writable columns in SpannerClient",
+          rollbackCols);
+
+      Set<String> missingCols = Sets.difference(schemaCols, rollbackCols);
+      assertTrue(
+          String.format(
+              "SCHEMA DRIFT DETECTED IN TABLE '%s': Column(s) %s exist in schema but are NOT handled in SpannerClient/RollbackPipeline! "
+                  + "Update SpannerClient.%s_WRITABLE_COLUMNS and restore mappers.",
+              tableName, missingCols, tableName.toUpperCase()),
+          missingCols.isEmpty());
     }
   }
 }

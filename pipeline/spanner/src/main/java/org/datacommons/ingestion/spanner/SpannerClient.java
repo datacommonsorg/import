@@ -7,14 +7,15 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
+import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
@@ -28,9 +29,13 @@ import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
-import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.data.TimeSeries;
-import org.datacommons.ingestion.data.TimeSeriesKey;
+import org.datacommons.ingestion.spanner.model.EdgeRecord;
+import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
+import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
+import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.model.ObservationRecord;
+import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,45 +162,88 @@ public class SpannerClient implements Serializable {
     return write;
   }
 
+  // --- Canonical Column Name Constants ---
+  public static final String COL_SUBJECT_ID = "subject_id";
+  public static final String COL_VALUE = "value";
+  public static final String COL_BYTES = "bytes";
+  public static final String COL_NAME = "name";
+  public static final String COL_TYPES = "types";
+  public static final String COL_PREDICATE = "predicate";
+  public static final String COL_OBJECT_ID = "object_id";
+  public static final String COL_PROVENANCE = "provenance";
+  public static final String COL_VARIABLE_MEASURED = "variable_measured";
+  public static final String COL_ENTITY1 = "entity1";
+  public static final String COL_EXTRA_ENTITIES_ID = "extra_entities_id";
+  public static final String COL_FACET_ID = "facet_id";
+  public static final String COL_ENTITIES = "entities";
+  public static final String COL_FACET = "facet";
+  public static final String COL_DATE = "date";
+  public static final String COL_TYPE = "type";
+  public static final String COL_KEY = "key";
+  public static final String COL_EMBEDDING_LABEL = "embedding_label";
+  public static final String COL_EMBEDDING_CONTENT_KEY = "embedding_content_key";
+  public static final String COL_EMBEDDING_CONTENT = "embedding_content";
+  public static final String COL_NODE_TYPES = "node_types";
+  public static final String COL_EMBEDDINGS = "embeddings";
+  public static final String COL_LAST_UPDATE_TIMESTAMP = "last_update_timestamp";
+
+  // --- Canonical Writable Columns for Spanner Tables ---
+  public static final Set<String> NODE_WRITABLE_COLUMNS =
+      Set.of(COL_SUBJECT_ID, COL_VALUE, COL_BYTES, COL_NAME, COL_TYPES, COL_LAST_UPDATE_TIMESTAMP);
+  public static final Set<String> EDGE_WRITABLE_COLUMNS =
+      Set.of(
+          COL_SUBJECT_ID, COL_PREDICATE, COL_OBJECT_ID, COL_PROVENANCE, COL_LAST_UPDATE_TIMESTAMP);
+  public static final Set<String> TIME_SERIES_WRITABLE_COLUMNS =
+      Set.of(
+          COL_VARIABLE_MEASURED,
+          COL_EXTRA_ENTITIES_ID,
+          COL_FACET_ID,
+          COL_ENTITIES,
+          COL_FACET,
+          COL_LAST_UPDATE_TIMESTAMP);
+  public static final Set<String> OBSERVATION_WRITABLE_COLUMNS =
+      Set.of(
+          COL_VARIABLE_MEASURED,
+          COL_ENTITY1,
+          COL_EXTRA_ENTITIES_ID,
+          COL_FACET_ID,
+          COL_DATE,
+          COL_VALUE,
+          COL_LAST_UPDATE_TIMESTAMP);
+  public static final Set<String> KEY_VALUE_STORE_WRITABLE_COLUMNS =
+      Set.of(COL_TYPE, COL_KEY, COL_PROVENANCE, COL_VALUE);
+  public static final Set<String> NODE_EMBEDDING_WRITABLE_COLUMNS =
+      Set.of(
+          COL_SUBJECT_ID,
+          COL_EMBEDDING_LABEL,
+          COL_EMBEDDING_CONTENT_KEY,
+          COL_EMBEDDING_CONTENT,
+          COL_NODE_TYPES,
+          COL_EMBEDDINGS);
+
   public Mutation toNodeMutation(Node node) {
     // Only update subject_id for provisional nodes.
     if (node.getTypes().size() == 1 && node.getTypes().contains("ProvisionalNode")) {
       return Mutation.newInsertOrUpdateBuilder(nodeTableName)
-          .set("subject_id")
+          .set(COL_SUBJECT_ID)
           .to(node.getSubjectId())
-          .set("last_update_timestamp")
+          .set(COL_LAST_UPDATE_TIMESTAMP)
           .to(Value.COMMIT_TIMESTAMP)
           .build();
     }
-    return Mutation.newInsertOrUpdateBuilder(nodeTableName)
-        .set("subject_id")
-        .to(node.getSubjectId())
-        .set("value")
-        .to(node.getValue())
-        .set("bytes")
-        .to(node.getBytes())
-        .set("name")
-        .to(node.getName())
-        .set("types")
-        .toStringArray(node.getTypes())
-        .set("last_update_timestamp")
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
+    return toNodeMutation(NodeRecord.from(node), this.nodeTableName);
+  }
+
+  public static Mutation toNodeMutation(NodeRecord row, String nodeTableName) {
+    return row.toMutation(nodeTableName);
   }
 
   public Mutation toEdgeMutation(Edge edge) {
-    return Mutation.newInsertOrUpdateBuilder(edgeTableName)
-        .set("subject_id")
-        .to(edge.getSubjectId())
-        .set("predicate")
-        .to(edge.getPredicate())
-        .set("object_id")
-        .to(edge.getObjectId())
-        .set("provenance")
-        .to(edge.getProvenance())
-        .set("last_update_timestamp")
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
+    return toEdgeMutation(EdgeRecord.from(edge), this.edgeTableName);
+  }
+
+  public static Mutation toEdgeMutation(EdgeRecord row, String edgeTableName) {
+    return row.toMutation(edgeTableName);
   }
 
   public List<KV<String, Mutation>> toGraphKVMutations(List<Node> nodes, List<Edge> edges) {
@@ -206,75 +254,57 @@ public class SpannerClient implements Serializable {
   }
 
   public Mutation toTimeSeriesMutation(TimeSeries obs) {
-    String variableMeasured = obs.getVariableMeasured();
-    String entity1 = obs.getEntity1();
-    String extraEntitiesId = obs.getExtraEntitiesId();
-    String facetId = obs.getFacetId();
-
-    // Create entities JSON
-    JsonObject entitiesJson = new JsonObject();
-    entitiesJson.addProperty("entity1", entity1);
-    List<String> extra = obs.getExtraEntities();
-    if (extra != null) {
-      if (extra.size() > 0) {
-        addPropertyIfNotEmpty(entitiesJson, "entity2", extra.get(0));
-      }
-      if (extra.size() > 1) {
-        addPropertyIfNotEmpty(entitiesJson, "entity3", extra.get(1));
-      }
-    }
-
-    // Create facet JSON
-    JsonObject facetJson = new JsonObject();
-    facetJson.addProperty(
-        "provenance", ProvenanceUtils.getProvenanceDcid(obs.getImportName(), obs.getIsBaseDc()));
-    addPropertyIfNotEmpty(facetJson, "measurementMethod", obs.getMeasurementMethod());
-    addPropertyIfNotEmpty(facetJson, "observationPeriod", obs.getObservationPeriod());
-    addPropertyIfNotEmpty(facetJson, "scalingFactor", obs.getScalingFactor());
-    addPropertyIfNotEmpty(facetJson, "unit", obs.getUnit());
-    facetJson.addProperty("isDcAggregate", obs.getIsDcAggregate());
-
-    return Mutation.newInsertOrUpdateBuilder(timeSeriesTableName)
-        .set("variable_measured")
-        .to(variableMeasured)
-        // entity1 is a STORED generated column in TimeSeries, DO NOT write to it directly!
-        .set("extra_entities_id")
-        .to(extraEntitiesId)
-        .set("facet_id")
-        .to(facetId)
-        .set("entities")
-        .to(Value.json(GSON.toJson(entitiesJson)))
-        .set("facet")
-        .to(Value.json(GSON.toJson(facetJson)))
-        .set("last_update_timestamp")
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
+    return toTimeSeriesMutation(TimeSeriesRecord.from(obs), this.timeSeriesTableName);
   }
 
-  private static void addPropertyIfNotEmpty(JsonObject json, String property, String value) {
-    if (value != null && !value.trim().isEmpty()) {
-      json.addProperty(property, value);
-    }
+  public static Mutation toTimeSeriesMutation(TimeSeriesRecord row, String timeSeriesTableName) {
+    return row.toMutation(timeSeriesTableName);
   }
 
   public Mutation toObservationMutation(Observation obs) {
-    TimeSeriesKey key = obs.getSeriesKey();
-    return Mutation.newInsertOrUpdateBuilder(observationTableName)
-        .set("variable_measured")
-        .to(key.getVariableMeasured())
-        .set("entity1")
-        .to(key.getEntity1())
-        .set("extra_entities_id")
-        .to(key.getExtraEntitiesId())
-        .set("facet_id")
-        .to(key.getFacetId())
-        .set("date")
-        .to(obs.getDate())
-        .set("value")
-        .to(obs.getValue())
-        .set("last_update_timestamp")
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
+    return toObservationMutation(ObservationRecord.from(obs), this.observationTableName);
+  }
+
+  public static Mutation toObservationMutation(ObservationRecord row, String observationTableName) {
+    return row.toMutation(observationTableName);
+  }
+
+  // --- Symmetrical Restore Mutation Mappers for Rollback ---
+
+  public static Mutation toNodeRestoreMutation(Struct struct, String nodeTableName) {
+    return toNodeMutation(NodeRecord.from(struct), nodeTableName);
+  }
+
+  public static Mutation toEdgeRestoreMutation(Struct struct, String edgeTableName) {
+    return toEdgeMutation(EdgeRecord.from(struct), edgeTableName);
+  }
+
+  public static Mutation toTimeSeriesRestoreMutation(Struct struct, String timeSeriesTableName) {
+    return toTimeSeriesMutation(TimeSeriesRecord.from(struct), timeSeriesTableName);
+  }
+
+  public static Mutation toObservationRestoreMutation(Struct struct, String observationTableName) {
+    return toObservationMutation(ObservationRecord.from(struct), observationTableName);
+  }
+
+  public static Mutation toKeyValueStoreMutation(
+      KeyValueStoreRecord row, String keyValueStoreTableName) {
+    return row.toMutation(keyValueStoreTableName);
+  }
+
+  public static Mutation toKeyValueStoreRestoreMutation(
+      Struct struct, String keyValueStoreTableName) {
+    return toKeyValueStoreMutation(KeyValueStoreRecord.from(struct), keyValueStoreTableName);
+  }
+
+  public static Mutation toNodeEmbeddingMutation(
+      NodeEmbeddingRecord row, String nodeEmbeddingTableName) {
+    return row.toMutation(nodeEmbeddingTableName);
+  }
+
+  public static Mutation toNodeEmbeddingRestoreMutation(
+      Struct struct, String nodeEmbeddingTableName) {
+    return toNodeEmbeddingMutation(NodeEmbeddingRecord.from(struct), nodeEmbeddingTableName);
   }
 
   /**

@@ -24,12 +24,94 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import java.util.List;
+import java.util.Set;
+import org.datacommons.ingestion.data.Edge;
+import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.Observation;
+import org.datacommons.ingestion.data.TimeSeries;
+import org.datacommons.ingestion.data.TimeSeriesKey;
+import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class RestoreMutationMappersTest {
+
+  @Test
+  public void testMutationSymmetry_rollbackRestoresAllForwardIngestionColumns() {
+    SpannerClient client =
+        SpannerClient.builder()
+            .gcpProjectId("test-project")
+            .spannerInstanceId("test-instance")
+            .spannerDatabaseId("test-db")
+            .nodeTableName("Node")
+            .edgeTableName("Edge")
+            .timeSeriesTableName("TimeSeries")
+            .observationTableName("Observation")
+            .build();
+
+    // 1. Node Symmetry
+    Node sampleNode =
+        Node.builder()
+            .subjectId("geoId/06")
+            .name("California")
+            .types(List.of("State", "Place"))
+            .value("Val")
+            .bytes(ByteArray.copyFrom("bytes"))
+            .build();
+
+    Set<String> forwardNodeCols = client.toNodeMutation(sampleNode).asMap().keySet();
+    assertEquals(
+        "toNodeMutation columns must exactly match NODE_WRITABLE_COLUMNS",
+        SpannerClient.NODE_WRITABLE_COLUMNS,
+        forwardNodeCols);
+
+    // 2. Edge Symmetry
+    Edge sampleEdge =
+        Edge.builder()
+            .subjectId("geoId/06")
+            .predicate("containedInPlace")
+            .objectId("country/USA")
+            .provenance("dc/base/Test")
+            .build();
+
+    Set<String> forwardEdgeCols = client.toEdgeMutation(sampleEdge).asMap().keySet();
+    assertEquals(
+        "toEdgeMutation columns must exactly match EDGE_WRITABLE_COLUMNS",
+        SpannerClient.EDGE_WRITABLE_COLUMNS,
+        forwardEdgeCols);
+
+    // 3. Observation Symmetry
+    TimeSeriesKey key =
+        new TimeSeriesKey(
+            "Count_Person", "geoId/06", "", "P1Y", "CensusMethod", "Person", "1", "facet123");
+    Observation sampleObs = Observation.builder().seriesKey(key).date("2020").value("100").build();
+
+    Set<String> forwardObsCols = client.toObservationMutation(sampleObs).asMap().keySet();
+    assertEquals(
+        "toObservationMutation columns must exactly match OBSERVATION_WRITABLE_COLUMNS",
+        SpannerClient.OBSERVATION_WRITABLE_COLUMNS,
+        forwardObsCols);
+
+    // 4. TimeSeries Symmetry
+    TimeSeries sampleTs =
+        TimeSeries.builder()
+            .variableMeasured("testStatVar")
+            .entity1("geoId/testPlace")
+            .importName("test_import")
+            .isBaseDc(true)
+            .isDcAggregate(false)
+            .measurementMethod("method")
+            .observationPeriod("P1Y")
+            .build();
+
+    Set<String> forwardTsCols = client.toTimeSeriesMutation(sampleTs).asMap().keySet();
+    assertEquals(
+        "toTimeSeriesMutation columns must exactly match TIME_SERIES_WRITABLE_COLUMNS",
+        SpannerClient.TIME_SERIES_WRITABLE_COLUMNS,
+        forwardTsCols);
+  }
 
   @Test
   public void testToTimeSeriesRestoreMutation_omitsGeneratedColumns() {

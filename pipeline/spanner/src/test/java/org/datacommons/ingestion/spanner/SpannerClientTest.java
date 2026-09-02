@@ -9,7 +9,9 @@ import com.google.gson.JsonParser;
 import java.util.List;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
+import org.datacommons.ingestion.data.TimeSeriesKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,5 +121,184 @@ public class SpannerClientTest {
     assertFalse(facetJson.has("observationPeriod"));
     assertFalse(facetJson.has("scalingFactor"));
     assertFalse(facetJson.has("unit"));
+  }
+
+  @Test
+  public void testToObservationMutation() {
+    TimeSeriesKey key =
+        new TimeSeriesKey(
+            "Count_Person", "geoId/06", "extra1", "P1Y", "CensusMethod", "Person", "1", "facet123");
+    Observation obs = Observation.builder().seriesKey(key).date("2020").value("100").build();
+
+    Mutation mutation = spannerClient.toObservationMutation(obs);
+    assertNotNull(mutation);
+    assertEquals("Observation", mutation.getTable());
+
+    var map = mutation.asMap();
+    assertEquals("Count_Person", map.get("variable_measured").getString());
+    assertEquals("geoId/06", map.get("entity1").getString());
+    assertEquals("extra1", map.get("extra_entities_id").getString());
+    assertEquals("facet123", map.get("facet_id").getString());
+    assertEquals("2020", map.get("date").getString());
+    assertEquals("100", map.get("value").getString());
+    assertEquals("spanner.commit_timestamp()", map.get("last_update_timestamp").toString());
+  }
+
+  @Test
+  public void testToNodeRestoreMutation() {
+    com.google.cloud.spanner.Struct struct =
+        com.google.cloud.spanner.Struct.newBuilder()
+            .set("subject_id")
+            .to("geoId/06")
+            .set("value")
+            .to("California")
+            .set("bytes")
+            .to((com.google.cloud.ByteArray) null)
+            .set("name")
+            .to("State of California")
+            .set("types")
+            .toStringArray(List.of("State", "Place"))
+            .set("last_update_timestamp")
+            .to(com.google.cloud.Timestamp.now())
+            .build();
+
+    Mutation mutation = SpannerClient.toNodeRestoreMutation(struct, "Node");
+    assertEquals("Node", mutation.getTable());
+    var map = mutation.asMap();
+    assertEquals("geoId/06", map.get("subject_id").getString());
+    assertEquals("California", map.get("value").getString());
+    assertTrue(map.get("bytes").isNull());
+    assertEquals("State of California", map.get("name").getString());
+    assertEquals(List.of("State", "Place"), map.get("types").getStringArray());
+  }
+
+  @Test
+  public void testToEdgeRestoreMutation() {
+    com.google.cloud.spanner.Struct struct =
+        com.google.cloud.spanner.Struct.newBuilder()
+            .set("subject_id")
+            .to("geoId/06")
+            .set("predicate")
+            .to("containedInPlace")
+            .set("object_id")
+            .to("country/USA")
+            .set("provenance")
+            .to("dc/base/Test")
+            .set("last_update_timestamp")
+            .to(com.google.cloud.Timestamp.now())
+            .build();
+
+    Mutation mutation = SpannerClient.toEdgeRestoreMutation(struct, "Edge");
+    assertEquals("Edge", mutation.getTable());
+    var map = mutation.asMap();
+    assertEquals("geoId/06", map.get("subject_id").getString());
+    assertEquals("containedInPlace", map.get("predicate").getString());
+    assertEquals("country/USA", map.get("object_id").getString());
+    assertEquals("dc/base/Test", map.get("provenance").getString());
+  }
+
+  @Test
+  public void testToTimeSeriesRestoreMutation() {
+    com.google.cloud.spanner.Struct struct =
+        com.google.cloud.spanner.Struct.newBuilder()
+            .set("variable_measured")
+            .to("Count_Person")
+            .set("extra_entities_id")
+            .to("extra1")
+            .set("facet_id")
+            .to("facet1")
+            .set("entities")
+            .to(com.google.cloud.spanner.Value.json("{\"entity1\":\"geoId/06\"}"))
+            .set("facet")
+            .to(com.google.cloud.spanner.Value.json("{\"provenance\":\"test\"}"))
+            .set("last_update_timestamp")
+            .to(com.google.cloud.Timestamp.now())
+            .build();
+
+    Mutation mutation = SpannerClient.toTimeSeriesRestoreMutation(struct, "TimeSeries");
+    assertEquals("TimeSeries", mutation.getTable());
+    var map = mutation.asMap();
+    assertEquals("Count_Person", map.get("variable_measured").getString());
+    assertEquals("{\"entity1\":\"geoId/06\"}", map.get("entities").getJson());
+    assertEquals("{\"provenance\":\"test\"}", map.get("facet").getJson());
+  }
+
+  @Test
+  public void testToObservationRestoreMutation() {
+    com.google.cloud.spanner.Struct struct =
+        com.google.cloud.spanner.Struct.newBuilder()
+            .set("variable_measured")
+            .to("Count_Person")
+            .set("entity1")
+            .to("geoId/06")
+            .set("extra_entities_id")
+            .to("extra1")
+            .set("facet_id")
+            .to("facet1")
+            .set("date")
+            .to("2020")
+            .set("value")
+            .to("100")
+            .set("last_update_timestamp")
+            .to(com.google.cloud.Timestamp.now())
+            .build();
+
+    Mutation mutation = SpannerClient.toObservationRestoreMutation(struct, "Observation");
+    assertEquals("Observation", mutation.getTable());
+    var map = mutation.asMap();
+    assertEquals("Count_Person", map.get("variable_measured").getString());
+    assertEquals("geoId/06", map.get("entity1").getString());
+    assertEquals("2020", map.get("date").getString());
+    assertEquals("100", map.get("value").getString());
+  }
+
+  @Test
+  public void testToKeyValueStoreRestoreMutation() {
+    com.google.cloud.spanner.Struct struct =
+        com.google.cloud.spanner.Struct.newBuilder()
+            .set("type")
+            .to("Config")
+            .set("key")
+            .to("k1")
+            .set("provenance")
+            .to("prov1")
+            .set("value")
+            .to(com.google.cloud.spanner.Value.json("{\"enabled\":true}"))
+            .build();
+
+    Mutation mutation = SpannerClient.toKeyValueStoreRestoreMutation(struct, "KeyValueStore");
+    assertEquals("KeyValueStore", mutation.getTable());
+    var map = mutation.asMap();
+    assertEquals("Config", map.get("type").getString());
+    assertEquals("k1", map.get("key").getString());
+    assertEquals("prov1", map.get("provenance").getString());
+    assertEquals("{\"enabled\":true}", map.get("value").getJson());
+  }
+
+  @Test
+  public void testToNodeEmbeddingRestoreMutation() {
+    com.google.cloud.spanner.Struct struct =
+        com.google.cloud.spanner.Struct.newBuilder()
+            .set("subject_id")
+            .to("geoId/06")
+            .set("embedding_label")
+            .to("label1")
+            .set("embedding_content_key")
+            .to("key1")
+            .set("embedding_content")
+            .to(com.google.cloud.spanner.Value.json("{\"text\":\"California\"}"))
+            .set("node_types")
+            .toStringArray(List.of("State"))
+            .set("embeddings")
+            .toFloat64Array(List.of(0.1, 0.2, 0.3))
+            .build();
+
+    Mutation mutation = SpannerClient.toNodeEmbeddingRestoreMutation(struct, "NodeEmbedding");
+    assertEquals("NodeEmbedding", mutation.getTable());
+    var map = mutation.asMap();
+    assertEquals("geoId/06", map.get("subject_id").getString());
+    assertEquals("label1", map.get("embedding_label").getString());
+    assertEquals(List.of("State"), map.get("node_types").getStringArray());
+    assertEquals(List.of(0.1, 0.2, 0.3), map.get("embeddings").getFloat64Array());
   }
 }

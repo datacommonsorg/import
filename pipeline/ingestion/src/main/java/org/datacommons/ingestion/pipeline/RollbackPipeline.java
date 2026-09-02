@@ -33,11 +33,11 @@ import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.ListCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -58,6 +58,12 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.ingestion.spanner.model.EdgeRecord;
+import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
+import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
+import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.model.ObservationRecord;
+import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,11 +155,12 @@ public class RollbackPipeline implements Serializable {
     }
 
     // A. Read Historical TimeSeries
+    String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
     String tsQuery =
         String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT variable_measured, extra_entities_id, facet_id, entities, facet FROM %s WHERE"
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT %s FROM %s WHERE"
                 + " provenance IN UNNEST(@provenances)",
-            spannerClient.getTimeSeriesTableName());
+            tsColumns, spannerClient.getTimeSeriesTableName());
     PCollection<Mutation> restoreTimeSeriesMutations =
         pipeline
             .apply(
@@ -174,13 +181,18 @@ public class RollbackPipeline implements Serializable {
                                 struct, spannerClient.getTimeSeriesTableName())));
 
     // B. Read Historical Observations (Time-Travel JOIN via TimeSeries)
+    String obsColumns =
+        ObservationRecord.READ_COLUMNS.stream()
+            .map(c -> "o." + c)
+            .collect(Collectors.joining(", "));
     String obsQuery =
         String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date,"
-                + " o.value FROM %s o JOIN %s ts ON o.variable_measured = ts.variable_measured AND"
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT %s FROM %s o JOIN %s ts ON o.variable_measured = ts.variable_measured AND"
                 + " o.entity1 = ts.entity1 AND o.extra_entities_id = ts.extra_entities_id AND"
                 + " o.facet_id = ts.facet_id WHERE ts.provenance IN UNNEST(@provenances)",
-            spannerClient.getObservationTableName(), spannerClient.getTimeSeriesTableName());
+            obsColumns,
+            spannerClient.getObservationTableName(),
+            spannerClient.getTimeSeriesTableName());
     PCollection<Mutation> restoreObservationMutations =
         pipeline
             .apply(
@@ -201,11 +213,12 @@ public class RollbackPipeline implements Serializable {
                                 struct, spannerClient.getObservationTableName())));
 
     // C. Read Historical Edges
+    String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
     String edgeQuery =
         String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT subject_id, predicate, object_id, provenance FROM %s WHERE provenance IN"
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT %s FROM %s WHERE provenance IN"
                 + " UNNEST(@provenances)",
-            spannerClient.getEdgeTableName());
+            edgeColumns, spannerClient.getEdgeTableName());
     PCollection<Mutation> restoreEdgeMutations =
         pipeline
             .apply(
@@ -226,11 +239,12 @@ public class RollbackPipeline implements Serializable {
                                 struct, spannerClient.getEdgeTableName())));
 
     // D. Read Historical KeyValueStore (type = 'ProvenanceSummary')
+    String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
     String kvQuery =
         String.format(
-            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT type, key, provenance, value FROM %s WHERE type = 'ProvenanceSummary' AND"
+            "@{spanner_emulator.disable_query_partitionability_check=true} SELECT %s FROM %s WHERE type = 'ProvenanceSummary' AND"
                 + " provenance IN UNNEST(@provenances)",
-            KEY_VALUE_STORE_TABLE);
+            kvColumns, KEY_VALUE_STORE_TABLE);
     PCollection<Mutation> restoreKvMutations =
         pipeline
             .apply(
@@ -568,7 +582,7 @@ public class RollbackPipeline implements Serializable {
               .read(
                   spannerClient.getNodeTableName(),
                   keySetBuilder.build(),
-                  Arrays.asList("subject_id", "name", "types", "value", "bytes"))) {
+                  NodeRecord.READ_COLUMNS)) {
         while (rs.next()) {
           Struct row = rs.getCurrentRowAsStruct();
           String id = row.getString("subject_id");
@@ -648,15 +662,7 @@ public class RollbackPipeline implements Serializable {
           dbClient
               .singleUse(TimestampBound.ofReadTimestamp(tPre))
               .read(
-                  NODE_EMBEDDING_TABLE,
-                  keySetBuilder.build(),
-                  Arrays.asList(
-                      "subject_id",
-                      "embedding_label",
-                      "embedding_content_key",
-                      "embedding_content",
-                      "node_types",
-                      "embeddings"))) {
+                  NODE_EMBEDDING_TABLE, keySetBuilder.build(), NodeEmbeddingRecord.READ_COLUMNS)) {
         while (rs.next()) {
           Struct row = rs.getCurrentRowAsStruct();
           receiver.output(
