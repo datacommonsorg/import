@@ -54,7 +54,7 @@ public class SpannerPartitionedDeleteFnTest implements Serializable {
             .build();
 
     SpannerPartitionedDeleteFn fn =
-        new SpannerPartitionedDeleteFn(client, "TimeSeries", "provenance", null);
+        new SpannerPartitionedDeleteFn(client, "TimeSeries", "provenance");
 
     List<List<String>> input = List.of(Collections.emptyList());
 

@@ -72,7 +72,7 @@ public class ReconcileNodesFnTest implements Serializable {
             .build();
 
     ReconcileNodesFn fn =
-        new ReconcileNodesFn(client, Timestamp.parseTimestamp("2026-01-01T00:00:00Z"), null);
+        new ReconcileNodesFn(client, Timestamp.parseTimestamp("2026-01-01T00:00:00Z"));
 
     List<List<String>> input = List.of(Collections.emptyList());
 

@@ -14,11 +14,8 @@
 
 package org.datacommons.ingestion.pipeline.rollback;
 
-import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.DatabaseClient;
-import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Spanner;
-import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
@@ -39,36 +36,23 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
   private final SpannerClient spannerClient;
   private final String tableName;
   private final String columnName;
-  private final String emulatorHost;
   private final Counter deletedRowsCounter;
   private transient Spanner spanner;
   private transient DatabaseClient dbClient;
 
   public SpannerPartitionedDeleteFn(
-      SpannerClient spannerClient, String tableName, String columnName, String emulatorHost) {
+      SpannerClient spannerClient, String tableName, String columnName) {
     this.spannerClient = spannerClient;
     this.tableName = tableName;
     this.columnName = columnName;
-    this.emulatorHost = emulatorHost;
     this.deletedRowsCounter =
         Metrics.counter(SpannerPartitionedDeleteFn.class, "rollback_deleted_rows:" + tableName);
   }
 
   @Setup
   public void setup() {
-    SpannerOptions.Builder builder =
-        SpannerOptions.newBuilder().setProjectId(spannerClient.getGcpProjectId());
-    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
-      builder.setEmulatorHost(emulatorHost.trim());
-      builder.setCredentials(NoCredentials.getInstance());
-    }
-    this.spanner = builder.build().getService();
-    this.dbClient =
-        spanner.getDatabaseClient(
-            DatabaseId.of(
-                spannerClient.getGcpProjectId(),
-                spannerClient.getSpannerInstanceId(),
-                spannerClient.getSpannerDatabaseId()));
+    this.spanner = spannerClient.createSpanner();
+    this.dbClient = spannerClient.getDatabaseClient(spanner);
   }
 
   @Teardown

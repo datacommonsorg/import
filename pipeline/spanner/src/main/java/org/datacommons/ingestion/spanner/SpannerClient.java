@@ -114,19 +114,8 @@ public class SpannerClient implements Serializable {
     @ProcessElement
     public void processElement(ProcessContext c) {
       String value = c.element();
-      SpannerOptions.Builder builder =
-          SpannerOptions.newBuilder().setProjectId(spannerClient.gcpProjectId);
-      if (spannerClient.emulatorHost != null) {
-        builder.setEmulatorHost(spannerClient.emulatorHost);
-        builder.setCredentials(NoCredentials.getInstance());
-      }
-      try (Spanner spanner = builder.build().getService()) {
-        DatabaseClient dbClient =
-            spanner.getDatabaseClient(
-                DatabaseId.of(
-                    spannerClient.gcpProjectId,
-                    spannerClient.spannerInstanceId,
-                    spannerClient.spannerDatabaseId));
+      try (Spanner spanner = spannerClient.createSpanner()) {
+        DatabaseClient dbClient = spannerClient.getDatabaseClient(spanner);
         String dml =
             String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, columnName);
         Statement statement = Statement.newBuilder(dml).bind(columnName).to(value).build();
@@ -135,6 +124,33 @@ public class SpannerClient implements Serializable {
         c.output(null);
       }
     }
+  }
+
+  public SpannerIO.Read getReadTransform() {
+    SpannerIO.Read read =
+        SpannerIO.read()
+            .withProjectId(gcpProjectId)
+            .withInstanceId(spannerInstanceId)
+            .withDatabaseId(spannerDatabaseId)
+            .withLowPriority();
+    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
+      read = read.withEmulatorHost(emulatorHost.trim());
+    }
+    return read;
+  }
+
+  public Spanner createSpanner() {
+    SpannerOptions.Builder builder = SpannerOptions.newBuilder().setProjectId(gcpProjectId);
+    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
+      builder.setEmulatorHost(emulatorHost.trim());
+      builder.setCredentials(NoCredentials.getInstance());
+    }
+    return builder.build().getService();
+  }
+
+  public DatabaseClient getDatabaseClient(Spanner spanner) {
+    return spanner.getDatabaseClient(
+        DatabaseId.of(gcpProjectId, spannerInstanceId, spannerDatabaseId));
   }
 
   public SpannerIO.Write getWriteTransform() {
@@ -255,6 +271,10 @@ public class SpannerClient implements Serializable {
 
   public String getObservationTableName() {
     return observationTableName;
+  }
+
+  public String getEmulatorHost() {
+    return emulatorHost;
   }
 
   /**

@@ -404,8 +404,8 @@ public class RollbackPipelineIntegrationTest {
       assertTrue(
           String.format(
               "SCHEMA DRIFT DETECTED IN TABLE '%s': Column(s) %s exist in schema but are NOT handled in SpannerClient/RollbackPipeline! "
-                  + "Update SpannerClient.%s_WRITABLE_COLUMNS and restore mappers.",
-              tableName, missingCols, tableName.toUpperCase()),
+                  + "Update %sRecord.WRITABLE_COLUMNS and restore mappers.",
+              tableName, missingCols, tableName),
           missingCols.isEmpty());
     }
   }

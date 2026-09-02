@@ -47,24 +47,15 @@ public record KeyValueStoreRecord(String type, String key, String provenance, St
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
-    Mutation mutation =
-        Mutation.newInsertOrUpdateBuilder(tableName)
-            .set(COL_TYPE)
-            .to(type)
-            .set(COL_KEY)
-            .to(key)
-            .set(COL_PROVENANCE)
-            .to(provenance)
-            .set(COL_VALUE)
-            .to(value != null ? Value.json(value) : Value.json(null))
-            .build();
-    if (!WRITABLE_COLUMNS.equals(mutation.asMap().keySet())) {
-      throw new IllegalStateException(
-          "Mutation columns "
-              + mutation.asMap().keySet()
-              + " do not match WRITABLE_COLUMNS "
-              + WRITABLE_COLUMNS);
-    }
-    return mutation;
+    return Mutation.newInsertOrUpdateBuilder(tableName)
+        .set(COL_TYPE)
+        .to(type)
+        .set(COL_KEY)
+        .to(key)
+        .set(COL_PROVENANCE)
+        .to(provenance)
+        .set(COL_VALUE)
+        .to(value != null ? Value.json(value) : Value.json(null))
+        .build();
   }
 }

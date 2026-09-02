@@ -60,8 +60,7 @@ public class ReconcileNodeEmbeddingsFnTest implements Serializable {
             .build();
 
     ReconcileNodeEmbeddingsFn fn =
-        new ReconcileNodeEmbeddingsFn(
-            client, Timestamp.parseTimestamp("2026-01-01T00:00:00Z"), null);
+        new ReconcileNodeEmbeddingsFn(client, Timestamp.parseTimestamp("2026-01-01T00:00:00Z"));
 
     List<List<String>> input = List.of(Collections.emptyList());
 

@@ -91,13 +91,6 @@
             "helpText": "Historical pre-run timestamp (T_pre) to restore from (RFC 3339 / ISO 8601).",
             "paramType": "TEXT",
             "isOptional": true
-        },
-        {
-            "name": "targetProvenances",
-            "label": "Target Provenances",
-            "helpText": "Optional JSON list or comma-separated string of explicit target provenances to roll back.",
-            "paramType": "TEXT",
-            "isOptional": true
         }
     ]
 }

@@ -64,28 +64,19 @@ public record NodeRecord(
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
-    Mutation mutation =
-        Mutation.newInsertOrUpdateBuilder(tableName)
-            .set(COL_SUBJECT_ID)
-            .to(subjectId)
-            .set(COL_LAST_UPDATE_TIMESTAMP)
-            .to(Value.COMMIT_TIMESTAMP)
-            .set(COL_VALUE)
-            .to(value)
-            .set(COL_BYTES)
-            .to(bytes)
-            .set(COL_NAME)
-            .to(name)
-            .set(COL_TYPES)
-            .toStringArray(types)
-            .build();
-    if (!WRITABLE_COLUMNS.equals(mutation.asMap().keySet())) {
-      throw new IllegalStateException(
-          "Mutation columns "
-              + mutation.asMap().keySet()
-              + " do not match WRITABLE_COLUMNS "
-              + WRITABLE_COLUMNS);
-    }
-    return mutation;
+    return Mutation.newInsertOrUpdateBuilder(tableName)
+        .set(COL_SUBJECT_ID)
+        .to(subjectId)
+        .set(COL_LAST_UPDATE_TIMESTAMP)
+        .to(Value.COMMIT_TIMESTAMP)
+        .set(COL_VALUE)
+        .to(value)
+        .set(COL_BYTES)
+        .to(bytes)
+        .set(COL_NAME)
+        .to(name)
+        .set(COL_TYPES)
+        .toStringArray(types)
+        .build();
   }
 }

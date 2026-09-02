@@ -142,24 +142,14 @@ public class SpannerRollbackPipeline implements Serializable {
       return new DeletionSignals(null, null, null);
     }
 
-    String emulatorHost = options.getEmulatorHost();
     PCollection<Void> delTsSignal =
         deleteDataForProvenances(
-            pipeline,
-            targetProvenances,
-            spannerClient.getTimeSeriesTableName(),
-            spannerClient,
-            emulatorHost);
+            pipeline, targetProvenances, spannerClient.getTimeSeriesTableName(), spannerClient);
     PCollection<Void> delEdgeSignal =
         deleteDataForProvenances(
-            pipeline,
-            targetProvenances,
-            spannerClient.getEdgeTableName(),
-            spannerClient,
-            emulatorHost);
+            pipeline, targetProvenances, spannerClient.getEdgeTableName(), spannerClient);
     PCollection<Void> delKvSignal =
-        deleteDataForProvenances(
-            pipeline, targetProvenances, "KeyValueStore", spannerClient, emulatorHost);
+        deleteDataForProvenances(pipeline, targetProvenances, "KeyValueStore", spannerClient);
 
     return new DeletionSignals(delTsSignal, delEdgeSignal, delKvSignal);
   }
@@ -173,7 +163,7 @@ public class SpannerRollbackPipeline implements Serializable {
       Timestamp tPre,
       List<String> targetProvenances,
       SpannerClient spannerClient) {
-    SpannerIO.Read baseRead = createBaseRead(spannerClient, options.getEmulatorHost());
+    SpannerIO.Read baseRead = spannerClient.getReadTransform();
 
     // A. Read Historical TimeSeries
     String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
@@ -284,8 +274,7 @@ public class SpannerRollbackPipeline implements Serializable {
       IngestionPipelineOptions options,
       Timestamp tPre,
       SpannerClient spannerClient) {
-    SpannerIO.Read baseRead = createBaseRead(spannerClient, options.getEmulatorHost());
-    String emulatorHost = options.getEmulatorHost();
+    SpannerIO.Read baseRead = spannerClient.getReadTransform();
 
     // TODO: Optimize node reconciliation for very large Node tables.
     // Querying Node by last_update_timestamp >= @tPre scans the Node table. As a future
@@ -318,7 +307,7 @@ public class SpannerRollbackPipeline implements Serializable {
                     .via(kv -> Lists.newArrayList(kv.getValue())))
             .apply(
                 "ReconcileNodeBatches",
-                ParDo.of(new ReconcileNodesFn(spannerClient, tPre, emulatorHost))
+                ParDo.of(new ReconcileNodesFn(spannerClient, tPre))
                     .withOutputTags(
                         RESTORE_NODES_TAG,
                         TupleTagList.of(DELETE_NODES_TAG).and(RESTORED_NODE_IDS_TAG)));
@@ -331,7 +320,7 @@ public class SpannerRollbackPipeline implements Serializable {
             .get(RESTORED_NODE_IDS_TAG)
             .apply(
                 "ReconcileNodeEmbeddingBatches",
-                ParDo.of(new ReconcileNodeEmbeddingsFn(spannerClient, tPre, emulatorHost)));
+                ParDo.of(new ReconcileNodeEmbeddingsFn(spannerClient, tPre)));
 
     return new NodeReconciliationResult(
         restoreNodeMutations, deleteNodeMutations, restoreEmbeddingMutations);
@@ -407,19 +396,6 @@ public class SpannerRollbackPipeline implements Serializable {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-  private static SpannerIO.Read createBaseRead(SpannerClient spannerClient, String emulatorHost) {
-    SpannerIO.Read baseRead =
-        SpannerIO.read()
-            .withProjectId(spannerClient.getGcpProjectId())
-            .withInstanceId(spannerClient.getSpannerInstanceId())
-            .withDatabaseId(spannerClient.getSpannerDatabaseId())
-            .withLowPriority();
-    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
-      baseRead = baseRead.withEmulatorHost(emulatorHost.trim());
-    }
-    return baseRead;
-  }
-
   public static List<String> resolveTargetProvenances(IngestionPipelineOptions options) {
     String importList = options.getImportList();
     if (importList == null || importList.trim().isEmpty()) {
@@ -478,16 +454,13 @@ public class SpannerRollbackPipeline implements Serializable {
       Pipeline pipeline,
       List<String> targetProvenances,
       String tableName,
-      SpannerClient spannerClient,
-      String emulatorHost) {
+      SpannerClient spannerClient) {
     return pipeline
         .apply(
             "CreateTargetProvs-" + tableName,
             Create.of(List.of(targetProvenances)).withCoder(ListCoder.of(StringUtf8Coder.of())))
         .apply(
             "ExecuteDeleteProvs-" + tableName,
-            ParDo.of(
-                new SpannerPartitionedDeleteFn(
-                    spannerClient, tableName, "provenance", emulatorHost)));
+            ParDo.of(new SpannerPartitionedDeleteFn(spannerClient, tableName, "provenance")));
   }
 }

@@ -14,14 +14,11 @@
 
 package org.datacommons.ingestion.pipeline.rollback;
 
-import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.DatabaseClient;
-import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
-import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
 import java.util.ArrayList;
@@ -47,7 +44,6 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
 
   private final SpannerClient spannerClient;
   private final com.google.cloud.Timestamp tPre;
-  private final String emulatorHost;
   private final Counter restoredNodesCounter =
       Metrics.counter(ReconcileNodesFn.class, "rollback_restored_nodes");
   private final Counter deletedNodesCounter =
@@ -55,28 +51,15 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
   private transient Spanner spanner;
   private transient DatabaseClient dbClient;
 
-  public ReconcileNodesFn(
-      SpannerClient spannerClient, com.google.cloud.Timestamp tPre, String emulatorHost) {
+  public ReconcileNodesFn(SpannerClient spannerClient, com.google.cloud.Timestamp tPre) {
     this.spannerClient = spannerClient;
     this.tPre = tPre;
-    this.emulatorHost = emulatorHost;
   }
 
   @Setup
   public void setup() {
-    SpannerOptions.Builder builder =
-        SpannerOptions.newBuilder().setProjectId(spannerClient.getGcpProjectId());
-    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
-      builder.setEmulatorHost(emulatorHost.trim());
-      builder.setCredentials(NoCredentials.getInstance());
-    }
-    this.spanner = builder.build().getService();
-    this.dbClient =
-        spanner.getDatabaseClient(
-            DatabaseId.of(
-                spannerClient.getGcpProjectId(),
-                spannerClient.getSpannerInstanceId(),
-                spannerClient.getSpannerDatabaseId()));
+    this.spanner = spannerClient.createSpanner();
+    this.dbClient = spannerClient.getDatabaseClient(spanner);
   }
 
   @Teardown

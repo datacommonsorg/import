@@ -90,30 +90,21 @@ public record ObservationRecord(
 
   /** Builds the canonical Spanner Mutation for this record. */
   public Mutation toMutation(String tableName) {
-    Mutation mutation =
-        Mutation.newInsertOrUpdateBuilder(tableName)
-            .set(COL_VARIABLE_MEASURED)
-            .to(variableMeasured)
-            .set(COL_ENTITY1)
-            .to(entity1)
-            .set(COL_EXTRA_ENTITIES_ID)
-            .to(extraEntitiesId)
-            .set(COL_FACET_ID)
-            .to(facetId)
-            .set(COL_DATE)
-            .to(date)
-            .set(COL_VALUE)
-            .to(value)
-            .set(COL_LAST_UPDATE_TIMESTAMP)
-            .to(Value.COMMIT_TIMESTAMP)
-            .build();
-    if (!WRITABLE_COLUMNS.equals(mutation.asMap().keySet())) {
-      throw new IllegalStateException(
-          "Mutation columns "
-              + mutation.asMap().keySet()
-              + " do not match WRITABLE_COLUMNS "
-              + WRITABLE_COLUMNS);
-    }
-    return mutation;
+    return Mutation.newInsertOrUpdateBuilder(tableName)
+        .set(COL_VARIABLE_MEASURED)
+        .to(variableMeasured)
+        .set(COL_ENTITY1)
+        .to(entity1)
+        .set(COL_EXTRA_ENTITIES_ID)
+        .to(extraEntitiesId)
+        .set(COL_FACET_ID)
+        .to(facetId)
+        .set(COL_DATE)
+        .to(date)
+        .set(COL_VALUE)
+        .to(value)
+        .set(COL_LAST_UPDATE_TIMESTAMP)
+        .to(Value.COMMIT_TIMESTAMP)
+        .build();
   }
 }
