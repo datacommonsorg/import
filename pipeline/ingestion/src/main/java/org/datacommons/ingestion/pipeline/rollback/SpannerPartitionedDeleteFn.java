@@ -21,6 +21,8 @@ import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
 import java.util.List;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.slf4j.Logger;
@@ -32,11 +34,13 @@ import org.slf4j.LoggerFactory;
  */
 public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
   private static final Logger LOGGER = LoggerFactory.getLogger(SpannerPartitionedDeleteFn.class);
+  private static final String DELETE_DML_TEMPLATE = "DELETE FROM %s WHERE %s IN UNNEST(@%s)";
 
   private final SpannerClient spannerClient;
   private final String tableName;
   private final String columnName;
   private final String emulatorHost;
+  private final Counter deletedRowsCounter;
   private transient Spanner spanner;
   private transient DatabaseClient dbClient;
 
@@ -46,6 +50,8 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
     this.tableName = tableName;
     this.columnName = columnName;
     this.emulatorHost = emulatorHost;
+    this.deletedRowsCounter =
+        Metrics.counter(SpannerPartitionedDeleteFn.class, "rollback_deleted_rows:" + tableName);
   }
 
   @Setup
@@ -78,10 +84,10 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
       receiver.output(null);
       return;
     }
-    String dml =
-        String.format("DELETE FROM %s WHERE %s IN UNNEST(@%s)", tableName, columnName, columnName);
+    String dml = String.format(DELETE_DML_TEMPLATE, tableName, columnName, columnName);
     Statement statement = Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
     long rowCount = dbClient.executePartitionedUpdate(statement);
+    deletedRowsCounter.inc(rowCount);
     LOGGER.info("Deleted {} rows from {} for {} IN {}", rowCount, tableName, columnName, values);
     receiver.output(null);
   }

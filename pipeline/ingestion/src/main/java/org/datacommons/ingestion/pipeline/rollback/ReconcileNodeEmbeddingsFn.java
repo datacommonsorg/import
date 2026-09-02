@@ -26,6 +26,8 @@ import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
 import java.util.List;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
@@ -37,6 +39,8 @@ public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
   private final SpannerClient spannerClient;
   private final com.google.cloud.Timestamp tPre;
   private final String emulatorHost;
+  private final Counter restoredEmbeddingsCounter =
+      Metrics.counter(ReconcileNodeEmbeddingsFn.class, "rollback_restored_embeddings");
   private transient Spanner spanner;
   private transient DatabaseClient dbClient;
 
@@ -88,6 +92,7 @@ public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
             .read(NODE_EMBEDDING_TABLE, keySetBuilder.build(), NodeEmbeddingRecord.READ_COLUMNS)) {
       while (rs.next()) {
         Struct row = rs.getCurrentRowAsStruct();
+        restoredEmbeddingsCounter.inc();
         receiver.output(NodeEmbeddingRecord.from(row).toMutation(NODE_EMBEDDING_TABLE));
       }
     }

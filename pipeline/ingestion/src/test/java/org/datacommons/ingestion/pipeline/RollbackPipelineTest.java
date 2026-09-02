@@ -64,36 +64,18 @@ public class RollbackPipelineTest implements Serializable {
   }
 
   @Test
-  public void testResolveTargetProvenances_fromTargetProvenancesJson() {
+  public void testResolveTargetProvenances_fromJsonArray_baseDc() {
     IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
-    options.setTargetProvenances(
-        "[\"dc/base/CensusACS5YearSurvey\", \"dc/base/CensusACS5YearSurvey_AggCountry\"]");
+    options.setImportList(
+        "[{\"importName\": \"CensusACS5YearSurvey\"}, {\"importName\": \"BLS_Data\"}]");
     options.setIsBaseDc(true);
 
     List<String> provenances = RollbackPipeline.resolveTargetProvenances(options);
     assertTrue(provenances.contains("dc/base/CensusACS5YearSurvey"));
-    assertTrue(provenances.contains("dc/base/CensusACS5YearSurvey_AggCountry"));
-  }
-
-  @Test
-  public void testRetentionWindowValidation_throwsWhenExceeded() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
-    options.setIsRollback(true);
-    options.setRollbackTimestamp("2020-01-01T00:00:00Z");
-
-    SpannerClient spannerClient =
-        SpannerClient.builder()
-            .gcpProjectId("test")
-            .spannerInstanceId("test")
-            .spannerDatabaseId("test")
-            .build();
-
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> RollbackPipeline.buildPipeline(pipeline, options, spannerClient));
-
-    assertTrue(exception.getMessage().contains("exceeds Spanner's 7-day PITR retention window"));
+    assertTrue(provenances.contains("dc/base/generated/CensusACS5YearSurvey"));
+    assertTrue(provenances.contains("dc/base/BLS_Data"));
+    assertTrue(provenances.contains("dc/base/generated/BLS_Data"));
+    assertEquals(4, provenances.size());
   }
 
   @Test
@@ -121,26 +103,13 @@ public class RollbackPipelineTest implements Serializable {
   public void testResolveTargetProvenances_empty_throwsException() {
     IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
     options.setImportList(null);
-    options.setTargetProvenances(null);
 
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
             () -> RollbackPipeline.resolveTargetProvenances(options));
 
-    assertTrue(
-        exception.getMessage().contains("Could not resolve any target provenances for rollback"));
-  }
-
-  @Test
-  public void testResolveTargetProvenances_fromCommaSeparatedTargetProvenances() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
-    options.setTargetProvenances("dc/base/CensusACS5YearSurvey, dc/base/BLS_Data");
-
-    List<String> provenances = RollbackPipeline.resolveTargetProvenances(options);
-    assertEquals(2, provenances.size());
-    assertTrue(provenances.contains("dc/base/CensusACS5YearSurvey"));
-    assertTrue(provenances.contains("dc/base/BLS_Data"));
+    assertTrue(exception.getMessage().contains("--importList must be specified for rollback"));
   }
 
   @Test
@@ -174,15 +143,6 @@ public class RollbackPipelineTest implements Serializable {
     org.junit.Assert.assertNull(signals.delTsSignal());
     org.junit.Assert.assertNull(signals.delEdgeSignal());
     org.junit.Assert.assertNull(signals.delKvSignal());
-  }
-
-  @Test
-  public void testValidateRetentionWindow_recentTimestamp_succeeds() {
-    com.google.cloud.Timestamp recent =
-        com.google.cloud.Timestamp.ofTimeSecondsAndNanos(
-            java.time.Instant.now().minus(java.time.Duration.ofHours(1)).getEpochSecond(), 0);
-    // Should not throw
-    RollbackPipeline.validateRetentionWindow(recent);
   }
 
   static class MockRollbackSpannerClient extends SpannerClient {

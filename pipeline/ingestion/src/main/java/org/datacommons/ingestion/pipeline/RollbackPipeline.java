@@ -14,7 +14,6 @@
 
 package org.datacommons.ingestion.pipeline;
 
-import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Mutation;
 import java.io.Serializable;
 import java.util.List;
@@ -48,10 +47,6 @@ public class RollbackPipeline implements Serializable {
 
   public static List<String> resolveTargetProvenances(IngestionPipelineOptions options) {
     return SpannerRollbackPipeline.resolveTargetProvenances(options);
-  }
-
-  public static void validateRetentionWindow(Timestamp tPre) {
-    SpannerRollbackPipeline.validateRetentionWindow(tPre);
   }
 
   public static PCollection<Void> deleteDataForProvenances(

@@ -22,8 +22,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.io.Serializable;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
@@ -72,6 +70,19 @@ public class SpannerRollbackPipeline implements Serializable {
   public static final String KEY_VALUE_STORE_TABLE = "KeyValueStore";
   public static final String NODE_EMBEDDING_TABLE = "NodeEmbedding";
 
+  private static final String HISTORICAL_TIMESERIES_QUERY_TEMPLATE =
+      "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)";
+  private static final String HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE =
+      "SELECT %s FROM %s o JOIN %s ts ON o.variable_measured = ts.variable_measured AND"
+          + " o.entity1 = ts.entity1 AND o.extra_entities_id = ts.extra_entities_id AND"
+          + " o.facet_id = ts.facet_id WHERE ts.provenance IN UNNEST(@provenances)";
+  private static final String HISTORICAL_EDGES_QUERY_TEMPLATE =
+      "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)";
+  private static final String HISTORICAL_KV_QUERY_TEMPLATE =
+      "SELECT %s FROM %s WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)";
+  private static final String MODIFIED_NODES_QUERY_TEMPLATE =
+      "SELECT subject_id FROM %s WHERE last_update_timestamp >= @tPre";
+
   public static final TupleTag<Mutation> RESTORE_NODES_TAG = ReconcileNodesFn.RESTORE_NODES_TAG;
   public static final TupleTag<Mutation> DELETE_NODES_TAG = ReconcileNodesFn.DELETE_NODES_TAG;
 
@@ -101,8 +112,6 @@ public class SpannerRollbackPipeline implements Serializable {
     }
 
     Timestamp tPre = Timestamp.parseTimestamp(timestampStr.trim());
-    validateRetentionWindow(tPre);
-
     List<String> targetProvenances = resolveTargetProvenances(options);
     LOGGER.info("Starting Spanner Time-Travel Rollback to T_pre: {}", tPre);
     LOGGER.info("Target provenances for rollback: {}", targetProvenances);
@@ -180,8 +189,9 @@ public class SpannerRollbackPipeline implements Serializable {
     String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
     String tsQuery =
         spannerClient.formatPartitionQuery(
-            "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)",
-            tsColumns, spannerClient.getTimeSeriesTableName());
+            HISTORICAL_TIMESERIES_QUERY_TEMPLATE,
+            tsColumns,
+            spannerClient.getTimeSeriesTableName());
     PCollection<Mutation> restoreTimeSeriesMutations =
         pipeline
             .apply(
@@ -208,9 +218,7 @@ public class SpannerRollbackPipeline implements Serializable {
             .collect(java.util.stream.Collectors.joining(", "));
     String obsQuery =
         spannerClient.formatPartitionQuery(
-            "SELECT %s FROM %s o JOIN %s ts ON o.variable_measured = ts.variable_measured AND"
-                + " o.entity1 = ts.entity1 AND o.extra_entities_id = ts.extra_entities_id AND"
-                + " o.facet_id = ts.facet_id WHERE ts.provenance IN UNNEST(@provenances)",
+            HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE,
             obsColumns,
             spannerClient.getObservationTableName(),
             spannerClient.getTimeSeriesTableName());
@@ -237,8 +245,7 @@ public class SpannerRollbackPipeline implements Serializable {
     String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
     String edgeQuery =
         spannerClient.formatPartitionQuery(
-            "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)",
-            edgeColumns, spannerClient.getEdgeTableName());
+            HISTORICAL_EDGES_QUERY_TEMPLATE, edgeColumns, spannerClient.getEdgeTableName());
     PCollection<Mutation> restoreEdgeMutations =
         pipeline
             .apply(
@@ -261,9 +268,7 @@ public class SpannerRollbackPipeline implements Serializable {
     String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
     String kvQuery =
         spannerClient.formatPartitionQuery(
-            "SELECT %s FROM %s WHERE type = 'ProvenanceSummary' AND provenance IN"
-                + " UNNEST(@provenances)",
-            kvColumns, KEY_VALUE_STORE_TABLE);
+            HISTORICAL_KV_QUERY_TEMPLATE, kvColumns, KEY_VALUE_STORE_TABLE);
     PCollection<Mutation> restoreKvMutations =
         pipeline
             .apply(
@@ -307,8 +312,7 @@ public class SpannerRollbackPipeline implements Serializable {
     // table scan over unmodified nodes.
     String modifiedNodesQuery =
         spannerClient.formatPartitionQuery(
-            "SELECT subject_id FROM %s WHERE last_update_timestamp >= @tPre",
-            spannerClient.getNodeTableName());
+            MODIFIED_NODES_QUERY_TEMPLATE, spannerClient.getNodeTableName());
     PCollection<String> modifiedSubjectIds =
         pipeline
             .apply(
@@ -450,92 +454,58 @@ public class SpannerRollbackPipeline implements Serializable {
     return baseRead;
   }
 
-  private static final int MAX_RETENTION_DAYS = 7;
-  private static final com.google.gson.Gson GSON = new com.google.gson.Gson();
-
-  public static void validateRetentionWindow(Timestamp tPre) {
-    Instant tPreInstant = Instant.ofEpochSecond(tPre.getSeconds(), tPre.getNanos());
-    Instant maxRetentionBoundary = Instant.now().minus(Duration.ofDays(MAX_RETENTION_DAYS));
-    if (tPreInstant.isBefore(maxRetentionBoundary)) {
+  public static List<String> resolveTargetProvenances(IngestionPipelineOptions options) {
+    String importList = options.getImportList();
+    if (importList == null || importList.trim().isEmpty()) {
       throw new IllegalArgumentException(
-          String.format(
-              "Cannot perform rollback: Timestamp %s exceeds Spanner's %d-day PITR retention"
-                  + " window.",
-              tPre, MAX_RETENTION_DAYS));
+          "--importList must be specified for rollback to resolve target provenances.");
     }
+
+    java.util.Set<String> importNames = parseImportNames(importList.trim());
+    if (importNames.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Could not parse any valid import names from --importList: " + importList);
+    }
+
+    List<String> provenances = new ArrayList<>();
+    for (String name : importNames) {
+      provenances.add(
+          org.datacommons.ingestion.data.ProvenanceUtils.getProvenanceDcid(
+              name, options.getIsBaseDc()));
+      provenances.add(
+          org.datacommons.ingestion.data.ProvenanceUtils.getProvenanceDcid(
+              "generated/" + name, options.getIsBaseDc()));
+    }
+    return provenances;
   }
 
-  public static List<String> resolveTargetProvenances(IngestionPipelineOptions options) {
-    java.util.Set<String> provenances = new java.util.HashSet<>();
-
-    String customTargetJson = options.getTargetProvenances();
-    if (customTargetJson != null && !customTargetJson.trim().isEmpty()) {
-      java.lang.reflect.Type listType =
-          new com.google.common.reflect.TypeToken<List<String>>() {}.getType();
+  private static java.util.Set<String> parseImportNames(String rawInput) {
+    java.util.Set<String> names = new java.util.LinkedHashSet<>();
+    if (rawInput.startsWith("[")) {
       try {
-        List<String> parsed = GSON.fromJson(customTargetJson.trim(), listType);
-        if (parsed != null) {
-          provenances.addAll(parsed);
-        }
-      } catch (Exception e) {
-        // If not JSON array, parse comma-separated
-        String[] tokens = customTargetJson.split(",");
-        for (String token : tokens) {
-          if (!token.trim().isEmpty()) {
-            provenances.add(token.trim());
-          }
-        }
-      }
-    }
-
-    String importList = options.getImportList();
-    if (importList != null && !importList.trim().isEmpty()) {
-      boolean parsedJson = false;
-      try {
-        JsonElement jsonElement = JsonParser.parseString(importList.trim());
-        if (jsonElement.isJsonArray()) {
-          JsonArray jsonArray = jsonElement.getAsJsonArray();
-          for (JsonElement element : jsonArray) {
-            if (element.isJsonObject() && element.getAsJsonObject().has("importName")) {
-              String importName = element.getAsJsonObject().get("importName").getAsString();
-              if (importName != null && !importName.trim().isEmpty()) {
-                provenances.add(
-                    org.datacommons.ingestion.data.ProvenanceUtils.getProvenanceDcid(
-                        importName.trim(), options.getIsBaseDc()));
-                provenances.add(
-                    org.datacommons.ingestion.data.ProvenanceUtils.getProvenanceDcid(
-                        "generated/" + importName.trim(), options.getIsBaseDc()));
-              }
+        JsonArray array = JsonParser.parseString(rawInput).getAsJsonArray();
+        for (JsonElement element : array) {
+          if (element.isJsonObject() && element.getAsJsonObject().has("importName")) {
+            String name = element.getAsJsonObject().get("importName").getAsString();
+            if (name != null && !name.trim().isEmpty()) {
+              names.add(name.trim());
             }
           }
-          parsedJson = true;
         }
+        return names;
       } catch (Exception e) {
-        // Fall back to comma-separated parsing
-      }
-      if (!parsedJson) {
-        String[] importNames = importList.split(",");
-        for (String name : importNames) {
-          String trimmed = name.trim();
-          if (!trimmed.isEmpty()) {
-            provenances.add(
-                org.datacommons.ingestion.data.ProvenanceUtils.getProvenanceDcid(
-                    trimmed, options.getIsBaseDc()));
-            provenances.add(
-                org.datacommons.ingestion.data.ProvenanceUtils.getProvenanceDcid(
-                    "generated/" + trimmed, options.getIsBaseDc()));
-          }
-        }
+        LOGGER.warn(
+            "Failed to parse --importList as JSON array, falling back to comma-separated: {}",
+            e.getMessage());
       }
     }
-
-    if (provenances.isEmpty()) {
-      throw new IllegalArgumentException(
-          "Could not resolve any target provenances for rollback. Please specify --importList or"
-              + " --targetProvenances.");
+    for (String token : rawInput.split(",")) {
+      String trimmed = token.trim();
+      if (!trimmed.isEmpty()) {
+        names.add(trimmed);
+      }
     }
-
-    return new ArrayList<>(provenances);
+    return names;
   }
 
   public static PCollection<Void> deleteDataForProvenances(

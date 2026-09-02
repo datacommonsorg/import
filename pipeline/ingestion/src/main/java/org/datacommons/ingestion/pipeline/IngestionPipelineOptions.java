@@ -110,9 +110,4 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   String getRollbackTimestamp();
 
   void setRollbackTimestamp(String rollbackTimestamp);
-
-  @Description("Optional JSON list of explicit target provenances to roll back")
-  String getTargetProvenances();
-
-  void setTargetProvenances(String targetProvenances);
 }

@@ -27,6 +27,8 @@ import com.google.cloud.spanner.TimestampBound;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.TupleTag;
 import org.datacommons.ingestion.spanner.SpannerClient;
@@ -43,6 +45,10 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
   private final SpannerClient spannerClient;
   private final com.google.cloud.Timestamp tPre;
   private final String emulatorHost;
+  private final Counter restoredNodesCounter =
+      Metrics.counter(ReconcileNodesFn.class, "rollback_restored_nodes");
+  private final Counter deletedNodesCounter =
+      Metrics.counter(ReconcileNodesFn.class, "rollback_deleted_nodes");
   private transient Spanner spanner;
   private transient DatabaseClient dbClient;
 
@@ -98,6 +104,7 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
         Struct row = rs.getCurrentRowAsStruct();
         String id = row.getString(NodeRecord.COL_SUBJECT_ID);
         restoredIds.add(id);
+        restoredNodesCounter.inc();
         receiver
             .get(RESTORE_NODES_TAG)
             .output(NodeRecord.from(row).toMutation(spannerClient.getNodeTableName()));
@@ -106,6 +113,7 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
 
     for (String id : batch) {
       if (!restoredIds.contains(id)) {
+        deletedNodesCounter.inc();
         receiver
             .get(DELETE_NODES_TAG)
             .output(
