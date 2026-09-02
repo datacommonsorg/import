@@ -36,7 +36,7 @@ class TestAggregationDeleter(unittest.TestCase):
         deleter.delete_aggregated_data(imports)
 
         # Verify execute_partitioned_dml calls (order-independent due to parallel execution)
-        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 3)
+        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 2)
 
         expected_provenances = ["dc/base/ImportA", "dc/base/ImportB"]
         expected_params = {"provenances": expected_provenances}
@@ -46,9 +46,6 @@ class TestAggregationDeleter(unittest.TestCase):
 
         self.assertTrue(any("DELETE FROM Edge" in sql for sql in executed_sqls))
         self.assertTrue(any("DELETE FROM TimeSeries" in sql for sql in executed_sqls))
-        self.assertTrue(
-            any("DELETE FROM KeyValueStore" in sql for sql in executed_sqls)
-        )
 
         for c in calls:
             self.assertEqual(c[1]["params"], expected_params)

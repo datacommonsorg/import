@@ -63,7 +63,7 @@ class AggregationDeleter:
         """Deletes aggregated data for the specified imports from Spanner concurrently.
 
         Uses Partitioned DML to execute deletions, which is safe for large volumes.
-        Runs deletions for Edge, TimeSeries, and KeyValueStore in parallel using ThreadPoolExecutor.
+        Runs deletions for Edge and TimeSeries in parallel using ThreadPoolExecutor.
 
         Args:
             imports_to_delete: List of import names (without dc/base/ prefix) to delete.
@@ -91,11 +91,6 @@ class AggregationDeleter:
                 "TimeSeries",
                 "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)",
                 " (and cascaded Observations)",
-            ),
-            (
-                "KeyValueStore",
-                "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)",
-                "",
             ),
         ]
 
