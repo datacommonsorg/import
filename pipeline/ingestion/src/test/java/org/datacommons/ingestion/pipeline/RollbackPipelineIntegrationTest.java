@@ -132,15 +132,13 @@ public class RollbackPipelineIntegrationTest {
     // Clear tables
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
     dbClient = spanner.getDatabaseClient(dbId);
+    List<String> tables = List.of("Observation", "TimeSeries", "Edge", "Node", "KeyValueStore");
     dbClient
         .readWriteTransaction()
         .run(
             transaction -> {
-              transaction.executeUpdate(Statement.of("DELETE FROM Observation WHERE true"));
-              transaction.executeUpdate(Statement.of("DELETE FROM TimeSeries WHERE true"));
-              transaction.executeUpdate(Statement.of("DELETE FROM Edge WHERE true"));
-              transaction.executeUpdate(Statement.of("DELETE FROM Node WHERE true"));
-              transaction.executeUpdate(Statement.of("DELETE FROM KeyValueStore WHERE true"));
+              tables.forEach(
+                  t -> transaction.executeUpdate(Statement.of("DELETE FROM " + t + " WHERE true")));
               return null;
             });
   }

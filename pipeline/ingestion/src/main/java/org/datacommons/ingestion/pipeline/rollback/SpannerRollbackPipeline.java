@@ -22,8 +22,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.ListCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -41,6 +46,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.sdk.values.TypeDescriptors;
+import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.pipeline.IngestionPipelineOptions;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.EdgeRecord;
@@ -403,51 +409,44 @@ public class SpannerRollbackPipeline implements Serializable {
           "--importList must be specified for rollback to resolve target provenances.");
     }
 
-    java.util.Set<String> importNames = parseImportNames(importList.trim());
+    Set<String> importNames = parseImportNames(importList.trim());
     if (importNames.isEmpty()) {
       throw new IllegalArgumentException(
           "Could not parse any valid import names from --importList: " + importList);
     }
 
-    List<String> provenances = new ArrayList<>();
-    for (String name : importNames) {
-      provenances.add(
-          org.datacommons.ingestion.data.ProvenanceUtils.getProvenanceDcid(
-              name, options.getIsBaseDc()));
-      provenances.add(
-          org.datacommons.ingestion.data.ProvenanceUtils.getProvenanceDcid(
-              "generated/" + name, options.getIsBaseDc()));
-    }
-    return provenances;
+    boolean isBaseDc = options.getIsBaseDc();
+    return importNames.stream()
+        .flatMap(
+            name ->
+                Stream.of(
+                    ProvenanceUtils.getProvenanceDcid(name, isBaseDc),
+                    ProvenanceUtils.getProvenanceDcid("generated/" + name, isBaseDc)))
+        .toList();
   }
 
-  private static java.util.Set<String> parseImportNames(String rawInput) {
-    java.util.Set<String> names = new java.util.LinkedHashSet<>();
+  private static Set<String> parseImportNames(String rawInput) {
     if (rawInput.startsWith("[")) {
       try {
         JsonArray array = JsonParser.parseString(rawInput).getAsJsonArray();
-        for (JsonElement element : array) {
-          if (element.isJsonObject() && element.getAsJsonObject().has("importName")) {
-            String name = element.getAsJsonObject().get("importName").getAsString();
-            if (name != null && !name.trim().isEmpty()) {
-              names.add(name.trim());
-            }
-          }
-        }
-        return names;
+        return StreamSupport.stream(array.spliterator(), false)
+            .filter(JsonElement::isJsonObject)
+            .map(e -> e.getAsJsonObject().get("importName"))
+            .filter(e -> e != null && !e.isJsonNull())
+            .map(JsonElement::getAsString)
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.toCollection(LinkedHashSet::new));
       } catch (Exception e) {
         LOGGER.warn(
             "Failed to parse --importList as JSON array, falling back to comma-separated: {}",
             e.getMessage());
       }
     }
-    for (String token : rawInput.split(",")) {
-      String trimmed = token.trim();
-      if (!trimmed.isEmpty()) {
-        names.add(trimmed);
-      }
-    }
-    return names;
+    return Arrays.stream(rawInput.split(","))
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   public static PCollection<Void> deleteDataForProvenances(

@@ -19,6 +19,7 @@ import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
+import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
 import java.util.ArrayList;
@@ -75,17 +76,11 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
       return;
     }
 
-    KeySet.Builder keySetBuilder = KeySet.newBuilder();
-    for (String subjectId : batch) {
-      keySetBuilder.addKey(com.google.cloud.spanner.Key.of(subjectId));
-    }
-
     Set<String> restoredIds = new HashSet<>();
     try (ResultSet rs =
         dbClient
             .singleUse(TimestampBound.ofReadTimestamp(tPre))
-            .read(
-                spannerClient.getNodeTableName(), keySetBuilder.build(), NodeRecord.READ_COLUMNS)) {
+            .read(spannerClient.getNodeTableName(), toKeySet(batch), NodeRecord.READ_COLUMNS)) {
       while (rs.next()) {
         Struct row = rs.getCurrentRowAsStruct();
         String id = row.getString(NodeRecord.COL_SUBJECT_ID);
@@ -95,21 +90,35 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
             .get(RESTORE_NODES_TAG)
             .output(NodeRecord.from(row).toMutation(spannerClient.getNodeTableName()));
       }
+    } catch (SpannerException e) {
+      throw new IllegalStateException(
+          String.format(
+              "Failed historical read on '%s' at T_pre (%s). "
+                  + "Verify that T_pre is within Spanner's version retention period.",
+              spannerClient.getNodeTableName(), tPre),
+          e);
     }
 
     if (!restoredIds.isEmpty()) {
       receiver.get(RESTORED_NODE_IDS_TAG).output(new ArrayList<>(restoredIds));
     }
 
-    for (String id : batch) {
-      if (!restoredIds.contains(id)) {
-        deletedNodesCounter.inc();
-        receiver
-            .get(DELETE_NODES_TAG)
-            .output(
-                Mutation.delete(
-                    spannerClient.getNodeTableName(), com.google.cloud.spanner.Key.of(id)));
-      }
-    }
+    batch.stream()
+        .filter(id -> !restoredIds.contains(id))
+        .forEach(
+            id -> {
+              deletedNodesCounter.inc();
+              receiver
+                  .get(DELETE_NODES_TAG)
+                  .output(
+                      Mutation.delete(
+                          spannerClient.getNodeTableName(), com.google.cloud.spanner.Key.of(id)));
+            });
+  }
+
+  private static KeySet toKeySet(List<String> subjectIds) {
+    KeySet.Builder builder = KeySet.newBuilder();
+    subjectIds.forEach(id -> builder.addKey(com.google.cloud.spanner.Key.of(id)));
+    return builder.build();
   }
 }

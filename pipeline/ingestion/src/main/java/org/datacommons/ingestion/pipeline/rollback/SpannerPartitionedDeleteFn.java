@@ -16,6 +16,7 @@ package org.datacommons.ingestion.pipeline.rollback;
 
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Spanner;
+import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.Statement;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
@@ -70,9 +71,17 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
     }
     String dml = String.format(DELETE_DML_TEMPLATE, tableName, columnName, columnName);
     Statement statement = Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
-    long rowCount = dbClient.executePartitionedUpdate(statement);
-    deletedRowsCounter.inc(rowCount);
-    LOGGER.info("Deleted {} rows from {} for {} IN {}", rowCount, tableName, columnName, values);
-    receiver.output(null);
+    try {
+      long rowCount = dbClient.executePartitionedUpdate(statement);
+      deletedRowsCounter.inc(rowCount);
+      LOGGER.info("Deleted {} rows from {} for {} IN {}", rowCount, tableName, columnName, values);
+      receiver.output(null);
+    } catch (SpannerException e) {
+      throw new IllegalStateException(
+          String.format(
+              "Failed to execute partitioned delete on '%s' where %s IN %s",
+              tableName, columnName, values),
+          e);
+    }
   }
 }

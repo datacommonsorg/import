@@ -20,6 +20,7 @@ import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
+import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
 import java.util.List;
@@ -64,20 +65,29 @@ public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
       return;
     }
 
-    KeySet.Builder keySetBuilder = KeySet.newBuilder();
-    for (String subjectId : batch) {
-      keySetBuilder.addRange(KeyRange.prefix(com.google.cloud.spanner.Key.of(subjectId)));
-    }
-
     try (ResultSet rs =
         dbClient
             .singleUse(TimestampBound.ofReadTimestamp(tPre))
-            .read(NODE_EMBEDDING_TABLE, keySetBuilder.build(), NodeEmbeddingRecord.READ_COLUMNS)) {
+            .read(NODE_EMBEDDING_TABLE, toPrefixKeySet(batch), NodeEmbeddingRecord.READ_COLUMNS)) {
       while (rs.next()) {
         Struct row = rs.getCurrentRowAsStruct();
         restoredEmbeddingsCounter.inc();
         receiver.output(NodeEmbeddingRecord.from(row).toMutation(NODE_EMBEDDING_TABLE));
       }
+    } catch (SpannerException e) {
+      throw new IllegalStateException(
+          String.format(
+              "Failed historical read on '%s' at T_pre (%s). "
+                  + "Verify that T_pre is within Spanner's version retention period.",
+              NODE_EMBEDDING_TABLE, tPre),
+          e);
     }
+  }
+
+  private static KeySet toPrefixKeySet(List<String> subjectIds) {
+    KeySet.Builder builder = KeySet.newBuilder();
+    subjectIds.forEach(
+        id -> builder.addRange(KeyRange.prefix(com.google.cloud.spanner.Key.of(id))));
+    return builder.build();
   }
 }
