@@ -20,15 +20,13 @@ import com.google.cloud.spanner.Statement;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.ListCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
@@ -305,7 +303,10 @@ public class SpannerRollbackPipeline implements Serializable {
                 "MapToKeyedSubjectId",
                 MapElements.into(
                         TypeDescriptors.kvs(TypeDescriptors.integers(), TypeDescriptors.strings()))
-                    .via(id -> KV.of(0, id)))
+                    .via(
+                        id ->
+                            KV.of(
+                                java.util.concurrent.ThreadLocalRandom.current().nextInt(100), id)))
             .apply("GroupNodeBatches", GroupIntoBatches.ofSize(NODE_RECONCILE_BATCH_SIZE))
             .apply(
                 "ExtractBatchElements",
@@ -426,27 +427,34 @@ public class SpannerRollbackPipeline implements Serializable {
   }
 
   private static Set<String> parseImportNames(String rawInput) {
-    if (rawInput.startsWith("[")) {
-      try {
-        JsonArray array = JsonParser.parseString(rawInput).getAsJsonArray();
-        return StreamSupport.stream(array.spliterator(), false)
-            .filter(JsonElement::isJsonObject)
-            .map(e -> e.getAsJsonObject().get("importName"))
-            .filter(e -> e != null && !e.isJsonNull())
-            .map(JsonElement::getAsString)
-            .map(String::trim)
-            .filter(s -> !s.isEmpty())
-            .collect(Collectors.toCollection(LinkedHashSet::new));
-      } catch (Exception e) {
-        LOGGER.warn(
-            "Failed to parse --importList as JSON array, falling back to comma-separated: {}",
-            e.getMessage());
+    try {
+      JsonElement jsonElement = JsonParser.parseString(rawInput);
+      if (!jsonElement.isJsonArray()) {
+        throw new IllegalArgumentException(
+            "Invalid --importList format: expected a JSON array (e.g. [{\"importName\": \"Census\"}]), but got: "
+                + rawInput);
       }
+      JsonArray array = jsonElement.getAsJsonArray();
+      Set<String> importNames = new LinkedHashSet<>();
+      for (JsonElement element : array) {
+        if (!element.isJsonObject()) {
+          throw new IllegalArgumentException(
+              "Invalid element in --importList JSON array: expected a JSON object with 'importName', got: "
+                  + element);
+        }
+        JsonElement nameElement = element.getAsJsonObject().get("importName");
+        if (nameElement == null
+            || nameElement.isJsonNull()
+            || nameElement.getAsString().trim().isEmpty()) {
+          throw new IllegalArgumentException(
+              "Invalid element in --importList: missing or empty 'importName' in: " + element);
+        }
+        importNames.add(nameElement.getAsString().trim());
+      }
+      return importNames;
+    } catch (JsonParseException e) {
+      throw new IllegalArgumentException("Failed to parse --importList as JSON: " + rawInput, e);
     }
-    return Arrays.stream(rawInput.split(","))
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   public static PCollection<Void> deleteDataForProvenances(

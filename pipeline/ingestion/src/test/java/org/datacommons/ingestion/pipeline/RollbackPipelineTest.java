@@ -50,18 +50,46 @@ public class RollbackPipelineTest implements Serializable {
   }
 
   @Test
-  public void testResolveTargetProvenances_fromImportList_baseDc() {
+  public void testResolveTargetProvenances_malformedJson_throwsException() {
     IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
-    options.setImportList("CensusACS5YearSurvey,BLS_Data");
+    options.setImportList("[{\"importName\": \"CensusACS5YearSurvey\""); // truncated JSON
     options.setIsBaseDc(true);
 
-    assertEquals(
-        List.of(
-            "dc/base/CensusACS5YearSurvey",
-            "dc/base/generated/CensusACS5YearSurvey",
-            "dc/base/BLS_Data",
-            "dc/base/generated/BLS_Data"),
-        RollbackPipeline.resolveTargetProvenances(options));
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.resolveTargetProvenances(options));
+
+    assertTrue(exception.getMessage().contains("Failed to parse --importList as JSON"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_nonJson_throwsException() {
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList("CensusACS5YearSurvey,BLS_Data"); // not valid JSON
+    options.setIsBaseDc(true);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.resolveTargetProvenances(options));
+
+    assertTrue(exception.getMessage().contains("Failed to parse --importList as JSON"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_nonArrayJson_throwsException() {
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList("{\"importName\": \"CensusACS5YearSurvey\"}"); // JSON object, not array
+    options.setIsBaseDc(true);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.resolveTargetProvenances(options));
+
+    assertTrue(
+        exception.getMessage().contains("Invalid --importList format: expected a JSON array"));
   }
 
   @Test
@@ -117,7 +145,7 @@ public class RollbackPipelineTest implements Serializable {
   @Test
   public void testResolveTargetProvenances_fromImportList_customDc() {
     IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
-    options.setImportList("CustomSurvey");
+    options.setImportList("[{\"importName\": \"CustomSurvey\"}]");
     options.setIsBaseDc(false);
 
     assertEquals(

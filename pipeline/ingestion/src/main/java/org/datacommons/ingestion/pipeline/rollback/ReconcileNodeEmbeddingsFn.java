@@ -65,6 +65,9 @@ public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
       return;
     }
 
+    // Delete existing embeddings at HEAD for these subject IDs to prevent orphaned composite keys
+    receiver.output(Mutation.delete(NODE_EMBEDDING_TABLE, toPrefixKeySet(batch)));
+
     try (ResultSet rs =
         dbClient
             .singleUse(TimestampBound.ofReadTimestamp(tPre))

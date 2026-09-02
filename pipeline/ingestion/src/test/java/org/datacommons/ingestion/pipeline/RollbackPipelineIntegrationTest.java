@@ -194,15 +194,75 @@ public class RollbackPipelineIntegrationTest {
     // 4. Verification Assertions
     assertNode(dbClient, SpannerTestData.SUBJECT_ID_CA, "California", List.of("State", "Place"));
     assertNodeDeleted(dbClient, SpannerTestData.SUBJECT_ID_DIRTY);
+    assertEdgeDeleted(dbClient, SpannerTestData.SUBJECT_ID_DIRTY);
+    assertTimeSeriesRestored(dbClient, SpannerTestData.STAT_VAR);
     assertObservationRestoredAndDirtyDeleted(dbClient);
     assertKeyValueRestored(dbClient);
+    assertNodeEmbeddingRestored(
+        dbClient, SpannerTestData.SUBJECT_ID_CA, SpannerTestData.EMBEDDING_CONTENT_V1);
+    assertNodeEmbeddingDeleted(dbClient, SpannerTestData.SUBJECT_ID_DIRTY);
+  }
+
+  @Test
+  public void testRollback_preservesUnrelatedImportsAndProvenances() throws Exception {
+    DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
+    DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
+
+    // 1. Seed Clean Baseline for TestImport (V1) and existing baseline entities for OtherImport
+    Timestamp tPre =
+        dbClient.write(
+            java.util.stream.Stream.concat(
+                    SpannerTestData.V1_BASELINE_MUTATIONS.stream(),
+                    SpannerTestData.OTHER_IMPORT_BASELINE_MUTATIONS.stream())
+                .toList());
+    Thread.sleep(1000);
+
+    // 2. Add Corrupted records for TestImport AND concurrent records for OtherImport
+    dbClient.write(
+        java.util.stream.Stream.concat(
+                SpannerTestData.V2_CORRUPTED_MUTATIONS.stream(),
+                SpannerTestData.OTHER_IMPORT_CONCURRENT_MUTATIONS.stream())
+            .toList());
+
+    // 3. Run Rollback specifically targeting TestImport
+    runRollbackPipeline(tPre);
+
+    // 4. Assert TestImport was rolled back
+    assertNode(dbClient, SpannerTestData.SUBJECT_ID_CA, "California", List.of("State", "Place"));
+    assertNodeDeleted(dbClient, SpannerTestData.SUBJECT_ID_DIRTY);
+
+    // 5. Assert OtherImport remains COMPLETELY INTACT (not deleted or altered)
+    assertNode(dbClient, SpannerTestData.SUBJECT_ID_OTHER, "Alaska", List.of("State", "Place"));
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT value FROM Observation WHERE variable_measured = '%s' AND entity1 = '%s'",
+                        SpannerTestData.STAT_VAR_OTHER, SpannerTestData.SUBJECT_ID_OTHER)))) {
+      assertTrue("OtherImport observation should remain intact", rs.next());
+      assertEquals(SpannerTestData.OTHER_OBS_VALUE, rs.getString("value"));
+    }
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT value FROM KeyValueStore WHERE key = '%s' AND provenance = '%s'",
+                        SpannerTestData.STAT_VAR_OTHER, SpannerTestData.OTHER_PROVENANCE)))) {
+      assertTrue("OtherImport KeyValueStore should remain intact", rs.next());
+      assertEquals(
+          SpannerTestData.OTHER_KV_VALUE.replace(" ", ""), rs.getJson("value").replace(" ", ""));
+    }
   }
 
   private void runRollbackPipeline(Timestamp tPre) {
     IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
     options.setIsRollback(true);
     options.setRollbackTimestamp(tPre.toString());
-    options.setImportList("TestImport");
+    options.setImportList("[{\"importName\": \"TestImport\"}]");
     options.setIsBaseDc(true);
     options.setProjectId(projectId);
     options.setSpannerInstanceId(instanceId);
@@ -246,6 +306,61 @@ public class RollbackPipelineIntegrationTest {
                     String.format(
                         "SELECT subject_id FROM Node WHERE subject_id = '%s'", subjectId)))) {
       assertFalse(String.format("Dirty node %s should be deleted", subjectId), rs.next());
+    }
+  }
+
+  private void assertEdgeDeleted(DatabaseClient dbClient, String subjectId) {
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT subject_id FROM Edge WHERE subject_id = '%s'", subjectId)))) {
+      assertFalse(String.format("Dirty edge for %s should be deleted", subjectId), rs.next());
+    }
+  }
+
+  private void assertTimeSeriesRestored(DatabaseClient dbClient, String variableMeasured) {
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT variable_measured FROM TimeSeries WHERE variable_measured = '%s'",
+                        variableMeasured)))) {
+      assertTrue(String.format("TimeSeries %s should exist", variableMeasured), rs.next());
+    }
+  }
+
+  private void assertNodeEmbeddingRestored(
+      DatabaseClient dbClient, String subjectId, String expectedContent) {
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT embedding_content FROM NodeEmbedding WHERE subject_id = '%s'",
+                        subjectId)))) {
+      assertTrue(String.format("NodeEmbedding for %s should exist", subjectId), rs.next());
+      assertEquals(
+          expectedContent.replace(" ", ""), rs.getJson("embedding_content").replace(" ", ""));
+    }
+  }
+
+  private void assertNodeEmbeddingDeleted(DatabaseClient dbClient, String subjectId) {
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT subject_id FROM NodeEmbedding WHERE subject_id = '%s'",
+                        subjectId)))) {
+      assertFalse(
+          String.format("Dirty node embedding for %s should be deleted", subjectId), rs.next());
     }
   }
 
