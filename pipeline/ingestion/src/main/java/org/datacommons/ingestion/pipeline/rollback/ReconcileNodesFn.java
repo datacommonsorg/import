@@ -24,6 +24,7 @@ import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +42,8 @@ import org.datacommons.ingestion.spanner.model.NodeRecord;
 public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
   public static final TupleTag<Mutation> RESTORE_NODES_TAG = new TupleTag<Mutation>() {};
   public static final TupleTag<Mutation> DELETE_NODES_TAG = new TupleTag<Mutation>() {};
+  public static final TupleTag<List<String>> RESTORED_NODE_IDS_TAG =
+      new TupleTag<List<String>>() {};
 
   private final SpannerClient spannerClient;
   private final com.google.cloud.Timestamp tPre;
@@ -109,6 +112,10 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
             .get(RESTORE_NODES_TAG)
             .output(NodeRecord.from(row).toMutation(spannerClient.getNodeTableName()));
       }
+    }
+
+    if (!restoredIds.isEmpty()) {
+      receiver.get(RESTORED_NODE_IDS_TAG).output(new ArrayList<>(restoredIds));
     }
 
     for (String id : batch) {

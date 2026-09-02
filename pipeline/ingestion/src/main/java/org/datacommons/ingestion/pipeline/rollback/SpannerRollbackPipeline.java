@@ -67,24 +67,21 @@ public class SpannerRollbackPipeline implements Serializable {
   private static final Logger LOGGER = LoggerFactory.getLogger(SpannerRollbackPipeline.class);
   private static final long NODE_RECONCILE_BATCH_SIZE = 1000L;
 
-  public static final String KEY_VALUE_STORE_TABLE = "KeyValueStore";
-  public static final String NODE_EMBEDDING_TABLE = "NodeEmbedding";
-
-  private static final String HISTORICAL_TIMESERIES_QUERY_TEMPLATE =
+  private static final String HISTORICAL_PROVENANCE_QUERY_TEMPLATE =
       "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)";
   private static final String HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE =
-      "SELECT %s FROM %s o JOIN %s ts ON o.variable_measured = ts.variable_measured AND"
+      "SELECT %s FROM Observation o JOIN TimeSeries ts ON o.variable_measured = ts.variable_measured AND"
           + " o.entity1 = ts.entity1 AND o.extra_entities_id = ts.extra_entities_id AND"
           + " o.facet_id = ts.facet_id WHERE ts.provenance IN UNNEST(@provenances)";
-  private static final String HISTORICAL_EDGES_QUERY_TEMPLATE =
-      "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)";
   private static final String HISTORICAL_KV_QUERY_TEMPLATE =
-      "SELECT %s FROM %s WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)";
-  private static final String MODIFIED_NODES_QUERY_TEMPLATE =
-      "SELECT subject_id FROM %s WHERE last_update_timestamp >= @tPre";
+      "SELECT %s FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)";
+  private static final String MODIFIED_NODES_QUERY =
+      "SELECT subject_id FROM Node WHERE last_update_timestamp >= @tPre";
 
   public static final TupleTag<Mutation> RESTORE_NODES_TAG = ReconcileNodesFn.RESTORE_NODES_TAG;
   public static final TupleTag<Mutation> DELETE_NODES_TAG = ReconcileNodesFn.DELETE_NODES_TAG;
+  public static final TupleTag<List<String>> RESTORED_NODE_IDS_TAG =
+      ReconcileNodesFn.RESTORED_NODE_IDS_TAG;
 
   public record DeletionSignals(
       PCollection<Void> delTsSignal,
@@ -151,7 +148,6 @@ public class SpannerRollbackPipeline implements Serializable {
             pipeline,
             targetProvenances,
             spannerClient.getTimeSeriesTableName(),
-            "provenance",
             spannerClient,
             emulatorHost);
     PCollection<Void> delEdgeSignal =
@@ -159,17 +155,11 @@ public class SpannerRollbackPipeline implements Serializable {
             pipeline,
             targetProvenances,
             spannerClient.getEdgeTableName(),
-            "provenance",
             spannerClient,
             emulatorHost);
     PCollection<Void> delKvSignal =
         deleteDataForProvenances(
-            pipeline,
-            targetProvenances,
-            KEY_VALUE_STORE_TABLE,
-            "provenance",
-            spannerClient,
-            emulatorHost);
+            pipeline, targetProvenances, "KeyValueStore", spannerClient, emulatorHost);
 
     return new DeletionSignals(delTsSignal, delEdgeSignal, delKvSignal);
   }
@@ -189,7 +179,7 @@ public class SpannerRollbackPipeline implements Serializable {
     String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
     String tsQuery =
         spannerClient.formatPartitionQuery(
-            HISTORICAL_TIMESERIES_QUERY_TEMPLATE,
+            HISTORICAL_PROVENANCE_QUERY_TEMPLATE,
             tsColumns,
             spannerClient.getTimeSeriesTableName());
     PCollection<Mutation> restoreTimeSeriesMutations =
@@ -217,11 +207,7 @@ public class SpannerRollbackPipeline implements Serializable {
             .map(c -> "o." + c)
             .collect(java.util.stream.Collectors.joining(", "));
     String obsQuery =
-        spannerClient.formatPartitionQuery(
-            HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE,
-            obsColumns,
-            spannerClient.getObservationTableName(),
-            spannerClient.getTimeSeriesTableName());
+        spannerClient.formatPartitionQuery(HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE, obsColumns);
     PCollection<Mutation> restoreObservationMutations =
         pipeline
             .apply(
@@ -245,7 +231,7 @@ public class SpannerRollbackPipeline implements Serializable {
     String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
     String edgeQuery =
         spannerClient.formatPartitionQuery(
-            HISTORICAL_EDGES_QUERY_TEMPLATE, edgeColumns, spannerClient.getEdgeTableName());
+            HISTORICAL_PROVENANCE_QUERY_TEMPLATE, edgeColumns, spannerClient.getEdgeTableName());
     PCollection<Mutation> restoreEdgeMutations =
         pipeline
             .apply(
@@ -266,9 +252,7 @@ public class SpannerRollbackPipeline implements Serializable {
 
     // D. Read Historical KeyValueStore (type = 'ProvenanceSummary')
     String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
-    String kvQuery =
-        spannerClient.formatPartitionQuery(
-            HISTORICAL_KV_QUERY_TEMPLATE, kvColumns, KEY_VALUE_STORE_TABLE);
+    String kvQuery = spannerClient.formatPartitionQuery(HISTORICAL_KV_QUERY_TEMPLATE, kvColumns);
     PCollection<Mutation> restoreKvMutations =
         pipeline
             .apply(
@@ -283,9 +267,7 @@ public class SpannerRollbackPipeline implements Serializable {
             .apply(
                 "MapHistoricalKeyValueStoreToMutations",
                 MapElements.into(TypeDescriptor.of(Mutation.class))
-                    .via(
-                        struct ->
-                            KeyValueStoreRecord.from(struct).toMutation(KEY_VALUE_STORE_TABLE)));
+                    .via(struct -> KeyValueStoreRecord.from(struct).toMutation("KeyValueStore")));
 
     return new HistoricalSnapshots(
         restoreTimeSeriesMutations,
@@ -310,9 +292,7 @@ public class SpannerRollbackPipeline implements Serializable {
     // scalability optimization, candidate subject_ids can be extracted directly from the
     // failed import's Edge and TimeSeries tables at HEAD prior to deletion, avoiding a
     // table scan over unmodified nodes.
-    String modifiedNodesQuery =
-        spannerClient.formatPartitionQuery(
-            MODIFIED_NODES_QUERY_TEMPLATE, spannerClient.getNodeTableName());
+    String modifiedNodesQuery = spannerClient.formatPartitionQuery(MODIFIED_NODES_QUERY);
     PCollection<String> modifiedSubjectIds =
         pipeline
             .apply(
@@ -339,30 +319,16 @@ public class SpannerRollbackPipeline implements Serializable {
             .apply(
                 "ReconcileNodeBatches",
                 ParDo.of(new ReconcileNodesFn(spannerClient, tPre, emulatorHost))
-                    .withOutputTags(RESTORE_NODES_TAG, TupleTagList.of(DELETE_NODES_TAG)));
+                    .withOutputTags(
+                        RESTORE_NODES_TAG,
+                        TupleTagList.of(DELETE_NODES_TAG).and(RESTORED_NODE_IDS_TAG)));
 
     PCollection<Mutation> restoreNodeMutations = nodeReconcileTuple.get(RESTORE_NODES_TAG);
     PCollection<Mutation> deleteNodeMutations = nodeReconcileTuple.get(DELETE_NODES_TAG);
 
     PCollection<Mutation> restoreEmbeddingMutations =
-        restoreNodeMutations
-            .apply(
-                "ExtractRestoredSubjectIds",
-                MapElements.into(TypeDescriptors.strings())
-                    .via(
-                        mutation ->
-                            SpannerClient.getMutationValue(
-                                mutation.asMap(), NodeRecord.COL_SUBJECT_ID)))
-            .apply(
-                "MapToKeyedEmbSubjectId",
-                MapElements.into(
-                        TypeDescriptors.kvs(TypeDescriptors.integers(), TypeDescriptors.strings()))
-                    .via(id -> KV.of(0, id)))
-            .apply("GroupEmbNodeBatches", GroupIntoBatches.ofSize(NODE_RECONCILE_BATCH_SIZE))
-            .apply(
-                "ExtractEmbBatchElements",
-                MapElements.into(TypeDescriptors.lists(TypeDescriptors.strings()))
-                    .via(kv -> Lists.newArrayList(kv.getValue())))
+        nodeReconcileTuple
+            .get(RESTORED_NODE_IDS_TAG)
             .apply(
                 "ReconcileNodeEmbeddingBatches",
                 ParDo.of(new ReconcileNodeEmbeddingsFn(spannerClient, tPre, emulatorHost)));
@@ -512,7 +478,6 @@ public class SpannerRollbackPipeline implements Serializable {
       Pipeline pipeline,
       List<String> targetProvenances,
       String tableName,
-      String columnName,
       SpannerClient spannerClient,
       String emulatorHost) {
     return pipeline
@@ -523,6 +488,6 @@ public class SpannerRollbackPipeline implements Serializable {
             "ExecuteDeleteProvs-" + tableName,
             ParDo.of(
                 new SpannerPartitionedDeleteFn(
-                    spannerClient, tableName, columnName, emulatorHost)));
+                    spannerClient, tableName, "provenance", emulatorHost)));
   }
 }

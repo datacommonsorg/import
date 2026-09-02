@@ -168,19 +168,11 @@ public class SpannerClient implements Serializable {
           .to(Value.COMMIT_TIMESTAMP)
           .build();
     }
-    return toNodeMutation(NodeRecord.from(node), this.nodeTableName);
-  }
-
-  public static Mutation toNodeMutation(NodeRecord row, String nodeTableName) {
-    return row.toMutation(nodeTableName);
+    return NodeRecord.from(node).toMutation(this.nodeTableName);
   }
 
   public Mutation toEdgeMutation(Edge edge) {
-    return toEdgeMutation(EdgeRecord.from(edge), this.edgeTableName);
-  }
-
-  public static Mutation toEdgeMutation(EdgeRecord row, String edgeTableName) {
-    return row.toMutation(edgeTableName);
+    return EdgeRecord.from(edge).toMutation(this.edgeTableName);
   }
 
   public List<KV<String, Mutation>> toGraphKVMutations(List<Node> nodes, List<Edge> edges) {
@@ -191,19 +183,11 @@ public class SpannerClient implements Serializable {
   }
 
   public Mutation toTimeSeriesMutation(TimeSeries obs) {
-    return toTimeSeriesMutation(TimeSeriesRecord.from(obs), this.timeSeriesTableName);
-  }
-
-  public static Mutation toTimeSeriesMutation(TimeSeriesRecord row, String timeSeriesTableName) {
-    return row.toMutation(timeSeriesTableName);
+    return TimeSeriesRecord.from(obs).toMutation(this.timeSeriesTableName);
   }
 
   public Mutation toObservationMutation(Observation obs) {
-    return toObservationMutation(ObservationRecord.from(obs), this.observationTableName);
-  }
-
-  public static Mutation toObservationMutation(ObservationRecord row, String observationTableName) {
-    return row.toMutation(observationTableName);
+    return ObservationRecord.from(obs).toMutation(this.observationTableName);
   }
 
   /**

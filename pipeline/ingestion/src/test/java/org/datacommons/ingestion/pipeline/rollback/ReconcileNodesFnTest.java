@@ -56,6 +56,10 @@ public class ReconcileNodesFnTest implements Serializable {
   public void testTupleTags_areDistinct() {
     assertNotEquals(
         ReconcileNodesFn.RESTORE_NODES_TAG.getId(), ReconcileNodesFn.DELETE_NODES_TAG.getId());
+    assertNotEquals(
+        ReconcileNodesFn.RESTORE_NODES_TAG.getId(), ReconcileNodesFn.RESTORED_NODE_IDS_TAG.getId());
+    assertNotEquals(
+        ReconcileNodesFn.DELETE_NODES_TAG.getId(), ReconcileNodesFn.RESTORED_NODE_IDS_TAG.getId());
   }
 
   @Test
@@ -83,7 +87,8 @@ public class ReconcileNodesFnTest implements Serializable {
                 ParDo.of(fn)
                     .withOutputTags(
                         ReconcileNodesFn.RESTORE_NODES_TAG,
-                        TupleTagList.of(ReconcileNodesFn.DELETE_NODES_TAG)));
+                        TupleTagList.of(ReconcileNodesFn.DELETE_NODES_TAG)
+                            .and(ReconcileNodesFn.RESTORED_NODE_IDS_TAG)));
 
     results
         .get(ReconcileNodesFn.RESTORE_NODES_TAG)
