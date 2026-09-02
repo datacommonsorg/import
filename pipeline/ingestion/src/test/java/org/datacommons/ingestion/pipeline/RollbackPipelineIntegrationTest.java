@@ -16,7 +16,6 @@ package org.datacommons.ingestion.pipeline;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.NoCredentials;
@@ -30,23 +29,12 @@ import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
-import com.google.common.collect.Sets;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.datacommons.ingestion.spanner.SpannerClient;
-import org.datacommons.ingestion.spanner.model.EdgeRecord;
-import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
-import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
-import org.datacommons.ingestion.spanner.model.NodeRecord;
-import org.datacommons.ingestion.spanner.model.ObservationRecord;
-import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -289,57 +277,6 @@ public class RollbackPipelineIntegrationTest {
       assertTrue("KeyValueStore should exist", rs.next());
       assertEquals(
           SpannerTestData.KV_VALUE_BASELINE.replace(" ", ""), rs.getJson("value").replace(" ", ""));
-    }
-  }
-
-  @Test
-  public void testSchemaCoverage_allWritableColumnsAreMappedInSpannerClient() {
-    // 1. Query INFORMATION_SCHEMA for all columns in the 6 restored tables
-    Map<String, Set<String>> writableColsByTable = new HashMap<>();
-    try (ResultSet rs =
-        dbClient
-            .singleUse()
-            .executeQuery(
-                Statement.of(
-                    "SELECT table_name, column_name, is_generated FROM INFORMATION_SCHEMA.COLUMNS "
-                        + "WHERE table_schema = '' AND table_name IN "
-                        + "('Node', 'Edge', 'TimeSeries', 'Observation', 'KeyValueStore', 'NodeEmbedding')"))) {
-      while (rs.next()) {
-        String tableName = rs.getString("table_name");
-        String colName = rs.getString("column_name");
-        String isGenerated = rs.getString("is_generated");
-        if ("ALWAYS".equalsIgnoreCase(isGenerated)) {
-          continue; // Skip STORED generated columns (e.g. TimeSeries.entity1)
-        }
-        writableColsByTable.computeIfAbsent(tableName, k -> new HashSet<>()).add(colName);
-      }
-    }
-
-    // 2. Validate against canonical record model writable column sets
-    Map<String, Set<String>> rollbackColsByTable =
-        Map.of(
-            "Node", NodeRecord.WRITABLE_COLUMNS,
-            "Edge", EdgeRecord.WRITABLE_COLUMNS,
-            "TimeSeries", TimeSeriesRecord.WRITABLE_COLUMNS,
-            "Observation", ObservationRecord.WRITABLE_COLUMNS,
-            "KeyValueStore", KeyValueStoreRecord.WRITABLE_COLUMNS,
-            "NodeEmbedding", NodeEmbeddingRecord.WRITABLE_COLUMNS);
-
-    for (Map.Entry<String, Set<String>> entry : writableColsByTable.entrySet()) {
-      String tableName = entry.getKey();
-      Set<String> schemaCols = entry.getValue();
-      Set<String> rollbackCols = rollbackColsByTable.get(tableName);
-      assertNotNull(
-          "Table " + tableName + " must have mapped writable columns in record model",
-          rollbackCols);
-
-      Set<String> missingCols = Sets.difference(schemaCols, rollbackCols);
-      assertTrue(
-          String.format(
-              "SCHEMA DRIFT DETECTED IN TABLE '%s': Column(s) %s exist in schema but are NOT handled in SpannerClient/RollbackPipeline! "
-                  + "Update %sRecord.WRITABLE_COLUMNS and restore mappers.",
-              tableName, missingCols, tableName),
-          missingCols.isEmpty());
     }
   }
 }

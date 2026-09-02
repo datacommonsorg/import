@@ -55,12 +55,13 @@ public class RollbackPipelineTest implements Serializable {
     options.setImportList("CensusACS5YearSurvey,BLS_Data");
     options.setIsBaseDc(true);
 
-    List<String> provenances = RollbackPipeline.resolveTargetProvenances(options);
-    assertTrue(provenances.contains("dc/base/CensusACS5YearSurvey"));
-    assertTrue(provenances.contains("dc/base/generated/CensusACS5YearSurvey"));
-    assertTrue(provenances.contains("dc/base/BLS_Data"));
-    assertTrue(provenances.contains("dc/base/generated/BLS_Data"));
-    assertEquals(4, provenances.size());
+    assertEquals(
+        List.of(
+            "dc/base/CensusACS5YearSurvey",
+            "dc/base/generated/CensusACS5YearSurvey",
+            "dc/base/BLS_Data",
+            "dc/base/generated/BLS_Data"),
+        RollbackPipeline.resolveTargetProvenances(options));
   }
 
   @Test
@@ -70,12 +71,13 @@ public class RollbackPipelineTest implements Serializable {
         "[{\"importName\": \"CensusACS5YearSurvey\"}, {\"importName\": \"BLS_Data\"}]");
     options.setIsBaseDc(true);
 
-    List<String> provenances = RollbackPipeline.resolveTargetProvenances(options);
-    assertTrue(provenances.contains("dc/base/CensusACS5YearSurvey"));
-    assertTrue(provenances.contains("dc/base/generated/CensusACS5YearSurvey"));
-    assertTrue(provenances.contains("dc/base/BLS_Data"));
-    assertTrue(provenances.contains("dc/base/generated/BLS_Data"));
-    assertEquals(4, provenances.size());
+    assertEquals(
+        List.of(
+            "dc/base/CensusACS5YearSurvey",
+            "dc/base/generated/CensusACS5YearSurvey",
+            "dc/base/BLS_Data",
+            "dc/base/generated/BLS_Data"),
+        RollbackPipeline.resolveTargetProvenances(options));
   }
 
   @Test
@@ -118,10 +120,9 @@ public class RollbackPipelineTest implements Serializable {
     options.setImportList("CustomSurvey");
     options.setIsBaseDc(false);
 
-    List<String> provenances = RollbackPipeline.resolveTargetProvenances(options);
-    assertTrue(provenances.contains("CustomSurvey"));
-    assertTrue(provenances.contains("generated/CustomSurvey"));
-    assertEquals(2, provenances.size());
+    assertEquals(
+        List.of("CustomSurvey", "generated/CustomSurvey"),
+        RollbackPipeline.resolveTargetProvenances(options));
   }
 
   @Test
