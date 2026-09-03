@@ -41,6 +41,16 @@ def _load_spanner_query_template() -> str:
         return f.read().rstrip()
 
 
+def _recording_nl_dcid_sentence_pair(dcid_str: str, sentence: str, seen: set, records: list[dict[str, str]]) -> None:
+    """Parses semicolon-separated dcids and records new (dcid, sentence) pairs."""
+    for item in str(dcid_str).split(";"):
+        dcid = item.strip()
+        if not dcid or (dcid, sentence) in seen:
+            continue
+        seen.add((dcid, sentence))
+        records.append({"dcid": dcid, "sentence": sentence})
+
+
 @lru_cache(maxsize=1)
 def _extract_nl_stat_var() -> list[dict[str, str]]:
     """Extracts deduplicated (dcid, sentence) pairs from NL stat var CSV file."""
@@ -51,12 +61,7 @@ def _extract_nl_stat_var() -> list[dict[str, str]]:
         sentence = str(row["sentence"]).strip()
         if not sentence:
             continue
-        for item in str(row["dcid"]).split(";"):
-            dcid = item.strip()
-            if not dcid or (dcid, sentence) in seen:
-                continue
-            seen.add((dcid, sentence))
-            records.append({"dcid": dcid, "sentence": sentence})
+        _recording_nl_dcid_sentence_pair(row["dcid"], sentence, seen, records)
     return records
 
 
