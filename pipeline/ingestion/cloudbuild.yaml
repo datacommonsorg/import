@@ -49,7 +49,7 @@ steps:
       - |
         if [ -n "${_TAG}" ] && [ "${_TAG}" != "${_VERSION}" ]; then
           gcloud artifacts docker tags add ${_IMAGE_GCR_PATH}:${_VERSION} ${_IMAGE_GCR_PATH}:${_TAG}
-          gsutil cp gs://${_TEMPLATE_BUCKET}/templates/flex/ingestion-${_VERSION}.json gs://${_TEMPLATE_BUCKET}/templates/flex/ingestion-${_TAG}.json
+          gcloud storage cp gs://${_TEMPLATE_BUCKET}/templates/flex/ingestion-${_VERSION}.json gs://${_TEMPLATE_BUCKET}/templates/flex/ingestion-${_TAG}.json
         fi
     id: 'tag-image-and-template'
 
