@@ -20,6 +20,18 @@ import yaml
 
 import config
 
+def _get_expected_default_specs():
+    return [
+        config.EmbeddingSpec(
+            embedding_label="base_text_embedding",
+            model_name="NodeEmbeddingModel",
+            task_type="RETRIEVAL_QUERY",
+            node_types={"StatisticalVariable": ["description"], "Topic": ["description"]},
+            node_filter_type="NoFilter",
+        )
+    ]
+
+
 class TestConfig(unittest.TestCase):
 
     def setUp(self):
@@ -34,7 +46,7 @@ class TestConfig(unittest.TestCase):
         if 'EMBEDDING_SPEC_PATH' in os.environ:
             del os.environ['EMBEDDING_SPEC_PATH']
         importlib.reload(config)
-        self.assertEqual(config.EMBEDDING_SPECS, config._DEFAULT_EMBEDDING_SPECS)
+        self.assertEqual(config.EMBEDDING_SPECS, _get_expected_default_specs())
 
     def test_valid_yaml_specs(self):
         valid_specs = [
@@ -102,7 +114,7 @@ class TestConfig(unittest.TestCase):
         try:
             os.environ['EMBEDDING_SPEC_PATH'] = temp_path
             importlib.reload(config)
-            self.assertEqual(config.EMBEDDING_SPECS, config._DEFAULT_EMBEDDING_SPECS)
+            self.assertEqual(config.EMBEDDING_SPECS, _get_expected_default_specs())
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
@@ -131,7 +143,7 @@ class TestConfig(unittest.TestCase):
     def test_nonexistent_yaml_file(self):
         os.environ['EMBEDDING_SPEC_PATH'] = '/nonexistent/path/to/spec.yaml'
         importlib.reload(config)
-        self.assertEqual(config.EMBEDDING_SPECS, config._DEFAULT_EMBEDDING_SPECS)
+        self.assertEqual(config.EMBEDDING_SPECS, _get_expected_default_specs())
 
 if __name__ == '__main__':
     unittest.main()

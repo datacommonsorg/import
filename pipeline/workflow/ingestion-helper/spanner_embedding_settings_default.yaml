@@ -1,0 +1,9 @@
+- embedding_label: "base_text_embedding"
+  model_name: "NodeEmbeddingModel"
+  task_type: "RETRIEVAL_QUERY"
+  node_types:
+    StatisticalVariable:
+      - "description"
+    Topic:
+      - "description"
+  node_filter_type: "NoFilter"

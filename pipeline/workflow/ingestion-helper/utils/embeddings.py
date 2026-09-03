@@ -19,6 +19,7 @@ from functools import lru_cache
 import itertools
 import json
 import logging
+import os
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
@@ -30,99 +31,87 @@ import config
 
 _BATCH_SIZE = 1000
 _NL_STAT_VAR_FILE = f"gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
+_SPANNER_QUERY_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "spanner_query_template.sql")
+
+
+@lru_cache(maxsize=1)
+def _load_spanner_query_template() -> str:
+    """Loads the Spanner GQL match template from file."""
+    with open(_SPANNER_QUERY_TEMPLATE_PATH, "r", encoding="utf-8") as f:
+        return f.read().rstrip()
+
 
 @lru_cache(maxsize=1)
 def _extract_nl_stat_var() -> list[dict[str, str]]:
-    output_df = pd.read_csv(_NL_STAT_VAR_FILE)
+    """Extracts deduplicated (dcid, sentence) pairs from NL stat var CSV file."""
+    output_df = pd.read_csv(_NL_STAT_VAR_FILE).dropna(subset=["dcid", "sentence"])
     seen = set()
     records = []
     for _, row in output_df.iterrows():
-        dcid_str = row.get("dcid")
-        sentence = row.get("sentence")
-        if pd.notna(dcid_str) and pd.notna(sentence):
-            dcid_str = str(dcid_str)
-            sentence = str(sentence).strip()
-            for item in dcid_str.split(";"):
-                item = item.strip()
-                if item and sentence:
-                    pair = (item, sentence)
-                    if pair not in seen:
-                        seen.add(pair)
-                        records.append({"dcid": item, "sentence": sentence})
+        sentence = str(row["sentence"]).strip()
+        if not sentence:
+            continue
+        for item in str(row["dcid"]).split(";"):
+            dcid = item.strip()
+            if not dcid or (dcid, sentence) in seen:
+                continue
+            seen.add((dcid, sentence))
+            records.append({"dcid": dcid, "sentence": sentence})
     return records
 
 
-def _fresh_data_condition(timestamp: Optional[str], predicate_types_list_sql: str) -> tuple[str, str]:
-    """Helper function to construct the timelock SQL condition string.
+def _fresh_data_condition(timestamp: str) -> tuple[str, str]:
+    """Constructs timelock condition clauses for nodes and properties.
 
-    If timestamp is None/NULL, returns "TRUE".
-    Otherwise, returns the timelock condition string using predicate_types_list_sql.
+    Args:
+        timestamp: ISO timestamp string of the latest lock.
+
+    Returns:
+        A tuple of (node_condition_sql, property_condition_sql).
     """
-    if timestamp is None:
-        return "TRUE", "TRUE"
-
     update_node_cond = f"n.last_update_timestamp > TIMESTAMP('{timestamp}')"
     update_property_cond = f"LOGICAL_OR(o.last_update_timestamp > TIMESTAMP('{timestamp}'))"
     return update_node_cond, update_property_cond
 
 
 def _generate_spanner_query(nodes: Dict[str, List[str]], timestamp: Optional[Any], filter_condition: str) -> str:
-    match_clauses = []
+    """Generates the Spanner GQL statement to perform a graph query that reads all related predicates and constructs JSON content to be embedded.
+
+    Args:
+        nodes: Mapping of node types to the list of predicate names to read and embed.
+        timestamp: ISO timestamp string of the latest lock, or None for full load.
+        filter_condition: Additional SQL/GQL condition to filter nodes (e.g. 'TRUE' or node ID filter).
+
+    Returns:
+        The generated Spanner GQL query string.
+    """
+    if timestamp:
+        update_node_cond, update_property_cond = _fresh_data_condition(str(timestamp))
+    else:
+        update_node_cond, update_property_cond = "TRUE", "TRUE"
+
+    query_template = _load_spanner_query_template()
+    list_of_graph_traversal_statements = []
     for node_type, predicate_types in nodes.items():
         safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
         predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
-        update_node_cond, update_property_cond = _fresh_data_condition(timestamp, predicate_types_list_sql)
-        spanner_query_template = f"""    MATCH
-    (n:Node WHERE "{node_type}" IN UNNEST(n.types) AND {filter_condition})
-    OPTIONAL MATCH
-    (n)-[e: Edge
-        WHERE e.predicate IN UNNEST({predicate_types_list_sql})]->
-    (o:Node
-        WHERE o.value IS NOT NULL
-        AND o.value <> "")
-    WITH
-        n,
-        e.predicate AS pred,
-        STRING_AGG(o.value, ". ") AS values,
-        {update_property_cond} AS update_property_data
-    GROUP BY n, pred
-    RETURN
-    n.subject_id AS subject_id,
-    n.types AS node_types,
-    {update_node_cond} AS update_node_data,
-    CASE 
-        WHEN COUNT(pred) > 0 THEN
-        JSON_OBJECT(
-            "subject_id", n.subject_id,
-            "name", n.name,
-            "properties", JSON_OBJECT(
-            ARRAY_AGG(pred IGNORE NULLS),
-            ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
-            )
+        graph_traversal_statement = query_template.format(
+            node_type=node_type,
+            filter_condition=filter_condition,
+            predicate_types_list_sql=predicate_types_list_sql,
+            update_property_cond=update_property_cond,
+            update_node_cond=update_node_cond,
         )
-        ELSE
-        JSON_OBJECT(
-            "subject_id", n.subject_id,
-            "name", n.name
-        )
-    END AS embedding_content,
-    CASE 
-        WHEN COUNT(pred) > 0 THEN
-            LOGICAL_OR(update_property_data)
-        ELSE
-            FALSE
-    END AS update_property_data
-    GROUP BY n"""
-        match_clauses.append(spanner_query_template)
+        list_of_graph_traversal_statements.append(graph_traversal_statement)
 
-    inner_gql = "\nUNION ALL\n".join(match_clauses)
+    unioned_graph_statement_over_type = "\nUNION ALL\n".join(list_of_graph_traversal_statements)
     return f"""
 SELECT
     subject_id,
     node_types,
     embedding_content
 FROM GRAPH_TABLE(DCGraph
-{inner_gql}
+{unioned_graph_statement_over_type}
 )
 WHERE update_node_data OR update_property_data"""
 
@@ -313,22 +302,14 @@ class EmbeddingUtils:
 
         logging.info(f"Generating embeddings in batches of {_BATCH_SIZE}.")
 
-        if node_filter_type == "NLStatisticalVariable":
-            predict_sql = f"""
-                SELECT subject_id, embedding_content, embeddings.values AS embeddings, node_types
-                FROM ML.PREDICT(
-                    MODEL {model_name},
-                    (SELECT subject_id, JSON_VALUE(embedding_content, "$.sentence") AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
-                )
-            """
-        else:
-            predict_sql = f"""
-                SELECT subject_id, embedding_content, embeddings.values AS embeddings, node_types
-                FROM ML.PREDICT(
-                    MODEL {model_name},
-                    (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
-                )
-            """
+        content_expr = 'JSON_VALUE(embedding_content, "$.sentence")' if node_filter_type == "NLStatisticalVariable" else "TO_JSON_STRING(embedding_content)"
+        predict_sql = f"""
+            SELECT subject_id, embedding_content, embeddings.values AS embeddings, node_types
+            FROM ML.PREDICT(
+                MODEL {model_name},
+                (SELECT subject_id, {content_expr} AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
+            )
+        """
 
         insert_sql = f"""
             INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content_key, embedding_content, embeddings, node_types)
