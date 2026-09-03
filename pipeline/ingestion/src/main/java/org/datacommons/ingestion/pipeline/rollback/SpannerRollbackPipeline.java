@@ -168,105 +168,134 @@ public class SpannerRollbackPipeline implements Serializable {
       SpannerClient spannerClient) {
     SpannerIO.Read baseRead = spannerClient.getReadTransform();
 
-    // A. Read Historical TimeSeries
-    String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
-    String tsQuery =
-        spannerClient.formatPartitionQuery(
-            HISTORICAL_PROVENANCE_QUERY_TEMPLATE,
-            tsColumns,
-            spannerClient.getTimeSeriesTableName());
     PCollection<Mutation> restoreTimeSeriesMutations =
-        pipeline
-            .apply(
-                "ReadHistoricalTimeSeries",
-                baseRead
-                    .withTimestamp(tPre)
-                    .withQuery(
-                        Statement.newBuilder(tsQuery)
-                            .bind("provenances")
-                            .toStringArray(targetProvenances)
-                            .build()))
-            .apply(
-                "MapHistoricalTimeSeriesToMutations",
-                MapElements.into(TypeDescriptor.of(Mutation.class))
-                    .via(
-                        struct ->
-                            TimeSeriesRecord.from(struct)
-                                .toMutation(spannerClient.getTimeSeriesTableName())));
-
-    // B. Read Historical Observations (Time-Travel JOIN via TimeSeries)
-    String obsColumns =
-        ObservationRecord.READ_COLUMNS.stream()
-            .map(c -> "o." + c)
-            .collect(java.util.stream.Collectors.joining(", "));
-    String obsQuery =
-        spannerClient.formatPartitionQuery(HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE, obsColumns);
+        readHistoricalTimeSeries(pipeline, baseRead, tPre, targetProvenances, spannerClient);
     PCollection<Mutation> restoreObservationMutations =
-        pipeline
-            .apply(
-                "ReadHistoricalObservations",
-                baseRead
-                    .withTimestamp(tPre)
-                    .withQuery(
-                        Statement.newBuilder(obsQuery)
-                            .bind("provenances")
-                            .toStringArray(targetProvenances)
-                            .build()))
-            .apply(
-                "MapHistoricalObservationsToMutations",
-                MapElements.into(TypeDescriptor.of(Mutation.class))
-                    .via(
-                        struct ->
-                            ObservationRecord.from(struct)
-                                .toMutation(spannerClient.getObservationTableName())));
-
-    // C. Read Historical Edges
-    String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
-    String edgeQuery =
-        spannerClient.formatPartitionQuery(
-            HISTORICAL_PROVENANCE_QUERY_TEMPLATE, edgeColumns, spannerClient.getEdgeTableName());
+        readHistoricalObservations(pipeline, baseRead, tPre, targetProvenances, spannerClient);
     PCollection<Mutation> restoreEdgeMutations =
-        pipeline
-            .apply(
-                "ReadHistoricalEdges",
-                baseRead
-                    .withTimestamp(tPre)
-                    .withQuery(
-                        Statement.newBuilder(edgeQuery)
-                            .bind("provenances")
-                            .toStringArray(targetProvenances)
-                            .build()))
-            .apply(
-                "MapHistoricalEdgesToMutations",
-                MapElements.into(TypeDescriptor.of(Mutation.class))
-                    .via(
-                        struct ->
-                            EdgeRecord.from(struct).toMutation(spannerClient.getEdgeTableName())));
-
-    // D. Read Historical KeyValueStore (type = 'ProvenanceSummary')
-    String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
-    String kvQuery = spannerClient.formatPartitionQuery(HISTORICAL_KV_QUERY_TEMPLATE, kvColumns);
+        readHistoricalEdges(pipeline, baseRead, tPre, targetProvenances, spannerClient);
     PCollection<Mutation> restoreKvMutations =
-        pipeline
-            .apply(
-                "ReadHistoricalKeyValueStore",
-                baseRead
-                    .withTimestamp(tPre)
-                    .withQuery(
-                        Statement.newBuilder(kvQuery)
-                            .bind("provenances")
-                            .toStringArray(targetProvenances)
-                            .build()))
-            .apply(
-                "MapHistoricalKeyValueStoreToMutations",
-                MapElements.into(TypeDescriptor.of(Mutation.class))
-                    .via(struct -> KeyValueStoreRecord.from(struct).toMutation("KeyValueStore")));
+        readHistoricalKeyValueStore(pipeline, baseRead, tPre, targetProvenances, spannerClient);
 
     return new HistoricalSnapshots(
         restoreTimeSeriesMutations,
         restoreObservationMutations,
         restoreEdgeMutations,
         restoreKvMutations);
+  }
+
+  private static PCollection<Mutation> readHistoricalTimeSeries(
+      Pipeline pipeline,
+      SpannerIO.Read baseRead,
+      Timestamp tPre,
+      List<String> targetProvenances,
+      SpannerClient spannerClient) {
+    String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
+    String tsQuery =
+        spannerClient.formatPartitionQuery(
+            HISTORICAL_PROVENANCE_QUERY_TEMPLATE,
+            tsColumns,
+            spannerClient.getTimeSeriesTableName());
+    return pipeline
+        .apply(
+            "ReadHistoricalTimeSeries",
+            baseRead
+                .withTimestamp(tPre)
+                .withQuery(
+                    Statement.newBuilder(tsQuery)
+                        .bind("provenances")
+                        .toStringArray(targetProvenances)
+                        .build()))
+        .apply(
+            "MapHistoricalTimeSeriesToMutations",
+            MapElements.into(TypeDescriptor.of(Mutation.class))
+                .via(
+                    struct ->
+                        TimeSeriesRecord.from(struct)
+                            .toMutation(spannerClient.getTimeSeriesTableName())));
+  }
+
+  private static PCollection<Mutation> readHistoricalObservations(
+      Pipeline pipeline,
+      SpannerIO.Read baseRead,
+      Timestamp tPre,
+      List<String> targetProvenances,
+      SpannerClient spannerClient) {
+    String obsColumns =
+        ObservationRecord.READ_COLUMNS.stream()
+            .map(c -> "o." + c)
+            .collect(Collectors.joining(", "));
+    String obsQuery =
+        spannerClient.formatPartitionQuery(HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE, obsColumns);
+    return pipeline
+        .apply(
+            "ReadHistoricalObservations",
+            baseRead
+                .withTimestamp(tPre)
+                .withQuery(
+                    Statement.newBuilder(obsQuery)
+                        .bind("provenances")
+                        .toStringArray(targetProvenances)
+                        .build()))
+        .apply(
+            "MapHistoricalObservationsToMutations",
+            MapElements.into(TypeDescriptor.of(Mutation.class))
+                .via(
+                    struct ->
+                        ObservationRecord.from(struct)
+                            .toMutation(spannerClient.getObservationTableName())));
+  }
+
+  private static PCollection<Mutation> readHistoricalEdges(
+      Pipeline pipeline,
+      SpannerIO.Read baseRead,
+      Timestamp tPre,
+      List<String> targetProvenances,
+      SpannerClient spannerClient) {
+    String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
+    String edgeQuery =
+        spannerClient.formatPartitionQuery(
+            HISTORICAL_PROVENANCE_QUERY_TEMPLATE, edgeColumns, spannerClient.getEdgeTableName());
+    return pipeline
+        .apply(
+            "ReadHistoricalEdges",
+            baseRead
+                .withTimestamp(tPre)
+                .withQuery(
+                    Statement.newBuilder(edgeQuery)
+                        .bind("provenances")
+                        .toStringArray(targetProvenances)
+                        .build()))
+        .apply(
+            "MapHistoricalEdgesToMutations",
+            MapElements.into(TypeDescriptor.of(Mutation.class))
+                .via(
+                    struct ->
+                        EdgeRecord.from(struct).toMutation(spannerClient.getEdgeTableName())));
+  }
+
+  private static PCollection<Mutation> readHistoricalKeyValueStore(
+      Pipeline pipeline,
+      SpannerIO.Read baseRead,
+      Timestamp tPre,
+      List<String> targetProvenances,
+      SpannerClient spannerClient) {
+    String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
+    String kvQuery = spannerClient.formatPartitionQuery(HISTORICAL_KV_QUERY_TEMPLATE, kvColumns);
+    return pipeline
+        .apply(
+            "ReadHistoricalKeyValueStore",
+            baseRead
+                .withTimestamp(tPre)
+                .withQuery(
+                    Statement.newBuilder(kvQuery)
+                        .bind("provenances")
+                        .toStringArray(targetProvenances)
+                        .build()))
+        .apply(
+            "MapHistoricalKeyValueStoreToMutations",
+            MapElements.into(TypeDescriptor.of(Mutation.class))
+                .via(struct -> KeyValueStoreRecord.from(struct).toMutation("KeyValueStore")));
   }
 
   // ---------------------------------------------------------------------------
@@ -342,10 +371,21 @@ public class SpannerRollbackPipeline implements Serializable {
       DeletionSignals delSignals,
       HistoricalSnapshots snapshots,
       NodeReconciliationResult nodeReconciliation) {
+    writeGraphTrack(pipeline, options, spannerClient, delSignals, snapshots, nodeReconciliation);
+    writeTimeSeriesTrack(pipeline, options, spannerClient, delSignals, snapshots);
+    writeKeyValueStoreTrack(pipeline, options, spannerClient, delSignals, snapshots);
+  }
+
+  private static void writeGraphTrack(
+      Pipeline pipeline,
+      IngestionPipelineOptions options,
+      SpannerClient spannerClient,
+      DeletionSignals delSignals,
+      HistoricalSnapshots snapshots,
+      NodeReconciliationResult nodeReconciliation) {
     boolean skipDelete = options.getSkipDelete();
     boolean skipWait = options.getSkipWait();
 
-    // --- Track 1: Graph Nodes, Edges, and Embeddings (Fully Concurrent) ---
     // 1A. Write Restored Nodes
     SpannerWriteResult writtenNodes =
         spannerClient.writeMutations(
@@ -371,8 +411,17 @@ public class SpannerRollbackPipeline implements Serializable {
     // 1D. Delete Newly Added Nodes
     spannerClient.writeMutations(
         pipeline, "WriteDeletedNodes", nodeReconciliation.deleteNodeMutations());
+  }
 
-    // --- Track 2: TimeSeries & Observations ---
+  private static void writeTimeSeriesTrack(
+      Pipeline pipeline,
+      IngestionPipelineOptions options,
+      SpannerClient spannerClient,
+      DeletionSignals delSignals,
+      HistoricalSnapshots snapshots) {
+    boolean skipDelete = options.getSkipDelete();
+    boolean skipWait = options.getSkipWait();
+
     // 2A. Write Restored TimeSeries (Waits on TimeSeries delete)
     PCollection<Mutation> tsMutationsToWrite = snapshots.timeSeriesMutations();
     if (!skipWait && !skipDelete && delSignals.delTsSignal() != null) {
@@ -389,8 +438,17 @@ public class SpannerRollbackPipeline implements Serializable {
           obsMutationsToWrite.apply("WaitOnWrittenTS", Wait.on(writtenTS.getOutput()));
     }
     spannerClient.writeMutations(pipeline, "WriteRestoredObservations", obsMutationsToWrite);
+  }
 
-    // --- Track 3: KeyValueStore (Fully Concurrent) ---
+  private static void writeKeyValueStoreTrack(
+      Pipeline pipeline,
+      IngestionPipelineOptions options,
+      SpannerClient spannerClient,
+      DeletionSignals delSignals,
+      HistoricalSnapshots snapshots) {
+    boolean skipDelete = options.getSkipDelete();
+    boolean skipWait = options.getSkipWait();
+
     PCollection<Mutation> kvMutationsToWrite = snapshots.keyValueStoreMutations();
     if (!skipWait && !skipDelete && delSignals.delKvSignal() != null) {
       kvMutationsToWrite =

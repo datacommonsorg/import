@@ -15,6 +15,7 @@
 package org.datacommons.ingestion.pipeline;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -30,6 +31,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.ingestion.pipeline.rollback.SpannerRollbackPipeline;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.Before;
 import org.junit.Rule;
@@ -165,12 +167,12 @@ public class RollbackPipelineTest implements Serializable {
             .build();
 
     var signals =
-        org.datacommons.ingestion.pipeline.rollback.SpannerRollbackPipeline.applyHeadDeletions(
+        SpannerRollbackPipeline.applyHeadDeletions(
             pipeline, options, List.of("dc/base/Test"), spannerClient);
 
-    org.junit.Assert.assertNull(signals.delTsSignal());
-    org.junit.Assert.assertNull(signals.delEdgeSignal());
-    org.junit.Assert.assertNull(signals.delKvSignal());
+    assertNull(signals.delTsSignal());
+    assertNull(signals.delEdgeSignal());
+    assertNull(signals.delKvSignal());
   }
 
   static class MockRollbackSpannerClient extends SpannerClient {

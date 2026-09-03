@@ -59,13 +59,11 @@ public class RollbackPipelineIntegrationTest {
   private String projectId;
   private String instanceId;
   private String databaseId;
-  private String gcsBucket;
   private String tempLocation;
   private String region;
   private String emulatorHost;
   private boolean isLocal;
   private SpannerClient spannerClient;
-  private DatabaseClient dbClient;
 
   @Before
   public void setUp() throws Exception {
@@ -97,7 +95,7 @@ public class RollbackPipelineIntegrationTest {
 
     // Clear tables
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
-    dbClient = spanner.getDatabaseClient(dbId);
+    DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
     List<String> tables = List.of("Observation", "TimeSeries", "Edge", "Node", "KeyValueStore");
     dbClient
         .readWriteTransaction()
@@ -157,7 +155,7 @@ public class RollbackPipelineIntegrationTest {
     projectId = System.getProperty("projectId", "datcom-ci");
     instanceId = System.getProperty("instanceId", "datcom-spanner-test");
     databaseId = System.getProperty("databaseId", "dc-test-db");
-    gcsBucket = System.getProperty("gcsBucket", "datcom-ci-test");
+    String gcsBucket = System.getProperty("gcsBucket", "datcom-ci-test");
     tempLocation = "gs://" + gcsBucket + "/dataflow/temp";
     region = System.getProperty("region", "us-central1");
     emulatorHost = null;
