@@ -536,7 +536,6 @@ class TestEmbeddingGenerator(unittest.TestCase):
             "job_config"
         ) or self.mock_executor.execute.call_args.kwargs.get("job_config")
         self.assertIsNotNone(job_config)
-        self.assertIsNotNone(job_config)
         struct_params = [
             p.values for p in job_config.query_parameters if p.name == "nl_stat_vars"
         ][0]
