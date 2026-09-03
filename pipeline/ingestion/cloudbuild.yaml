@@ -41,17 +41,17 @@ steps:
       - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.GraphIngestionPipeline'
     id: 'build-flex-template'
 
-  # 3. Add and push the 'latest' tag to the newly built image
+  # 3. Add and push the designated tag (defaults to 'latest', or whatever _TAG is provided)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
+    entrypoint: 'bash'
     args:
-      - 'artifacts'
-      - 'docker'
-      - 'tags'
-      - 'add'
-      - '${_IMAGE_GCR_PATH}:${_VERSION}'
-      - '${_IMAGE_GCR_PATH}:latest'
-    id: 'tag-image-latest'
+      - '-c'
+      - |
+        if [ -n "${_TAG}" ] && [ "${_TAG}" != "${_VERSION}" ]; then
+          gcloud artifacts docker tags add ${_IMAGE_GCR_PATH}:${_VERSION} ${_IMAGE_GCR_PATH}:${_TAG}
+          gsutil cp gs://${_TEMPLATE_BUCKET}/templates/flex/ingestion-${_VERSION}.json gs://${_TEMPLATE_BUCKET}/templates/flex/ingestion-${_TAG}.json
+        fi
+    id: 'tag-image-and-template'
 
 availableSecrets:
   secretManager:
@@ -62,5 +62,6 @@ options:
 
 substitutions:
   _VERSION: "$SHORT_SHA"
+  _TAG: "latest"
   _TEMPLATE_BUCKET: "datcom-templates"
   _IMAGE_GCR_PATH: "us-docker.pkg.dev/datcom-ci/gcr.io/dataflow-templates/ingestion"
