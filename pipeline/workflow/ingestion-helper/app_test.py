@@ -35,15 +35,6 @@ class TestMain(unittest.TestCase):
         # Clear overrides after each test
         app.dependency_overrides.clear()
 
-    @patch('config.EMBEDDING_SPECS', [
-        config.EmbeddingSpec(
-            embedding_label="base_text_embedding",
-            model_name="NodeEmbeddingModel",
-            task_type="RETRIEVAL_QUERY",
-            node_types={"Topic": ["description"]},
-            node_filter_type="NoFilter"
-        )
-    ])
     def test_embedding_ingestion_success(self):
         # Mock SpannerClient instance and its database
         mock_spanner_client = MagicMock()
@@ -130,11 +121,15 @@ class TestMain(unittest.TestCase):
 
         # Check second call (updated nodes for deletion)
         args2, kwargs2 = call_args_list[1]
-        self.assertIn("FROM GRAPH_TABLE(DCGraph", args2[0])
+        self.assertIn("Node", args2[0])
+        self.assertEqual(kwargs2["params"]["timestamp"], expected_timestamp)
+        self.assertEqual(kwargs2["params"]["node_types"], ["StatisticalVariable", "Topic"])
 
         # Check third call (updated nodes for embedding generation)
         args3, kwargs3 = call_args_list[2]
-        self.assertIn("FROM GRAPH_TABLE(DCGraph", args3[0])
+        self.assertIn("Node", args3[0])
+        self.assertEqual(kwargs3["params"]["timestamp"], expected_timestamp)
+        self.assertEqual(kwargs3["params"]["node_types"], ["StatisticalVariable", "Topic"])
 
         # Check fourth call (ML.PREDICT)
         args4, kwargs4 = call_args_list[3]
