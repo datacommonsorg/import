@@ -42,14 +42,14 @@ class TestConfig(unittest.TestCase):
                 "embedding_label": "custom_embedding",
                 "model_name": "CustomModel",
                 "task_type": "CUSTOM_TASK",
-                "node_types": ["StatVar"],
+                "node_types": {"StatVar": ["description"]},
                 "node_filter_type": "NoFilter"
             },
             {
                 "embedding_label": "another_embedding",
                 "model_name": "AnotherModel",
                 "task_type": "ANOTHER_TASK",
-                "node_types": ["StatisticalVariable"],
+                "node_types": {"StatisticalVariable": ["description"]},
                 "node_filter_type": "NLStatisticalVariable"
             }
         ]
@@ -71,7 +71,7 @@ class TestConfig(unittest.TestCase):
             "embedding_label": "single_embedding",
             "model_name": "SingleModel",
             "task_type": "SINGLE_TASK",
-            "node_types": ["StatVar"],
+            "node_types": {"StatVar": ["description"]},
             "node_filter_type": "NoFilter"
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
@@ -115,7 +115,14 @@ class TestConfig(unittest.TestCase):
                 embedding_label="base_text_embedding",
                 model_name="NodeEmbeddingModel",
                 task_type="RETRIEVAL_QUERY",
-                node_types=["StatisticalVariable", "Topic"],
+                node_types={"StatisticalVariable": ["description"], "Topic": ["description"]},
+                node_filter_type="NoFilter"
+            ),
+            config.EmbeddingSpec(
+                embedding_label="nl_stat_var_embedding",
+                model_name="NodeEmbeddingModel",
+                task_type="RETRIEVAL_QUERY",
+                node_types={"StatisticalVariable": [], "Topic": []},
                 node_filter_type="NLStatisticalVariable"
             )
         ]
