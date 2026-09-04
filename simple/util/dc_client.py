@@ -73,7 +73,7 @@ def get_api_root():
 
 if _DEBUG:
   logging.info("DC API Root: %s", get_api_root())
-  logging.info("DC API Key: %s", get_api_key())
+  logging.info("DC API Key: %s", "<set>" if get_api_key() else "<not set>")
   os.makedirs(_DEBUG_FOLDER, exist_ok=True)
 
 
