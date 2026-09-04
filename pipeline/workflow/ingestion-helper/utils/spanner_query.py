@@ -14,6 +14,19 @@
 
 """Spanner query templates and constants for embedding workflows."""
 
+# Builds a JSON object containing the subject node (subject_id, name) and an optional
+# nested dictionary of predicates mapped to aggregated object node values.
+# It returns a JSON with below format
+# {
+#   "subject_id": ""
+#   "name": ""
+#   "properties": {
+#       "pred1": "val1, val2, ...",
+#       "pred2": "val1, val2, ..."
+#   }
+# }
+# when there is no preidicate it would return only subject id and name
+
 EMBEDDING_JSON_GENERATION = """CASE 
     WHEN COUNT(pred) > 0 THEN
     JSON_OBJECT(
@@ -31,8 +44,14 @@ EMBEDDING_JSON_GENERATION = """CASE
     )
 END"""
 
+# Evaluates whether the subject node was updated after the provided @timestamp parameter,
+# or evaluates to TRUE for a full table read when @timestamp is NULL.
 TIMESTAMP_CONDITION = "IF(@timestamp IS NOT NULL, n.last_update_timestamp > @timestamp, TRUE)"
 
+# GQL statement template to traverse the graph for a specific node type:
+# 1. Filters valid subject nodes matching the node type, custom filter, and update timestamp condition.
+# 2. Performs optional graph traversal to retrieve valid predicates and non-empty related object node values.
+# 3. Groups by node and returns subject node DCID (subject_id), node types, and the combined embedding JSON.
 EMBEDDING_CONTENT_QUERY_BY_NODE_TYPE = f"""MATCH
 (n:Node WHERE "{{node_type}}" IN UNNEST(n.types) AND {{filter_condition}} AND {TIMESTAMP_CONDITION})
 OPTIONAL MATCH

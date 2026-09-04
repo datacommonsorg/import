@@ -18,8 +18,19 @@ from pydantic import BaseModel
 
 
 class EmbeddingSpec(BaseModel):
+    """Specification for generating and indexing embeddings for graph nodes.
+
+    Attributes:
+        embedding_label: Identifier key for the embedding dataset (e.g. 'base_text_embedding').
+        model_name: Name of the Spanner ML model endpoint used for vector generation.
+        task_type: Embedding task type passed to ML.PREDICT (e.g. 'RETRIEVAL_QUERY').
+        node_types: Maps each node type (e.g. 'StatisticalVariable', 'Topic') to the list of
+            predicate names (e.g. ['description']) whose connected object values will be embedded.
+        node_filter_type: Node filtering strategy ('NoFilter' or 'NLStatisticalVariable').
+    """
     embedding_label: str
     model_name: str
     task_type: str
+    # Maps each node type to the list of predicate names to be read and embedded.
     node_types: dict[str, list[str]]
     node_filter_type: str
