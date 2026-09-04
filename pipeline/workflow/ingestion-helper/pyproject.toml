@@ -44,8 +44,9 @@ path = "__init__.py"
 bypass-selection = true
 
 [tool.hatch.build.targets.wheel.force-include]
-"clients/schema.sql" = "clients/schema.sql"
-"spanner_embedding_settings_dev.yaml" = "spanner_embedding_settings_dev.yaml"
+"clients" = "clients"
+"utils" = "utils"
+"configs" = "configs"
 
 [dependency-groups]
 dev = [

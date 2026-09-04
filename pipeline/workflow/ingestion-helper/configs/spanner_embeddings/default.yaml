@@ -2,6 +2,8 @@
   model_name: "NodeEmbeddingModel"
   task_type: "RETRIEVAL_QUERY"
   node_types:
-    - "StatisticalVariable"
-    - "Topic"
-  node_filter_type: "NLStatisticalVariable"
+    StatisticalVariable:
+      - "description"
+    Topic:
+      - "description"
+  node_filter_type: "NoFilter"
