@@ -786,34 +786,56 @@ class StatVarGroupGenerator:
               BEGIN
                 DECLARE paths_to_resolve INT64 DEFAULT 1;
 
-                CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
-                  SELECT child, parent, predicate FROM ParentChild
+                -- Only run the iterative bypass on SVG-to-SVG edges (specializationOf).
+                CREATE OR REPLACE TEMP TABLE CurrentSVGParent AS (
+                  SELECT child, parent, predicate
+                  FROM ParentChild
+                  WHERE predicate = 'specializationOf'
                 );
 
                 WHILE paths_to_resolve > 0 DO
-                  CREATE OR REPLACE TEMP TABLE NextParentChild AS (
+                  CREATE OR REPLACE TEMP TABLE NextSVGParent AS ( 
                     SELECT DISTINCT pc.child, np.parent, pc.predicate
-                    FROM CurrentParentChild pc
-                    JOIN CurrentParentChild np ON pc.parent = np.child
+                    FROM CurrentSVGParent pc
+                    JOIN CurrentSVGParent np ON pc.parent = np.child
                     WHERE pc.parent IN (SELECT svg_id FROM PrunableSVGs)
 
                     UNION DISTINCT
 
                     SELECT DISTINCT child, parent, predicate
-                    FROM CurrentParentChild
+                    FROM CurrentSVGParent
                     WHERE parent NOT IN (SELECT svg_id FROM PrunableSVGs)
                   );
 
                   SET paths_to_resolve = (
                     SELECT COUNT(*)
-                    FROM NextParentChild
+                    FROM NextSVGParent
                     WHERE parent IN (SELECT svg_id FROM PrunableSVGs)
                   );
 
-                  CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
-                    SELECT * FROM NextParentChild
+                  CREATE OR REPLACE TEMP TABLE CurrentSVGParent AS (
+                    SELECT * FROM NextSVGParent
                   );
                 END WHILE;
+
+                -- Reconstruct CurrentParentChild by combining the bypassed SVG-to-SVG edges
+                -- and the SV-to-SVG edges mapped to their bypassed parents.
+                CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
+                  SELECT DISTINCT sv.child, COALESCE(svg.parent, sv.parent) AS parent, sv.predicate
+                  FROM (SELECT * FROM ParentChild WHERE predicate = 'memberOf') sv
+                  LEFT JOIN (
+                    SELECT child, parent 
+                    FROM CurrentSVGParent 
+                    WHERE child IN (SELECT svg_id FROM PrunableSVGs)
+                  ) svg ON sv.parent = svg.child
+                  WHERE COALESCE(svg.parent, sv.parent) NOT IN (SELECT svg_id FROM PrunableSVGs)
+
+                  UNION DISTINCT
+
+                  SELECT DISTINCT child, parent, predicate
+                  FROM CurrentSVGParent
+                  WHERE parent NOT IN (SELECT svg_id FROM PrunableSVGs)
+                );
 
                 -- Remove edges starting from pruned nodes
                 CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
@@ -827,51 +849,23 @@ class StatVarGroupGenerator:
 
           -- Compute effective parent for each surviving child of a pruned SVG across ALL DAG paths.
           BEGIN
-            DECLARE unbypassed INT64 DEFAULT 1;
-
-            -- Base: direct children of pruned SVGs
-            CREATE OR REPLACE TEMP TABLE WalkUp AS (
-              SELECT
-                child AS node_id,
-                parent AS effective_parent,
-                predicate
+            -- Ensure CurrentSVGParent exists even if no pruning occurred
+            CREATE TEMP TABLE IF NOT EXISTS CurrentSVGParent AS (
+              SELECT child, parent, predicate
               FROM ParentChild
-              WHERE parent IN (SELECT svg_id FROM PrunableSVGs)
+              WHERE FALSE
             );
 
-            WHILE unbypassed > 0 DO
-              CREATE OR REPLACE TEMP TABLE NextWalkUp AS (
-                SELECT DISTINCT w.node_id, pc.parent AS effective_parent, w.predicate
-                FROM WalkUp w
-                JOIN ParentChild pc ON w.effective_parent = pc.child
-                WHERE w.effective_parent IN (SELECT svg_id FROM PrunableSVGs)
-
-                UNION DISTINCT
-
-                SELECT DISTINCT node_id, effective_parent, predicate
-                FROM WalkUp
-                WHERE effective_parent NOT IN (SELECT svg_id FROM PrunableSVGs)
-              );
-
-              SET unbypassed = (
-                SELECT COUNT(*)
-                FROM NextWalkUp
-                WHERE effective_parent IN (SELECT svg_id FROM PrunableSVGs)
-              );
-
-              CREATE OR REPLACE TEMP TABLE WalkUp AS (
-                SELECT * FROM NextWalkUp
-              );
-            END WHILE;
-
-            -- Filter to non-prunable ancestors for surviving (non-pruned) children
             CREATE OR REPLACE TEMP TABLE EffectiveParent AS (
               SELECT DISTINCT
-                node_id,
-                effective_parent,
-                predicate
-              FROM WalkUp
-              WHERE node_id NOT IN (SELECT svg_id FROM PrunableSVGs)
+                orig.child AS node_id,
+                COALESCE(svg.parent, orig.parent) AS effective_parent,
+                orig.predicate
+              FROM ParentChild orig
+              LEFT JOIN CurrentSVGParent svg ON orig.parent = svg.child
+              WHERE orig.parent IN (SELECT svg_id FROM PrunableSVGs)
+                AND orig.child NOT IN (SELECT svg_id FROM PrunableSVGs)
+                AND COALESCE(svg.parent, orig.parent) NOT IN (SELECT svg_id FROM PrunableSVGs)
             );
           END;
 
