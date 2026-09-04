@@ -295,6 +295,10 @@ resource "google_cloud_run_v2_service" "import_helper" {
         name  = "GCS_BUCKET_ID"
         value = google_storage_bucket.import_bucket.name
       }
+      env {
+        name  = "SPANNER_DATABASE_PATH"
+        value = local.spanner_database_path
+      }
     }
   }
 
@@ -365,10 +369,11 @@ resource "google_workflows_workflow" "import_automation_workflow" {
   source_contents = file("${path.module}/../workflow/import-automation-workflow.yaml")
 
   user_env_vars = {
-    LOCATION         = var.region
-    GCS_BUCKET_ID    = google_storage_bucket.import_bucket.name
-    GCS_MOUNT_BUCKET = google_storage_bucket.mount_bucket.name
-    PROJECT_NUMBER   = data.google_project.project.number
+    LOCATION              = var.region
+    GCS_BUCKET_ID         = google_storage_bucket.import_bucket.name
+    GCS_MOUNT_BUCKET      = google_storage_bucket.mount_bucket.name
+    PROJECT_NUMBER        = data.google_project.project.number
+    IMPORT_HELPER_SERVICE = google_cloud_run_v2_service.import_helper.name
   }
 
   depends_on = [google_project_service.services]
@@ -472,7 +477,7 @@ resource "google_pubsub_subscription" "import_automation_sub" {
   filter = "attributes.transfer_status=\"TRANSFER_COMPLETED\""
 
   push_config {
-    push_endpoint = google_cloud_run_v2_service.import_helper.uri
+    push_endpoint = "${google_cloud_run_v2_service.import_helper.uri}/imports/feed"
     oidc_token {
       service_account_email = google_service_account.automation_sa.email
     }

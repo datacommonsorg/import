@@ -12,7 +12,7 @@ main:
           - gcsMountBucket: ${sys.get_env("GCS_MOUNT_BUCKET")}
           - gcsImportBucket: ${sys.get_env("GCS_BUCKET_ID")}
           - gcsMountPath: "/tmp/gcs"
-          - stagingHelperUrl: ${"https://" + default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + "-staging-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
+          - stagingHelperUrl: ${"https://" + default(sys.get_env("IMPORT_HELPER_SERVICE"), "import-helper-service") + "-staging-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - skipImportJob: ${string(default(map.get(args, "skipImportJob"), false)) == "true"}
           - skipStagingIngestion: ${string(default(map.get(args, "skipStagingIngestion"), false)) == "true"}
           - prodDenylist:
@@ -180,7 +180,7 @@ ingestEnvironment:
   steps:
     - initSub:
         assign:
-          - helperService: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + envSuffix}
+          - helperService: ${default(sys.get_env("IMPORT_HELPER_SERVICE"), "import-helper-service") + envSuffix}
           - spannerWorkflow: ${default(sys.get_env("SPANNER_INGESTION_WORKFLOW_NAME"), "spanner-ingestion-workflow") + envSuffix}
           - helperUrl: ${"https://" + helperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - ingestionExecutionResponse: null
