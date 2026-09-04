@@ -27,48 +27,11 @@ import pandas as pd
 from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON, FLOAT64
 from clients.spanner import SpannerClient
 import config
+from utils.spanner_query import EMBEDDING_CONTENT_QUERY_BY_NODE_TYPE
 
 
 _BATCH_SIZE = 1000
 _NL_STAT_VAR_FILE = f"gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
-
-_SPANNER_EMBEDDING_JSON_CONTENT = """CASE 
-    WHEN COUNT(pred) > 0 THEN
-    JSON_OBJECT(
-        "subject_id", n.subject_id,
-        "name", n.name,
-        "properties", JSON_OBJECT(
-        ARRAY_AGG(pred IGNORE NULLS),
-        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
-        )
-    )
-    ELSE
-    JSON_OBJECT(
-        "subject_id", n.subject_id,
-        "name", n.name
-    )
-END"""
-
-_TIMESTAMP_CONDITION = "IF(@timestamp IS NOT NULL, n.last_update_timestamp > @timestamp, TRUE)"
-
-_SPANNER_QUERY_TEMPLATE = f"""MATCH
-(n:Node WHERE "{{node_type}}" IN UNNEST(n.types) AND {{filter_condition}} AND {_TIMESTAMP_CONDITION})
-OPTIONAL MATCH
-(n)-[e: Edge
-    WHERE e.predicate IN UNNEST({{predicate_types_list_sql}})]->
-(o:Node
-    WHERE o.value IS NOT NULL
-    AND o.value <> "")
-WITH
-    n,
-    e.predicate AS pred,
-    STRING_AGG(o.value, ". ") AS values
-GROUP BY n, pred
-RETURN
-n.subject_id AS subject_id,
-n.types AS node_types,
-{_SPANNER_EMBEDDING_JSON_CONTENT} AS embedding_content
-GROUP BY n"""
 
 
 def _recording_nl_dcid_sentence_pair(dcid_str: str, sentence: str, seen: set, records: list[dict[str, str]]) -> None:
@@ -111,7 +74,7 @@ def _generate_spanner_query(nodes: Dict[str, List[str]], filter_condition: str) 
         # an inlined GQL array literal (e.g. ['description', 'name']).
         safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
         predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
-        graph_traversal_statement = _SPANNER_QUERY_TEMPLATE.format(
+        graph_traversal_statement = EMBEDDING_CONTENT_QUERY_BY_NODE_TYPE.format(
             node_type=node_type,
             filter_condition=filter_condition,
             predicate_types_list_sql=predicate_types_list_sql,
