@@ -107,7 +107,7 @@ public class GraphUtilsTest {
     McfStatVarObsSeries.StatVarObs obs = series.getSvObsList(0);
     assertEquals("2023-01-15", obs.getDate());
     assertEquals("obs1", obs.getDcid());
-    assertEquals(100.5, obs.getNumber(), 0.001);
+    assertEquals("100.5", obs.getText());
     assertEquals("A test observation", GraphUtils.getPropVal(obs.getPvs(), "description"));
   }
 
@@ -169,12 +169,12 @@ public class GraphUtilsTest {
     McfStatVarObsSeries.StatVarObs obs1 = series.getSvObsList(0);
     assertEquals("2023-01-15", obs1.getDate());
     assertEquals("obs1", obs1.getDcid());
-    assertEquals(100.5, obs1.getNumber(), 0.001);
+    assertEquals("100.5", obs1.getText());
 
     McfStatVarObsSeries.StatVarObs obs2 = series.getSvObsList(1);
     assertEquals("2023-02-15", obs2.getDate());
     assertEquals("obs2", obs2.getDcid());
-    assertEquals(102.0, obs2.getNumber(), 0.001);
+    assertEquals("102.0", obs2.getText());
   }
 
   @Test
@@ -215,5 +215,36 @@ public class GraphUtilsTest {
 
     assertNotNull(result);
     assertEquals(2, result.size());
+  }
+
+  @Test
+  public void testBuildOptimizedMcfGraph_preservesSigFigsAndLargeNumbers() {
+    McfGraph.PropertyValues svoNode =
+        createSVObsNode(
+            "obsSigFig",
+            "dcid:placeA",
+            "dcid:svPrecision",
+            "2023-01-15",
+            "12.5000",
+            ValueType.NUMBER,
+            "P1M",
+            "dcid:methodA",
+            "dcid:unitX",
+            "1",
+            null);
+
+    McfGraph mcfGraph =
+        McfGraph.newBuilder().setType(McfType.INSTANCE_MCF).putNodes("l:node1", svoNode).build();
+
+    List<McfOptimizedGraph> result = GraphUtils.buildOptimizedMcfGraph(List.of(mcfGraph));
+    assertEquals(1, result.size());
+    McfStatVarObsSeries.StatVarObs obs = result.get(0).getSvObsSeries().getSvObsList(0);
+    assertEquals("12.5000", obs.getText());
+
+    // Also verify roundtrip back to McfGraph
+    List<McfGraph> roundTripGraphs = GraphUtils.convertMcfStatVarObsSeriesToMcfGraph(result.get(0));
+    assertEquals(1, roundTripGraphs.size());
+    McfGraph.PropertyValues node = roundTripGraphs.get(0).getNodesOrThrow("l:node1");
+    assertEquals("12.5000", GraphUtils.getPropVal(node, "value"));
   }
 }

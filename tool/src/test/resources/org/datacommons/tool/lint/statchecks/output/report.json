@@ -21,110 +21,149 @@
       }
     }
   },
-  "entries": [{
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.mcf",
-      "lineNumber": "17"
+  "entries": [
+    {
+      "level": "LEVEL_ERROR",
+      "location": {
+        "file": "covid.mcf",
+        "lineNumber": "17"
+      },
+      "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 8, value2: 3",
+      "counterKey": "Sanity_InconsistentSvObsValues"
+    }
+  ],
+  "statsCheckSummary": [
+    {
+      "placeDcid": "geoId/07",
+      "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+      "measurementMethod": "",
+      "observationPeriod": "",
+      "scalingFactor": "",
+      "unit": "",
+      "validationCounters": [
+        {
+          "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan100",
+          "problemPoints": [
+            {
+              "date": "2020-03-02",
+              "values": [
+                {
+                  "value": {
+                    "type": "NUMBER",
+                    "value": "3"
+                  },
+                  "locations": [
+                    {
+                      "file": "covid.mcf",
+                      "lineNumber": "49"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "date": "2020-03-03",
+              "values": [
+                {
+                  "value": {
+                    "type": "NUMBER",
+                    "value": "7"
+                  },
+                  "locations": [
+                    {
+                      "file": "covid.mcf",
+                      "lineNumber": "65"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "percentDifference": 133.33
+        }
+      ]
     },
-    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 8.0, value2: 3.0",
-    "counterKey": "Sanity_InconsistentSvObsValues"
-  }],
-  "statsCheckSummary": [{
-    "placeDcid": "geoId/07",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan100",
-      "problemPoints": [{
-        "date": "2020-03-02",
-        "values": [{
-          "value": {
-            "type": "NUMBER",
-            "value": "3"
-          },
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "49"
-          }]
-        }]
-      }, {
-        "date": "2020-03-03",
-        "values": [{
-          "value": {
-            "type": "NUMBER",
-            "value": "7"
-          },
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "65"
-          }]
-        }]
-      }],
-      "percentDifference": 133.33
-    }]
-  }, {
-    "placeDcid": "geoId/06",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Inconsistent_Values",
-      "problemPoints": [{
-        "date": "2020-02-03",
-        "values": [{
-          "value": {
-            "type": "NUMBER",
-            "value": "8"
-          },
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "25"
-          }]
-        }, {
-          "value": {
-            "type": "NUMBER",
-            "value": "3"
-          },
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "17"
-          }]
-        }]
-      }]
-    }, {
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30, 2020-02-02, 2020-02-03, 2020-03-02, 2020-03-03, 2020-05-03"
-    }]
-  }, {
-    "placeDcid": "geoId/0601",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Inconsistent_Date_Granularity",
-      "problemPoints": [{
-        "date": "2020-03",
-        "values": [{
-          "value": {
-            "type": "NUMBER",
-            "value": "1"
-          },
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "105"
-          }]
-        }]
-      }]
-    }]
-  }],
+    {
+      "placeDcid": "geoId/06",
+      "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+      "measurementMethod": "",
+      "observationPeriod": "",
+      "scalingFactor": "",
+      "unit": "",
+      "validationCounters": [
+        {
+          "counterKey": "StatsCheck_Inconsistent_Values",
+          "problemPoints": [
+            {
+              "date": "2020-02-03",
+              "values": [
+                {
+                  "value": {
+                    "type": "NUMBER",
+                    "value": "8"
+                  },
+                  "locations": [
+                    {
+                      "file": "covid.mcf",
+                      "lineNumber": "25"
+                    }
+                  ]
+                },
+                {
+                  "value": {
+                    "type": "NUMBER",
+                    "value": "3"
+                  },
+                  "locations": [
+                    {
+                      "file": "covid.mcf",
+                      "lineNumber": "17"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "counterKey": "StatsCheck_Data_Holes",
+          "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30, 2020-02-02, 2020-02-03, 2020-03-02, 2020-03-03, 2020-05-03"
+        }
+      ]
+    },
+    {
+      "placeDcid": "geoId/0601",
+      "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+      "measurementMethod": "",
+      "observationPeriod": "",
+      "scalingFactor": "",
+      "unit": "",
+      "validationCounters": [
+        {
+          "counterKey": "StatsCheck_Inconsistent_Date_Granularity",
+          "problemPoints": [
+            {
+              "date": "2020-03",
+              "values": [
+                {
+                  "value": {
+                    "type": "NUMBER",
+                    "value": "1"
+                  },
+                  "locations": [
+                    {
+                      "file": "covid.mcf",
+                      "lineNumber": "105"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "commandArgs": {
     "existenceChecks": true,
     "resolution": "RESOLUTION_MODE_LOCAL",
