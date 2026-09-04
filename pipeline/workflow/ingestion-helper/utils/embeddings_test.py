@@ -17,8 +17,8 @@ import os
 from collections import OrderedDict
 import unittest
 from unittest.mock import MagicMock, patch
-from datetime import datetime
-from google.cloud.spanner_v1.param_types import STRING, Array
+from datetime import datetime, timezone
+from google.cloud.spanner_v1.param_types import STRING, Array, TIMESTAMP
 
 from utils.embeddings import EmbeddingUtils, _generate_spanner_query
 
@@ -42,18 +42,26 @@ class TestEmbeddingUtils(unittest.TestCase):
         query = _generate_spanner_query({
             "StatisticalVariable": ["description"],
             "Topic": ["description"]
-        }, None, "TRUE")
+        }, "TRUE")
         expected_query = _load_test_query("generate_spanner_query_full_structure.sql")
         self.assertEqual(query.strip(), expected_query.strip())
 
     def test_get_latest_lock_timestamp(self):
         mock_snapshot = MagicMock()
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
-        expected_timestamp = datetime(2026, 4, 20, 12, 0, 0)
+        expected_timestamp = datetime(2026, 4, 20, 12, 0, 0, tzinfo=timezone.utc)
         mock_snapshot.execute_sql.return_value = [(expected_timestamp,)]
 
         timestamp = self.utils._get_latest_lock_timestamp()
-        self.assertEqual(timestamp, expected_timestamp.isoformat())
+        self.assertEqual(timestamp, expected_timestamp)
+
+    def test_get_latest_lock_timestamp_none(self):
+        mock_snapshot = MagicMock()
+        self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = [(None,)]
+
+        timestamp = self.utils._get_latest_lock_timestamp()
+        self.assertIsNone(timestamp)
 
     def test_get_node_filter_condition_no_filter(self):
         params = {}
@@ -111,7 +119,8 @@ class TestEmbeddingUtils(unittest.TestCase):
         query = args[0]
         expected_query = _load_test_query("get_updated_nodes.sql")
         self.assertEqual(query.strip(), expected_query.strip())
-        self.assertEqual(kwargs["params"], {})
+        self.assertEqual(kwargs["params"], {"timestamp": None})
+        self.assertEqual(kwargs["param_types"], {"timestamp": TIMESTAMP})
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/1")
         self.assertEqual(nodes[0]["name"], "Node 1")
@@ -138,7 +147,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             field_names=["subject_id", "name", "types"]
         )
 
-        test_timestamp = datetime(2026, 4, 25, 0, 0, 0)
+        test_timestamp = datetime(2026, 4, 25, 0, 0, 0, tzinfo=timezone.utc)
         nodes = list(self.utils._get_updated_nodes(test_timestamp, {"Topic": ["description"]}, "NoFilter", 3600))
         
         # Verify Spanner call with full SQL validation
@@ -147,7 +156,8 @@ class TestEmbeddingUtils(unittest.TestCase):
         query = args[0]
         expected_query = _load_test_query("get_updated_nodes_with_timestamp.sql")
         self.assertEqual(query.strip(), expected_query.strip())
-        self.assertEqual(kwargs["params"], {})
+        self.assertEqual(kwargs["params"], {"timestamp": test_timestamp})
+        self.assertEqual(kwargs["param_types"], {"timestamp": TIMESTAMP})
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/2")
 
@@ -187,8 +197,8 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.assertEqual(query.strip(), expected_query.strip())
         self.assertIn("n.subject_id IN UNNEST(@nl_stat_vars)", query)
         self.assertIn("JSON_OBJECT", query)
-        self.assertEqual(kwargs["params"], {"nl_stat_vars": ["dc/1", "dc/2"]})
-        self.assertEqual(kwargs["param_types"], {"nl_stat_vars": Array(STRING)})
+        self.assertEqual(kwargs["params"], {"timestamp": None, "nl_stat_vars": ["dc/1", "dc/2"]})
+        self.assertEqual(kwargs["param_types"], {"timestamp": TIMESTAMP, "nl_stat_vars": Array(STRING)})
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/1")
 

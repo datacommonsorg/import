@@ -14,7 +14,7 @@
 
 import unittest
 from unittest.mock import MagicMock, patch
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 from fastapi.testclient import TestClient
@@ -23,6 +23,12 @@ from dependencies import get_spanner_client, get_storage_client
 import config
 
 client = TestClient(app)
+
+
+def _load_test_query(filename: str) -> str:
+    path = os.path.join(os.path.dirname(__file__), "utils", "test_data", filename)
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read().strip()
 
 
 class TestMain(unittest.TestCase):
@@ -68,7 +74,7 @@ class TestMain(unittest.TestCase):
             def __iter__(self):
                 return iter(self.rows)
 
-        expected_timestamp = datetime(2026, 4, 20, 12, 0, 0)
+        expected_timestamp = datetime(2026, 4, 25, 0, 0, 0, tzinfo=timezone.utc)
 
         # Mock side effect for execute_sql
         # First call: get_latest_lock_timestamp
@@ -128,13 +134,15 @@ class TestMain(unittest.TestCase):
         # Check first call (lock timestamp)
         self.assertIn("IngestionLock", call_args_list[0].args[0])
 
+        expected_query = _load_test_query("get_updated_nodes_with_timestamp.sql")
+
         # Check second call (updated nodes for deletion)
         args2, kwargs2 = call_args_list[1]
-        self.assertIn("FROM GRAPH_TABLE(DCGraph", args2[0])
+        self.assertEqual(args2[0].strip(), expected_query)
 
         # Check third call (updated nodes for embedding generation)
         args3, kwargs3 = call_args_list[2]
-        self.assertIn("FROM GRAPH_TABLE(DCGraph", args3[0])
+        self.assertEqual(args3[0].strip(), expected_query)
 
         # Check fourth call (ML.PREDICT)
         args4, kwargs4 = call_args_list[3]

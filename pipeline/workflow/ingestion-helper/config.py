@@ -19,12 +19,7 @@ from typing import List, Dict
 from pydantic import BaseModel, Field
 import yaml
 
-class EmbeddingSpec(BaseModel):
-    embedding_label: str
-    model_name: str
-    task_type: str
-    node_types: Dict[str, List[str]]
-    node_filter_type: str
+from models import EmbeddingSpec
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
 SPANNER_DATABASE_PATH = os.environ.get('SPANNER_DATABASE_PATH')
@@ -65,7 +60,7 @@ else:
     EMBEDDING_MODELS = _DEFAULT_MODELS
 
 _DEFAULT_EMBEDDING_SPEC_PATH = os.path.join(
-    os.path.dirname(__file__), "spanner_embedding_settings_default.yaml"
+    os.path.dirname(__file__), "configs", "spanner_embeddings", "default.yaml"
 )
 EMBEDDING_SPEC_PATH = os.environ.get("EMBEDDING_SPEC_PATH", _DEFAULT_EMBEDDING_SPEC_PATH)
 

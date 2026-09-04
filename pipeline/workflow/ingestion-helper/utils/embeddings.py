@@ -31,14 +31,44 @@ import config
 
 _BATCH_SIZE = 1000
 _NL_STAT_VAR_FILE = f"gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
-_SPANNER_QUERY_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "spanner_query_template.sql")
 
+_SPANNER_EMBEDDING_JSON_CONTENT = """CASE 
+    WHEN COUNT(pred) > 0 THEN
+    JSON_OBJECT(
+        "subject_id", n.subject_id,
+        "name", n.name,
+        "properties", JSON_OBJECT(
+        ARRAY_AGG(pred IGNORE NULLS),
+        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
+        )
+    )
+    ELSE
+    JSON_OBJECT(
+        "subject_id", n.subject_id,
+        "name", n.name
+    )
+END"""
 
-@lru_cache(maxsize=1)
-def _load_spanner_query_template() -> str:
-    """Loads the Spanner GQL match template from file."""
-    with open(_SPANNER_QUERY_TEMPLATE_PATH, "r", encoding="utf-8") as f:
-        return f.read().rstrip()
+_TIMESTAMP_CONDITION = "IF(@timestamp IS NOT NULL, n.last_update_timestamp > @timestamp, TRUE)"
+
+_SPANNER_QUERY_TEMPLATE = f"""MATCH
+(n:Node WHERE "{{node_type}}" IN UNNEST(n.types) AND {{filter_condition}} AND {_TIMESTAMP_CONDITION})
+OPTIONAL MATCH
+(n)-[e: Edge
+    WHERE e.predicate IN UNNEST({{predicate_types_list_sql}})]->
+(o:Node
+    WHERE o.value IS NOT NULL
+    AND o.value <> "")
+WITH
+    n,
+    e.predicate AS pred,
+    STRING_AGG(o.value, ". ") AS values
+GROUP BY n, pred
+RETURN
+n.subject_id AS subject_id,
+n.types AS node_types,
+{_SPANNER_EMBEDDING_JSON_CONTENT} AS embedding_content
+GROUP BY n"""
 
 
 def _recording_nl_dcid_sentence_pair(dcid_str: str, sentence: str, seen: set, records: list[dict[str, str]]) -> None:
@@ -65,60 +95,34 @@ def _extract_nl_stat_var() -> list[dict[str, str]]:
     return records
 
 
-def _fresh_data_condition(timestamp: str) -> tuple[str, str]:
-    """Constructs timelock condition clauses for nodes and properties.
-
-    Args:
-        timestamp: ISO timestamp string of the latest lock.
-
-    Returns:
-        A tuple of (node_condition_sql, property_condition_sql).
-    """
-    update_node_cond = f"n.last_update_timestamp > TIMESTAMP('{timestamp}')"
-    update_property_cond = f"LOGICAL_OR(o.last_update_timestamp > TIMESTAMP('{timestamp}'))"
-    return update_node_cond, update_property_cond
-
-
-def _generate_spanner_query(nodes: Dict[str, List[str]], timestamp: Optional[Any], filter_condition: str) -> str:
+def _generate_spanner_query(nodes: Dict[str, List[str]], filter_condition: str) -> str:
     """Generates the Spanner GQL statement to perform a graph query that reads all related predicates and constructs JSON content to be embedded.
 
     Args:
         nodes: Mapping of node types to the list of predicate names to read and embed.
-        timestamp: ISO timestamp string of the latest lock, or None for full load.
         filter_condition: Additional SQL/GQL condition to filter nodes (e.g. 'TRUE' or node ID filter).
 
     Returns:
         The generated Spanner GQL query string.
     """
-    if timestamp:
-        update_node_cond, update_property_cond = _fresh_data_condition(str(timestamp))
-    else:
-        update_node_cond, update_property_cond = "TRUE", "TRUE"
-
-    query_template = _load_spanner_query_template()
     list_of_graph_traversal_statements = []
     for node_type, predicate_types in nodes.items():
+        # Escape single quotes and wrap each predicate string in single quotes to safely construct
+        # an inlined GQL array literal (e.g. ['description', 'name']).
         safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
         predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
-        graph_traversal_statement = query_template.format(
+        graph_traversal_statement = _SPANNER_QUERY_TEMPLATE.format(
             node_type=node_type,
             filter_condition=filter_condition,
             predicate_types_list_sql=predicate_types_list_sql,
-            update_property_cond=update_property_cond,
-            update_node_cond=update_node_cond,
         )
         list_of_graph_traversal_statements.append(graph_traversal_statement)
 
     unioned_graph_statement_over_type = "\nUNION ALL\n".join(list_of_graph_traversal_statements)
     return f"""
-SELECT
-    subject_id,
-    node_types,
-    embedding_content
-FROM GRAPH_TABLE(DCGraph
+Graph DCGraph
 {unioned_graph_statement_over_type}
-)
-WHERE update_node_data OR update_property_data"""
+"""
 
 
 class EmbeddingUtils:
@@ -127,21 +131,18 @@ class EmbeddingUtils:
     def __init__(self, spanner: SpannerClient) -> None:
         self.spanner = spanner
 
-    def _get_latest_lock_timestamp(self):
+    def _get_latest_lock_timestamp(self) -> Optional[datetime]:
         """Gets the latest AcquiredTimestamp from IngestionLock table.
 
         Returns:
-            The latest AcquiredTimestamp as an ISO string, or None if no entries exist.
+            The latest AcquiredTimestamp as a datetime, or None if no entries exist.
         """
         time_lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
         try:
             with self.spanner.database.snapshot() as snapshot:
                 results = snapshot.execute_sql(time_lock_sql)
                 for row in results:
-                    val = row[0]
-                    if val is not None:
-                        return val.isoformat().replace("+00:00", "Z") if hasattr(val, "isoformat") else str(val)
-                    return None
+                    return row[0]
         except Exception as e:
             logging.error(f"Error fetching latest lock timestamp: {e}")
             raise
@@ -160,12 +161,12 @@ class EmbeddingUtils:
             logging.error(f"Unknown node filter type: {node_filter_type}")
             raise ValueError(f"Unknown node filter type: {node_filter_type}")
 
-    def _get_updated_nodes(self, timestamp: Optional[str], node_types: Dict[str, List[str]], node_filter_type: str, timeout: int):
+    def _get_updated_nodes(self, timestamp: Optional[Union[datetime, str]], node_types: Dict[str, List[str]], node_filter_type: str, timeout: int):
         """Gets subject_ids and names from Node table where last_update_timestamp > timestamp.
         Yields results to avoid loading all into memory.
 
         Args:
-            timestamp: ISO timestamp string or None to filter by.
+            timestamp: Timestamp or None to filter by.
             node_types: A dictionary mapping node types to lists of predicate types to filter by.
             node_filter_type: String specifying the node filtering logic.
             timeout: Timeout for the spanner client to execute queries.
@@ -173,11 +174,11 @@ class EmbeddingUtils:
         Yields:
             Dictionaries containing subject_id and name.
         """
-        params = {}
-        param_types = {}
+        params = {"timestamp": timestamp}
+        param_types = {"timestamp": TIMESTAMP}
 
         filter_condition = self._get_node_filter_condition(node_filter_type, params, param_types)
-        updated_node_sql = _generate_spanner_query(node_types, timestamp, filter_condition)
+        updated_node_sql = _generate_spanner_query(node_types, filter_condition)
 
         if timestamp:
             logging.info(f"Filtering valid nodes updated after {timestamp}")
