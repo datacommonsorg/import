@@ -26,7 +26,7 @@ client = TestClient(app)
 
 
 def _load_test_query(filename: str) -> str:
-    path = os.path.join(os.path.dirname(__file__), "utils", "test_data", filename)
+    path = os.path.join(os.path.dirname(__file__), "utils", "golden_queries", filename)
     with open(path, "r", encoding="utf-8") as f:
         return f.read().strip()
 
