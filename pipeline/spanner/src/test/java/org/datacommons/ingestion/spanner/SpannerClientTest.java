@@ -9,7 +9,9 @@ import com.google.gson.JsonParser;
 import java.util.List;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
+import org.datacommons.ingestion.data.TimeSeriesKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,5 +121,61 @@ public class SpannerClientTest {
     assertFalse(facetJson.has("observationPeriod"));
     assertFalse(facetJson.has("scalingFactor"));
     assertFalse(facetJson.has("unit"));
+  }
+
+  @Test
+  public void testToObservationMutation() {
+    TimeSeriesKey key =
+        new TimeSeriesKey(
+            "Count_Person", "geoId/06", "extra1", "P1Y", "CensusMethod", "Person", "1", "facet123");
+    Observation obs = Observation.builder().seriesKey(key).date("2020").value("100").build();
+
+    Mutation mutation = spannerClient.toObservationMutation(obs);
+    assertNotNull(mutation);
+    assertEquals("Observation", mutation.getTable());
+
+    var map = mutation.asMap();
+    assertEquals("Count_Person", map.get("variable_measured").getString());
+    assertEquals("geoId/06", map.get("entity1").getString());
+    assertEquals("extra1", map.get("extra_entities_id").getString());
+    assertEquals("facet123", map.get("facet_id").getString());
+    assertEquals("2020", map.get("date").getString());
+    assertEquals("100", map.get("value").getString());
+    assertEquals("spanner.commit_timestamp()", map.get("last_update_timestamp").toString());
+  }
+
+  @Test
+  public void testFormatPartitionQuery_production_preservesCleanSql() {
+    SpannerClient prodClient =
+        SpannerClient.builder()
+            .gcpProjectId("test-project")
+            .spannerInstanceId("test-instance")
+            .spannerDatabaseId("test-db")
+            .build();
+
+    String query =
+        prodClient.formatPartitionQuery(
+            "SELECT * FROM TimeSeries WHERE provenance = '%s'", "dc/base/Test");
+    assertEquals("SELECT * FROM TimeSeries WHERE provenance = 'dc/base/Test'", query);
+    assertFalse(query.contains("spanner_emulator"));
+  }
+
+  @Test
+  public void testFormatPartitionQuery_emulator_prependsHint() {
+    SpannerClient emulatorClient =
+        SpannerClient.builder()
+            .gcpProjectId("test-project")
+            .spannerInstanceId("test-instance")
+            .spannerDatabaseId("test-db")
+            .emulatorHost("localhost:9010")
+            .build();
+
+    String query =
+        emulatorClient.formatPartitionQuery(
+            "SELECT * FROM TimeSeries WHERE provenance = '%s'", "dc/base/Test");
+    assertEquals(
+        "@{spanner_emulator.disable_query_partitionability_check=true} SELECT * FROM TimeSeries WHERE provenance = 'dc/base/Test'",
+        query);
+    assertTrue(query.startsWith("@{spanner_emulator.disable_query_partitionability_check=true}"));
   }
 }

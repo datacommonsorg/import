@@ -77,7 +77,11 @@ public class GraphIngestionPipeline {
             .build();
 
     Pipeline pipeline = Pipeline.create(options);
-    buildPipeline(pipeline, options, spannerClient);
+    if (options.getIsRollback()) {
+      RollbackPipeline.buildPipeline(pipeline, options, spannerClient);
+    } else {
+      buildPipeline(pipeline, options, spannerClient);
+    }
     pipeline.run();
   }
 
