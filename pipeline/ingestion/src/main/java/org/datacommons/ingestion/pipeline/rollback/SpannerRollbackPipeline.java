@@ -100,6 +100,7 @@ public class SpannerRollbackPipeline implements Serializable {
   public record NodeReconciliationResult(
       PCollection<Mutation> restoreNodeMutations,
       PCollection<Mutation> deleteNodeMutations,
+      PCollection<Mutation> deleteEmbeddingMutations,
       PCollection<Mutation> restoreEmbeddingMutations) {}
 
   /** Builds the complete Beam execution graph for Spanner time-travel rollback. */
@@ -152,7 +153,12 @@ public class SpannerRollbackPipeline implements Serializable {
         deleteDataForProvenances(
             pipeline, targetProvenances, spannerClient.getEdgeTableName(), spannerClient);
     PCollection<Void> delKvSignal =
-        deleteDataForProvenances(pipeline, targetProvenances, "KeyValueStore", spannerClient);
+        deleteDataForProvenances(
+            pipeline,
+            targetProvenances,
+            "KeyValueStore",
+            "type = 'ProvenanceSummary'",
+            spannerClient);
 
     return new DeletionSignals(delTsSignal, delEdgeSignal, delKvSignal);
   }
@@ -350,15 +356,26 @@ public class SpannerRollbackPipeline implements Serializable {
     PCollection<Mutation> restoreNodeMutations = nodeReconcileTuple.get(RESTORE_NODES_TAG);
     PCollection<Mutation> deleteNodeMutations = nodeReconcileTuple.get(DELETE_NODES_TAG);
 
-    PCollection<Mutation> restoreEmbeddingMutations =
+    PCollectionTuple embTuple =
         nodeReconcileTuple
             .get(RESTORED_NODE_IDS_TAG)
             .apply(
                 "ReconcileNodeEmbeddingBatches",
-                ParDo.of(new ReconcileNodeEmbeddingsFn(spannerClient, tPre)));
+                ParDo.of(new ReconcileNodeEmbeddingsFn(spannerClient, tPre))
+                    .withOutputTags(
+                        ReconcileNodeEmbeddingsFn.RESTORE_EMBEDDINGS_TAG,
+                        TupleTagList.of(ReconcileNodeEmbeddingsFn.DELETE_EMBEDDINGS_TAG)));
+
+    PCollection<Mutation> deleteEmbeddingMutations =
+        embTuple.get(ReconcileNodeEmbeddingsFn.DELETE_EMBEDDINGS_TAG);
+    PCollection<Mutation> restoreEmbeddingMutations =
+        embTuple.get(ReconcileNodeEmbeddingsFn.RESTORE_EMBEDDINGS_TAG);
 
     return new NodeReconciliationResult(
-        restoreNodeMutations, deleteNodeMutations, restoreEmbeddingMutations);
+        restoreNodeMutations,
+        deleteNodeMutations,
+        deleteEmbeddingMutations,
+        restoreEmbeddingMutations);
   }
 
   // ---------------------------------------------------------------------------
@@ -391,26 +408,43 @@ public class SpannerRollbackPipeline implements Serializable {
         spannerClient.writeMutations(
             pipeline, "WriteRestoredNodes", nodeReconciliation.restoreNodeMutations());
 
-    // 1B. Write Restored Edges (Only waits on its own Edge delete signal)
+    // 1B. Write Restored Edges (Interleaved in Node -> waits on both writtenNodes and
+    // delEdgeSignal)
     PCollection<Mutation> edgeMutationsToWrite = snapshots.edgeMutations();
     if (!skipWait && !skipDelete && delSignals.delEdgeSignal() != null) {
       edgeMutationsToWrite =
           edgeMutationsToWrite.apply("WaitOnDelEdges", Wait.on(delSignals.delEdgeSignal()));
     }
+    if (!skipWait) {
+      edgeMutationsToWrite =
+          edgeMutationsToWrite.apply(
+              "WaitOnWrittenNodesForEdges", Wait.on(writtenNodes.getOutput()));
+    }
     spannerClient.writeMutations(pipeline, "WriteRestoredEdges", edgeMutationsToWrite);
 
-    // 1C. Write Restored NodeEmbeddings (Interleaved in Node -> waits on written Nodes)
-    PCollection<Mutation> embMutationsToWrite = nodeReconciliation.restoreEmbeddingMutations();
-    if (!skipWait) {
-      embMutationsToWrite =
-          embMutationsToWrite.apply(
-              "WaitOnWrittenNodesForEmbeddings", Wait.on(writtenNodes.getOutput()));
-    }
-    spannerClient.writeMutations(pipeline, "WriteRestoredNodeEmbeddings", embMutationsToWrite);
+    // 1C. Reconcile NodeEmbeddings (Interleaved in Node -> prefix deletes applied before restores)
+    PCollection<Mutation> embDeletesToWrite = nodeReconciliation.deleteEmbeddingMutations();
+    SpannerWriteResult writtenEmbDeletes =
+        spannerClient.writeMutations(pipeline, "WriteDeletedNodeEmbeddings", embDeletesToWrite);
 
-    // 1D. Delete Newly Added Nodes
-    spannerClient.writeMutations(
-        pipeline, "WriteDeletedNodes", nodeReconciliation.deleteNodeMutations());
+    PCollection<Mutation> embRestoresToWrite = nodeReconciliation.restoreEmbeddingMutations();
+    if (!skipWait) {
+      embRestoresToWrite =
+          embRestoresToWrite
+              .apply("WaitOnWrittenNodesForEmbeddings", Wait.on(writtenNodes.getOutput()))
+              .apply("WaitOnDeletedEmbeddingsForRestore", Wait.on(writtenEmbDeletes.getOutput()));
+    }
+    spannerClient.writeMutations(pipeline, "WriteRestoredNodeEmbeddings", embRestoresToWrite);
+
+    // 1D. Delete Newly Added Nodes (Edge is interleaved in Node without cascade -> waits on
+    // delEdgeSignal)
+    PCollection<Mutation> deleteNodeMutations = nodeReconciliation.deleteNodeMutations();
+    if (!skipWait && !skipDelete && delSignals.delEdgeSignal() != null) {
+      deleteNodeMutations =
+          deleteNodeMutations.apply(
+              "WaitOnDelEdgesForNodeDelete", Wait.on(delSignals.delEdgeSignal()));
+    }
+    spannerClient.writeMutations(pipeline, "WriteDeletedNodes", deleteNodeMutations);
   }
 
   private static void writeTimeSeriesTrack(
@@ -501,12 +535,23 @@ public class SpannerRollbackPipeline implements Serializable {
       List<String> targetProvenances,
       String tableName,
       SpannerClient spannerClient) {
+    return deleteDataForProvenances(pipeline, targetProvenances, tableName, null, spannerClient);
+  }
+
+  public static PCollection<Void> deleteDataForProvenances(
+      Pipeline pipeline,
+      List<String> targetProvenances,
+      String tableName,
+      String additionalPredicate,
+      SpannerClient spannerClient) {
     return pipeline
         .apply(
             "CreateTargetProvs-" + tableName,
             Create.of(List.of(targetProvenances)).withCoder(ListCoder.of(StringUtf8Coder.of())))
         .apply(
             "ExecuteDeleteProvs-" + tableName,
-            ParDo.of(new SpannerPartitionedDeleteFn(spannerClient, tableName, "provenance")));
+            ParDo.of(
+                new SpannerPartitionedDeleteFn(
+                    spannerClient, tableName, "provenance", additionalPredicate)));
   }
 }

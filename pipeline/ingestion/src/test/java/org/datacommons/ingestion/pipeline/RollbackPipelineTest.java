@@ -15,10 +15,12 @@
 package org.datacommons.ingestion.pipeline;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,6 +33,8 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.ingestion.pipeline.rollback.ReconcileNodeEmbeddingsFn;
+import org.datacommons.ingestion.pipeline.rollback.SpannerPartitionedDeleteFn;
 import org.datacommons.ingestion.pipeline.rollback.SpannerRollbackPipeline;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.Before;
@@ -173,6 +177,36 @@ public class RollbackPipelineTest implements Serializable {
     assertNull(signals.delTsSignal());
     assertNull(signals.delEdgeSignal());
     assertNull(signals.delKvSignal());
+  }
+
+  @Test
+  public void testBuildDml_withoutAdditionalPredicate() {
+    String dml = SpannerPartitionedDeleteFn.buildDml("Edge", "provenance", null);
+    assertEquals("DELETE FROM Edge WHERE provenance IN UNNEST(@provenance)", dml);
+  }
+
+  @Test
+  public void testBuildDml_withAdditionalPredicate() {
+    String dml =
+        SpannerPartitionedDeleteFn.buildDml(
+            "KeyValueStore", "provenance", "type = 'ProvenanceSummary'");
+    assertEquals(
+        "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenance)",
+        dml);
+  }
+
+  @Test
+  public void testReconcileNodeEmbeddings_distinctTupleTags() {
+    assertNotEquals(
+        ReconcileNodeEmbeddingsFn.DELETE_EMBEDDINGS_TAG.getId(),
+        ReconcileNodeEmbeddingsFn.RESTORE_EMBEDDINGS_TAG.getId());
+  }
+
+  @Test
+  public void testToPrefixKeySet_generatesPrefixRanges() {
+    KeySet keySet = ReconcileNodeEmbeddingsFn.toPrefixKeySet(List.of("geoId/06", "geoId/02"));
+    List<?> ranges = (List<?>) keySet.getRanges();
+    assertEquals(2, ranges.size());
   }
 
   static class MockRollbackSpannerClient extends SpannerClient {

@@ -27,12 +27,15 @@ import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.TupleTag;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.NodeEmbeddingRecord;
 
 /** Reconciles vector embeddings for restored nodes against the historical snapshot at T_pre. */
 public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
   public static final String NODE_EMBEDDING_TABLE = "NodeEmbedding";
+  public static final TupleTag<Mutation> DELETE_EMBEDDINGS_TAG = new TupleTag<Mutation>() {};
+  public static final TupleTag<Mutation> RESTORE_EMBEDDINGS_TAG = new TupleTag<Mutation>() {};
 
   private final SpannerClient spannerClient;
   private final com.google.cloud.Timestamp tPre;
@@ -60,13 +63,15 @@ public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
   }
 
   @ProcessElement
-  public void processElement(@Element List<String> batch, OutputReceiver<Mutation> receiver) {
+  public void processElement(@Element List<String> batch, MultiOutputReceiver receiver) {
     if (batch == null || batch.isEmpty()) {
       return;
     }
 
     // Delete existing embeddings at HEAD for these subject IDs to prevent orphaned composite keys
-    receiver.output(Mutation.delete(NODE_EMBEDDING_TABLE, toPrefixKeySet(batch)));
+    receiver
+        .get(DELETE_EMBEDDINGS_TAG)
+        .output(Mutation.delete(NODE_EMBEDDING_TABLE, toPrefixKeySet(batch)));
 
     try (ResultSet rs =
         dbClient
@@ -75,7 +80,9 @@ public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
       while (rs.next()) {
         Struct row = rs.getCurrentRowAsStruct();
         restoredEmbeddingsCounter.inc();
-        receiver.output(NodeEmbeddingRecord.from(row).toMutation(NODE_EMBEDDING_TABLE));
+        receiver
+            .get(RESTORE_EMBEDDINGS_TAG)
+            .output(NodeEmbeddingRecord.from(row).toMutation(NODE_EMBEDDING_TABLE));
       }
     } catch (SpannerException e) {
       throw new IllegalStateException(
@@ -87,7 +94,7 @@ public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
     }
   }
 
-  private static KeySet toPrefixKeySet(List<String> subjectIds) {
+  public static KeySet toPrefixKeySet(List<String> subjectIds) {
     KeySet.Builder builder = KeySet.newBuilder();
     subjectIds.forEach(
         id -> builder.addRange(KeyRange.prefix(com.google.cloud.spanner.Key.of(id))));

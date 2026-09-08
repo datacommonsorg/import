@@ -385,11 +385,25 @@ public class RollbackPipelineIntegrationTest {
             .executeQuery(
                 Statement.of(
                     String.format(
-                        "SELECT value FROM KeyValueStore WHERE key = '%s' AND provenance = '%s'",
+                        "SELECT value FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND key = '%s' AND provenance = '%s'",
                         SpannerTestData.STAT_VAR, SpannerTestData.PROVENANCE)))) {
-      assertTrue("KeyValueStore should exist", rs.next());
+      assertTrue("KeyValueStore ProvenanceSummary should exist", rs.next());
       assertEquals(
           SpannerTestData.KV_VALUE_BASELINE.replace(" ", ""), rs.getJson("value").replace(" ", ""));
+    }
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT value FROM KeyValueStore WHERE type = '%s' AND key = '%s' AND provenance = '%s'",
+                        SpannerTestData.KV_OTHER_TYPE,
+                        SpannerTestData.STAT_VAR,
+                        SpannerTestData.PROVENANCE)))) {
+      assertTrue("KeyValueStore non-ProvenanceSummary types should be preserved", rs.next());
+      assertEquals(
+          SpannerTestData.KV_OTHER_VALUE.replace(" ", ""), rs.getJson("value").replace(" ", ""));
     }
   }
 }

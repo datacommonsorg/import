@@ -37,15 +37,25 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
   private final SpannerClient spannerClient;
   private final String tableName;
   private final String columnName;
+  private final String additionalPredicate;
   private final Counter deletedRowsCounter;
   private transient Spanner spanner;
   private transient DatabaseClient dbClient;
 
   public SpannerPartitionedDeleteFn(
       SpannerClient spannerClient, String tableName, String columnName) {
+    this(spannerClient, tableName, columnName, null);
+  }
+
+  public SpannerPartitionedDeleteFn(
+      SpannerClient spannerClient,
+      String tableName,
+      String columnName,
+      String additionalPredicate) {
     this.spannerClient = spannerClient;
     this.tableName = tableName;
     this.columnName = columnName;
+    this.additionalPredicate = additionalPredicate;
     this.deletedRowsCounter =
         Metrics.counter(SpannerPartitionedDeleteFn.class, "rollback_deleted_rows:" + tableName);
   }
@@ -69,7 +79,7 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
       receiver.output(null);
       return;
     }
-    String dml = String.format(DELETE_DML_TEMPLATE, tableName, columnName, columnName);
+    String dml = buildDml(tableName, columnName, additionalPredicate);
     Statement statement = Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
     try {
       long rowCount = dbClient.executePartitionedUpdate(statement);
@@ -83,5 +93,13 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
               tableName, columnName, values),
           e);
     }
+  }
+
+  public static String buildDml(String tableName, String columnName, String additionalPredicate) {
+    return additionalPredicate != null && !additionalPredicate.trim().isEmpty()
+        ? String.format(
+            "DELETE FROM %s WHERE %s AND %s IN UNNEST(@%s)",
+            tableName, additionalPredicate, columnName, columnName)
+        : String.format(DELETE_DML_TEMPLATE, tableName, columnName, columnName);
   }
 }

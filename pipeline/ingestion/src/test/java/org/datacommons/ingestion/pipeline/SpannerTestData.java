@@ -33,6 +33,8 @@ public final class SpannerTestData {
   public static final String VALUE_2021 = "40000000";
   public static final String KV_VALUE_BASELINE = "{\"obs_count\": 1}";
   public static final String KV_VALUE_CORRUPTED = "{\"obs_count\": 999}";
+  public static final String KV_OTHER_TYPE = "StatVarSummary";
+  public static final String KV_OTHER_VALUE = "{\"description\": \"Total Person Count\"}";
   public static final String EMBEDDING_LABEL = "test-label";
   public static final String EMBEDDING_KEY = "test-key";
   public static final String EMBEDDING_CONTENT_V1 = "{\"text\":\"California\"}";
@@ -59,7 +61,8 @@ public final class SpannerTestData {
           edgeMutation(SUBJECT_ID_CA, "typeOf", "Place", PROVENANCE),
           timeSeriesMutation(STAT_VAR, SUBJECT_ID_CA, FACET_ID, PROVENANCE),
           observationMutation(STAT_VAR, SUBJECT_ID_CA, FACET_ID, DATE_2020, VALUE_2020),
-          keyValueMutation(STAT_VAR, PROVENANCE, KV_VALUE_BASELINE));
+          keyValueMutation(STAT_VAR, PROVENANCE, KV_VALUE_BASELINE),
+          keyValueMutation(KV_OTHER_TYPE, STAT_VAR, PROVENANCE, KV_OTHER_VALUE));
 
   public static final List<Mutation> V2_CORRUPTED_MUTATIONS =
       List.of(
@@ -190,9 +193,14 @@ public final class SpannerTestData {
   }
 
   public static Mutation keyValueMutation(String key, String provenance, String jsonValue) {
+    return keyValueMutation("ProvenanceSummary", key, provenance, jsonValue);
+  }
+
+  public static Mutation keyValueMutation(
+      String type, String key, String provenance, String jsonValue) {
     return Mutation.newInsertOrUpdateBuilder("KeyValueStore")
         .set("type")
-        .to("ProvenanceSummary")
+        .to(type)
         .set("key")
         .to(key)
         .set("provenance")
