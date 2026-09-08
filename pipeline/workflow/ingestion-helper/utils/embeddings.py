@@ -19,29 +19,73 @@ from functools import lru_cache
 import itertools
 import json
 import logging
+import os
 import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 import pandas as pd
 from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON, FLOAT64
 from clients.spanner import SpannerClient
 import config
+from utils.spanner_query import EMBEDDING_CONTENT_QUERY_BY_NODE_TYPE
 
 
 _BATCH_SIZE = 1000
 _NL_STAT_VAR_FILE = f"gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
 
+
+def _recording_nl_dcid_sentence_pair(dcid_str: str, sentence: str, seen: set, records: list[dict[str, str]]) -> None:
+    """Parses semicolon-separated dcids and records new (dcid, sentence) pairs."""
+    for item in str(dcid_str).split(";"):
+        dcid = item.strip()
+        if not dcid or (dcid, sentence) in seen:
+            continue
+        seen.add((dcid, sentence))
+        records.append({"dcid": dcid, "sentence": sentence})
+
+
 @lru_cache(maxsize=1)
 def _extract_nl_stat_var() -> list[dict[str, str]]:
     """Extracts deduplicated (dcid, sentence) pairs from NL stat var CSV file."""
-    output_df = pd.read_csv(_NL_STAT_VAR_FILE)
-    output_df = output_df.dropna(subset=['dcid', 'sentence'])
-    output_df['dcid'] = output_df['dcid'].apply(lambda x: [item.strip() for item in str(x).split(';') if item.strip()])
-    output_df['sentence'] = output_df['sentence'].astype(str).str.strip()
-    
-    exploded = output_df.explode('dcid')
-    exploded = exploded[(exploded['dcid'] != '') & (exploded['sentence'] != '')]
-    deduped = exploded[['dcid', 'sentence']].drop_duplicates()
-    return deduped.to_dict(orient='records')
+    output_df = pd.read_csv(_NL_STAT_VAR_FILE).dropna(subset=["dcid", "sentence"])
+    seen = set()
+    records = []
+    for _, row in output_df.iterrows():
+        sentence = str(row["sentence"]).strip()
+        if not sentence:
+            continue
+        _recording_nl_dcid_sentence_pair(row["dcid"], sentence, seen, records)
+    return records
+
+
+def _generate_spanner_query(nodes: Dict[str, List[str]], filter_condition: str) -> str:
+    """Generates the Spanner GQL statement to perform a graph query that reads all related predicates and constructs JSON content to be embedded.
+
+    Args:
+        nodes: Mapping of node types to the list of predicate names to read and embed.
+        filter_condition: Additional SQL/GQL condition to filter nodes (e.g. 'TRUE' or node ID filter).
+
+    Returns:
+        The generated Spanner GQL query string.
+    """
+    list_of_graph_traversal_statements = []
+    for node_type, predicate_types in nodes.items():
+        # Escape single quotes and wrap each predicate string in single quotes to safely construct
+        # an inlined GQL array literal (e.g. ['description', 'name']).
+        safe_predicate_types = [f"'{pt.replace(chr(39), chr(92) + chr(39))}'" for pt in predicate_types]
+        predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
+        graph_traversal_statement = EMBEDDING_CONTENT_QUERY_BY_NODE_TYPE.format(
+            node_type=node_type,
+            filter_condition=filter_condition,
+            predicate_types_list_sql=predicate_types_list_sql,
+        )
+        list_of_graph_traversal_statements.append(graph_traversal_statement)
+
+    unioned_graph_statement_over_type = "\nUNION ALL\n".join(list_of_graph_traversal_statements)
+    return f"""
+Graph DCGraph
+{unioned_graph_statement_over_type}
+"""
 
 
 class EmbeddingUtils:
@@ -50,11 +94,11 @@ class EmbeddingUtils:
     def __init__(self, spanner: SpannerClient) -> None:
         self.spanner = spanner
 
-    def _get_latest_lock_timestamp(self):
+    def _get_latest_lock_timestamp(self) -> Optional[datetime]:
         """Gets the latest AcquiredTimestamp from IngestionLock table.
 
         Returns:
-            The latest AcquiredTimestamp as a datetime object, or None if no entries exist.
+            The latest AcquiredTimestamp as a datetime, or None if no entries exist.
         """
         time_lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
         try:
@@ -75,44 +119,32 @@ class EmbeddingUtils:
             dcids = sorted(list({r["dcid"] for r in nl_records}))
             params["nl_stat_vars"] = dcids
             param_types["nl_stat_vars"] = Array(STRING)
-            return "subject_id IN UNNEST(@nl_stat_vars)"
+            return "n.subject_id IN UNNEST(@nl_stat_vars)"
         else:
             logging.error(f"Unknown node filter type: {node_filter_type}")
             raise ValueError(f"Unknown node filter type: {node_filter_type}")
 
-    def _get_updated_nodes(self, timestamp, node_types, node_filter_type, timeout):
+    def _get_updated_nodes(self, timestamp: Optional[Union[datetime, str]], node_types: Dict[str, List[str]], node_filter_type: str, timeout: int):
         """Gets subject_ids and names from Node table where last_update_timestamp > timestamp.
         Yields results to avoid loading all into memory.
 
         Args:
-            timestamp: datetime object to filter by.
-            node_types: A list of strings representing the node types to filter by.
+            timestamp: Timestamp or None to filter by.
+            node_types: A dictionary mapping node types to lists of predicate types to filter by.
             node_filter_type: String specifying the node filtering logic.
             timeout: Timeout for the spanner client to execute queries.
 
         Yields:
             Dictionaries containing subject_id and name.
         """
-        params = {"node_types": node_types}
-        param_types = {"node_types": Array(STRING)}
+        params = {"timestamp": timestamp}
+        param_types = {"timestamp": TIMESTAMP}
 
         filter_condition = self._get_node_filter_condition(node_filter_type, params, param_types)
-        timestamp_condition = "last_update_timestamp > @timestamp" if timestamp else "TRUE"
-
-        updated_node_sql = f"""
-            SELECT subject_id, name, types FROM Node 
-            WHERE name IS NOT NULL
-              AND {timestamp_condition}
-              AND {filter_condition}
-              AND EXISTS (
-                SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST(@node_types)
-              )
-        """
+        updated_node_sql = _generate_spanner_query(node_types, filter_condition)
 
         if timestamp:
             logging.info(f"Filtering valid nodes updated after {timestamp}")
-            params["timestamp"] = timestamp
-            param_types["timestamp"] = TIMESTAMP
         else:
             logging.info("No timestamp provided, reading all valid nodes.")
 
@@ -151,19 +183,14 @@ class EmbeddingUtils:
                 for sentence in sentences:
                     embedding_content = json.dumps(OrderedDict([
                         ("title", subject_id),
-                        ("name", sentence)
+                        ("sentence", sentence)
                     ]))
                     yield (subject_id, embedding_content, node.get("types"))
         else:
             for node in nodes_generator:
-                name = node.get("name")
                 subject_id = node.get("subject_id")
-                if name:
-                    embedding_content = json.dumps(OrderedDict([
-                        ("title", subject_id),
-                        ("name", name)
-                    ]))
-                    yield (subject_id, embedding_content, node.get("types"))
+                embedding_content = node.get("embedding_content")
+                yield (subject_id, embedding_content, node.get("node_types"))
 
     def _delete_existing_embeddings(self, embedding_table: str, embedding_label: str, subject_ids_iterable, timeout: int) -> int:
         """Deletes existing embeddings for subject_ids from a generator or iterable in batches.
@@ -223,7 +250,7 @@ class EmbeddingUtils:
         logging.info(f"Deleted {total_deleted} existing embedding rows (embedding_label: {embedding_label}).")
         return total_deleted
 
-    def _generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_table, embedding_label, task_type, timeout):
+    def _generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_table, embedding_label, task_type, node_filter_type, timeout):
         """Generates embeddings in batches using standard transactions.
         Processes nodes in chunks of 500 to avoid transaction size limits.
         Accepts a generator or list to avoid loading all nodes into memory.
@@ -244,17 +271,18 @@ class EmbeddingUtils:
 
         logging.info(f"Generating embeddings in batches of {_BATCH_SIZE}.")
 
+        content_expr = 'JSON_VALUE(embedding_content, "$.sentence")' if node_filter_type == "NLStatisticalVariable" else "TO_JSON_STRING(embedding_content)"
         predict_sql = f"""
             SELECT subject_id, embedding_content, embeddings.values AS embeddings, node_types
             FROM ML.PREDICT(
                 MODEL {model_name},
-                (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
+                (SELECT subject_id, {content_expr} AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
             )
         """
 
         insert_sql = f"""
             INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content_key, embedding_content, embeddings, node_types)
-            SELECT subject_id, @embedding_label, CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content, '$.name')) AS STRING), embedding_content, embeddings, node_types
+            SELECT subject_id, @embedding_label, CAST(FARM_FINGERPRINT(TO_JSON_STRING(embedding_content)) AS STRING), embedding_content, embeddings, node_types
             FROM UNNEST(@rows)
         """
 
@@ -378,6 +406,7 @@ class EmbeddingUtils:
                 embedding_table=self.spanner.embedding_table,
                 embedding_label=embedding_label,
                 task_type=task_type,
+                node_filter_type=node_filter_type,
                 timeout=config.TIMEOUT
             )
             total_affected_rows += affected_rows

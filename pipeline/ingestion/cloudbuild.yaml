@@ -45,7 +45,7 @@ steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
-      - -c
+      - '-c'
       - |
         set -e
         if [ -n "${_TAG}" ] && [ "${_TAG}" != "${_VERSION}" ]; then

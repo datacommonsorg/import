@@ -15,16 +15,11 @@
 import os
 import json
 import logging
-from typing import List
+from typing import List, Dict
 from pydantic import BaseModel, Field
 import yaml
 
-class EmbeddingSpec(BaseModel):
-    embedding_label: str
-    model_name: str
-    task_type: str
-    node_types: List[str]
-    node_filter_type: str
+from models import EmbeddingSpec
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
 SPANNER_DATABASE_PATH = os.environ.get('SPANNER_DATABASE_PATH')
@@ -64,52 +59,51 @@ if models_env:
 else:
     EMBEDDING_MODELS = _DEFAULT_MODELS
 
-_DEFAULT_EMBEDDING_SPECS = [
-    EmbeddingSpec(
-        embedding_label="base_text_embedding",
-        model_name="NodeEmbeddingModel",
-        task_type="RETRIEVAL_QUERY",
-        node_types=["StatisticalVariable", "Topic"],
-        node_filter_type="NoFilter"
-    )
-]
+_DEFAULT_EMBEDDING_SPEC_PATH = os.path.join(
+    os.path.dirname(__file__), "configs", "spanner_embeddings", "default.yaml"
+)
+EMBEDDING_SPEC_PATH = os.environ.get("EMBEDDING_SPEC_PATH", _DEFAULT_EMBEDDING_SPEC_PATH)
 
-spec_path = os.environ.get('EMBEDDING_SPEC_PATH')
 
-def _load_embedding_specs(spec_path: str) -> List[EmbeddingSpec]:
-    """Load embedding specs from file. If failed reading, use default spec.
+def _load_embedding_specs(spec_path: str = _DEFAULT_EMBEDDING_SPEC_PATH) -> List[EmbeddingSpec]:
+    """Load embedding specs from YAML file.
 
     Args:
-        spec_path: Path to the embedding specs file.
+        spec_path: Path to the embedding specs file. Defaults to _DEFAULT_EMBEDDING_SPEC_PATH.
 
     Returns:
         List of EmbeddingSpec objects.
     """
-    global _DEFAULT_EMBEDDING_SPECS
     if not spec_path:
-        return _DEFAULT_EMBEDDING_SPECS
+        spec_path = _DEFAULT_EMBEDDING_SPEC_PATH
     resolved_path = os.path.abspath(spec_path)
     if not (os.path.isabs(spec_path) or os.path.exists(resolved_path)):
         resolved_path = os.path.join(os.path.dirname(__file__), spec_path)
     if not os.path.exists(resolved_path):
-        logging.warning(f"EMBEDDING_SPEC_PATH file not found: {resolved_path}. Using defaults.")
-        return _DEFAULT_EMBEDDING_SPECS
+        logging.warning(
+            f"EMBEDDING_SPEC_PATH file not found: {resolved_path}. Using default path {_DEFAULT_EMBEDDING_SPEC_PATH}."
+        )
+        resolved_path = _DEFAULT_EMBEDDING_SPEC_PATH
+
     try:
-        with open(resolved_path, 'r') as f:
+        with open(resolved_path, "r") as f:
             parsed = yaml.safe_load(f)
         if isinstance(parsed, dict):
             parsed = [parsed]
         if not isinstance(parsed, list):
-            logging.warning(f"Invalid format in EMBEDDING_SPEC_PATH file: {resolved_path}. Must be a list or a dictionary. Using defaults.")
-            return _DEFAULT_EMBEDDING_SPECS
+            logging.warning(
+                f"Invalid format in EMBEDDING_SPEC_PATH file: {resolved_path}. Must be a list or a dictionary."
+            )
+            return _load_embedding_specs(_DEFAULT_EMBEDDING_SPEC_PATH)
         validated = [EmbeddingSpec(**spec) for spec in parsed]
         logging.info(f"Successfully loaded embedding specs from {resolved_path}")
         return validated
     except Exception as e:
-        logging.warning(f"Error reading/validating EMBEDDING_SPEC_PATH file: {e}. Using defaults.")
-        return _DEFAULT_EMBEDDING_SPECS
+        logging.warning(f"Error reading/validating EMBEDDING_SPEC_PATH file {resolved_path}: {e}. Using defaults.")
+        return _load_embedding_specs(_DEFAULT_EMBEDDING_SPEC_PATH)
 
-EMBEDDING_SPECS = _load_embedding_specs(spec_path)
+
+EMBEDDING_SPECS = _load_embedding_specs(EMBEDDING_SPEC_PATH)
 
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')

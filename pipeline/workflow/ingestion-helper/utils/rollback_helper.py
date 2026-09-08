@@ -114,6 +114,7 @@ def revert_imports(spanner_client: Any,
             if status:
                 results.append({
                     "importName": import_name,
+                    "latestVersion": restored_version,
                     "reverted": True,
                     "failedVersion": failed_version,
                     "restoredVersion": restored_version
