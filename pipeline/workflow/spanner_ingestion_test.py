@@ -116,9 +116,11 @@ def cleanup_spanner(import_name):
     database = instance.database(SPANNER_DATABASE_ID)
 
     def _delete_import(transaction):
-        query1 = "DELETE FROM ImportStatus WHERE ImportName = @import_name"
-        query2 = "DELETE FROM ImportVersionHistory WHERE ImportName = @import_name"
-        query3 = "DELETE FROM IngestionHistory WHERE @import_name IN UNNEST(IngestedImports)"
+        query1 = "DELETE FROM ImportSummary WHERE ImportName = @import_name"
+        query2 = "DELETE FROM ImportHistory WHERE ImportName = @import_name"
+        query3 = "DELETE FROM ImportStatus WHERE ImportName = @import_name"
+        query4 = "DELETE FROM ImportVersionHistory WHERE ImportName = @import_name"
+        query5 = "DELETE FROM IngestionHistory WHERE @import_name IN UNNEST(IngestedImports)"
         params = {"import_name": import_name}
         param_types = {"import_name": spanner.param_types.STRING}
         transaction.execute_update(query1,
@@ -130,11 +132,17 @@ def cleanup_spanner(import_name):
         transaction.execute_update(query3,
                                    params=params,
                                    param_types=param_types)
+        transaction.execute_update(query4,
+                                   params=params,
+                                   param_types=param_types)
+        transaction.execute_update(query5,
+                                   params=params,
+                                   param_types=param_types)
 
     try:
         database.run_in_transaction(_delete_import)
         logging.info(
-            f"Successfully cleaned up {import_name} from ImportStatus, ImportVersionHistory, and IngestionHistory tables.")
+            f"Successfully cleaned up {import_name} from ImportSummary, ImportHistory, ImportStatus, ImportVersionHistory, and IngestionHistory tables.")
     except Exception as e:
         logging.warning(f"Error during Spanner cleanup: {e}")
 

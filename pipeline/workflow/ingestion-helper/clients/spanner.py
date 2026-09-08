@@ -318,18 +318,18 @@ class SpannerClient:
         logging.info(f"Updated ingestion status for {import_names}")
 
         def _update(transaction: Transaction):
-            update_sql = "UPDATE ImportStatus SET State = @importStatus, WorkflowId = @workflowId, StatusUpdateTimestamp = PENDING_COMMIT_TIMESTAMP() WHERE ImportName IN UNNEST(@importNames)"
-            transaction.execute_update(update_sql,
-                                       params={
-                                           "importNames": import_names,
-                                           "workflowId": workflow_id,
-                                           "importStatus": status
-                                       },
-                                       param_types={
-                                           "importNames": Array(STRING),
-                                           "workflowId": STRING,
-                                           "importStatus": STRING
-                                       })
+            columns = [
+                "ImportName", "State", "WorkflowId", "StatusUpdateTimestamp"
+            ]
+            values = [
+                [name, status, workflow_id, spanner.COMMIT_TIMESTAMP]
+                for name in import_names
+            ]
+            transaction.insert_or_update(
+                table="ImportStatus",
+                columns=columns,
+                values=values
+            )
 
         try:
             self.database.run_in_transaction(_update)
