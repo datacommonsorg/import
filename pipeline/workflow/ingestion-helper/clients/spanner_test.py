@@ -827,6 +827,10 @@ class TestSpannerClient(unittest.TestCase):
         mock_spanner_client.return_value.instance.return_value = mock_instance
         mock_instance.database.return_value = mock_db
 
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = []
+
         client = SpannerClient("project", "instance", "database")
         import_list = [{
             "importName": "EurostatData",
@@ -837,7 +841,6 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["importName"], "EurostatData")
         self.assertEqual(result[0]["latestVersion"], "gs://datcom-prod-imports/scripts/eurostat/2026_08_03T19_03_05_074661_07_00/*/*.mcf")
-        mock_db.snapshot.assert_not_called()
 
     @patch('google.cloud.spanner.Client')
     def test_get_import_info_with_dict_import_name_only(self, mock_spanner_client):

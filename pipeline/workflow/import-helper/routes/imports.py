@@ -124,7 +124,7 @@ def update_import_version(req: UpdateImportVersionRequest,
 
         version = req.version
         if version == 'STAGING':
-            version = storage.get_staging_version(import_name)
+            version = storage.get_import_version(import_name, is_staging=True)
 
         summary = storage.get_import_summary(import_name, version)
         params = import_utils.get_import_params(summary)
@@ -133,17 +133,14 @@ def update_import_version(req: UpdateImportVersionRequest,
         if req.override:
             params['status'] = 'STAGING'
             comment = f'version-override:{caller} {comment}'
-        elif params.get('status') in ('SKIP', 'SKIPPED'):
-            history = spanner.get_import_history(import_name, limit=1, status="SUCCESS")
-            if not history:
-                logging.info(
-                    f"Import {import_name} is {params.get('status')} in GCS, but has no prior SUCCESS history "
-                    f"in database '{spanner.database_id}'. Promoting to STAGING for initial load."
-                )
-                params['status'] = 'STAGING'
-                comment = f'initial-load {comment}'
-            else:
-                params['status'] = 'SKIP'
+        elif params.get('status') == 'SKIP':
+            version = storage.get_import_version(import_name, is_staging=False)
+            params['latest_version'] = version
+
+        if not params.get('latest_version'):
+            params['latest_version'] = version
+
+        return_status = params.get('status') or 'FAILURE'
 
         wf_id = req.workflowId or req.jobId
         version_path = params.get('latest_version') or version
@@ -166,7 +163,7 @@ def update_import_version(req: UpdateImportVersionRequest,
         import_items.append(
             ImportVersionItem(
                 importName=import_name,
-                status=params.get('status', 'RETRY'),
+                status=return_status,
                 latestVersion=params.get('latest_version')
             )
         )

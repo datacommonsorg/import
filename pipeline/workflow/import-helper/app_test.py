@@ -77,7 +77,7 @@ class AppTest(unittest.TestCase):
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner
         app.dependency_overrides[get_storage_client] = lambda: mock_storage
 
-        mock_storage.get_staging_version.side_effect = lambda name: f"ver_{name}"
+        mock_storage.get_import_version.side_effect = lambda name, is_staging=False: f"ver_{name}"
         mock_storage.get_import_summary.side_effect = lambda name, version: {
             "importName": name,
             "status": "STAGING",
@@ -109,7 +109,7 @@ class AppTest(unittest.TestCase):
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner
         app.dependency_overrides[get_storage_client] = lambda: mock_storage
 
-        mock_storage.get_staging_version.side_effect = lambda name: f"ver_{name}"
+        mock_storage.get_import_version.side_effect = lambda name, is_staging=False: f"ver_{name}"
         mock_storage.get_import_summary.side_effect = lambda name, version: {
             "importName": name,
             "status": "NOT_STAGING",
@@ -136,6 +136,7 @@ class AppTest(unittest.TestCase):
             status="STAGING"
         )
         self.assertEqual(mock_spanner.update_import_summary.call_count, 1)
+
 
     @patch('routes.events.import_utils.invoke_spanner_ingestion_workflow')
     @patch('routes.events.import_utils.check_duplicate', return_value=False)

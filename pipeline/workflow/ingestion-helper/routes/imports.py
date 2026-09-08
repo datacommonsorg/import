@@ -28,6 +28,7 @@ from utils import rollback_helper
 class ImportItem(BaseModel):
     importName: str
     latestVersion: Optional[str] = None
+    forceIngestion: Optional[bool] = False
 
 
 class ImportInfoRequest(BaseModel):

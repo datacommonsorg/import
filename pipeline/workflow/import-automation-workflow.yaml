@@ -179,15 +179,15 @@ ingestEnvironment:
         result: versionResponse
     - checkSkipIngestion:
         switch:
-          - condition: ${len(versionResponse.body.imports) == 0 or versionResponse.body.imports[0].status != "STAGING"}
+          - condition: ${len(versionResponse.body.imports) == 0 or (versionResponse.body.imports[0].status != "STAGING" and versionResponse.body.imports[0].status != "SKIP")}
             return:
               status: "SKIPPED"
-              message: '${"Import status is not STAGING (" + versionResponse.body.message + "); skipped Spanner ingestion."}'
+              message: '${"Import status is not STAGING or SKIP (" + versionResponse.body.message + "); skipped Spanner ingestion."}'
     - prepareIngestionArgs:
         assign:
           - targetImport: ${versionResponse.body.imports[0]}
           - importEntry:
-              importName: ${text.split(targetImport.importName, ":")[1]}
+              importName: ${text.split(targetImport.importName, ":")[len(text.split(targetImport.importName, ":")) - 1]}
               latestVersion: ${targetImport.latestVersion}
           - ingestionArgs:
               importList:

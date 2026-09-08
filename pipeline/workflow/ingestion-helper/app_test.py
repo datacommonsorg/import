@@ -302,7 +302,7 @@ class TestMain(unittest.TestCase):
             config.PROJECT_ID, config.LOCATION, "job-456"
         )
         mock_spanner_client.update_import_version_history.assert_called_once_with(
-            [{"importName": "import1", "latestVersion": None}], "wf-123", status="SUCCESS", metrics=mock_metrics
+            [{"importName": "import1", "latestVersion": None, "forceIngestion": False}], "wf-123", status="SUCCESS", metrics=mock_metrics
         )
 
     @patch('routes.imports.import_utils.get_ingestion_metrics')

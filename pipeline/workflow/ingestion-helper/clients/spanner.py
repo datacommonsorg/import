@@ -251,9 +251,11 @@ class SpannerClient:
             if isinstance(item, dict):
                 import_name = item.get("importName")
                 provided_version = item.get("latestVersion")
+                force_ingestion = item.get("forceIngestion", False)
             elif hasattr(item, "importName"):
                 import_name = getattr(item, "importName", None)
                 provided_version = getattr(item, "latestVersion", None)
+                force_ingestion = getattr(item, "forceIngestion", False)
             else:
                 continue
 
@@ -264,11 +266,37 @@ class SpannerClient:
                 pending_imports.append({
                     "importName": import_name,
                     "latestVersion": provided_version,
+                    "forceIngestion": bool(force_ingestion),
                 })
             else:
                 imports_to_fetch.append(import_name)
 
         logging.info(f"Fetching import details. Provided directly: {len(pending_imports)}, Needing DB fetch: {len(imports_to_fetch)}, Empty list: {not import_list}")
+
+        if pending_imports:
+            names = [
+                item["importName"] for item in pending_imports
+                if not item.get("forceIngestion", False)
+            ]
+            if names:
+                sql = "SELECT ImportName, LatestVersion FROM ImportStatus WHERE State = 'SUCCESS' AND ImportName IN UNNEST(@importNames)"
+                try:
+                    with self.database.snapshot() as snapshot:
+                        results = snapshot.execute_sql(sql, params={"importNames": names}, param_types={"importNames": Array(STRING)})
+                        success_imports = {row[0]: row[1] for row in results}
+                        filtered_imports = []
+                        for item in pending_imports:
+                            is_forced = item.get("forceIngestion", False)
+                            if not is_forced and success_imports.get(item["importName"]) == item["latestVersion"]:
+                                logging.info(
+                                    f"Skipping import {item['importName']}: version '{item['latestVersion']}' is already SUCCESS in ImportStatus."
+                                )
+                            else:
+                                filtered_imports.append(item)
+                        pending_imports = filtered_imports
+                except Exception as e:
+                    logging.error(f'Error checking candidate imports in ImportStatus: {e}')
+                    raise
 
         sql = None
         params = {}
