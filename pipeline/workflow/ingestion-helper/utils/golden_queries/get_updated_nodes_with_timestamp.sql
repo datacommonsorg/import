@@ -18,7 +18,7 @@ n.types AS node_types,
 CASE 
     WHEN COUNT(pred) > 0 THEN
     JSON_OBJECT(
-        "subject_id", n.subject_id,
+        "title", n.subject_id,
         "name", n.name,
         "properties", JSON_OBJECT(
         ARRAY_AGG(pred IGNORE NULLS),
@@ -27,7 +27,7 @@ CASE
     )
     ELSE
     JSON_OBJECT(
-        "subject_id", n.subject_id,
+        "title", n.subject_id,
         "name", n.name
     )
 END AS embedding_content

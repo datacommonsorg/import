@@ -18,7 +18,7 @@
 # nested dictionary of predicates mapped to aggregated object node values.
 # It returns a JSON with below format
 # {
-#   "subject_id": ""
+#   "title": ""
 #   "name": ""
 #   "properties": {
 #       "pred1": "val1, val2, ...",
@@ -30,7 +30,7 @@
 EMBEDDING_JSON_GENERATION = """CASE 
     WHEN COUNT(pred) > 0 THEN
     JSON_OBJECT(
-        "subject_id", n.subject_id,
+        "title", n.subject_id,
         "name", n.name,
         "properties", JSON_OBJECT(
         ARRAY_AGG(pred IGNORE NULLS),
@@ -39,7 +39,7 @@ EMBEDDING_JSON_GENERATION = """CASE
     )
     ELSE
     JSON_OBJECT(
-        "subject_id", n.subject_id,
+        "title", n.subject_id,
         "name", n.name
     )
 END"""
