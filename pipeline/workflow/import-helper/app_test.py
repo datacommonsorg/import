@@ -18,6 +18,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from app import app
+import config
 from dependencies import get_spanner_client, get_storage_client
 
 client = TestClient(app)
@@ -138,7 +139,7 @@ class AppTest(unittest.TestCase):
         self.assertEqual(mock_spanner.update_import_summary.call_count, 1)
 
 
-    @patch('routes.events.import_utils.invoke_spanner_ingestion_workflow')
+    @patch('routes.events.import_utils.invoke_import_automation_workflow')
     @patch('routes.events.import_utils.check_duplicate', return_value=False)
     @patch('routes.events.config.PROJECT_ID', 'test-project')
     @patch('routes.events.config.LOCATION', 'us-central1')
@@ -164,7 +165,19 @@ class AppTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
 
-        mock_invoke.assert_called_once()
+        mock_invoke.assert_called_once_with(
+            project_id='test-project',
+            location='us-central1',
+            workflow_id=config.IMPORT_AUTOMATION_WORKFLOW_ID,
+            import_name="scripts/us_fed:Rates",
+            latest_version="2026-09-01",
+            import_size="small",
+            graph_path="/**/*.mcf*",
+            cron_schedule="",
+            skip_import_job=True,
+            skip_staging_ingestion=False,
+            skip_prod_ingestion=False,
+        )
         self.assertEqual(mock_spanner.update_import_summary.call_count, 1)
 
     @patch('routes.events.import_utils.invoke_import_automation_workflow')
@@ -194,7 +207,19 @@ class AppTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
 
-        mock_invoke.assert_called_once()
+        mock_invoke.assert_called_once_with(
+            project_id='test-project',
+            location='us-central1',
+            workflow_id=config.IMPORT_AUTOMATION_WORKFLOW_ID,
+            import_name="scripts/us_fed:Rates",
+            latest_version="2026-09-01",
+            import_size="medium",
+            graph_path="/**/*.mcf*",
+            cron_schedule="",
+            skip_import_job=False,
+            skip_staging_ingestion=False,
+            skip_prod_ingestion=False,
+        )
 
     def test_database_initialize_endpoint(self):
         mock_spanner = MagicMock()

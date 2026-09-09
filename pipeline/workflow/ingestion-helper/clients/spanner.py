@@ -287,7 +287,12 @@ class SpannerClient:
                         filtered_imports = []
                         for item in pending_imports:
                             is_forced = item.get("forceIngestion", False)
-                            if not is_forced and success_imports.get(item["importName"]) == item["latestVersion"]:
+                            if (
+                                not is_forced
+                                and item.get("latestVersion") is not None
+                                and item["importName"] in success_imports
+                                and success_imports[item["importName"]] == item["latestVersion"]
+                            ):
                                 logging.info(
                                     f"Skipping import {item['importName']}: version '{item['latestVersion']}' is already SUCCESS in ImportStatus."
                                 )

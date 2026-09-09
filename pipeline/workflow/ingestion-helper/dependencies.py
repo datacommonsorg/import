@@ -13,11 +13,13 @@
 # limitations under the License.
 
 from fastapi import HTTPException
+from google.cloud.workflows import executions_v1
 from clients.spanner import SpannerClient
 import config
 
 # Cached singleton instances to reuse connection/session pools across requests
 _spanner_client = None
+_workflow_client = None
 
 def get_spanner_client() -> SpannerClient:
     global _spanner_client
@@ -40,3 +42,11 @@ def get_spanner_client() -> SpannerClient:
             emulator_host=config.SPANNER_EMULATOR_HOST
         )
     return _spanner_client
+
+
+def get_workflow_client() -> executions_v1.ExecutionsClient:
+    global _workflow_client
+    if _workflow_client is None:
+        _workflow_client = executions_v1.ExecutionsClient()
+    return _workflow_client
+
