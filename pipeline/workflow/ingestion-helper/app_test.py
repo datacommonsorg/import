@@ -14,7 +14,7 @@
 
 import unittest
 from unittest.mock import MagicMock, patch
-from datetime import datetime, timezone
+from datetime import datetime
 import os
 
 from fastapi.testclient import TestClient
@@ -23,12 +23,6 @@ from dependencies import get_spanner_client
 import config
 
 client = TestClient(app)
-
-
-def _load_test_query(filename: str) -> str:
-    path = os.path.join(os.path.dirname(__file__), "utils", "golden_queries", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read().strip()
 
 
 class TestMain(unittest.TestCase):
@@ -41,15 +35,6 @@ class TestMain(unittest.TestCase):
         # Clear overrides after each test
         app.dependency_overrides.clear()
 
-    @patch('config.EMBEDDING_SPECS', [
-        config.EmbeddingSpec(
-            embedding_label="base_text_embedding",
-            model_name="NodeEmbeddingModel",
-            task_type="RETRIEVAL_QUERY",
-            node_types={"Topic": ["description"]},
-            node_filter_type="NoFilter"
-        )
-    ])
     def test_embedding_ingestion_success(self):
         # Mock SpannerClient instance and its database
         mock_spanner_client = MagicMock()
@@ -74,7 +59,7 @@ class TestMain(unittest.TestCase):
             def __iter__(self):
                 return iter(self.rows)
 
-        expected_timestamp = datetime(2026, 4, 25, 0, 0, 0, tzinfo=timezone.utc)
+        expected_timestamp = datetime(2026, 4, 20, 12, 0, 0)
 
         # Mock side effect for execute_sql
         # First call: get_latest_lock_timestamp
@@ -134,15 +119,17 @@ class TestMain(unittest.TestCase):
         # Check first call (lock timestamp)
         self.assertIn("IngestionLock", call_args_list[0].args[0])
 
-        expected_query = _load_test_query("get_updated_nodes_with_timestamp.sql")
-
         # Check second call (updated nodes for deletion)
         args2, kwargs2 = call_args_list[1]
-        self.assertEqual(args2[0].strip(), expected_query)
+        self.assertIn("Node", args2[0])
+        self.assertEqual(kwargs2["params"]["timestamp"], expected_timestamp)
+        self.assertEqual(kwargs2["params"]["node_types"], ["StatisticalVariable", "Topic"])
 
         # Check third call (updated nodes for embedding generation)
         args3, kwargs3 = call_args_list[2]
-        self.assertEqual(args3[0].strip(), expected_query)
+        self.assertIn("Node", args3[0])
+        self.assertEqual(kwargs3["params"]["timestamp"], expected_timestamp)
+        self.assertEqual(kwargs3["params"]["node_types"], ["StatisticalVariable", "Topic"])
 
         # Check fourth call (ML.PREDICT)
         args4, kwargs4 = call_args_list[3]

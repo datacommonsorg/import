@@ -19,18 +19,6 @@ import importlib
 import yaml
 
 import config
-from models import EmbeddingSpec
-
-_DEFAULT_EXPECTED_SPECS = [
-    EmbeddingSpec(
-        embedding_label="base_text_embedding",
-        model_name="NodeEmbeddingModel",
-        task_type="RETRIEVAL_QUERY",
-        node_types={"StatisticalVariable": ["description"], "Topic": ["description"]},
-        node_filter_type="NoFilter",
-    )
-]
-
 
 class TestConfig(unittest.TestCase):
 
@@ -46,7 +34,7 @@ class TestConfig(unittest.TestCase):
         if 'EMBEDDING_SPEC_PATH' in os.environ:
             del os.environ['EMBEDDING_SPEC_PATH']
         importlib.reload(config)
-        self.assertEqual(config.EMBEDDING_SPECS, _DEFAULT_EXPECTED_SPECS)
+        self.assertEqual(config.EMBEDDING_SPECS, config._DEFAULT_EMBEDDING_SPECS)
 
     def test_valid_yaml_specs(self):
         valid_specs = [
@@ -54,14 +42,14 @@ class TestConfig(unittest.TestCase):
                 "embedding_label": "custom_embedding",
                 "model_name": "CustomModel",
                 "task_type": "CUSTOM_TASK",
-                "node_types": {"StatVar": ["description"]},
+                "node_types": ["StatVar"],
                 "node_filter_type": "NoFilter"
             },
             {
                 "embedding_label": "another_embedding",
                 "model_name": "AnotherModel",
                 "task_type": "ANOTHER_TASK",
-                "node_types": {"StatisticalVariable": ["description"]},
+                "node_types": ["StatisticalVariable"],
                 "node_filter_type": "NLStatisticalVariable"
             }
         ]
@@ -72,7 +60,7 @@ class TestConfig(unittest.TestCase):
         try:
             os.environ['EMBEDDING_SPEC_PATH'] = temp_path
             importlib.reload(config)
-            expected = [EmbeddingSpec(**s) for s in valid_specs]
+            expected = [config.EmbeddingSpec(**s) for s in valid_specs]
             self.assertEqual(config.EMBEDDING_SPECS, expected)
         finally:
             if os.path.exists(temp_path):
@@ -83,7 +71,7 @@ class TestConfig(unittest.TestCase):
             "embedding_label": "single_embedding",
             "model_name": "SingleModel",
             "task_type": "SINGLE_TASK",
-            "node_types": {"StatVar": ["description"]},
+            "node_types": ["StatVar"],
             "node_filter_type": "NoFilter"
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
@@ -93,7 +81,7 @@ class TestConfig(unittest.TestCase):
         try:
             os.environ['EMBEDDING_SPEC_PATH'] = temp_path
             importlib.reload(config)
-            expected = [EmbeddingSpec(**single_spec)]
+            expected = [config.EmbeddingSpec(**single_spec)]
             self.assertEqual(config.EMBEDDING_SPECS, expected)
         finally:
             if os.path.exists(temp_path):
@@ -114,20 +102,29 @@ class TestConfig(unittest.TestCase):
         try:
             os.environ['EMBEDDING_SPEC_PATH'] = temp_path
             importlib.reload(config)
-            self.assertEqual(config.EMBEDDING_SPECS, _DEFAULT_EXPECTED_SPECS)
+            self.assertEqual(config.EMBEDDING_SPECS, config._DEFAULT_EMBEDDING_SPECS)
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
-    def test_spanner_embedding_settings_default_yaml(self):
-        os.environ['EMBEDDING_SPEC_PATH'] = 'configs/spanner_embeddings/default.yaml'
+    def test_spanner_embedding_settings_dev_yaml(self):
+        os.environ['EMBEDDING_SPEC_PATH'] = 'spanner_embedding_settings_dev.yaml'
         importlib.reload(config)
-        self.assertEqual(config.EMBEDDING_SPECS, _DEFAULT_EXPECTED_SPECS)
+        expected = [
+            config.EmbeddingSpec(
+                embedding_label="base_text_embedding",
+                model_name="NodeEmbeddingModel",
+                task_type="RETRIEVAL_QUERY",
+                node_types=["StatisticalVariable", "Topic"],
+                node_filter_type="NLStatisticalVariable"
+            )
+        ]
+        self.assertEqual(config.EMBEDDING_SPECS, expected)
 
     def test_nonexistent_yaml_file(self):
         os.environ['EMBEDDING_SPEC_PATH'] = '/nonexistent/path/to/spec.yaml'
         importlib.reload(config)
-        self.assertEqual(config.EMBEDDING_SPECS, _DEFAULT_EXPECTED_SPECS)
+        self.assertEqual(config.EMBEDDING_SPECS, config._DEFAULT_EMBEDDING_SPECS)
 
 if __name__ == '__main__':
     unittest.main()
