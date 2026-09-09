@@ -18,31 +18,24 @@
 # nested dictionary of predicates mapped to aggregated object node values.
 # It returns a JSON with below format
 # {
-#   "subject_id": ""
+#   "title": ""
 #   "name": ""
-#   "properties": {
-#       "pred1": "val1, val2, ...",
-#       "pred2": "val1, val2, ..."
-#   }
+#   "pred1": "val1, val2, ..."
+#   "pred2": "val1, val2, ..."
+#   ...
 # }
 # when there is no preidicate it would return only subject id and name
 
-EMBEDDING_JSON_GENERATION = """CASE 
-    WHEN COUNT(pred) > 0 THEN
-    JSON_OBJECT(
-        "subject_id", n.subject_id,
-        "name", n.name,
-        "properties", JSON_OBJECT(
-        ARRAY_AGG(pred IGNORE NULLS),
-        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
-        )
-    )
-    ELSE
-    JSON_OBJECT(
-        "subject_id", n.subject_id,
-        "name", n.name
-    )
-END"""
+EMBEDDING_JSON_GENERATION = """JSON_OBJECT(
+  ARRAY_CONCAT(
+    ['title', 'name'],
+    IF(COUNT(pred) > 0, ARRAY_AGG(pred), [])
+  ),
+  ARRAY_CONCAT(
+    [TO_JSON(n.subject_id), TO_JSON(n.name)],
+    IF(COUNT(pred) > 0, ARRAY_AGG(TO_JSON(values)), [])
+  )
+)"""
 
 # Evaluates whether the subject node was updated after the provided @timestamp parameter,
 # or evaluates to TRUE for a full table read when @timestamp is NULL.

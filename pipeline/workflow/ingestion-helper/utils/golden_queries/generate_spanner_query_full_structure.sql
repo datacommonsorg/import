@@ -15,22 +15,16 @@ GROUP BY n, pred
 RETURN
 n.subject_id AS subject_id,
 n.types AS node_types,
-CASE 
-    WHEN COUNT(pred) > 0 THEN
-    JSON_OBJECT(
-        "subject_id", n.subject_id,
-        "name", n.name,
-        "properties", JSON_OBJECT(
-        ARRAY_AGG(pred IGNORE NULLS),
-        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
-        )
-    )
-    ELSE
-    JSON_OBJECT(
-        "subject_id", n.subject_id,
-        "name", n.name
-    )
-END AS embedding_content
+JSON_OBJECT(
+  ARRAY_CONCAT(
+    ['title', 'name'],
+    IF(COUNT(pred) > 0, ARRAY_AGG(pred), [])
+  ),
+  ARRAY_CONCAT(
+    [TO_JSON(n.subject_id), TO_JSON(n.name)],
+    IF(COUNT(pred) > 0, ARRAY_AGG(TO_JSON(values)), [])
+  )
+) AS embedding_content
 GROUP BY n
 UNION ALL
 MATCH
@@ -49,20 +43,14 @@ GROUP BY n, pred
 RETURN
 n.subject_id AS subject_id,
 n.types AS node_types,
-CASE 
-    WHEN COUNT(pred) > 0 THEN
-    JSON_OBJECT(
-        "subject_id", n.subject_id,
-        "name", n.name,
-        "properties", JSON_OBJECT(
-        ARRAY_AGG(pred IGNORE NULLS),
-        ARRAY_AGG(TO_JSON(values) IGNORE NULLS)
-        )
-    )
-    ELSE
-    JSON_OBJECT(
-        "subject_id", n.subject_id,
-        "name", n.name
-    )
-END AS embedding_content
+JSON_OBJECT(
+  ARRAY_CONCAT(
+    ['title', 'name'],
+    IF(COUNT(pred) > 0, ARRAY_AGG(pred), [])
+  ),
+  ARRAY_CONCAT(
+    [TO_JSON(n.subject_id), TO_JSON(n.name)],
+    IF(COUNT(pred) > 0, ARRAY_AGG(TO_JSON(values)), [])
+  )
+) AS embedding_content
 GROUP BY n
