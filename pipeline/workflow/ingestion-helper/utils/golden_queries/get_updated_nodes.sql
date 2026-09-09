@@ -18,11 +18,11 @@ n.types AS node_types,
 JSON_OBJECT(
   ARRAY_CONCAT(
     ['title', 'name'],
-    IF(COUNT(pred) > 0, ARRAY_AGG(pred), [])
+    IF(COUNT(pred) > 0, ARRAY_AGG(pred), ARRAY<STRING>[])
   ),
   ARRAY_CONCAT(
     [TO_JSON(n.subject_id), TO_JSON(n.name)],
-    IF(COUNT(pred) > 0, ARRAY_AGG(TO_JSON(values)), [])
+    IF(COUNT(pred) > 0, ARRAY_AGG(TO_JSON(values)), ARRAY<JSON>[])
   )
 ) AS embedding_content
 GROUP BY n

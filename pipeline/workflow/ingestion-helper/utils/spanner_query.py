@@ -18,22 +18,22 @@
 # nested dictionary of predicates mapped to aggregated object node values.
 # It returns a JSON with below format
 # {
-#   "title": ""
-#   "name": ""
+#   "title": "subject_id"
+#   "name": "name"
 #   "pred1": "val1, val2, ..."
 #   "pred2": "val1, val2, ..."
 #   ...
 # }
-# when there is no preidicate it would return only subject id and name
+# when there is no predicate it would return only title and name
 
 EMBEDDING_JSON_GENERATION = """JSON_OBJECT(
   ARRAY_CONCAT(
     ['title', 'name'],
-    IF(COUNT(pred) > 0, ARRAY_AGG(pred), [])
+    IF(COUNT(pred) > 0, ARRAY_AGG(pred), ARRAY<STRING>[])
   ),
   ARRAY_CONCAT(
     [TO_JSON(n.subject_id), TO_JSON(n.name)],
-    IF(COUNT(pred) > 0, ARRAY_AGG(TO_JSON(values)), [])
+    IF(COUNT(pred) > 0, ARRAY_AGG(TO_JSON(values)), ARRAY<JSON>[])
   )
 )"""
 
