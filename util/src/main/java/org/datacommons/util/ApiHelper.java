@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 // the Data Commons API.
 public class ApiHelper {
   private static final Logger logger = LogManager.getLogger(ApiHelper.class);
+  private static final Gson GSON = new Gson();
   private static final String NODE_API_PATH = "/v2/node";
 
   // Retry configuration
@@ -105,7 +106,7 @@ public class ApiHelper {
     String responseBody = response.body().trim();
     V2NodeResponse v2Response;
     try {
-      v2Response = new Gson().fromJson(responseBody, V2NodeResponse.class);
+      v2Response = GSON.fromJson(responseBody, V2NodeResponse.class);
     } catch (JsonParseException e) {
       logger.warn(
           "DC API call to {} returned HTTP {} with invalid JSON; request body length={} chars: [{}]; response body length={} chars: [{}]",
