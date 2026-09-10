@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import java.io.ByteArrayOutputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -32,10 +33,7 @@ public class ApiHelperTest {
   public void buildPropertyValuesRequestDefaultsToProd() {
     HttpRequest request =
         ApiHelper.buildPropertyValuesRequest(
-            List.of("geoId/06"),
-            "name",
-            "",
-            new DcApiConfig("https://api.datacommons.org", "prod-key"));
+            "{}", new DcApiConfig("https://api.datacommons.org", "prod-key"));
 
     assertEquals("https://api.datacommons.org/v2/node", request.uri().toString());
     assertEquals("prod-key", request.headers().firstValue("x-api-key").orElse(""));
@@ -45,10 +43,7 @@ public class ApiHelperTest {
   public void buildPropertyValuesRequestUsesExplicitRoot() {
     HttpRequest request =
         ApiHelper.buildPropertyValuesRequest(
-            List.of("geoId/06"),
-            "name",
-            "",
-            new DcApiConfig("https://custom.api.datacommons.org/", "key"));
+            "{}", new DcApiConfig("https://custom.api.datacommons.org/", "key"));
 
     assertEquals("https://custom.api.datacommons.org/v2/node", request.uri().toString());
     assertEquals("key", request.headers().firstValue("x-api-key").orElse(""));
@@ -58,7 +53,7 @@ public class ApiHelperTest {
   public void buildPropertyValuesRequestOmitsMissingKey() {
     HttpRequest request =
         ApiHelper.buildPropertyValuesRequest(
-            List.of("geoId/06"), "name", "", new DcApiConfig("https://api.datacommons.org", ""));
+            "{}", new DcApiConfig("https://api.datacommons.org", ""));
 
     assertEquals("https://api.datacommons.org/v2/node", request.uri().toString());
     assertTrue(request.headers().firstValue("x-api-key").isEmpty());
@@ -108,6 +103,7 @@ public class ApiHelperTest {
     HttpClient mockHttp = mock(HttpClient.class);
     HttpResponse<String> firstResponse = mock(HttpResponse.class);
     HttpResponse<String> invalidResponse = mock(HttpResponse.class);
+    when(invalidResponse.statusCode()).thenReturn(200);
     when(firstResponse.body())
         .thenReturn(
             "{\"data\":{\"nodeA\":{\"arcs\":{\"typeOf\":{\"nodes\":[{\"dcid\":\"Place\"}]}}}},"
@@ -119,6 +115,17 @@ public class ApiHelperTest {
 
     assertNull(result);
     verify(mockHttp, org.mockito.Mockito.times(2)).send(any(), any());
+  }
+
+  @Test(expected = JsonParseException.class)
+  public void fetchPropertyValuesPropagatesMalformedResponse() throws Exception {
+    HttpClient mockHttp = mock(HttpClient.class);
+    HttpResponse<String> malformedResponse = mock(HttpResponse.class);
+    when(malformedResponse.statusCode()).thenReturn(200);
+    when(malformedResponse.body()).thenReturn("{invalid-json");
+    doReturn(malformedResponse).when(mockHttp).send(any(), any());
+
+    ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf");
   }
 
   @Test

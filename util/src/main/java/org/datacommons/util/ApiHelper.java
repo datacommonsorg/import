@@ -3,6 +3,7 @@ package org.datacommons.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import java.io.IOException;
@@ -55,7 +56,8 @@ public class ApiHelper {
       String nextToken,
       DcApiConfig config)
       throws IOException, InterruptedException {
-    var request = buildPropertyValuesRequest(nodes, property, nextToken, config);
+    String requestBody = buildPropertyValuesBody(nodes, property, nextToken);
+    var request = buildPropertyValuesRequest(requestBody, config);
 
     // maxRetries = 0 means no retries (only initial attempt)
     // maxRetries = 3 means 4 total attempts (1 initial + 3 retries)
@@ -85,18 +87,57 @@ public class ApiHelper {
 
     var response =
         Failsafe.with(retryPolicy)
+            .onFailure(
+                event -> {
+                  // This runs once after the final failed attempt.
+                  logger.warn(
+                      "DC API call to {} failed; request body length={} chars: [{}]",
+                      request.uri(),
+                      requestBody.length(),
+                      bodyExcerpt(requestBody),
+                      event.getException());
+                })
             .get(
                 () -> {
                   return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                 });
 
-    V2NodeResponse v2Response = new Gson().fromJson(response.body().trim(), V2NodeResponse.class);
-    if (v2Response == null || v2Response.data == null) return null;
+    String responseBody = response.body().trim();
+    V2NodeResponse v2Response;
+    try {
+      v2Response = new Gson().fromJson(responseBody, V2NodeResponse.class);
+    } catch (JsonParseException e) {
+      logger.warn(
+          "DC API call to {} returned HTTP {} with invalid JSON; request body length={} chars: [{}]; response body length={} chars: [{}]",
+          request.uri(),
+          response.statusCode(),
+          requestBody.length(),
+          bodyExcerpt(requestBody),
+          responseBody.length(),
+          bodyExcerpt(responseBody),
+          e);
+      throw e;
+    }
+    if (v2Response == null || v2Response.data == null) {
+      logger.warn(
+          "DC API call to {} returned HTTP {} without data; request body length={} chars: [{}]; response body length={} chars: [{}]",
+          request.uri(),
+          response.statusCode(),
+          requestBody.length(),
+          bodyExcerpt(requestBody),
+          responseBody.length(),
+          bodyExcerpt(responseBody));
+      return null;
+    }
     return v2Response;
   }
 
-  static HttpRequest buildPropertyValuesRequest(
-      List<String> nodes, String property, String nextToken, DcApiConfig config) {
+  private static String bodyExcerpt(String body) {
+    return body.length() > 500 ? body.substring(0, 500) + "..." : body;
+  }
+
+  private static String buildPropertyValuesBody(
+      List<String> nodes, String property, String nextToken) {
     JsonArray dcids = new JsonArray();
     for (var node : nodes) {
       dcids.add(node);
@@ -109,12 +150,15 @@ public class ApiHelper {
     if (nextToken != null && !nextToken.isEmpty()) {
       arg.addProperty("nextToken", nextToken);
     }
+    return arg.toString();
+  }
 
+  static HttpRequest buildPropertyValuesRequest(String requestBody, DcApiConfig config) {
     var requestBuilder =
         HttpRequest.newBuilder(URI.create(config.apiRoot() + NODE_API_PATH))
             .version(HttpClient.Version.HTTP_1_1)
             .header("accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()));
+            .POST(HttpRequest.BodyPublishers.ofString(requestBody));
 
     if (!config.apiKey().isEmpty()) {
       requestBuilder.header("x-api-key", config.apiKey());
