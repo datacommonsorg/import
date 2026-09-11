@@ -135,7 +135,8 @@ def update_import_version(req: UpdateImportVersionRequest,
             comment = f'version-override:{caller} {comment}'
         elif params.get('status') == 'SKIP':
             version = storage.get_import_version(import_name, is_staging=False)
-            params['latest_version'] = version
+            summary = storage.get_import_summary(import_name, version)
+            params['latest_version'] = import_utils.get_import_params(summary).get('latest_version')
 
         if not params.get('latest_version'):
             params['latest_version'] = version
