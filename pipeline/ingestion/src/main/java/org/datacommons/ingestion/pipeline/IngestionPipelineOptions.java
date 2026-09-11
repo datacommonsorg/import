@@ -99,4 +99,15 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   String getEmulatorHost();
 
   void setEmulatorHost(String emulatorHost);
+
+  @Description("Whether to run in Rollback Mode instead of Normal Ingestion")
+  @Default.Boolean(false)
+  boolean getIsRollback();
+
+  void setIsRollback(boolean isRollback);
+
+  @Description("Historical pre-run timestamp (T_pre) to restore from (RFC 3339 / ISO 8601)")
+  String getRollbackTimestamp();
+
+  void setRollbackTimestamp(String rollbackTimestamp);
 }
