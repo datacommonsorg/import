@@ -586,6 +586,8 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         self.assertIn("EffectiveParent", query)
         self.assertIn("HAVING COUNT(DISTINCT pc.child) <= 1", query)
         self.assertIn("generated_provenance_prefix", query)
+        self.assertIn("MIN(provenance) AS provenance", query)
+        self.assertIn("DistinctTriples", query)
 
 
 class TestNodePropertiesGenerator(unittest.TestCase):
