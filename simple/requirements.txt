@@ -15,7 +15,7 @@ numpy==1.25.2
 pandas==2.1.0
 parameterized==0.9.0
 platformdirs==3.10.0
-protobuf==4.25.3
+protobuf==5.29.6
 PyLD==2.0.4
 PyMySQL==1.1.0
 python-dateutil==2.8.2
