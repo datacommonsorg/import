@@ -15,6 +15,8 @@ main:
           - stagingHelperUrl: ${"https://" + default(sys.get_env("IMPORT_HELPER_SERVICE"), "import-helper-service") + "-staging-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - skipImportJob: ${string(default(map.get(args, "skipImportJob"), false)) == "true"}
           - skipStagingIngestion: ${string(default(map.get(args, "skipStagingIngestion"), false)) == "true"}
+          - dryRunIngestion: ${string(default(map.get(args, "dryRunIngestion"), false)) == "true"}
+          - forceIngestion: ${string(default(map.get(args, "forceIngestion"), false)) == "true"}
           - prodDenylist:
               "CDC500": true
               "CDC_OzoneCounty": true
@@ -134,6 +136,8 @@ main:
           importName: ${importName}
           envSuffix: "-staging"
           waitIngestion: true
+          dryRun: ${dryRunIngestion}
+          forceIngestion: ${forceIngestion}
         result: stagingResult
     - checkProdEligible:
         switch:
@@ -147,6 +151,8 @@ main:
           importName: ${importName}
           envSuffix: ""
           waitIngestion: false
+          dryRun: ${dryRunIngestion}
+          forceIngestion: ${forceIngestion}
         result: prodResult
     - returnResult:
         return:
@@ -156,14 +162,14 @@ main:
           prod: ${default(prodResult, defaultResult)}
 
 ingestEnvironment:
-  params: [projectId, region, importName, envSuffix, waitIngestion]
+  params: [projectId, region, importName, envSuffix, waitIngestion, dryRun, forceIngestion]
   steps:
     - initSub:
         assign:
           - helperService: ${default(sys.get_env("IMPORT_HELPER_SERVICE"), "import-helper-service") + envSuffix}
-          - spannerWorkflow: ${default(sys.get_env("SPANNER_INGESTION_WORKFLOW_NAME"), "spanner-ingestion-workflow") + envSuffix}
+          - ingestionHelperService: ${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service") + envSuffix}
           - helperUrl: ${"https://" + helperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
-          - ingestionExecutionResponse: null
+          - ingestionHelperUrl: ${"https://" + ingestionHelperService + "-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
     - updateImportVersion:
         call: http.post
         args:
@@ -179,30 +185,65 @@ ingestEnvironment:
         result: versionResponse
     - checkSkipIngestion:
         switch:
-          - condition: ${len(versionResponse.body.imports) == 0 or versionResponse.body.imports[0].status != "STAGING"}
+          - condition: ${len(versionResponse.body.imports) == 0 or (versionResponse.body.imports[0].status != "STAGING" and versionResponse.body.imports[0].status != "SKIP")}
             return:
               status: "SKIPPED"
-              message: '${"Import status is not STAGING (" + versionResponse.body.message + "); skipped Spanner ingestion."}'
+              message: '${"Import status is not STAGING or SKIP (" + versionResponse.body.message + "); skipped Spanner ingestion."}'
     - prepareIngestionArgs:
         assign:
           - targetImport: ${versionResponse.body.imports[0]}
+          - importParts: ${text.split(targetImport.importName, ":")}
           - importEntry:
-              importName: ${text.split(targetImport.importName, ":")[1]}
+              importName: ${importParts[len(importParts) - 1]}
               latestVersion: ${targetImport.latestVersion}
-          - ingestionArgs:
-              importList:
-                - ${importEntry}
-    - runSpannerIngestion:
-        call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
+    - triggerIngestion:
+        call: http.post
         args:
-          parent: ${"projects/" + projectId + "/locations/" + region + "/workflows/" + spannerWorkflow}
+          url: ${ingestionHelperUrl + "/imports/ingest"}
+          auth:
+            type: OIDC
           body:
-            argument: ${json.encode_to_string(ingestionArgs)}
-          connector_params:
-            timeout: 21600
-            skip_polling: ${not waitIngestion}
-        result: ingestionExecutionResponse
-    - returnSubResult:
-        return:
-          status: "SUCCESS"
-          executionName: ${ingestionExecutionResponse.name}
+            importList:
+              - ${importEntry}
+            dryRun: ${dryRun}
+            forceIngestion: ${forceIngestion}
+        result: ingestResponse
+    - checkIngestResponse:
+        switch:
+          - condition: ${ingestResponse.body.status == "SKIPPED"}
+            return:
+              status: "SKIPPED"
+              message: ${ingestResponse.body.message}
+          - condition: ${ingestResponse.body.status != "SUBMITTED"}
+            raise:
+              message: '${"Ingestion helper returned unexpected status: " + string(ingestResponse.body.status)}'
+              code: 500
+              response: ${ingestResponse.body}
+          - condition: ${not waitIngestion}
+            return:
+              status: "SUCCESS"
+              executionName: ${ingestResponse.body.executionName}
+        next: waitForExecution
+    - waitForExecution:
+        call: sys.sleep
+        args:
+          seconds: 60
+        next: checkExecutionStatus
+    - checkExecutionStatus:
+        call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.get
+        args:
+          name: ${ingestResponse.body.executionName}
+        result: executionStatus
+        next: checkIfDone
+    - checkIfDone:
+        switch:
+          - condition: ${executionStatus.state == "SUCCEEDED"}
+            return:
+              status: "SUCCESS"
+              executionName: ${ingestResponse.body.executionName}
+          - condition: ${executionStatus.state == "FAILED" or executionStatus.state == "CANCELLED"}
+            raise:
+              message: '${"Ingestion workflow execution failed with state: " + executionStatus.state}'
+              code: 500
+              execution: ${executionStatus}
+        next: waitForExecution

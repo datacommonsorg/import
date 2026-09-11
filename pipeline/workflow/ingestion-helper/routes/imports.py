@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 from typing import List, Optional
 
 from clients.spanner import IngestionStage, IngestionState, SpannerClient
 import config
-from dependencies import get_spanner_client
+from dependencies import get_spanner_client, get_workflow_client
 from fastapi import APIRouter, Depends, HTTPException
+from google.cloud.workflows import executions_v1
 from pydantic import BaseModel, Field
 from routes.models import BaseResponse, ResponseStatus
 from utils import imports as import_utils
@@ -30,8 +32,15 @@ class ImportItem(BaseModel):
     latestVersion: Optional[str] = None
 
 
-class ImportInfoRequest(BaseModel):
+class IngestRequest(BaseModel):
     importList: Optional[List[ImportItem]] = Field(default_factory=list)
+    forceIngestion: Optional[bool] = False
+    dryRun: Optional[bool] = False
+
+
+class IngestResponse(BaseResponse):
+    executionName: Optional[str] = None
+    importList: List[ImportItem] = Field(default_factory=list)
 
 
 class UpdateIngestionStatusRequest(BaseModel):
@@ -72,11 +81,72 @@ class RevertImportResponse(BaseResponse):
 router = APIRouter(prefix="/imports", tags=["imports"])
 
 
-@router.post("/info", response_model=List[ImportItem])
-def get_import_info(req: ImportInfoRequest,
-                    spanner: SpannerClient = Depends(get_spanner_client)):
-    """Gets the details of imports that are ready for ingestion."""
-    return spanner.get_import_info(req.importList)
+@router.post("/ingest", response_model=IngestResponse)
+def ingest_imports(
+    req: IngestRequest,
+    spanner: SpannerClient = Depends(get_spanner_client),
+    workflow_client: executions_v1.ExecutionsClient = Depends(get_workflow_client),
+):
+    """Checks Spanner for ready imports and triggers ingestion workflow if needed."""
+    ready_imports = spanner.get_import_info(
+        req.importList, force_ingestion=bool(req.forceIngestion)
+    )
+    if not ready_imports:
+        return IngestResponse(
+            status=ResponseStatus.SKIPPED,
+            message="No imports need ingestion",
+            executionName=None,
+            importList=[],
+        )
+
+    import_items = [
+        ImportItem(**item) if isinstance(item, dict) else item
+        for item in ready_imports
+    ]
+
+    if req.dryRun:
+        return IngestResponse(
+            status=ResponseStatus.SKIPPED,
+            message="Dry run: skipped triggering ingestion workflow",
+            executionName=None,
+            importList=import_items,
+        )
+
+    if not config.PROJECT_ID or not config.LOCATION:
+        raise HTTPException(
+            status_code=500,
+            detail="PROJECT_ID or LOCATION configuration is missing. Ensure PROJECT_ID and LOCATION/REGION are set."
+        )
+
+    parent = executions_v1.ExecutionsClient.workflow_path(
+        config.PROJECT_ID,
+        config.LOCATION,
+        config.SPANNER_INGESTION_WORKFLOW_NAME,
+    )
+    execution_payload = {
+        "importList": [item.model_dump() for item in import_items]
+    }
+    execution = executions_v1.Execution(
+        argument=json.dumps(execution_payload)
+    )
+
+    try:
+        execution_resp = workflow_client.create_execution(
+            parent=parent, execution=execution
+        )
+    except Exception as e:
+        logging.error(f"Failed to trigger ingestion workflow {parent}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to trigger ingestion workflow: {e}"
+        )
+
+    return IngestResponse(
+        status=ResponseStatus.SUBMITTED,
+        message=f"Triggered ingestion workflow execution: {execution_resp.name}",
+        executionName=execution_resp.name,
+        importList=import_items,
+    )
 
 
 def _extract_import_names(
@@ -91,9 +161,9 @@ def update_ingestion_status(
     req: UpdateIngestionStatusRequest,
     spanner: SpannerClient = Depends(get_spanner_client)):
     """Updates the status of imports after ingestion."""
-    ingested_imports = _extract_import_names(req.importList)
+    import_list_dicts = [item.model_dump() for item in req.importList]
     status_str = req.status.value if hasattr(req.status, 'value') else req.status
-    spanner.update_ingestion_status(ingested_imports, req.workflowId, status_str)
+    spanner.update_ingestion_status(import_list_dicts, req.workflowId, status_str)
 
     if req.status == IngestionState.SUCCESS:
         metrics = None
@@ -105,7 +175,6 @@ def update_ingestion_status(
                 logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
                 metrics = None
 
-        import_list_dicts = [item.model_dump() for item in req.importList]
         spanner.update_import_version_history(import_list_dicts,
                                               req.workflowId,
                                               status=status_str,

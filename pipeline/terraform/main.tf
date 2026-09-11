@@ -264,6 +264,10 @@ resource "google_cloud_run_v2_service" "ingestion_helper" {
         name  = "GCS_BUCKET_ID"
         value = google_storage_bucket.import_bucket.name
       }
+      env {
+        name  = "SPANNER_INGESTION_WORKFLOW_NAME"
+        value = "spanner-ingestion-workflow"
+      }
     }
   }
 
@@ -369,11 +373,12 @@ resource "google_workflows_workflow" "import_automation_workflow" {
   source_contents = file("${path.module}/../workflow/import-automation-workflow.yaml")
 
   user_env_vars = {
-    LOCATION              = var.region
-    GCS_BUCKET_ID         = google_storage_bucket.import_bucket.name
-    GCS_MOUNT_BUCKET      = google_storage_bucket.mount_bucket.name
-    PROJECT_NUMBER        = data.google_project.project.number
-    IMPORT_HELPER_SERVICE = google_cloud_run_v2_service.import_helper.name
+    LOCATION                 = var.region
+    GCS_BUCKET_ID            = google_storage_bucket.import_bucket.name
+    GCS_MOUNT_BUCKET         = google_storage_bucket.mount_bucket.name
+    PROJECT_NUMBER           = data.google_project.project.number
+    IMPORT_HELPER_SERVICE    = google_cloud_run_v2_service.import_helper.name
+    INGESTION_HELPER_SERVICE = google_cloud_run_v2_service.ingestion_helper.name
   }
 
   depends_on = [google_project_service.services]
@@ -388,11 +393,13 @@ resource "google_workflows_workflow" "spanner_ingestion_workflow" {
   source_contents = file("${path.module}/../workflow/spanner-ingestion-workflow.yaml")
 
   user_env_vars = {
-    LOCATION               = var.region
-    PROJECT_ID             = var.project_id
-    SPANNER_DATABASE_PATH  = local.spanner_database_path
-    PROJECT_NUMBER         = data.google_project.project.number
-    DATAFLOW_TEMPLATE_PATH = "${var.dataflow_template_path}ingestion-${var.image_version}.json"
+    LOCATION                 = var.region
+    PROJECT_ID               = var.project_id
+    SPANNER_DATABASE_PATH    = local.spanner_database_path
+    PROJECT_NUMBER           = data.google_project.project.number
+    DATAFLOW_TEMPLATE_PATH   = "${var.dataflow_template_path}ingestion-${var.image_version}.json"
+    INGESTION_HELPER_SERVICE = google_cloud_run_v2_service.ingestion_helper.name
+    AGGREGATION_JOB_NAME     = google_cloud_run_v2_job.aggregation_helper.name
   }
 
   depends_on = [google_project_service.services]

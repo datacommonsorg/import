@@ -4,7 +4,7 @@ main:
     - init:
         assign:
           - lock_timeout: 82800 # 23 hours
-          - wait_period: 300 # seconds
+          - wait_period: ${int(default(map.get(args, "wait_period"), default(map.get(args, "waitPeriod"), 300)))}
           - project_id: '${sys.get_env("PROJECT_ID")}'
           - dataflow_job_name: ${"ingestion-job-" + string(int(sys.now()))}
           - aggregation_job_name: '${default(sys.get_env("AGGREGATION_JOB_NAME"), "aggregation-helper-job")}'
@@ -55,11 +55,11 @@ main:
           result: lock_status
         retry:
           predicate: ${http.default_retry_predicate}
-          max_retries: 20
+          max_retries: 60
           backoff:
-            initial_delay: 300
-            max_delay: 600
-            multiplier: 2
+            initial_delay: ${wait_period}
+            max_delay: ${wait_period}
+            multiplier: 1
 
     # Pipeline Execution under Lock (Dataflow Ingestion, Aggregation, and Rollback on Failure)
     - run_pipeline_execution:
@@ -141,30 +141,18 @@ main:
           database: ${spanner_db_path}
           importList: ${import_info_list}
 
-# Sub-workflow that fetches import details from /imports/info, logs, and registers initial state
+# Sub-workflow that logs import details and registers initial state
 initialize_imports:
   params: [helper_url, workflow_id, import_list, status]
   steps:
-    - fetch_import_info:
-        call: http.post
-        args:
-          url: ${helper_url + "/imports/info"}
-          auth:
-            type: OIDC
-          body:
-            importList: ${import_list}
-        result: import_info_res
-    - set_import_info:
-        assign:
-          - resolved_imports: ${import_info_res.body}
     - check_empty_imports:
         switch:
-          - condition: ${len(resolved_imports) == 0}
+          - condition: ${len(import_list) == 0}
             return: []
     - log_imports:
         call: sys.log
         args:
-          text: '${"Import list: " + json.encode_to_string(resolved_imports)}'
+          text: '${"Import list: " + json.encode_to_string(import_list)}'
           severity: INFO
     - register_state:
         call: update_state_subworkflow
@@ -172,11 +160,11 @@ initialize_imports:
           helper_url: ${helper_url}
           workflow_id: '${workflow_id}'
           status: '${status}'
-          import_list: ${resolved_imports}
+          import_list: ${import_list}
           job_id: null
         result: state_response
     - return_imports:
-        return: ${resolved_imports}
+        return: ${import_list}
 
 # Reusable sub-workflow that updates ingestion-history, and conditionally ingestion-status for SUCCESS or RETRY
 update_state_subworkflow:

@@ -71,10 +71,14 @@ async def handle_feed_event(
     import_size = attributes.get('import_size', 'small')
     cron_schedule = attributes.get('cron_schedule', '')
 
+    skip_staging_ingestion = attributes.get(
+        'skip_staging_ingestion', '').lower() == 'true'
+    skip_prod_ingestion = attributes.get(
+        'skip_prod_ingestion', '').lower() == 'true'
+
     if post_process == 'spanner_ingestion_workflow':
         feed_name = attributes.get('feed_name', 'cda_feed')
-        full_version_path = import_utils.get_full_version_path(
-            config.GCS_BUCKET_ID, import_name, latest_version, graph_path)
+        base_version_path = f"gs://{config.GCS_BUCKET_ID}/{import_name.replace(':', '/')}/{latest_version}"
 
         next_refresh = None
         if cron_schedule:
@@ -92,7 +96,7 @@ async def handle_feed_event(
                 ImportStatusItem(
                     importName=import_name,
                     status=ImportState.STAGING,
-                    latestVersion=full_version_path,
+                    latestVersion=base_version_path,
                     graphPath=graph_path
                 )
             ],
@@ -101,14 +105,20 @@ async def handle_feed_event(
         )
         update_import_status(status_req, spanner=spanner, storage=storage)
 
-        # Invoke Spanner ingestion workflow to trigger Dataflow job
+        # Invoke Import Automation workflow to trigger staging and prod ingestion
         if config.PROJECT_ID and config.LOCATION:
-            import_utils.invoke_spanner_ingestion_workflow(
+            import_utils.invoke_import_automation_workflow(
                 project_id=config.PROJECT_ID,
                 location=config.LOCATION,
-                workflow_id=config.SPANNER_INGESTION_WORKFLOW_ID,
+                workflow_id=config.IMPORT_AUTOMATION_WORKFLOW_ID,
                 import_name=import_name,
-                latest_version=full_version_path
+                latest_version=latest_version,
+                import_size=import_size,
+                graph_path=graph_path,
+                cron_schedule=cron_schedule,
+                skip_import_job=True,
+                skip_staging_ingestion=skip_staging_ingestion,
+                skip_prod_ingestion=skip_prod_ingestion,
             )
     elif post_process == 'import_automation_workflow':
         if config.PROJECT_ID and config.LOCATION:
@@ -120,7 +130,10 @@ async def handle_feed_event(
                 latest_version=latest_version,
                 import_size=import_size,
                 graph_path=graph_path,
-                cron_schedule=cron_schedule
+                cron_schedule=cron_schedule,
+                skip_import_job=False,
+                skip_staging_ingestion=skip_staging_ingestion,
+                skip_prod_ingestion=skip_prod_ingestion,
             )
     else:
         logging.info(f"Skipping import post processing for post_process={post_process}.")

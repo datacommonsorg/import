@@ -408,6 +408,7 @@ dependencies = [
     { name = "google-auth" },
     { name = "google-cloud-spanner" },
     { name = "google-cloud-storage" },
+    { name = "google-cloud-workflows" },
     { name = "jinja2" },
     { name = "pandas" },
     { name = "pydantic" },
@@ -431,6 +432,7 @@ requires-dist = [
     { name = "google-auth" },
     { name = "google-cloud-spanner", specifier = ">=3.60.0" },
     { name = "google-cloud-storage" },
+    { name = "google-cloud-workflows" },
     { name = "jinja2" },
     { name = "pandas", specifier = "~=3.0.3" },
     { name = "pydantic", specifier = ">=2.0.0" },
@@ -751,6 +753,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/88/ae/707995271f77e3c1da715c740160f98f87a79a5c601b28d17c4d2500c037/google_cloud_storage_control-1.12.0.tar.gz", hash = "sha256:49090d03532c0c84c6246a5fd490c31fd4bbffb4c7771c0a6744ec23a194a5f6", size = 137036, upload-time = "2026-06-03T16:14:00.921Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/34/ba/f187f30fb2c8bb5dbb0de0fcb0dec2f8fab0b782ab42facc83ea02628f1b/google_cloud_storage_control-1.12.0-py3-none-any.whl", hash = "sha256:20f7f1252fa5635d47e12f746aa69d719e31eb9405cbbd14cdfba317db27d421", size = 102205, upload-time = "2026-06-03T16:12:43.266Z" },
+]
+
+[[package]]
+name = "google-cloud-workflows"
+version = "1.23.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", extra = ["grpc"] },
+    { name = "google-auth" },
+    { name = "grpcio" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/81/0e/46c57e4a52eb912deefd64c006fd8b5459b44ebbfa4ac1f40bee0f2b1696/google_cloud_workflows-1.23.0.tar.gz", hash = "sha256:be8e08a5d134186dbcdf867c05b159ad8ac7de3b6425b21befaab7f4f258d4a8", size = 221560, upload-time = "2026-06-22T23:22:56.165Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/21/859bcf64ccd22de1aa337aff4f2e3a7862f3f5886d16c4881302558f62a8/google_cloud_workflows-1.23.0-py3-none-any.whl", hash = "sha256:06fbabc20e7b8b360f548d307451d70a3037b7cda012dd4051a33e104bc34707", size = 207068, upload-time = "2026-06-22T23:21:01.19Z" },
 ]
 
 [[package]]

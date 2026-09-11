@@ -69,7 +69,7 @@ curl -X POST "${HELPER_URL}/imports/version" \
 echo ""
 
 # Build JSON payload
-IMPORT_ITEM="{\"importName\":\"${CLEAN_IMPORT_NAME}\""
+IMPORT_ITEM="{\"importName\":\"${CLEAN_IMPORT_NAME}\",\"forceIngestion\":true"
 if [ "$LATEST_VERSION" != "STAGING" ]; then
   IMPORT_ITEM="${IMPORT_ITEM},\"latestVersion\":\"${LATEST_VERSION}\""
 fi

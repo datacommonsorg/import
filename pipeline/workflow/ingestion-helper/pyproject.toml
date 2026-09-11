@@ -35,6 +35,7 @@ dependencies = [
     "pandas~=3.0.3",
     "pyyaml",
     "gcsfs",
+    "google-cloud-workflows",
 ]
 
 [tool.hatch.version]
