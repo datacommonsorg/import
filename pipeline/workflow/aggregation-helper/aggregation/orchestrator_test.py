@@ -333,6 +333,70 @@ class TestOrchestratorExecution(unittest.TestCase):
         )
         self.mock_deleter.return_value.delete_stat_var_group_edges.assert_called_once()
 
+    def test_delete_previous_aggregations_provenance_summary(
+        self,
+        mock_entity_gen,
+        mock_calc_gen,
+        mock_sv_agg,
+        mock_place_gen,
+        mock_executor_cls,
+    ):
+        """Verifies _delete_previous_aggregations calls delete_provenance_summaries for PROVENANCE_SUMMARY calcs."""
+        self.orchestrator.calculations = [
+            {"type": "PROVENANCE_SUMMARY", "input_imports": ["*"]},
+        ]
+        self.orchestrator._delete_previous_aggregations(
+            ["WHO", "UN_Data"], dry_run=False
+        )
+
+        self.mock_deleter.return_value.delete_provenance_summaries.assert_called_once_with(
+            ["UN_Data", "WHO"]
+        )
+
+    def test_delete_previous_aggregations_provenance_summary_dry_run(
+        self,
+        mock_entity_gen,
+        mock_calc_gen,
+        mock_sv_agg,
+        mock_place_gen,
+        mock_executor_cls,
+    ):
+        """Verifies _delete_previous_aggregations does not call delete_provenance_summaries on dry run."""
+        self.orchestrator.calculations = [
+            {"type": "PROVENANCE_SUMMARY", "input_imports": ["*"]},
+        ]
+        self.orchestrator._delete_previous_aggregations(
+            ["WHO"], dry_run=True
+        )
+
+        self.mock_deleter.return_value.delete_provenance_summaries.assert_not_called()
+
+    def test_build_deletion_plan(
+        self,
+        mock_entity_gen,
+        mock_calc_gen,
+        mock_sv_agg,
+        mock_place_gen,
+        mock_executor_cls,
+    ):
+        """Tests that _build_deletion_plan correctly categorizes all deletion targets."""
+        self.orchestrator.calculations = [
+            {
+                "type": "PLACE_AGGREGATION",
+                "input_imports": ["ImportA"],
+                "output_import": "ImportA_AggState",
+            },
+            {"type": "LINKED_EDGES", "input_imports": ["*"]},
+            {"type": "PROVENANCE_SUMMARY", "input_imports": ["*"]},
+            {"type": "STAT_VAR_GROUPS", "input_imports": ["schema"]},
+        ]
+        plan = self.orchestrator._build_deletion_plan(["ImportA", "schema"])
+        self.assertFalse(plan.is_empty)
+        self.assertEqual(plan.aggregated_imports, ["ImportA_AggState"])
+        self.assertEqual(plan.linked_edge_imports, ["ImportA", "schema"])
+        self.assertEqual(plan.provenance_summary_imports, ["ImportA", "schema"])
+        self.assertTrue(plan.delete_stat_var_groups)
+
 
 CHAINED_CONFIG_YAML = textwrap.dedent("""\
     calculations:
