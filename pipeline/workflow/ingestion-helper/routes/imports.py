@@ -30,11 +30,12 @@ from utils import rollback_helper
 class ImportItem(BaseModel):
     importName: str
     latestVersion: Optional[str] = None
-    forceIngestion: Optional[bool] = False
 
 
 class IngestRequest(BaseModel):
     importList: Optional[List[ImportItem]] = Field(default_factory=list)
+    forceIngestion: Optional[bool] = False
+    dryRun: Optional[bool] = False
 
 
 class IngestResponse(BaseResponse):
@@ -87,7 +88,9 @@ def ingest_imports(
     workflow_client: executions_v1.ExecutionsClient = Depends(get_workflow_client),
 ):
     """Checks Spanner for ready imports and triggers ingestion workflow if needed."""
-    ready_imports = spanner.get_import_info(req.importList)
+    ready_imports = spanner.get_import_info(
+        req.importList, force_ingestion=bool(req.forceIngestion)
+    )
     if not ready_imports:
         return IngestResponse(
             status=ResponseStatus.SKIPPED,
@@ -100,6 +103,14 @@ def ingest_imports(
         ImportItem(**item) if isinstance(item, dict) else item
         for item in ready_imports
     ]
+
+    if req.dryRun:
+        return IngestResponse(
+            status=ResponseStatus.SKIPPED,
+            message="Dry run: skipped triggering ingestion workflow",
+            executionName=None,
+            importList=import_items,
+        )
 
     if not config.PROJECT_ID or not config.LOCATION:
         raise HTTPException(
@@ -150,9 +161,9 @@ def update_ingestion_status(
     req: UpdateIngestionStatusRequest,
     spanner: SpannerClient = Depends(get_spanner_client)):
     """Updates the status of imports after ingestion."""
-    ingested_imports = _extract_import_names(req.importList)
+    import_list_dicts = [item.model_dump() for item in req.importList]
     status_str = req.status.value if hasattr(req.status, 'value') else req.status
-    spanner.update_ingestion_status(ingested_imports, req.workflowId, status_str)
+    spanner.update_ingestion_status(import_list_dicts, req.workflowId, status_str)
 
     if req.status == IngestionState.SUCCESS:
         metrics = None
@@ -164,7 +175,6 @@ def update_ingestion_status(
                 logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
                 metrics = None
 
-        import_list_dicts = [item.model_dump() for item in req.importList]
         spanner.update_import_version_history(import_list_dicts,
                                               req.workflowId,
                                               status=status_str,

@@ -296,13 +296,13 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
         mock_spanner_client.update_ingestion_status.assert_called_once_with(
-            ["import1"], "wf-123", "SUCCESS"
+            [{"importName": "import1", "latestVersion": None}], "wf-123", "SUCCESS"
         )
         mock_get_ingestion_metrics.assert_called_once_with(
             config.PROJECT_ID, config.LOCATION, "job-456"
         )
         mock_spanner_client.update_import_version_history.assert_called_once_with(
-            [{"importName": "import1", "latestVersion": None, "forceIngestion": False}], "wf-123", status="SUCCESS", metrics=mock_metrics
+            [{"importName": "import1", "latestVersion": None}], "wf-123", status="SUCCESS", metrics=mock_metrics
         )
 
     @patch('routes.imports.import_utils.get_ingestion_metrics')

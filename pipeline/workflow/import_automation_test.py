@@ -150,15 +150,15 @@ def main(argv):
         import_workflow_args = {
             "importName": TEST_IMPORT_NAME,
             "importConfig": json.dumps(import_config),
-            "skipStagingIngestion": "true",
+            "dryRunIngestion": "true",
         }
         if os.environ.get('SKIP_IMPORT_JOB'):
             import_workflow_args["skipImportJob"] = os.environ.get('SKIP_IMPORT_JOB')
 
         logging.info("Step 1: Running Import Automation Workflow...")
-        cloud_workflow.trigger_workflow_and_wait(PROJECT_ID, LOCATION,
-                                                 IMPORT_WORKFLOW_ID,
-                                                 import_workflow_args)
+        workflow_result = cloud_workflow.trigger_workflow_and_wait(
+            PROJECT_ID, LOCATION, IMPORT_WORKFLOW_ID, import_workflow_args)
+        logging.info(f"Workflow result: {workflow_result}")
 
         # 2. Verify Data in Spanner
         logging.info("Step 2: Verifying Data in Spanner...")

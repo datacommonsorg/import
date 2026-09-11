@@ -228,7 +228,7 @@ class SpannerClient:
             logging.error(f'Error releasing lock for {workflow_id}: {e}')
             raise
 
-    def get_import_info(self, import_list: list | None) -> list:
+    def get_import_info(self, import_list: list | None, force_ingestion: bool = False) -> list:
         """Get the details of imports to ingest.
 
         If import_list is empty, return info for ready imports (STAGING) from Spanner DB.
@@ -237,47 +237,30 @@ class SpannerClient:
 
         Args:
             import_list: A list of dicts or objects containing 'importName' and optional 'latestVersion'.
+            force_ingestion: Optional bool flag to force ingestion for all imports in the list.
 
         Returns:
             A list of dictionaries, where each dictionary contains 'importName' and 'latestVersion' (full GCS graph path).
         """
         if not import_list:
-            import_list = []
+            return []
 
         pending_imports = []
-        imports_to_fetch = []
 
         for item in import_list:
-            if isinstance(item, dict):
-                import_name = item.get("importName")
-                provided_version = item.get("latestVersion")
-                force_ingestion = item.get("forceIngestion", False)
-            elif hasattr(item, "importName"):
-                import_name = getattr(item, "importName", None)
-                provided_version = getattr(item, "latestVersion", None)
-                force_ingestion = getattr(item, "forceIngestion", False)
-            else:
-                continue
+            import_name = item.get("importName") if isinstance(item, dict) else getattr(item, "importName", None)
+            provided_version = item.get("latestVersion") if isinstance(item, dict) else getattr(item, "latestVersion", None)
 
-            if not import_name:
-                continue
-
-            if provided_version:
+            if import_name and provided_version:
                 pending_imports.append({
                     "importName": import_name,
                     "latestVersion": provided_version,
-                    "forceIngestion": bool(force_ingestion),
                 })
-            else:
-                imports_to_fetch.append(import_name)
 
-        logging.info(f"Fetching import details. Provided directly: {len(pending_imports)}, Needing DB fetch: {len(imports_to_fetch)}, Empty list: {not import_list}")
+        logging.info(f"Fetching import details. Provided directly: {len(pending_imports)}")
 
-        if pending_imports:
-            names = [
-                item["importName"] for item in pending_imports
-                if not item.get("forceIngestion", False)
-            ]
+        if pending_imports and not force_ingestion:
+            names = [item["importName"] for item in pending_imports]
             if names:
                 sql = "SELECT ImportName, LatestVersion FROM ImportStatus WHERE State = 'SUCCESS' AND ImportName IN UNNEST(@importNames)"
                 try:
@@ -286,11 +269,8 @@ class SpannerClient:
                         success_imports = {row[0]: row[1] for row in results}
                         filtered_imports = []
                         for item in pending_imports:
-                            is_forced = item.get("forceIngestion", False)
                             if (
-                                not is_forced
-                                and item.get("latestVersion") is not None
-                                and item["importName"] in success_imports
+                                item["importName"] in success_imports
                                 and success_imports[item["importName"]] == item["latestVersion"]
                             ):
                                 logging.info(
@@ -303,60 +283,37 @@ class SpannerClient:
                     logging.error(f'Error checking candidate imports in ImportStatus: {e}')
                     raise
 
-        sql = None
-        params = {}
-        param_types = {}
-
-        if not import_list:
-            sql = "SELECT ImportName, LatestVersion, GraphPath FROM ImportStatus WHERE State = 'STAGING'"
-        elif imports_to_fetch:
-            sql = "SELECT ImportName, LatestVersion, GraphPath FROM ImportStatus WHERE State = 'STAGING' AND ImportName IN UNNEST(@importNames)"
-            params = {"importNames": imports_to_fetch}
-            param_types = {"importNames": Array(STRING)}
-
-        if sql:
-            try:
-                with self.database.snapshot() as snapshot:
-                    results = snapshot.execute_sql(sql, params=params, param_types=param_types)
-                    for row in results:
-                        latest_ver = (row[1] or "").rstrip('/')
-                        graph_p = (row[2] or "").lstrip('/')
-                        if graph_p and not latest_ver.endswith(graph_p.rstrip('/')):
-                            full_version = f"{latest_ver}/{graph_p}"
-                        else:
-                            full_version = latest_ver
-                        pending_imports.append({
-                            "importName": row[0],
-                            "latestVersion": full_version,
-                        })
-            except Exception as e:
-                logging.error(f'Error getting import list: {e}')
-                raise
-
         logging.info(f"Found {len(pending_imports)} import jobs.")
         return pending_imports
 
-    def update_ingestion_status(self, import_names: list, workflow_id: str,
+    def update_ingestion_status(self, imports: list, workflow_id: str,
                                 status: str):
         """Updates the ImportStatus table.
 
         Args:
-            import_names: List of import names.
+            imports: List of import names (str) or import objects/dicts with importName and optional latestVersion.
             workflow_id: The ID of the workflow.
             status: The status of the ingestion.
         """
-        if not import_names:
+        if not imports:
             return
 
-        logging.info(f"Updated ingestion status for {import_names}")
+        logging.info(f"Updating ingestion status for {imports}")
 
         def _update(transaction: Transaction):
             columns = [
-                "ImportName", "State", "WorkflowId", "StatusUpdateTimestamp"
+                "ImportName", "State", "WorkflowId", "StatusUpdateTimestamp",
+                "LatestVersion"
             ]
             values = [
-                [name, status, workflow_id, spanner.COMMIT_TIMESTAMP]
-                for name in import_names
+                [
+                    item['importName'].split(':')[-1],
+                    status,
+                    workflow_id,
+                    spanner.COMMIT_TIMESTAMP,
+                    item.get('latestVersion')
+                ]
+                for item in imports
             ]
             transaction.insert_or_update(
                 table="ImportStatus",
@@ -366,7 +323,7 @@ class SpannerClient:
 
         try:
             self.database.run_in_transaction(_update)
-            logging.info(f"Marked {len(import_names)} import jobs as {status}.")
+            logging.info(f"Marked {len(imports)} import jobs as {status}.")
         except Exception as e:
             logging.error(f'Error updating ImportStatus table: {e}')
             raise

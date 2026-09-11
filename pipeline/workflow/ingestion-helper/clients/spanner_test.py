@@ -842,49 +842,12 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(result[0]["importName"], "EurostatData")
         self.assertEqual(result[0]["latestVersion"], "gs://datcom-prod-imports/scripts/eurostat/2026_08_03T19_03_05_074661_07_00/*/*.mcf")
 
-    @patch('google.cloud.spanner.Client')
-    def test_get_import_info_with_dict_import_name_only(self, mock_spanner_client):
-        mock_instance = MagicMock()
-        mock_db = MagicMock()
-        mock_spanner_client.return_value.instance.return_value = mock_instance
-        mock_instance.database.return_value = mock_db
-
-        mock_snapshot = MagicMock()
-        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
-        mock_results = [
-            ["EurostatData", "gs://bucket/version1", "/*/*.mcf"]
-        ]
-        mock_snapshot.execute_sql.return_value = mock_results
-
-        client = SpannerClient("project", "instance", "database")
-        result = client.get_import_info([{"importName": "EurostatData"}])
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["importName"], "EurostatData")
-        self.assertEqual(result[0]["latestVersion"], "gs://bucket/version1/*/*.mcf")
-        mock_snapshot.execute_sql.assert_called_once()
 
     @patch('google.cloud.spanner.Client')
     def test_get_import_info_empty_list(self, mock_spanner_client):
-        mock_instance = MagicMock()
-        mock_db = MagicMock()
-        mock_spanner_client.return_value.instance.return_value = mock_instance
-        mock_instance.database.return_value = mock_db
-
-        mock_snapshot = MagicMock()
-        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
-        mock_results = [
-            ["ImportA", "gs://bucket/v1", "/*/*.mcf"]
-        ]
-        mock_snapshot.execute_sql.return_value = mock_results
-
         client = SpannerClient("project", "instance", "database")
-        result = client.get_import_info([])
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["importName"], "ImportA")
-        self.assertEqual(result[0]["latestVersion"], "gs://bucket/v1/*/*.mcf")
-        mock_snapshot.execute_sql.assert_called_once()
+        self.assertEqual(client.get_import_info([]), [])
+        self.assertEqual(client.get_import_info(None), [])
 
     @patch('google.cloud.spanner.Client')
     def test_get_import_info_skips_when_already_success(self, mock_spanner_client):
@@ -957,13 +920,7 @@ class TestSpannerClient(unittest.TestCase):
                 "importName": "ImportWithNewVersion",
                 "latestVersion": "gs://bucket/v2",
             },
-            # 3. Already ingested with same version, but forceIngestion=True -> should NOT be skipped
-            {
-                "importName": "ImportForced",
-                "latestVersion": "gs://bucket/v1",
-                "forceIngestion": True,
-            },
-            # 4. Brand new import not in ImportStatus -> should NOT be skipped
+            # 3. Brand new import not in ImportStatus -> should NOT be skipped
             {
                 "importName": "ImportBrandNew",
                 "latestVersion": "gs://bucket/v1",
@@ -973,11 +930,14 @@ class TestSpannerClient(unittest.TestCase):
         result = client.get_import_info(import_list)
         result_names = [item["importName"] for item in result]
 
-        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result), 2)
         self.assertNotIn("ImportAlreadyIngested", result_names)
         self.assertIn("ImportWithNewVersion", result_names)
-        self.assertIn("ImportForced", result_names)
         self.assertIn("ImportBrandNew", result_names)
+
+        # When force_ingestion=True, nothing is filtered out
+        result_forced = client.get_import_info(import_list, force_ingestion=True)
+        self.assertEqual(len(result_forced), 3)
 
 
 if __name__ == '__main__':
