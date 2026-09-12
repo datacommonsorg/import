@@ -14,7 +14,11 @@
 
 import unittest
 
+import pandas as pd
+
 from stats.data import _get_flattened_dataclass_field_names
+from stats.data import strip_namespace
+from stats.data import strip_namespace_series
 from stats.data import Event
 from stats.data import McfNode
 from stats.data import Observation
@@ -204,3 +208,23 @@ memberOf: svg1""".strip()
     ]
     self.assertListEqual(_get_flattened_dataclass_field_names(Observation),
                          expected)
+
+  def test_strip_namespace(self):
+    self.assertEqual(strip_namespace("dcid:country/USA"), "country/USA")
+    self.assertEqual(strip_namespace("dcs:measuredValue"), "measuredValue")
+    self.assertEqual(strip_namespace("schema:Thing"), "Thing")
+    # Custom namespace should NOT be stripped
+    self.assertEqual(strip_namespace("oecd:Annual_Average_Wage"), "oecd:Annual_Average_Wage")
+    # No namespace
+    self.assertEqual(strip_namespace("country/USA"), "country/USA")
+
+  def test_strip_namespace_series(self):
+    series = pd.Series([
+        "dcid:country/USA", "dcs:measuredValue", "schema:Thing",
+        "oecd:Annual_Average_Wage", "country/USA"
+    ])
+    expected = pd.Series([
+        "country/USA", "measuredValue", "Thing",
+        "oecd:Annual_Average_Wage", "country/USA"
+    ])
+    pd.testing.assert_series_equal(strip_namespace_series(series), expected)
