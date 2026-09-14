@@ -348,11 +348,12 @@ class StatVarGroupGenerator:
           FROM Ancestors
         );
 
-        -- Fetch all StatisticalVariable nodes and their provenance.
+        -- Fetch all StatisticalVariable nodes and their canonical provenance.
         CREATE OR REPLACE TEMP TABLE StatVar AS (
-          SELECT DISTINCT subject_id, provenance
+          SELECT subject_id, MIN(provenance) AS provenance
           FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, provenance FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatisticalVariable'")
           WHERE NOT STARTS_WITH(provenance, generated_provenance_prefix)
+          GROUP BY subject_id
         );
 
         -- Fetch relevant StatisticalVariable triples.
@@ -371,9 +372,10 @@ class StatVarGroupGenerator:
         -- This avoids scanning StatVarTriple twice for the same predicates.
         CREATE OR REPLACE TEMP TABLE SVBaseData AS (
           WITH SVPopType AS (
-            SELECT DISTINCT subject_id, object_id AS populationType
+            SELECT subject_id, MIN(object_id) AS populationType
             FROM StatVarTriple
             WHERE predicate = 'populationType'
+            GROUP BY subject_id
           ),
           SVStatVarProps AS (
             SELECT subject_id,
@@ -383,12 +385,12 @@ class StatVarGroupGenerator:
           ),
           SVStatVarPropsAgg AS (
             SELECT subject_id,
-              ARRAY_AGG(statVarProperties) AS sv_statVarProperties
+              ARRAY_AGG(DISTINCT statVarProperties ORDER BY statVarProperties) AS sv_statVarProperties
             FROM SVStatVarProps
             GROUP BY subject_id
           ),
           SVCprops AS (
-            SELECT subject_id, ARRAY_AGG(object_id ORDER BY object_id) AS cprops
+            SELECT subject_id, ARRAY_AGG(DISTINCT object_id ORDER BY object_id) AS cprops
             FROM StatVarTriple
             WHERE predicate = 'constraintProperties'
             GROUP BY subject_id
@@ -397,8 +399,8 @@ class StatVarGroupGenerator:
             -- Reconstruct SV pvs in the same FormatName(p) = FormatName(v) form.
             SELECT
               T.subject_id,
-              ARRAY_AGG(CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id))
-                        ORDER BY T.predicate, T.object_id) AS sv_pvs
+              ARRAY_AGG(DISTINCT CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id))
+                        ORDER BY CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id))) AS sv_pvs
             FROM StatVarTriple T
             JOIN SVCprops SC ON T.subject_id = SC.subject_id
             WHERE T.predicate IN UNNEST(SC.cprops)
@@ -476,11 +478,13 @@ class StatVarGroupGenerator:
 
         -- Seed the intial data for iteratively generating SVGs.
         CREATE OR REPLACE TEMPORARY TABLE InitialData AS (
-          WITH Constraints AS (
-            SELECT 
-              T.subject_id, 
-              ARRAY_AGG(T.predicate ORDER BY T.predicate, T.object_id) AS aligned_cps,
-              ARRAY_AGG(CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id)) ORDER BY T.predicate, T.object_id) AS pvs
+          WITH DistinctTriples AS (
+            SELECT DISTINCT
+              T.subject_id,
+              T.predicate,
+              T.object_id,
+              FormatName(T.predicate) AS formatted_predicate,
+              FormatName(T.object_id) AS formatted_object_id
             FROM StatVarTriple T
             JOIN SVBaseData SVB ON SVB.subject_id = T.subject_id
             LEFT JOIN SVDPVMatch M ON M.subject_id = T.subject_id
@@ -489,6 +493,13 @@ class StatVarGroupGenerator:
               -- is in dpvs_to_strip, exclude it from the hierarchy generation.
               AND CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id))
                 NOT IN UNNEST(IFNULL(M.dpvs_to_strip, ARRAY<STRING>[]))
+          ),
+          Constraints AS (
+            SELECT 
+              subject_id, 
+              ARRAY_AGG(predicate ORDER BY predicate, object_id) AS aligned_cps,
+              ARRAY_AGG(CONCAT(formatted_predicate, ' = ', formatted_object_id) ORDER BY predicate, object_id) AS pvs
+            FROM DistinctTriples
             GROUP BY subject_id 
           )
           SELECT
