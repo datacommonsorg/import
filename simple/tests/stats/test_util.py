@@ -21,6 +21,8 @@ import pandas as pd
 from stats.data import Observation
 from stats.data import OBSERVATION_FIELD_NAMES
 from stats.data import Triple
+from stats.db import Db
+from util.filesystem import File
 
 # If $TEST_MODE is set to "write", the test will write the goldens.
 _TEST_MODE = os.getenv("TEST_MODE", "")
@@ -142,6 +144,26 @@ def write_triples_list(triples: list[Triple], output_path: str):
   pd.DataFrame(triples).to_csv(output_path, index=False)
 
 
+def write_db_triples_list(triples: list[Triple], output_path: str):
+  """
+  Writes the list of triples to the output_path CSV in the normalized form in
+  which a Db persists them, i.e. with namespaces stripped from the subject and
+  object ids.
+  """
+  write_triples_list([Triple(*triple.db_tuple()) for triple in triples],
+                     output_path)
+
+
+def write_observations_df(observations_df: pd.DataFrame, output_path: str):
+  """
+  Writes the observations DataFrame to the output_path CSV using the
+  observation column order in which a Db persists them.
+  """
+  observations_df.to_csv(output_path,
+                         index=False,
+                         columns=OBSERVATION_FIELD_NAMES)
+
+
 def write_key_values(db_path: str, output_path: str):
   """
   Fetches all key values from a sqlite db at db_path
@@ -187,3 +209,41 @@ class FakeGzipTime:
 # Use this method to make tests use fixed timestamps.
 def use_fake_gzip_time(timestamp=0):
   gzip.time = FakeGzipTime(timestamp)
+
+
+class FakeDb(Db):
+  """An in-memory Db that records what was written to it.
+
+  Importer tests use this to assert on the triples and observations an importer
+  produces, without depending on a real storage backend.
+  """
+
+  def __init__(self) -> None:
+    self.triples: list[Triple] = []
+    self.observation_dfs: list[pd.DataFrame] = []
+    self.committed = False
+    self.closed = False
+
+  def insert_triples(self,
+                     triples: list[Triple],
+                     input_file: File = None,
+                     provenance_dir: str = None):
+    self.triples.extend(triples)
+
+  def insert_observations(self, observations_df: pd.DataFrame,
+                          input_file: File):
+    self.observation_dfs.append(observations_df)
+
+  @property
+  def observations_df(self) -> pd.DataFrame:
+    """All inserted observations concatenated in insertion order."""
+    if not self.observation_dfs:
+      return pd.DataFrame(columns=OBSERVATION_FIELD_NAMES)
+    return pd.concat(self.observation_dfs, ignore_index=True)
+
+  def commit(self):
+    self.committed = True
+
+  def commit_and_close(self):
+    self.commit()
+    self.closed = True

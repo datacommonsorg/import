@@ -15,23 +15,19 @@
 import json
 import os
 import shutil
-import sqlite3
 import tempfile
 import unittest
 
-import pandas as pd
 from stats.config import Config
-from stats.data import Triple
-from stats.db import create_and_update_db
-from stats.db import create_sqlite_config
 from stats.entities_importer import EntitiesImporter
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from tests.stats.test_util import compare_files
+from tests.stats.test_util import FakeDb
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import use_fake_gzip_time
-from tests.stats.test_util import write_triples
+from tests.stats.test_util import write_db_triples_list
 from util.filesystem import create_store
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -54,9 +50,6 @@ def _test_import(test: unittest.TestCase, test_name: str):
                                                 create_if_missing=False)
     input_config_file = input_store.as_dir().open_file("config.json",
                                                        create_if_missing=False)
-    db_file_name = f"{test_name}.db"
-    db_path = os.path.join(temp_dir, db_file_name)
-    db_file = temp_store.as_dir().open_file(db_file_name)
 
     output_triples_path = os.path.join(temp_dir, f"{test_name}.triples.db.csv")
     expected_triples_path = os.path.join(_EXPECTED_DIR,
@@ -65,7 +58,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     config = Config(data=json.loads(input_config_file.read()))
     nodes = Nodes(config)
 
-    db = create_and_update_db(create_sqlite_config(db_file))
+    db = FakeDb()
     report_file = temp_store.as_dir().open_file("report.json")
     reporter = FileImportReporter(input_file.full_path(),
                                   ImportReporter(report_file))
@@ -77,7 +70,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     db.insert_triples(nodes.triples())
     db.commit_and_close()
 
-    write_triples(db_path, output_triples_path)
+    write_db_triples_list(db.triples, output_triples_path)
 
     if is_write_mode():
       shutil.copy(output_triples_path, expected_triples_path)

@@ -1,0 +1,359 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:obs_012d5ef91ef0e4edcaa28090b965e165bc5c06572bad02be320c00bc74e2004b",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.19,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AFG"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_f928e9a4d9689b0caf81ea552e30cc44af04976a27730628398a833bd33eda98",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.21,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/YEM"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_f4edfa02392d478f0c82d256510bfc348202022d668ac0d409d2057bb848ba2c",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.29,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AGO"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_9b5c4ddf03b9eae42a86ca17424b845ac6576fc611b7063b754a2ba0a9d8c7c4",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.31,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ZMB"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_12c3423027b55a3dc4d9010bc3f859387d516bf23325ddcc2c643ed59c41e140",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.37,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ZWE"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_fa4e03014b2f4ee9bfe91ee664de89d811744e462580299f0382358a54a0e11d",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.5,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ALB"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_0d8526e9679b899ba92570c7fdd7f5275db69d95874de9779929f0b2941c0f83",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.5,
+            "dcid:observationAbout": {
+                "@id": "dcid:wikidataId/Q22062741"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_caed88e4f5e7fa5df76f795d45b0866512fe3559cf5b4d11bf113acd994ebc40",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.52,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/DZA"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_24b83fc25508fea9e95a364cc5482e78a0c58b719ef09ac74fe9c642d42289f1",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.76,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AND"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_55ddf454571fc1df43c32efc6f484380bcf58ab1ae45253575e32be1193282af",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 6,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AFG"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_6be12bf38c378dc05b2ef8c4ac673660e6401a503d6f4712b4b993b9771a62e5",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 56,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/YEM"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_d8014872a20c4d4ac691397870b9f840e5bf6f0fdbb76aa1d89f9a3ebd1beb7b",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 6,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AGO"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_af6a480083aee421654bde3db82453034ced682b7545f77e410280dc216daeec",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 34,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ZMB"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_74df20c07df88bc8005fa6ba6002b0c25fd27ca9aff5aa85ac342d570a246914",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 76,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ZWE"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_5a6a0674e0e3fa06a214f7d75b21d2319c6006ffde4f58d5b168d8a209b43665",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 34,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ALB"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_09d866a18712162a74260bfdd86df7d34eeafd5fae4237aabf4d19c0efc0bf44",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 97,
+            "dcid:observationAbout": {
+                "@id": "dcid:wikidataId/Q22062741"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_ca3ce540974e8b849682b41232464a1e15e4b8a7c8733f649c9d409f728e6118",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 92,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/DZA"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_ac80fb789405ebe32f404a8fdfb9ccd9cf48e89e80dbd27476bc687b56edee71",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 9,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AND"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_49d24dcba98cac9219b22041d6b767ccc7a57436272e8c07471fa8af9ed3dcd8",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 34,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ASM"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_589238d23c7dcec07c38b5739c20cd227f25534cce1195eeca50122d1b23e1dd",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 42,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AIA"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_f43af575e53e3263d2b58743d6b87ea5f4d8cac12234075264b7bbc6f2fb5170",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 75,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/WLF"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_4aaf1b013705df9d5ba0c03a7e6113094e6b57d1be75cfec0aaebd14266bd872",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 65,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ESH"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        }
+    ]
+}

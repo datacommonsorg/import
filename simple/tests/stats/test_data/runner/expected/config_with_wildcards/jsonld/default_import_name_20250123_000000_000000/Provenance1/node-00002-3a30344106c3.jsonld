@@ -1,0 +1,82 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:Source1",
+            "@type": "dcid:Source",
+            "dcid:name": "Source1",
+            "dcid:url": "http://source1.com",
+            "dcid:domain": "source1.com"
+        },
+        {
+            "@id": "dcid:c/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Custom Variables",
+            "dcid:specializationOf": {
+                "@id": "dcid:dc/g/Root"
+            }
+        },
+        {
+            "@id": "dcid:country/AFG",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/AGO",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/AIA",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/ALB",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/AND",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/ASM",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/DZA",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/ESH",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/IND",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/USA",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/WLF",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/YEM",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/ZMB",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/ZWE",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:wikidataId/Q22062741",
+            "@type": "dcid:Country"
+        }
+    ]
+}

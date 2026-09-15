@@ -1,0 +1,43 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:author1",
+            "@type": "dcid:Author",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:author_id": "author1",
+            "dcid:author_name": "Jane Doe",
+            "dcid:author_country": {
+                "@id": "dcid:country/USA"
+            }
+        },
+        {
+            "@id": "dcid:author2",
+            "@type": "dcid:Author",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:author_id": "author2",
+            "dcid:author_name": "Joe Smith",
+            "dcid:author_country": {
+                "@id": "dcid:country/CAN"
+            }
+        },
+        {
+            "@id": "dcid:author3",
+            "@type": "dcid:Author",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:author_id": "author3",
+            "dcid:author_name": "Jane Smith",
+            "dcid:author_country": {
+                "@id": "dcid:country/USA"
+            }
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:some_var1",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+                "@id": "dcid:value"
+            },
+            "dcid:name": "Some Variable 1 Name",
+            "dcid:description": "Some Variable 1 Description"
+        }
+    ]
+}

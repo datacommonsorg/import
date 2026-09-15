@@ -7,13 +7,19 @@
       "importType": "observations",
       "format": "variablePerRow",
       "entityType": "Country",
-      "provenance": "Provenance1 Name"
+      "provenance": "dcid:Provenance1",
+      "columnMappings": {
+        "dcid:variableMeasured": "variable",
+        "dcid:observationAbout": "entity",
+        "dcid:observationDate": "date",
+        "dcid:value": "value"
+      }
     },
     "countr*.csv": {
       "importType": "observations",
       "format": "variablePerColumn",
       "entityType": "Country",
-      "provenance": "Provenance1 Name",
+      "provenance": "dcid:Provenance1",
       "columnMappings": {
         "dcid:observationAbout": "place",
         "dcid:observationDate": "year"
@@ -23,19 +29,14 @@
       "importType": "observations",
       "format": "variablePerColumn",
       "entityType": "Country",
-      "provenance": "Provenance1 Name",
+      "provenance": "dcid:Provenance1",
       "columnMappings": {
         "dcid:observationAbout": "wikidataid",
         "dcid:observationDate": "year"
       }
-    }
-  },
-  "sources": {
-    "Source1 Name": {
-      "url": "http://source1.com",
-      "provenances": {
-        "Provenance1 Name": "http://source1.com/provenance1"
-      }
+    },
+    "*.mcf": {
+      "provenance": "dcid:Provenance1"
     }
   }
 }

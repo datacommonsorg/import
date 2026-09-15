@@ -1,7 +1,17 @@
 {
   "inputFiles": {
     "*.csv": {
-      "format": "variablePerRow"
+      "format": "variablePerRow",
+      "columnMappings": {
+        "dcid:variableMeasured": "variable",
+        "dcid:observationAbout": "entity",
+        "dcid:observationDate": "date",
+        "dcid:value": "value"
+      },
+      "provenance": "dcid:Provenance1"
+    },
+    "*.mcf": {
+      "provenance": "dcid:Provenance1"
     }
   }
 }
