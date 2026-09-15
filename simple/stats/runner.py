@@ -689,15 +689,23 @@ class Runner:
       logging.info("Importing %d files (%d MCF, %d CSV)...", len(all_files),
                    len(mcf_files), len(csv_files))
       if not self.use_multiprocessing:
-        num_threads = min(32, len(all_files))
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=num_threads) as executor:
-          futures = [
-              executor.submit(self._run_single_import, file)
-              for file in all_files
-          ]
-          for future in concurrent.futures.as_completed(futures):
-            future.result()
+        # MCF files must be fully imported before any CSV file is processed.
+        # MCF defines provenance and source nodes that the CSV importers look
+        # up by name. If a CSV gets there first, Nodes.provenance() auto-creates
+        # a provenance with no source attached, and the source link is lost for
+        # the rest of the run.
+        for file_group in (mcf_files, csv_files):
+          if not file_group:
+            continue
+          num_threads = min(32, len(file_group))
+          with concurrent.futures.ThreadPoolExecutor(
+              max_workers=num_threads) as executor:
+            futures = [
+                executor.submit(self._run_single_import, file)
+                for file in file_group
+            ]
+            for future in concurrent.futures.as_completed(futures):
+              future.result()
       else:
         num_processes = min(32, len(all_files))
         config_json_str = json.dumps(self.config.data)
@@ -716,7 +724,11 @@ class Runner:
                   jsonld_dir_name,
               ) for file in all_files
           ]
-          for future in concurrent.futures.as_completed(futures):
+          # Merge in submission order, not completion order. all_files is
+          # MCF first, and MCF results carry the provenance-to-source links
+          # that later merges depend on. The imports themselves still run in
+          # parallel; only the merge into self.nodes is ordered.
+          for future in futures:
             res = future.result()
             self._log_file_progress("Imported file", res.file_rel_path)
             if res.resolved_entities:
