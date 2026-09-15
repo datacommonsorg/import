@@ -630,3 +630,61 @@ class TestMain(unittest.TestCase):
         import_names=["oecd"],
         import_proxy_entities=True,
     )
+
+  @mock.patch('stats.main.Runner')
+  def test_deprecated_mode_flag_is_accepted_and_ignored(self, mock_runner):
+    """--mode must not break existing callers, and must not reach Runner.
+
+    DCP passes DATA_RUN_MODE=dcpbridge and the retired CDC builds pass
+    customdc / maindc / schemaupdate. None of them should fail, and none of
+    them should change what the importer does.
+    """
+    from stats.main import _run
+    from stats.main import FLAGS
+
+    FLAGS(["test_program"])
+    FLAGS.input_dir = "/base/input"
+    FLAGS.imports = []
+    FLAGS.config_file = None
+    FLAGS.output_dir = "/output"
+
+    for mode in [
+        "", "dcpbridge", "customdc", "maindc", "schemaupdate", "something_else"
+    ]:
+      with self.subTest(mode=mode):
+        mock_runner.reset_mock()
+        FLAGS.mode = mode
+
+        _run()
+
+        mock_runner.assert_called_once_with(
+            config_file_path=None,
+            input_dir_path="/base/input",
+            output_dir_path="/output",
+            import_names=[],
+            import_proxy_entities=True,
+        )
+        self.assertNotIn("mode", mock_runner.call_args.kwargs)
+
+    FLAGS.mode = ""
+
+  def test_removed_modes_log_a_warning(self):
+    from stats import main as main_module
+
+    main_module.FLAGS(["test_program"])
+
+    for mode in ["customdc", "maindc", "schemaupdate"]:
+      with self.subTest(mode=mode):
+        main_module.FLAGS.mode = mode
+        with self.assertLogs(level="WARNING") as logs:
+          main_module._warn_if_mode_is_set()
+        self.assertTrue(any(mode in line for line in logs.output))
+
+    for mode in ["", "dcpbridge"]:
+      with self.subTest(mode=mode):
+        main_module.FLAGS.mode = mode
+        with mock.patch.object(main_module.logging, "warning") as mock_warn:
+          main_module._warn_if_mode_is_set()
+        mock_warn.assert_not_called()
+
+    main_module.FLAGS.mode = ""

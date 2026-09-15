@@ -35,10 +35,9 @@ flags.DEFINE_list("imports", [],
 flags.DEFINE_string(
     "mode",
     "",
-    "Deprecated and ignored. The importer now only runs the dcpbridge "
-    "workflow. Accepted values are an empty string or 'dcpbridge'. The flag "
-    "is retained only so existing callers keep working, and will be removed "
-    "once they stop passing it.",
+    "Deprecated and ignored. The importer only runs the dcpbridge workflow "
+    "now. Any value is accepted so existing callers keep working, but it has "
+    "no effect. The flag will be removed once callers stop passing it.",
 )
 flags.DEFINE_bool(
     "freeze_time",
@@ -60,6 +59,27 @@ flags.DEFINE_bool(
 # i.e. packages where time should not be frozen if it leads to errant behavior.
 _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
+# Values --mode used to accept. Passing one of these now does nothing, so we
+# warn rather than silently proceeding as if the caller got what it asked for.
+_REMOVED_RUN_MODES = frozenset(["customdc", "maindc", "schemaupdate"])
+
+
+def _warn_if_mode_is_set():
+  """Logs a deprecation warning for --mode, which is accepted but ignored."""
+  mode = (FLAGS.mode or "").strip()
+  if not mode or mode == "dcpbridge":
+    return
+  if mode in _REMOVED_RUN_MODES:
+    logging.warning(
+        "--mode=%s is no longer supported and is being ignored. This importer "
+        "only runs the dcpbridge workflow. The run will continue as dcpbridge, "
+        "which does NOT do what %s used to do. Remove the flag from the "
+        "caller.", mode, mode)
+  else:
+    logging.warning(
+        "Unrecognized --mode=%s. The flag is deprecated and "
+        "ignored; running the dcpbridge workflow.", mode)
+
 
 def _run():
   # Configure requests adapter default pool size to support parallel GCS uploads
@@ -67,11 +87,7 @@ def _run():
 
   initialize_logger()
 
-  if FLAGS.mode not in ("", "dcpbridge"):
-    raise ValueError(
-        f"Unsupported --mode={FLAGS.mode!r}. This importer only runs the "
-        "dcpbridge workflow; the customdc, maindc and schemaupdate modes have "
-        "been removed.")
+  _warn_if_mode_is_set()
 
   logging.info("Starting stats data importer job.")
 
