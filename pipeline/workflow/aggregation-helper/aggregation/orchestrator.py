@@ -475,43 +475,40 @@ class AggregationOrchestrator:
             logging.info("No existing aggregated data resolved for deletion.")
             return
 
-        tasks = [
-            (
-                f"aggregated data for imports: {plan.aggregated_imports}",
-                bool(plan.aggregated_imports),
-                lambda: self.deleter.delete_aggregated_data(plan.aggregated_imports),
-            ),
-            (
-                f"linked relationship edges for imports: {plan.linked_edge_imports}",
-                bool(plan.linked_edge_imports),
-                lambda: self.deleter.delete_linked_edges(plan.linked_edge_imports),
-            ),
-            (
-                f"KeyValueStore ProvenanceSummary records for imports: {plan.provenance_summary_imports}",
-                bool(plan.provenance_summary_imports),
-                lambda: self.deleter.delete_provenance_summaries(
+        if dry_run:
+            if plan.aggregated_imports:
+                logging.info(
+                    f"[Dry Run] Would delete aggregated data for imports: {plan.aggregated_imports}"
+                )
+            if plan.linked_edge_imports:
+                logging.info(
+                    f"[Dry Run] Would delete linked relationship edges for imports: {plan.linked_edge_imports}"
+                )
+            if plan.provenance_summary_imports:
+                logging.info(
+                    f"[Dry Run] Would delete KeyValueStore ProvenanceSummary records for imports: {plan.provenance_summary_imports}"
+                )
+            if plan.delete_stat_var_groups:
+                logging.info(
+                    "[Dry Run] Would delete StatVarGroup edges across all provenances."
+                )
+            if plan.delete_topic_lists:
+                logging.info(
+                    "[Dry Run] Would delete topic and peer group list edges across all provenances."
+                )
+        else:
+            if plan.aggregated_imports:
+                self.deleter.delete_aggregated_data(plan.aggregated_imports)
+            if plan.linked_edge_imports:
+                self.deleter.delete_linked_edges(plan.linked_edge_imports)
+            if plan.provenance_summary_imports:
+                self.deleter.delete_provenance_summaries(
                     plan.provenance_summary_imports
-                ),
-            ),
-            (
-                "StatVarGroup edges across all provenances.",
-                plan.delete_stat_var_groups,
-                self.deleter.delete_stat_var_group_edges,
-            ),
-            (
-                "topic and peer group list edges across all provenances.",
-                plan.delete_topic_lists,
-                self.deleter.delete_topic_list_edges,
-            ),
-        ]
-
-        for description, should_run, action in tasks:
-            if not should_run:
-                continue
-            if dry_run:
-                logging.info(f"[Dry Run] Would delete {description}")
-            else:
-                action()
+                )
+            if plan.delete_stat_var_groups:
+                self.deleter.delete_stat_var_group_edges()
+            if plan.delete_topic_lists:
+                self.deleter.delete_topic_list_edges()
 
     def _get_active_stages_for_import(self, single_import: str) -> List[int]:
         """Returns a sorted list of unique active stage numbers for a single import.
