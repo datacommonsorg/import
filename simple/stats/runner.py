@@ -724,11 +724,7 @@ class Runner:
                   jsonld_dir_name,
               ) for file in all_files
           ]
-          # Merge in submission order, not completion order. all_files is
-          # MCF first, and MCF results carry the provenance-to-source links
-          # that later merges depend on. The imports themselves still run in
-          # parallel; only the merge into self.nodes is ordered.
-          for future in futures:
+          for future in concurrent.futures.as_completed(futures):
             res = future.result()
             self._log_file_progress("Imported file", res.file_rel_path)
             if res.resolved_entities:

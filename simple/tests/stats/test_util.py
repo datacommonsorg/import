@@ -14,7 +14,6 @@
 
 import gzip
 import os
-import sqlite3
 import unittest
 
 import pandas as pd
@@ -107,36 +106,6 @@ def compare_csv_files(test: unittest.TestCase,
   test.assertEqual(actual_csv, expected_csv, message)
 
 
-def read_triples_csv(path: str) -> list[Triple]:
-  """
-  Reads a triples CSV into a list of Triple objects.
-  """
-  df = pd.read_csv(path, keep_default_na=False)
-  return [Triple(**kwargs) for kwargs in df.to_dict(orient='records')]
-
-
-def write_observations(db_path: str, output_path: str):
-  """
-  Fetches all observations from a sqlite db at db_path
-  and writes it to the output_path CSV.
-  """
-  with sqlite3.connect(db_path) as db:
-    rows = db.execute("select * from observations").fetchall()
-    pd.DataFrame(rows, columns=OBSERVATION_FIELD_NAMES).to_csv(output_path,
-                                                               index=False)
-
-
-def write_triples(db_path: str, output_path: str):
-  """
-  Fetches all triples from a sqlite db at db_path
-  and writes it to the output_path CSV.
-  """
-  with sqlite3.connect(db_path) as db:
-    rows = db.execute("select * from triples").fetchall()
-    triples = [Triple(*row) for row in rows]
-    write_triples_list(triples, output_path)
-
-
 def write_triples_list(triples: list[Triple], output_path: str):
   """
   Writes the list of triples to the output_path CSV.
@@ -162,38 +131,6 @@ def write_observations_df(observations_df: pd.DataFrame, output_path: str):
   observations_df.to_csv(output_path,
                          index=False,
                          columns=OBSERVATION_FIELD_NAMES)
-
-
-def write_key_values(db_path: str, output_path: str):
-  """
-  Fetches all key values from a sqlite db at db_path
-  and writes it to the output_path CSV.
-  """
-  with sqlite3.connect(db_path) as db:
-    rows = db.execute("select * from key_value_store").fetchall()
-    pd.DataFrame(rows, columns=["lookup_key", "value"]).to_csv(output_path,
-                                                               index=False)
-
-
-def write_full_db_to_file(db_path: str, output_path: str):
-  """
-  Writes a file with SQL statements that can be used to reconstruct the full
-  database schema and contents.
-  """
-  with sqlite3.connect(db_path) as db:
-    with open(output_path, 'w') as f:
-      for line in db.iterdump():
-        f.write('%s\n' % line)
-
-
-def read_full_db_from_file(db_path: str, input_path: str):
-  """
-  Reconstructs a database's schema and contents from a file with a series of
-  SQL commands.
-  """
-  with sqlite3.connect(db_path) as db:
-    with open(input_path, 'r') as f:
-      db.cursor().executescript(f.read())
 
 
 class FakeGzipTime:

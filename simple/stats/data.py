@@ -573,19 +573,6 @@ class VerticalSpec:
                         verticals=set(json.get("verticals", [])))
 
 
-# dict[svg id, svg specialized name]
-SVGSpecializedNames = dict[str, str]
-
-# dict[parent svg id, child SVGSpecializedNames]
-ParentSVG2ChildSpecializedNames = dict[str, SVGSpecializedNames]
-
-
-@dataclass
-class StatVarHierarchyResult:
-  svg_triples: list[Triple]
-  svg_specialized_names: ParentSVG2ChildSpecializedNames
-
-
 def strip_namespace(v: str) -> str:
   """
   Strips namespaces from dcids.
