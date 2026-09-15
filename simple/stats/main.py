@@ -21,7 +21,6 @@ from freezegun import freeze_time
 import requests.adapters
 from stats import constants
 from stats.logger import initialize_logger
-from stats.runner import RunMode
 from stats.runner import Runner
 
 FLAGS = flags.FLAGS
@@ -33,11 +32,13 @@ flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
 flags.DEFINE_list("imports", [],
                   "The names of the imports (subdirectories under input_dir).")
-flags.DEFINE_enum(
+flags.DEFINE_string(
     "mode",
-    RunMode.CUSTOM_DC,
-    list(RunMode._member_map_.values()),
-    f"Mode of operation",
+    "",
+    "Deprecated and ignored. The importer now only runs the dcpbridge "
+    "workflow. Accepted values are an empty string or 'dcpbridge'. The flag "
+    "is retained only so existing callers keep working, and will be removed "
+    "once they stop passing it.",
 )
 flags.DEFINE_bool(
     "freeze_time",
@@ -65,13 +66,19 @@ def _run():
   requests.adapters.DEFAULT_POOLSIZE = 32
 
   initialize_logger()
-  logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
+
+  if FLAGS.mode not in ("", "dcpbridge"):
+    raise ValueError(
+        f"Unsupported --mode={FLAGS.mode!r}. This importer only runs the "
+        "dcpbridge workflow; the customdc, maindc and schemaupdate modes have "
+        "been removed.")
+
+  logging.info("Starting stats data importer job.")
 
   Runner(
       config_file_path=FLAGS.config_file,
       input_dir_path=FLAGS.input_dir,
       output_dir_path=FLAGS.output_dir,
-      mode=FLAGS.mode,
       import_names=FLAGS.imports,
       import_proxy_entities=FLAGS.import_proxy_entities,
   ).run()

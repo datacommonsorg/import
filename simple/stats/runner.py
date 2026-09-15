@@ -16,7 +16,6 @@ import concurrent.futures
 from dataclasses import dataclass
 from datetime import datetime
 from datetime import timezone
-from enum import StrEnum
 import json
 import logging
 import os
@@ -26,44 +25,24 @@ import unittest.mock as mock_module
 
 import fs.path as fspath
 from stats import constants
-from stats import schema
-from stats import stat_var_hierarchy_generator
 from stats.config import Config
 from stats.data import FileValidationError
 from stats.data import ImportType
 from stats.data import InputFileFormat
-from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import Triple
 from stats.data import ValidationErrorType
-from stats.data import VerticalSpec
-from stats.db import create_and_update_db
-from stats.db import create_main_dc_config
-from stats.db import create_sqlite_config
 from stats.db import Db
-from stats.db import FIELD_DB_PARAMS
-from stats.db import FIELD_DB_TYPE
-from stats.db import get_blue_green_config_from_env
-from stats.db import get_cloud_sql_config_from_env
-from stats.db import get_datacommons_platform_config_from_env
-from stats.db import get_sqlite_path_from_env
-from stats.db import ImportStatus
-from stats.db import TYPE_CLOUD_SQL
-from stats.db_cache import get_db_cache_from_env
-from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import EntityResolutionError
 from stats.importer import Importer
-from stats.jsonld_exporter import export_to_jsonld
 from stats.jsonld_stream_db import JsonLdStreamDb
 from stats.mcf_importer import McfImporter
-import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
-from stats.svg_cache import generate_svg_cache
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
@@ -75,14 +54,6 @@ from util.filesystem import Store
 
 from util import dc_client
 
-
-class RunMode(StrEnum):
-  CUSTOM_DC = "customdc"
-  SCHEMA_UPDATE = "schemaupdate"
-  MAIN_DC = "maindc"
-  DCP_BRIDGE = "dcpbridge"
-
-
 _ARCHIVES_DIR_NAME = "archives"
 
 
@@ -93,17 +64,12 @@ def _create_importer_for_file(
     db: Db,
     reporter: FileImportReporter,
     nodes: Nodes,
-    mode: Optional[RunMode] = None,
 ) -> Importer:
   if input_file.path.lower().endswith(".mcf"):
-    output_file = process_dir.open_file(
-        input_file.path) if mode == RunMode.MAIN_DC else None
     return McfImporter(
         input_file=input_file,
-        output_file=output_file,
         db=db,
         reporter=reporter,
-        is_main_dc=(mode == RunMode.MAIN_DC),
         nodes=nodes,
     )
 
@@ -115,7 +81,7 @@ def _create_importer_for_file(
       input_file_format = config.format(input_file)
       if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
         mappings = config.column_mappings(input_file)
-        if not mappings and mode == RunMode.DCP_BRIDGE:
+        if not mappings:
           raise ValueError(
               f"Missing column mappings for file '{input_file.path}' in config.json"
           )
@@ -209,13 +175,8 @@ def _run_single_csv_import_proc(
     report_file = process_store.open_file(f"report_{sanitized_path}.json")
     reporter = ImportReporter(report_file).get_file_reporter(input_store)
 
-    importer = _create_importer_for_file(config,
-                                         input_store,
-                                         process_store,
-                                         db,
-                                         reporter,
-                                         nodes,
-                                         mode=RunMode.DCP_BRIDGE)
+    importer = _create_importer_for_file(config, input_store, process_store, db,
+                                         reporter, nodes)
     importer.do_import()
     db.commit_and_close()
 
@@ -255,7 +216,6 @@ class Runner:
       config_file_path: str,
       input_dir_path: str,
       output_dir_path: str,
-      mode: RunMode = RunMode.CUSTOM_DC,
       import_names: Optional[list[str]] = None,
       use_multiprocessing: bool = True,
       import_proxy_entities: Optional[bool] = None,
@@ -264,7 +224,6 @@ class Runner:
             input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
 
-    self.mode = mode
     self.import_names = import_names
     self.use_multiprocessing = use_multiprocessing
     self.active_import_prefixes = None
@@ -277,14 +236,13 @@ class Runner:
     # "Special" file handlers.
     # i.e. if files of these types are present, they are handled in specific ways.
     self.special_files: dict[str, File] = {}
-    self.svg_specialized_names: ParentSVG2ChildSpecializedNames = {}
 
     # Config file driven (input paths pulled from config)
     if config_file_path:
       self._read_config_from_file(config_file_path)
 
       input_urls = self.config.data_download_urls()
-      if not input_urls and self.mode != RunMode.SCHEMA_UPDATE:
+      if not input_urls:
         raise ValueError("Data Download URLs not found in config.")
       for input_url in input_urls:
         input_store = create_store(input_url)
@@ -366,43 +324,13 @@ class Runner:
 
     self.nodes = Nodes(self.config)
     self.db = None
-    self.db_cache = None
     self.trigger_workflow_info = None
 
   def run(self):
-    # Check if blue-green is enabled
-    blue_green_config = get_blue_green_config_from_env()
-
-    if blue_green_config["enabled"]:
-      logging.info("Blue-green import enabled (local SQLite build)")
-
     try:
-      # For blue-green, defer Cloud SQL connection until transfer phase
-      # For normal imports, create connection now
-      if self.db is None and not blue_green_config[
-          "enabled"] and self.mode != RunMode.DCP_BRIDGE:
-        self.db = create_and_update_db(self._get_db_config())
-        self.db_cache = get_db_cache_from_env()
+      self._run_imports_and_export_jsonld()
 
-      if self.mode == RunMode.SCHEMA_UPDATE:
-        logging.info("Skipping imports because run mode is schema update.")
-
-      elif self.mode == RunMode.CUSTOM_DC or self.mode == RunMode.MAIN_DC:
-        # Select import strategy
-        if blue_green_config["enabled"]:
-          self._run_local_sqlite_build_import()
-        else:
-          self._run_imports_and_do_post_import_work()
-
-      elif self.mode == RunMode.DCP_BRIDGE:
-        self._run_imports_and_export_jsonld()
-
-      else:
-        raise ValueError(f"Unsupported mode: {self.mode}")
-
-      # Commit and close DB (skipped for blue-green as it handles its own commits)
-      if not blue_green_config["enabled"]:
-        self.db.commit_and_close()
+      self.db.commit_and_close()
 
       # Report done.
       self.reporter.report_done()
@@ -498,19 +426,12 @@ class Runner:
   def _read_config_from_file(self,
                              config_file_path: str,
                              config_file_dir: Optional[Dir] = None) -> Config:
-    try:
-      if config_file_dir:
-        raw_config = config_file_dir.open_file(config_file_path,
-                                               create_if_missing=False).read()
-      else:
-        with create_store(config_file_path) as config_store:
-          raw_config = config_store.as_file().read()
-    except FileNotFoundError:
-      if self.mode == RunMode.SCHEMA_UPDATE:
-        logging.warning("Config file not found. Defaulting to empty config.")
-        raw_config = None
-      else:
-        raise
+    if config_file_dir:
+      raw_config = config_file_dir.open_file(config_file_path,
+                                             create_if_missing=False).read()
+    else:
+      with create_store(config_file_path) as config_store:
+        raw_config = config_store.as_file().read()
 
     config_data = json.loads(raw_config) if raw_config else {}
     self.config = Config(data=config_data)
@@ -651,252 +572,6 @@ class Runner:
     self._merge_configs(configs, base_dir)
     return configs
 
-  def _get_db_config(self) -> dict:
-    if self.mode == RunMode.MAIN_DC:
-      logging.info("Using Main DC config.")
-      return create_main_dc_config(self.output_dir.path)
-    # Attempt to get from env (data commons platform, cloud sql, then sqlite),
-    # then config file, then default.
-    db_cfg = get_datacommons_platform_config_from_env()
-    if db_cfg:
-      logging.info("Using Data Commons Platform settings from env.")
-      return db_cfg
-    db_cfg = get_cloud_sql_config_from_env()
-    if db_cfg:
-      logging.info("Using Cloud SQL settings from env.")
-      return db_cfg
-    sqlite_path_from_env = get_sqlite_path_from_env()
-    if sqlite_path_from_env:
-      logging.info("Using SQLite settings from env.")
-      sqlite_env_store = create_store(sqlite_path_from_env,
-                                      create_if_missing=True,
-                                      treat_as_file=True)
-      self.all_stores.append(sqlite_env_store)
-      sqlite_file = sqlite_env_store.as_file()
-    else:
-      logging.info("Using default SQLite settings.")
-      sqlite_file = self.output_dir.open_file(constants.DB_FILE_NAME)
-    return create_sqlite_config(sqlite_file)
-
-  def _run_imports_and_do_post_import_work(self):
-    # (SQL only) Drop data in existing tables (except import metadata).
-    # Also drop indexes for faster writes.
-    self.db.maybe_clear_before_import()
-
-    # Import data from all input files.
-    self._run_all_data_imports()
-
-    # Generate triples.
-    triples = self.nodes.triples()
-    # Write triples to DB.
-    self.db.insert_triples(triples)
-
-    # Generate SVG hierarchy.
-    self._generate_svg_hierarchy()
-
-    # Generate SVG cache.
-    self._generate_svg_cache()
-
-    # Generate NL artifacts (sentences, embeddings, topic cache).
-    self._generate_nl_artifacts()
-
-    # Write import info to DB.
-    self.db.insert_import_info(status=ImportStatus.SUCCESS)
-
-    # Flush the DB cache if it exists.
-    if self.db_cache:
-      logging.info("Database cache is configured. Clearing cache.")
-      self.db_cache.clear()
-
-  def _run_local_sqlite_build_import(self):
-    """Run import using local SQLite build blue-green strategy."""
-
-    blue_green_config = get_blue_green_config_from_env()
-    local_db_path = blue_green_config["local_sqlite_path"]
-
-    logging.info("Building local SQLite (blue-green strategy)...")
-    logging.info(f"Local database: {local_db_path}")
-
-    try:
-      # Remove old local build if exists
-      if os.path.exists(local_db_path):
-        os.remove(local_db_path)
-        logging.info("Removed previous local build database")
-
-      # Create local SQLite database
-      local_db_store = create_store(local_db_path,
-                                    create_if_missing=True,
-                                    treat_as_file=True)
-      local_db_file = local_db_store.as_file()
-      local_db_config = create_sqlite_config(local_db_file)
-      local_db = create_and_update_db(local_db_config)
-
-      # Temporarily switch to local database
-      original_db = self.db
-      self.db = local_db
-
-      # Clear and import data
-      self.db.maybe_clear_before_import()
-      self._run_all_data_imports()
-
-      # Generate triples
-      triples = self.nodes.triples()
-      self.db.insert_triples(triples)
-
-      # Write import info
-      self.db.insert_import_info(status=ImportStatus.SUCCESS)
-
-      # Get row counts for validation
-      counts = self.db.engine.get_row_counts()
-
-      logging.info(f"Local build complete:")
-      logging.info(f"  Observations: {counts['observations']:,}")
-      logging.info(f"  Triples: {counts['triples']:,}")
-      logging.info(f"  Key-value pairs: {counts['key_value_store']:,}")
-
-      # Commit and close local database
-      self.db.commit_and_close()
-
-      # Transfer to Cloud SQL (this blocks db temporarily)
-      logging.info("Transferring to Cloud SQL...")
-
-      # Get Cloud SQL config
-      cloud_config = get_cloud_sql_config_from_env()
-      if not cloud_config:
-        raise RuntimeError("Cloud SQL not configured for blue-green import")
-
-      # Create Cloud SQL connection
-      cloud_db_config = {
-          FIELD_DB_TYPE: TYPE_CLOUD_SQL,
-          FIELD_DB_PARAMS: cloud_config[FIELD_DB_PARAMS]
-      }
-      cloud_db = create_and_update_db(cloud_db_config)
-
-      # Transfer data
-      transfer_result = transfer_sqlite_to_cloud_sql(
-          sqlite_path=local_db_path,
-          cloud_sql_engine=cloud_db.engine,
-          expected_obs=counts['observations'],
-          expected_triples=counts['triples'],
-          expected_kv=counts['key_value_store'])
-
-      logging.info("Transfer complete:")
-      logging.info(f"  Observations: {transfer_result['observations']:,}")
-      logging.info(f"  Triples: {transfer_result['triples']:,}")
-      logging.info(f"  Key-value pairs: {transfer_result['key_value_store']:,}")
-
-      # Post-processing
-      logging.info("Post-processing...")
-
-      # Switch to Cloud SQL for post-processing
-      self.db = cloud_db
-
-      # Generate SVG hierarchy, cache, and NL artifacts
-      self._generate_svg_hierarchy()
-      self._generate_svg_cache()
-      self._generate_nl_artifacts()
-
-      # Flush the DB cache if it exists
-      if self.db_cache:
-        logging.info("Database cache is configured. Clearing cache.")
-        self.db_cache.clear()
-
-      logging.info("Local SQLite build import and transfer successful.")
-
-    except Exception as e:
-      logging.error(f"Local SQLite build import failed: {e}")
-      raise
-
-    finally:
-      # Remove local build database
-      if os.path.exists(local_db_path):
-        try:
-          os.remove(local_db_path)
-          logging.info(f"Cleaned up local build database: {local_db_path}")
-        except Exception as e:
-          logging.warning(f"Failed to cleanup local database: {e}")
-
-  def _generate_nl_artifacts(self):
-    nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
-    triples: list[Triple] = []
-    topic_triples = self.db.select_triples_by_subject_type(sc.TYPE_TOPIC)
-    sv_triples = self.db.select_triples_by_subject_type(
-        sc.TYPE_STATISTICAL_VARIABLE)
-    triples = topic_triples + sv_triples
-
-    # Generate sentences.
-    nl.generate_nl_sentences(triples, nl_dir)
-
-    # If generating topics, fetch svpg triples as well and generate topic cache
-    if topic_triples:
-      sv_peer_group_triples = self.db.select_triples_by_subject_type(
-          sc.TYPE_STAT_VAR_PEER_GROUP)
-      topic_cache_triples = topic_triples + sv_peer_group_triples
-      nl.generate_topic_cache(topic_cache_triples, nl_dir)
-
-  def _generate_svg_hierarchy(self):
-    if self.mode == RunMode.MAIN_DC:
-      logging.info("Hierarchy generation not supported for main dc, skipping.")
-      return
-    if not self.config.generate_hierarchy():
-      logging.info("Hierarchy generation not enabled, skipping.")
-      return
-
-    logging.info("Generating SVG hierarchy.")
-    sv_triples = self.db.select_triples_by_subject_type(
-        sc.TYPE_STATISTICAL_VARIABLE)
-    if not sv_triples:
-      logging.info("No SV triples found, skipping SVG generating hierarchy.")
-    logging.info("Generating SVG hierarchy for %s SV triples.", len(sv_triples))
-
-    vertical_specs: list[VerticalSpec] = []
-    vertical_specs_file = self.special_files.get(
-        constants.VERTICAL_SPECS_FILE_TYPE)
-    if vertical_specs_file:
-      logging.info("Loading vertical specs from: %s",
-                   vertical_specs_file.name())
-      vertical_specs = stat_var_hierarchy_generator.load_vertical_specs(
-          vertical_specs_file.read())
-
-    # Collect all dcids that can be used to generate SVG names and get their schema names.
-    schema_dcids = list(
-        self._triples_dcids(sv_triples) |
-        self._vertical_specs_dcids(vertical_specs))
-    dcid2name = schema.get_schema_names(schema_dcids, self.db)
-
-    sv_hierarchy_result = stat_var_hierarchy_generator.generate(
-        triples=sv_triples,
-        vertical_specs=vertical_specs,
-        dcid2name=dcid2name,
-        custom_svg_prefix=self.config.custom_svg_prefix(),
-        sv_hierarchy_props_blocklist=self.config.sv_hierarchy_props_blocklist())
-    self.svg_specialized_names = sv_hierarchy_result.svg_specialized_names
-    logging.info("Inserting %s SVG triples into DB.",
-                 len(sv_hierarchy_result.svg_triples))
-    self.db.insert_triples(sv_hierarchy_result.svg_triples)
-
-  # Returns all unique predicates and object ids from the specified triples.
-  def _triples_dcids(self, triples: list[Triple]) -> set[str]:
-    dcids: set[str] = set()
-    for triple in triples:
-      if triple.predicate and triple.object_id:
-        dcids.add(triple.predicate)
-        dcids.add(triple.object_id)
-    return dcids
-
-  # Returns all unique pop types and verticals from the specified vertical specs.
-  def _vertical_specs_dcids(self,
-                            vertical_specs: list[VerticalSpec]) -> set[str]:
-    dcids: set[str] = set()
-    for vertical_spec in vertical_specs:
-      if vertical_spec.population_type:
-        dcids.add(vertical_spec.population_type)
-      dcids.update(vertical_spec.verticals)
-    return dcids
-
-  def _generate_svg_cache(self):
-    generate_svg_cache(self.db, self.svg_specialized_names)
-
   def _check_if_special_file(self, file: File) -> bool:
     for file_type in self.special_file_names_by_type.keys():
       if file_type in self.special_files:
@@ -1013,94 +688,88 @@ class Runner:
     if all_files:
       logging.info("Importing %d files (%d MCF, %d CSV)...", len(all_files),
                    len(mcf_files), len(csv_files))
-      if self.mode == RunMode.DCP_BRIDGE:
-        if not self.use_multiprocessing:
-          num_threads = min(32, len(all_files))
-          with concurrent.futures.ThreadPoolExecutor(
-              max_workers=num_threads) as executor:
-            futures = [
-                executor.submit(self._run_single_import, file)
-                for file in all_files
-            ]
-            for future in concurrent.futures.as_completed(futures):
-              future.result()
-        else:
-          num_processes = min(32, len(all_files))
-          config_json_str = json.dumps(self.config.data)
-          jsonld_dir_name = self.db.jsonld_dir.name()
-          with concurrent.futures.ProcessPoolExecutor(
-              max_workers=num_processes) as executor:
-            futures = [
-                executor.submit(
-                    _run_single_csv_import_proc,
-                    file.path,
-                    file._store.root_path,
-                    self.output_dir.full_path(),
-                    self.process_dir.full_path(),
-                    self.import_names,
-                    config_json_str,
-                    jsonld_dir_name,
-                ) for file in all_files
-            ]
-            for future in concurrent.futures.as_completed(futures):
-              res = future.result()
-              self._log_file_progress("Imported file", res.file_rel_path)
-              if res.resolved_entities:
-                for dcid, val in res.resolved_entities.items():
-                  if isinstance(val, tuple):
-                    t, p_ids = val
-                  else:
-                    t, p_ids = val, set()
-                  if isinstance(p_ids, set):
-                    for p_id in (p_ids or [""]):
-                      self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
-                  else:
-                    self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
-              if res.event_types:
-                self.nodes.event_types.update(res.event_types)
-              if res.entity_types:
-                self.nodes.entity_types.update(res.entity_types)
-              if res.variables:
-                self.nodes.variables.update(res.variables)
-              if res.sources:
-                for src in res.sources.values():
-                  self.nodes.register_source(id=src.id,
-                                             name=src.name,
-                                             url=src.url,
-                                             provenance_id=getattr(
-                                                 src, "provenance_id", ""))
-              if res.provenances:
-                for prov in res.provenances.values():
-                  self.nodes.register_provenance(id=prov.id,
-                                                 name=prov.name,
-                                                 url=prov.url,
-                                                 source_id=prov.source_id,
-                                                 properties=prov.properties)
-              if res.groups:
-                self.nodes.groups.update(res.groups)
-                for svg in res.groups.values():
-                  self.nodes.ids_to_groups[svg.id] = svg
-              if res.properties:
-                for prop_name, prop_obj in res.properties.items():
-                  if prop_name not in self.nodes.properties:
-                    self.nodes.properties[prop_name] = prop_obj
-                  else:
-                    self.nodes.properties[prop_name].provenance_ids.update(
-                        getattr(prop_obj, "provenance_ids", set()))
-              if res.processed_imports:
-                self.db._processed_imports.update(res.processed_imports)
-              if res.obs_collision_count and hasattr(self.db,
-                                                     "obs_collision_count"):
-                self.db.obs_collision_count += res.obs_collision_count
-                for f_name, count in res.file_collision_counts.items():
-                  self.db.file_collision_counts[f_name] += count
-                  self.db.file_sample_collisions[f_name].extend(
-                      res.file_sample_collisions.get(f_name, []))
+      if not self.use_multiprocessing:
+        num_threads = min(32, len(all_files))
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=num_threads) as executor:
+          futures = [
+              executor.submit(self._run_single_import, file)
+              for file in all_files
+          ]
+          for future in concurrent.futures.as_completed(futures):
+            future.result()
       else:
-        for file in mcf_files:
-          self._run_single_mcf_import(file)
-        for file in csv_files:
-          self._run_single_import(file)
+        num_processes = min(32, len(all_files))
+        config_json_str = json.dumps(self.config.data)
+        jsonld_dir_name = self.db.jsonld_dir.name()
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=num_processes) as executor:
+          futures = [
+              executor.submit(
+                  _run_single_csv_import_proc,
+                  file.path,
+                  file._store.root_path,
+                  self.output_dir.full_path(),
+                  self.process_dir.full_path(),
+                  self.import_names,
+                  config_json_str,
+                  jsonld_dir_name,
+              ) for file in all_files
+          ]
+          for future in concurrent.futures.as_completed(futures):
+            res = future.result()
+            self._log_file_progress("Imported file", res.file_rel_path)
+            if res.resolved_entities:
+              for dcid, val in res.resolved_entities.items():
+                if isinstance(val, tuple):
+                  t, p_ids = val
+                else:
+                  t, p_ids = val, set()
+                if isinstance(p_ids, set):
+                  for p_id in (p_ids or [""]):
+                    self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
+                else:
+                  self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
+            if res.event_types:
+              self.nodes.event_types.update(res.event_types)
+            if res.entity_types:
+              self.nodes.entity_types.update(res.entity_types)
+            if res.variables:
+              self.nodes.variables.update(res.variables)
+            if res.sources:
+              for src in res.sources.values():
+                self.nodes.register_source(id=src.id,
+                                           name=src.name,
+                                           url=src.url,
+                                           provenance_id=getattr(
+                                               src, "provenance_id", ""))
+            if res.provenances:
+              for prov in res.provenances.values():
+                self.nodes.register_provenance(id=prov.id,
+                                               name=prov.name,
+                                               url=prov.url,
+                                               source_id=prov.source_id,
+                                               properties=prov.properties)
+            if res.groups:
+              self.nodes.groups.update(res.groups)
+              for svg in res.groups.values():
+                self.nodes.ids_to_groups[svg.id] = svg
+            if res.properties:
+              for prop_name, prop_obj in res.properties.items():
+                if prop_name not in self.nodes.properties:
+                  self.nodes.properties[prop_name] = prop_obj
+                else:
+                  self.nodes.properties[prop_name].provenance_ids.update(
+                      getattr(prop_obj, "provenance_ids", set()))
+            if res.processed_imports:
+              self.db._processed_imports.update(res.processed_imports)
+            if res.obs_collision_count and hasattr(self.db,
+                                                   "obs_collision_count"):
+              self.db.obs_collision_count += res.obs_collision_count
+              for f_name, count in res.file_collision_counts.items():
+                self.db.file_collision_counts[f_name] += count
+                self.db.file_sample_collisions[f_name].extend(
+                    res.file_sample_collisions.get(f_name, []))
 
   def _log_file_progress(self, file_prefix: str, file: File):
     """Increments file progress counter thread-safely and logs standard progress line."""
@@ -1114,26 +783,6 @@ class Runner:
     self._log_file_progress("Importing CSV file", input_file)
     self._create_importer(input_file).do_import()
 
-  def _run_single_mcf_import(self, input_mcf_file: File):
-    self._log_file_progress("Importing MCF file", input_mcf_file)
-    self._create_mcf_importer(input_mcf_file, self.output_dir,
-                              self.mode == RunMode.MAIN_DC).do_import()
-
-  def _create_mcf_importer(self, input_file: File, output_dir: Dir,
-                           is_main_dc: bool) -> Importer:
-    output_file = None
-    if is_main_dc:
-      output_file = output_dir.open_file(input_file.path)
-    reporter = self.reporter.get_file_reporter(input_file)
-    return McfImporter(
-        input_file=input_file,
-        output_file=output_file,
-        db=self.db,
-        reporter=reporter,
-        is_main_dc=is_main_dc,
-        nodes=self.nodes,
-    )
-
   def _create_importer(self, input_file: File) -> Importer:
     reporter = self.reporter.get_file_reporter(input_file)
     return _create_importer_for_file(
@@ -1143,7 +792,6 @@ class Runner:
         self.db,
         reporter,
         self.nodes,
-        mode=self.mode,
     )
 
   def _run_imports_and_export_jsonld(self):
