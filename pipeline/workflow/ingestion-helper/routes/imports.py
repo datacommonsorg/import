@@ -12,29 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import Enum
+import json
 import logging
-import os
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from clients.spanner import IngestionStage, IngestionState, SpannerClient
-from clients.storage import StorageClient
 import config
-from dependencies import get_spanner_client, get_storage_client
-from fastapi import APIRouter, Depends, HTTPException, Request
+from dependencies import get_spanner_client, get_workflow_client
+from fastapi import APIRouter, Depends, HTTPException
+from google.cloud.workflows import executions_v1
 from pydantic import BaseModel, Field
 from routes.models import BaseResponse, ResponseStatus
 from utils import imports as import_utils
 from utils import rollback_helper
-
-
-class ImportState(str, Enum):
-    STAGING = "STAGING"
-    FAILURE = "FAILURE"
-    SUCCESS = "SUCCESS"
-    RETRY = "RETRY"
-    SKIP = "SKIP"
-    VALIDATION = "VALIDATION"
 
 
 class ImportItem(BaseModel):
@@ -42,8 +32,15 @@ class ImportItem(BaseModel):
     latestVersion: Optional[str] = None
 
 
-class ImportInfoRequest(BaseModel):
+class IngestRequest(BaseModel):
     importList: Optional[List[ImportItem]] = Field(default_factory=list)
+    forceIngestion: Optional[bool] = False
+    dryRun: Optional[bool] = False
+
+
+class IngestResponse(BaseResponse):
+    executionName: Optional[str] = None
+    importList: List[ImportItem] = Field(default_factory=list)
 
 
 class UpdateIngestionStatusRequest(BaseModel):
@@ -51,6 +48,7 @@ class UpdateIngestionStatusRequest(BaseModel):
     workflowId: str
     status: IngestionState
     jobId: Optional[str] = None
+
 
 class UpdateIngestionHistoryRequest(BaseModel):
     workflowId: str
@@ -61,54 +59,15 @@ class UpdateIngestionHistoryRequest(BaseModel):
     jobId: Optional[str] = None
 
 
-class ImportStatusItem(BaseModel):
-    importName: str
-    status: ImportState
-    latestVersion: Optional[str] = None
-    graphPath: Optional[str] = None
-
-
-class UpdateImportStatusRequest(BaseModel):
-    imports: List[ImportStatusItem]
-    jobId: Optional[str] = None
-    workflowId: Optional[str] = None
-    executionTime: Optional[int] = None
-    dataVolume: Optional[int] = None
-    nextRefresh: Optional[str] = None
-
-
-class UpdateImportVersionRequest(BaseModel):
-    imports: List[str]
-    version: str
-    comment: str
-    workflowId: Optional[str] = None
-    jobId: Optional[str] = None
-    override: Optional[bool] = False
-    triggerIngestion: Optional[bool] = False
-
-
-class ImportVersionItem(BaseModel):
-    importName: str
-    status: ImportState
-    latestVersion: Optional[str] = None
-
-
-class UpdateImportVersionResponse(BaseResponse):
-    imports: List[ImportVersionItem] = Field(default_factory=list)
-
-
-class ImportInfoItem(BaseModel):
-    importName: str = Field(description="The name of the import")
-    latestVersion: str = Field(description="The latest version full GCS graph path")
-
-
 class RevertImportRequest(BaseModel):
     importName: Optional[str] = Field(default=None, description="Import name to revert")
     workflowId: Optional[str] = Field(default=None, description="Workflow execution ID")
     dryRun: bool = Field(default=False, description="Dry run mode")
 
+
 class RevertImportResultItem(BaseModel):
     importName: str
+    latestVersion: Optional[str] = None
     failedVersion: Optional[str] = None
     restoredVersion: Optional[str] = None
 
@@ -118,14 +77,76 @@ class RevertImportResponse(BaseResponse):
     revertedImports: List[RevertImportResultItem] = Field(default_factory=list)
     dryRun: bool = False
 
+
 router = APIRouter(prefix="/imports", tags=["imports"])
 
 
-@router.post("/info", response_model=List[ImportInfoItem])
-def get_import_info(req: ImportInfoRequest,
-                    spanner: SpannerClient = Depends(get_spanner_client)):
-    """Gets the details of imports that are ready for ingestion."""
-    return spanner.get_import_info(req.importList)
+@router.post("/ingest", response_model=IngestResponse)
+def ingest_imports(
+    req: IngestRequest,
+    spanner: SpannerClient = Depends(get_spanner_client),
+    workflow_client: executions_v1.ExecutionsClient = Depends(get_workflow_client),
+):
+    """Checks Spanner for ready imports and triggers ingestion workflow if needed."""
+    ready_imports = spanner.get_import_info(
+        req.importList, force_ingestion=bool(req.forceIngestion)
+    )
+    if not ready_imports:
+        return IngestResponse(
+            status=ResponseStatus.SKIPPED,
+            message="No imports need ingestion",
+            executionName=None,
+            importList=[],
+        )
+
+    import_items = [
+        ImportItem(**item) if isinstance(item, dict) else item
+        for item in ready_imports
+    ]
+
+    if req.dryRun:
+        return IngestResponse(
+            status=ResponseStatus.SKIPPED,
+            message="Dry run: skipped triggering ingestion workflow",
+            executionName=None,
+            importList=import_items,
+        )
+
+    if not config.PROJECT_ID or not config.LOCATION:
+        raise HTTPException(
+            status_code=500,
+            detail="PROJECT_ID or LOCATION configuration is missing. Ensure PROJECT_ID and LOCATION/REGION are set."
+        )
+
+    parent = executions_v1.ExecutionsClient.workflow_path(
+        config.PROJECT_ID,
+        config.LOCATION,
+        config.SPANNER_INGESTION_WORKFLOW_NAME,
+    )
+    execution_payload = {
+        "importList": [item.model_dump() for item in import_items]
+    }
+    execution = executions_v1.Execution(
+        argument=json.dumps(execution_payload)
+    )
+
+    try:
+        execution_resp = workflow_client.create_execution(
+            parent=parent, execution=execution
+        )
+    except Exception as e:
+        logging.error(f"Failed to trigger ingestion workflow {parent}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to trigger ingestion workflow: {e}"
+        )
+
+    return IngestResponse(
+        status=ResponseStatus.SUBMITTED,
+        message=f"Triggered ingestion workflow execution: {execution_resp.name}",
+        executionName=execution_resp.name,
+        importList=import_items,
+    )
 
 
 def _extract_import_names(
@@ -140,9 +161,9 @@ def update_ingestion_status(
     req: UpdateIngestionStatusRequest,
     spanner: SpannerClient = Depends(get_spanner_client)):
     """Updates the status of imports after ingestion."""
-    ingested_imports = _extract_import_names(req.importList)
+    import_list_dicts = [item.model_dump() for item in req.importList]
     status_str = req.status.value if hasattr(req.status, 'value') else req.status
-    spanner.update_ingestion_status(ingested_imports, req.workflowId, status_str)
+    spanner.update_ingestion_status(import_list_dicts, req.workflowId, status_str)
 
     if req.status == IngestionState.SUCCESS:
         metrics = None
@@ -154,7 +175,6 @@ def update_ingestion_status(
                 logging.error(f"Failed to fetch metrics for job {req.jobId}: {e}")
                 metrics = None
 
-        import_list_dicts = [item.model_dump() for item in req.importList]
         spanner.update_import_version_history(import_list_dicts,
                                               req.workflowId,
                                               status=status_str,
@@ -191,135 +211,6 @@ def update_ingestion_history(
                                      metrics=metrics)
 
     return BaseResponse(status=ResponseStatus.OK)
-
-
-@router.post("/status", response_model=BaseResponse)
-def update_import_status(req: UpdateImportStatusRequest,
-                         spanner: SpannerClient = Depends(get_spanner_client),
-                         storage: StorageClient = Depends(get_storage_client)):
-    """Updates the status of import jobs."""
-    for item in req.imports:
-        logging.info(
-            f"Updating import {item.importName} to status {item.status}")
-
-        # Construct dictionary parameters for the individual import
-        import_req = {
-            "importName": item.importName,
-            "status": item.status,
-            "jobId": req.jobId,
-            "executionTime": req.executionTime,
-            "dataVolume": req.dataVolume,
-            "latestVersion": item.latestVersion,
-            "graphPath": item.graphPath,
-            "nextRefresh": req.nextRefresh,
-        }
-        req_dict = {k: v for k, v in import_req.items() if v is not None}
-        params = import_utils.get_import_params(req_dict)
-
-        next_refresh = None
-        if config.IS_BASE_DC:
-            next_refresh = import_utils.get_next_refresh(
-                config.PROJECT_ID, config.LOCATION, item.importName)
-
-        if next_refresh:
-            params['next_refresh'] = next_refresh
-
-        if item.status == ImportState.STAGING:
-            version = os.path.basename(item.latestVersion or '')
-            if not version:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Empty version for import {item.importName}")
-            storage.update_version_file(item.importName,
-                                        version,
-                                        is_staging=True)
-            storage.update_provenance_file(item.importName, version)
-            storage.update_import_summary(params, version=version)
-            storage.update_version_file(item.importName,
-                                        version,
-                                        is_staging=False)
-            wf_id = req.workflowId or req.jobId
-            comment = f"import-workflow:{wf_id or ''}"
-            status_val = item.status.value if hasattr(item.status,
-                                                      'value') else item.status
-            version_path = params.get('latest_version') or item.latestVersion or version
-            spanner.update_version_history(item.importName,
-                                           version_path,
-                                           comment,
-                                           workflow_id=wf_id,
-                                           status=status_val)
-
-        spanner.update_import_status(params)
-    return BaseResponse(status=ResponseStatus.OK)
-
-
-@router.post("/version", response_model=UpdateImportVersionResponse)
-def update_import_version(req: UpdateImportVersionRequest,
-                          request: Request,
-                          spanner: SpannerClient = Depends(get_spanner_client),
-                          storage: StorageClient = Depends(get_storage_client)):
-    """Updates the version and status of multiple imports."""
-    updated_imports = []
-    import_items = []
-    caller = import_utils.get_caller_identity(request) if req.override else None
-    for import_name in req.imports:
-        logging.info(
-            f"Updating import {import_name} to version {req.version} comment: {req.comment}"
-        )
-
-        version = req.version
-        if version == 'STAGING':
-            version = storage.get_staging_version(import_name)
-
-        summary = storage.get_import_summary(import_name, version)
-        params = import_utils.get_import_params(summary)
-
-        comment = req.comment
-        if req.override:
-            params['status'] = 'STAGING'
-            comment = f'version-override:{caller} {comment}'
-        elif params.get('status') in ('SKIP', 'SKIPPED'):
-            history = spanner.get_import_version_history(import_name, limit=1, status="SUCCESS")
-            if not history:
-                logging.info(
-                    f"Import {import_name} is {params.get('status')} in GCS, but has no prior SUCCESS history "
-                    f"in database '{spanner.database.name}'. Promoting to STAGING for initial load."
-                )
-                params['status'] = 'STAGING'
-                comment = f'initial-load {comment}'
-            else:
-                params['status'] = 'SKIP'
-
-        if params['status'] == 'STAGING':
-            storage.update_provenance_file(import_name, version)
-            storage.update_version_file(import_name, version, is_staging=False)
-            wf_id = req.workflowId or req.jobId
-            version_path = params.get('latest_version') or version
-            spanner.update_version_history(import_name,
-                                           version_path,
-                                           comment,
-                                           workflow_id=wf_id,
-                                           status="STAGING")
-            logging.info(f"Updated import {import_name} to version {version}")
-        else:
-            logging.info(f"Skipping {import_name} version update")
-
-        spanner.update_import_status(params)
-        
-        import_items.append(
-            ImportVersionItem(
-                importName=import_name,
-                status=params.get('status', 'RETRY'),
-                latestVersion=params.get('latest_version')
-            )
-        )
-        updated_imports.append(
-            f"Import: {import_name} Version: {version} Status: {params['status']}"
-        )
-
-    return UpdateImportVersionResponse(status=ResponseStatus.OK,
-                                       message="; ".join(updated_imports),
-                                       imports=import_items)
 
 
 @router.post("/revert", response_model=RevertImportResponse)
@@ -363,6 +254,7 @@ def revert_imports(
     reverted_items = [
         RevertImportResultItem(
             importName=r["importName"],
+            latestVersion=r.get("latestVersion") or r.get("restoredVersion"),
             failedVersion=r.get("failedVersion"),
             restoredVersion=r.get("restoredVersion")
         ) for r in results

@@ -39,6 +39,7 @@ else:
     SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID')
 GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID')
 LOCATION = os.environ.get('LOCATION') or os.environ.get('REGION')
+SPANNER_INGESTION_WORKFLOW_NAME = os.environ.get('SPANNER_INGESTION_WORKFLOW_NAME', 'spanner-ingestion-workflow')
 ENABLE_EMBEDDINGS = os.environ.get('ENABLE_EMBEDDINGS', 'false').lower() == 'true'
 IS_BASE_DC = os.environ.get('IS_BASE_DC', 'true').lower() == 'true'
 TIMEOUT = int(os.environ.get('TIMEOUT', 1700))

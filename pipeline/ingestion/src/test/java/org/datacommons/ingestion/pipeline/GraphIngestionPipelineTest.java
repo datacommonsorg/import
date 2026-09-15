@@ -219,6 +219,73 @@ public class GraphIngestionPipelineTest implements Serializable {
         !foundConstraintProperties);
   }
 
+  @Test
+  public void testIsDirectRunner() {
+    IngestionPipelineOptions directOptions =
+        PipelineOptionsFactory.fromArgs("--runner=DirectRunner").as(IngestionPipelineOptions.class);
+    assertTrue(
+        "Should return true for DirectRunner",
+        GraphIngestionPipeline.isDirectRunner(directOptions));
+
+    IngestionPipelineOptions dataflowOptions =
+        PipelineOptionsFactory.fromArgs(
+                "--runner=DataflowRunner",
+                "--project=test-project",
+                "--stagingLocation=gs://test-bucket/staging")
+            .as(IngestionPipelineOptions.class);
+    assertTrue(
+        "Should return false for DataflowRunner",
+        !GraphIngestionPipeline.isDirectRunner(dataflowOptions));
+  }
+
+  @Test
+  public void testConfigureDirectRunnerUncaughtExceptionHandler() {
+    Thread.UncaughtExceptionHandler originalHandler = Thread.getDefaultUncaughtExceptionHandler();
+    try {
+      Thread.setDefaultUncaughtExceptionHandler(null);
+      GraphIngestionPipeline.configureDirectRunnerUncaughtExceptionHandler();
+      assertTrue(
+          "Default uncaught exception handler should be registered",
+          Thread.getDefaultUncaughtExceptionHandler() != null);
+    } finally {
+      Thread.setDefaultUncaughtExceptionHandler(originalHandler);
+    }
+  }
+
+  @Test
+  public void testDirectRunnerSubprocessExitsFastOnFailure() throws Exception {
+    String javaHome = System.getProperty("java.home");
+    String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
+    String classpath = System.getProperty("java.class.path");
+    String className = GraphIngestionPipeline.class.getCanonicalName();
+
+    ProcessBuilder builder =
+        new ProcessBuilder(
+            javaBin,
+            "-cp",
+            classpath,
+            className,
+            "--runner=DirectRunner",
+            "--importList=[{\"importName\": \"invalidImport\", \"graphPath\": \"/invalid/nonexistent/*\"}]",
+            "--projectId=test-project",
+            "--spannerInstanceId=test-instance",
+            "--spannerDatabaseId=test-db");
+
+    builder.inheritIO();
+    Process process = builder.start();
+    boolean finished = false;
+    try {
+      finished = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);
+    } finally {
+      if (!finished) {
+        process.destroyForcibly();
+      }
+    }
+
+    assertTrue("Process should terminate within 30 seconds without hanging", finished);
+    assertTrue("Process should exit with non-zero exit code", process.exitValue() != 0);
+  }
+
   static class MockSpannerClient extends SpannerClient {
     private final transient PCollection<Void> deleteSignal;
     private final transient SpannerWriteResult mockWriteResult;

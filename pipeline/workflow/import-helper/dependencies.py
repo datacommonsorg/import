@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from fastapi import HTTPException
-from google.cloud.workflows import executions_v1
 from clients.spanner import SpannerClient
+from clients.storage import StorageClient
 import config
 
-# Cached singleton instances to reuse connection/session pools across requests
 _spanner_client = None
-_workflow_client = None
+_storage_client = None
+
 
 def get_spanner_client() -> SpannerClient:
     global _spanner_client
@@ -32,21 +32,18 @@ def get_spanner_client() -> SpannerClient:
         _spanner_client = SpannerClient(
             config.SPANNER_PROJECT_ID,
             config.SPANNER_INSTANCE_ID,
-            config.SPANNER_DATABASE_ID,
-            location=config.LOCATION,
-            models=config.EMBEDDING_MODELS,
-            embedding_space=config.EMBEDDING_SPACE,
-            embedding_table=config.EMBEDDING_TABLE,
-            embedding_index=config.EMBEDDING_INDEX,
-            embedding_label_index=config.EMBEDDING_LABEL_INDEX,
-            emulator_host=config.SPANNER_EMULATOR_HOST
+            config.SPANNER_DATABASE_ID
         )
     return _spanner_client
 
 
-def get_workflow_client() -> executions_v1.ExecutionsClient:
-    global _workflow_client
-    if _workflow_client is None:
-        _workflow_client = executions_v1.ExecutionsClient()
-    return _workflow_client
-
+def get_storage_client() -> StorageClient:
+    global _storage_client
+    if _storage_client is None:
+        if not config.GCS_BUCKET_ID:
+            raise HTTPException(
+                status_code=500,
+                detail="GCS Bucket ID configuration is missing. Ensure GCS_BUCKET_ID is set."
+            )
+        _storage_client = StorageClient(config.GCS_BUCKET_ID)
+    return _storage_client

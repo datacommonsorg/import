@@ -1,4 +1,4 @@
-# Copyright 2025 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Storage client for the ingestion helper."""
+"""Storage client for the import helper."""
 
-import logging
-from google.cloud import storage
-from google.cloud import exceptions
 import json
+import logging
 import os
 import config
+from google.cloud import exceptions
+from google.cloud import storage
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -48,7 +48,7 @@ class StorageClient:
 
         Args:
             import_name: The name of the import.
-            version: The version of the import.            
+            version: The version of the import.
 
         Returns:
             A dictionary containing the import summary, or an empty dict if not found.
@@ -96,23 +96,29 @@ class StorageClient:
         blob.upload_from_string(json.dumps(import_summary))
         logging.info(f'Updated import summary at {summary_file}')
 
-    def get_staging_version(self, import_name: str) -> str:
-        """Retrieves the latest version from the staging directory.
+    def get_import_version(self,
+                           import_name: str,
+                           is_staging: bool = False) -> str:
+        """Retrieves the version from the version file (staging or latest) in GCS.
 
         Args:
             import_name: The name of the import.
+            is_staging: Whether to retrieve the staging version file or the latest version file.
 
         Returns:
             The version string, or an empty string if not found.
         """
+        file_name = _STAGING_VERSION_FILE if is_staging else _LATEST_VERSION_FILE
+        file_type = "staging" if is_staging else "latest"
         output_dir = self._get_output_dir(import_name)
-        version_file = os.path.join(output_dir, _STAGING_VERSION_FILE)
-        logging.info(f'Reading version file {version_file}')
+        version_file = os.path.join(output_dir, file_name)
+        logging.info(f'Reading {file_type} version file {version_file}')
         try:
             blob = self.bucket.blob(version_file)
-            return blob.download_as_text()
+            return blob.download_as_text().strip()
         except exceptions.NotFound:
-            logging.error(f"Version file {version_file} not found")
+            logging.error(
+                f"{file_type.capitalize()} version file {version_file} not found")
             raise
 
     def update_version_file(self,
@@ -166,15 +172,6 @@ class StorageClient:
                              'import_metadata_mcf.mcf'))
             new_blob.upload_from_string(default_provenance)
 
-        # TODO: Ingested using provenance import. Provenance file should be copied to the import folder.
-        # provenance_file = import_name.split(':')[-1] + '.mcf'
-        # provenance_blob = self.bucket.blob(
-        #     os.path.join('provenance', provenance_file))
-        # if provenance_blob.exists():
-        #     self.bucket.copy_blob(
-        #         provenance_blob, self.bucket,
-        #         os.path.join(output_dir, version, 'provenance', 'genmcf',
-        #                      provenance_file))
         logging.info(
             f'Updated provenance file for import {import_name} to add {version}'
         )

@@ -348,11 +348,12 @@ class StatVarGroupGenerator:
           FROM Ancestors
         );
 
-        -- Fetch all StatisticalVariable nodes and their provenance.
+        -- Fetch all StatisticalVariable nodes and their canonical provenance.
         CREATE OR REPLACE TEMP TABLE StatVar AS (
-          SELECT DISTINCT subject_id, provenance
+          SELECT subject_id, MIN(provenance) AS provenance
           FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, provenance FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatisticalVariable'")
           WHERE NOT STARTS_WITH(provenance, generated_provenance_prefix)
+          GROUP BY subject_id
         );
 
         -- Fetch relevant StatisticalVariable triples.
@@ -371,9 +372,10 @@ class StatVarGroupGenerator:
         -- This avoids scanning StatVarTriple twice for the same predicates.
         CREATE OR REPLACE TEMP TABLE SVBaseData AS (
           WITH SVPopType AS (
-            SELECT DISTINCT subject_id, object_id AS populationType
+            SELECT subject_id, MIN(object_id) AS populationType
             FROM StatVarTriple
             WHERE predicate = 'populationType'
+            GROUP BY subject_id
           ),
           SVStatVarProps AS (
             SELECT subject_id,
@@ -383,12 +385,12 @@ class StatVarGroupGenerator:
           ),
           SVStatVarPropsAgg AS (
             SELECT subject_id,
-              ARRAY_AGG(statVarProperties) AS sv_statVarProperties
+              ARRAY_AGG(DISTINCT statVarProperties ORDER BY statVarProperties) AS sv_statVarProperties
             FROM SVStatVarProps
             GROUP BY subject_id
           ),
           SVCprops AS (
-            SELECT subject_id, ARRAY_AGG(object_id ORDER BY object_id) AS cprops
+            SELECT subject_id, ARRAY_AGG(DISTINCT object_id ORDER BY object_id) AS cprops
             FROM StatVarTriple
             WHERE predicate = 'constraintProperties'
             GROUP BY subject_id
@@ -397,8 +399,8 @@ class StatVarGroupGenerator:
             -- Reconstruct SV pvs in the same FormatName(p) = FormatName(v) form.
             SELECT
               T.subject_id,
-              ARRAY_AGG(CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id))
-                        ORDER BY T.predicate, T.object_id) AS sv_pvs
+              ARRAY_AGG(DISTINCT CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id))
+                        ORDER BY CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id))) AS sv_pvs
             FROM StatVarTriple T
             JOIN SVCprops SC ON T.subject_id = SC.subject_id
             WHERE T.predicate IN UNNEST(SC.cprops)
@@ -476,11 +478,13 @@ class StatVarGroupGenerator:
 
         -- Seed the intial data for iteratively generating SVGs.
         CREATE OR REPLACE TEMPORARY TABLE InitialData AS (
-          WITH Constraints AS (
-            SELECT 
-              T.subject_id, 
-              ARRAY_AGG(T.predicate ORDER BY T.predicate, T.object_id) AS aligned_cps,
-              ARRAY_AGG(CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id)) ORDER BY T.predicate, T.object_id) AS pvs
+          WITH DistinctTriples AS (
+            SELECT DISTINCT
+              T.subject_id,
+              T.predicate,
+              T.object_id,
+              FormatName(T.predicate) AS formatted_predicate,
+              FormatName(T.object_id) AS formatted_object_id
             FROM StatVarTriple T
             JOIN SVBaseData SVB ON SVB.subject_id = T.subject_id
             LEFT JOIN SVDPVMatch M ON M.subject_id = T.subject_id
@@ -489,6 +493,13 @@ class StatVarGroupGenerator:
               -- is in dpvs_to_strip, exclude it from the hierarchy generation.
               AND CONCAT(FormatName(T.predicate), ' = ', FormatName(T.object_id))
                 NOT IN UNNEST(IFNULL(M.dpvs_to_strip, ARRAY<STRING>[]))
+          ),
+          Constraints AS (
+            SELECT 
+              subject_id, 
+              ARRAY_AGG(predicate ORDER BY predicate, object_id) AS aligned_cps,
+              ARRAY_AGG(CONCAT(formatted_predicate, ' = ', formatted_object_id) ORDER BY predicate, object_id) AS pvs
+            FROM DistinctTriples
             GROUP BY subject_id 
           )
           SELECT
@@ -782,63 +793,92 @@ class StatVarGroupGenerator:
 
               INSERT INTO PrunableSVGs SELECT svg_id FROM NewPrunable;
 
-              -- Update CurrentParentChild by bypassing PrunableSVGs nodes recursively
-              CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
-                WITH RECURSIVE Walk AS (
+              -- Update CurrentParentChild by bypassing PrunableSVGs nodes.
+              BEGIN
+                DECLARE paths_to_resolve INT64 DEFAULT 1;
+
+                -- Only run the iterative bypass on SVG-to-SVG edges (specializationOf).
+                CREATE OR REPLACE TEMP TABLE CurrentSVGParent AS (
                   SELECT child, parent, predicate
                   FROM ParentChild
+                  WHERE predicate = 'specializationOf'
+                );
 
-                  UNION ALL
+                WHILE paths_to_resolve > 0 DO
+                  CREATE OR REPLACE TEMP TABLE NextSVGParent AS ( 
+                    SELECT DISTINCT pc.child, np.parent, pc.predicate
+                    FROM CurrentSVGParent pc
+                    JOIN CurrentSVGParent np ON pc.parent = np.child
+                    WHERE pc.parent IN (SELECT svg_id FROM PrunableSVGs)
 
-                  SELECT w.child, pc.parent, w.predicate
-                  FROM Walk w
-                  JOIN PrunableSVGs p ON w.parent = p.svg_id
-                  JOIN ParentChild pc ON p.svg_id = pc.child
-                )
-                SELECT DISTINCT child, parent, predicate
-                FROM Walk
-                WHERE parent NOT IN (SELECT svg_id FROM PrunableSVGs)
-                  AND child NOT IN (SELECT svg_id FROM PrunableSVGs)
-              );
+                    UNION DISTINCT
+
+                    SELECT DISTINCT child, parent, predicate
+                    FROM CurrentSVGParent
+                    WHERE parent NOT IN (SELECT svg_id FROM PrunableSVGs)
+                  );
+
+                  SET paths_to_resolve = (
+                    SELECT COUNT(*)
+                    FROM NextSVGParent
+                    WHERE parent IN (SELECT svg_id FROM PrunableSVGs)
+                  );
+
+                  CREATE OR REPLACE TEMP TABLE CurrentSVGParent AS (
+                    SELECT * FROM NextSVGParent
+                  );
+                END WHILE;
+
+                -- Reconstruct CurrentParentChild by combining the bypassed SVG-to-SVG edges
+                -- and the SV-to-SVG edges mapped to their bypassed parents.
+                CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
+                  SELECT DISTINCT sv.child, COALESCE(svg.parent, sv.parent) AS parent, sv.predicate
+                  FROM (SELECT * FROM ParentChild WHERE predicate = 'memberOf') sv
+                  LEFT JOIN (
+                    SELECT child, parent 
+                    FROM CurrentSVGParent 
+                    WHERE child IN (SELECT svg_id FROM PrunableSVGs)
+                  ) svg ON sv.parent = svg.child
+                  WHERE COALESCE(svg.parent, sv.parent) NOT IN (SELECT svg_id FROM PrunableSVGs)
+
+                  UNION DISTINCT
+
+                  SELECT DISTINCT child, parent, predicate
+                  FROM CurrentSVGParent
+                  WHERE parent NOT IN (SELECT svg_id FROM PrunableSVGs)
+                );
+
+                -- Remove edges starting from pruned nodes
+                CREATE OR REPLACE TEMP TABLE CurrentParentChild AS (
+                  SELECT DISTINCT child, parent, predicate
+                  FROM CurrentParentChild
+                  WHERE child NOT IN (SELECT svg_id FROM PrunableSVGs)
+                );
+              END;
             END IF;
           END WHILE;
 
           -- Compute effective parent for each surviving child of a pruned SVG across ALL DAG paths.
-          -- Use a recursive CTE to explore ALL paths through the DAG. Each path stops when it
-          -- reaches a non-prunable ancestor.
-          CREATE OR REPLACE TEMP TABLE EffectiveParent AS (
-            WITH RECURSIVE
-            WalkUp AS (
-              -- Base: direct children of pruned SVGs
-              SELECT
-                child AS node_id,
-                parent AS effective_parent,
-                predicate,
-                1 AS depth
+          BEGIN
+            -- Ensure CurrentSVGParent exists even if no pruning occurred
+            CREATE TEMP TABLE IF NOT EXISTS CurrentSVGParent AS (
+              SELECT child, parent, predicate
               FROM ParentChild
-              WHERE parent IN (SELECT svg_id FROM PrunableSVGs)
+              WHERE FALSE
+            );
 
-              UNION ALL
-
-              -- Recursive: if effective_parent is prunable, walk up to its parents
-              SELECT
-                w.node_id,
-                pc.parent AS effective_parent,
-                w.predicate,
-                w.depth + 1 AS depth
-              FROM WalkUp w
-              JOIN PrunableSVGs p ON w.effective_parent = p.svg_id
-              JOIN ParentChild pc ON p.svg_id = pc.child
-            )
-            -- Filter to non-prunable ancestors for surviving (non-pruned) children
-            SELECT DISTINCT
-              node_id,
-              effective_parent,
-              predicate
-            FROM WalkUp
-            WHERE effective_parent NOT IN (SELECT svg_id FROM PrunableSVGs)
-              AND node_id NOT IN (SELECT svg_id FROM PrunableSVGs)
-          );
+            CREATE OR REPLACE TEMP TABLE EffectiveParent AS (
+              SELECT DISTINCT
+                orig.child AS node_id,
+                COALESCE(svg.parent, orig.parent) AS effective_parent,
+                orig.predicate
+              FROM ParentChild orig
+              LEFT JOIN CurrentSVGParent svg ON orig.parent = svg.child
+              WHERE orig.parent IN (SELECT svg_id FROM PrunableSVGs)
+                AND orig.child NOT IN (SELECT svg_id FROM PrunableSVGs)
+                AND COALESCE(svg.parent, orig.parent) NOT IN (SELECT svg_id FROM PrunableSVGs)
+            );
+          END;
 
           -- Build redirected edges for non-pruned children of pruned SVGs.
           -- Pruned SVGs themselves are removed entirely (no redirected edges).

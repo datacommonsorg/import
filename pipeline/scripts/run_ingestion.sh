@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Triggers the Spanner ingestion workflow for a specific import.
-# Updates the import version and version history via ingestion-helper.
+# Updates the import version and version history via import-helper.
 #
 # Usage:
 #   ./pipeline/scripts/run_ingestion.sh <importName> <env> <latestVersion: full GCS path with wildcard>
@@ -29,12 +29,12 @@ case "${ENV,,}" in
   staging)
     PROJECT="datcom-import-automation-prod"
     WORKFLOW="spanner-ingestion-workflow-staging"
-    HELPER_SERVICE="ingestion-helper-service-staging"
+    HELPER_SERVICE="import-helper-service-staging"
     ;;
   prod|production)
     PROJECT="datcom-import-automation-prod"
     WORKFLOW="spanner-ingestion-workflow"
-    HELPER_SERVICE="ingestion-helper-service"
+    HELPER_SERVICE="import-helper-service"
     ;;
   *)
     echo "Unknown environment: '${ENV}'. Supported environments: staging, prod"
@@ -69,7 +69,7 @@ curl -X POST "${HELPER_URL}/imports/version" \
 echo ""
 
 # Build JSON payload
-IMPORT_ITEM="{\"importName\":\"${CLEAN_IMPORT_NAME}\""
+IMPORT_ITEM="{\"importName\":\"${CLEAN_IMPORT_NAME}\",\"forceIngestion\":true"
 if [ "$LATEST_VERSION" != "STAGING" ]; then
   IMPORT_ITEM="${IMPORT_ITEM},\"latestVersion\":\"${LATEST_VERSION}\""
 fi

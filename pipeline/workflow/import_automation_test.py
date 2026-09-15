@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-End-to-end test for Spanner ingestion workflow.
+End-to-end test for import automation workflow.
 """
 
+import json
 import os
 import sys
 
@@ -40,19 +41,16 @@ else:
                                          'datcom-spanner-test')
     SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID', 'dc-test-db')
 GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID', 'datcom-ci-test')
-INGESTION_WORKFLOW_ID = os.environ.get('INGESTION_WORKFLOW_ID',
-                                       'spanner-ingestion-workflow-staging')
+GCS_MOUNT_BUCKET = os.environ.get('GCS_MOUNT_BUCKET', 'datcom-ci-test')
+IMPORT_WORKFLOW_ID = os.environ.get('IMPORT_WORKFLOW_ID',
+                                    'import-automation-workflow-staging')
 
 # Test Import Configuration
 TEST_IMPORT_NAME = 'scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test'
-TEST_IMPORT_VERSION = os.environ.get(
-    'TEST_IMPORT_VERSION',
-    f"gs://{GCS_BUCKET_ID}/scripts/us_fed/treasury_constant_maturity_rates/{TEST_IMPORT_NAME.split(':')[-1]}/test_version/*/*/*.mcf",
-)
 
 
 def verify_spanner_data(import_name):
-    """Verifies that the import data exists and is marked as SUCCESS in Spanner."""
+    """Verifies that the import data exists in ImportSummary and ImportHistory in Spanner."""
     logging.info(f"Verifying Spanner data for import: {import_name}")
     spanner_client = spanner.Client(project=SPANNER_PROJECT_ID)
     instance = spanner_client.instance(SPANNER_INSTANCE_ID)
@@ -60,49 +58,46 @@ def verify_spanner_data(import_name):
 
     try:
         with database.snapshot(multi_use=True) as snapshot:
-            # Check ImportStatus table
-            query = "SELECT State FROM ImportStatus WHERE ImportName = @import_name"
+            # 1. Check ImportSummary table
+            query_summary = "SELECT State, LatestVersion FROM ImportSummary WHERE ImportName = @import_name"
             params = {"import_name": import_name}
             param_types = {"import_name": spanner.param_types.STRING}
 
-            results = list(
-                snapshot.execute_sql(query,
+            results_summary = list(
+                snapshot.execute_sql(query_summary,
                                      params=params,
                                      param_types=param_types))
 
-            if not results:
+            if not results_summary:
                 raise AssertionError(
-                    f"Import {import_name} not found in ImportStatus table.")
+                    f"Import {import_name} not found in ImportSummary table.")
 
-            state = results[0][0]
-            if state != 'SUCCESS':
-                raise AssertionError(
-                    f"Import {import_name} state is {state}, expected 'SUCCESS'."
-                )
-
+            state, latest_version = results_summary[0]
             logging.info(
-                f"Import {import_name} verified in ImportStatus with state: {state}"
+                f"Import {import_name} verified in ImportSummary with state: {state}, latest_version: {latest_version}"
             )
 
-            # Check IngestionHistory table
+            # 2. Check ImportHistory table
             query_history = """
-                SELECT count(*) 
-                FROM IngestionHistory 
-                WHERE @import_name IN UNNEST(IngestedImports)
-                  AND Status = 'SUCCESS'
+                SELECT Version, Status, Comment
+                FROM ImportHistory 
+                WHERE ImportName = @import_name
+                ORDER BY UpdateTimestamp DESC
+                LIMIT 1
             """
             results_history = list(
                 snapshot.execute_sql(query_history,
                                      params=params,
                                      param_types=param_types))
-            count = results_history[0][0]
 
-            if count == 0:
+            if not results_history:
                 raise AssertionError(
-                    f"Import {import_name} not found with Status='SUCCESS' in IngestionHistory table."
-                )
+                    f"Import {import_name} not found in ImportHistory table.")
 
-            logging.info(f"Import {import_name} verified in IngestionHistory.")
+            version, status, comment = results_history[0]
+            logging.info(
+                f"Import {import_name} verified in ImportHistory: version={version}, status={status}, comment={comment}"
+            )
 
     except Exception as e:
         logging.error(f"Spanner verification failed: {e}")
@@ -117,9 +112,8 @@ def cleanup_spanner(import_name):
     database = instance.database(SPANNER_DATABASE_ID)
 
     def _delete_import(transaction):
-        query1 = "DELETE FROM ImportStatus WHERE ImportName = @import_name"
-        query2 = "DELETE FROM ImportVersionHistory WHERE ImportName = @import_name"
-        query3 = "DELETE FROM IngestionHistory WHERE @import_name IN UNNEST(IngestedImports)"
+        query1 = "DELETE FROM ImportSummary WHERE ImportName = @import_name"
+        query2 = "DELETE FROM ImportHistory WHERE ImportName = @import_name"
         params = {"import_name": import_name}
         param_types = {"import_name": spanner.param_types.STRING}
         transaction.execute_update(query1,
@@ -128,14 +122,11 @@ def cleanup_spanner(import_name):
         transaction.execute_update(query2,
                                    params=params,
                                    param_types=param_types)
-        transaction.execute_update(query3,
-                                   params=params,
-                                   param_types=param_types)
 
     try:
         database.run_in_transaction(_delete_import)
         logging.info(
-            f"Successfully cleaned up {import_name} from ImportStatus, ImportVersionHistory, and IngestionHistory tables.")
+            f"Successfully cleaned up {import_name} from ImportSummary and ImportHistory tables.")
     except Exception as e:
         logging.warning(f"Error during Spanner cleanup: {e}")
 
@@ -148,29 +139,35 @@ def main(argv):
         short_import_name = TEST_IMPORT_NAME.split(':')[-1]
         cleanup_spanner(short_import_name)
 
-        # 1. Trigger Spanner Ingestion Workflow
-        ingestion_workflow_args = {
-            "importList": [
-                {
-                    "importName": short_import_name,
-                    "latestVersion": TEST_IMPORT_VERSION,
-                }
-            ]
+        # 1. Trigger Import Automation Workflow
+        import_config = {
+            "gcp_project_id": PROJECT_ID,
+            "gcs_project_id": PROJECT_ID,
+            "storage_prod_bucket_name": GCS_BUCKET_ID,
+            "gcs_bucket_volume_mount": GCS_MOUNT_BUCKET
         }
 
-        logging.info("Step 1: Running Spanner Ingestion Workflow...")
-        cloud_workflow.trigger_workflow_and_wait(PROJECT_ID, LOCATION,
-                                                 INGESTION_WORKFLOW_ID,
-                                                 ingestion_workflow_args)
+        import_workflow_args = {
+            "importName": TEST_IMPORT_NAME,
+            "importConfig": json.dumps(import_config),
+            "dryRunIngestion": "true",
+        }
+        if os.environ.get('SKIP_IMPORT_JOB'):
+            import_workflow_args["skipImportJob"] = os.environ.get('SKIP_IMPORT_JOB')
+
+        logging.info("Step 1: Running Import Automation Workflow...")
+        workflow_result = cloud_workflow.trigger_workflow_and_wait(
+            PROJECT_ID, LOCATION, IMPORT_WORKFLOW_ID, import_workflow_args)
+        logging.info(f"Workflow result: {workflow_result}")
 
         # 2. Verify Data in Spanner
         logging.info("Step 2: Verifying Data in Spanner...")
         verify_spanner_data(short_import_name)
 
-        logging.info("Spanner ingestion test completed successfully.")
+        logging.info("Import automation test completed successfully.")
 
     except Exception as e:
-        logging.error(f"Spanner ingestion test Failed: {e}")
+        logging.error(f"Import automation test Failed: {e}")
         sys.exit(1)
 
 

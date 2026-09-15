@@ -19,7 +19,7 @@ import os
 
 from fastapi.testclient import TestClient
 from app import app
-from dependencies import get_spanner_client, get_storage_client
+from dependencies import get_spanner_client, get_workflow_client
 import config
 
 client = TestClient(app)
@@ -161,148 +161,6 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.json()["status"], "OK")
         mock_spanner_client.seed_database.assert_called_once()
 
-    @patch('routes.imports.import_utils.get_next_refresh')
-    def test_update_import_status_success(self, mock_get_next_refresh):
-        mock_get_next_refresh.return_value = "2026-07-01T00:00:00Z"
-        mock_spanner_client = MagicMock()
-        mock_storage_client = MagicMock()
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
-        app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
-
-        payload = {
-            "imports": [
-                {
-                    "importName": "import1",
-                    "status": "STAGING",
-                    "latestVersion": "gs://bucket/import1/version1.csv",
-                    "graphPath": "graph"
-                },
-                {
-                    "importName": "import2",
-                    "status": "STAGING",
-                    "latestVersion": "gs://bucket/import2/version2.csv",
-                    "graphPath": "graph"
-                }
-            ],
-            "jobId": "job123",
-            "executionTime": 100,
-            "dataVolume": 200,
-            "nextRefresh": "2026-07-01T00:00:00Z"
-        }
-
-        response = client.post("/imports/status", json=payload)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "OK")
-        
-        # Verify storage was called for both imports
-        self.assertEqual(mock_storage_client.update_version_file.call_count, 4) # 2 per import
-        self.assertEqual(mock_storage_client.update_provenance_file.call_count, 2)
-        self.assertEqual(mock_storage_client.update_import_summary.call_count, 2)
-        
-        # Verify spanner was called for both imports
-        mock_spanner_client.update_version_history.assert_any_call(
-            "import1", "gs://bucket/import1/version1.csv/graph", "import-workflow:job123", workflow_id="job123", status="STAGING"
-        )
-        mock_spanner_client.update_version_history.assert_any_call(
-            "import2", "gs://bucket/import2/version2.csv/graph", "import-workflow:job123", workflow_id="job123", status="STAGING"
-        )
-        self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
-        self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)
-
-    def test_update_import_version_success(self):
-        mock_spanner_client = MagicMock()
-        mock_storage_client = MagicMock()
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
-        app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
-
-        # Mock storage calls
-        mock_storage_client.get_staging_version.side_effect = lambda name: f"ver_{name}"
-        mock_storage_client.get_import_summary.side_effect = lambda name, version: {
-            "importName": name,
-            "status": "STAGING",
-            "latestVersion": f"gs://bucket/{name}/{version}.csv"
-        }
-
-        payload = {
-            "imports": ["import1", "import2"],
-            "version": "STAGING",
-            "comment": "release-comment",
-            "override": False
-        }
-
-        response = client.post("/imports/version", json=payload)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "OK")
-        self.assertIn("Import: import1 Version: ver_import1 Status: STAGING", response.json()["message"])
-        self.assertIn("Import: import2 Version: ver_import2 Status: STAGING", response.json()["message"])
-
-        # Verify storage was called
-        mock_storage_client.get_staging_version.assert_any_call("import1")
-        mock_storage_client.get_staging_version.assert_any_call("import2")
-        self.assertEqual(mock_storage_client.update_provenance_file.call_count, 2)
-        self.assertEqual(mock_storage_client.update_version_file.call_count, 2)
-
-        # Verify spanner was called
-        mock_spanner_client.update_version_history.assert_any_call(
-            "import1", "gs://bucket/import1/ver_import1.csv", "release-comment", workflow_id=None, status="STAGING"
-        )
-        mock_spanner_client.update_version_history.assert_any_call(
-            "import2", "gs://bucket/import2/ver_import2.csv", "release-comment", workflow_id=None, status="STAGING"
-        )
-        self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
-        self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)
-
-    @patch('routes.imports.import_utils.get_caller_identity')
-    def test_update_import_version_override_success(self, mock_get_caller_identity):
-        mock_get_caller_identity.return_value = "test-caller"
-        mock_spanner_client = MagicMock()
-        mock_storage_client = MagicMock()
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
-        app.dependency_overrides[get_storage_client] = lambda: mock_storage_client
-
-        # Mock storage calls
-        mock_storage_client.get_staging_version.side_effect = lambda name: f"ver_{name}"
-        mock_storage_client.get_import_summary.side_effect = lambda name, version: {
-            "importName": name,
-            "status": "NOT_STAGING",  # Starts as NOT_STAGING, will be overridden to STAGING
-            "latestVersion": f"gs://bucket/{name}/{version}.csv"
-        }
-
-        payload = {
-            "imports": ["import1", "import2"],
-            "version": "STAGING",
-            "comment": "release-comment",
-            "override": True
-        }
-
-        response = client.post("/imports/version", json=payload)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "OK")
-        self.assertIn("Import: import1 Version: ver_import1 Status: STAGING", response.json()["message"])
-        self.assertIn("Import: import2 Version: ver_import2 Status: STAGING", response.json()["message"])
-
-        # Verify storage was called
-        mock_storage_client.get_staging_version.assert_any_call("import1")
-        mock_storage_client.get_staging_version.assert_any_call("import2")
-        self.assertEqual(mock_storage_client.update_provenance_file.call_count, 2)
-        self.assertEqual(mock_storage_client.update_version_file.call_count, 2)
-
-        # Verify spanner was called with the overridden comment containing caller
-        mock_spanner_client.update_version_history.assert_any_call(
-            "import1", "gs://bucket/import1/ver_import1.csv", "version-override:test-caller release-comment", workflow_id=None, status="STAGING"
-        )
-        mock_spanner_client.update_version_history.assert_any_call(
-            "import2", "gs://bucket/import2/ver_import2.csv", "version-override:test-caller release-comment", workflow_id=None, status="STAGING"
-        )
-        self.assertEqual(mock_spanner_client.update_version_history.call_count, 2)
-        self.assertEqual(mock_spanner_client.update_import_status.call_count, 2)
-        
-        # Verify get_caller_identity was called exactly once outside of the loop
-        mock_get_caller_identity.assert_called_once()
-
     def test_revert_single_import(self):
         mock_spanner_client = MagicMock()
         mock_spanner_client.get_import_latest_version.return_value = "gs://bucket/path/v2/*/*.mcf"
@@ -438,7 +296,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
         mock_spanner_client.update_ingestion_status.assert_called_once_with(
-            ["import1"], "wf-123", "SUCCESS"
+            [{"importName": "import1", "latestVersion": None}], "wf-123", "SUCCESS"
         )
         mock_get_ingestion_metrics.assert_called_once_with(
             config.PROJECT_ID, config.LOCATION, "job-456"
@@ -585,13 +443,21 @@ class TestMain(unittest.TestCase):
             metrics=mock_metrics
         )
 
-    def test_get_import_info_list_of_dicts(self):
+    @patch('config.PROJECT_ID', 'test-project')
+    @patch('config.LOCATION', 'us-central1')
+    def test_ingest_imports_submitted(self):
         mock_spanner_client = MagicMock()
         mock_spanner_client.get_import_info.return_value = [{
             "importName": "EurostatData",
             "latestVersion": "gs://bucket/path/*/*.mcf"
         }]
+        mock_workflow_client = MagicMock()
+        mock_execution = MagicMock()
+        mock_execution.name = "projects/test-project/locations/us-central1/workflows/spanner-ingestion-workflow/executions/exec-123"
+        mock_workflow_client.create_execution.return_value = mock_execution
+
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        app.dependency_overrides[get_workflow_client] = lambda: mock_workflow_client
 
         payload = {
             "importList": [{
@@ -599,25 +465,38 @@ class TestMain(unittest.TestCase):
                 "latestVersion": "gs://bucket/path/*/*.mcf",
             }]
         }
-        response = client.post("/imports/info", json=payload)
+        response = client.post("/imports/ingest", json=payload)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()), 1)
-        self.assertEqual(response.json()[0]["importName"], "EurostatData")
+        data = response.json()
+        self.assertEqual(data["status"], "SUBMITTED")
+        self.assertEqual(data["executionName"], "projects/test-project/locations/us-central1/workflows/spanner-ingestion-workflow/executions/exec-123")
+        self.assertEqual(len(data["importList"]), 1)
+        self.assertEqual(data["importList"][0]["importName"], "EurostatData")
         mock_spanner_client.get_import_info.assert_called_once()
+        mock_workflow_client.create_execution.assert_called_once()
 
-    def test_get_import_info_dict_import_name_only(self):
+    def test_ingest_imports_skipped(self):
         mock_spanner_client = MagicMock()
-        mock_spanner_client.get_import_info.return_value = [{
-            "importName": "import1",
-            "latestVersion": "gs://bucket/import1/*/*.mcf"
-        }]
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        mock_spanner_client.get_import_info.return_value = []
+        mock_workflow_client = MagicMock()
 
-        payload = {"importList": [{"importName": "import1"}]}
-        response = client.post("/imports/info", json=payload)
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        app.dependency_overrides[get_workflow_client] = lambda: mock_workflow_client
+
+        payload = {
+            "importList": [{
+                "importName": "EurostatData",
+                "latestVersion": "gs://bucket/path/*/*.mcf",
+            }]
+        }
+        response = client.post("/imports/ingest", json=payload)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()), 1)
+        data = response.json()
+        self.assertEqual(data["status"], "SKIPPED")
+        self.assertIsNone(data["executionName"])
+        self.assertEqual(len(data["importList"]), 0)
         mock_spanner_client.get_import_info.assert_called_once()
+        mock_workflow_client.create_execution.assert_not_called()
 
 
 if __name__ == '__main__':

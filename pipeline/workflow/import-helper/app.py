@@ -11,4 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from .spanner import SpannerClient
+
+from fastapi import FastAPI
+from routes import imports, events, database
+from utils.logging import log_requests
+from __init__ import __version__
+
+app = FastAPI(
+    title="Data Commons Import Helper",
+    description="FastAPI service providing helper routines for Import Automation workflow.",
+    version=__version__
+)
+
+# Register the centralized HTTP request/response logging middleware
+app.middleware("http")(log_requests)
+
+# Include APIRouters
+app.include_router(events.router)
+app.include_router(imports.router)
+app.include_router(database.router)
