@@ -61,11 +61,14 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         # 1. Setup mock data
         self.add_node('geoId/06075', 'San Francisco County', types=['County'])
-        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('geoId/06', 'California', types=['AdminstrativeArea1', 'State'])
         self.add_node('country/USA', 'United States', types=['Country'])
         
         self.add_edge('geoId/06075', 'containedInPlace', 'geoId/06', import_name)
         self.add_edge('geoId/06', 'containedInPlace', 'country/USA', import_name)
+        self.add_edge('geoId/06075', 'typeOf', 'County', 'Place')
+        self.add_edge('geoId/06', 'typeOf', 'AdminstrativeArea1', 'Place')
+        self.add_edge('geoId/06', 'typeOf', 'State', 'Place')
         
         self.flush_to_spanner()
         
@@ -81,20 +84,34 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.assertTrue(res.success)
         
         # 3. Verify results in Spanner
-        with self.database.snapshot() as snapshot:
-            query = """
+        with self.database.snapshot(multi_use=True) as snapshot:
+            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
+            edge_query = """
                 SELECT subject_id, object_id, provenance 
                 FROM Edge 
                 WHERE predicate = 'linkedContainedInPlace'
                 ORDER BY subject_id, object_id
             """
-            results = list(snapshot.execute_sql(query))
+            edge_results = list(snapshot.execute_sql(edge_query))
             
-            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
-            self.assertEqual(len(results), 3)
-            self.assertEqual(tuple(results[0]), ('geoId/06', 'country/USA', expected_provenance))
-            self.assertEqual(tuple(results[1]), ('geoId/06075', 'country/USA', expected_provenance))
-            self.assertEqual(tuple(results[2]), ('geoId/06075', 'geoId/06', expected_provenance))
+            self.assertEqual(len(edge_results), 3)
+            self.assertEqual(tuple(edge_results[0]), ('geoId/06', 'country/USA', expected_provenance))
+            self.assertEqual(tuple(edge_results[1]), ('geoId/06075', 'country/USA', expected_provenance))
+            self.assertEqual(tuple(edge_results[2]), ('geoId/06075', 'geoId/06', expected_provenance))
+
+            linked_edge_query = """
+                SELECT ancestor, child_type, child, provenance 
+                FROM LinkedEdge
+                WHERE predicate = 'containedInPlace' 
+                ORDER BY ancestor, child_type, child, provenance
+            """
+            linked_edge_results = list(snapshot.execute_sql(linked_edge_query))
+            
+            self.assertEqual(len(linked_edge_results), 4)
+            self.assertEqual(tuple(linked_edge_results[0]), ('country/USA', 'AdminstrativeArea1', 'geoId/06', expected_provenance))
+            self.assertEqual(tuple(linked_edge_results[1]), ('country/USA', 'County', 'geoId/06075', expected_provenance))
+            self.assertEqual(tuple(linked_edge_results[2]), ('country/USA', 'State', 'geoId/06', expected_provenance))
+            self.assertEqual(tuple(linked_edge_results[3]), ('geoId/06', 'County', 'geoId/06075', expected_provenance))
 
 
     def test_linked_member_of(self):
@@ -153,8 +170,10 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_node('dc/svpg/TestSvpg', 'Test SVPG', types=['StatVarPeerGroup'])
         self.add_node('TestVariable', 'Test Variable', types=['StatisticalVariable'])
         
-        self.add_edge('dc/topic/TestTopic', 'member', 'dc/svpg/TestSvpg', import_name)
-        self.add_edge('dc/svpg/TestSvpg', 'relevantVariable', 'TestVariable', import_name)
+        self.add_edge('dc/topic/TestTopic', 'relevantVariable', 'dc/svpg/TestSvpg', import_name)
+        self.add_edge('dc/svpg/TestSvpg', 'member', 'TestVariable', import_name)
+        self.add_edge('dc/topic/TestTopic', 'typeOf', 'Topic', import_name)
+        self.add_edge('dc/svpg/TestSvpg', 'typeOf', 'StatVarPeerGroup', import_name)
         
         self.flush_to_spanner()
         
@@ -196,6 +215,8 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         
         self.add_edge('geoId/06', 'containedInPlace', 'geoId/36', import_name)
         self.add_edge('geoId/36', 'containedInPlace', 'geoId/06', import_name)
+        self.add_edge('geoId/06', 'typeOf', 'State', 'Place')
+        self.add_edge('geoId/36', 'typeOf', 'State', 'Place')
         
         self.flush_to_spanner()
         
@@ -211,22 +232,36 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.assertTrue(res.success)
         
         # 3. Verify results
-        with self.database.snapshot() as snapshot:
-            query = """
+        with self.database.snapshot(multi_use=True) as snapshot:
+            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
+            edge_query = """
                 SELECT subject_id, object_id, provenance 
                 FROM Edge 
                 WHERE predicate = 'linkedContainedInPlace'
                 ORDER BY subject_id, object_id
             """
-            results = list(snapshot.execute_sql(query))
+            edge_results = list(snapshot.execute_sql(edge_query))
             
-            expected_provenance = f'dc/base/generated/{import_name}' if self.is_base_dc else f'generated/{import_name}'
             # Should resolve to 4 distinct edges: 06->06, 06->36, 36->06, 36->36
-            self.assertEqual(len(results), 4)
-            self.assertEqual(tuple(results[0]), ('geoId/06', 'geoId/06', expected_provenance))
-            self.assertEqual(tuple(results[1]), ('geoId/06', 'geoId/36', expected_provenance))
-            self.assertEqual(tuple(results[2]), ('geoId/36', 'geoId/06', expected_provenance))
-            self.assertEqual(tuple(results[3]), ('geoId/36', 'geoId/36', expected_provenance))
+            self.assertEqual(len(edge_results), 4)
+            self.assertEqual(tuple(edge_results[0]), ('geoId/06', 'geoId/06', expected_provenance))
+            self.assertEqual(tuple(edge_results[1]), ('geoId/06', 'geoId/36', expected_provenance))
+            self.assertEqual(tuple(edge_results[2]), ('geoId/36', 'geoId/06', expected_provenance))
+            self.assertEqual(tuple(edge_results[3]), ('geoId/36', 'geoId/36', expected_provenance))
+
+            linked_edge_query = """
+                SELECT ancestor, child_type, child, provenance 
+                FROM LinkedEdge 
+                WHERE predicate = 'containedInPlace'
+                ORDER BY ancestor, child_type, child, provenance
+            """
+            linked_edge_results = list(snapshot.execute_sql(linked_edge_query))
+            
+            self.assertEqual(len(linked_edge_results), 4)
+            self.assertEqual(tuple(linked_edge_results[0]), ('geoId/06', 'State', 'geoId/06', expected_provenance))
+            self.assertEqual(tuple(linked_edge_results[1]), ('geoId/06', 'State', 'geoId/36', expected_provenance))
+            self.assertEqual(tuple(linked_edge_results[2]), ('geoId/36', 'State', 'geoId/06', expected_provenance))
+            self.assertEqual(tuple(linked_edge_results[3]), ('geoId/36', 'State', 'geoId/36', expected_provenance))
 
     def test_linked_contained_in_place_idempotency(self):
         """Tests run_linked_contained_in_place does not write duplicate edges if they already exist."""
@@ -281,6 +316,10 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('geoId/06', 'containedInPlace', 'country/USA', import_a)
         self.add_edge('geoId/36061', 'containedInPlace', 'geoId/36', import_b)
         self.add_edge('geoId/36', 'containedInPlace', 'country/USA', import_b)
+        self.add_edge('geoId/06075', 'typeOf', 'County', 'Place')
+        self.add_edge('geoId/06', 'typeOf', 'State', 'Place')
+        self.add_edge('geoId/36061', 'typeOf', 'County', 'Place')
+        self.add_edge('geoId/36', 'typeOf', 'State', 'Place')
         self.flush_to_spanner()
         
         calculations = [
@@ -299,9 +338,12 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             prov_b = 'dc/base/generated/ImportB_MultiTest' if self.is_base_dc else 'generated/ImportB_MultiTest'
             res_a = list(snapshot.execute_sql(f"SELECT subject_id FROM Edge WHERE provenance = '{prov_a}' AND predicate = 'linkedContainedInPlace'"))
             res_b = list(snapshot.execute_sql(f"SELECT subject_id FROM Edge WHERE provenance = '{prov_b}' AND predicate = 'linkedContainedInPlace'"))
-            self.assertEqual(len(res_a), 3, "ImportA should have 3 scoped linked edges.")
-            self.assertEqual(len(res_b), 3, "ImportB should have 3 scoped linked edges.")
-
+            self.assertEqual(len(res_a), 3, "ImportA should have 3 scoped linked edges in Edge table.")
+            self.assertEqual(len(res_b), 3, "ImportB should have 3 scoped linked edges in Edge table.")
+            res_a_linked_edge = list(snapshot.execute_sql(f"SELECT ancestor FROM LinkedEdge WHERE provenance = '{prov_a}' AND predicate = 'containedInPlace'"))
+            res_b_linked_edge = list(snapshot.execute_sql(f"SELECT ancestor FROM LinkedEdge WHERE provenance = '{prov_b}' AND predicate = 'containedInPlace'"))
+            self.assertEqual(len(res_a_linked_edge), 3, "ImportA should have 3 scoped linked edges in LinkedEdge table.")
+            self.assertEqual(len(res_b_linked_edge), 3, "ImportB should have 3 scoped linked edges in LinkedEdge table.")                     
 
     def test_topic_and_svpg_list_edges(self):
         """Tests materialization of relevantVariableList and memberList edges and literal nodes."""
@@ -312,6 +354,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_node('custom/topic/AirQuality', 'Air Quality')  # Type provided via typeOf edge
         self.add_node('dc/svpg/AgeGroups', 'Age Groups', types=['StatVarPeerGroup'])
         
+        self.add_edge('dc/topic/Environment', 'typeOf', 'Topic', import_name)
         self.add_edge('custom/topic/AirQuality', 'typeOf', 'Topic', import_name)
         self.add_edge('dc/svpg/AgeGroups', 'typeOf', 'StatVarPeerGroup', import_name)
         
