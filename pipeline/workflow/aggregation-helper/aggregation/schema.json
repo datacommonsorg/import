@@ -218,9 +218,11 @@
                           "model_endpoint": { "type": "string" },
                           "task_type": { "type": "string" },
                           "node_types": {
-                            "type": "array",
-                            "items": { "type": "string" },
-                            "minItems": 1
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "array",
+                              "items": { "type": "string" }
+                            }
                           },
                           "node_filter_type": { "type": "string" }
                         }
