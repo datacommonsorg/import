@@ -343,7 +343,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             res_a_linked_edge = list(snapshot.execute_sql(f"SELECT ancestor FROM LinkedEdge WHERE provenance = '{prov_a}' AND predicate = 'containedInPlace'"))
             res_b_linked_edge = list(snapshot.execute_sql(f"SELECT ancestor FROM LinkedEdge WHERE provenance = '{prov_b}' AND predicate = 'containedInPlace'"))
             self.assertEqual(len(res_a_linked_edge), 3, "ImportA should have 3 scoped linked edges in LinkedEdge table.")
-            self.assertEqual(len(res_b_linked_edge), 3, "ImportB should have 3 scoped linked edges in LinkedEdge table.")                     
+            self.assertEqual(len(res_b_linked_edge), 3, "ImportB should have 3 scoped linked edges in LinkedEdge table.")
 
     def test_topic_and_svpg_list_edges(self):
         """Tests materialization of relevantVariableList and memberList edges and literal nodes."""

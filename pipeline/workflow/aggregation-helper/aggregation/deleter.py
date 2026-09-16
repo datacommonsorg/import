@@ -76,7 +76,7 @@ class AggregationDeleter:
 
         Returns:
             The total number of rows deleted across all executed queries.
-        """ 
+        """
         total_rows = 0
         def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
             rows = self.spanner_database.execute_partitioned_dml(
@@ -85,6 +85,8 @@ class AggregationDeleter:
             logging.info(f"Deleted {rows} rows from {table_name} table{extra_desc}.")
             return rows
 
+        if not delete_queries:
+            return 0
         try:
             with concurrent.futures.ThreadPoolExecutor(
                 max_workers=len(delete_queries)

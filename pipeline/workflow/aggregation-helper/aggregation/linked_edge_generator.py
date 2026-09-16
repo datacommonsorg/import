@@ -153,7 +153,12 @@ class LinkedEdgeGenerator:
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_type_of` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
-          "SELECT subject_id, object_id FROM Edge WHERE predicate = 'typeOf'");  
+          '''SELECT DISTINCT subject_id, object_id FROM Edge
+          WHERE predicate = 'typeOf'
+          AND subject_id IN (
+            SELECT DISTINCT subject_id FROM Edge 
+            WHERE predicate = 'containedInPlace'{provenance_filter}
+          )''');  
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_contained_in_place` AS
         SELECT subject_id, object_id, provenance
