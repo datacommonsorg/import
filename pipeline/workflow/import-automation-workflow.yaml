@@ -9,9 +9,15 @@ main:
           - jobId: ${text.replace_all(text.to_lower(text.substring(text.split(args.importName, ":")[1], 0, 50) + "-" + string(int(sys.now()))), "_", "-")}
           - importName: ${args.importName}
           - importConfig: ${default(map.get(args, "importConfig"), "{}")}
+          - batchConfigMap: ${json.decode(importConfig)}
+          - batchConfigMap["invoke_import_validation"]: false
+          - batchConfigMap["invoke_differ_tool"]: false
+          - batchImportConfig: ${json.encode_to_string(batchConfigMap)}
           - gcsMountBucket: ${sys.get_env("GCS_MOUNT_BUCKET")}
           - gcsImportBucket: ${sys.get_env("GCS_BUCKET_ID")}
           - gcsMountPath: "/tmp/gcs"
+          - envSuffix: ${default(sys.get_env("ENV_SUFFIX"), "")}
+          - validationJobName: ${default(sys.get_env("VALIDATION_JOB_NAME"), "validation-helper-job" + envSuffix)}
           - stagingHelperUrl: ${"https://" + default(sys.get_env("IMPORT_HELPER_SERVICE"), "import-helper-service") + "-staging-" + sys.get_env("PROJECT_NUMBER") + "." + region + ".run.app"}
           - skipImportJob: ${string(default(map.get(args, "skipImportJob"), false)) == "true"}
           - skipStagingIngestion: ${string(default(map.get(args, "skipStagingIngestion"), false)) == "true"}
@@ -89,7 +95,7 @@ main:
                         imageUri: ${imageUri}
                         commands:
                         - ${"--import_name=" + importName}
-                        - ${"--import_config=" + importConfig}
+                        - ${"--import_config=" + batchImportConfig}
                       environment:
                         variables:
                           IMPORT_NAME: ${importName}
@@ -124,6 +130,39 @@ main:
                 result: functionResponse
             - failWorkflow:
                 raise: ${e}
+    - runValidationJob:
+        try:
+          call: googleapis.run.v2.projects.locations.jobs.run
+          args:
+            name: ${"projects/" + projectId + "/locations/" + region + "/jobs/" + validationJobName}
+            body:
+              overrides:
+                containerOverrides:
+                  - args:
+                      - ${"--import_name=" + importName}
+                      - ${"--import_config=" + importConfig}
+            connector_params:
+              timeout: 7200 # 2 hours
+          result: validationJobResponse
+        except:
+          as: val_err
+          steps:
+            - updateValidationFailureStatus:
+                call: http.post
+                args:
+                  url: ${stagingHelperUrl + "/imports/status"}
+                  auth:
+                    type: OIDC
+                  body:
+                    jobId: ${jobId}
+                    imports:
+                      - importName: ${importName}
+                        status: 'FAILURE'
+                        latestVersion: ${"gs://" + gcsImportBucket + "/" + text.replace_all(importName, ":", "/")}
+                    executionTime: ${int(sys.now() - startTime)}
+                result: valFunctionResponse
+            - failValidationWorkflow:
+                raise: ${val_err}
     - checkStagingEligible:
         switch:
           - condition: ${skipStagingIngestion}
