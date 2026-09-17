@@ -1,0 +1,12 @@
+Node: dc/o/312zndw0sve38
+dcid: "dc/o/312zndw0sve38"
+keyString: "observationAbout=country/USAvariableMeasured=InterestRate_TreasuryNote_10YearobservationDate=2025-01-31value=4.58unit=PercentmeasurementMethod=ConstantMaturityRate"
+measurementMethod: dcid:ConstantMaturityRate
+observationAbout: dcid:country/USA
+observationDate: "2025-01-31"
+typeOf: dcid:StatVarObservation
+unit: dcid:Percent
+value: 4.58
+variableMeasured: dcid:InterestRate_TreasuryNote_10Year
+
+
