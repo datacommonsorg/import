@@ -106,9 +106,9 @@ def invoke_import_automation_workflow(project_id: str,
                                       import_size: str = 'small',
                                       graph_path: str = "/**/*.mcf*",
                                       cron_schedule: str = "",
-                                      skip_import_job: bool = False,
-                                      skip_staging_ingestion: bool = False,
-                                      skip_prod_ingestion: bool = False):
+                                      skip_import_job: bool | None = None,
+                                      skip_staging_ingestion: bool | None = None,
+                                      skip_prod_ingestion: bool | None = None):
     """Triggers the import automation workflow."""
     import_config = {
         "user_script_args": [f"--version={latest_version}"],
@@ -119,10 +119,13 @@ def invoke_import_automation_workflow(project_id: str,
     workflow_args = {
         "importName": import_name,
         "importConfig": json.dumps(import_config),
-        "skipImportJob": skip_import_job,
-        "skipStagingIngestion": skip_staging_ingestion,
-        "skipProdIngestion": skip_prod_ingestion,
     }
+    if skip_import_job is not None:
+        workflow_args["skipImportJob"] = skip_import_job
+    if skip_staging_ingestion is not None:
+        workflow_args["skipStagingIngestion"] = skip_staging_ingestion
+    if skip_prod_ingestion is not None:
+        workflow_args["skipProdIngestion"] = skip_prod_ingestion
 
     if import_size == 'large':
         workflow_args["resources"] = {

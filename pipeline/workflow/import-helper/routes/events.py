@@ -71,10 +71,14 @@ async def handle_feed_event(
     import_size = attributes.get('import_size', 'small')
     cron_schedule = attributes.get('cron_schedule', '')
 
-    skip_staging_ingestion = attributes.get(
-        'skip_staging_ingestion', '').lower() == 'true'
-    skip_prod_ingestion = attributes.get(
-        'skip_prod_ingestion', '').lower() == 'true'
+    skip_staging_ingestion = (
+        attributes.get('skip_staging_ingestion').lower() == 'true'
+        if attributes.get('skip_staging_ingestion') else None
+    )
+    skip_prod_ingestion = (
+        attributes.get('skip_prod_ingestion').lower() == 'true'
+        if attributes.get('skip_prod_ingestion') else None
+    )
 
     if post_process == 'spanner_ingestion_workflow':
         feed_name = attributes.get('feed_name', 'cda_feed')
