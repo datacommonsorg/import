@@ -193,6 +193,15 @@ public class RollbackPipelineIntegrationTest {
     assertNode(dbClient, SpannerTestData.SUBJECT_ID_CA, "California", List.of("State", "Place"));
     assertNodeDeleted(dbClient, SpannerTestData.SUBJECT_ID_DIRTY);
     assertEdgeDeleted(dbClient, SpannerTestData.SUBJECT_ID_DIRTY);
+    // The clean V1 edge carries the target provenance, so Phase 1 deletes it along with the dirty
+    // one. It only comes back if the historical restore actually works.
+    assertEdgeExists(
+        dbClient,
+        SpannerTestData.SUBJECT_ID_CA,
+        "typeOf",
+        "Place",
+        SpannerTestData.PROVENANCE,
+        "should be restored from T_pre after the Phase 1 provenance-wide delete");
     assertTimeSeriesRestored(dbClient, SpannerTestData.STAT_VAR);
     assertObservationRestoredAndDirtyDeleted(dbClient);
     assertKeyValueRestored(dbClient);
@@ -231,6 +240,20 @@ public class RollbackPipelineIntegrationTest {
 
     // 5. Assert OtherImport remains COMPLETELY INTACT (not deleted or altered)
     assertNode(dbClient, SpannerTestData.SUBJECT_ID_OTHER, "Alaska", List.of("State", "Place"));
+    // Edge and TimeSeries are the two tables hit by the Phase 1 partitioned delete, so they are
+    // where an over-broad provenance resolution would do damage first.
+    assertEdgeExists(
+        dbClient,
+        SpannerTestData.SUBJECT_ID_OTHER,
+        "typeOf",
+        "Place",
+        SpannerTestData.OTHER_PROVENANCE,
+        "belongs to an unrelated import and must survive the provenance-scoped delete");
+    assertTimeSeriesExistsForProvenance(
+        dbClient,
+        SpannerTestData.STAT_VAR_OTHER,
+        SpannerTestData.OTHER_PROVENANCE,
+        "belongs to an unrelated import and must survive the provenance-scoped delete");
     try (ResultSet rs =
         dbClient
             .singleUse()
@@ -315,6 +338,71 @@ public class RollbackPipelineIntegrationTest {
                     String.format(
                         "SELECT subject_id FROM Edge WHERE subject_id = '%s'", subjectId)))) {
       assertFalse(String.format("Dirty edge for %s should be deleted", subjectId), rs.next());
+    }
+  }
+
+  /**
+   * Asserts that a specific edge is present with all four key columns intact.
+   *
+   * <p>Phase 1 issues an unconditional partitioned delete of every {@code Edge} row matching the
+   * target provenances, so edges that legitimately existed at {@code T_pre} are removed and must be
+   * brought back by the historical restore. Asserting only that dirty edges disappeared would pass
+   * even if the restore path dropped every row, so callers must also assert the surviving edges.
+   *
+   * @param context describes why the edge is expected to be present, for the failure message
+   */
+  private void assertEdgeExists(
+      DatabaseClient dbClient,
+      String subjectId,
+      String predicate,
+      String objectId,
+      String provenance,
+      String context) {
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT subject_id, predicate, object_id, provenance FROM Edge"
+                            + " WHERE subject_id = '%s' AND predicate = '%s' AND object_id = '%s'"
+                            + " AND provenance = '%s'",
+                        subjectId, predicate, objectId, provenance)))) {
+      assertTrue(
+          String.format(
+              "Edge %s-[%s]->%s (provenance %s) %s",
+              subjectId, predicate, objectId, provenance, context),
+          rs.next());
+      assertEquals(subjectId, rs.getString("subject_id"));
+      assertEquals(predicate, rs.getString("predicate"));
+      assertEquals(objectId, rs.getString("object_id"));
+      assertEquals(provenance, rs.getString("provenance"));
+    }
+  }
+
+  /**
+   * Asserts that a TimeSeries row exists for the given variable and provenance.
+   *
+   * <p>{@code provenance} is a generated STORED column derived from the {@code facet} JSON, and is
+   * the exact predicate used by the Phase 1 partitioned delete, so this is the assertion that
+   * catches an over-broad provenance resolution.
+   */
+  private void assertTimeSeriesExistsForProvenance(
+      DatabaseClient dbClient, String variableMeasured, String provenance, String context) {
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT variable_measured, provenance FROM TimeSeries"
+                            + " WHERE variable_measured = '%s' AND provenance = '%s'",
+                        variableMeasured, provenance)))) {
+      assertTrue(
+          String.format("TimeSeries %s (provenance %s) %s", variableMeasured, provenance, context),
+          rs.next());
+      assertEquals(variableMeasured, rs.getString("variable_measured"));
+      assertEquals(provenance, rs.getString("provenance"));
     }
   }
 
