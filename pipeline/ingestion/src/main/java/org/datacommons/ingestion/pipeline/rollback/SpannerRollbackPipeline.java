@@ -44,7 +44,7 @@ import org.apache.beam.sdk.values.TupleTagList;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.data.ProvenanceUtils;
-import org.datacommons.ingestion.pipeline.IngestionPipelineOptions;
+import org.datacommons.ingestion.pipeline.RollbackPipelineOptions;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.EdgeRecord;
 import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
@@ -81,6 +81,12 @@ public class SpannerRollbackPipeline implements Serializable {
   private static final String MODIFIED_NODES_QUERY =
       "SELECT subject_id FROM Node WHERE last_update_timestamp >= @tPre";
 
+  public static final String TABLE_NODE = "Node";
+  public static final String TABLE_EDGE = "Edge";
+  public static final String TABLE_TIMESERIES = "TimeSeries";
+  public static final String TABLE_OBSERVATION = "Observation";
+  public static final String TABLE_KEY_VALUE_STORE = "KeyValueStore";
+
   public static final TupleTag<Mutation> RESTORE_NODES_TAG = ReconcileNodesFn.RESTORE_NODES_TAG;
   public static final TupleTag<Mutation> DELETE_NODES_TAG = ReconcileNodesFn.DELETE_NODES_TAG;
   public static final TupleTag<List<String>> RESTORED_NODE_IDS_TAG =
@@ -105,11 +111,10 @@ public class SpannerRollbackPipeline implements Serializable {
 
   /** Builds the complete Beam execution graph for Spanner time-travel rollback. */
   public static void buildPipeline(
-      Pipeline pipeline, IngestionPipelineOptions options, SpannerClient spannerClient) {
+      Pipeline pipeline, RollbackPipelineOptions options, SpannerClient spannerClient) {
     String timestampStr = options.getRollbackTimestamp();
     if (timestampStr == null || timestampStr.trim().isEmpty()) {
-      throw new IllegalArgumentException(
-          "--rollbackTimestamp must be specified when --isRollback=true");
+      throw new IllegalArgumentException("--rollbackTimestamp must be specified for rollback.");
     }
 
     Timestamp tPre = Timestamp.parseTimestamp(timestampStr.trim());
@@ -118,45 +123,34 @@ public class SpannerRollbackPipeline implements Serializable {
     LOGGER.info("Target provenances for rollback: {}", targetProvenances);
 
     // Phase 1: Partitioned Deletions at HEAD
-    DeletionSignals delSignals =
-        applyHeadDeletions(pipeline, options, targetProvenances, spannerClient);
+    DeletionSignals delSignals = applyHeadDeletions(pipeline, targetProvenances, spannerClient);
 
     // Phase 2: Parallel Historical Snapshot Reads at T_pre
     HistoricalSnapshots snapshots =
-        readHistoricalSnapshots(pipeline, options, tPre, targetProvenances, spannerClient);
+        readHistoricalSnapshots(pipeline, tPre, targetProvenances, spannerClient);
 
     // Phase 3: Shared Table Reconciliation (Node & NodeEmbedding)
     NodeReconciliationResult nodeReconciliation =
-        reconcileSharedEntities(pipeline, options, tPre, spannerClient);
+        reconcileSharedEntities(pipeline, tPre, spannerClient);
 
     // Phase 4: Parallel Multi-Track Referential Integrity Write DAG
-    writeRestorationDags(
-        pipeline, options, spannerClient, delSignals, snapshots, nodeReconciliation);
+    writeRestorationDags(pipeline, spannerClient, delSignals, snapshots, nodeReconciliation);
   }
 
   // ---------------------------------------------------------------------------
   // Phase 1: Partitioned Deletions at HEAD
   // ---------------------------------------------------------------------------
   public static DeletionSignals applyHeadDeletions(
-      Pipeline pipeline,
-      IngestionPipelineOptions options,
-      List<String> targetProvenances,
-      SpannerClient spannerClient) {
-    if (options.getSkipDelete()) {
-      return new DeletionSignals(null, null, null);
-    }
-
+      Pipeline pipeline, List<String> targetProvenances, SpannerClient spannerClient) {
     PCollection<Void> delTsSignal =
-        deleteDataForProvenances(
-            pipeline, targetProvenances, spannerClient.getTimeSeriesTableName(), spannerClient);
+        deleteDataForProvenances(pipeline, targetProvenances, TABLE_TIMESERIES, spannerClient);
     PCollection<Void> delEdgeSignal =
-        deleteDataForProvenances(
-            pipeline, targetProvenances, spannerClient.getEdgeTableName(), spannerClient);
+        deleteDataForProvenances(pipeline, targetProvenances, TABLE_EDGE, spannerClient);
     PCollection<Void> delKvSignal =
         deleteDataForProvenances(
             pipeline,
             targetProvenances,
-            "KeyValueStore",
+            TABLE_KEY_VALUE_STORE,
             "type = 'ProvenanceSummary'",
             spannerClient);
 
@@ -168,20 +162,19 @@ public class SpannerRollbackPipeline implements Serializable {
   // ---------------------------------------------------------------------------
   public static HistoricalSnapshots readHistoricalSnapshots(
       Pipeline pipeline,
-      IngestionPipelineOptions options,
       Timestamp tPre,
       List<String> targetProvenances,
       SpannerClient spannerClient) {
-    SpannerIO.Read baseRead = spannerClient.getReadTransform();
+    SpannerIO.Read baseRead = spannerClient.getReadTransform().withBatching(false);
 
     PCollection<Mutation> restoreTimeSeriesMutations =
-        readHistoricalTimeSeries(pipeline, baseRead, tPre, targetProvenances, spannerClient);
+        readHistoricalTimeSeries(pipeline, baseRead, tPre, targetProvenances);
     PCollection<Mutation> restoreObservationMutations =
-        readHistoricalObservations(pipeline, baseRead, tPre, targetProvenances, spannerClient);
+        readHistoricalObservations(pipeline, baseRead, tPre, targetProvenances);
     PCollection<Mutation> restoreEdgeMutations =
-        readHistoricalEdges(pipeline, baseRead, tPre, targetProvenances, spannerClient);
+        readHistoricalEdges(pipeline, baseRead, tPre, targetProvenances);
     PCollection<Mutation> restoreKvMutations =
-        readHistoricalKeyValueStore(pipeline, baseRead, tPre, targetProvenances, spannerClient);
+        readHistoricalKeyValueStore(pipeline, baseRead, tPre, targetProvenances);
 
     return new HistoricalSnapshots(
         restoreTimeSeriesMutations,
@@ -191,17 +184,10 @@ public class SpannerRollbackPipeline implements Serializable {
   }
 
   private static PCollection<Mutation> readHistoricalTimeSeries(
-      Pipeline pipeline,
-      SpannerIO.Read baseRead,
-      Timestamp tPre,
-      List<String> targetProvenances,
-      SpannerClient spannerClient) {
+      Pipeline pipeline, SpannerIO.Read baseRead, Timestamp tPre, List<String> targetProvenances) {
     String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
     String tsQuery =
-        spannerClient.formatPartitionQuery(
-            HISTORICAL_PROVENANCE_QUERY_TEMPLATE,
-            tsColumns,
-            spannerClient.getTimeSeriesTableName());
+        String.format(HISTORICAL_PROVENANCE_QUERY_TEMPLATE, tsColumns, TABLE_TIMESERIES);
     return pipeline
         .apply(
             "ReadHistoricalTimeSeries",
@@ -215,24 +201,16 @@ public class SpannerRollbackPipeline implements Serializable {
         .apply(
             "MapHistoricalTimeSeriesToMutations",
             MapElements.into(TypeDescriptor.of(Mutation.class))
-                .via(
-                    struct ->
-                        TimeSeriesRecord.from(struct)
-                            .toMutation(spannerClient.getTimeSeriesTableName())));
+                .via(struct -> TimeSeriesRecord.from(struct).toMutation(TABLE_TIMESERIES)));
   }
 
   private static PCollection<Mutation> readHistoricalObservations(
-      Pipeline pipeline,
-      SpannerIO.Read baseRead,
-      Timestamp tPre,
-      List<String> targetProvenances,
-      SpannerClient spannerClient) {
+      Pipeline pipeline, SpannerIO.Read baseRead, Timestamp tPre, List<String> targetProvenances) {
     String obsColumns =
         ObservationRecord.READ_COLUMNS.stream()
             .map(c -> "o." + c)
             .collect(Collectors.joining(", "));
-    String obsQuery =
-        spannerClient.formatPartitionQuery(HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE, obsColumns);
+    String obsQuery = String.format(HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE, obsColumns);
     return pipeline
         .apply(
             "ReadHistoricalObservations",
@@ -246,22 +224,13 @@ public class SpannerRollbackPipeline implements Serializable {
         .apply(
             "MapHistoricalObservationsToMutations",
             MapElements.into(TypeDescriptor.of(Mutation.class))
-                .via(
-                    struct ->
-                        ObservationRecord.from(struct)
-                            .toMutation(spannerClient.getObservationTableName())));
+                .via(struct -> ObservationRecord.from(struct).toMutation(TABLE_OBSERVATION)));
   }
 
   private static PCollection<Mutation> readHistoricalEdges(
-      Pipeline pipeline,
-      SpannerIO.Read baseRead,
-      Timestamp tPre,
-      List<String> targetProvenances,
-      SpannerClient spannerClient) {
+      Pipeline pipeline, SpannerIO.Read baseRead, Timestamp tPre, List<String> targetProvenances) {
     String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
-    String edgeQuery =
-        spannerClient.formatPartitionQuery(
-            HISTORICAL_PROVENANCE_QUERY_TEMPLATE, edgeColumns, spannerClient.getEdgeTableName());
+    String edgeQuery = String.format(HISTORICAL_PROVENANCE_QUERY_TEMPLATE, edgeColumns, TABLE_EDGE);
     return pipeline
         .apply(
             "ReadHistoricalEdges",
@@ -275,19 +244,13 @@ public class SpannerRollbackPipeline implements Serializable {
         .apply(
             "MapHistoricalEdgesToMutations",
             MapElements.into(TypeDescriptor.of(Mutation.class))
-                .via(
-                    struct ->
-                        EdgeRecord.from(struct).toMutation(spannerClient.getEdgeTableName())));
+                .via(struct -> EdgeRecord.from(struct).toMutation(TABLE_EDGE)));
   }
 
   private static PCollection<Mutation> readHistoricalKeyValueStore(
-      Pipeline pipeline,
-      SpannerIO.Read baseRead,
-      Timestamp tPre,
-      List<String> targetProvenances,
-      SpannerClient spannerClient) {
+      Pipeline pipeline, SpannerIO.Read baseRead, Timestamp tPre, List<String> targetProvenances) {
     String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
-    String kvQuery = spannerClient.formatPartitionQuery(HISTORICAL_KV_QUERY_TEMPLATE, kvColumns);
+    String kvQuery = String.format(HISTORICAL_KV_QUERY_TEMPLATE, kvColumns);
     return pipeline
         .apply(
             "ReadHistoricalKeyValueStore",
@@ -301,17 +264,14 @@ public class SpannerRollbackPipeline implements Serializable {
         .apply(
             "MapHistoricalKeyValueStoreToMutations",
             MapElements.into(TypeDescriptor.of(Mutation.class))
-                .via(struct -> KeyValueStoreRecord.from(struct).toMutation("KeyValueStore")));
+                .via(struct -> KeyValueStoreRecord.from(struct).toMutation(TABLE_KEY_VALUE_STORE)));
   }
 
   // ---------------------------------------------------------------------------
   // Phase 3: Shared Table Reconciliation (Node & NodeEmbedding)
   // ---------------------------------------------------------------------------
   public static NodeReconciliationResult reconcileSharedEntities(
-      Pipeline pipeline,
-      IngestionPipelineOptions options,
-      Timestamp tPre,
-      SpannerClient spannerClient) {
+      Pipeline pipeline, Timestamp tPre, SpannerClient spannerClient) {
     SpannerIO.Read baseRead = spannerClient.getReadTransform();
 
     // TODO: Optimize node reconciliation for very large Node tables.
@@ -383,26 +343,21 @@ public class SpannerRollbackPipeline implements Serializable {
   // ---------------------------------------------------------------------------
   public static void writeRestorationDags(
       Pipeline pipeline,
-      IngestionPipelineOptions options,
       SpannerClient spannerClient,
       DeletionSignals delSignals,
       HistoricalSnapshots snapshots,
       NodeReconciliationResult nodeReconciliation) {
-    writeGraphTrack(pipeline, options, spannerClient, delSignals, snapshots, nodeReconciliation);
-    writeTimeSeriesTrack(pipeline, options, spannerClient, delSignals, snapshots);
-    writeKeyValueStoreTrack(pipeline, options, spannerClient, delSignals, snapshots);
+    writeGraphTrack(pipeline, spannerClient, delSignals, snapshots, nodeReconciliation);
+    writeTimeSeriesTrack(pipeline, spannerClient, delSignals, snapshots);
+    writeKeyValueStoreTrack(pipeline, spannerClient, delSignals, snapshots);
   }
 
   private static void writeGraphTrack(
       Pipeline pipeline,
-      IngestionPipelineOptions options,
       SpannerClient spannerClient,
       DeletionSignals delSignals,
       HistoricalSnapshots snapshots,
       NodeReconciliationResult nodeReconciliation) {
-    boolean skipDelete = options.getSkipDelete();
-    boolean skipWait = options.getSkipWait();
-
     // 1A. Write Restored Nodes
     SpannerWriteResult writtenNodes =
         spannerClient.writeMutations(
@@ -410,16 +365,11 @@ public class SpannerRollbackPipeline implements Serializable {
 
     // 1B. Write Restored Edges (Interleaved in Node -> waits on both writtenNodes and
     // delEdgeSignal)
-    PCollection<Mutation> edgeMutationsToWrite = snapshots.edgeMutations();
-    if (!skipWait && !skipDelete && delSignals.delEdgeSignal() != null) {
-      edgeMutationsToWrite =
-          edgeMutationsToWrite.apply("WaitOnDelEdges", Wait.on(delSignals.delEdgeSignal()));
-    }
-    if (!skipWait) {
-      edgeMutationsToWrite =
-          edgeMutationsToWrite.apply(
-              "WaitOnWrittenNodesForEdges", Wait.on(writtenNodes.getOutput()));
-    }
+    PCollection<Mutation> edgeMutationsToWrite =
+        snapshots
+            .edgeMutations()
+            .apply("WaitOnDelEdges", Wait.on(delSignals.delEdgeSignal()))
+            .apply("WaitOnWrittenNodesForEdges", Wait.on(writtenNodes.getOutput()));
     spannerClient.writeMutations(pipeline, "WriteRestoredEdges", edgeMutationsToWrite);
 
     // 1C. Reconcile NodeEmbeddings (Interleaved in Node -> prefix deletes applied before restores)
@@ -427,74 +377,53 @@ public class SpannerRollbackPipeline implements Serializable {
     SpannerWriteResult writtenEmbDeletes =
         spannerClient.writeMutations(pipeline, "WriteDeletedNodeEmbeddings", embDeletesToWrite);
 
-    PCollection<Mutation> embRestoresToWrite = nodeReconciliation.restoreEmbeddingMutations();
-    if (!skipWait) {
-      embRestoresToWrite =
-          embRestoresToWrite
-              .apply("WaitOnWrittenNodesForEmbeddings", Wait.on(writtenNodes.getOutput()))
-              .apply("WaitOnDeletedEmbeddingsForRestore", Wait.on(writtenEmbDeletes.getOutput()));
-    }
+    PCollection<Mutation> embRestoresToWrite =
+        nodeReconciliation
+            .restoreEmbeddingMutations()
+            .apply("WaitOnWrittenNodesForEmbeddings", Wait.on(writtenNodes.getOutput()))
+            .apply("WaitOnDeletedEmbeddingsForRestore", Wait.on(writtenEmbDeletes.getOutput()));
     spannerClient.writeMutations(pipeline, "WriteRestoredNodeEmbeddings", embRestoresToWrite);
 
     // 1D. Delete Newly Added Nodes (Edge is interleaved in Node without cascade -> waits on
     // delEdgeSignal)
-    PCollection<Mutation> deleteNodeMutations = nodeReconciliation.deleteNodeMutations();
-    if (!skipWait && !skipDelete && delSignals.delEdgeSignal() != null) {
-      deleteNodeMutations =
-          deleteNodeMutations.apply(
-              "WaitOnDelEdgesForNodeDelete", Wait.on(delSignals.delEdgeSignal()));
-    }
+    PCollection<Mutation> deleteNodeMutations =
+        nodeReconciliation
+            .deleteNodeMutations()
+            .apply("WaitOnDelEdgesForNodeDelete", Wait.on(delSignals.delEdgeSignal()));
     spannerClient.writeMutations(pipeline, "WriteDeletedNodes", deleteNodeMutations);
   }
 
   private static void writeTimeSeriesTrack(
       Pipeline pipeline,
-      IngestionPipelineOptions options,
       SpannerClient spannerClient,
       DeletionSignals delSignals,
       HistoricalSnapshots snapshots) {
-    boolean skipDelete = options.getSkipDelete();
-    boolean skipWait = options.getSkipWait();
-
     // 2A. Write Restored TimeSeries (Waits on TimeSeries delete)
-    PCollection<Mutation> tsMutationsToWrite = snapshots.timeSeriesMutations();
-    if (!skipWait && !skipDelete && delSignals.delTsSignal() != null) {
-      tsMutationsToWrite =
-          tsMutationsToWrite.apply("WaitOnDelTS", Wait.on(delSignals.delTsSignal()));
-    }
+    PCollection<Mutation> tsMutationsToWrite =
+        snapshots.timeSeriesMutations().apply("WaitOnDelTS", Wait.on(delSignals.delTsSignal()));
     SpannerWriteResult writtenTS =
         spannerClient.writeMutations(pipeline, "WriteRestoredTimeSeries", tsMutationsToWrite);
 
     // 2B. Write Restored Observations (Interleaved in TimeSeries -> waits on written TimeSeries)
-    PCollection<Mutation> obsMutationsToWrite = snapshots.observationMutations();
-    if (!skipWait) {
-      obsMutationsToWrite =
-          obsMutationsToWrite.apply("WaitOnWrittenTS", Wait.on(writtenTS.getOutput()));
-    }
+    PCollection<Mutation> obsMutationsToWrite =
+        snapshots.observationMutations().apply("WaitOnWrittenTS", Wait.on(writtenTS.getOutput()));
     spannerClient.writeMutations(pipeline, "WriteRestoredObservations", obsMutationsToWrite);
   }
 
   private static void writeKeyValueStoreTrack(
       Pipeline pipeline,
-      IngestionPipelineOptions options,
       SpannerClient spannerClient,
       DeletionSignals delSignals,
       HistoricalSnapshots snapshots) {
-    boolean skipDelete = options.getSkipDelete();
-    boolean skipWait = options.getSkipWait();
-
-    PCollection<Mutation> kvMutationsToWrite = snapshots.keyValueStoreMutations();
-    if (!skipWait && !skipDelete && delSignals.delKvSignal() != null) {
-      kvMutationsToWrite =
-          kvMutationsToWrite.apply("WaitOnDelKV", Wait.on(delSignals.delKvSignal()));
-    }
+    PCollection<Mutation> kvMutationsToWrite =
+        snapshots.keyValueStoreMutations().apply("WaitOnDelKV", Wait.on(delSignals.delKvSignal()));
     spannerClient.writeMutations(pipeline, "WriteRestoredKeyValueStore", kvMutationsToWrite);
   }
 
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-  public static List<String> resolveTargetProvenances(IngestionPipelineOptions options) {
+  public static List<String> resolveTargetProvenances(RollbackPipelineOptions options) {
     String importList = options.getImportList();
     if (importList == null || importList.trim().isEmpty()) {
       throw new IllegalArgumentException(

@@ -16,7 +16,7 @@ package org.datacommons.ingestion.pipeline;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -57,7 +57,7 @@ public class RollbackPipelineTest implements Serializable {
 
   @Test
   public void testResolveTargetProvenances_malformedJson_throwsException() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
     options.setImportList("[{\"importName\": \"CensusACS5YearSurvey\""); // truncated JSON
     options.setIsBaseDc(true);
 
@@ -71,7 +71,7 @@ public class RollbackPipelineTest implements Serializable {
 
   @Test
   public void testResolveTargetProvenances_nonJson_throwsException() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
     options.setImportList("CensusACS5YearSurvey,BLS_Data"); // not valid JSON
     options.setIsBaseDc(true);
 
@@ -85,7 +85,7 @@ public class RollbackPipelineTest implements Serializable {
 
   @Test
   public void testResolveTargetProvenances_nonArrayJson_throwsException() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
     options.setImportList("{\"importName\": \"CensusACS5YearSurvey\"}"); // JSON object, not array
     options.setIsBaseDc(true);
 
@@ -99,7 +99,7 @@ public class RollbackPipelineTest implements Serializable {
 
   @Test
   public void testResolveTargetProvenances_fromJsonArray_baseDc() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
     options.setImportList(
         "[{\"importName\": \"CensusACS5YearSurvey\"}, {\"importName\": \"BLS_Data\"}]");
     options.setIsBaseDc(true);
@@ -115,8 +115,7 @@ public class RollbackPipelineTest implements Serializable {
 
   @Test
   public void testMissingRollbackTimestamp_throwsException() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
-    options.setIsRollback(true);
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
     options.setRollbackTimestamp(null);
 
     SpannerClient spannerClient =
@@ -136,7 +135,7 @@ public class RollbackPipelineTest implements Serializable {
 
   @Test
   public void testResolveTargetProvenances_empty_throwsException() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
     options.setImportList(null);
 
     IllegalArgumentException exception =
@@ -149,7 +148,7 @@ public class RollbackPipelineTest implements Serializable {
 
   @Test
   public void testResolveTargetProvenances_fromImportList_customDc() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
     options.setImportList("[{\"importName\": \"CustomSurvey\"}]");
     options.setIsBaseDc(false);
 
@@ -159,10 +158,8 @@ public class RollbackPipelineTest implements Serializable {
   }
 
   @Test
-  public void testApplyHeadDeletions_skipDeleteTrue_returnsNullSignals() {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
-    options.setSkipDelete(true);
-
+  public void testApplyHeadDeletions_alwaysReturnsSignals() {
+    Pipeline localPipeline = Pipeline.create();
     SpannerClient spannerClient =
         SpannerClient.builder()
             .gcpProjectId("test")
@@ -172,11 +169,25 @@ public class RollbackPipelineTest implements Serializable {
 
     var signals =
         SpannerRollbackPipeline.applyHeadDeletions(
-            pipeline, options, List.of("dc/base/Test"), spannerClient);
+            localPipeline, List.of("dc/base/Test"), spannerClient);
 
-    assertNull(signals.delTsSignal());
-    assertNull(signals.delEdgeSignal());
-    assertNull(signals.delKvSignal());
+    assertNotNull(signals.delTsSignal());
+    assertNotNull(signals.delEdgeSignal());
+    assertNotNull(signals.delKvSignal());
+  }
+
+  @Test
+  public void testCreateSpannerClient_usesHardcodedTableNames() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setProjectId("test-proj");
+    options.setSpannerInstanceId("test-inst");
+    options.setSpannerDatabaseId("test-db");
+
+    SpannerClient client = RollbackPipeline.createSpannerClient(options);
+    assertEquals("Node", client.getNodeTableName());
+    assertEquals("Edge", client.getEdgeTableName());
+    assertEquals("TimeSeries", client.getTimeSeriesTableName());
+    assertEquals("Observation", client.getObservationTableName());
   }
 
   @Test

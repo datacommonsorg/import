@@ -41,17 +41,10 @@ public class GraphIngestionPipeline {
     return element == null || element.getAsString().isEmpty();
   }
 
-  public static void main(String[] args) {
-    IngestionPipelineOptions options =
-        PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
-
-    // Install a fail-fast uncaught exception handler exclusively for local DirectRunner runs.
-    if (isDirectRunner(options)) {
-      configureDirectRunnerUncaughtExceptionHandler();
-    }
-
+  public static SpannerClient.Builder createBaseSpannerClientBuilder(
+      SpannerPipelineOptions options) {
     String isBaseDcEnv = System.getenv("IS_BASE_DC");
-    if (isBaseDcEnv != null) {
+    if (isBaseDcEnv != null && !isBaseDcEnv.isEmpty()) {
       options.setIsBaseDc(Boolean.parseBoolean(isBaseDcEnv));
     }
 
@@ -63,25 +56,35 @@ public class GraphIngestionPipeline {
       }
     }
 
-    SpannerClient spannerClient =
-        SpannerClient.builder()
-            .gcpProjectId(options.getProjectId())
-            .spannerInstanceId(options.getSpannerInstanceId())
-            .spannerDatabaseId(options.getSpannerDatabaseId())
-            .nodeTableName(options.getSpannerNodeTableName())
-            .edgeTableName(options.getSpannerEdgeTableName())
-            .timeSeriesTableName(options.getSpannerTimeSeriesTableName())
-            .observationTableName(options.getSpannerObservationTableName())
-            .numShards(options.getNumShards())
-            .emulatorHost(emulatorHost)
-            .build();
+    return SpannerClient.builder()
+        .gcpProjectId(options.getProjectId())
+        .spannerInstanceId(options.getSpannerInstanceId())
+        .spannerDatabaseId(options.getSpannerDatabaseId())
+        .numShards(options.getNumShards())
+        .emulatorHost(emulatorHost);
+  }
 
-    Pipeline pipeline = Pipeline.create(options);
-    if (options.getIsRollback()) {
-      RollbackPipeline.buildPipeline(pipeline, options, spannerClient);
-    } else {
-      buildPipeline(pipeline, options, spannerClient);
+  public static SpannerClient createSpannerClient(IngestionPipelineOptions options) {
+    return createBaseSpannerClientBuilder(options)
+        .nodeTableName(options.getSpannerNodeTableName())
+        .edgeTableName(options.getSpannerEdgeTableName())
+        .timeSeriesTableName(options.getSpannerTimeSeriesTableName())
+        .observationTableName(options.getSpannerObservationTableName())
+        .build();
+  }
+
+  public static void main(String[] args) {
+    IngestionPipelineOptions options =
+        PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
+
+    // Install a fail-fast uncaught exception handler exclusively for local DirectRunner runs.
+    if (isDirectRunner(options)) {
+      configureDirectRunnerUncaughtExceptionHandler();
     }
+
+    SpannerClient spannerClient = createSpannerClient(options);
+    Pipeline pipeline = Pipeline.create(options);
+    buildPipeline(pipeline, options, spannerClient);
     pipeline.run();
   }
 
@@ -89,7 +92,7 @@ public class GraphIngestionPipeline {
    * Returns true if the configured Beam pipeline runner is {@code DirectRunner} (used for local
    * testing and emulated environments).
    */
-  static boolean isDirectRunner(IngestionPipelineOptions options) {
+  static boolean isDirectRunner(SpannerPipelineOptions options) {
     Class<?> runnerClass = options.getRunner();
     return runnerClass != null && "DirectRunner".equals(runnerClass.getSimpleName());
   }
@@ -221,8 +224,7 @@ public class GraphIngestionPipeline {
           result.uniqueSeries,
           result.obsDataPoints,
           deleteObsWait,
-          deleteEdgesWait,
-          options);
+          deleteEdgesWait);
       return;
     }
 
@@ -292,8 +294,7 @@ public class GraphIngestionPipeline {
         uniqueSeries,
         obsDataPoints,
         deleteObsWait,
-        deleteEdgesWait,
-        options);
+        deleteEdgesWait);
   }
 
   private static void writeToSpanner(
@@ -305,20 +306,16 @@ public class GraphIngestionPipeline {
       PCollection<TimeSeries> uniqueSeries,
       PCollection<Observation> obsDataPoints,
       PCollection<Void> deleteObsWait,
-      PCollection<Void> deleteEdgesWait,
-      IngestionPipelineOptions options) {
+      PCollection<Void> deleteEdgesWait) {
     // Write Nodes
     SpannerWriteResult writtenNodes =
         spannerClient.writeMutations(pipeline, "WriteNodesToSpanner-" + importName, nodeMutations);
 
     // Write Edges (wait for Nodes write and Edges delete)
-    PCollection<Mutation> waitingEdges = edgeMutations;
-    if (!options.getSkipWait()) {
-      waitingEdges =
-          edgeMutations.apply(
-              "EdgesWaitOn-" + importName,
-              Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
-    }
+    PCollection<Mutation> waitingEdges =
+        edgeMutations.apply(
+            "EdgesWaitOn-" + importName,
+            Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
     spannerClient.writeMutations(pipeline, "WriteEdgesToSpanner-" + importName, waitingEdges);
 
     // Convert unique TimeSeries to TimeSeries mutations
@@ -336,22 +333,16 @@ public class GraphIngestionPipeline {
                 .via(spannerClient::toObservationMutation));
 
     // Write TimeSeries (wait for Obs delete)
-    PCollection<Mutation> waitingTimeSeries = timeSeriesMutations;
-    if (!options.getSkipWait()) {
-      waitingTimeSeries =
-          timeSeriesMutations.apply("TimeSeriesWaitOn-" + importName, Wait.on(deleteObsWait));
-    }
+    PCollection<Mutation> waitingTimeSeries =
+        timeSeriesMutations.apply("TimeSeriesWaitOn-" + importName, Wait.on(deleteObsWait));
     SpannerWriteResult writtenTimeSeries =
         spannerClient.writeMutations(
             pipeline, "WriteTimeSeriesToSpanner-" + importName, waitingTimeSeries);
 
     // Write Observations (wait for TimeSeries write)
-    PCollection<Mutation> waitingObservations = observationMutations;
-    if (!options.getSkipWait()) {
-      waitingObservations =
-          observationMutations.apply(
-              "ObservationWaitOn-" + importName, Wait.on(writtenTimeSeries.getOutput()));
-    }
+    PCollection<Mutation> waitingObservations =
+        observationMutations.apply(
+            "ObservationWaitOn-" + importName, Wait.on(writtenTimeSeries.getOutput()));
     spannerClient.writeMutations(
         pipeline, "WriteObservationsToSpanner-" + importName, waitingObservations);
   }

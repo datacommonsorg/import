@@ -17,19 +17,39 @@ package org.datacommons.ingestion.pipeline;
 import java.io.Serializable;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.datacommons.ingestion.pipeline.rollback.SpannerRollbackPipeline;
 import org.datacommons.ingestion.spanner.SpannerClient;
 
 /** Entrypoint for Spanner time-travel rollback. */
 public class RollbackPipeline implements Serializable {
 
+  public static SpannerClient createSpannerClient(RollbackPipelineOptions options) {
+    return GraphIngestionPipeline.createBaseSpannerClientBuilder(options).build();
+  }
+
+  public static void main(String[] args) {
+    RollbackPipelineOptions options =
+        PipelineOptionsFactory.fromArgs(args).withValidation().as(RollbackPipelineOptions.class);
+
+    // Install a fail-fast uncaught exception handler exclusively for local DirectRunner runs.
+    if (GraphIngestionPipeline.isDirectRunner(options)) {
+      GraphIngestionPipeline.configureDirectRunnerUncaughtExceptionHandler();
+    }
+
+    SpannerClient spannerClient = createSpannerClient(options);
+    Pipeline pipeline = Pipeline.create(options);
+    buildPipeline(pipeline, options, spannerClient);
+    pipeline.run();
+  }
+
   /** Builds the Beam execution graph for Spanner time-travel rollback. */
   public static void buildPipeline(
-      Pipeline pipeline, IngestionPipelineOptions options, SpannerClient spannerClient) {
+      Pipeline pipeline, RollbackPipelineOptions options, SpannerClient spannerClient) {
     SpannerRollbackPipeline.buildPipeline(pipeline, options, spannerClient);
   }
 
-  public static List<String> resolveTargetProvenances(IngestionPipelineOptions options) {
+  public static List<String> resolveTargetProvenances(RollbackPipelineOptions options) {
     return SpannerRollbackPipeline.resolveTargetProvenances(options);
   }
 }

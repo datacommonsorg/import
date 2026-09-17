@@ -80,7 +80,7 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
     try (ResultSet rs =
         dbClient
             .singleUse(TimestampBound.ofReadTimestamp(tPre))
-            .read(spannerClient.getNodeTableName(), toKeySet(batch), NodeRecord.READ_COLUMNS)) {
+            .read(SpannerRollbackPipeline.TABLE_NODE, toKeySet(batch), NodeRecord.READ_COLUMNS)) {
       while (rs.next()) {
         Struct row = rs.getCurrentRowAsStruct();
         String id = row.getString(NodeRecord.COL_SUBJECT_ID);
@@ -88,14 +88,14 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
         restoredNodesCounter.inc();
         receiver
             .get(RESTORE_NODES_TAG)
-            .output(NodeRecord.from(row).toMutation(spannerClient.getNodeTableName()));
+            .output(NodeRecord.from(row).toMutation(SpannerRollbackPipeline.TABLE_NODE));
       }
     } catch (SpannerException e) {
       throw new IllegalStateException(
           String.format(
               "Failed historical read on '%s' at T_pre (%s). "
                   + "Verify that T_pre is within Spanner's version retention period.",
-              spannerClient.getNodeTableName(), tPre),
+              SpannerRollbackPipeline.TABLE_NODE, tPre),
           e);
     }
 
@@ -112,7 +112,7 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
                   .get(DELETE_NODES_TAG)
                   .output(
                       Mutation.delete(
-                          spannerClient.getNodeTableName(), com.google.cloud.spanner.Key.of(id)));
+                          SpannerRollbackPipeline.TABLE_NODE, com.google.cloud.spanner.Key.of(id)));
             });
   }
 

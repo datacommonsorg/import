@@ -257,8 +257,7 @@ public class RollbackPipelineIntegrationTest {
   }
 
   private void runRollbackPipeline(Timestamp tPre) {
-    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
-    options.setIsRollback(true);
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
     options.setRollbackTimestamp(tPre.toString());
     options.setImportList("[{\"importName\": \"TestImport\"}]");
     options.setIsBaseDc(true);

@@ -1,45 +1,35 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package org.datacommons.ingestion.pipeline;
 
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 
-/** IngestionPipelineOptions interface for defining spanner ingestion pipeline options. */
-public interface IngestionPipelineOptions extends PipelineOptions {
-  @Description("GCP project id")
-  @Default.String("datcom-store")
-  String getProjectId();
-
-  void setProjectId(String projectId);
-
-  @Description("Spanner Instance Id for output")
-  @Default.String("dc-kg-test")
-  String getSpannerInstanceId();
-
-  void setSpannerInstanceId(String instanceId);
-
-  @Description("Spanner Database Id for output")
-  @Default.String("dc_graph_5")
-  String getSpannerDatabaseId();
-
-  void setSpannerDatabaseId(String databaseId);
-
+/** IngestionPipelineOptions interface for defining Spanner ingestion pipeline options. */
+public interface IngestionPipelineOptions extends SpannerPipelineOptions {
   @Description("GCS bucket Id for input data")
   @Default.String("datcom-store")
   String getStorageBucketId();
 
   void setStorageBucketId(String bucketId);
 
-  @Description("List of imports for ingestion (CSV)")
-  String getImportList();
+  @Description("Whether to skip transformation step.")
+  @Default.Boolean(false)
+  boolean getSkipTransformation();
 
-  void setImportList(String importList);
-
-  @Description("The number of shards to generate for writing mutations.")
-  @Default.Integer(1)
-  int getNumShards();
-
-  void setNumShards(int numShards);
+  void setSkipTransformation(boolean skipTransformation);
 
   @Description("Whether to skip delete operations.")
   @Default.Boolean(false)
@@ -47,11 +37,11 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSkipDelete(boolean skipDelete);
 
-  @Description("Spanner Observation table name")
-  @Default.String("Observation")
-  String getSpannerObservationTableName();
+  @Description("Whether to force combination of schema nodes across shards.")
+  @Default.Boolean(false)
+  boolean getForceCombineNodes();
 
-  void setSpannerObservationTableName(String tableName);
+  void setForceCombineNodes(boolean forceCombineNodes);
 
   @Description("Spanner Node table name")
   @Default.String("Node")
@@ -71,43 +61,9 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSpannerTimeSeriesTableName(String tableName);
 
-  @Description("Whether to force combination of schema nodes across shards.")
-  @Default.Boolean(false)
-  boolean getForceCombineNodes();
+  @Description("Spanner Observation table name")
+  @Default.String("Observation")
+  String getSpannerObservationTableName();
 
-  void setForceCombineNodes(boolean forceCombineNodes);
-
-  @Description("Whether this is a base Data Commons ingestion run")
-  @Default.Boolean(true)
-  boolean getIsBaseDc();
-
-  void setIsBaseDc(boolean isBaseDc);
-
-  @Description("Whether to skip transformation step.")
-  @Default.Boolean(false)
-  boolean getSkipTransformation();
-
-  void setSkipTransformation(boolean skipTransformation);
-
-  @Description("Whether to skip wait operations between pipeline stages.")
-  @Default.Boolean(false)
-  boolean getSkipWait();
-
-  void setSkipWait(boolean skipWait);
-
-  @Description("Local Spanner emulator host override (e.g. localhost:15000)")
-  String getEmulatorHost();
-
-  void setEmulatorHost(String emulatorHost);
-
-  @Description("Whether to run in Rollback Mode instead of Normal Ingestion")
-  @Default.Boolean(false)
-  boolean getIsRollback();
-
-  void setIsRollback(boolean isRollback);
-
-  @Description("Historical pre-run timestamp (T_pre) to restore from (RFC 3339 / ISO 8601)")
-  String getRollbackTimestamp();
-
-  void setRollbackTimestamp(String rollbackTimestamp);
+  void setSpannerObservationTableName(String tableName);
 }
