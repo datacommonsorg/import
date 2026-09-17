@@ -41,6 +41,12 @@ steps:
   dir: 'pipeline/workflow'
   waitFor: ['-']
 
+- id: 'build-validation-helper'
+  name: 'gcr.io/cloud-builders/gcloud'
+  args: ['builds', 'submit', 'validation-helper', '--config', 'validation-helper/cloudbuild.yaml', '--project', '${_PROJECT_ID}', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
+  dir: 'pipeline/workflow'
+  waitFor: ['-']
+
 - id: 'build-dataflow-template'
   name: 'gcr.io/cloud-builders/gcloud'
   args:
