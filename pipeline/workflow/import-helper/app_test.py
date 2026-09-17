@@ -221,6 +221,145 @@ class AppTest(unittest.TestCase):
             skip_prod_ingestion=None,
         )
 
+    @patch('routes.events.import_utils.invoke_import_automation_airflow')
+    @patch('routes.events.import_utils.check_duplicate', return_value=False)
+    def test_handle_feed_event_import_automation_airflow(self, mock_check_dup, mock_invoke):
+        mock_spanner = MagicMock()
+        mock_storage = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner
+        app.dependency_overrides[get_storage_client] = lambda: mock_storage
+
+        notification = {
+            "attributes": {
+                "transfer_status": "TRANSFER_COMPLETED",
+                "import_name": "scripts/us_fed:Rates",
+                "import_version": "2026-09-01",
+                "post_process": "import_automation_airflow",
+                "graph_path": "/**/*.mcf*",
+                "import_size": "large"
+            },
+            "messageId": "msg-789",
+            "data": base64.b64encode(b'{"test": "data"}').decode('utf-8')
+        }
+
+        response = client.post("/imports/feed", json={"message": notification})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+
+        mock_invoke.assert_called_once_with(
+            import_name="scripts/us_fed:Rates",
+            latest_version="2026-09-01",
+            import_size="large",
+            graph_path="/**/*.mcf*",
+            cron_schedule="",
+            dag_id=None,
+            skip_import_job=False,
+            skip_staging_ingestion=None,
+            skip_prod_ingestion=None,
+        )
+
+    @patch('routes.events.import_utils.invoke_import_automation_airflow')
+    @patch('routes.events.import_utils.check_duplicate', return_value=False)
+    def test_handle_feed_event_import_automation_airflow_with_dag_id(self, mock_check_dup, mock_invoke):
+        mock_spanner = MagicMock()
+        mock_storage = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner
+        app.dependency_overrides[get_storage_client] = lambda: mock_storage
+
+        notification = {
+            "attributes": {
+                "transfer_status": "TRANSFER_COMPLETED",
+                "import_name": "scripts/us_fed:Rates",
+                "import_version": "2026-09-01",
+                "post_process": "import_automation_airflow",
+                "dag_id": "USFed_Rates_Custom_DAG",
+                "graph_path": "/**/*.mcf*",
+                "import_size": "small"
+            },
+            "messageId": "msg-790",
+            "data": base64.b64encode(b'{"test": "data"}').decode('utf-8')
+        }
+
+        response = client.post("/imports/feed", json={"message": notification})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+
+        mock_invoke.assert_called_once_with(
+            import_name="scripts/us_fed:Rates",
+            latest_version="2026-09-01",
+            import_size="small",
+            graph_path="/**/*.mcf*",
+            cron_schedule="",
+            dag_id="USFed_Rates_Custom_DAG",
+            skip_import_job=False,
+            skip_staging_ingestion=None,
+            skip_prod_ingestion=None,
+        )
+
+    @patch('utils.imports.id_token.fetch_id_token', return_value="iap-id-token")
+    @patch('utils.imports.requests.post')
+    @patch('utils.imports.google.auth.default')
+    def test_invoke_import_automation_airflow_generic_and_fallback(self, mock_auth, mock_post, mock_fetch_id_token):
+        from utils import imports as import_utils
+
+        # 0. Raise ValueError when AIRFLOW_WEB_SERVER_URL is not configured
+        with patch('utils.imports.config.AIRFLOW_WEB_SERVER_URL', ''):
+            with self.assertRaises(ValueError):
+                import_utils.invoke_import_automation_airflow(
+                    import_name="scripts/new:NewImport",
+                    latest_version="2026-09-17",
+                )
+
+        mock_creds = MagicMock()
+        mock_creds.token = "fake-token"
+        mock_auth.return_value = (mock_creds, "test-project")
+
+        # 1. When dag_id is None and AIRFLOW_IAP_CLIENT_ID is unset -> uses default credentials and calls generic DAG
+        mock_resp_ok = MagicMock()
+        mock_resp_ok.status_code = 200
+        mock_post.return_value = mock_resp_ok
+
+        with patch('utils.imports.config.AIRFLOW_WEB_SERVER_URL', 'https://airflow.example.com'), \
+             patch('utils.imports.config.AIRFLOW_IAP_CLIENT_ID', ''):
+            import_utils.invoke_import_automation_airflow(
+                import_name="scripts/new:NewImport",
+                latest_version="2026-09-17",
+                dag_id=None,
+            )
+        called_url = mock_post.call_args[0][0]
+        self.assertEqual(called_url, "https://airflow.example.com/api/v1/dags/manual_refresh/dagRuns")
+        self.assertEqual(mock_post.call_args[1]["headers"]["Authorization"], "Bearer fake-token")
+
+        # 2. When AIRFLOW_IAP_CLIENT_ID is configured -> uses id_token.fetch_id_token
+        with patch('utils.imports.config.AIRFLOW_WEB_SERVER_URL', 'https://airflow.example.com'), \
+             patch('utils.imports.config.AIRFLOW_IAP_CLIENT_ID', 'test-iap-client-id.apps.googleusercontent.com'):
+            import_utils.invoke_import_automation_airflow(
+                import_name="scripts/new:NewImport",
+                latest_version="2026-09-17",
+                dag_id=None,
+            )
+        mock_fetch_id_token.assert_called_once()
+        self.assertEqual(mock_fetch_id_token.call_args[0][1], 'test-iap-client-id.apps.googleusercontent.com')
+        self.assertEqual(mock_post.call_args[1]["headers"]["Authorization"], "Bearer iap-id-token")
+
+        # 3. When dag_id is specified but returns 404 -> falls back to generic DAG
+        mock_resp_404 = MagicMock()
+        mock_resp_404.status_code = 404
+        mock_post.side_effect = [mock_resp_404, mock_resp_ok]
+
+        with patch('utils.imports.config.AIRFLOW_WEB_SERVER_URL', 'https://airflow.example.com'), \
+             patch('utils.imports.config.AIRFLOW_IAP_CLIENT_ID', ''):
+            import_utils.invoke_import_automation_airflow(
+                import_name="scripts/new:MissingImport",
+                latest_version="2026-09-17",
+                dag_id="MissingImport",
+            )
+        self.assertEqual(mock_post.call_count, 4)
+        first_try_url = mock_post.call_args_list[2][0][0]
+        fallback_url = mock_post.call_args_list[3][0][0]
+        self.assertEqual(first_try_url, "https://airflow.example.com/api/v1/dags/MissingImport/dagRuns")
+        self.assertEqual(fallback_url, "https://airflow.example.com/api/v1/dags/manual_refresh/dagRuns")
+
     def test_database_initialize_endpoint(self):
         mock_spanner = MagicMock()
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner
