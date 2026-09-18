@@ -35,7 +35,7 @@ steps:
 
 - id: 'spanner-ingestion-workflow'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['workflows', 'deploy', 'spanner-ingestion-workflow${_ENV_SUFFIX}', '--project', '${_PROJECT_ID}', '--location', '${_LOCATION}', '--source', 'spanner-ingestion-workflow.yaml', '--set-env-vars', 'LOCATION=${_LOCATION},PROJECT_ID=${_PROJECT_ID},SPANNER_DATABASE_PATH=${_SPANNER_DATABASE_PATH},PROJECT_NUMBER=${_PROJECT_NUMBER},DATAFLOW_TEMPLATE_PATH=${_DATAFLOW_TEMPLATE_PATH}ingestion-${_VERSION}.json,INGESTION_HELPER_SERVICE=ingestion-helper-service${_ENV_SUFFIX},AGGREGATION_JOB_NAME=aggregation-helper-job${_ENV_SUFFIX}']
+  args: ['workflows', 'deploy', 'spanner-ingestion-workflow${_ENV_SUFFIX}', '--project', '${_PROJECT_ID}', '--location', '${_LOCATION}', '--source', 'spanner-ingestion-workflow.yaml', '--set-env-vars', 'LOCATION=${_LOCATION},PROJECT_ID=${_PROJECT_ID},SPANNER_DATABASE_PATH=${_SPANNER_DATABASE_PATH},PROJECT_NUMBER=${_PROJECT_NUMBER},DATAFLOW_TEMPLATE_PATH=${_DATAFLOW_TEMPLATE_PATH}ingestion-${_VERSION}.json,ROLLBACK_TEMPLATE_PATH=${_DATAFLOW_TEMPLATE_PATH}rollback/rollback-${_VERSION}.json,INGESTION_HELPER_SERVICE=ingestion-helper-service${_ENV_SUFFIX},AGGREGATION_JOB_NAME=aggregation-helper-job${_ENV_SUFFIX}']
 
 options:
   logging: CLOUD_LOGGING_ONLY
