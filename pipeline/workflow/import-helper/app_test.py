@@ -175,8 +175,8 @@ class AppTest(unittest.TestCase):
             graph_path="/**/*.mcf*",
             cron_schedule="",
             skip_import_job=True,
-            skip_staging_ingestion=False,
-            skip_prod_ingestion=False,
+            skip_staging_ingestion=None,
+            skip_prod_ingestion=None,
         )
         self.assertEqual(mock_spanner.update_import_summary.call_count, 1)
 
@@ -217,8 +217,8 @@ class AppTest(unittest.TestCase):
             graph_path="/**/*.mcf*",
             cron_schedule="",
             skip_import_job=False,
-            skip_staging_ingestion=False,
-            skip_prod_ingestion=False,
+            skip_staging_ingestion=None,
+            skip_prod_ingestion=None,
         )
 
     def test_database_initialize_endpoint(self):

@@ -1,5 +1,5 @@
 {
-    "name": "Spannger graph ingestion pipeline",
+    "name": "Spanner graph ingestion pipeline",
     "description": "Spanner graph ingestion pipeline.",
     "parameters": [
         {
@@ -30,6 +30,27 @@
             "isOptional": true
         },
         {
+            "name": "isBaseDc",
+            "label": "Is Base Data Commons",
+            "helpText": "Whether this is a base Data Commons ingestion run.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "storageBucketId",
+            "label": "GCS bucket Id for input data",
+            "helpText": "GCS bucket Id for input data",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "skipTransformation",
+            "label": "Skip Transformation",
+            "helpText": "Whether to skip transformation step.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
             "name": "skipDelete",
             "label": "Skip Delete",
             "helpText": "Whether to skip the delete operation.",
@@ -44,9 +65,23 @@
             "isOptional": true
         },
         {
-            "name": "spannerObservationTableName",
-            "label": "Spanner Observation table name",
-            "helpText": "Spanner Observation table name",
+            "name": "numShards",
+            "label": "Number of mutation shards",
+            "helpText": "Number of mutation shards",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerNodeTableName",
+            "label": "Spanner Node table name",
+            "helpText": "Spanner Node table name",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerEdgeTableName",
+            "label": "Spanner Edge table name",
+            "helpText": "Spanner Edge table name",
             "paramType": "TEXT",
             "isOptional": true
         },
@@ -58,23 +93,16 @@
             "isOptional": true
         },
         {
-            "name": "isBaseDc",
-            "label": "Is Base Data Commons",
-            "helpText": "Whether this is a base Data Commons ingestion run.",
+            "name": "spannerObservationTableName",
+            "label": "Spanner Observation table name",
+            "helpText": "Spanner Observation table name",
             "paramType": "TEXT",
             "isOptional": true
         },
         {
-            "name": "skipTransformation",
-            "label": "Skip Transformation",
-            "helpText": "Whether to skip transformation step.",
-            "paramType": "TEXT",
-            "isOptional": true
-        },
-        {
-            "name": "skipWait",
-            "label": "Skip Wait Operations",
-            "helpText": "Whether to skip wait operations between pipeline stages.",
+            "name": "emulatorHost",
+            "label": "Spanner Emulator Host",
+            "helpText": "Local Spanner emulator host override (e.g. localhost:15000).",
             "paramType": "TEXT",
             "isOptional": true
         }
