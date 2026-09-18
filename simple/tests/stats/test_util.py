@@ -14,13 +14,14 @@
 
 import gzip
 import os
-import sqlite3
 import unittest
 
 import pandas as pd
 from stats.data import Observation
 from stats.data import OBSERVATION_FIELD_NAMES
 from stats.data import Triple
+from stats.db import Db
+from util.filesystem import File
 
 # If $TEST_MODE is set to "write", the test will write the goldens.
 _TEST_MODE = os.getenv("TEST_MODE", "")
@@ -105,36 +106,6 @@ def compare_csv_files(test: unittest.TestCase,
   test.assertEqual(actual_csv, expected_csv, message)
 
 
-def read_triples_csv(path: str) -> list[Triple]:
-  """
-  Reads a triples CSV into a list of Triple objects.
-  """
-  df = pd.read_csv(path, keep_default_na=False)
-  return [Triple(**kwargs) for kwargs in df.to_dict(orient='records')]
-
-
-def write_observations(db_path: str, output_path: str):
-  """
-  Fetches all observations from a sqlite db at db_path
-  and writes it to the output_path CSV.
-  """
-  with sqlite3.connect(db_path) as db:
-    rows = db.execute("select * from observations").fetchall()
-    pd.DataFrame(rows, columns=OBSERVATION_FIELD_NAMES).to_csv(output_path,
-                                                               index=False)
-
-
-def write_triples(db_path: str, output_path: str):
-  """
-  Fetches all triples from a sqlite db at db_path
-  and writes it to the output_path CSV.
-  """
-  with sqlite3.connect(db_path) as db:
-    rows = db.execute("select * from triples").fetchall()
-    triples = [Triple(*row) for row in rows]
-    write_triples_list(triples, output_path)
-
-
 def write_triples_list(triples: list[Triple], output_path: str):
   """
   Writes the list of triples to the output_path CSV.
@@ -142,36 +113,24 @@ def write_triples_list(triples: list[Triple], output_path: str):
   pd.DataFrame(triples).to_csv(output_path, index=False)
 
 
-def write_key_values(db_path: str, output_path: str):
+def write_db_triples_list(triples: list[Triple], output_path: str):
   """
-  Fetches all key values from a sqlite db at db_path
-  and writes it to the output_path CSV.
+  Writes the list of triples to the output_path CSV in the normalized form in
+  which a Db persists them, i.e. with namespaces stripped from the subject and
+  object ids.
   """
-  with sqlite3.connect(db_path) as db:
-    rows = db.execute("select * from key_value_store").fetchall()
-    pd.DataFrame(rows, columns=["lookup_key", "value"]).to_csv(output_path,
-                                                               index=False)
+  write_triples_list([Triple(*triple.db_tuple()) for triple in triples],
+                     output_path)
 
 
-def write_full_db_to_file(db_path: str, output_path: str):
+def write_observations_df(observations_df: pd.DataFrame, output_path: str):
   """
-  Writes a file with SQL statements that can be used to reconstruct the full
-  database schema and contents.
+  Writes the observations DataFrame to the output_path CSV using the
+  observation column order in which a Db persists them.
   """
-  with sqlite3.connect(db_path) as db:
-    with open(output_path, 'w') as f:
-      for line in db.iterdump():
-        f.write('%s\n' % line)
-
-
-def read_full_db_from_file(db_path: str, input_path: str):
-  """
-  Reconstructs a database's schema and contents from a file with a series of
-  SQL commands.
-  """
-  with sqlite3.connect(db_path) as db:
-    with open(input_path, 'r') as f:
-      db.cursor().executescript(f.read())
+  observations_df.to_csv(output_path,
+                         index=False,
+                         columns=OBSERVATION_FIELD_NAMES)
 
 
 class FakeGzipTime:
@@ -187,3 +146,41 @@ class FakeGzipTime:
 # Use this method to make tests use fixed timestamps.
 def use_fake_gzip_time(timestamp=0):
   gzip.time = FakeGzipTime(timestamp)
+
+
+class FakeDb(Db):
+  """An in-memory Db that records what was written to it.
+
+  Importer tests use this to assert on the triples and observations an importer
+  produces, without depending on a real storage backend.
+  """
+
+  def __init__(self) -> None:
+    self.triples: list[Triple] = []
+    self.observation_dfs: list[pd.DataFrame] = []
+    self.committed = False
+    self.closed = False
+
+  def insert_triples(self,
+                     triples: list[Triple],
+                     input_file: File = None,
+                     provenance_dir: str = None):
+    self.triples.extend(triples)
+
+  def insert_observations(self, observations_df: pd.DataFrame,
+                          input_file: File):
+    self.observation_dfs.append(observations_df)
+
+  @property
+  def observations_df(self) -> pd.DataFrame:
+    """All inserted observations concatenated in insertion order."""
+    if not self.observation_dfs:
+      return pd.DataFrame(columns=OBSERVATION_FIELD_NAMES)
+    return pd.concat(self.observation_dfs, ignore_index=True)
+
+  def commit(self):
+    self.committed = True
+
+  def commit_and_close(self):
+    self.commit()
+    self.closed = True

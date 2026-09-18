@@ -1,0 +1,53 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:article1",
+            "@type": "dcid:Article",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:article_id": "article1",
+            "dcid:article_title": "Article 1",
+            "dcid:article_author": {
+                "@id": "dcid:author1"
+            }
+        },
+        {
+            "@id": "dcid:article2",
+            "@type": "dcid:Article",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:article_id": "article2",
+            "dcid:article_title": "Article 2",
+            "dcid:article_author": [
+                {
+                    "@id": "dcid:author1"
+                },
+                {
+                    "@id": "dcid:author2"
+                }
+            ]
+        },
+        {
+            "@id": "dcid:article3",
+            "@type": "dcid:Article",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:article_id": "article3",
+            "dcid:article_title": "Article 3",
+            "dcid:article_author": [
+                {
+                    "@id": "dcid:author2"
+                },
+                {
+                    "@id": "dcid:author3"
+                }
+            ]
+        }
+    ]
+}

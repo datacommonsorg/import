@@ -17,14 +17,13 @@ import shutil
 import tempfile
 import unittest
 
-from stats.db import create_and_update_db
-from stats.db import create_sqlite_config
 from stats.mcf_importer import McfImporter
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from tests.stats.test_util import compare_files
+from tests.stats.test_util import FakeDb
 from tests.stats.test_util import is_write_mode
-from tests.stats.test_util import write_triples
+from tests.stats.test_util import write_db_triples_list
 from util.filesystem import create_store
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -35,7 +34,6 @@ _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 def _test_import(test: unittest.TestCase,
                  test_name: str,
-                 is_main_dc: bool,
                  raises_error: bool = False):
   test.maxDiff = None
 
@@ -47,30 +45,16 @@ def _test_import(test: unittest.TestCase,
     input_file = input_store.as_dir().open_file(input_file_name,
                                                 create_if_missing=False)
 
-    db_file_name = f"{test_name}.db"
-    db_path = os.path.join(temp_dir, db_file_name)
-    db_file = temp_store.as_dir().open_file(db_file_name)
-
-    output_mcf_path = os.path.join(temp_dir, f"{test_name}.mcf")
     output_triples_path = os.path.join(temp_dir, f"{test_name}.triples.db.csv")
-    expected_mcf_path = os.path.join(_EXPECTED_DIR, f"{test_name}.mcf")
     expected_triples_path = os.path.join(_EXPECTED_DIR,
                                          f"{test_name}.triples.db.csv")
 
-    db = create_and_update_db(create_sqlite_config(db_file))
+    db = FakeDb()
     report_file = temp_store.as_dir().open_file("report.json")
     reporter = FileImportReporter(input_file.full_path(),
                                   ImportReporter(report_file))
 
-    output_store = create_store(output_mcf_path,
-                                create_if_missing=True,
-                                treat_as_file=True)
-    output_file = output_store.as_file()
-    importer = McfImporter(input_file=input_file,
-                           output_file=output_file,
-                           db=db,
-                           reporter=reporter,
-                           is_main_dc=is_main_dc)
+    importer = McfImporter(input_file=input_file, db=db, reporter=reporter)
 
     if raises_error:
       with test.assertRaises(ValueError):
@@ -80,30 +64,21 @@ def _test_import(test: unittest.TestCase,
     importer.do_import()
 
     db.commit_and_close()
-    write_triples(db_path, output_triples_path)
+    write_db_triples_list(db.triples, output_triples_path)
 
-    if not is_main_dc:
-      if is_write_mode():
-        shutil.copy(output_triples_path, expected_triples_path)
-        return
+    if is_write_mode():
+      shutil.copy(output_triples_path, expected_triples_path)
+      return
 
-      compare_files(test, output_triples_path, expected_triples_path)
-    else:
-      if is_write_mode():
-        shutil.copy(output_mcf_path, expected_mcf_path)
-        return
-
-      compare_files(test, output_mcf_path, expected_mcf_path)
+    compare_files(test, output_triples_path, expected_triples_path)
 
     input_store.close()
-    output_store.close()
     temp_store.close()
 
 
 class TestMcfImporter(unittest.TestCase):
 
   def test_basic_mcf(self):
-    _test_import(self, "basic_mcf", is_main_dc=False)
-    _test_import(self, "basic_mcf_main_dc", is_main_dc=True)
-    _test_import(self, "invalid_mcf", is_main_dc=False, raises_error=True)
-    _test_import(self, "provenance_source", is_main_dc=False)
+    _test_import(self, "basic_mcf")
+    _test_import(self, "invalid_mcf", raises_error=True)
+    _test_import(self, "provenance_source")

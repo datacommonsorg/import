@@ -19,19 +19,16 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock
 
-import pandas as pd
 from stats.config import Config
-from stats.data import Observation
-from stats.db import create_and_update_db
-from stats.db import create_sqlite_config
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from stats.variable_per_row_importer import VariablePerRowImporter
 from tests.stats.test_util import compare_files
+from tests.stats.test_util import FakeDb
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import use_fake_gzip_time
-from tests.stats.test_util import write_observations
+from tests.stats.test_util import write_observations_df
 from util.filesystem import create_store
 
 from util import dc_client
@@ -50,16 +47,10 @@ def _test_import(test: unittest.TestCase, test_name: str):
   with tempfile.TemporaryDirectory() as temp_dir:
     input_dir = os.path.join(_INPUT_DIR, test_name)
     expected_dir = os.path.join(_EXPECTED_DIR, test_name)
-    temp_store = create_store(temp_dir)
 
     input_path = os.path.join(input_dir, "input.csv")
     config_path = os.path.join(input_dir, "config.json")
-    db_file_name = f"{test_name}.db"
-    db_path = os.path.join(temp_dir, db_file_name)
-    db_file = temp_store.as_dir().open_file(db_file_name)
 
-    output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
-    expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
     output_path = os.path.join(temp_dir, "observations.db.csv")
     expected_path = os.path.join(expected_dir, "observations.db.csv")
 
@@ -68,7 +59,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     with open(config_path) as config_file:
       config = Config(json.load(config_file))
 
-    db = create_and_update_db(create_sqlite_config(db_file))
+    db = FakeDb()
     report_file = create_store(temp_dir).as_dir().open_file("report.json")
     reporter = FileImportReporter(input_path, ImportReporter(report_file))
     nodes = Nodes(config)
@@ -108,7 +99,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
 
     db.commit_and_close()
 
-    write_observations(db_path, output_path)
+    write_observations_df(db.observations_df, output_path)
 
     if is_write_mode():
       shutil.copy(output_path, expected_path)
@@ -131,8 +122,6 @@ class TestVariablePerRowImporter(unittest.TestCase):
   def test_unresolved_entity_raises_error(self):
     from unittest import mock
 
-    from stats.db import create_and_update_db
-    from stats.db import create_sqlite_config
     from stats.importer import EntityResolutionError
     from util.filesystem import create_store
 
@@ -150,8 +139,7 @@ class TestVariablePerRowImporter(unittest.TestCase):
         )
       with open(config_path) as config_file:
         config = Config(json.load(config_file))
-      db_file = create_store(temp_dir).as_dir().open_file("test.db")
-      db = create_and_update_db(create_sqlite_config(db_file))
+      db = FakeDb()
       nodes = Nodes(config)
       report_file = create_store(temp_dir).as_dir().open_file("report.json")
       reporter = FileImportReporter(csv_path, ImportReporter(report_file))

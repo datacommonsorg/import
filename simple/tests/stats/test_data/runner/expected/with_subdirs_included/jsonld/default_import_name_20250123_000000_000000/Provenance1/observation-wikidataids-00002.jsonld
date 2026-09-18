@@ -1,0 +1,71 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:obs_43fa8a51db9533fab8265c71286156160fc672d525ba1336a256d9c68919d022",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2021,
+            "dcid:value": 555,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/USA"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_a8ab7cebea54254293fffc56c64340cc7d8381fe3051e6a24b52df3839a2bd97",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1"
+            },
+            "dcid:observationDate": 2022,
+            "dcid:value": 321,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/IND"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_96d9487e7759536307ffb26140f3680792b0d8911b207b7eaa0ce2085529dc11",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2021,
+            "dcid:value": 666,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/USA"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_d522da04fa8eb5b6f6b6229b4866b5cbd3309f073353a4d195c16c8922adf4cd",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2"
+            },
+            "dcid:observationDate": 2022,
+            "dcid:value": 123,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/IND"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        }
+    ]
+}

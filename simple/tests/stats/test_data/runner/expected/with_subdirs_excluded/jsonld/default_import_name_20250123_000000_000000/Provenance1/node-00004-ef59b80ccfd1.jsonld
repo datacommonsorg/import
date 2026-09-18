@@ -1,0 +1,45 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:Source1",
+            "@type": "dcid:Source",
+            "dcid:name": "Source1",
+            "dcid:url": "http://source1.com",
+            "dcid:domain": "source1.com"
+        },
+        {
+            "@id": "dcid:author_country",
+            "@type": "dcid:Property",
+            "dcid:name": "author_country"
+        },
+        {
+            "@id": "dcid:author_id",
+            "@type": "dcid:Property",
+            "dcid:name": "author_id"
+        },
+        {
+            "@id": "dcid:author_name",
+            "@type": "dcid:Property",
+            "dcid:name": "author_name"
+        },
+        {
+            "@id": "dcid:c/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Custom Variables",
+            "dcid:specializationOf": {
+                "@id": "dcid:dc/g/Root"
+            }
+        },
+        {
+            "@id": "dcid:country/IND",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/USA",
+            "@type": "dcid:Country"
+        }
+    ]
+}

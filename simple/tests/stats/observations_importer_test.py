@@ -22,16 +22,15 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 from stats.config import Config
-from stats.db import create_and_update_db
-from stats.db import create_sqlite_config
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from tests.stats.test_util import compare_files
+from tests.stats.test_util import FakeDb
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import use_fake_gzip_time
-from tests.stats.test_util import write_observations
+from tests.stats.test_util import write_observations_df
 from util.filesystem import create_store
 
 from util import dc_client
@@ -57,12 +56,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     input_file_name = "input.csv"
     input_path = os.path.join(input_dir, input_file_name)
     config_path = os.path.join(input_dir, "config.json")
-    db_file_name = f"{test_name}.db"
-    db_path = os.path.join(temp_dir, db_file_name)
-    db_file = temp_store.as_dir().open_file(db_file_name)
 
-    output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
-    expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
     output_path = os.path.join(temp_dir, "observations.db.csv")
     expected_path = os.path.join(expected_dir, "observations.db.csv")
 
@@ -72,7 +66,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     with open(config_path) as config_file:
       config = Config(json.load(config_file))
 
-    db = create_and_update_db(create_sqlite_config(db_file))
+    db = FakeDb()
     debug_resolve_file = temp_store.as_dir().open_file("debug.csv")
     report_file = temp_store.as_dir().open_file("report.json")
     reporter = FileImportReporter(input_path, ImportReporter(report_file))
@@ -87,7 +81,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
                          nodes=nodes).do_import()
     db.commit_and_close()
 
-    write_observations(db_path, output_path)
+    write_observations_df(db.observations_df, output_path)
 
     if is_write_mode():
       shutil.copy(output_path, expected_path)

@@ -1,21 +1,8 @@
 # Simple Stats Importer
 
-This importer imports input CSVs into a database which is subsequently used to serve Custom DCs.
-
-[sqlite]: https://github.com/datacommonsorg/mixer/tree/a768446c56095aa23add8c59cf6a0630a17a726b/internal/sqlite
-
-
-## Prerequisites
-
-- Protoc 3.21.12
-
-  Install [`protoc`](https://grpc.io/docs/protoc-installation/) at version
-  3.21.12.
-
-  On MacOS, you can do this with Homebrew by running `brew install protobuf@21`.
-  Be sure to update your path as described in the output (likely it'll instruct
-  you to run
-  `echo 'export PATH="/opt/homebrew/opt/protobuf@21/bin:$PATH"' >> ~/.zshrc`).
+This importer (also referred to as the "preprocessor") reads input CSV and MCF
+files and writes the resulting graph out as sharded JSON-LD files. Those shards
+are consumed by the Data Commons ingestion pipeline (the "dcpbridge" workflow).
 
 ## Default usage
 
@@ -23,10 +10,12 @@ This importer imports input CSVs into a database which is subsequently used to s
 python3 -m stats.main
 ```
 
-By default it reads inputs CSVs from the `.data/input` folder and outputs
-a sqlite `datacommons.db` file in the `.data/output` folder.
+By default it reads input files from the `.data/input` folder and writes output
+to the `.data/output` folder.
 
-To enable Data Commons API lookups, set a `DC_API_KEY` environment variable. See [API documentation](https://docs.datacommons.org/api/rest/v2/getting_started#authentication) to learn more about getting and using API keys.
+To enable Data Commons API lookups, set a `DC_API_KEY` environment variable. See
+[API documentation](https://docs.datacommons.org/api/rest/v2/getting_started#authentication)
+to learn more about getting and using API keys.
 
 ## Other options
 
@@ -38,7 +27,8 @@ python3 -m stats.main --help
 
 ## Config driven imports
 
-The simple importer can be bootstrapped either by an input directory or by a config file. Use the `--config_file` flag to use the latter:
+The importer can be bootstrapped either by an input directory or by a config
+file. Use the `--config_file` flag to use the latter:
 
 ```shell
 python3 -m stats.main \
@@ -53,50 +43,34 @@ For config driven imports, the import files are specified using the
 
 The first 2 columns of input CSVs should be place names (or more generically
 _entity_ names) and observation periods respectively. Each subsequent column
-should be for each individual statvar. A sample input CSV can be found
-[here](sample/countries/input.csv).
+should be for each individual statvar.
 
-## Debug files
+## Output
 
-The program also outputs a `debug_resolve.csv` file. This is for debugging
-whether names were resolved to the correct DCIDs and addressed any unresolved
-ones. A sample CSV can be found [here](sample/countries/debug_resolve.csv).
+All output is written under `--output_dir`, which can be a local path or a
+`gs://` path:
 
-## Database options
+* `jsonld/<import_name>_<timestamp>/<import_name>/`: the generated JSON-LD
+  shards. Node shards are named `node-<index>-<uid>.jsonld` and observation
+  shards are named `observation-<sanitized_input_file>-<index>.jsonld`.
+* `process/report.json`: the import report, including per-file status.
+* `process/debug_resolve_*.csv`: debug files for entity name resolution. These
+  are useful for checking whether names were resolved to the correct DCIDs and
+  for addressing unresolved ones.
 
-As noted above, the importer by default writes to a local sqlite DB.
-It can however be configured to write to a Cloud SQL DB instead as described in this section.
+There is no database output. The importer streams shards to a local temporary
+directory as it runs and bulk uploads them to the output directory at the end
+of the run.
 
-### Cloud SQL options
+## Environment variables
 
-The importer writes to a Cloud SQL DB if the following environment variables are specified.
-
-* `USE_CLOUDSQL`: To make the importer use Cloud SQL, set `USE_CLOUDSQL` to `true`.
-* `DB_USER`: The DB user. e.g. `root`
-* `DB_PASS`: The DB user's password.
-* `DB_NAME`: [Optional] The name of the DB. Defaults to `datacommons`.
-
-Example environment variables:
-
-```bash
-export USE_CLOUDSQL=true
-export CLOUDSQL_INSTANCE=datcom-website-dev:us-central1:dc-graph
-export DB_USER=root
-export DB_PASS=fake
-```
-
-
-> Browse or create your Google SQL instances [here](https://console.cloud.google.com/sql/instances).
-
-### Reducing database downtime
-
-When using Cloud SQL, you can enable blue-green import to significantly reduce database blocking:
-
-```bash
-export ENABLE_BLUE_GREEN_IMPORT=true
-```
-
-**How it works:**
-1. Build complete database in local SQLite (Cloud SQL remains available)
-2. Bulk transfer to Cloud SQL (Cloud SQL blocked during transfer time, duration depends on size)
-3. Create indexes using MySQL Online DDL (Cloud SQL readable, though unindexed queries will be slow)
+| Variable | Default | Description |
+| --- | --- | --- |
+| `DC_API_KEY` | *unset* | Data Commons API key, used for entity resolution and schema lookups. |
+| `DC_API_ROOT` | `https://api.datacommons.org` | Data Commons REST API endpoint root. |
+| `DC_CLIENT_DEBUG` | `false` | If true, logs DC API request details and writes debug dumps to `.data/debug`. Note that this logs the API key, so keep it off outside of local debugging. |
+| `LOG_LEVEL` | `INFO` | Python logging level. |
+| `IMPORT_PROXY_ENTITIES` | `true` | Whether to generate proxy entity nodes for entities resolved from Base Data Commons. Can also be set with `--import_proxy_entities`. |
+| `FAST_NODE_EXPORT` | `true` | If true, node shards are serialized directly instead of going through rdflib. |
+| `WORKFLOW_EXECUTION_ID` | *unset* | Set by the ingestion workflow. When set (and the output dir is on GCS), the run writes a handshake JSON file for the workflow. |
+| `TEMP_LOCATION` | *unset* | GCS path the workflow handshake file is written under. |

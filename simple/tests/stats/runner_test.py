@@ -20,20 +20,13 @@ import tempfile
 import unittest
 from unittest import mock
 
-from fakeredis import FakeRedis
 from freezegun import freeze_time
 from stats import constants
 from stats.data import ValidationErrorType
-from stats.db_cache import ENV_REDIS_HOST
 from stats.runner import create_store as real_create_store
-from stats.runner import RunMode
 from stats.runner import Runner
-from tests.stats.test_util import compare_csv_files
-from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
-from tests.stats.test_util import read_full_db_from_file
 from tests.stats.test_util import use_fake_gzip_time
-from tests.stats.test_util import write_full_db_to_file
 
 from util import dc_client
 
@@ -48,9 +41,7 @@ _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 def _test_runner(test: unittest.TestCase,
                  test_name: str,
                  config_path: str = None,
-                 output_dir_name: str = None,
-                 run_mode: RunMode = RunMode.CUSTOM_DC,
-                 input_db_file_name: str = None):
+                 output_dir_name: str = None):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -62,27 +53,10 @@ def _test_runner(test: unittest.TestCase,
       remote_entity_types_path = os.path.join(input_dir,
                                               "remote_entity_types.json")
 
-    db_path = os.path.join(temp_dir, "datacommons.db")
-    if (input_db_file_name):
-      input_db_file = os.path.join(input_dir, input_db_file_name)
-      read_full_db_from_file(db_path, input_db_file)
-
     output_dir_name = output_dir_name if output_dir_name else test_name
     expected_dir = os.path.join(_EXPECTED_DIR, output_dir_name)
-    expected_nl_dir = os.path.join(expected_dir, constants.NL_DIR_NAME)
-    Path(expected_nl_dir).mkdir(parents=True, exist_ok=True)
-
-    output_nl_sentences_path = os.path.join(temp_dir, constants.NL_DIR_NAME,
-                                            constants.SENTENCES_FILE_NAME)
-    expected_nl_sentences_path = os.path.join(expected_dir,
-                                              constants.NL_DIR_NAME,
-                                              constants.SENTENCES_FILE_NAME)
-    output_db_path = os.path.join(temp_dir, "datacommons.sql")
-    expected_db_path = os.path.join(expected_dir, "datacommons.sql")
-    output_topic_cache_json_path = os.path.join(temp_dir, constants.NL_DIR_NAME,
-                                                constants.TOPIC_CACHE_FILE_NAME)
-    expected_topic_cache_json_path = os.path.join(
-        expected_dir, constants.NL_DIR_NAME, constants.TOPIC_CACHE_FILE_NAME)
+    expected_jsonld_dir = os.path.join(expected_dir, "jsonld")
+    output_jsonld_dir = os.path.join(temp_dir, "jsonld")
 
     dc_client.get_property_of_entities = mock.MagicMock(return_value={})
     if remote_entity_types_path and os.path.exists(remote_entity_types_path):
@@ -93,29 +67,38 @@ def _test_runner(test: unittest.TestCase,
     Runner(config_file_path=config_path,
            input_dir_path=input_dir,
            output_dir_path=temp_dir,
-           mode=run_mode,
            use_multiprocessing=False).run()
 
     if is_write_mode():
-      write_full_db_to_file(db_path=db_path, output_path=expected_db_path)
-      if os.path.exists(output_nl_sentences_path):
-        shutil.copy(output_nl_sentences_path, expected_nl_sentences_path)
-      if os.path.exists(output_topic_cache_json_path):
-        shutil.copy(output_topic_cache_json_path,
-                    expected_topic_cache_json_path)
+      if os.path.exists(output_jsonld_dir):
+        shutil.rmtree(expected_jsonld_dir, ignore_errors=True)
+        shutil.copytree(output_jsonld_dir, expected_jsonld_dir)
       return
 
-    write_full_db_to_file(db_path=db_path, output_path=output_db_path)
-    compare_files(test, output_db_path, expected_db_path,
-                  f"{test_name}: database")
-    if os.path.exists(expected_nl_sentences_path):
-      compare_csv_files(test, output_nl_sentences_path,
-                        expected_nl_sentences_path,
-                        f"{test_name}: nl sentences")
-    if os.path.exists(expected_topic_cache_json_path) and os.path.exists(
-        output_topic_cache_json_path):
-      compare_files(test, output_topic_cache_json_path,
-                    expected_topic_cache_json_path, f"{test_name}: topic cache")
+    def load_jsonld(dir_path):
+      nodes = []
+      observations = []
+      if os.path.exists(dir_path):
+        for root, _, files in os.walk(dir_path):
+          for f in files:
+            if f.endswith(".jsonld"):
+              with open(os.path.join(root, f), "r") as json_f:
+                data = json.load(json_f)
+                if "@graph" in data:
+                  if f.startswith("node-"):
+                    nodes.extend(data["@graph"])
+                  elif f.startswith("observation-"):
+                    observations.extend(data["@graph"])
+      return sorted(nodes, key=lambda x: json.dumps(x, sort_keys=True)), sorted(
+          observations, key=lambda x: json.dumps(x, sort_keys=True))
+
+    output_nodes, output_obs = load_jsonld(output_jsonld_dir)
+    expected_nodes, expected_obs = load_jsonld(expected_jsonld_dir)
+
+    test.assertEqual(output_nodes, expected_nodes,
+                     f"{test_name}: nodes mismatch")
+    test.assertEqual(output_obs, expected_obs,
+                     f"{test_name}: observations mismatch")
 
 
 class TestRunner(unittest.TestCase):
@@ -145,28 +128,8 @@ class TestRunner(unittest.TestCase):
   def test_input_dir_driven(self):
     _test_runner(self, "input_dir_driven")
 
-  def test_input_dir_driven_with_existing_old_schema_data(self):
-    _test_runner(self,
-                 "input_dir_driven_with_existing_old_schema_data",
-                 input_db_file_name="sqlite_old_schema_populated.sql")
-
-  def test_generate_svg_hierarchy(self):
-    _test_runner(self, "generate_svg_hierarchy")
-
-  def test_sv_nl_sentences(self):
-    _test_runner(self, "sv_nl_sentences")
-
-  def test_topic_nl_sentences(self):
-    _test_runner(self, "topic_nl_sentences")
-
   def test_remote_entity_types(self):
     _test_runner(self, "remote_entity_types")
-
-  def test_schema_update_only(self):
-    _test_runner(self,
-                 "schema_update_only",
-                 run_mode=RunMode.SCHEMA_UPDATE,
-                 input_db_file_name="sqlite_old_schema_populated.sql")
 
   def test_empty_input(self):
     with self.assertRaises(FileNotFoundError):
@@ -177,27 +140,6 @@ class TestRunner(unittest.TestCase):
       _test_runner(self,
                    "empty",
                    config_path=os.path.join(_CONFIG_DIR, "nonexistent.json"))
-
-  def test_empty_input_schema_update(self):
-    """Schema update mode, input dir-driven, empty input, no database to start
-
-    Expected output: initialized, empty database
-    """
-    _test_runner(self,
-                 "empty",
-                 output_dir_name="empty_initialized_db",
-                 run_mode=RunMode.SCHEMA_UPDATE)
-
-  def test_missing_config_schema_update(self):
-    """Schema update mode, config file-driven, empty input, no database to start
-
-    Expected output: initialized, empty database
-    """
-    _test_runner(self,
-                 "missing_config_schema_update",
-                 config_path=os.path.join(_CONFIG_DIR, "nonexistent.json"),
-                 output_dir_name="empty_initialized_db",
-                 run_mode=RunMode.SCHEMA_UPDATE)
 
   def test_with_subdirs_excluded(self):
     _test_runner(self,
@@ -215,29 +157,6 @@ class TestRunner(unittest.TestCase):
 
   def test_namespace_prefixes(self):
     _test_runner(self, "namespace_prefixes")
-
-  @mock.patch.dict(os.environ, {ENV_REDIS_HOST: "localhost"})
-  def test_with_redis_db_cache(self):
-    fake_redis = FakeRedis()
-    fake_redis.set("somekey", "somevalue")
-    self.assertEqual(1, len(fake_redis.keys("*")))
-    with mock.patch("redis.Redis", return_value=fake_redis):
-      _test_runner(self, "input_dir_driven")
-      # Redis cache should be cleared.
-      self.assertEqual(0, len(fake_redis.keys("*")))
-
-  @mock.patch.dict(os.environ, {ENV_REDIS_HOST: "localhost"})
-  def test_with_redis_db_cache_schema_update(self):
-    fake_redis = FakeRedis()
-    fake_redis.set("somekey", "somevalue")
-    self.assertEqual(1, len(fake_redis.keys("*")))
-    with mock.patch("redis.Redis", return_value=fake_redis):
-      _test_runner(self,
-                   "empty",
-                   output_dir_name="empty_initialized_db",
-                   run_mode=RunMode.SCHEMA_UPDATE)
-      # Redis cache should NOT be cleared in schema update mode.
-      self.assertEqual(1, len(fake_redis.keys("*")))
 
   def test_dcp_bridge(self):
     self.maxDiff = None
@@ -327,7 +246,6 @@ class TestRunner(unittest.TestCase):
           config_file_path=None,
           input_dir_path=input_dir,
           output_dir_path=temp_dir,
-          mode=RunMode.DCP_BRIDGE,
           use_multiprocessing=False,
       ).run()
 
@@ -554,7 +472,6 @@ class TestRunner(unittest.TestCase):
           runner = Runner(config_file_path=None,
                           input_dir_path=input_dir,
                           output_dir_path=output_dir,
-                          mode=RunMode.DCP_BRIDGE,
                           import_names=[constants.ALL_IMPORTS],
                           use_multiprocessing=False)
           runner.run()
@@ -660,7 +577,6 @@ class TestRunner(unittest.TestCase):
             config_file_path=None,
             input_dir_path=input_dir,
             output_dir_path=temp_dir,
-            mode=RunMode.DCP_BRIDGE,
         )
 
         with self.assertRaises(ValueError) as context:
@@ -704,7 +620,6 @@ class TestMain(unittest.TestCase):
     FLAGS.imports = ["oecd"]
     FLAGS.config_file = None
     FLAGS.output_dir = "/output"
-    FLAGS.mode = RunMode.CUSTOM_DC
 
     _run()
 
@@ -712,7 +627,64 @@ class TestMain(unittest.TestCase):
         config_file_path=None,
         input_dir_path="/base/input",
         output_dir_path="/output",
-        mode=RunMode.CUSTOM_DC,
         import_names=["oecd"],
         import_proxy_entities=True,
     )
+
+  @mock.patch('stats.main.Runner')
+  def test_deprecated_mode_flag_is_accepted_and_ignored(self, mock_runner):
+    """--mode must not break existing callers, and must not reach Runner.
+
+    DCP passes DATA_RUN_MODE=dcpbridge and the retired CDC builds pass
+    customdc / maindc / schemaupdate. None of them should fail, and none of
+    them should change what the importer does.
+    """
+    from stats.main import _run
+    from stats.main import FLAGS
+
+    FLAGS(["test_program"])
+    FLAGS.input_dir = "/base/input"
+    FLAGS.imports = []
+    FLAGS.config_file = None
+    FLAGS.output_dir = "/output"
+
+    for mode in [
+        "", "dcpbridge", "customdc", "maindc", "schemaupdate", "something_else"
+    ]:
+      with self.subTest(mode=mode):
+        mock_runner.reset_mock()
+        FLAGS.mode = mode
+
+        _run()
+
+        mock_runner.assert_called_once_with(
+            config_file_path=None,
+            input_dir_path="/base/input",
+            output_dir_path="/output",
+            import_names=[],
+            import_proxy_entities=True,
+        )
+        self.assertNotIn("mode", mock_runner.call_args.kwargs)
+
+    FLAGS.mode = ""
+
+  def test_removed_modes_log_a_warning(self):
+    from stats import main as main_module
+
+    main_module.FLAGS(["test_program"])
+
+    for mode in ["customdc", "maindc", "schemaupdate"]:
+      with self.subTest(mode=mode):
+        main_module.FLAGS.mode = mode
+        with self.assertLogs(level="WARNING") as logs:
+          main_module._warn_if_mode_is_set()
+        self.assertTrue(any(mode in line for line in logs.output))
+
+    for mode in ["", "dcpbridge"]:
+      with self.subTest(mode=mode):
+        main_module.FLAGS.mode = mode
+        with mock.patch.object(main_module.logging, "warning") as mock_warn:
+          main_module._warn_if_mode_is_set()
+        mock_warn.assert_not_called()
+
+    main_module.FLAGS.mode = ""
