@@ -38,3 +38,9 @@ INGESTION_HELPER_SERVICE = os.environ.get('INGESTION_HELPER_SERVICE', 'ingestion
 INGESTION_HELPER_URL = f"https://{INGESTION_HELPER_SERVICE}-{PROJECT_NUMBER}.{LOCATION}.run.app" if PROJECT_NUMBER and LOCATION else ""
 SPANNER_INGESTION_WORKFLOW_ID = os.environ.get('SPANNER_INGESTION_WORKFLOW_NAME', 'spanner-ingestion-workflow')
 IMPORT_AUTOMATION_WORKFLOW_ID = os.environ.get('IMPORT_AUTOMATION_WORKFLOW_NAME', 'import-automation-workflow')
+AIRFLOW_WEB_SERVER_URL = os.environ.get('AIRFLOW_WEB_SERVER_URL', '')
+AIRFLOW_DEFAULT_DAG_ID = os.environ.get(
+    'AIRFLOW_DEFAULT_DAG_ID',
+    'import_automation_workflow'
+)
+AIRFLOW_IAP_CLIENT_ID = os.environ.get('AIRFLOW_IAP_CLIENT_ID', '')

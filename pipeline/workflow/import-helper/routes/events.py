@@ -70,6 +70,7 @@ async def handle_feed_event(
     graph_path = attributes.get('graph_path', "/**/*.mcf*")
     import_size = attributes.get('import_size', 'small')
     cron_schedule = attributes.get('cron_schedule', '')
+    dag_id = attributes.get('dag_id')
 
     skip_staging_ingestion = (
         attributes.get('skip_staging_ingestion').lower() == 'true'
@@ -139,6 +140,19 @@ async def handle_feed_event(
                 skip_staging_ingestion=skip_staging_ingestion,
                 skip_prod_ingestion=skip_prod_ingestion,
             )
+    elif post_process == 'import_automation_airflow':
+        # Invoke Cloud Composer Airflow DAG for import automation
+        import_utils.invoke_import_automation_airflow(
+            import_name=import_name,
+            latest_version=latest_version,
+            import_size=import_size,
+            graph_path=graph_path,
+            cron_schedule=cron_schedule,
+            dag_id=dag_id,
+            skip_import_job=False,
+            skip_staging_ingestion=skip_staging_ingestion,
+            skip_prod_ingestion=skip_prod_ingestion,
+        )
     else:
         logging.info(f"Skipping import post processing for post_process={post_process}.")
 
