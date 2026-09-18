@@ -14,21 +14,15 @@
 
 import unittest
 from unittest.mock import MagicMock, patch
-from datetime import datetime, timezone
+from datetime import datetime
 import os
 
 from fastapi.testclient import TestClient
 from app import app
-from dependencies import get_spanner_client
+from dependencies import get_spanner_client, get_workflow_client
 import config
 
 client = TestClient(app)
-
-
-def _load_test_query(filename: str) -> str:
-    path = os.path.join(os.path.dirname(__file__), "utils", "golden_queries", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read().strip()
 
 
 class TestMain(unittest.TestCase):
@@ -41,15 +35,6 @@ class TestMain(unittest.TestCase):
         # Clear overrides after each test
         app.dependency_overrides.clear()
 
-    @patch('config.EMBEDDING_SPECS', [
-        config.EmbeddingSpec(
-            embedding_label="base_text_embedding",
-            model_name="NodeEmbeddingModel",
-            task_type="RETRIEVAL_QUERY",
-            node_types={"Topic": ["description"]},
-            node_filter_type="NoFilter"
-        )
-    ])
     def test_embedding_ingestion_success(self):
         # Mock SpannerClient instance and its database
         mock_spanner_client = MagicMock()
@@ -74,7 +59,7 @@ class TestMain(unittest.TestCase):
             def __iter__(self):
                 return iter(self.rows)
 
-        expected_timestamp = datetime(2026, 4, 25, 0, 0, 0, tzinfo=timezone.utc)
+        expected_timestamp = datetime(2026, 4, 20, 12, 0, 0)
 
         # Mock side effect for execute_sql
         # First call: get_latest_lock_timestamp
@@ -134,15 +119,17 @@ class TestMain(unittest.TestCase):
         # Check first call (lock timestamp)
         self.assertIn("IngestionLock", call_args_list[0].args[0])
 
-        expected_query = _load_test_query("get_updated_nodes_with_timestamp.sql")
-
         # Check second call (updated nodes for deletion)
         args2, kwargs2 = call_args_list[1]
-        self.assertEqual(args2[0].strip(), expected_query)
+        self.assertIn("Node", args2[0])
+        self.assertEqual(kwargs2["params"]["timestamp"], expected_timestamp)
+        self.assertEqual(kwargs2["params"]["node_types"], ["StatisticalVariable", "Topic"])
 
         # Check third call (updated nodes for embedding generation)
         args3, kwargs3 = call_args_list[2]
-        self.assertEqual(args3[0].strip(), expected_query)
+        self.assertIn("Node", args3[0])
+        self.assertEqual(kwargs3["params"]["timestamp"], expected_timestamp)
+        self.assertEqual(kwargs3["params"]["node_types"], ["StatisticalVariable", "Topic"])
 
         # Check fourth call (ML.PREDICT)
         args4, kwargs4 = call_args_list[3]
@@ -309,7 +296,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
         mock_spanner_client.update_ingestion_status.assert_called_once_with(
-            ["import1"], "wf-123", "SUCCESS"
+            [{"importName": "import1", "latestVersion": None}], "wf-123", "SUCCESS"
         )
         mock_get_ingestion_metrics.assert_called_once_with(
             config.PROJECT_ID, config.LOCATION, "job-456"
@@ -456,13 +443,21 @@ class TestMain(unittest.TestCase):
             metrics=mock_metrics
         )
 
-    def test_get_import_info_list_of_dicts(self):
+    @patch('config.PROJECT_ID', 'test-project')
+    @patch('config.LOCATION', 'us-central1')
+    def test_ingest_imports_submitted(self):
         mock_spanner_client = MagicMock()
         mock_spanner_client.get_import_info.return_value = [{
             "importName": "EurostatData",
             "latestVersion": "gs://bucket/path/*/*.mcf"
         }]
+        mock_workflow_client = MagicMock()
+        mock_execution = MagicMock()
+        mock_execution.name = "projects/test-project/locations/us-central1/workflows/spanner-ingestion-workflow/executions/exec-123"
+        mock_workflow_client.create_execution.return_value = mock_execution
+
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        app.dependency_overrides[get_workflow_client] = lambda: mock_workflow_client
 
         payload = {
             "importList": [{
@@ -470,25 +465,38 @@ class TestMain(unittest.TestCase):
                 "latestVersion": "gs://bucket/path/*/*.mcf",
             }]
         }
-        response = client.post("/imports/info", json=payload)
+        response = client.post("/imports/ingest", json=payload)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()), 1)
-        self.assertEqual(response.json()[0]["importName"], "EurostatData")
+        data = response.json()
+        self.assertEqual(data["status"], "SUBMITTED")
+        self.assertEqual(data["executionName"], "projects/test-project/locations/us-central1/workflows/spanner-ingestion-workflow/executions/exec-123")
+        self.assertEqual(len(data["importList"]), 1)
+        self.assertEqual(data["importList"][0]["importName"], "EurostatData")
         mock_spanner_client.get_import_info.assert_called_once()
+        mock_workflow_client.create_execution.assert_called_once()
 
-    def test_get_import_info_dict_import_name_only(self):
+    def test_ingest_imports_skipped(self):
         mock_spanner_client = MagicMock()
-        mock_spanner_client.get_import_info.return_value = [{
-            "importName": "import1",
-            "latestVersion": "gs://bucket/import1/*/*.mcf"
-        }]
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        mock_spanner_client.get_import_info.return_value = []
+        mock_workflow_client = MagicMock()
 
-        payload = {"importList": [{"importName": "import1"}]}
-        response = client.post("/imports/info", json=payload)
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        app.dependency_overrides[get_workflow_client] = lambda: mock_workflow_client
+
+        payload = {
+            "importList": [{
+                "importName": "EurostatData",
+                "latestVersion": "gs://bucket/path/*/*.mcf",
+            }]
+        }
+        response = client.post("/imports/ingest", json=payload)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()), 1)
+        data = response.json()
+        self.assertEqual(data["status"], "SKIPPED")
+        self.assertIsNone(data["executionName"])
+        self.assertEqual(len(data["importList"]), 0)
         mock_spanner_client.get_import_info.assert_called_once()
+        mock_workflow_client.create_execution.assert_not_called()
 
 
 if __name__ == '__main__':

@@ -212,10 +212,7 @@ public class ExistenceChecker {
         subMap.remove(subs.get(0));
         return;
       }
-      // Important: If the dcid is malformed, Mixer can return failure. Also, if the URI is too
-      // long, then too this happens. So issue independent RPCs now. If this happens often enough,
-      // we can revisit.
-      logger.warn("DC Call failed (bad DCID or URI length). Issuing individual calls now.");
+      logger.warn("Batch DC call failed. Issuing individual calls now.");
       for (String sub : subs) {
         performDcCall(pred, List.of(sub), subMap);
       }

@@ -56,7 +56,7 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
 | `/database/lock/acquire` | `POST` | `LockAcquireRequest` | `BaseResponse` | Attempts to acquire the global Spanner ingestion lock. |
 | `/database/lock/release` | `POST` | `LockReleaseRequest` | `BaseResponse` | Releases the global ingestion lock. |
 | `/embeddings/ingest` | `POST` | `EmbeddingIngestionRequest` | `EmbeddingIngestionResponse` | Generates text embeddings for updated Spanner nodes. |
-| `/imports/info` | `POST` | `ImportInfoRequest` | `List[ImportInfoItem]` | Returns all imports in `STAGING` state ready to ingest. |
+| `/imports/ingest` | `POST` | `IngestRequest` | `IngestResponse` | Checks Spanner for ready imports and triggers the ingestion workflow if needed. |
 | `/imports/status` | `POST` | `UpdateImportStatusRequest` | `BaseResponse` | Updates status and refresh windows for multiple imports. |
 | `/imports/version` | `POST` | `UpdateImportVersionRequest` | `BaseResponse` | Updates the version and status of multiple imports. |
 | `/imports/ingestion-status` | `POST` | `UpdateIngestionStatusRequest` | `BaseResponse` | Records dataset ingestion status and version history upon completion/failure. |
