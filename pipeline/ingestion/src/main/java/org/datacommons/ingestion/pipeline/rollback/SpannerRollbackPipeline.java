@@ -17,6 +17,7 @@ package org.datacommons.ingestion.pipeline.rollback;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Statement;
+import com.google.cloud.spanner.Struct;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonParser;
 import java.io.Serializable;
@@ -35,6 +36,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.GroupIntoBatches;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Reshuffle;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -49,7 +51,6 @@ import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.EdgeRecord;
 import org.datacommons.ingestion.spanner.model.KeyValueStoreRecord;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
-import org.datacommons.ingestion.spanner.model.ObservationRecord;
 import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,12 +71,14 @@ public class SpannerRollbackPipeline implements Serializable {
   private static final Logger LOGGER = LoggerFactory.getLogger(SpannerRollbackPipeline.class);
   private static final long NODE_RECONCILE_BATCH_SIZE = 1000L;
 
+  /** Parent TimeSeries keys looked up per Observation prefix read. */
+  private static final long OBSERVATION_PARENT_KEY_BATCH_SIZE = 1000L;
+
+  /** Shard count used to spread Observation parent-key batches across workers. */
+  private static final int OBSERVATION_PARENT_KEY_SHARDS = 100;
+
   private static final String HISTORICAL_PROVENANCE_QUERY_TEMPLATE =
       "SELECT %s FROM %s WHERE provenance IN UNNEST(@provenances)";
-  private static final String HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE =
-      "SELECT %s FROM Observation o JOIN TimeSeries ts ON o.variable_measured = ts.variable_measured AND"
-          + " o.entity1 = ts.entity1 AND o.extra_entities_id = ts.extra_entities_id AND"
-          + " o.facet_id = ts.facet_id WHERE ts.provenance IN UNNEST(@provenances)";
   private static final String HISTORICAL_KV_QUERY_TEMPLATE =
       "SELECT %s FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)";
   private static final String MODIFIED_NODES_QUERY =
@@ -165,16 +168,33 @@ public class SpannerRollbackPipeline implements Serializable {
       Timestamp tPre,
       List<String> targetProvenances,
       SpannerClient spannerClient) {
-    SpannerIO.Read baseRead = spannerClient.getReadTransform().withBatching(false);
+    // Keep batching enabled so each read is partitioned across workers. Spanner only partitions
+    // queries whose plan is rooted at a Distributed Union; the Edge, TimeSeries and KeyValueStore
+    // reads qualify via their ByProvenance indexes. Observation does not, and is read by key
+    // instead -- see ReadHistoricalObservationsFn.
+    SpannerIO.Read baseRead = spannerClient.getReadTransform();
 
+    // Read once and fan out: the raw Structs feed both the TimeSeries restore mutations and the
+    // parent keys used to look up interleaved Observation children.
+    PCollection<Struct> historicalTimeSeriesRows =
+        readHistoricalTimeSeriesRows(pipeline, baseRead, tPre, targetProvenances, spannerClient);
+
+    // Materialize each snapshot before the Phase 4 Wait.on gates. Otherwise fusion makes the read
+    // inherit the write's dependency on Phases 1 and 3, when these reads are at T_pre and depend
+    // on nothing at HEAD. Not redundant shuffles.
     PCollection<Mutation> restoreTimeSeriesMutations =
-        readHistoricalTimeSeries(pipeline, baseRead, tPre, targetProvenances);
+        historicalTimeSeriesRows
+            .apply(
+                "MapHistoricalTimeSeriesToMutations",
+                MapElements.into(TypeDescriptor.of(Mutation.class))
+                    .via(struct -> TimeSeriesRecord.from(struct).toMutation(TABLE_TIMESERIES)))
+            .apply("MaterializeHistoricalTimeSeries", Reshuffle.viaRandomKey());
     PCollection<Mutation> restoreObservationMutations =
-        readHistoricalObservations(pipeline, baseRead, tPre, targetProvenances);
+        readHistoricalObservations(historicalTimeSeriesRows, tPre, spannerClient);
     PCollection<Mutation> restoreEdgeMutations =
-        readHistoricalEdges(pipeline, baseRead, tPre, targetProvenances);
+        readHistoricalEdges(pipeline, baseRead, tPre, targetProvenances, spannerClient);
     PCollection<Mutation> restoreKvMutations =
-        readHistoricalKeyValueStore(pipeline, baseRead, tPre, targetProvenances);
+        readHistoricalKeyValueStore(pipeline, baseRead, tPre, targetProvenances, spannerClient);
 
     return new HistoricalSnapshots(
         restoreTimeSeriesMutations,
@@ -183,54 +203,94 @@ public class SpannerRollbackPipeline implements Serializable {
         restoreKvMutations);
   }
 
-  private static PCollection<Mutation> readHistoricalTimeSeries(
-      Pipeline pipeline, SpannerIO.Read baseRead, Timestamp tPre, List<String> targetProvenances) {
-    String tsColumns = String.join(", ", TimeSeriesRecord.READ_COLUMNS);
+  /**
+   * Reads the historical TimeSeries rows at T_pre.
+   *
+   * <p>Selects {@code entity1} in addition to {@link TimeSeriesRecord#READ_COLUMNS}. It is a
+   * generated column and therefore not writable, but it is the second component of the TimeSeries
+   * primary key and so is required to address interleaved Observation children.
+   */
+  private static PCollection<Struct> readHistoricalTimeSeriesRows(
+      Pipeline pipeline,
+      SpannerIO.Read baseRead,
+      Timestamp tPre,
+      List<String> targetProvenances,
+      SpannerClient spannerClient) {
+    String tsColumns =
+        Stream.concat(
+                TimeSeriesRecord.READ_COLUMNS.stream(), Stream.of(TimeSeriesRecord.COL_ENTITY1))
+            .collect(Collectors.joining(", "));
     String tsQuery =
-        String.format(HISTORICAL_PROVENANCE_QUERY_TEMPLATE, tsColumns, TABLE_TIMESERIES);
-    return pipeline
-        .apply(
-            "ReadHistoricalTimeSeries",
-            baseRead
-                .withTimestamp(tPre)
-                .withQuery(
-                    Statement.newBuilder(tsQuery)
-                        .bind("provenances")
-                        .toStringArray(targetProvenances)
-                        .build()))
-        .apply(
-            "MapHistoricalTimeSeriesToMutations",
-            MapElements.into(TypeDescriptor.of(Mutation.class))
-                .via(struct -> TimeSeriesRecord.from(struct).toMutation(TABLE_TIMESERIES)));
+        spannerClient.formatPartitionQuery(
+            HISTORICAL_PROVENANCE_QUERY_TEMPLATE, tsColumns, TABLE_TIMESERIES);
+    return pipeline.apply(
+        "ReadHistoricalTimeSeries",
+        baseRead
+            .withTimestamp(tPre)
+            .withQuery(
+                Statement.newBuilder(tsQuery)
+                    .bind("provenances")
+                    .toStringArray(targetProvenances)
+                    .build()));
   }
 
+  /**
+   * Reads historical Observation rows at T_pre via keyed prefix lookups on their parent TimeSeries
+   * rows.
+   *
+   * <p>Observation is interleaved in TimeSeries, so a prefix read over the parent keys returns the
+   * same rows a join would while parallelising over the upstream TimeSeries PCollection instead of
+   * over query partitions. See {@link ReadHistoricalObservationsFn} for why the join form is
+   * unsuitable here.
+   */
   private static PCollection<Mutation> readHistoricalObservations(
-      Pipeline pipeline, SpannerIO.Read baseRead, Timestamp tPre, List<String> targetProvenances) {
-    String obsColumns =
-        ObservationRecord.READ_COLUMNS.stream()
-            .map(c -> "o." + c)
-            .collect(Collectors.joining(", "));
-    String obsQuery = String.format(HISTORICAL_OBSERVATIONS_QUERY_TEMPLATE, obsColumns);
-    return pipeline
+      PCollection<Struct> historicalTimeSeriesRows, Timestamp tPre, SpannerClient spannerClient) {
+    return historicalTimeSeriesRows
+        .apply(
+            "MapToObservationParentKeys",
+            MapElements.into(
+                    TypeDescriptors.kvs(
+                        TypeDescriptors.integers(),
+                        TypeDescriptors.lists(TypeDescriptors.strings())))
+                .via(SpannerRollbackPipeline::toKeyedObservationParentKey))
+        .apply(
+            "GroupObservationParentKeyBatches",
+            GroupIntoBatches.ofSize(OBSERVATION_PARENT_KEY_BATCH_SIZE))
+        .apply(
+            "ExtractObservationParentKeyBatch",
+            MapElements.into(
+                    TypeDescriptors.lists(TypeDescriptors.lists(TypeDescriptors.strings())))
+                .via(kv -> Lists.newArrayList(kv.getValue())))
         .apply(
             "ReadHistoricalObservations",
-            baseRead
-                .withTimestamp(tPre)
-                .withQuery(
-                    Statement.newBuilder(obsQuery)
-                        .bind("provenances")
-                        .toStringArray(targetProvenances)
-                        .build()))
-        .apply(
-            "MapHistoricalObservationsToMutations",
-            MapElements.into(TypeDescriptor.of(Mutation.class))
-                .via(struct -> ObservationRecord.from(struct).toMutation(TABLE_OBSERVATION)));
+            ParDo.of(new ReadHistoricalObservationsFn(spannerClient, tPre, TABLE_OBSERVATION)))
+        .apply("MaterializeHistoricalObservations", Reshuffle.viaRandomKey());
+  }
+
+  /**
+   * Projects a historical TimeSeries Struct onto its primary key, sharded by a deterministic hash
+   * so that {@link GroupIntoBatches} distributes batches across workers reproducibly.
+   */
+  private static KV<Integer, List<String>> toKeyedObservationParentKey(Struct struct) {
+    List<String> parentKey =
+        List.of(
+            struct.getString(TimeSeriesRecord.COL_VARIABLE_MEASURED),
+            struct.getString(TimeSeriesRecord.COL_ENTITY1),
+            struct.getString(TimeSeriesRecord.COL_EXTRA_ENTITIES_ID),
+            struct.getString(TimeSeriesRecord.COL_FACET_ID));
+    return KV.of(Math.floorMod(parentKey.hashCode(), OBSERVATION_PARENT_KEY_SHARDS), parentKey);
   }
 
   private static PCollection<Mutation> readHistoricalEdges(
-      Pipeline pipeline, SpannerIO.Read baseRead, Timestamp tPre, List<String> targetProvenances) {
+      Pipeline pipeline,
+      SpannerIO.Read baseRead,
+      Timestamp tPre,
+      List<String> targetProvenances,
+      SpannerClient spannerClient) {
     String edgeColumns = String.join(", ", EdgeRecord.READ_COLUMNS);
-    String edgeQuery = String.format(HISTORICAL_PROVENANCE_QUERY_TEMPLATE, edgeColumns, TABLE_EDGE);
+    String edgeQuery =
+        spannerClient.formatPartitionQuery(
+            HISTORICAL_PROVENANCE_QUERY_TEMPLATE, edgeColumns, TABLE_EDGE);
     return pipeline
         .apply(
             "ReadHistoricalEdges",
@@ -244,13 +304,18 @@ public class SpannerRollbackPipeline implements Serializable {
         .apply(
             "MapHistoricalEdgesToMutations",
             MapElements.into(TypeDescriptor.of(Mutation.class))
-                .via(struct -> EdgeRecord.from(struct).toMutation(TABLE_EDGE)));
+                .via(struct -> EdgeRecord.from(struct).toMutation(TABLE_EDGE)))
+        .apply("MaterializeHistoricalEdges", Reshuffle.viaRandomKey());
   }
 
   private static PCollection<Mutation> readHistoricalKeyValueStore(
-      Pipeline pipeline, SpannerIO.Read baseRead, Timestamp tPre, List<String> targetProvenances) {
+      Pipeline pipeline,
+      SpannerIO.Read baseRead,
+      Timestamp tPre,
+      List<String> targetProvenances,
+      SpannerClient spannerClient) {
     String kvColumns = String.join(", ", KeyValueStoreRecord.READ_COLUMNS);
-    String kvQuery = String.format(HISTORICAL_KV_QUERY_TEMPLATE, kvColumns);
+    String kvQuery = spannerClient.formatPartitionQuery(HISTORICAL_KV_QUERY_TEMPLATE, kvColumns);
     return pipeline
         .apply(
             "ReadHistoricalKeyValueStore",
@@ -264,7 +329,8 @@ public class SpannerRollbackPipeline implements Serializable {
         .apply(
             "MapHistoricalKeyValueStoreToMutations",
             MapElements.into(TypeDescriptor.of(Mutation.class))
-                .via(struct -> KeyValueStoreRecord.from(struct).toMutation(TABLE_KEY_VALUE_STORE)));
+                .via(struct -> KeyValueStoreRecord.from(struct).toMutation(TABLE_KEY_VALUE_STORE)))
+        .apply("MaterializeHistoricalKeyValueStore", Reshuffle.viaRandomKey());
   }
 
   // ---------------------------------------------------------------------------
