@@ -39,5 +39,13 @@ steps:
     - 'gs://${_TEMPLATE_BUCKET}/templates/flex/ingestion-${_VERSION}.json'
     - 'gs://${_TEMPLATE_BUCKET}/templates/flex/ingestion-${_PROD_TAG}.json'
 
+- id: 'label-rollback-dataflow-template'
+  name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'gsutil'
+  args:
+    - 'cp'
+    - 'gs://${_TEMPLATE_BUCKET}/templates/flex/rollback/rollback-${_VERSION}.json'
+    - 'gs://${_TEMPLATE_BUCKET}/templates/flex/rollback/rollback-${_PROD_TAG}.json'
+
 options:
   logging: CLOUD_LOGGING_ONLY

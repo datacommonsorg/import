@@ -10,7 +10,6 @@ import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Value;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -28,9 +27,11 @@ import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
-import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.data.TimeSeries;
-import org.datacommons.ingestion.data.TimeSeriesKey;
+import org.datacommons.ingestion.spanner.model.EdgeRecord;
+import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.model.ObservationRecord;
+import org.datacommons.ingestion.spanner.model.TimeSeriesRecord;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,19 +114,8 @@ public class SpannerClient implements Serializable {
     @ProcessElement
     public void processElement(ProcessContext c) {
       String value = c.element();
-      SpannerOptions.Builder builder =
-          SpannerOptions.newBuilder().setProjectId(spannerClient.gcpProjectId);
-      if (spannerClient.emulatorHost != null) {
-        builder.setEmulatorHost(spannerClient.emulatorHost);
-        builder.setCredentials(NoCredentials.getInstance());
-      }
-      try (Spanner spanner = builder.build().getService()) {
-        DatabaseClient dbClient =
-            spanner.getDatabaseClient(
-                DatabaseId.of(
-                    spannerClient.gcpProjectId,
-                    spannerClient.spannerInstanceId,
-                    spannerClient.spannerDatabaseId));
+      try (Spanner spanner = spannerClient.createSpanner()) {
+        DatabaseClient dbClient = spannerClient.getDatabaseClient(spanner);
         String dml =
             String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, columnName);
         Statement statement = Statement.newBuilder(dml).bind(columnName).to(value).build();
@@ -134,6 +124,33 @@ public class SpannerClient implements Serializable {
         c.output(null);
       }
     }
+  }
+
+  public SpannerIO.Read getReadTransform() {
+    SpannerIO.Read read =
+        SpannerIO.read()
+            .withProjectId(gcpProjectId)
+            .withInstanceId(spannerInstanceId)
+            .withDatabaseId(spannerDatabaseId)
+            .withLowPriority();
+    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
+      read = read.withEmulatorHost(emulatorHost.trim());
+    }
+    return read;
+  }
+
+  public Spanner createSpanner() {
+    SpannerOptions.Builder builder = SpannerOptions.newBuilder().setProjectId(gcpProjectId);
+    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
+      builder.setEmulatorHost(emulatorHost.trim());
+      builder.setCredentials(NoCredentials.getInstance());
+    }
+    return builder.build().getService();
+  }
+
+  public DatabaseClient getDatabaseClient(Spanner spanner) {
+    return spanner.getDatabaseClient(
+        DatabaseId.of(gcpProjectId, spannerInstanceId, spannerDatabaseId));
   }
 
   public SpannerIO.Write getWriteTransform() {
@@ -161,41 +178,17 @@ public class SpannerClient implements Serializable {
     // Only update subject_id for provisional nodes.
     if (node.getTypes().size() == 1 && node.getTypes().contains("ProvisionalNode")) {
       return Mutation.newInsertOrUpdateBuilder(nodeTableName)
-          .set("subject_id")
+          .set(NodeRecord.COL_SUBJECT_ID)
           .to(node.getSubjectId())
-          .set("last_update_timestamp")
+          .set(NodeRecord.COL_LAST_UPDATE_TIMESTAMP)
           .to(Value.COMMIT_TIMESTAMP)
           .build();
     }
-    return Mutation.newInsertOrUpdateBuilder(nodeTableName)
-        .set("subject_id")
-        .to(node.getSubjectId())
-        .set("value")
-        .to(node.getValue())
-        .set("bytes")
-        .to(node.getBytes())
-        .set("name")
-        .to(node.getName())
-        .set("types")
-        .toStringArray(node.getTypes())
-        .set("last_update_timestamp")
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
+    return NodeRecord.from(node).toMutation(this.nodeTableName);
   }
 
   public Mutation toEdgeMutation(Edge edge) {
-    return Mutation.newInsertOrUpdateBuilder(edgeTableName)
-        .set("subject_id")
-        .to(edge.getSubjectId())
-        .set("predicate")
-        .to(edge.getPredicate())
-        .set("object_id")
-        .to(edge.getObjectId())
-        .set("provenance")
-        .to(edge.getProvenance())
-        .set("last_update_timestamp")
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
+    return EdgeRecord.from(edge).toMutation(this.edgeTableName);
   }
 
   public List<KV<String, Mutation>> toGraphKVMutations(List<Node> nodes, List<Edge> edges) {
@@ -206,75 +199,11 @@ public class SpannerClient implements Serializable {
   }
 
   public Mutation toTimeSeriesMutation(TimeSeries obs) {
-    String variableMeasured = obs.getVariableMeasured();
-    String entity1 = obs.getEntity1();
-    String extraEntitiesId = obs.getExtraEntitiesId();
-    String facetId = obs.getFacetId();
-
-    // Create entities JSON
-    JsonObject entitiesJson = new JsonObject();
-    entitiesJson.addProperty("entity1", entity1);
-    List<String> extra = obs.getExtraEntities();
-    if (extra != null) {
-      if (extra.size() > 0) {
-        addPropertyIfNotEmpty(entitiesJson, "entity2", extra.get(0));
-      }
-      if (extra.size() > 1) {
-        addPropertyIfNotEmpty(entitiesJson, "entity3", extra.get(1));
-      }
-    }
-
-    // Create facet JSON
-    JsonObject facetJson = new JsonObject();
-    facetJson.addProperty(
-        "provenance", ProvenanceUtils.getProvenanceDcid(obs.getImportName(), obs.getIsBaseDc()));
-    addPropertyIfNotEmpty(facetJson, "measurementMethod", obs.getMeasurementMethod());
-    addPropertyIfNotEmpty(facetJson, "observationPeriod", obs.getObservationPeriod());
-    addPropertyIfNotEmpty(facetJson, "scalingFactor", obs.getScalingFactor());
-    addPropertyIfNotEmpty(facetJson, "unit", obs.getUnit());
-    facetJson.addProperty("isDcAggregate", obs.getIsDcAggregate());
-
-    return Mutation.newInsertOrUpdateBuilder(timeSeriesTableName)
-        .set("variable_measured")
-        .to(variableMeasured)
-        // entity1 is a STORED generated column in TimeSeries, DO NOT write to it directly!
-        .set("extra_entities_id")
-        .to(extraEntitiesId)
-        .set("facet_id")
-        .to(facetId)
-        .set("entities")
-        .to(Value.json(GSON.toJson(entitiesJson)))
-        .set("facet")
-        .to(Value.json(GSON.toJson(facetJson)))
-        .set("last_update_timestamp")
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
-  }
-
-  private static void addPropertyIfNotEmpty(JsonObject json, String property, String value) {
-    if (value != null && !value.trim().isEmpty()) {
-      json.addProperty(property, value);
-    }
+    return TimeSeriesRecord.from(obs).toMutation(this.timeSeriesTableName);
   }
 
   public Mutation toObservationMutation(Observation obs) {
-    TimeSeriesKey key = obs.getSeriesKey();
-    return Mutation.newInsertOrUpdateBuilder(observationTableName)
-        .set("variable_measured")
-        .to(key.getVariableMeasured())
-        .set("entity1")
-        .to(key.getEntity1())
-        .set("extra_entities_id")
-        .to(key.getExtraEntitiesId())
-        .set("facet_id")
-        .to(key.getFacetId())
-        .set("date")
-        .to(obs.getDate())
-        .set("value")
-        .to(obs.getValue())
-        .set("last_update_timestamp")
-        .to(Value.COMMIT_TIMESTAMP)
-        .build();
+    return ObservationRecord.from(obs).toMutation(this.observationTableName);
   }
 
   /**
@@ -342,6 +271,24 @@ public class SpannerClient implements Serializable {
 
   public String getObservationTableName() {
     return observationTableName;
+  }
+
+  public String getEmulatorHost() {
+    return emulatorHost;
+  }
+
+  /**
+   * Prepares a SQL query for SpannerIO partitioned reads by conditionally prepending the
+   * emulator-specific hint ({@code @{spanner_emulator.disable_query_partitionability_check=true}})
+   * when running against the Cloud Spanner Emulator. In production Cloud Spanner, standard SQL is
+   * preserved.
+   */
+  public String formatPartitionQuery(String format, Object... args) {
+    String query = (args == null || args.length == 0) ? format : String.format(format, args);
+    if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
+      return "@{spanner_emulator.disable_query_partitionability_check=true} " + query;
+    }
+    return query;
   }
 
   public static Builder builder() {
