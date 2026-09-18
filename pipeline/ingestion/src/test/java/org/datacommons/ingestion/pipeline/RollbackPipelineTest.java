@@ -33,6 +33,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.ingestion.pipeline.rollback.ReadHistoricalObservationsFn;
 import org.datacommons.ingestion.pipeline.rollback.ReconcileNodeEmbeddingsFn;
 import org.datacommons.ingestion.pipeline.rollback.SpannerPartitionedDeleteFn;
 import org.datacommons.ingestion.pipeline.rollback.SpannerRollbackPipeline;
@@ -218,6 +219,45 @@ public class RollbackPipelineTest implements Serializable {
     KeySet keySet = ReconcileNodeEmbeddingsFn.toPrefixKeySet(List.of("geoId/06", "geoId/02"));
     List<?> ranges = (List<?>) keySet.getRanges();
     assertEquals(2, ranges.size());
+  }
+
+  @Test
+  public void testToParentPrefixKeySet_generatesOneRangePerParentKey() {
+    KeySet keySet =
+        ReadHistoricalObservationsFn.toParentPrefixKeySet(
+            List.of(
+                List.of("Count_Person", "geoId/06", "", "facet1"),
+                List.of("Count_Person", "geoId/02", "", "facet2")));
+    List<?> ranges = (List<?>) keySet.getRanges();
+    assertEquals(2, ranges.size());
+  }
+
+  @Test
+  public void testToParentPrefixKeySet_emptyBatch_yieldsNoRanges() {
+    KeySet keySet = ReadHistoricalObservationsFn.toParentPrefixKeySet(List.of());
+    assertTrue(((List<?>) keySet.getRanges()).isEmpty());
+  }
+
+  @Test
+  public void testToParentPrefixKeySet_wrongArity_throwsException() {
+    // A TimeSeries primary key has exactly 4 components; a short key would silently widen the
+    // prefix range and delete or restore unrelated Observation rows.
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ReadHistoricalObservationsFn.toParentPrefixKeySet(
+                    List.of(List.of("Count_Person", "geoId/06", ""))));
+    assertTrue(e.getMessage().contains("TimeSeries primary key of 4 columns"));
+  }
+
+  @Test
+  public void testToParentPrefixKeySet_nullKey_throwsException() {
+    List<List<String>> batch = new ArrayList<>();
+    batch.add(null);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ReadHistoricalObservationsFn.toParentPrefixKeySet(batch));
   }
 
   static class MockRollbackSpannerClient extends SpannerClient {
