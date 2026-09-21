@@ -1,0 +1,376 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Utility to generate a dataset diff for import analysis."""
+
+from enum import Enum
+import os
+import sys
+
+from absl import app
+from absl import flags
+from absl import logging
+import pandas as pd
+
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.path.dirname(os.path.dirname(_SCRIPT_DIR))
+sys.path.append(_SCRIPT_DIR)
+sys.path.append(os.path.join(_DATA_DIR, 'util'))
+
+import bigquery_differ
+import differ_utils
+from mcf_file_util import normalize_value
+
+_GROUPBY_KEYS = [
+    'variableMeasured', 'observationAbout', 'observationDate',
+    'observationPeriod', 'measurementMethod', 'unit', 'scalingFactor'
+]
+
+Diff = Enum('Diff', [
+    ('ADDED', 1),
+    ('DELETED', 2),
+    ('MODIFIED', 3),
+    ('UNMODIFIED', 4),
+])
+
+Column = Enum('Column', [
+    ('variableMeasured', 1),
+    ('observationDate', 2),
+    ('value', 3),
+    ('typeOf', 4),
+    ('dcid', 5),
+    ('diff_type', 6),
+    ('key_combined', 7),
+    ('value_combined', 8),
+])
+
+_FLAGS = flags.FLAGS
+flags.DEFINE_string('current_data', '',
+                    'Path to the current data (wildcard on local/GCS supported).')
+flags.DEFINE_string('previous_data', '',
+                    'Path to the previous data (wildcard on local/GCS supported).')
+flags.DEFINE_string('output_location', 'results',
+                    'Path (local/GCS) to the output data folder.')
+flags.DEFINE_string('runner_mode', 'bigquery',
+                    'Runner mode (bigquery/native). Defaults to bigquery.')
+flags.DEFINE_string('job_name', 'differ', 'Name of the differ job.')
+flags.DEFINE_string('project_id', '', 'GCP project id for BigQuery differ job.')
+if 'bq_dataset' not in _FLAGS:
+    flags.DEFINE_string('bq_dataset', 'datcom_import_differ',
+                        'BigQuery dataset ID for temporary differ tables.')
+
+
+def val_str(value) -> str:
+    """Normalizes and stringifies a property value for diff comparison."""
+    if isinstance(value, list):
+        return ", ".join(sorted([val_str(v) for v in value]))
+    if isinstance(value, str):
+        return str(normalize_value(value))
+    return str(value) if value is not None else ''
+
+
+class ImportDiffer:
+    """Utility to generate a diff of two versions of a dataset for import analysis.
+
+    Usage:
+    $ python import_differ.py --current_data=<path> --previous_data=<path> --output_location=<path> \
+      --runner_mode=<bigquery/native> --project_id=<id> --job_name=<name>
+
+    Runner Modes:
+    - bigquery (default): Streams MCF to CSV and computes diffs via BigQuery FULL OUTER JOIN.
+    - native: Runs the differ using in-memory Python (Pandas) locally.
+    """
+
+    def __init__(self,
+                 current_data,
+                 previous_data,
+                 output_location,
+                 project_id='',
+                 job_name='differ',
+                 runner_mode='bigquery',
+                 bq_dataset='datcom_import_differ'):
+        self.current_data = current_data
+        self.previous_data = previous_data
+        self.output_path = output_location
+        self.project_id = project_id
+        self.job_name = job_name
+        self.runner_mode = runner_mode
+        self.bq_dataset = bq_dataset
+
+    def _cleanup_data(self, df: pd.DataFrame):
+        for column in [Diff.ADDED, Diff.DELETED, Diff.MODIFIED]:
+            df[column.name] = df.get(column.name, 0)
+            df[column.name] = df[column.name].fillna(0).astype(int)
+
+    def generate_diff(self, previous_df: pd.DataFrame,
+                      current_df: pd.DataFrame) -> pd.DataFrame:
+        """Processes previous and current datasets to generate diff data."""
+        if current_df.empty and not previous_df.empty:
+            result = previous_df.copy()
+            result[Column.diff_type.name] = Diff.DELETED.name
+            return result
+        elif previous_df.empty and not current_df.empty:
+            result = current_df.copy()
+            result[Column.diff_type.name] = Diff.ADDED.name
+            return result
+        elif previous_df.empty and current_df.empty:
+            column_list = [
+                Column.key_combined.name, Column.value_combined.name + '_x',
+                Column.value_combined.name + '_y', Column.diff_type.name
+            ]
+            return pd.DataFrame(columns=column_list)
+        result = pd.merge(previous_df,
+                          current_df,
+                          on=Column.key_combined.name,
+                          how='outer',
+                          indicator=Column.diff_type.name)
+        result[Column.diff_type.name] = result.apply(
+            lambda row: Diff.ADDED.name
+            if row[Column.diff_type.name] == 'right_only' else Diff.DELETED.name
+            if row[Column.diff_type.name] == 'left_only' else Diff.MODIFIED.name
+            if row[Column.value_combined.name + '_x'] != row[
+                Column.value_combined.name + '_y'] else Diff.UNMODIFIED.name,
+            axis=1)
+        result.drop(
+            result[result[Column.diff_type.name] == Diff.UNMODIFIED.name].index,
+            inplace=True)
+        result.reset_index(drop=True, inplace=True)
+        if result.empty:
+            column_list = [
+                Column.key_combined.name, Column.value_combined.name + '_x',
+                Column.value_combined.name + '_y', Column.diff_type.name
+            ]
+            return pd.DataFrame(columns=column_list)
+
+        return result
+
+    def split_data(self, mcf_nodes: list) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Splits MCF nodes into observation and schema nodes based on typeOf property."""
+        obs_list = []
+        schema_list = []
+        for node in mcf_nodes:
+            if 'StatVarObservation' in node.get(Column.typeOf.name):
+                values_to_combine = []
+                keys_to_combine = []
+                value_keys = [Column.value.name]
+                for key in _GROUPBY_KEYS:
+                    keys_to_combine.append(str(node.get(key, "")))
+                for key in value_keys:
+                    values_to_combine.append(str(node.get(key, "")))
+
+                key_combined = ";".join(keys_to_combine)
+                value_combined = ";".join(values_to_combine)
+
+                obs_list.append({
+                    Column.key_combined.name: key_combined,
+                    Column.value_combined.name: value_combined,
+                    'Node': node.get('Node', ''),
+                    'dcid': node.get('dcid', '')
+                })
+            else:
+                node_id_key = str(node.get('Node', ""))
+                node_id_key = str(node.get(Column.dcid.name, node_id_key))
+                if not node_id_key:
+                    logging.error(f'Skipping node as dcid is missing {node}.')
+                    continue
+                values_to_combine = []
+                keys_to_combine = [node_id_key]
+                node.pop(Column.dcid.name, None)
+                node.pop('Node', None)
+                value_keys = sorted(node.keys())
+                for key in value_keys:
+                    values_to_combine.append(key + ":" +
+                                             val_str(node.get(key, "")))
+                key_combined = ";".join(keys_to_combine)
+                value_combined = ";".join(values_to_combine)
+                schema_list.append({
+                    Column.key_combined.name: key_combined,
+                    Column.value_combined.name: value_combined
+                })
+
+        schema_df = pd.DataFrame(schema_list)
+        schema_df.drop_duplicates(inplace=True)
+        obs_df = pd.DataFrame(obs_list)
+        return obs_df, schema_df
+
+    def convert_diff_to_mcf_nodes(self,
+                                  diff_df: pd.DataFrame,
+                                  is_obs: bool,
+                                  diff_type: str = None,
+                                  suffix: str = None) -> list:
+        """Converts the diff dataframe back to MCF format nodes."""
+        all_nodes = []
+        diff_types = [diff_type] if diff_type else [
+            Diff.ADDED.name, Diff.DELETED.name, Diff.MODIFIED.name
+        ]
+        for d_type in diff_types:
+            df_type = diff_df[diff_df[Column.diff_type.name] == d_type]
+            if df_type.empty:
+                continue
+
+            col_suffix = suffix if suffix else (
+                '_x' if d_type == Diff.DELETED.name else '_y')
+
+            for _, row in df_type.iterrows():
+                node = {}
+                key_combined = str(row[Column.key_combined.name])
+
+                def get_val(base_name):
+                    col_name = base_name + col_suffix
+                    if col_name in row:
+                        return str(row[col_name])
+                    return str(row.get(base_name, ''))
+
+                value_combined = get_val(Column.value_combined.name)
+
+                if is_obs:
+                    node_id = get_val('Node')
+                    dcid_id = get_val('dcid')
+                    if node_id and node_id != 'nan':
+                        node['Node'] = node_id
+                    if dcid_id and dcid_id != 'nan':
+                        node['dcid'] = dcid_id
+
+                    keys = key_combined.split(';')
+                    for i, key in enumerate(_GROUPBY_KEYS):
+                        if i < len(keys) and keys[i] and keys[i] != "nan":
+                            node[key] = keys[i]
+
+                    values = value_combined.split(';')
+                    if values and values[0] and values[0] != "nan":
+                        node['value'] = values[0]
+
+                    node['typeOf'] = 'StatVarObservation'
+                else:
+                    if key_combined.startswith('dcid:'):
+                        node['dcid'] = key_combined[len('dcid:'):]
+                    else:
+                        node['Node'] = key_combined
+
+                    for kv in value_combined.split(';'):
+                        if ':' in kv:
+                            k, v = kv.split(':', 1)
+                            node[k] = v
+
+                all_nodes.append(node)
+        return all_nodes
+
+    def run_differ(self):
+        os.makedirs(self.output_path, exist_ok=True)
+
+        logging.info('Processing input data to generate diff...')
+        if self.runner_mode == 'bigquery':
+            logging.info("Invoking BigQuery mode for differ")
+            return bigquery_differ.run_bigquery_differ(
+                current_data=self.current_data,
+                previous_data=self.previous_data,
+                output_location=self.output_path,
+                project_id=self.project_id,
+                job_name=self.job_name,
+                dataset_id=self.bq_dataset,
+            )
+        elif self.runner_mode == 'native':
+            logging.info(f'Loading current data from {self.current_data}')
+            mcf_nodes = differ_utils.load_data(self.current_data)
+            current_df_obs, current_df_schema = self.split_data(mcf_nodes)
+            logging.info(
+                f'Loaded current data with {current_df_obs.shape[0]} observations and {current_df_schema.shape[0]} nodes.'
+            )
+            logging.info(f'Loading previous data from {self.previous_data}')
+            mcf_nodes = differ_utils.load_data(self.previous_data)
+            previous_df_obs, previous_df_schema = self.split_data(mcf_nodes)
+            logging.info(
+                f'Loaded previous data with {previous_df_obs.shape[0]} observations and {previous_df_schema.shape[0]} nodes.'
+            )
+            logging.info('Generating observation diff...')
+            obs_diff = self.generate_diff(previous_df_obs, current_df_obs)
+            logging.info('Generating schema diff...')
+            schema_diff = self.generate_diff(previous_df_schema,
+                                             current_df_schema)
+
+            logging.info('Writing diff to MCF files...')
+            for d_type, filename, suffix in [
+                (Diff.ADDED.name, 'nodes-added.mcf', '_y'),
+                (Diff.DELETED.name, 'nodes-deleted.mcf', '_x'),
+                (Diff.MODIFIED.name, 'nodes-modified.mcf', '_y'),
+                (Diff.MODIFIED.name, 'nodes-original.mcf', '_x'),
+            ]:
+                obs_nodes = self.convert_diff_to_mcf_nodes(
+                    obs_diff, True, d_type, suffix)
+                schema_nodes = self.convert_diff_to_mcf_nodes(
+                    schema_diff, False, d_type, suffix)
+                type_nodes = obs_nodes + schema_nodes
+                if type_nodes:
+                    differ_utils.write_mcf_nodes(type_nodes, self.output_path,
+                                                 filename)
+
+            obs_stats = obs_diff[Column.diff_type.name].value_counts().to_dict()
+            schema_stats = schema_diff[
+                Column.diff_type.name].value_counts().to_dict()
+
+            differ_summary = {
+                'current_version':
+                    self.current_data,
+                'previous_version':
+                    self.previous_data,
+                'current_obs_count':
+                    int(current_df_obs.shape[0]),
+                'previous_obs_count':
+                    int(previous_df_obs.shape[0]),
+                'current_schema_count':
+                    int(current_df_schema.shape[0]),
+                'previous_schema_count':
+                    int(previous_df_schema.shape[0]),
+                'added_obs_count':
+                    int(obs_stats.get(Diff.ADDED.name, 0)),
+                'deleted_obs_count':
+                    int(obs_stats.get(Diff.DELETED.name, 0)),
+                'modified_obs_count':
+                    int(obs_stats.get(Diff.MODIFIED.name, 0)),
+                'added_schema_count':
+                    int(schema_stats.get(Diff.ADDED.name, 0)),
+                'deleted_schema_count':
+                    int(schema_stats.get(Diff.DELETED.name, 0)),
+                'modified_schema_count':
+                    int(schema_stats.get(Diff.MODIFIED.name, 0)),
+                'obs_diff_count':
+                    int(obs_diff.shape[0]),
+                'schema_diff_count':
+                    int(schema_diff.shape[0])
+            }
+            logging.info(
+                f'Generated observation diff of size {obs_diff.shape[0]}')
+            logging.info(
+                f'Generated schema diff of size {schema_diff.shape[0]}')
+            differ_utils.write_json_data(differ_summary, self.output_path,
+                                         'differ_summary.json')
+            logging.info(f'Differ summary: {differ_summary}')
+            logging.info(f'Differ output written to {self.output_path}')
+            return differ_summary
+        else:
+            raise ValueError(
+                f"Unsupported runner_mode: {self.runner_mode}. Must be 'bigquery' or 'native'."
+            )
+
+
+def main(_):
+    """Runs the differ."""
+    differ = ImportDiffer(_FLAGS.current_data, _FLAGS.previous_data,
+                          _FLAGS.output_location, _FLAGS.project_id,
+                          _FLAGS.job_name, _FLAGS.runner_mode,
+                          _FLAGS.bq_dataset)
+    differ.run_differ()
+
+
+if __name__ == '__main__':
+    app.run(main)
