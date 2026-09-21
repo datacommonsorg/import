@@ -20,7 +20,7 @@ from stats import constants
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
@@ -38,16 +38,16 @@ _MAX_CHARS = 2**16 - 1
 class McfImporter(Importer):
   """Imports a MCF file.
 
-  The MCF nodes are parsed and inserted as triples via the Db.
+  The MCF nodes are parsed and inserted as triples via the GraphWriter.
     """
 
   def __init__(self,
                input_file: File,
-               db: Db,
+               graph_writer: GraphWriter,
                reporter: FileImportReporter,
                nodes: Nodes = None) -> None:
     self.input_file = input_file
-    self.db = db
+    self.graph_writer = graph_writer
     self.reporter = reporter
     self.nodes = nodes
 
@@ -66,10 +66,9 @@ class McfImporter(Importer):
         ]:
           metadata_subject_ids.add(subject_id)
 
-      # Pass 2: Map and stream triples to database in chunks
-      logging.info(
-          "Streaming MCF triples parsing and database writes for %s...",
-          self.input_file.full_path())
+      # Pass 2: Map and stream triples to the graph writer in chunks
+      logging.info("Streaming MCF triple parsing and writes for %s...",
+                   self.input_file.full_path())
       chunk = []
       all_metadata_triples = []
 
@@ -87,12 +86,12 @@ class McfImporter(Importer):
         # Only flush at subject boundaries to prevent splitting a subject's triples
         if chunk and triple.subject_id != chunk[-1].subject_id and len(
             chunk) >= 10000:
-          self.db.insert_triples(chunk, self.input_file)
+          self.graph_writer.write_triples(chunk, self.input_file)
           chunk = []
         chunk.append(triple)
 
       if chunk:
-        self.db.insert_triples(chunk, self.input_file)
+        self.graph_writer.write_triples(chunk, self.input_file)
 
       # Register all collected metadata nodes at the end
       if all_metadata_triples:

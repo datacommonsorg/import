@@ -1,0 +1,4 @@
+article_id,article_title,article_author
+article1,"Article 1",author1
+article2,"Article 2","author1,author2"
+article3,"Article 3","author2,author3"

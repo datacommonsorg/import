@@ -37,6 +37,11 @@ _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 
+def _sort_key(graph_entry: dict) -> str:
+  """Orders JSON-LD entries so comparisons ignore shard and write order."""
+  return json.dumps(graph_entry, sort_keys=True)
+
+
 @freeze_time("2025-01-23")
 def _test_runner(test: unittest.TestCase,
                  test_name: str,
@@ -76,21 +81,16 @@ def _test_runner(test: unittest.TestCase,
       return
 
     def load_jsonld(dir_path):
+      """Collects every node and observation written under dir_path."""
       nodes = []
       observations = []
-      if os.path.exists(dir_path):
-        for root, _, files in os.walk(dir_path):
-          for f in files:
-            if f.endswith(".jsonld"):
-              with open(os.path.join(root, f), "r") as json_f:
-                data = json.load(json_f)
-                if "@graph" in data:
-                  if f.startswith("node-"):
-                    nodes.extend(data["@graph"])
-                  elif f.startswith("observation-"):
-                    observations.extend(data["@graph"])
-      return sorted(nodes, key=lambda x: json.dumps(x, sort_keys=True)), sorted(
-          observations, key=lambda x: json.dumps(x, sort_keys=True))
+      for root, _, files in os.walk(dir_path):
+        for file_name in files:
+          with open(os.path.join(root, file_name), "r") as f:
+            graph = json.load(f)["@graph"]
+          target = nodes if file_name.startswith("node-") else observations
+          target.extend(graph)
+      return sorted(nodes, key=_sort_key), sorted(observations, key=_sort_key)
 
     output_nodes, output_obs = load_jsonld(output_jsonld_dir)
     expected_nodes, expected_obs = load_jsonld(expected_jsonld_dir)
@@ -108,6 +108,7 @@ class TestRunner(unittest.TestCase):
     use_fake_gzip_time()
 
   def test_config_driven(self):
+    """Config passed as a file, inputs pulled from its dataDownloadUrl."""
     _test_runner(self,
                  "config_driven",
                  config_path=os.path.join(_CONFIG_DIR, "config_driven.json"))
@@ -120,16 +121,25 @@ class TestRunner(unittest.TestCase):
                                             "config_driven_invalid.json"))
 
   def test_config_with_wildcards(self):
+    """Same as config_driven, but the inputFiles patterns are globs."""
     _test_runner(self,
                  "config_with_wildcards",
                  config_path=os.path.join(_CONFIG_DIR,
                                           "config_with_wildcards.json"))
 
   def test_input_dir_driven(self):
+    """Config discovered as config.json inside the input dir, as DCP does it."""
     _test_runner(self, "input_dir_driven")
 
   def test_remote_entity_types(self):
+    """Proxy entity nodes typed from what Base DC reports."""
     _test_runner(self, "remote_entity_types")
+
+  def test_entities(self):
+    _test_runner(self, "entities")
+
+  def test_events(self):
+    _test_runner(self, "events")
 
   def test_empty_input(self):
     with self.assertRaises(FileNotFoundError):
@@ -178,23 +188,27 @@ class TestRunner(unittest.TestCase):
           "inputFiles": [{
               "pattern": "countries.csv",
               "importType": "observations",
-              "format": "variablePerColumn",
               "entityType": "Country",
               "provenance": "dcid:Provenance1",
               "columnMappings": {
+                  "dcid:variableMeasured": "variable",
                   "dcid:observationAbout": "place",
                   "dcid:observationDate": "year",
+                  "dcid:value": "value",
               },
+              "columnsToResolve": ["place"],
           }, {
               "pattern": "wikidataids.csv",
               "importType": "observations",
-              "format": "variablePerColumn",
               "entityType": "Country",
               "provenance": "dcid:Provenance1",
               "columnMappings": {
+                  "dcid:variableMeasured": "variable",
                   "dcid:observationAbout": "wikidataid",
                   "dcid:observationDate": "year",
+                  "dcid:value": "value",
               },
+              "columnsToResolve": ["wikidataid"],
           }, {
               "pattern": "variable_per_row.csv",
               "importType": "observations",

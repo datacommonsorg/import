@@ -21,9 +21,9 @@ from stats.mcf_importer import McfImporter
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from tests.stats.test_util import compare_files
-from tests.stats.test_util import FakeDb
 from tests.stats.test_util import is_write_mode
-from tests.stats.test_util import write_db_triples_list
+from tests.stats.test_util import RecordingGraphWriter
+from tests.stats.test_util import write_triples_list
 from util.filesystem import create_store
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -45,16 +45,18 @@ def _test_import(test: unittest.TestCase,
     input_file = input_store.as_dir().open_file(input_file_name,
                                                 create_if_missing=False)
 
-    output_triples_path = os.path.join(temp_dir, f"{test_name}.triples.db.csv")
+    output_triples_path = os.path.join(temp_dir, f"{test_name}.triples.csv")
     expected_triples_path = os.path.join(_EXPECTED_DIR,
-                                         f"{test_name}.triples.db.csv")
+                                         f"{test_name}.triples.csv")
 
-    db = FakeDb()
+    graph_writer = RecordingGraphWriter()
     report_file = temp_store.as_dir().open_file("report.json")
     reporter = FileImportReporter(input_file.full_path(),
                                   ImportReporter(report_file))
 
-    importer = McfImporter(input_file=input_file, db=db, reporter=reporter)
+    importer = McfImporter(input_file=input_file,
+                           graph_writer=graph_writer,
+                           reporter=reporter)
 
     if raises_error:
       with test.assertRaises(ValueError):
@@ -63,8 +65,8 @@ def _test_import(test: unittest.TestCase,
 
     importer.do_import()
 
-    db.commit_and_close()
-    write_db_triples_list(db.triples, output_triples_path)
+    graph_writer.commit_and_close()
+    write_triples_list(graph_writer.triples, output_triples_path)
 
     if is_write_mode():
       shutil.copy(output_triples_path, expected_triples_path)
@@ -80,5 +82,9 @@ class TestMcfImporter(unittest.TestCase):
 
   def test_basic_mcf(self):
     _test_import(self, "basic_mcf")
+
+  def test_invalid_mcf(self):
     _test_import(self, "invalid_mcf", raises_error=True)
+
+  def test_provenance_source(self):
     _test_import(self, "provenance_source")

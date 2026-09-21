@@ -18,7 +18,7 @@ from unittest import mock
 from stats.config import Config
 from stats.data import Triple
 from stats.data import ValidationErrorType
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from stats.validation import MetadataValidator
 
 
@@ -35,7 +35,7 @@ class TestMetadataValidator(unittest.TestCase):
     }
 
     # Setup mock database with matching MCF definitions
-    mock_db = mock.MagicMock(spec=Db)
+    mock_db = mock.MagicMock(spec=GraphWriter)
     mock_db._triples = {
         "_global": [
             # Define Source
@@ -62,7 +62,7 @@ class TestMetadataValidator(unittest.TestCase):
     }
 
     # Setup mock database missing the provenance definition
-    mock_db = mock.MagicMock(spec=Db)
+    mock_db = mock.MagicMock(spec=GraphWriter)
     mock_db._triples = {
         "_global": [Triple("dcid:MySource", "typeOf", object_id="Source"),]
     }
@@ -88,7 +88,7 @@ class TestMetadataValidator(unittest.TestCase):
     }
 
     # Setup mock database where Provenance is defined but completely lacks a linked source
-    mock_db = mock.MagicMock(spec=Db)
+    mock_db = mock.MagicMock(spec=GraphWriter)
     mock_db._triples = {
         "_global": [
             Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
@@ -117,7 +117,7 @@ class TestMetadataValidator(unittest.TestCase):
 
     # Setup mock database where Provenance is defined and points to a source,
     # but the Source node itself is NOT defined in the database triples
-    mock_db = mock.MagicMock(spec=Db)
+    mock_db = mock.MagicMock(spec=GraphWriter)
     mock_db._triples = {
         "_global": [
             Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
@@ -134,7 +134,7 @@ class TestMetadataValidator(unittest.TestCase):
     mock_config = mock.MagicMock(spec=Config)
     mock_config.data = {"inputFiles": [{"pattern": "data.csv"}]}
 
-    mock_db = mock.MagicMock(spec=Db)
+    mock_db = mock.MagicMock(spec=GraphWriter)
     mock_db._triples = {}
 
     validator = MetadataValidator(mock_config, mock_db)
@@ -155,7 +155,7 @@ class TestMetadataValidator(unittest.TestCase):
         }]
     }
 
-    mock_db = mock.MagicMock(spec=Db)
+    mock_db = mock.MagicMock(spec=GraphWriter)
     mock_db._triples = {}
 
     validator = MetadataValidator(mock_config, mock_db)

@@ -72,7 +72,7 @@ class Triple:
   object_id: str = ""
   object_value: str = ""
 
-  def db_tuple(self):
+  def normalized_tuple(self):
     return (strip_namespace(self.subject_id), self.predicate,
             strip_namespace(self.object_id), self.object_value)
 
@@ -304,7 +304,7 @@ class Observation:
   properties: ObservationProperties = field(
       default_factory=ObservationProperties.new)
 
-  def db_tuple(self):
+  def normalized_tuple(self):
     return (strip_namespace(self.entity), strip_namespace(self.variable),
             self.date, self.value, strip_namespace(self.provenance),
             strip_namespace(self.properties.unit),
@@ -502,11 +502,6 @@ class ImportType(StrEnum):
   ENTITIES = "entities"
 
 
-class InputFileFormat(StrEnum):
-  VARIABLE_PER_ROW = "variablePerRow"
-  VARIABLE_PER_COLUMN = "variablePerColumn"
-
-
 class TimePeriod(StrEnum):
   DAY = "day"
   MONTH = "month"
@@ -644,12 +639,10 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
 def prepare_observations_df(df: pd.DataFrame, provenance: str,
                             obs_props: "ObservationProperties") -> pd.DataFrame:
   """
-  Transform observations DataFrame into database-ready format.
-  Applies all transformations that Observation.db_tuple() used to do, but vectorially.
+  Transforms an observations DataFrame into the form the graph writer persists.
 
-  This function eliminates the need to create Observation objects, applying
-  all transformations (filtering, namespace stripping, JSON serialization)
-  using vectorized pandas operations.
+  Does the filtering, namespace stripping and JSON serialization with vectorized
+  pandas operations, so no per-row Observation objects are created.
 
   Args:
     df: DataFrame with columns [entity, variable, date, value]
@@ -657,7 +650,7 @@ def prepare_observations_df(df: pd.DataFrame, provenance: str,
     obs_props: Observation properties
 
   Returns:
-    DataFrame with columns ready for database insertion:
+    DataFrame with the columns the graph writer expects:
     [entity, variable, date, value, provenance, unit, scaling_factor,
      measurement_method, observation_period, properties]
   """
@@ -681,5 +674,5 @@ def prepare_observations_df(df: pd.DataFrame, provenance: str,
     # Serialize custom properties dict to JSON (even when empty)
   df[constants.COLUMN_PROPERTIES] = json.dumps(obs_props.properties or {})
 
-  # Reorder columns to match database schema
+  # Reorder columns to match the graph writer's expected order
   return df[constants.OBSERVATION_COLUMNS]

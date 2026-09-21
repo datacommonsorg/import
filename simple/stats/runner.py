@@ -28,18 +28,16 @@ from stats import constants
 from stats.config import Config
 from stats.data import FileValidationError
 from stats.data import ImportType
-from stats.data import InputFileFormat
 from stats.data import Triple
 from stats.data import ValidationErrorType
-from stats.db import Db
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
+from stats.graph_writer import GraphWriter
 from stats.importer import EntityResolutionError
 from stats.importer import Importer
-from stats.jsonld_stream_db import JsonLdStreamDb
+from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
-from stats.observations_importer import ObservationsImporter
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
@@ -61,14 +59,14 @@ def _create_importer_for_file(
     config: Config,
     input_file: File,
     process_dir: Dir,
-    db: Db,
+    graph_writer: GraphWriter,
     reporter: FileImportReporter,
     nodes: Nodes,
 ) -> Importer:
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
         input_file=input_file,
-        db=db,
+        graph_writer=graph_writer,
         reporter=reporter,
         nodes=nodes,
     )
@@ -78,27 +76,14 @@ def _create_importer_for_file(
   match import_type:
 
     case ImportType.OBSERVATIONS:
-      input_file_format = config.format(input_file)
-      if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
-        mappings = config.column_mappings(input_file)
-        if not mappings:
-          raise ValueError(
-              f"Missing column mappings for file '{input_file.path}' in config.json"
-          )
-        return VariablePerRowImporter(
-            input_file=input_file,
-            db=db,
-            reporter=reporter,
-            nodes=nodes,
+      mappings = config.column_mappings(input_file)
+      if not mappings:
+        raise ValueError(
+            f"Missing column mappings for file '{input_file.path}' in config.json"
         )
-      sanitized_path = input_file.full_path().replace("://",
-                                                      "_").replace("/", "_")
-      debug_resolve_file = process_dir.open_file(
-          f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
-      return ObservationsImporter(
+      return VariablePerRowImporter(
           input_file=input_file,
-          db=db,
-          debug_resolve_file=debug_resolve_file,
+          graph_writer=graph_writer,
           reporter=reporter,
           nodes=nodes,
       )
@@ -110,7 +95,7 @@ def _create_importer_for_file(
           f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
       return EventsImporter(
           input_file=input_file,
-          db=db,
+          graph_writer=graph_writer,
           debug_resolve_file=debug_resolve_file,
           reporter=reporter,
           nodes=nodes,
@@ -119,7 +104,7 @@ def _create_importer_for_file(
     case ImportType.ENTITIES:
       return EntitiesImporter(
           input_file=input_file,
-          db=db,
+          graph_writer=graph_writer,
           reporter=reporter,
           nodes=nodes,
       )
@@ -165,20 +150,20 @@ def _run_single_csv_import_proc(
 
     config = Config(json.loads(config_json_str))
     nodes = Nodes(config=config)
-    db = JsonLdStreamDb(output_store,
-                        import_names,
-                        nodes,
-                        jsonld_dir_name=jsonld_dir_name)
+    graph_writer = JsonLdStreamWriter(output_store,
+                                      import_names,
+                                      nodes,
+                                      jsonld_dir_name=jsonld_dir_name)
 
     sanitized_path = input_store.full_path().replace("://",
                                                      "_").replace("/", "_")
     report_file = process_store.open_file(f"report_{sanitized_path}.json")
     reporter = ImportReporter(report_file).get_file_reporter(input_store)
 
-    importer = _create_importer_for_file(config, input_store, process_store, db,
-                                         reporter, nodes)
+    importer = _create_importer_for_file(config, input_store, process_store,
+                                         graph_writer, reporter, nodes)
     importer.do_import()
-    db.commit_and_close()
+    graph_writer.commit_and_close()
 
     resolved_entities = {
         e.entity_dcid: (e.entity_type, getattr(e, "provenance_ids", set()))
@@ -193,9 +178,9 @@ def _run_single_csv_import_proc(
     properties = dict(nodes.properties)
     return ImportProcResult(
         file_rel_path=file_rel_path,
-        obs_collision_count=db.obs_collision_count,
-        file_collision_counts=dict(db.file_collision_counts),
-        file_sample_collisions=dict(db.file_sample_collisions),
+        obs_collision_count=graph_writer.obs_collision_count,
+        file_collision_counts=dict(graph_writer.file_collision_counts),
+        file_sample_collisions=dict(graph_writer.file_sample_collisions),
         resolved_entities=resolved_entities,
         event_types=event_types,
         entity_types=entity_types,
@@ -204,7 +189,7 @@ def _run_single_csv_import_proc(
         provenances=provenances,
         groups=groups,
         properties=properties,
-        processed_imports=set(db._processed_imports),
+        processed_imports=set(graph_writer._processed_imports),
     )
 
 
@@ -323,14 +308,14 @@ class Runner:
         report_file=self.process_dir.open_file(constants.REPORT_JSON_FILE_NAME))
 
     self.nodes = Nodes(self.config)
-    self.db = None
+    self.graph_writer = None
     self.trigger_workflow_info = None
 
   def run(self):
     try:
       self._run_imports_and_export_jsonld()
 
-      self.db.commit_and_close()
+      self.graph_writer.commit_and_close()
 
       # Report done.
       self.reporter.report_done()
@@ -438,15 +423,11 @@ class Runner:
 
   def _merge_configs(self, configs: list, base_dir: Dir):
     """Merges multiple config.json files into a single configuration.
-    
+
     Args:
       configs: A list of File objects representing the config.json files to merge.
       base_dir: The base directory used to calculate relative paths for input files.
     """
-    import json
-
-    import fs.path as fspath
-
     merged_data = {
         "includeInputSubdirs": True,
         "inputFiles": [],
@@ -470,23 +451,21 @@ class Runner:
       merged_data["_dir_import_names"][rel_dir] = config_data.get(
           "importName") or rel_dir
 
-      # Merge inputFiles, prefixing patterns with rel_dir and converting dicts to lists
       input_files = config_data.get("inputFiles", [])
+      if not isinstance(input_files, list):
+        raise ValueError(
+            f"'inputFiles' in {file.full_path()} must be a list of objects, "
+            f"each with a 'pattern' and a 'provenance'. "
+            f"Got: {type(input_files).__name__}")
 
-      # 1. Normalize legacy dictionary format to standard list format
-      entries = []
-      if isinstance(input_files, list):
-        entries = [entry for entry in input_files if isinstance(entry, dict)]
-      elif isinstance(input_files, dict):
-        for k, v in input_files.items():
-          entry = {"pattern": k}
-          if isinstance(v, dict):
-            entry.update(v)
-          entries.append(entry)
-
-      # 2. Process all entries uniformly (DRY)
+      # Patterns are relative to the config's own directory, so prefix them
+      # with that directory to make them resolvable from the merged base dir.
       import_name = config_data.get("importName") or rel_dir
-      for entry in entries:
+      for entry in input_files:
+        if not isinstance(entry, dict):
+          raise ValueError(
+              f"Invalid entry in 'inputFiles' in {file.full_path()}: "
+              f"must be a JSON object. Got: {entry}")
         new_entry = dict(entry)
         for key_field in ["pattern", "filename"]:
           if key_field in new_entry:
@@ -689,11 +668,13 @@ class Runner:
       logging.info("Importing %d files (%d MCF, %d CSV)...", len(all_files),
                    len(mcf_files), len(csv_files))
       if not self.use_multiprocessing:
-        # MCF files must be fully imported before any CSV file is processed.
-        # MCF defines provenance and source nodes that the CSV importers look
-        # up by name. If a CSV gets there first, Nodes.provenance() auto-creates
-        # a provenance with no source attached, and the source link is lost for
-        # the rest of the run.
+        # Import the MCF group to completion before starting the CSV group.
+        # MCF declares the provenance and source nodes that CSV importers then
+        # look up by name; if a CSV gets there first, Nodes.provenance()
+        # auto-creates a provenance with no source and the source link is lost.
+        # Files within each group still run concurrently.
+        #
+        # The multiprocessing branch below does not preserve this ordering.
         for file_group in (mcf_files, csv_files):
           if not file_group:
             continue
@@ -709,7 +690,7 @@ class Runner:
       else:
         num_processes = min(32, len(all_files))
         config_json_str = json.dumps(self.config.data)
-        jsonld_dir_name = self.db.jsonld_dir.name()
+        jsonld_dir_name = self.graph_writer.jsonld_dir.name()
         with concurrent.futures.ProcessPoolExecutor(
             max_workers=num_processes) as executor:
           futures = [
@@ -770,13 +751,13 @@ class Runner:
                   self.nodes.properties[prop_name].provenance_ids.update(
                       getattr(prop_obj, "provenance_ids", set()))
             if res.processed_imports:
-              self.db._processed_imports.update(res.processed_imports)
-            if res.obs_collision_count and hasattr(self.db,
+              self.graph_writer._processed_imports.update(res.processed_imports)
+            if res.obs_collision_count and hasattr(self.graph_writer,
                                                    "obs_collision_count"):
-              self.db.obs_collision_count += res.obs_collision_count
+              self.graph_writer.obs_collision_count += res.obs_collision_count
               for f_name, count in res.file_collision_counts.items():
-                self.db.file_collision_counts[f_name] += count
-                self.db.file_sample_collisions[f_name].extend(
+                self.graph_writer.file_collision_counts[f_name] += count
+                self.graph_writer.file_sample_collisions[f_name].extend(
                     res.file_sample_collisions.get(f_name, []))
 
   def _log_file_progress(self, file_prefix: str, file: File):
@@ -797,15 +778,17 @@ class Runner:
         self.config,
         input_file,
         self.process_dir,
-        self.db,
+        self.graph_writer,
         reporter,
         self.nodes,
     )
 
   def _run_imports_and_export_jsonld(self):
     logging.info(
-        "Initializing JsonLdStreamDb to stream JSON-LD directly to GCS/Disk")
-    self.db = JsonLdStreamDb(self.output_dir, self.import_names, self.nodes)
+        "Initializing JsonLdStreamWriter to stream JSON-LD directly to GCS/Disk"
+    )
+    self.graph_writer = JsonLdStreamWriter(self.output_dir, self.import_names,
+                                           self.nodes)
 
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
@@ -813,18 +796,18 @@ class Runner:
     # Generate triples from nodes grouped by provenance directory and write directly
     for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
       if prov_dir == "_global":
-        self.db.insert_triples(triples)
+        self.graph_writer.write_triples(triples)
       else:
-        self.db.insert_triples(triples, provenance_dir=prov_dir)
+        self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
-    MetadataValidator(self.config, self.db).validate()
+    MetadataValidator(self.config, self.graph_writer).validate()
 
     # Populate trigger workflow info if running under ingestion workflow and output is GCS
-    output_path = self.db.jsonld_dir.full_path()
-    import_name = self.db.import_name
+    output_path = self.graph_writer.jsonld_dir.full_path()
+    import_name = self.graph_writer.import_name
     if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      processed_imports = sorted(list(self.db._processed_imports))
+      processed_imports = sorted(list(self.graph_writer._processed_imports))
       if not processed_imports:
         processed_imports = [import_name]
       import_list = []

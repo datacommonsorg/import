@@ -93,7 +93,7 @@ OBSERVATION_PROPERTY_COLUMNS = [
     COLUMN_PROPERTIES,
 ]
 
-# Standard observation column ordering for database schema
+# Standard observation column ordering used by the graph writer.
 OBSERVATION_COLUMNS = [
     COLUMN_ENTITY,
     COLUMN_VARIABLE,

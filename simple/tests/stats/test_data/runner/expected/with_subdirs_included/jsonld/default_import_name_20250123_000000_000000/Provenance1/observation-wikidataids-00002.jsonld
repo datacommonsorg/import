@@ -4,68 +4,80 @@
     },
     "@graph": [
         {
-            "@id": "dcid:obs_43fa8a51db9533fab8265c71286156160fc672d525ba1336a256d9c68919d022",
+            "@id": "dcid:obs_78888dbb9e96fcb85e47a7017bf52880a69c827724c3068dca218bd6e05e17d4",
             "@type": "dcid:StatVarObservation",
             "dcid:variableMeasured": {
-                "@id": "dcid:var1"
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
             },
             "dcid:observationDate": 2021,
             "dcid:value": 555,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
             "dcid:observationAbout": {
                 "@id": "dcid:country/USA"
-            },
-            "dcid:provenance": {
-                "@id": "dcid:Provenance1"
-            },
-            "dcid:provenanceUrl": "http://source1.com/provenance1"
+            }
         },
         {
-            "@id": "dcid:obs_a8ab7cebea54254293fffc56c64340cc7d8381fe3051e6a24b52df3839a2bd97",
+            "@id": "dcid:obs_107361df7b3ad40ab03a51d0ef68d4f1d8c5c3955401eafe6c28a95108a63cbf",
             "@type": "dcid:StatVarObservation",
             "dcid:variableMeasured": {
-                "@id": "dcid:var1"
-            },
-            "dcid:observationDate": 2022,
-            "dcid:value": 321,
-            "dcid:observationAbout": {
-                "@id": "dcid:country/IND"
-            },
-            "dcid:provenance": {
-                "@id": "dcid:Provenance1"
-            },
-            "dcid:provenanceUrl": "http://source1.com/provenance1"
-        },
-        {
-            "@id": "dcid:obs_96d9487e7759536307ffb26140f3680792b0d8911b207b7eaa0ce2085529dc11",
-            "@type": "dcid:StatVarObservation",
-            "dcid:variableMeasured": {
-                "@id": "dcid:var2"
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
             },
             "dcid:observationDate": 2021,
             "dcid:value": 666,
-            "dcid:observationAbout": {
-                "@id": "dcid:country/USA"
-            },
             "dcid:provenance": {
                 "@id": "dcid:Provenance1"
             },
-            "dcid:provenanceUrl": "http://source1.com/provenance1"
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/USA"
+            }
         },
         {
-            "@id": "dcid:obs_d522da04fa8eb5b6f6b6229b4866b5cbd3309f073353a4d195c16c8922adf4cd",
+            "@id": "dcid:obs_0a7c5beff13de0e71e24dbd990f4780d2c65f40c5d6ebd9c1f56aa489879498c",
             "@type": "dcid:StatVarObservation",
             "dcid:variableMeasured": {
-                "@id": "dcid:var2"
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2022,
+            "dcid:value": 321,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/IND"
+            }
+        },
+        {
+            "@id": "dcid:obs_6c72b04d3d4df87f8e4456f513d8e61734a0ecf3c846fc2435449fdcc00f1ae9",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
             },
             "dcid:observationDate": 2022,
             "dcid:value": 123,
-            "dcid:observationAbout": {
-                "@id": "dcid:country/IND"
-            },
             "dcid:provenance": {
                 "@id": "dcid:Provenance1"
             },
-            "dcid:provenanceUrl": "http://source1.com/provenance1"
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/IND"
+            }
         }
     ]
 }

@@ -210,12 +210,7 @@ memberOf: svg1""".strip()
 
 
 class TestValidateNumericValues(unittest.TestCase):
-  """Tests for validate_numeric_values.
-
-  This used to be covered incidentally via SqlDb.insert_observations. That
-  implementation is gone, but jsonld_stream_db.py still calls this on every
-  import, so it is tested directly here.
-  """
+  """Tests for validate_numeric_values, which every import runs on its values."""
 
   def test_numeric_values_pass(self):
     df = pd.DataFrame({"value": [1, 2.5, -3, "4", "5.6"]})

@@ -20,7 +20,7 @@ import pandas as pd
 from stats.data import Observation
 from stats.data import OBSERVATION_FIELD_NAMES
 from stats.data import Triple
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from util.filesystem import File
 
 # If $TEST_MODE is set to "write", the test will write the goldens.
@@ -107,26 +107,19 @@ def compare_csv_files(test: unittest.TestCase,
 
 
 def write_triples_list(triples: list[Triple], output_path: str):
-  """
-  Writes the list of triples to the output_path CSV.
-  """
-  pd.DataFrame(triples).to_csv(output_path, index=False)
+  """Writes triples to output_path as CSV.
 
-
-def write_db_triples_list(triples: list[Triple], output_path: str):
+  Triples are written in the normalized form a GraphWriter persists, i.e. with
+  namespaces stripped from the subject and object ids.
   """
-  Writes the list of triples to the output_path CSV in the normalized form in
-  which a Db persists them, i.e. with namespaces stripped from the subject and
-  object ids.
-  """
-  write_triples_list([Triple(*triple.db_tuple()) for triple in triples],
-                     output_path)
+  normalized = [Triple(*triple.normalized_tuple()) for triple in triples]
+  pd.DataFrame(normalized).to_csv(output_path, index=False)
 
 
 def write_observations_df(observations_df: pd.DataFrame, output_path: str):
   """
   Writes the observations DataFrame to the output_path CSV using the
-  observation column order in which a Db persists them.
+  observation column order in which a GraphWriter persists them.
   """
   observations_df.to_csv(output_path,
                          index=False,
@@ -148,8 +141,8 @@ def use_fake_gzip_time(timestamp=0):
   gzip.time = FakeGzipTime(timestamp)
 
 
-class FakeDb(Db):
-  """An in-memory Db that records what was written to it.
+class RecordingGraphWriter(GraphWriter):
+  """An in-memory GraphWriter that records what was written to it.
 
   Importer tests use this to assert on the triples and observations an importer
   produces, without depending on a real storage backend.
@@ -161,14 +154,13 @@ class FakeDb(Db):
     self.committed = False
     self.closed = False
 
-  def insert_triples(self,
-                     triples: list[Triple],
-                     input_file: File = None,
-                     provenance_dir: str = None):
+  def write_triples(self,
+                    triples: list[Triple],
+                    input_file: File = None,
+                    provenance_dir: str = None):
     self.triples.extend(triples)
 
-  def insert_observations(self, observations_df: pd.DataFrame,
-                          input_file: File):
+  def write_observations(self, observations_df: pd.DataFrame, input_file: File):
     self.observation_dfs.append(observations_df)
 
   @property

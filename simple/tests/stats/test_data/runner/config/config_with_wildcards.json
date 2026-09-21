@@ -2,11 +2,10 @@
   "dataDownloadUrl": [
     "tests/stats/test_data/runner/input/config_with_wildcards"
   ],
-  "inputFiles": {
-    "variable_per_row.csv": {
+  "inputFiles": [
+    {
+      "pattern": "variable_per_row.csv",
       "importType": "observations",
-      "format": "variablePerRow",
-      "entityType": "Country",
       "provenance": "dcid:Provenance1",
       "columnMappings": {
         "dcid:variableMeasured": "variable",
@@ -15,28 +14,37 @@
         "dcid:value": "value"
       }
     },
-    "countr*.csv": {
+    {
+      "pattern": "countr*.csv",
       "importType": "observations",
-      "format": "variablePerColumn",
-      "entityType": "Country",
       "provenance": "dcid:Provenance1",
       "columnMappings": {
+        "dcid:variableMeasured": "variable",
         "dcid:observationAbout": "place",
-        "dcid:observationDate": "year"
-      }
+        "dcid:observationDate": "year",
+        "dcid:value": "value"
+      },
+      "columnsToResolve": [
+        "place"
+      ]
     },
-    "wiki*.csv": {
+    {
+      "pattern": "wiki*.csv",
       "importType": "observations",
-      "format": "variablePerColumn",
-      "entityType": "Country",
       "provenance": "dcid:Provenance1",
       "columnMappings": {
+        "dcid:variableMeasured": "variable",
         "dcid:observationAbout": "wikidataid",
-        "dcid:observationDate": "year"
-      }
+        "dcid:observationDate": "year",
+        "dcid:value": "value"
+      },
+      "columnsToResolve": [
+        "wikidataid"
+      ]
     },
-    "*.mcf": {
+    {
+      "pattern": "*.mcf",
       "provenance": "dcid:Provenance1"
     }
-  }
+  ]
 }

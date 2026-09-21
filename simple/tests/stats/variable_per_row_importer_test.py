@@ -25,8 +25,8 @@ from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from stats.variable_per_row_importer import VariablePerRowImporter
 from tests.stats.test_util import compare_files
-from tests.stats.test_util import FakeDb
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import RecordingGraphWriter
 from tests.stats.test_util import use_fake_gzip_time
 from tests.stats.test_util import write_observations_df
 from util.filesystem import create_store
@@ -51,15 +51,15 @@ def _test_import(test: unittest.TestCase, test_name: str):
     input_path = os.path.join(input_dir, "input.csv")
     config_path = os.path.join(input_dir, "config.json")
 
-    output_path = os.path.join(temp_dir, "observations.db.csv")
-    expected_path = os.path.join(expected_dir, "observations.db.csv")
+    output_path = os.path.join(temp_dir, "observations.csv")
+    expected_path = os.path.join(expected_dir, "observations.csv")
 
     input_file = create_store(input_path).as_file()
 
     with open(config_path) as config_file:
       config = Config(json.load(config_file))
 
-    db = FakeDb()
+    graph_writer = RecordingGraphWriter()
     report_file = create_store(temp_dir).as_dir().open_file("report.json")
     reporter = FileImportReporter(input_path, ImportReporter(report_file))
     nodes = Nodes(config)
@@ -76,7 +76,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
         })
 
     VariablePerRowImporter(input_file=input_file,
-                           db=db,
+                           graph_writer=graph_writer,
                            reporter=reporter,
                            nodes=nodes).do_import()
 
@@ -97,9 +97,9 @@ def _test_import(test: unittest.TestCase, test_name: str):
       # Should track the primary states
       test.assertEqual(set(called_args), {"geoId/06", "geoId/08"})
 
-    db.commit_and_close()
+    graph_writer.commit_and_close()
 
-    write_observations_df(db.observations_df, output_path)
+    write_observations_df(graph_writer.observations_df, output_path)
 
     if is_write_mode():
       shutil.copy(output_path, expected_path)
@@ -139,12 +139,12 @@ class TestVariablePerRowImporter(unittest.TestCase):
         )
       with open(config_path) as config_file:
         config = Config(json.load(config_file))
-      db = FakeDb()
+      graph_writer = RecordingGraphWriter()
       nodes = Nodes(config)
       report_file = create_store(temp_dir).as_dir().open_file("report.json")
       reporter = FileImportReporter(csv_path, ImportReporter(report_file))
       importer = VariablePerRowImporter(
-          create_store(csv_path).as_file(), db, reporter, nodes)
+          create_store(csv_path).as_file(), graph_writer, reporter, nodes)
       with mock.patch.object(dc, "resolve_entities",
                              return_value={}) as mock_resolve:
         with self.assertRaises(EntityResolutionError):
