@@ -100,12 +100,6 @@ in the output graph. See [`importProxyEntities`](#importproxyentities).
 
 The list of column names to be ignored by the importer, if any.
 
-#### `format`
-
-Optional and vestigial. The only accepted value is `"variablePerRow"`, which is
-also the behavior when the field is absent: one observation per CSV row, with
-the variable named in a column. Any other value is rejected, so a config
-carrying a stale value fails loudly rather than having its CSVs misread.
 
 ## `importProxyEntities`
 
@@ -156,33 +150,6 @@ Extra phrasings to index the variable under for search.
 If not specified, the variable name is used.
 
 Note that `nlSentences` is deprecated and will be removed in the future.
-
-## `sources`
-
-The top-level `sources` field should encode the sources and provenances associated with the input dataset.
-
-> Sources and provenances are now normally defined in MCF rather than here, and
-> the `provenance` on each `inputFiles` entry refers to an MCF-defined
-> provenance node by DCID. This block is still parsed, but the MCF definitions
-> are what provenance and source validation checks against.
-
-### Source parameters
-
-#### `url`
-
-The URL of the source.
-
-#### `provenances`
-
-The provenances under a given source should be defined using the `provenances` property as `{provenance-name}:{provenance-url}` pairs.
-
-## `dataDownloadUrl`
-
-The simple importer can be bootstrapped either by an input directory or by a config file.
-
-For config driven imports, the import files are specified using a `dataDownloadUrl` field.
-
-This is a repeated field, in that the value should be an array of download URLs. The URLs can be web urls (`http://` or `https://`), GCS directories (`gs://`) or local directories.
 
 ### Examples
 

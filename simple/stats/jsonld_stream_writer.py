@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A DB implementation that streams JSON-LD shards directly to GCS/Disk."""
+"""A GraphWriter implementation that streams JSON-LD shards directly to GCS/Disk."""
 
 from collections import defaultdict
 import concurrent.futures
@@ -34,24 +34,25 @@ from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
 from google.cloud import storage
 import pandas as pd
+from pyld import jsonld
 from rdflib import Graph
 from rdflib import Literal
 from rdflib import Namespace
 from rdflib import RDF
+from rdflib import URIRef
 import requests
 from stats import constants
 from stats.data import strip_namespace
 from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
-from stats.jsonld_exporter import DCID_URL
-from stats.jsonld_exporter import expand_id
-from stats.jsonld_exporter import write_shard
 from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
+
+DCID_URL = "https://datacommons.org/browser/"
 
 # Configuration Constants
 _CHUNK_SIZE = 10000
@@ -274,6 +275,47 @@ def _write_node_shard_fast(args):
   logging.info(f"Saved JSON-LD shard to {shard_name} (fast path)")
 
 
+def expand_id(item):
+  """Expands a short ID into a full URIRef."""
+  if not item:
+    return None
+  if item.startswith("http://") or item.startswith("https://"):
+    return URIRef(item)
+  if item.startswith("dcid:"):
+    return URIRef(f"{DCID_URL}{item[5:]}")
+  return URIRef(f"{DCID_URL}{item.lstrip('/')}")
+
+
+def write_shard(g: Graph,
+                index: int,
+                output_dir,
+                ns_map: dict,
+                prefix: str = "output"):
+  """Serializes and writes an RDF graph to a JSON-LD shard.
+
+  Args:
+    g: The RDF graph to serialize.
+    index: The shard index for the filename.
+    output_dir: The directory to write the shard file to.
+    ns_map: The namespace map for context compaction.
+    prefix: The file name prefix (e.g. 'node' or 'observation').
+  """
+  jsonld_str = g.serialize(context=ns_map, format="json-ld", indent=4)
+  expanded_jsonld = json.loads(jsonld_str)
+  compacted_jsonld = jsonld.compact(expanded_jsonld, ns_map)
+
+  if "@graph" not in compacted_jsonld:
+    data_only = {k: v for k, v in compacted_jsonld.items() if k != "@context"}
+    compacted_jsonld = {
+        "@context": compacted_jsonld.get("@context"),
+        "@graph": [data_only]
+    }
+
+  shard_name = f"{prefix}-{index:05d}.jsonld"
+  output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
+  logging.info(f"Saved JSON-LD shard to {shard_name}")
+
+
 def _write_node_shard_rdflib(args):
   """
   Writes a chunk of triples to a JSON-LD shard using rdflib.
@@ -307,7 +349,7 @@ def _write_node_shard_rdflib(args):
 
 
 class JsonLdStreamWriter(GraphWriter):
-  """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
+  """A GraphWriter implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
 
   def __init__(self,
                output_dir,

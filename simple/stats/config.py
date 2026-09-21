@@ -50,8 +50,7 @@ _AGGREGATION_FIELD = "aggregation"
 _PROPERTIES_FIELD = "properties"
 _DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
 _FORMAT_FIELD = "format"
-# The only CSV layout there has ever been a production importer for: one
-# observation per row, with the variable named in a column.
+# Default and only accepted variable import format
 _VARIABLE_PER_ROW_FORMAT = "variablePerRow"
 _COLUMN_MAPPINGS_FIELD = "columnMappings"
 _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
