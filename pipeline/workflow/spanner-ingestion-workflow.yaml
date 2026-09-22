@@ -8,7 +8,8 @@ main:
           - project_id: '${sys.get_env("PROJECT_ID")}'
           - dataflow_job_name: ${"ingestion-job-" + string(int(sys.now()))}
           - aggregation_job_name: '${default(sys.get_env("AGGREGATION_JOB_NAME"), "aggregation-helper-job")}'
-          - dataflow_gcs_path: '${sys.get_env("DATAFLOW_TEMPLATE_PATH")}'
+          - dataflow_gcs_path: '${default(sys.get_env("DATAFLOW_TEMPLATE_PATH"), "")}'
+          - rollback_gcs_path: '${default(sys.get_env("ROLLBACK_TEMPLATE_PATH"), text.replace_all(default(dataflow_gcs_path, ""), "/ingestion-", "/rollback/rollback-"))}'
           - location: '${sys.get_env("LOCATION")}'
           - spanner_db_path: '${sys.get_env("SPANNER_DATABASE_PATH")}'
           - spanner_parts: '${text.split(spanner_db_path, "/")}'
@@ -18,19 +19,9 @@ main:
           - helper_service: '${default(sys.get_env("INGESTION_HELPER_SERVICE"), "ingestion-helper-service")}'
           - helper_url: '${"https://" + helper_service + "-" + sys.get_env("PROJECT_NUMBER") + "." + location + ".run.app"}'
           - workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
-          - import_list_input: ${default(map.get(args, "importList"), [])}
+          - import_info_list: ${default(map.get(args, "importList"), [])}
           - pipeline_failed: false
           - failure_details: ""
-
-    # Resolve import payload, register PENDING state, and log details
-    - resolve_imports:
-        call: initialize_imports
-        args:
-          helper_url: ${helper_url}
-          workflow_id: '${workflow_id}'
-          import_list: ${import_list_input}
-          status: 'PENDING'
-        result: import_info_list
 
     # Early exit if no imports are ready / staging
     - check_empty_imports:
@@ -40,6 +31,22 @@ main:
               status: "SKIPPED"
               message: "No staging imports found to ingest"
               importList: []
+
+    # Log import details and register initial PENDING state
+    - log_imports:
+        call: sys.log
+        args:
+          text: '${"Import list: " + json.encode_to_string(import_info_list)}'
+          severity: INFO
+    - register_initial_state:
+        call: update_state_subworkflow
+        args:
+          helper_url: ${helper_url}
+          workflow_id: '${workflow_id}'
+          status: 'PENDING'
+          import_list: ${import_info_list}
+          job_id: null
+        result: initial_state_response
 
     # Acquire global ingestion lock on Spanner DB
     - acquire_ingestion_lock:
@@ -60,6 +67,11 @@ main:
             initial_delay: ${wait_period}
             max_delay: ${wait_period}
             multiplier: 1
+
+    # Capture pre-ingestion timestamp (T_pre) under lock for Spanner rollback
+    - record_rollback_timestamp:
+        assign:
+          - rollback_timestamp: ${time.format(sys.now())}
 
     # Pipeline Execution under Lock (Dataflow Ingestion, Aggregation, and Rollback on Failure)
     - run_pipeline_execution:
@@ -101,14 +113,14 @@ main:
                   helper_url: ${helper_url}
                   import_list: ${import_info_list}
                   project_id: ${project_id}
-                  dataflow_job_name: ${dataflow_job_name}
-                  dataflow_gcs_path: ${dataflow_gcs_path}
+                  rollback_gcs_path: ${rollback_gcs_path}
+                  rollback_timestamp: ${rollback_timestamp}
                   location: ${location}
                   spanner_project_id: ${spanner_project_id}
                   spanner_instance_id: ${spanner_instance_id}
                   spanner_database_id: ${spanner_database_id}
                   wait_period: ${wait_period}
-                  aggregation_job_name: ${aggregation_job_name}
+                  pipeline_err: ${pipeline_err}
                 result: rollback_result
             - mark_pipeline_failed:
                 assign:
@@ -127,7 +139,7 @@ main:
         result: lock_release_response
 
     # If pipeline experienced a failure and completed rollback, fail the workflow to alert oncall
-    - check_failure:
+    - rollback_completed:
         switch:
           - condition: ${default(pipeline_failed, false)}
             raise: '${"Pipeline failed and rollback succeeded: " + json.encode_to_string(failure_details)}'
@@ -140,31 +152,6 @@ main:
           aggregationJobRunId: ${ingestion_res.aggregationJobRunId}
           database: ${spanner_db_path}
           importList: ${import_info_list}
-
-# Sub-workflow that logs import details and registers initial state
-initialize_imports:
-  params: [helper_url, workflow_id, import_list, status]
-  steps:
-    - check_empty_imports:
-        switch:
-          - condition: ${len(import_list) == 0}
-            return: []
-    - log_imports:
-        call: sys.log
-        args:
-          text: '${"Import list: " + json.encode_to_string(import_list)}'
-          severity: INFO
-    - register_state:
-        call: update_state_subworkflow
-        args:
-          helper_url: ${helper_url}
-          workflow_id: '${workflow_id}'
-          status: '${status}'
-          import_list: ${import_list}
-          job_id: null
-        result: state_response
-    - return_imports:
-        return: ${import_list}
 
 # Reusable sub-workflow that updates ingestion-history, and conditionally ingestion-status for SUCCESS or RETRY
 update_state_subworkflow:
@@ -220,6 +207,7 @@ ingestion_subworkflow:
           wait_period: ${wait_period}
           helper_url: ${helper_url}
           workflow_id: ${workflow_id}
+          rollback_timestamp: null
         result: dataflow_job_id
     - run_aggregation_step:
         call: run_aggregation_job
@@ -272,7 +260,7 @@ run_aggregation_job:
 
 # This sub-workflow launches a Dataflow job and waits for it to complete.
 run_dataflow_job:
-  params: [import_list, project_id, job_name, template_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period, helper_url, workflow_id]
+  params: [import_list, project_id, job_name, template_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period, helper_url, workflow_id, {rollback_timestamp: null}]
   steps:
     - init:
         assign:
@@ -280,6 +268,16 @@ run_dataflow_job:
           - machineType: 'n2-highmem-8'
           - numWorkers: 3
           - maxWorkers: 20
+          - jobParameters:
+              importList: '${import_list}'
+              projectId: '${spanner_project_id}'
+              spannerInstanceId: '${spanner_instance_id}'
+              spannerDatabaseId: '${spanner_database_id}'
+    - check_rollback_timestamp:
+        switch:
+          - condition: ${rollback_timestamp != null and rollback_timestamp != ""}
+            assign:
+              - jobParameters["rollbackTimestamp"]: '${rollback_timestamp}'
     - launch_job:
         call: googleapis.dataflow.v1b3.projects.locations.flexTemplates.launch
         args:
@@ -289,11 +287,7 @@ run_dataflow_job:
             launchParameter:
               containerSpecGcsPath: '${template_gcs_path}'
               jobName: '${jobName}'
-              parameters:
-                importList: '${import_list}'
-                projectId: '${spanner_project_id}'
-                spannerInstanceId: '${spanner_instance_id}'
-                spannerDatabaseId: '${spanner_database_id}'
+              parameters: ${jobParameters}
               environment:
                 numWorkers: ${numWorkers}
                 maxWorkers: ${maxWorkers}
@@ -327,44 +321,27 @@ run_dataflow_job:
               job_id: ${launch_result.job.id}
         next: wait_for_job_completion
 
-# This sub-workflow performs rollback: sets state to RETRY, reverts imports, and retriggers ingestion.
+# This sub-workflow performs Spanner rollback to rollback_timestamp (T_pre) using the rollback Dataflow pipeline
+# and marks the imports and workflow history as RETRY.
 # If rollback fails, it raises an error so the parent workflow skips lock release and alerts oncall.
 rollback_subworkflow:
-  params: [workflow_id, helper_url, import_list, project_id, dataflow_job_name, dataflow_gcs_path, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period, aggregation_job_name]
+  params: [workflow_id, helper_url, import_list, project_id, rollback_gcs_path, rollback_timestamp, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period, {pipeline_err: null}]
   steps:
     - try_rollback_execution:
         try:
           steps:
-            - revert_imports:
-                call: http.post
+            - log_rollback_start:
+                call: sys.log
                 args:
-                  url: ${helper_url + "/imports/revert"}
-                  auth:
-                    type: OIDC
-                  body:
-                    workflowId: '${workflow_id}'
-                result: revert_res
-            - resolve_retry_imports:
-                call: initialize_imports
+                  text: '${"Starting rollback to timestamp " + rollback_timestamp + " for imports: " + json.encode_to_string(import_list)}'
+                  severity: WARNING
+            - run_rollback_job:
+                call: run_dataflow_job
                 args:
-                  helper_url: ${helper_url}
-                  workflow_id: '${workflow_id}'
-                  import_list: ${revert_res.body.revertedImports}
-                  status: 'RETRY'
-                result: retry_import_info_list
-            - check_empty_retry_imports:
-                switch:
-                  - condition: ${len(retry_import_info_list) == 0}
-                    raise:
-                      message: '${"Rollback failed: No restored staging imports resolved for workflow: " + workflow_id}'
-                      code: 500
-            - run_retry_ingestion:
-                call: ingestion_subworkflow
-                args:
-                  import_list: ${retry_import_info_list}
+                  import_list: '${json.encode_to_string(import_list)}'
                   project_id: ${project_id}
-                  job_name: ${"ingestion-job-retry-" + string(int(sys.now()))}
-                  template_gcs_path: ${dataflow_gcs_path}
+                  job_name: ${"rollback-job-" + string(int(sys.now()))}
+                  template_gcs_path: ${rollback_gcs_path}
                   location: ${location}
                   spanner_project_id: ${spanner_project_id}
                   spanner_instance_id: ${spanner_instance_id}
@@ -372,13 +349,30 @@ rollback_subworkflow:
                   wait_period: ${wait_period}
                   helper_url: ${helper_url}
                   workflow_id: ${workflow_id}
-                  aggregation_job_name: ${aggregation_job_name}
-                result: retry_ingestion_result
+                  rollback_timestamp: ${rollback_timestamp}
+                result: rollback_job_id
+            - update_retry_state:
+                call: update_state_subworkflow
+                args:
+                  helper_url: ${helper_url}
+                  workflow_id: '${workflow_id}'
+                  status: 'RETRY'
+                  import_list: ${import_list}
+                  job_id: ${rollback_job_id}
+                result: retry_state_response
+            - log_rollback_complete:
+                call: sys.log
+                args:
+                  text: '${"Rollback completed successfully - Rollback Dataflow Job ID: " + string(rollback_job_id)}'
+                  severity: INFO
             - return_rollback_success:
                 return:
                   status: "ROLLBACK_SUCCESS"
+                  rollbackJobId: ${default(rollback_job_id, "N/A")}
         except:
           as: retry_err
           steps:
-            - raise_rollback_failure:
-                raise: ${retry_err}
+            - rollback_failure:
+                raise:
+                  message: '${"Pipeline failed and rollback also failed. Original error: " + json.encode_to_string(pipeline_err) + " | Rollback error: " + json.encode_to_string(retry_err)}'
+                  code: 500
