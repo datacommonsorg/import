@@ -20,13 +20,15 @@ import logging
 import os
 import re
 import config
+import google.auth
 from google.auth import jwt
-from google.auth.transport import requests
+from google.auth.transport.requests import Request
 from google.cloud import storage
 from google.cloud.workflows import executions_v1
 from google.oauth2 import id_token
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import requests
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -161,6 +163,124 @@ def invoke_import_automation_workflow(project_id: str,
     return response
 
 
+def invoke_import_automation_airflow(import_name: str,
+                                     latest_version: str,
+                                     import_size: str = 'small',
+                                     graph_path: str = "/**/*.mcf*",
+                                     cron_schedule: str = "",
+                                     dag_id: str | None = None,
+                                     skip_import_job: bool | None = None,
+                                     skip_staging_ingestion: bool | None = None,
+                                     skip_prod_ingestion: bool | None = None):
+    """Triggers the import automation DAG in Cloud Composer (Airflow).
+
+    Args:
+        import_name: The name of the import (e.g. 'scripts/entities:Schema' or 'Schema').
+        latest_version: The version of the import.
+        import_size: The size of the import ('small', 'medium', 'large').
+        graph_path: The graph path for the import.
+        cron_schedule: The cron schedule for the import.
+        dag_id: Optional Airflow DAG ID to invoke; defaults to generic manual_refresh DAG.
+        skip_import_job: Whether to skip the import batch job.
+        skip_staging_ingestion: Whether to skip staging Spanner ingestion.
+        skip_prod_ingestion: Whether to skip production Spanner ingestion.
+    """
+    short_import_name = import_name.split(':')[-1]
+    target_dag_id = dag_id if dag_id else config.AIRFLOW_DEFAULT_DAG_ID
+    full_import_name = (
+        import_name if ':' in import_name else f"scripts/entities:{import_name}"
+    )
+
+    import_config = {
+        "user_script_args": [f"--version={latest_version}"],
+        "import_version_override": latest_version,
+        "graph_data_path": graph_path,
+        "cron_schedule_override": cron_schedule
+    }
+    if short_import_name == 'Schema' or target_dag_id == 'Schema':
+        import_config.update({
+            "invoke_import_validation": True,
+            "invoke_import_tool": True,
+            "invoke_differ_tool": True,
+            "skip_input_upload": True
+        })
+
+    if import_size == 'large':
+        resources = {
+            "machine": "n2-highmem-16",
+            "cpu": 16000,
+            "memory": 131072,
+            "disk": 100
+        }
+    elif import_size == 'medium':
+        resources = {
+            "machine": "n2-highmem-8",
+            "cpu": 8000,
+            "memory": 65536,
+            "disk": 100
+        }
+    else:
+        resources = {
+            "machine": "n2-standard-8",
+            "cpu": 8000,
+            "memory": 32768,
+            "disk": 100
+        }
+
+    conf = {
+        "importName": full_import_name,
+        "importConfig": import_config,
+        "resources": resources,
+    }
+    if skip_import_job is not None:
+        conf["skipImportJob"] = skip_import_job
+    if skip_staging_ingestion is not None:
+        conf["skipStagingIngestion"] = skip_staging_ingestion
+    if skip_prod_ingestion is not None:
+        conf["skipProdIngestion"] = skip_prod_ingestion
+
+    dag_run_id = f"cda_feed__{short_import_name}__{latest_version}__{int(datetime.now(timezone.utc).timestamp())}"
+    payload = {
+        "dag_run_id": dag_run_id,
+        "conf": conf
+    }
+
+    if not config.AIRFLOW_WEB_SERVER_URL:
+        raise ValueError("AIRFLOW_WEB_SERVER_URL is not configured.")
+
+    base_url = config.AIRFLOW_WEB_SERVER_URL.rstrip('/')
+    url = f"{base_url}/api/v1/dags/{target_dag_id}/dagRuns"
+    logging.info(f"Invoking Airflow DAG {target_dag_id} for {import_name} at {url}")
+
+    if config.AIRFLOW_IAP_CLIENT_ID:
+        token = id_token.fetch_id_token(Request(), config.AIRFLOW_IAP_CLIENT_ID)
+    else:
+        credentials, _ = google.auth.default(
+            scopes=['https://www.googleapis.com/auth/cloud-platform'])
+        credentials.refresh(Request())
+        token = credentials.token
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json'
+    }
+    response = requests.post(url, json=payload, headers=headers, timeout=60)
+    if response.status_code == 404 and target_dag_id != config.AIRFLOW_DEFAULT_DAG_ID:
+        logging.warning(
+            f"Airflow DAG '{target_dag_id}' not found (404). "
+            f"Falling back to generic DAG '{config.AIRFLOW_DEFAULT_DAG_ID}'."
+        )
+        target_dag_id = config.AIRFLOW_DEFAULT_DAG_ID
+        url = f"{base_url}/api/v1/dags/{target_dag_id}/dagRuns"
+        response = requests.post(url, json=payload, headers=headers, timeout=60)
+
+    response.raise_for_status()
+    logging.info(
+        f"Triggered Airflow DAG {target_dag_id} for {import_name}. Run ID: {dag_run_id}"
+    )
+    return response
+
+
 def get_next_refresh(project_id: str, location: str, import_name: str) -> str | None:
     """Fetches the next scheduled run time for the import job from Cloud Scheduler."""
     try:
@@ -189,7 +309,7 @@ def get_caller_identity(request):
             try:
                 unverified_claims = jwt.decode(token, verify=False)
                 id_info = id_token.verify_oauth2_token(token,
-                                                       requests.Request())
+                                                       Request())
                 return id_info.get('email', 'unknown_email')
             except Exception as e:
                 if unverified_claims:
