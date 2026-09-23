@@ -19,7 +19,6 @@ substitutions:
   _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
   _VERSION: '${SHORT_SHA}'
   _PROD_TAG: 'stable'
-  _AIRFLOW_WEB_SERVER_URL: 'https://1e10aeac4ac64b84bb66e54511cf1c30-dot-us-central1.composer.googleusercontent.com'
 
 steps:
 
@@ -43,7 +42,7 @@ steps:
     - '.'
     - '--config=deploy-services.yaml'
     - '--project=${PROJECT_ID}'
-    - '--substitutions=_PROJECT_ID=datcom-ci,_SPANNER_DATABASE_PATH=projects/datcom-ci/instances/datcom-spanner-test/databases/dc-test-db,_GCS_BUCKET_ID=datcom-ci-test,_GCS_MOUNT_BUCKET=datcom-ci-test,_BQ_DATASET_ID=spanner_model_dataset,_LOCATION=us-central1,_PROJECT_NUMBER=879489846695,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-ci/locations/us-central1/connections/bq_spanner_conn_test,_ENABLE_EMBEDDINGS=true,_VERSION=${_VERSION},_ENV_SUFFIX=-staging,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/,_AIRFLOW_WEB_SERVER_URL=${_AIRFLOW_WEB_SERVER_URL}'
+    - '--substitutions=_PROJECT_ID=datcom-ci,_SPANNER_DATABASE_PATH=projects/datcom-ci/instances/datcom-spanner-test/databases/dc-test-db,_GCS_BUCKET_ID=datcom-ci-test,_GCS_MOUNT_BUCKET=datcom-ci-test,_BQ_DATASET_ID=spanner_model_dataset,_LOCATION=us-central1,_PROJECT_NUMBER=879489846695,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-ci/locations/us-central1/connections/bq_spanner_conn_test,_ENABLE_EMBEDDINGS=true,_VERSION=${_VERSION},_ENV_SUFFIX=-staging,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/'
   dir: 'pipeline/workflow'
 
 # 3. Run E2E Tests on Test Environment
@@ -62,22 +61,6 @@ steps:
   dir: 'pipeline/workflow'
   waitFor: ['deploy-test']
 
-- id: 'import-automation-test'
-  name: 'ghcr.io/astral-sh/uv:python3.11-bookworm'
-  entrypoint: 'sh'
-  args:
-    - '-c'
-    - |
-      uv run python import_automation_test.py
-  env:
-    - 'PROJECT_ID=datcom-ci'
-    - 'LOCATION=us-central1'
-    - 'SPANNER_DATABASE_PATH=projects/datcom-ci/instances/datcom-spanner-test/databases/dc-test-db'
-    - 'GCS_BUCKET_ID=datcom-ci-test'
-    - 'GCS_MOUNT_BUCKET=datcom-ci-test'
-  dir: 'pipeline/workflow'
-  waitFor: ['deploy-test']
-
 # 4. Trigger Staging Build (Child)
 - id: 'deploy-staging'
   name: 'gcr.io/cloud-builders/gcloud'
@@ -87,9 +70,9 @@ steps:
     - '.'
     - '--config=deploy-services.yaml'
     - '--project=${PROJECT_ID}'
-    - '--substitutions=_PROJECT_ID=datcom-import-automation-prod,_SPANNER_DATABASE_PATH=projects/datcom-store/instances/dc-graph-staging/databases/dc_graph,_GCS_BUCKET_ID=datcom-prod-imports,_GCS_MOUNT_BUCKET=datcom-volume-mount,_BQ_DATASET_ID=datacommons,_LOCATION=us-central1,_PROJECT_NUMBER=965988403328,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-import-automation-prod/locations/us-central1/connections/bq_spanner_conn_staging,_ENABLE_EMBEDDINGS=true,_VERSION=${_VERSION},_ENV_SUFFIX=-staging,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/,_AIRFLOW_WEB_SERVER_URL=${_AIRFLOW_WEB_SERVER_URL}'
+    - '--substitutions=_PROJECT_ID=datcom-import-automation-prod,_SPANNER_DATABASE_PATH=projects/datcom-store/instances/dc-graph-staging/databases/dc_graph,_GCS_BUCKET_ID=datcom-prod-imports,_GCS_MOUNT_BUCKET=datcom-volume-mount,_BQ_DATASET_ID=datacommons,_LOCATION=us-central1,_PROJECT_NUMBER=965988403328,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-import-automation-prod/locations/us-central1/connections/bq_spanner_conn_staging,_ENABLE_EMBEDDINGS=true,_VERSION=${_VERSION},_ENV_SUFFIX=-staging,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/'
   dir: 'pipeline/workflow'
-  waitFor: ['spanner-ingestion-test', 'import-automation-test']
+  waitFor: ['spanner-ingestion-test']
 
 # 5. Promote prod version
 - id: 'update-version'
@@ -106,7 +89,7 @@ steps:
     - '.'
     - '--config=deploy-services.yaml'
     - '--project=${PROJECT_ID}'
-    - '--substitutions=_PROJECT_ID=datcom-import-automation-prod,_SPANNER_DATABASE_PATH=projects/datcom-store/instances/dc-graph-prod/databases/dc_graph,_GCS_BUCKET_ID=datcom-prod-imports,_GCS_MOUNT_BUCKET=datcom-volume-mount,_BQ_DATASET_ID=datacommons,_LOCATION=us-central1,_PROJECT_NUMBER=965988403328,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-import-automation-prod/locations/us-central1/connections/bq_spanner_conn_prod,_ENABLE_EMBEDDINGS=true,_VERSION=${_PROD_TAG},_ENV_SUFFIX=,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/,_AIRFLOW_WEB_SERVER_URL=${_AIRFLOW_WEB_SERVER_URL}'
+    - '--substitutions=_PROJECT_ID=datcom-import-automation-prod,_SPANNER_DATABASE_PATH=projects/datcom-store/instances/dc-graph-prod/databases/dc_graph,_GCS_BUCKET_ID=datcom-prod-imports,_GCS_MOUNT_BUCKET=datcom-volume-mount,_BQ_DATASET_ID=datacommons,_LOCATION=us-central1,_PROJECT_NUMBER=965988403328,_AR_REPO_URL=${_AR_REPO_URL},_BQ_SPANNER_CONN_ID=projects/datcom-import-automation-prod/locations/us-central1/connections/bq_spanner_conn_prod,_ENABLE_EMBEDDINGS=true,_VERSION=${_PROD_TAG},_ENV_SUFFIX=,_DATAFLOW_TEMPLATE_PATH=gs://datcom-templates/templates/flex/'
   dir: 'pipeline/workflow'
 
 options:
