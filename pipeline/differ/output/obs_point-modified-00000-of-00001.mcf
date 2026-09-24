@@ -1,0 +1,12 @@
+Node: dc/o/v9wehq1lfrf55
+dcid: "dc/o/v9wehq1lfrf55"
+keyString: "observationAbout=country/USAvariableMeasured=InterestRate_TreasuryBond_20YearobservationDate=2025-01-30value=4.81unit=PercentmeasurementMethod=ConstantMaturityRate"
+measurementMethod: dcid:ConstantMaturityRate
+observationAbout: dcid:country/USA
+observationDate: "2025-01-30"
+typeOf: dcid:StatVarObservation
+unit: dcid:Percent
+value: 4.85
+variableMeasured: dcid:InterestRate_TreasuryBond_20Year
+
+
