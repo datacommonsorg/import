@@ -360,12 +360,18 @@ class Nodes:
     return self.groups[group_path]
 
   def _default_custom_group(self) -> StatVarGroup:
+    if sc.ROOT_SVG_ID not in self.groups:
+      # Emit the global root StatVarGroup (dc/g/Root)
+      root_svg = StatVarGroup(sc.ROOT_SVG_ID, "Data Commons Variables", "")
+      self.groups[sc.ROOT_SVG_ID] = root_svg
+      self.ids_to_groups[root_svg.id] = root_svg
     if _DEFAULT_CUSTOM_GROUP_PATH not in self.groups:
       # Compute id and name using config (falls back to schema constants).
       root_id = sc.DEFAULT_CUSTOM_ROOT_SVG_ID
       root_name = self.config.default_custom_root_svg_name()
       svg = StatVarGroup(root_id, root_name, sc.ROOT_SVG_ID)
       self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = svg
+      self.ids_to_groups[svg.id] = svg
     return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
   @thread_safe

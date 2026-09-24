@@ -99,8 +99,9 @@ class StatVarGroup:
     triples: list[Triple] = [
         Triple(self.id, _PREDICATE_TYPE_OF, object_id=STAT_VAR_GROUP),
         Triple(self.id, _PREDICATE_NAME, object_value=self.name),
-        Triple(self.id, _PREDICATE_SPECIALIZATION_OF, object_id=self.parent_id),
     ]
+    if self.parent_id:
+      triples.append(Triple(self.id, _PREDICATE_SPECIALIZATION_OF, object_id=self.parent_id))
     for provenance_id in self.provenance_ids:
       triples.append(
           Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=provenance_id))
