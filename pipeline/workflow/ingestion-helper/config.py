@@ -114,6 +114,7 @@ EMBEDDING_SPECS = _load_embedding_specs(spec_path)
 
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD') or None
 GCS_OUTPUT_PREFIX = os.environ.get('GCS_OUTPUT_PREFIX', '')
 
 SPANNER_EMULATOR_HOST = os.environ.get('SPANNER_EMULATOR_HOST')
