@@ -22,7 +22,6 @@ ingestion-helper/
 │   ├── __init__.py            # Exposes SpannerClient & StorageClient
 │   ├── spanner.py             # Cloud Spanner driver & mutations
 │   ├── storage.py             # Google Cloud Storage driver
-│   ├── schema.sql             # Spanner DDL Schema
 │   └── spanner_test.py        # Client-level unit tests
 │
 ├── utils/                     # Layer 2: Core Processing & Calculations

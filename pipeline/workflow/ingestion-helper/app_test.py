@@ -150,16 +150,6 @@ class TestMain(unittest.TestCase):
         self.assertEqual(rows[1][0], "dc/3")
         self.assertEqual(rows[0][2], [0.1, 0.2])
 
-    def test_seed_database_success(self):
-        mock_spanner_client = MagicMock()
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
-
-        # Call the FastAPI endpoint
-        response = client.post("/database/seed")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "OK")
-        mock_spanner_client.seed_database.assert_called_once()
 
     def test_revert_single_import(self):
         mock_spanner_client = MagicMock()

@@ -29,27 +29,7 @@ class LockReleaseRequest(BaseModel):
 
 router = APIRouter(prefix="/database", tags=["database"])
 
-@router.post("/initialize", response_model=BaseResponse)
-@log_start
-def initialize_database(spanner: SpannerClient = Depends(get_spanner_client)):
-    """Initializes the database by creating all required tables and proto bundles."""
-    try:
-        spanner.initialize_database()
-        return BaseResponse(status=ResponseStatus.OK)
-    except Exception as e:
-        logging.error(f"Failed to initialize database: {e}")
-        raise HTTPException(status_code=500, detail=f"Database initialization failed: {str(e)}")
 
-@router.post("/seed", response_model=BaseResponse)
-@log_start
-def seed_database(spanner: SpannerClient = Depends(get_spanner_client)):
-    """Seeds the database with base empty nodes."""
-    try:
-        spanner.seed_database()
-        return BaseResponse(status=ResponseStatus.OK)
-    except Exception as e:
-        logging.error(f"Failed to seed database: {e}")
-        raise HTTPException(status_code=500, detail=f"Database seeding failed: {str(e)}")
 
 @router.post("/lock/acquire", response_model=BaseResponse)
 def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Depends(get_spanner_client)):
