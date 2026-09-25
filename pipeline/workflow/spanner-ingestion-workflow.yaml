@@ -3,7 +3,7 @@ main:
   steps:
     - init:
         assign:
-          - lock_timeout: 82800 # 23 hours
+          - lock_timeout: 604800 # 7 days
           - wait_period: ${int(default(map.get(args, "wait_period"), default(map.get(args, "waitPeriod"), 300)))}
           - project_id: '${sys.get_env("PROJECT_ID")}'
           - dataflow_job_name: ${"ingestion-job-" + string(int(sys.now()))}
@@ -32,21 +32,12 @@ main:
               message: "No staging imports found to ingest"
               importList: []
 
-    # Log import details and register initial PENDING state
+    # Log import details
     - log_imports:
         call: sys.log
         args:
           text: '${"Import list: " + json.encode_to_string(import_info_list)}'
           severity: INFO
-    - register_initial_state:
-        call: update_state_subworkflow
-        args:
-          helper_url: ${helper_url}
-          workflow_id: '${workflow_id}'
-          status: 'PENDING'
-          import_list: ${import_info_list}
-          job_id: null
-        result: initial_state_response
 
     # Acquire global ingestion lock on Spanner DB
     - acquire_ingestion_lock:
@@ -62,7 +53,7 @@ main:
           result: lock_status
         retry:
           predicate: ${http.default_retry_predicate}
-          max_retries: 60
+          max_retries: 250
           backoff:
             initial_delay: ${wait_period}
             max_delay: ${wait_period}
@@ -77,6 +68,15 @@ main:
     - run_pipeline_execution:
         try:
           steps:
+            - register_initial_state:
+                call: update_state_subworkflow
+                args:
+                  helper_url: ${helper_url}
+                  workflow_id: '${workflow_id}'
+                  status: 'PENDING'
+                  import_list: ${import_info_list}
+                  job_id: null
+                result: initial_state_response
             - run_ingestion:
                 call: ingestion_subworkflow
                 args:
