@@ -1,0 +1,42 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:CASE",
+            "@type": "dcid:Property",
+            "dcid:name": "CASE"
+        },
+        {
+            "@id": "dcid:IUCR",
+            "@type": "dcid:Property",
+            "dcid:name": "IUCR"
+        },
+        {
+            "@id": "dcid:PRIMARY_DESCRIPTION",
+            "@type": "dcid:Property",
+            "dcid:name": "PRIMARY DESCRIPTION"
+        },
+        {
+            "@id": "dcid:SECONDARY_DESCRIPTION",
+            "@type": "dcid:Property",
+            "dcid:name": "SECONDARY DESCRIPTION"
+        },
+        {
+            "@id": "dcid:Source1",
+            "@type": "dcid:Source",
+            "dcid:name": "Source1",
+            "dcid:url": "http://source1.com",
+            "dcid:domain": "source1.com"
+        },
+        {
+            "@id": "dcid:c/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Custom Variables",
+            "dcid:specializationOf": {
+                "@id": "dcid:dc/g/Root"
+            }
+        }
+    ]
+}

@@ -1,0 +1,44 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:some_var1",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+                "@id": "dcid:value"
+            },
+            "dcid:name": "Some Variable 1 Name",
+            "dcid:description": "Some Variable 1 Description"
+        },
+        {
+            "@id": "dcid:var1",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+                "@id": "dcid:value"
+            },
+            "dcid:name": "Variable 1",
+            "dcid:populationType": {
+                "@id": "dcid:Thing"
+            },
+            "dcid:statType": {
+                "@id": "dcid:measuredValue"
+            }
+        },
+        {
+            "@id": "dcid:var2",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+                "@id": "dcid:value"
+            },
+            "dcid:name": "Variable 2",
+            "dcid:populationType": {
+                "@id": "dcid:Thing"
+            },
+            "dcid:statType": {
+                "@id": "dcid:measuredValue"
+            }
+        }
+    ]
+}

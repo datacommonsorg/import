@@ -1,14 +1,27 @@
-place,year,var1,var2
-Afghanistan,2023,0.19,6
-Yemen,2023,0.21,56
-Angola,2023,0.29,6
-Zambia,2023,0.31,34
-Zimbabwe,2023,0.37,76
-Albania,2023,0.50,34
-dcid: wikidataId/Q22062741,2023,0.50,97
-Algeria,2023,0.52,92
-Andorra,2023,0.76,9
-American Samoa,2023,#N/A,34
-Anguilla,2023,#N/A,42
-Wallis and Futuna Islands,2023,#N/A,75
-Western Sahara,2023,#N/A,65
+place,year,variable,value
+Afghanistan,2023,var1,0.19
+Afghanistan,2023,var2,6
+Yemen,2023,var1,0.21
+Yemen,2023,var2,56
+Angola,2023,var1,0.29
+Angola,2023,var2,6
+Zambia,2023,var1,0.31
+Zambia,2023,var2,34
+Zimbabwe,2023,var1,0.37
+Zimbabwe,2023,var2,76
+Albania,2023,var1,0.50
+Albania,2023,var2,34
+dcid: wikidataId/Q22062741,2023,var1,0.50
+dcid: wikidataId/Q22062741,2023,var2,97
+Algeria,2023,var1,0.52
+Algeria,2023,var2,92
+Andorra,2023,var1,0.76
+Andorra,2023,var2,9
+American Samoa,2023,var1,#N/A
+American Samoa,2023,var2,34
+Anguilla,2023,var1,#N/A
+Anguilla,2023,var2,42
+Wallis and Futuna Islands,2023,var1,#N/A
+Wallis and Futuna Islands,2023,var2,75
+Western Sahara,2023,var1,#N/A
+Western Sahara,2023,var2,65

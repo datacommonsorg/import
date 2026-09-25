@@ -1,6 +1,7 @@
 {
-  "inputFiles": {
-    "countryalpha3codes.csv": {
+  "inputFiles": [
+    {
+      "pattern": "countryalpha3codes.csv",
       "eventType": "CrimeEvent",
       "entityType": "Country",
       "provenance": "Test Provenance",
@@ -15,7 +16,8 @@
         "dcid:observationDate": "DATE  OF OCCURRENCE"
       }
     },
-    "idcolumns.csv": {
+    {
+      "pattern": "idcolumns.csv",
       "eventType": "CrimeEvent2",
       "entityType": "Country",
       "provenance": "Test Provenance",
@@ -31,7 +33,7 @@
         "dcid:observationDate": "DATE  OF OCCURRENCE"
       }
     }
-  },
+  ],
   "events": {
     "CrimeEvent": {
       "name": "Crime Event",

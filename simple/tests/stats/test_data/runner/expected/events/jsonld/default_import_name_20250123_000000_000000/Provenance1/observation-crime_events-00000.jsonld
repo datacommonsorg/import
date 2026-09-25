@@ -1,0 +1,87 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:obs_dde9c62fed81f2ae05fc6e3aedb0f34f670b57271f55a9fea78aea51d867d8b8",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:Count_CrimeEvent"
+            },
+            "dcid:observationDate": "2023-11-08",
+            "dcid:value": 2,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/USA"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_768d99681dc2ace634e9cdc7d6249467fdadcab1430c6d347ef3bba00162fb6f",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:Count_CrimeEvent"
+            },
+            "dcid:observationDate": "2023-11-08",
+            "dcid:value": 2,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/BRA"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_c679c7bcec5e101f1917373e583a9bf6140e06b89e97427c8d2cbcb6d4694087",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:Count_CrimeEvent"
+            },
+            "dcid:observationDate": "2023-11-08",
+            "dcid:value": 1,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/CHN"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_d2b7cf25ba060e4d2e88ad0097f356156728fdaa5f001c20079acf957cce7697",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:Count_CrimeEvent"
+            },
+            "dcid:observationDate": "2023-09-17",
+            "dcid:value": 1,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/CHN"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:obs_8bbb722a7f5bce86783e8292322ff9ed0736e98935f6ce30928bd14416d42038",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:Count_CrimeEvent"
+            },
+            "dcid:observationDate": "2023-08-02",
+            "dcid:value": 1,
+            "dcid:observationAbout": {
+                "@id": "dcid:country/USA"
+            },
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1"
+        }
+    ]
+}

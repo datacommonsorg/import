@@ -1,0 +1,13 @@
+Node: dcid:var1
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Variable 1"
+populationType: dcs:Thing
+statType: dcs:measuredValue
+
+Node: dcid:var2
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Variable 2"
+populationType: dcs:Thing
+statType: dcs:measuredValue

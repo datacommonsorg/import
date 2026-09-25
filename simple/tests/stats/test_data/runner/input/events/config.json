@@ -1,0 +1,40 @@
+{
+  "inputFiles": [
+    {
+      "pattern": "crime_events.csv",
+      "importType": "events",
+      "eventType": "CrimeEvent",
+      "entityType": "Country",
+      "idColumn": "CASE",
+      "provenance": "dcid:Provenance1",
+      "computedVariables": [
+        "Count_CrimeEvent"
+      ],
+      "columnsToResolve": [
+        "countryAlpha3Code"
+      ],
+      "columnMappings": {
+        "dcid:location": "countryAlpha3Code",
+        "dcid:observationDate": "DATE  OF OCCURRENCE"
+      }
+    },
+    {
+      "pattern": "*.mcf",
+      "provenance": "dcid:Provenance1"
+    }
+  ],
+  "events": {
+    "CrimeEvent": {
+      "name": "Crime Event",
+      "description": "Crime Event description"
+    }
+  },
+  "variables": {
+    "Count_CrimeEvent": {
+      "name": "Number of Crime Events",
+      "aggregation": {
+        "period": "day"
+      }
+    }
+  }
+}

@@ -14,6 +14,8 @@
 
 import unittest
 
+import pandas as pd
+from stats import constants
 from stats.data import _get_flattened_dataclass_field_names
 from stats.data import Event
 from stats.data import McfNode
@@ -22,6 +24,7 @@ from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
 from stats.data import Triple
+from stats.data import validate_numeric_values
 
 SV_ID1 = "sv_id1"
 SV_NAME1 = "SV Name1"
@@ -204,3 +207,37 @@ memberOf: svg1""".strip()
     ]
     self.assertListEqual(_get_flattened_dataclass_field_names(Observation),
                          expected)
+
+
+class TestValidateNumericValues(unittest.TestCase):
+  """Tests for validate_numeric_values, which every import runs on its values."""
+
+  def test_numeric_values_pass(self):
+    df = pd.DataFrame({"value": [1, 2.5, -3, "4", "5.6"]})
+    validate_numeric_values(df, "test.csv")
+
+  def test_missing_value_column_is_ignored(self):
+    validate_numeric_values(pd.DataFrame({"entity": ["a"]}), "test.csv")
+
+  def test_empty_and_na_values_pass(self):
+    df = pd.DataFrame({"value": [1, None, "", "NaN", "nan"]})
+    validate_numeric_values(df, "test.csv")
+
+  def test_standard_na_values_pass(self):
+    df = pd.DataFrame({"value": [1] + list(constants.STANDARD_NA_VALUES)})
+    validate_numeric_values(df, "test.csv")
+
+  def test_non_numeric_value_raises(self):
+    df = pd.DataFrame({"value": [1, "abc"]})
+    with self.assertRaises(ValueError) as cm:
+      validate_numeric_values(df, "test.csv")
+    self.assertIn("abc", str(cm.exception))
+    self.assertIn("test.csv", str(cm.exception))
+    self.assertEqual(cm.exception.file_path, "test.csv")
+
+  def test_error_lists_at_most_ten_examples(self):
+    df = pd.DataFrame({"value": [f"bad{i}" for i in range(15)]})
+    with self.assertRaises(ValueError) as cm:
+      validate_numeric_values(df, "test.csv")
+    # The message caps the example list at 10 entries.
+    self.assertEqual(str(cm.exception).count("bad"), 10)

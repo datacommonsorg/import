@@ -416,5 +416,5 @@ class TestNodes(unittest.TestCase):
     shards = nodes.triples_by_provenance_dir()
     self.assertIn("prov/1", shards)
     triples = shards["prov/1"]
-    db_tuples = [t.db_tuple() for t in triples]
-    self.assertEqual(len(db_tuples), len(set(db_tuples)))
+    normalized_tuples = [t.normalized_tuple() for t in triples]
+    self.assertEqual(len(normalized_tuples), len(set(normalized_tuples)))

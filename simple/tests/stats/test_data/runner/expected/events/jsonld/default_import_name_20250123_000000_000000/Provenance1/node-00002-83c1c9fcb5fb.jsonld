@@ -1,0 +1,70 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:Count_CrimeEvent",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:name": "Number of Crime Events",
+            "dcid:memberOf": {
+                "@id": "dcid:c/g/Root"
+            },
+            "dcid:includedIn": [
+                {
+                    "@id": "dcid:Provenance1"
+                },
+                {
+                    "@id": "dcid:Source1"
+                }
+            ],
+            "dcid:populationType": {
+                "@id": "schema:Thing"
+            },
+            "dcid:statType": {
+                "@id": "dcs:measuredValue"
+            },
+            "dcid:measuredProperty": {
+                "@id": "dcs:Count_CrimeEvent"
+            }
+        },
+        {
+            "@id": "dcid:CrimeEvent",
+            "@type": "dcid:Class",
+            "dcid:subClassOf": {
+                "@id": "dcid:Event"
+            },
+            "dcid:name": "Crime Event",
+            "dcid:description": "Crime Event description",
+            "dcid:includedIn": [
+                {
+                    "@id": "dcid:Provenance1"
+                },
+                {
+                    "@id": "dcid:Source1"
+                }
+            ]
+        },
+        {
+            "@id": "dcid:Provenance1",
+            "@type": "dcid:Provenance",
+            "dcid:name": "Provenance1",
+            "dcid:source": {
+                "@id": "dcid:Source1"
+            },
+            "dcid:url": "http://source1.com/provenance1"
+        },
+        {
+            "@id": "dcid:country/BRA",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/CHN",
+            "@type": "dcid:Country"
+        },
+        {
+            "@id": "dcid:country/USA",
+            "@type": "dcid:Country"
+        }
+    ]
+}

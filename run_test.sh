@@ -74,8 +74,6 @@ function update_goldens {
 function py_test {
   # Clear api key to catch any spurious API calls.
   export DC_API_KEY=
-  # Do not use Cloud SQL.
-  export USE_CLOUDSQL=false
 
   python3 -m venv .env
   source .env/bin/activate
@@ -86,7 +84,7 @@ function py_test {
   pip3 install -r requirements.txt -q
 
   echo -e "#### Running stats tests"
-  python3 -m pytest tests/ -s
+  python3 -m pytest tests/ kg_util/ -s
 
   echo -e "#### Running ingestion helper tests"
   cd "${ROOT_DIR}/pipeline/workflow/ingestion-helper"
@@ -102,11 +100,6 @@ function run_all_tests {
   run_py_test
 }
 
-function compile_protos {
-  echo "Running protoc."
-  protoc -I=./simple/proto/ --python_out=./simple/proto --mypy_out=./simple/proto ./simple/proto/*.proto
-}
-
 function help {
   echo "Usage: $0 -afhlp"
   echo "-a              Run all tests"
@@ -115,7 +108,6 @@ function help {
   echo "-h              This usage"
   echo "-l              Run lint test"
   echo "-p              Run python tests"
-  echo "--protoc        Compile protos"
   exit 1
 }
 
@@ -154,11 +146,6 @@ while [[ "$#" -gt 0 ]]; do
     -p)
         echo -e "### Running python tests"
         run_py_test
-        shift 1
-        ;;
-    --protoc)
-        echo -e "### Compiling protos"
-        compile_protos
         shift 1
         ;;
     *)
