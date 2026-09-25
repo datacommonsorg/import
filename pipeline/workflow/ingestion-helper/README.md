@@ -50,8 +50,6 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
 
 | Endpoint | Method | Request Body | Response Model | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `/database/initialize` | `POST` | *None* | `BaseResponse` | Boots database DDL schemas & proto descriptors. |
-| `/database/seed` | `POST` | *None* | `BaseResponse` | Seeds baseline empty nodes required by schema. |
 | `/database/lock/acquire` | `POST` | `LockAcquireRequest` | `BaseResponse` | Attempts to acquire the global Spanner ingestion lock. |
 | `/database/lock/release` | `POST` | `LockReleaseRequest` | `BaseResponse` | Releases the global ingestion lock. |
 | `/embeddings/ingest` | `POST` | `EmbeddingIngestionRequest` | `EmbeddingIngestionResponse` | Generates text embeddings for updated Spanner nodes. |
@@ -82,7 +80,6 @@ All application configurations are centralized inside **[config.py](config.py)**
 | `ENABLE_EMBEDDINGS` | `bool` | `false` | Enables/disables Vertex AI embedding generation. |
 | `IS_BASE_DC` | `bool` | `true` | Identifies if this is a Base Data Commons instance. |
 | `TIMEOUT` | `int` | `1700` | Query execution timeout in seconds for Spanner transactions. |
-| `EMBEDDING_MODEL_ID` | `str` | `text-embedding-005` | Vertex AI Text Embedding model version. |
 | `REDIS_HOST` | `str` | *None* | Redis host address (triggers cache clears). |
 | `REDIS_PORT` | `str` | `6379` | Redis port. |
 | `GCS_OUTPUT_PREFIX` | `str` | `""` | Optional folder prefix for GCS writes. |

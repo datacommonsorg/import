@@ -30,7 +30,6 @@ class LockReleaseRequest(BaseModel):
 router = APIRouter(prefix="/database", tags=["database"])
 
 
-
 @router.post("/lock/acquire", response_model=BaseResponse)
 def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Attempts to acquire the global lock for ingestion."""

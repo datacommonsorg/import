@@ -45,22 +45,11 @@ class SpannerClient:
     and getting/updating import statuses.
     """
     _LOCK_ID = "global_ingestion_lock"
-    _EMBEDDING_MODEL_PATH = "//aiplatform.googleapis.com/projects/{project}/locations/{location}/publishers/google/models/{model}"
-    _DEFAULT_MODELS = [{
-        "name": "NodeEmbeddingModel",
-        "endpoint": "text-embedding-005"
-    }]
 
     def __init__(self,
                  project_id: str,
                  instance_id: str,
                  database_id: str,
-                 location: str = None,
-                 models: list[dict] = None,
-                 embedding_space: int = 768,
-                 embedding_table: str = "NodeEmbedding",
-                 embedding_index: str = "NodeEmbeddingIndex",
-                 embedding_label_index: str = "NodeEmbeddingLabelIndex",
                  emulator_host: str = None):
         """Initializes a Spanner client and connects to a specific database."""
         client_options = {"api_endpoint": "spanner.googleapis.com"}
@@ -88,27 +77,6 @@ class SpannerClient:
         logging.info(f"Successfully initialized database: {database.name}")
         self.database = database
         self.project_id = project_id
-        self.location = location
-        self.embedding_space = embedding_space
-        self.embedding_table = embedding_table
-        self.embedding_index = embedding_index
-        self.embedding_label_index = embedding_label_index
-
-        if not models:
-            models = self._DEFAULT_MODELS
-
-        self.models = []
-        for model in models:
-            name = model["name"]
-            endpoint = self._get_embeddings_endpoint(model["endpoint"])
-            self.models.append({"name": name, "endpoint": endpoint})
-
-    def _get_embeddings_endpoint(self, model: str) -> str:
-        """Returns the parameterized embedding model endpoint."""
-        return self._EMBEDDING_MODEL_PATH.format(project=self.project_id,
-                                                 location=self.location or
-                                                 "us-central1",
-                                                 model=model)
 
     def acquire_lock(self, workflow_id: str, timeout: int) -> bool:
         """Attempts to acquire the global ingestion lock.
