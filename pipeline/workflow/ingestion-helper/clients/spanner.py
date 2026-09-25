@@ -328,6 +328,32 @@ class SpannerClient:
             logging.error(f'Error updating ImportStatus table: {e}')
             raise
 
+    def _get_workflow_execution_time(self,
+                                     transaction: Transaction,
+                                     workflow_id: str) -> int | None:
+        """Calculates workflow execution time in seconds from IngestionHistory.CreationTimestamp."""
+        try:
+            res = list(
+                transaction.execute_sql(
+                    "SELECT CreationTimestamp FROM IngestionHistory WHERE WorkflowExecutionID = @workflowId",
+                    params={"workflowId": workflow_id},
+                    param_types={"workflowId": STRING}))
+            if res and res[0][0] is not None:
+                creation_time = res[0][0]
+                if isinstance(creation_time, datetime):
+                    if creation_time.tzinfo is None:
+                        creation_time = creation_time.replace(
+                            tzinfo=timezone.utc)
+                    return max(
+                        0,
+                        int((datetime.now(timezone.utc) -
+                             creation_time).total_seconds()))
+        except Exception as e:
+            logging.warning(
+                f"Could not calculate execution time from CreationTimestamp: {e}"
+            )
+        return None
+
     def update_ingestion_history(self,
                                  workflow_id: str,
                                  status: IngestionState,
@@ -374,20 +400,11 @@ class SpannerClient:
                                          IngestionState.RETRY))
 
                 # Calculate workflow execution time from CreationTimestamp
-                try:
-                    res = list(transaction.execute_sql(
-                        "SELECT CreationTimestamp FROM IngestionHistory WHERE WorkflowExecutionID = @workflowId",
-                        params={"workflowId": workflow_id},
-                        param_types={"workflowId": STRING}
-                    ))
-                    if res and len(res) > 0 and res[0] and len(res[0]) > 0:
-                        creation_time = res[0][0]
-                        if isinstance(creation_time, datetime):
-                            columns.append("ExecutionTime")
-                            values.append(
-                                max(0, int((datetime.now(timezone.utc) - creation_time).total_seconds())))
-                except Exception as e:
-                    logging.warning(f"Could not calculate execution time from CreationTimestamp: {e}")
+                exec_time = self._get_workflow_execution_time(
+                    transaction, workflow_id)
+                if exec_time is not None:
+                    columns.append("ExecutionTime")
+                    values.append(exec_time)
 
             if job_id:
                 columns.append("DataflowJobID")
@@ -450,6 +467,11 @@ class SpannerClient:
                 "NodeCount", "EdgeCount", "ObservationCount",
                 "TimeSeriesCount", "Comment"
             ]
+            exec_time = self._get_workflow_execution_time(
+                transaction, workflow_id)
+            if exec_time is None:
+                exec_time = m.get('execution_time')
+
             version_history_values = []
             for import_json in import_list_json:
                 import_name = import_json.get('importName')
@@ -462,7 +484,7 @@ class SpannerClient:
                 version_history_values.append([
                     short_name, import_json.get('latestVersion'),
                     spanner.COMMIT_TIMESTAMP, workflow_id, status,
-                    m.get('execution_time'),
+                    exec_time,
                     counts.get('node_count') or counts.get('nodeCount'),
                     counts.get('edge_count') or counts.get('edgeCount'),
                     counts.get('obs_count') or counts.get('obsCount'),

@@ -15,6 +15,7 @@
 import os
 import json
 import logging
+import tempfile
 from typing import List
 from pydantic import BaseModel, Field
 import yaml
@@ -114,6 +115,13 @@ EMBEDDING_SPECS = _load_embedding_specs(spec_path)
 
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD') or None
+REDIS_CA_CERT = os.environ.get('REDIS_CA_CERT') or None
+REDIS_CA_CERT_PATH = None
+if REDIS_CA_CERT:
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as _f:
+        _f.write(REDIS_CA_CERT)
+        REDIS_CA_CERT_PATH = _f.name
 GCS_OUTPUT_PREFIX = os.environ.get('GCS_OUTPUT_PREFIX', '')
 
 SPANNER_EMULATOR_HOST = os.environ.get('SPANNER_EMULATOR_HOST')
