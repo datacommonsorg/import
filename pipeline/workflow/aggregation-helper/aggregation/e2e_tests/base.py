@@ -84,6 +84,7 @@ class AggregationIntegrationTestBase(unittest.TestCase):
             transaction.execute_update("DELETE FROM Edge WHERE TRUE")
             transaction.execute_update("DELETE FROM NodeEmbedding WHERE TRUE")
             transaction.execute_update("DELETE FROM Node WHERE TRUE")
+            transaction.execute_update("DELETE FROM LinkedEdge WHERE TRUE")
         
         self.database.run_in_transaction(_clear)
         logging.info("Tables cleared successfully.")
