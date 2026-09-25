@@ -487,5 +487,33 @@ class TestMain(unittest.TestCase):
         mock_workflow_client.create_execution.assert_not_called()
 
 
+
+    @patch('routes.cache.redis.Redis')
+    def test_clear_redis_cache_success(self, mock_redis_class):
+        mock_redis_instance = MagicMock()
+        mock_redis_class.return_value.__enter__.return_value = mock_redis_instance
+
+        with patch.object(config, 'REDIS_HOST', '10.0.0.5'),              patch.object(config, 'REDIS_PORT', '6379'),              patch.object(config, 'REDIS_PASSWORD', 'test-pass'),              patch.object(config, 'REDIS_CA_CERT_PATH', '/path/to/cert.pem'):
+            response = client.post('/cache/clear')
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data['status'], 'SUCCESS')
+            self.assertEqual(data['message'], 'Cache cleared')
+            mock_redis_class.assert_called_once_with(
+                host='10.0.0.5',
+                port=6379,
+                password='test-pass',
+                ssl=True,
+                ssl_ca_certs='/path/to/cert.pem',
+            )
+            mock_redis_instance.flushall.assert_called_once_with(asynchronous=True)
+
+    def test_clear_redis_cache_skipped_when_no_host(self):
+        with patch.object(config, 'REDIS_HOST', None):
+            response = client.post('/cache/clear')
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data['status'], 'SKIPPED')
+
 if __name__ == '__main__':
     unittest.main()
