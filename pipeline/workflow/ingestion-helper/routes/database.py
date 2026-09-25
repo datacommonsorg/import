@@ -18,7 +18,6 @@ from pydantic import BaseModel
 from clients.spanner import SpannerClient
 from dependencies import get_spanner_client
 from routes.models import BaseResponse, ResponseStatus
-from utils.logging import log_start
 
 class LockAcquireRequest(BaseModel):
     workflowId: str

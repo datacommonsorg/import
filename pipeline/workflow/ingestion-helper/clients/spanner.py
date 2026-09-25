@@ -14,7 +14,6 @@
 
 import logging
 import os
-import posixpath
 from enum import Enum
 from google.cloud import spanner
 from google.cloud.spanner_v1 import Transaction
