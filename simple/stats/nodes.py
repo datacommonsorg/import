@@ -104,6 +104,8 @@ class Nodes:
     self._event_type_generated_id_count = 0
     # Used to generate entity type IDs
     self._entity_type_generated_id_count = 0
+    # Used to generate custom group IDs
+    self._group_generated_id_count = 0
     # If generating SV hierarchy, create default custom dc group at the outset.
     if config.generate_hierarchy():
       self.group("")
@@ -285,6 +287,8 @@ class Nodes:
     sv.add_provenance(provenance)
     svg = self.ids_to_groups.get(sv.group_id)
     while svg:
+      if svg.id in (sc.ROOT_SVG_ID, sc.DEFAULT_CUSTOM_ROOT_SVG_ID):
+        break
       svg.add_provenance(provenance)
       svg = self.ids_to_groups.get(svg.parent_id)
     return sv
@@ -349,23 +353,34 @@ class Nodes:
       path = "/".join(tokens[:index + 1])
       if path not in self.groups:
         parent_path = "" if "/" not in path else path[:path.rindex("/")]
-        parent_id = (self.groups[parent_path].id
-                     if parent_path in self.groups else sc.ROOT_SVG_ID)
+        parent_id = (self.groups[parent_path].id if parent_path in self.groups
+                     else self._ensure_root_group().id)
+        self._group_generated_id_count += 1
         svg = StatVarGroup(
-            f"{self._custom_id_namespace}/g/group_{len(self.groups) + 1}",
+            f"{self._custom_id_namespace}/g/group_{self._group_generated_id_count}",
             tokens[index], parent_id)
         self.groups[path] = svg
         self.ids_to_groups[svg.id] = svg
 
     return self.groups[group_path]
 
+  def _ensure_root_group(self) -> StatVarGroup:
+    if sc.ROOT_SVG_ID not in self.groups:
+      # Emit the global root StatVarGroup (dc/g/Root)
+      root_svg = StatVarGroup(sc.ROOT_SVG_ID, sc.ROOT_SVG_NAME, "")
+      self.groups[sc.ROOT_SVG_ID] = root_svg
+      self.ids_to_groups[root_svg.id] = root_svg
+    return self.groups[sc.ROOT_SVG_ID]
+
   def _default_custom_group(self) -> StatVarGroup:
+    self._ensure_root_group()
     if _DEFAULT_CUSTOM_GROUP_PATH not in self.groups:
       # Compute id and name using config (falls back to schema constants).
       root_id = sc.DEFAULT_CUSTOM_ROOT_SVG_ID
       root_name = self.config.default_custom_root_svg_name()
       svg = StatVarGroup(root_id, root_name, sc.ROOT_SVG_ID)
       self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = svg
+      self.ids_to_groups[svg.id] = svg
     return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
   @thread_safe

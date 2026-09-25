@@ -153,6 +153,15 @@ class TestData(unittest.TestCase):
     ]
     self.assertListEqual(result, expected)
 
+  def test_svg_triples_without_parent(self):
+    svg = StatVarGroup("dc/g/Root", "Data Commons Variables", "")
+    result = svg.triples()
+    expected = [
+        Triple("dc/g/Root", "typeOf", object_id="StatVarGroup"),
+        Triple("dc/g/Root", "name", object_value="Data Commons Variables"),
+    ]
+    self.assertListEqual(result, expected)
+
   def test_event_triples(self):
     event = Event(EVENT_ID1,
                   EVENT_TYPE1,
