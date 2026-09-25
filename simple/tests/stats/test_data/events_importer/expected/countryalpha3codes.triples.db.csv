@@ -69,6 +69,8 @@ c/p/1,typeOf,Provenance,
 c/p/1,name,,Test Provenance
 c/p/1,source,c/s/1,
 c/p/1,url,,http://source.com/provenance
+dc/g/Root,typeOf,StatVarGroup,
+dc/g/Root,name,,Data Commons Variables
 c/g/Root,typeOf,StatVarGroup,
 c/g/Root,name,,Custom Variables
 c/g/Root,specializationOf,dc/g/Root,

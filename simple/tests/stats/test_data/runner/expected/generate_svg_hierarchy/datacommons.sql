@@ -9,7 +9,7 @@ CREATE TABLE key_value_store (
     lookup_key varchar(255),
     value longtext
 );
-INSERT INTO "key_value_store" VALUES('StatVarGroups','H4sIAAAAAAAC/+OS5OJMSdZP1w/Kzy8R4pHi4uKA8bjkEGwhIS4B59LikvxchbDEoszEpJzUYgBdasAjOwAAAA==');
+INSERT INTO "key_value_store" VALUES('StatVarGroups','H4sIAAAAAAAC/+OS4+JI1k/XD8rPLxES4hJwLi0uyc9VCEssykxMykkt5jLk4kyBK1DhEnNJLElUcM7Pzc3PK0Yok+JCGAMABWgJJlMAAAA=');
 CREATE TABLE observations (
     entity varchar(255),
     variable varchar(255),
@@ -46,6 +46,8 @@ INSERT INTO "triples" VALUES('c/p/1','typeOf','Provenance','');
 INSERT INTO "triples" VALUES('c/p/1','name','','Provenance1');
 INSERT INTO "triples" VALUES('c/p/1','source','c/s/1','');
 INSERT INTO "triples" VALUES('c/p/1','url','','http://source1.com/provenance1');
+INSERT INTO "triples" VALUES('dc/g/Root','typeOf','StatVarGroup','');
+INSERT INTO "triples" VALUES('dc/g/Root','name','','Data Commons Variables');
 INSERT INTO "triples" VALUES('c/g/Root','typeOf','StatVarGroup','');
 INSERT INTO "triples" VALUES('c/g/Root','name','','Custom Variables');
 INSERT INTO "triples" VALUES('c/g/Root','specializationOf','dc/g/Root','');

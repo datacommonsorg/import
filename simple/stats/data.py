@@ -101,7 +101,10 @@ class StatVarGroup:
         Triple(self.id, _PREDICATE_NAME, object_value=self.name),
     ]
     if self.parent_id:
-      triples.append(Triple(self.id, _PREDICATE_SPECIALIZATION_OF, object_id=self.parent_id))
+      triples.append(
+          Triple(self.id,
+                 _PREDICATE_SPECIALIZATION_OF,
+                 object_id=self.parent_id))
     for provenance_id in self.provenance_ids:
       triples.append(
           Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=provenance_id))

@@ -17,11 +17,13 @@ import shutil
 import tempfile
 import unittest
 
+from stats import schema_constants as sc
 from stats.config import Config
 from stats.data import Property
 from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
+from stats.data import Triple
 from stats.nodes import Nodes
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
@@ -215,6 +217,11 @@ class TestNodes(unittest.TestCase):
         list(nodes.groups.values()),
         [
             StatVarGroup(
+                "dc/g/Root",
+                "Data Commons Variables",
+                "",
+            ),
+            StatVarGroup(
                 "custom/g/group_1",
                 "Parent Group",
                 "dc/g/Root",
@@ -258,6 +265,11 @@ class TestNodes(unittest.TestCase):
     self.assertListEqual(
         list(nodes.groups.values()),
         [
+            StatVarGroup(
+                "dc/g/Root",
+                "Data Commons Variables",
+                "",
+            ),
             StatVarGroup(
                 "custom/g/group_1",
                 "Parent Group",
@@ -382,6 +394,11 @@ class TestNodes(unittest.TestCase):
         list(nodes.groups.values()),
         [
             StatVarGroup(
+                "dc/g/Root",
+                "Data Commons Variables",
+                "",
+            ),
+            StatVarGroup(
                 "ONE/g/group_1",
                 "Parent",
                 "dc/g/Root",
@@ -407,6 +424,24 @@ class TestNodes(unittest.TestCase):
     ]
     self.assertTrue(default_groups, "Default custom root SVG should exist")
     self.assertEqual(default_groups[0].name, "ONE Data")
+
+  def test_root_stat_var_group_created(self):
+    nodes = Nodes(CONFIG)
+    nodes.group("My Category/My Subcategory")
+    self.assertIn(sc.ROOT_SVG_ID, nodes.groups)
+    root_svg = nodes.groups[sc.ROOT_SVG_ID]
+    self.assertEqual(root_svg.id, "dc/g/Root")
+    self.assertEqual(root_svg.name, "Data Commons Variables")
+    self.assertEqual(root_svg.parent_id, "")
+    root_triples = root_svg.triples()
+    self.assertIn(Triple("dc/g/Root", "typeOf", object_id="StatVarGroup"),
+                  root_triples)
+    self.assertIn(
+        Triple("dc/g/Root", "name", object_value="Data Commons Variables"),
+        root_triples)
+    for t in root_triples:
+      self.assertNotEqual(t.predicate, "specializationOf")
+      self.assertNotEqual(t.predicate, "includedIn")
 
   def test_triples_by_provenance_dir_and_deduplication(self):
     nodes = Nodes(Config(CONFIG_DATA))

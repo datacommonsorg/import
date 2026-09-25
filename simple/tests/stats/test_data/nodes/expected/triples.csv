@@ -10,6 +10,8 @@ c/p/1,url,,http://source1.com/provenance1
 b.csv,typeOf,Provenance,
 b.csv,name,,b.csv
 b.csv,source,,
+dc/g/Root,typeOf,StatVarGroup,
+dc/g/Root,name,,Data Commons Variables
 custom/g/group_1,typeOf,StatVarGroup,
 custom/g/group_1,name,,Parent Group
 custom/g/group_1,specializationOf,dc/g/Root,
