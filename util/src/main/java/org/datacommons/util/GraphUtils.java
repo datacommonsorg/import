@@ -108,6 +108,22 @@ public class GraphUtils {
   }
 
   /**
+   * Checks if a given set of property values represents a StatisticalPopulation node.
+   *
+   * @param pvs The property values to check.
+   * @return True if the property values indicate a StatisticalPopulation, false otherwise.
+   */
+  public static boolean isStatisticalPopulation(PropertyValues pvs) {
+    List<String> types = getPropertyValues(pvs.getPvsMap(), Property.typeOf.name());
+    for (String type : types) {
+      if (McfUtil.stripNamespace(type).equals(Vocabulary.STATISTICAL_POPULATION_TYPE)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Updates a PV in an McfGraph instance
    *
    * @param prop property to update
