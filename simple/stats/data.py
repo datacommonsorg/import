@@ -63,6 +63,7 @@ _MCF_PREDICATE_BLOCKLIST = set([_PREDICATE_INCLUDED_IN])
 _DCS_PREFIX = "dcs:"
 
 _NAMESPACE_DELIMITER = ':'
+_GLOBAL_PREFIXES = ("dcid:", "dcs:", "schema:")
 
 
 @dataclass
@@ -591,7 +592,10 @@ def strip_namespace(v: str) -> str:
   Strips namespaces from dcids.
   e.g. 'dcid:country/USA' -> 'country/USA'
   """
-  return v[v.find(_NAMESPACE_DELIMITER) + 1:]
+  for prefix in _GLOBAL_PREFIXES:
+    if v.startswith(prefix):
+      return v[len(prefix):]
+  return v
 
 
 def strip_namespace_series(series: pd.Series) -> pd.Series:
@@ -603,7 +607,7 @@ def strip_namespace_series(series: pd.Series) -> pd.Series:
   Returns:
     Series with namespaces stripped
   """
-  return series.str.split(_NAMESPACE_DELIMITER, n=1).str[-1]
+  return series.str.replace(r'^(dcid:|dcs:|schema:)', '', regex=True)
 
 
 def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
