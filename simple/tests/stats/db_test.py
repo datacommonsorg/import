@@ -350,13 +350,20 @@ class TestDb(unittest.TestCase):
             }
         })
 
-  @mock.patch('requests.post')
+  @mock.patch('stats.db.AuthorizedSession')
+  @mock.patch('stats.db.id_token.fetch_id_token')
+  @mock.patch('stats.db.google.auth.transport.requests.Request')
   @mock.patch.dict(
       os.environ, {
           "USE_DATA_COMMONS_PLATFORM": "true",
           "DATA_COMMONS_PLATFORM_URL": "https://test_url"
       })
-  def test_insert_triples_into_datacommons_platform(self, mock_post):
+  def test_insert_triples_into_datacommons_platform(self, mock_auth_request, mock_fetch_id_token, mock_authorized_session):
+    
+    mock_session_instance = mock.Mock()
+    mock_authorized_session.return_value = mock_session_instance
+    mock_post = mock_session_instance.post
+    
     config = get_datacommons_platform_config_from_env()
     db = create_and_update_db(config)
 
