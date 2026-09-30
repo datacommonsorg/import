@@ -35,7 +35,11 @@ _API_ROOT_ENV = "DC_API_ROOT"
 # Default REST API endpoint root.
 _DEFAULT_API_ROOT = "https://api.datacommons.org"
 
-_DEBUG = True
+_DEBUG_ENV = "DC_CLIENT_DEBUG"
+
+# Debug mode is off by default. It logs the DC API key and writes debug dumps
+# to disk, so it must only be enabled explicitly for local troubleshooting.
+_DEBUG = os.environ.get(_DEBUG_ENV, "").lower() in ("true", "1", "yes")
 _DEBUG_FOLDER = ".data/debug"
 
 NGRAM_MIN_MATCH_FRACTION = 0.8

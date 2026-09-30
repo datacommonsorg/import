@@ -1,0 +1,28 @@
+{
+  "inputFiles": [
+    {
+      "pattern": "author_entities.csv",
+      "importType": "entities",
+      "rowEntityType": "Author",
+      "idColumn": "author_id",
+      "columnsToResolve": [
+        "author_country"
+      ],
+      "provenance": "dcid:Provenance1"
+    },
+    {
+      "pattern": "article_entities.csv",
+      "importType": "entities",
+      "rowEntityType": "Article",
+      "idColumn": "article_id",
+      "columnsToResolve": [
+        "article_author"
+      ],
+      "provenance": "dcid:Provenance1"
+    },
+    {
+      "pattern": "*.mcf",
+      "provenance": "dcid:Provenance1"
+    }
+  ]
+}
