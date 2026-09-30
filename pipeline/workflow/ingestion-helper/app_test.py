@@ -40,8 +40,6 @@ class TestMain(unittest.TestCase):
         mock_spanner_client = MagicMock()
         mock_database = MagicMock()
         mock_spanner_client.database = mock_database
-        mock_spanner_client.embedding_table = "NodeEmbedding"
-        mock_spanner_client.embedding_index = "NodeEmbeddingIndex"
 
         # Mock snapshot and execute_sql
         mock_snapshot = MagicMock()
@@ -150,16 +148,6 @@ class TestMain(unittest.TestCase):
         self.assertEqual(rows[1][0], "dc/3")
         self.assertEqual(rows[0][2], [0.1, 0.2])
 
-    def test_seed_database_success(self):
-        mock_spanner_client = MagicMock()
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
-
-        # Call the FastAPI endpoint
-        response = client.post("/database/seed")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "OK")
-        mock_spanner_client.seed_database.assert_called_once()
 
     def test_revert_single_import(self):
         mock_spanner_client = MagicMock()
@@ -498,6 +486,34 @@ class TestMain(unittest.TestCase):
         mock_spanner_client.get_import_info.assert_called_once()
         mock_workflow_client.create_execution.assert_not_called()
 
+
+
+    @patch('routes.cache.redis.Redis')
+    def test_clear_redis_cache_success(self, mock_redis_class):
+        mock_redis_instance = MagicMock()
+        mock_redis_class.return_value.__enter__.return_value = mock_redis_instance
+
+        with patch.object(config, 'REDIS_HOST', '10.0.0.5'),              patch.object(config, 'REDIS_PORT', '6379'),              patch.object(config, 'REDIS_PASSWORD', 'test-pass'),              patch.object(config, 'REDIS_CA_CERT_PATH', '/path/to/cert.pem'):
+            response = client.post('/cache/clear')
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data['status'], 'SUCCESS')
+            self.assertEqual(data['message'], 'Cache cleared')
+            mock_redis_class.assert_called_once_with(
+                host='10.0.0.5',
+                port=6379,
+                password='test-pass',
+                ssl=True,
+                ssl_ca_certs='/path/to/cert.pem',
+            )
+            mock_redis_instance.flushall.assert_called_once_with(asynchronous=True)
+
+    def test_clear_redis_cache_skipped_when_no_host(self):
+        with patch.object(config, 'REDIS_HOST', None):
+            response = client.post('/cache/clear')
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data['status'], 'SKIPPED')
 
 if __name__ == '__main__':
     unittest.main()

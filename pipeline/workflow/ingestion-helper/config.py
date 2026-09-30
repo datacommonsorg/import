@@ -15,6 +15,7 @@
 import os
 import json
 import logging
+import tempfile
 from typing import List
 from pydantic import BaseModel, Field
 import yaml
@@ -43,27 +44,6 @@ SPANNER_INGESTION_WORKFLOW_NAME = os.environ.get('SPANNER_INGESTION_WORKFLOW_NAM
 ENABLE_EMBEDDINGS = os.environ.get('ENABLE_EMBEDDINGS', 'false').lower() == 'true'
 IS_BASE_DC = os.environ.get('IS_BASE_DC', 'true').lower() == 'true'
 TIMEOUT = int(os.environ.get('TIMEOUT', 1700))
-EMBEDDING_SPACE = int(os.environ.get('EMBEDDING_SPACE', 768))
-EMBEDDING_TABLE = os.environ.get('EMBEDDING_TABLE', 'NodeEmbedding')
-EMBEDDING_INDEX = os.environ.get('EMBEDDING_INDEX', 'NodeEmbeddingIndex')
-EMBEDDING_LABEL_INDEX = os.environ.get('EMBEDDING_LABEL_INDEX', 'NodeEmbeddingLabelIndex')
-
-_DEFAULT_MODELS = [
-    {"name": "NodeEmbeddingModel", "endpoint": "text-embedding-005"}
-]
-
-models_env = os.environ.get('EMBEDDING_MODELS')
-if models_env:
-    try:
-        parsed = json.loads(models_env)
-        if isinstance(parsed, list) and all(isinstance(m, dict) and "name" in m and "endpoint" in m for m in parsed):
-            EMBEDDING_MODELS = parsed
-        else:
-            EMBEDDING_MODELS = _DEFAULT_MODELS
-    except Exception:
-        EMBEDDING_MODELS = _DEFAULT_MODELS
-else:
-    EMBEDDING_MODELS = _DEFAULT_MODELS
 
 _DEFAULT_EMBEDDING_SPECS = [
     EmbeddingSpec(
@@ -114,6 +94,13 @@ EMBEDDING_SPECS = _load_embedding_specs(spec_path)
 
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD') or None
+REDIS_CA_CERT = os.environ.get('REDIS_CA_CERT') or None
+REDIS_CA_CERT_PATH = None
+if REDIS_CA_CERT:
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as _f:
+        _f.write(REDIS_CA_CERT)
+        REDIS_CA_CERT_PATH = _f.name
 GCS_OUTPUT_PREFIX = os.environ.get('GCS_OUTPUT_PREFIX', '')
 
 SPANNER_EMULATOR_HOST = os.environ.get('SPANNER_EMULATOR_HOST')

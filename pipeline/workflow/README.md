@@ -11,10 +11,10 @@ Pushes to the `master` branch automatically trigger the main parent orchestrator
 The automated pipeline executes the following steps:
 1.  **Build:** Builds three container images in parallel:
     - The `ingestion-helper` service.
-    - The `import-helper` service.
+    - The `aggregation-helper` job.
     - The Dataflow Flex Template used for Spanner data ingestion.
 2.  **Staging Deployment:** Deploys the services and workflows to the Staging environment (`datcom-ci` project) using staging configurations.
-3.  **Integration Testing:** Runs the end-to-end integration test suites (`spanner_ingestion_test.py` and `import_automation_test.py`) in parallel against the Staging environment inside `uv`-enabled containers.
+3.  **Integration Testing:** Runs the end-to-end integration test suite (`spanner_ingestion_test.py`) against the Staging environment inside a `uv`-enabled container.
 4.  **Production Deployment:** Upon successful completion of all integration tests, promotes the container images and deploys the updated services and workflows to the Production environment (`datcom-import-automation-prod` project).
 
 ---
@@ -58,18 +58,11 @@ _VERSION=dev-<your-name>
 ```
 
 ### Step 3: Run the Integration Tests
-Once the staging deployment completes, execute the integration test runners from your local terminal. The runners use **`uv`** to manage their execution environment:
+Once the staging deployment completes, execute the integration test runner from your local terminal. The runner uses **`uv`** to manage its execution environment:
 
-#### 1. Ingestion Workflow Test:
+#### Ingestion Workflow Test:
 ```bash
 # Inside pipeline/workflow/
 uv run python spanner_ingestion_test.py
 ```
 - **What it does:** Cleans up `ImportStatus`, `ImportVersionHistory`, and `IngestionHistory` for the test import, triggers `spanner-ingestion-workflow-staging` directly with the test import version, and verifies that `ImportStatus` is updated to `SUCCESS` and logged in `IngestionHistory`.
-
-#### 2. Import Automation Workflow Test:
-```bash
-# Inside pipeline/workflow/
-uv run python import_automation_test.py
-```
-- **What it does:** Cleans up `ImportSummary` and `ImportHistory` for the test import, triggers `import-automation-workflow-staging`, and verifies records in `ImportSummary` and `ImportHistory`.

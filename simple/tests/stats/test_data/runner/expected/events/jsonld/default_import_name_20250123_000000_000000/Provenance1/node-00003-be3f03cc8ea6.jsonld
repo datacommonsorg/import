@@ -37,6 +37,11 @@
             "dcid:specializationOf": {
                 "@id": "dcid:dc/g/Root"
             }
+        },
+        {
+            "@id": "dcid:dc/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Data Commons Variables"
         }
     ]
 }
