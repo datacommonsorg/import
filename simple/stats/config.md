@@ -16,8 +16,7 @@ The config parameters for the files to be imported should be specified in a `con
         "dcid:observationAbout": "country",
         "dcid:observationDate": "year",
         "dcid:value": "value"
-      },
-      "columnsToResolve": ["country"]
+      }
     },
     {
       "pattern": "*.mcf",
@@ -84,17 +83,7 @@ or a custom observation property you have defined in MCF.
 
 Events imports only. All entities in the file are assumed to be of this type,
 and the importer resolves entity names to DCIDs of that type. Observations
-imports ignore it: they resolve only the columns named in `columnsToResolve`,
-and take entity types from Base Data Commons.
-
-#### `columnsToResolve`
-
-The columns holding entities. Values that are not already DCIDs (names,
-wikidata ids, lat/lng pairs) are resolved against Data Commons. Values in a
-column the importer knows to be pre-resolved, such as `dcid`, are taken as-is.
-
-Listing a column here is also what makes its entities eligible for proxy nodes
-in the output graph. See [`importProxyEntities`](#importproxyentities).
+imports ignore it and take entity types from Base Data Commons.
 
 #### `ignoreColumns`
 
@@ -103,10 +92,10 @@ The list of column names to be ignored by the importer, if any.
 
 ## `importProxyEntities`
 
-If `true` (the default), the importer looks up the entities in
-`columnsToResolve` against Base Data Commons and emits a proxy node for each one
-it finds a type for. Set it to `false` to skip both the lookups and the nodes;
-observations still reference the entity DCIDs directly.
+If `true` (the default), the importer looks up the observation entities against
+Base Data Commons and emits a proxy node for each one it finds a type for. Set
+it to `false` to skip both the lookups and the nodes; observations still
+reference the entity DCIDs directly.
 
 Can also be set per-run with the `--import_proxy_entities` flag or the
 `IMPORT_PROXY_ENTITIES` environment variable.

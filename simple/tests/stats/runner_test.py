@@ -69,6 +69,9 @@ def _test_runner(test: unittest.TestCase,
         dc_client.get_property_of_entities = mock.MagicMock(
             return_value=json.load(f))
 
+    # TODO: Run these tests with use_multiprocessing=True to match production.
+    # Child processes don't inherit the dc_client mocks above, so this needs a
+    # stub DC API server (e.g. via DC_API_ROOT) first.
     Runner(config_file_path=config_path,
            input_dir_path=input_dir,
            output_dir_path=temp_dir,
