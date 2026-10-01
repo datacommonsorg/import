@@ -1,0 +1,42 @@
+Node: InterestRate_TreasuryBill_1Year
+dcid: "InterestRate_TreasuryBill_1Year"
+maturity: [1 Year]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryBill_1Year"
+populationType: dcid:TreasuryBill
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+DiffType: MODIFIED
+
+Node: InterestRate_TreasuryNote_5Year
+dcid: "InterestRate_TreasuryNote_5Year"
+maturity: [5 Year]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryNote_5Year"
+populationType: dcid:TreasuryNote
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+DiffType: ADDED
+
+Node: InterestRate_TreasuryBill_3Month
+dcid: "InterestRate_TreasuryBill_3Month"
+maturity: [3 Month]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryBill_3Month"
+populationType: dcid:TreasuryBill
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+DiffType: DELETED
+
+Node: dc/o/312zndw0sve38
+dcid: "dc/o/312zndw0sve38"
+keyString: "observationAbout=country/USAvariableMeasured=InterestRate_TreasuryNote_10YearobservationDate=2025-01-31value=4.58unit=PercentmeasurementMethod=ConstantMaturityRate"
+measurementMethod: dcid:ConstantMaturityRate
+observationAbout: dcid:country/USA
+observationDate: "2025-01-31"
+typeOf: dcid:StatVarObservation
+unit: dcid:Percent
+value: 4.58
+variableMeasured: dcid:InterestRate_TreasuryNote_10Year
+DiffType: ADDED
+
