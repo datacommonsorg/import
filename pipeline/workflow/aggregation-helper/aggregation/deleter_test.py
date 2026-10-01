@@ -36,7 +36,7 @@ class TestAggregationDeleter(unittest.TestCase):
         deleter.delete_aggregated_data(imports)
 
         # Verify execute_partitioned_dml calls (order-independent due to parallel execution)
-        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 3)
+        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 2)
 
         expected_provenances = ["dc/base/ImportA", "dc/base/ImportB"]
         expected_params = {"provenances": expected_provenances}
@@ -46,9 +46,6 @@ class TestAggregationDeleter(unittest.TestCase):
 
         self.assertTrue(any("DELETE FROM Edge" in sql for sql in executed_sqls))
         self.assertTrue(any("DELETE FROM TimeSeries" in sql for sql in executed_sqls))
-        self.assertTrue(
-            any("DELETE FROM KeyValueStore" in sql for sql in executed_sqls)
-        )
 
         for c in calls:
             self.assertEqual(c[1]["params"], expected_params)
@@ -101,6 +98,76 @@ class TestAggregationDeleter(unittest.TestCase):
         deleter = AggregationDeleter("proj", "inst", "db")
         with self.assertRaises(RuntimeError):
             deleter.delete_aggregated_data(["ImportA"])
+
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_provenance_summaries(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+
+        deleter = AggregationDeleter(
+            project_id="proj", instance_id="inst", database_id="db", is_base_dc=True
+        )
+
+        imports = ["ImportA", "ImportB"]
+        deleter.delete_provenance_summaries(imports)
+
+        mock_db.execute_partitioned_dml.assert_called_once()
+        call_args = mock_db.execute_partitioned_dml.call_args
+        sql = call_args[0][0]
+        params = call_args[1]["params"]
+
+        self.assertIn("DELETE FROM KeyValueStore", sql)
+        self.assertIn("type = 'ProvenanceSummary'", sql)
+        self.assertIn("provenance IN UNNEST(@provenances)", sql)
+        self.assertEqual(
+            params, {"provenances": ["dc/base/ImportA", "dc/base/ImportB"]}
+        )
+
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_provenance_summaries_not_base_dc(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+
+        deleter = AggregationDeleter(
+            project_id="proj", instance_id="inst", database_id="db", is_base_dc=False
+        )
+
+        imports = ["ImportA"]
+        deleter.delete_provenance_summaries(imports)
+
+        mock_db.execute_partitioned_dml.assert_called_once()
+        params = mock_db.execute_partitioned_dml.call_args[1]["params"]
+        self.assertEqual(params, {"provenances": ["ImportA"]})
+
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_provenance_summaries_empty(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+
+        deleter = AggregationDeleter("proj", "inst", "db")
+        deleter.delete_provenance_summaries([])
+
+        mock_db.execute_partitioned_dml.assert_not_called()
+
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_provenance_summaries_exception(self, mock_spanner_client):
+        mock_db = MagicMock()
+        mock_db.execute_partitioned_dml.side_effect = RuntimeError(
+            "Spanner deletion error"
+        )
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+
+        deleter = AggregationDeleter("proj", "inst", "db")
+        with self.assertRaises(RuntimeError):
+            deleter.delete_provenance_summaries(["ImportA"])
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_stat_var_group_edges(self, mock_spanner_client):
