@@ -79,10 +79,20 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
       receiver.output(null);
       return;
     }
-    String dml = buildDml(tableName, columnName, additionalPredicate);
-    Statement statement = Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
     try {
-      long rowCount = dbClient.executePartitionedUpdate(statement);
+      long rowCount;
+      if (spannerClient.isTimeSeriesProvenanceDelete(tableName, columnName)
+          && (additionalPredicate == null || additionalPredicate.trim().isEmpty())) {
+        rowCount = spannerClient.deleteTimeSeriesByProvenances(dbClient, tableName, values);
+      } else {
+        // Only KeyValueStore passes an additionalPredicate today; TimeSeries
+        // provenance deletes take the per-variable path above.
+        String targetTable = spannerClient.getDeleteTarget(tableName, columnName);
+        String dml = buildDml(targetTable, columnName, additionalPredicate);
+        Statement statement =
+            Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
+        rowCount = dbClient.executePartitionedUpdate(statement);
+      }
       deletedRowsCounter.inc(rowCount);
       LOGGER.info("Deleted {} rows from {} for {} IN {}", rowCount, tableName, columnName, values);
       receiver.output(null);
