@@ -43,7 +43,7 @@ class TestSpannerClient(unittest.TestCase):
         client = SpannerClient("project", "instance", "database")
         
         # Run method
-        result = client.acquire_lock("workflow-123", 3600)
+        result = client.acquire_lock("workflow-123")
         
         # Verify
         self.assertTrue(result)
@@ -70,13 +70,62 @@ class TestSpannerClient(unittest.TestCase):
         client = SpannerClient("project", "instance", "database")
         
         # Run method
-        result = client.acquire_lock("workflow-123", 3600)
+        result = client.acquire_lock("workflow-123")
         
         # Verify
         self.assertTrue(result)
         mock_transaction.execute_update.assert_called_once()
         args, _ = mock_transaction.execute_update.call_args
         self.assertIn("UPDATE IngestionLock", args[0])
+
+    def _lock_client(self, mock_spanner_client, lock_row):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+        mock_transaction = MagicMock()
+        mock_db.run_in_transaction.side_effect = (
+            lambda callback, *args, **kwargs: callback(mock_transaction, *args,
+                                                       **kwargs))
+        mock_transaction.execute_sql.return_value = [lock_row]
+        return SpannerClient("project", "instance",
+                             "database"), mock_transaction
+
+    @patch('google.cloud.spanner.Client')
+    def test_acquire_lock_assigned_to_self(self, mock_spanner_client):
+        from datetime import datetime, timezone
+        client, txn = self._lock_client(
+            mock_spanner_client,
+            ["workflow-123", datetime.now(timezone.utc)])
+
+        self.assertTrue(client.acquire_lock("workflow-123"))
+        txn.execute_update.assert_called_once()
+        args, kwargs = txn.execute_update.call_args
+        self.assertIn("UPDATE IngestionLock", args[0])
+        self.assertEqual(kwargs["params"]["workflowId"], "workflow-123")
+
+    @patch('google.cloud.spanner.Client')
+    def test_acquire_lock_held_by_other(self, mock_spanner_client):
+        from datetime import datetime, timezone
+        client, txn = self._lock_client(
+            mock_spanner_client,
+            ["workflow-other", datetime.now(timezone.utc)])
+
+        self.assertFalse(client.acquire_lock("workflow-123"))
+        txn.execute_update.assert_not_called()
+
+    @patch('google.cloud.spanner.Client')
+    def test_acquire_lock_force_takes_over(self, mock_spanner_client):
+        from datetime import datetime, timezone
+        client, txn = self._lock_client(
+            mock_spanner_client,
+            ["workflow-other", datetime.now(timezone.utc)])
+
+        self.assertTrue(client.acquire_lock("workflow-123", force=True))
+        txn.execute_update.assert_called_once()
+        args, kwargs = txn.execute_update.call_args
+        self.assertIn("UPDATE IngestionLock", args[0])
+        self.assertEqual(kwargs["params"]["workflowId"], "workflow-123")
 
     @patch('google.cloud.spanner.Client')
     def test_revert_import_state(self, mock_spanner_client):

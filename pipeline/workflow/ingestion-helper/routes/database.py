@@ -21,7 +21,9 @@ from routes.models import BaseResponse, ResponseStatus
 
 class LockAcquireRequest(BaseModel):
     workflowId: str
-    timeout: int
+    # Takes over the lock even if held by another workflow. Intended for
+    # manual handoff (pipeline/scripts/update_lock.sh), not the workflow.
+    force: bool = False
 
 class LockReleaseRequest(BaseModel):
     workflowId: str
@@ -33,11 +35,11 @@ router = APIRouter(prefix="/database", tags=["database"])
 def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Attempts to acquire the global lock for ingestion."""
     try:
-        status_ok = spanner.acquire_lock(req.workflowId, req.timeout)
+        status_ok = spanner.acquire_lock(req.workflowId, force=req.force)
         if not status_ok:
             raise HTTPException(
                 status_code=503,
-                detail=f"Failed to acquire lock: Lock already held or acquisition timed out for workflow {req.workflowId}"
+                detail=f"Failed to acquire lock: Lock held by another workflow (requested by {req.workflowId})"
             )
         return BaseResponse(status=ResponseStatus.OK)
     except HTTPException:

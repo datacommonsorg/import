@@ -77,20 +77,26 @@ class SpannerClient:
         self.database = database
         self.project_id = project_id
 
-    def acquire_lock(self, workflow_id: str, timeout: int) -> bool:
+    def acquire_lock(self, workflow_id: str, force: bool = False) -> bool:
         """Attempts to acquire the global ingestion lock.
+
+        The lock is acquired if it is free or already assigned to
+        `workflow_id`. A lock held by another workflow is never treated as
+        stale; release it or hand it over with `force`.
 
         Args:
             workflow_id: The ID of the workflow attempting to acquire the lock.
-            timeout: The duration in seconds after which a lock is considered stale.
+            force: If True, takes over the lock even if it is held by another
+                workflow (e.g. to hand the lock to a rerun after a failure).
 
         Returns:
             True if the lock was acquired, False otherwise.
         """
-        logging.info(f"Attempting to acquire lock for {workflow_id}")
+        logging.info(
+            f"Attempting to acquire lock for {workflow_id} (force={force})")
 
         def _acquire(transaction: Transaction) -> bool:
-            sql = "SELECT LockOwner, AcquiredTimestamp FROM IngestionLock WHERE LockID = @lockId"
+            sql = "SELECT LockOwner FROM IngestionLock WHERE LockID = @lockId"
             params = {"lockId": self._LOCK_ID}
             param_types = {"lockId": STRING}
 
@@ -98,20 +104,24 @@ class SpannerClient:
             results = transaction.execute_sql(sql, params, param_types)
             for row in results:
                 row_found = True
-                current_owner, acquired_at = row[0], row[1]
+                current_owner = row[0]
 
             lock_is_available = False
             if not row_found:
                 lock_is_available = True
             elif current_owner is None:
                 lock_is_available = True
-            else:
-                timeout_threshold = datetime.now(timezone.utc) - acquired_at
-                if timeout_threshold.total_seconds() > timeout:
-                    logging.info(
-                        f"Stale lock found, owned by {current_owner}. Acquiring."
-                    )
-                    lock_is_available = True
+            elif current_owner == workflow_id:
+                # Lock was assigned to this workflow (e.g. manually during a
+                # rerun after a failure).
+                logging.info(
+                    f"Lock already assigned to {workflow_id}. Acquiring.")
+                lock_is_available = True
+            elif force:
+                logging.warning(
+                    f"Force-acquiring lock held by {current_owner} for {workflow_id}."
+                )
+                lock_is_available = True
 
             if lock_is_available:
                 if not row_found:
