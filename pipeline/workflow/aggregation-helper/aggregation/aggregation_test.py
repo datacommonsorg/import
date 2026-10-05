@@ -530,6 +530,8 @@ class TestEmbeddingGenerator(unittest.TestCase):
 
     @patch.object(EmbeddingGenerator, "spanner_database")
     def test_delete_existing_embeddings(self, mock_db):
+        from google.cloud.spanner_v1 import RequestOptions
+
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_snapshot = MagicMock()
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
@@ -551,7 +553,17 @@ class TestEmbeddingGenerator(unittest.TestCase):
             spec, embedding_table="NodeEmbedding"
         )
         self.assertEqual(deleted, 2)
+        self.assertEqual(mock_snapshot.execute_sql.call_count, 2)
+        for sql_call in mock_snapshot.execute_sql.call_args_list:
+            self.assertEqual(
+                sql_call[1]["request_options"].priority,
+                RequestOptions.Priority.PRIORITY_LOW,
+            )
         mock_db.execute_partitioned_dml.assert_called_once()
+        self.assertEqual(
+            mock_db.execute_partitioned_dml.call_args[1]["request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
 
 
 class TestStatVarGroupGenerator(unittest.TestCase):

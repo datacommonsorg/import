@@ -4,6 +4,8 @@ import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Options;
+import com.google.cloud.spanner.Options.RpcPriority;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
@@ -119,7 +121,8 @@ public class SpannerClient implements Serializable {
         String dml =
             String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, columnName);
         Statement statement = Statement.newBuilder(dml).bind(columnName).to(value).build();
-        long rowCount = dbClient.executePartitionedUpdate(statement);
+        long rowCount =
+            dbClient.executePartitionedUpdate(statement, Options.priority(RpcPriority.LOW));
         LOGGER.info("Deleted {} rows from {} for {} {}", rowCount, tableName, columnName, value);
         c.output(null);
       }
