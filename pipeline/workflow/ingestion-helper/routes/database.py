@@ -39,6 +39,14 @@ def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Dep
                 status_code=503,
                 detail=f"Failed to acquire lock: Lock already held or acquisition timed out for workflow {req.workflowId}"
             )
+        logging.info(
+            f"INGESTION_LOCK_ACQUIRED: workflow={req.workflowId} timeout={req.timeout}",
+            extra={
+                "event": "INGESTION_LOCK_ACQUIRED",
+                "workflow_id": req.workflowId,
+                "timeout": req.timeout,
+            }
+        )
         return BaseResponse(status=ResponseStatus.OK)
     except HTTPException:
         raise
@@ -56,6 +64,13 @@ def release_ingestion_lock(req: LockReleaseRequest, spanner: SpannerClient = Dep
                 status_code=400,
                 detail=f"Failed to release lock: Lock not held by workflow {req.workflowId} or already released"
             )
+        logging.info(
+            f"INGESTION_LOCK_RELEASED: workflow={req.workflowId}",
+            extra={
+                "event": "INGESTION_LOCK_RELEASED",
+                "workflow_id": req.workflowId,
+            }
+        )
         return BaseResponse(status=ResponseStatus.OK)
     except HTTPException:
         raise
