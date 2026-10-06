@@ -1,0 +1,83 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:obs_dc1b9a3df5ba7790af3ff8d54b24cb631ab9800b52de7ac2e8bd2c39e2c051e0",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2024,
+            "dcid:value": 5,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE3"
+            }
+        },
+        {
+            "@id": "dcid:obs_f8439781def4b07a9f2bdd0967bfa4e20c8b86b18979e36dcd8b9703d96a3202",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2024,
+            "dcid:value": 6,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE3"
+            }
+        },
+        {
+            "@id": "dcid:obs_188ad10cf0f2fbec44d3ce23650ec1f650bea987ba1e2384cccfa83692bc2729",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2024,
+            "dcid:value": 7,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE4"
+            }
+        },
+        {
+            "@id": "dcid:obs_01d96fbad20a89ed245ee2a5ba1acdb797106e8f0c270d2d6db49aaec6852497",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2024,
+            "dcid:value": 8,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE4"
+            }
+        }
+    ]
+}

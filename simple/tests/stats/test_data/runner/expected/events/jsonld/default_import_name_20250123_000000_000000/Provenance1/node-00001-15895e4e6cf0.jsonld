@@ -1,0 +1,105 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:JG365961",
+            "@type": "dcid:CrimeEvent",
+            "dcid:location": {
+                "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": "08/02/2023 9:25:00 AM",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:IUCR": 530,
+            "dcid:PRIMARY_DESCRIPTION": "ASSAULT",
+            "dcid:SECONDARY_DESCRIPTION": "AGGRAVATED - OTHER DANGEROUS WEAPON"
+        },
+        {
+            "@id": "dcid:JG427641",
+            "@type": "dcid:CrimeEvent",
+            "dcid:location": {
+                "@id": "dcid:country/CHN"
+            },
+            "dcid:observationDate": "09/17/2023 3:00:00 AM",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:IUCR": 820,
+            "dcid:PRIMARY_DESCRIPTION": "THEFT",
+            "dcid:SECONDARY_DESCRIPTION": "$500 AND UNDER"
+        },
+        {
+            "@id": "dcid:JG496575",
+            "@type": "dcid:CrimeEvent",
+            "dcid:location": {
+                "@id": "dcid:country/BRA"
+            },
+            "dcid:observationDate": "11/08/2023 2:38:00 PM",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:IUCR": 860,
+            "dcid:PRIMARY_DESCRIPTION": "THEFT",
+            "dcid:SECONDARY_DESCRIPTION": "RETAIL THEFT"
+        },
+        {
+            "@id": "dcid:JG496991",
+            "@type": "dcid:CrimeEvent",
+            "dcid:location": {
+                "@id": "dcid:country/BRA"
+            },
+            "dcid:observationDate": "11/08/2023 3:14:00 PM",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:IUCR": 560,
+            "dcid:PRIMARY_DESCRIPTION": "ASSAULT",
+            "dcid:SECONDARY_DESCRIPTION": "SIMPLE"
+        },
+        {
+            "@id": "dcid:JG497095",
+            "@type": "dcid:CrimeEvent",
+            "dcid:location": {
+                "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": "11/08/2023 8:50:00 PM",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:IUCR": 810,
+            "dcid:PRIMARY_DESCRIPTION": "THEFT",
+            "dcid:SECONDARY_DESCRIPTION": "OVER $500"
+        },
+        {
+            "@id": "dcid:JG497145",
+            "@type": "dcid:CrimeEvent",
+            "dcid:location": {
+                "@id": "dcid:country/CHN"
+            },
+            "dcid:observationDate": "11/08/2023 10:55:00 PM",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:IUCR": "051A",
+            "dcid:PRIMARY_DESCRIPTION": "ASSAULT",
+            "dcid:SECONDARY_DESCRIPTION": "AGGRAVATED - HANDGUN"
+        },
+        {
+            "@id": "dcid:JG498494",
+            "@type": "dcid:CrimeEvent",
+            "dcid:location": {
+                "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": "11/08/2023 8:25:00 AM",
+            "dcid:includedIn": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:IUCR": 560,
+            "dcid:PRIMARY_DESCRIPTION": "ASSAULT",
+            "dcid:SECONDARY_DESCRIPTION": "SIMPLE"
+        }
+    ]
+}

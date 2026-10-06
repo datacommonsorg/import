@@ -6,100 +6,106 @@ The config parameters for the files to be imported should be specified in a `con
 
 ```json
 {
-  "inputFiles": {
-    "countries.csv": {
-      "entityType": "Country",
+  "inputFiles": [
+    {
+      "pattern": "countries.csv",
+      "provenance": "dcid:Provenance1",
       "ignoreColumns": ["ignore1", "ignore2"],
-      "provenance": "Provenance1 Name"
-    },
-    "latlng.csv": {
-      "entityType": "State",
-      "provenance": "Provenance1 Name"
-    },
-    "geoid.csv": {
-      "entityType": "",
-      "provenance": "Provenance2 Name"
-    }
-  },
-  "variables": {
-    "Variable 1": {"group": "Parent Group/Child Group 1"},
-    "Variable 2": {"group": "Parent Group/Child Group 1"},
-    "var3": {
-      "name": "Var 3 Name",
-      "description": "Var 3 Description",
-      "searchDescriptions": ["Sentence 1", "Sentence 2"],
-      "group": "Parent Group/Child Group 2",
-      "properties": {
-        "populationType": "schema:Person",
-        "measuredProperty": "age",
-        "statType": "medianValue",
-        "gender": "Female"
+      "columnMappings": {
+        "dcid:variableMeasured": "variable",
+        "dcid:observationAbout": "country",
+        "dcid:observationDate": "year",
+        "dcid:value": "value"
       }
     },
-  },
-  "sources": {
-    "Source1 Name": {
-      "url": "http://source1.com",
-      "provenances": {
-        "Provenance1 Name": "http://source1.com/provenance1",
-        "Provenance2 Name": "http://source1.com/provenance2"
-      }
+    {
+      "pattern": "*.mcf",
+      "provenance": "dcid:Provenance1"
     }
-  }
+  ]
 }
 ```
 
 ## `inputFiles`
 
-The top-level `inputFiles` field should encode a map from input file name to parameters specific to that file.
-Keys can be individual file names or wildcard patterns if the same config applies to multiple files.
+The top-level `inputFiles` field is a list of objects, one per group of input
+files. Each object identifies the files it applies to with a `pattern`, and
+carries the parameters for those files.
 
-If files match multiple wildcard patterns, the first match as specified in the config will be used.
+If a file matches multiple patterns, the first match in list order wins.
 
 Example:
 
 ```json
 {
-  "inputFiles": {
+  "inputFiles": [
     // Applies only to "foo.csv".
-    "foo.csv": {...},
+    {"pattern": "foo.csv", ...},
     // Applies to bar.csv, bar1.csv, bar2.csv, etc.
-    "bar*.csv": {...},
+    {"pattern": "bar*.csv", ...},
     // Applies to all CSVs except "foo.csv" and "bar*.csv".
-    "*.csv": {...}
-  }
+    {"pattern": "*.csv", ...}
+  ]
 }
 ```
 
+> An older format keyed `inputFiles` as a map from pattern to parameters. It is
+> no longer accepted. As well as being undocumented, it silently bypassed
+> provenance and source validation, because the validator iterates `inputFiles`
+> and skips entries that are not objects. Over a map, that is every entry.
+
 ### Input file parameters
+
+#### `pattern`
+
+Required. A file name or glob pattern identifying the files this entry applies
+to. Patterns are relative to the directory containing the `config.json`.
+
+#### `provenance`
+
+Required, for CSV and MCF files alike. The provenance DCID for this input file,
+for example `dcid:Provenance1`. It must include a namespace prefix, and the
+provenance node itself must be defined in one of the MCF files, with a `source`.
+
+Provenances typically map to a dataset from a source.
+e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank source.
+
+#### `columnMappings`
+
+Required for CSV files. Maps the CSV's column headings to DCIDs. There are no
+built-in default column names.
+
+`dcid:variableMeasured`, `dcid:observationDate` and `dcid:value` are always
+required, along with at least one entity mapping: either `dcid:observationAbout`
+or a custom observation property you have defined in MCF.
 
 #### `entityType`
 
-All entities in a given file must be of a specific type. This type should be
-specified as the value of the `entityType` field. The importer tries to resolve
-entities to dcids of that type.
+Events imports only. All entities in the file are assumed to be of this type,
+and the importer resolves entity names to DCIDs of that type. Observations
+imports ignore it and take entity types from Base Data Commons.
 
 #### `ignoreColumns`
 
 The list of column names to be ignored by the importer, if any.
 
-#### `provenance`
 
-The provenance (name) of this input file. 
-Note that provenance details should be specified under `sources` -> `provenances` 
-and this field associates one of the provenances defined there to this file.
+## `importProxyEntities`
 
-Provenances typically map to a dataset from a source.
-e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank source.
+If `true` (the default), the importer looks up the observation entities against
+Base Data Commons and emits a proxy node for each one it finds a type for. Set
+it to `false` to skip both the lookups and the nodes; observations still
+reference the entity DCIDs directly.
+
+Can also be set per-run with the `--import_proxy_entities` flag or the
+`IMPORT_PROXY_ENTITIES` environment variable.
 
 ## `variables`
 
-The top-level `variables` field can be used to provide more information about variables 
-in the input CSVs.
+Events imports only. Provides display names and other metadata for the
+variables named in an events CSV.
 
-If not specified, the variable column names in the CSVs will be used as their names.
-
-Names can be overriden and other information can be provided using the parameters described below.
+Variables for observations imports are declared in MCF, not here.
 
 ### Variable parameters
 
@@ -112,7 +118,7 @@ If not specified, the column name will be used as the display name.
 
 The long form description of the variable.
 
-The description will also be used to create NL embeddings for the variable.
+The description is carried through to the graph and used downstream for search.
 
 #### `properties`
 
@@ -129,32 +135,10 @@ Use "/" as a separator to specify a multi-level hierarchy.
 
 #### `searchDescriptions` _(formerly `nlSentences`)_
 
-An array of search descriptions to be used for creating more NL embeddings for the variable.
-If not specified, the variable name will be used for creating these embeddings.
+Extra phrasings to index the variable under for search.
+If not specified, the variable name is used.
 
 Note that `nlSentences` is deprecated and will be removed in the future.
-
-## `sources`
-
-The top-level `sources` field should encode the sources and provenances associated with the input dataset.
-
-### Source parameters
-
-#### `url`
-
-The URL of the source.
-
-#### `provenances`
-
-The provenances under a given source should be defined using the `provenances` property as `{provenance-name}:{provenance-url}` pairs.
-
-## `dataDownloadUrl`
-
-The simple importer can be bootstrapped either by an input directory or by a config file.
-
-For config driven imports, the import files are specified using a `dataDownloadUrl` field.
-
-This is a repeated field, in that the value should be an array of download URLs. The URLs can be web urls (`http://` or `https://`), GCS directories (`gs://`) or local directories.
 
 ### Examples
 
@@ -187,9 +171,12 @@ Local directory:
 
 ## `groupStatVarsByProperty`
 
-If `true`, auto generates a hierarchy of groups based on properties of variables in the dataset. Default is `false`.
+If `true`, requests a hierarchy of StatVarGroups generated from the properties
+of the variables in the dataset. Default is `false`.
 
-> TODO: Add more details.
+The importer does not build the hierarchy itself. It creates the custom root
+StatVarGroup and forwards the request to the ingestion pipeline as
+`generateStatVarGroups` in the handshake record.
 
 ## Hierarchy and Group Customization
 

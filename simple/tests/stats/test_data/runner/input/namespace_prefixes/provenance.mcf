@@ -1,0 +1,8 @@
+Node: dcid:Source1
+typeOf: dcs:Source
+url: "http://source1.com"
+
+Node: dcid:Provenance1
+typeOf: dcs:Provenance
+url: "http://source1.com/provenance1"
+source: dcid:Source1
