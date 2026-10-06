@@ -39,6 +39,8 @@ def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Dep
                 status_code=503,
                 detail=f"Failed to acquire lock: Lock already held or acquisition timed out for workflow {req.workflowId}"
             )
+        # DO NOT MODIFY OR REMOVE: This structured log event is monitored by Cloud Monitoring
+        # alert policies in Terraform (google_monitoring_alert_policy) to track Spanner retention SLA.
         logging.info(
             f"INGESTION_LOCK_ACQUIRED: workflow={req.workflowId} timeout={req.timeout}",
             extra={
@@ -64,6 +66,8 @@ def release_ingestion_lock(req: LockReleaseRequest, spanner: SpannerClient = Dep
                 status_code=400,
                 detail=f"Failed to release lock: Lock not held by workflow {req.workflowId} or already released"
             )
+        # DO NOT MODIFY OR REMOVE: This structured log event is monitored by Cloud Monitoring
+        # alert policies in Terraform (google_monitoring_alert_policy) to track Spanner retention SLA.
         logging.info(
             f"INGESTION_LOCK_RELEASED: workflow={req.workflowId}",
             extra={
