@@ -3,7 +3,6 @@ main:
   steps:
     - init:
         assign:
-          - lock_timeout: 604800 # 7 days
           - wait_period: ${int(default(map.get(args, "wait_period"), default(map.get(args, "waitPeriod"), 300)))}
           - project_id: '${sys.get_env("PROJECT_ID")}'
           - dataflow_job_name: ${"ingestion-job-" + string(int(sys.now()))}
@@ -49,7 +48,6 @@ main:
               type: OIDC
             body:
               workflowId: '${workflow_id}'
-              timeout: ${lock_timeout}
           result: lock_status
         retry:
           predicate: ${http.default_retry_predicate}
