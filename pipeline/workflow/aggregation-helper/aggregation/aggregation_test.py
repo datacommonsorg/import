@@ -433,16 +433,43 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         self.assertTrue(len(query) > 0)
 
 
+def _load_test_query(filename: str) -> str:
+    path = os.path.join(os.path.dirname(__file__), "golden_queries", filename)
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read().strip()
+
+
 class TestEmbeddingGenerator(unittest.TestCase):
     def setUp(self):
         self.mock_executor = MagicMock()
         self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.spanner_project_id = "test-spanner-project"
+        self.mock_executor.project_id = "test-project"
         self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
         self.mock_executor.enable_embeddings = True
         self.mock_executor.bq_dataset_id = "datacommons"
 
+    def test_generate_spanner_query(self):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        spec = EmbeddingSpec(
+            embedding_label="test_embedding",
+            model_name="TestModel",
+            model_endpoint="text-embedding-005",
+            task_type="TEST_TASK",
+            node_types={
+                "StatisticalVariable": ["description"],
+                "Topic": ["description"]
+            },
+            node_filter_type="NoFilter"
+        )
+        query = generator._generate_spanner_query(spec.node_types)
+        expected_query = _load_test_query("generate_spanner_query.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
+
+    @patch.object(EmbeddingGenerator, "_get_latest_lock_timestamp", return_value=None)
+    @patch.object(EmbeddingGenerator, "_stream_spanner_to_bq")
     @patch.object(EmbeddingGenerator, "_delete_existing_embeddings")
-    def test_run_all(self, mock_delete):
+    def test_run_all(self, mock_delete, mock_stream, mock_lock_ts):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -453,7 +480,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 model_name="TestModel",
                 model_endpoint="text-embedding-005",
                 task_type="TEST_TASK",
-                node_types=["StatVar"],
+                node_types={"StatVar": ["description"]},
                 node_filter_type="NoFilter",
             )
         ]
@@ -465,15 +492,14 @@ class TestEmbeddingGenerator(unittest.TestCase):
 
         self.assertEqual(len(jobs), 1)
         mock_delete.assert_called_once()
+        mock_stream.assert_called_once()
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
-        self.assertIn("test-conn", query)
-        self.assertIn("spanner-uri", query)
-        self.assertIn("TestModel", query)
-        self.assertIn("test_embedding", query)
-        self.assertIn("CustomEmbeddingTable", query)
-        self.assertIn("TEST_TASK", query)
+        expected_query = _load_test_query("run_all.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
 
+    @patch.object(EmbeddingGenerator, "_get_latest_lock_timestamp", return_value=None)
+    @patch.object(EmbeddingGenerator, "_stream_spanner_to_bq")
     @patch.object(EmbeddingGenerator, "_delete_existing_embeddings")
     @patch(
         "aggregation.embedding_generator._extract_nl_stat_var",
@@ -482,7 +508,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
             {"dcid": "statVar2", "sentence": "sentence2"},
         ],
     )
-    def test_run_all_nl_stat_var(self, mock_extract, mock_delete):
+    def test_run_all_nl_stat_var(self, mock_extract, mock_delete, mock_stream, mock_lock_ts):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
@@ -493,7 +519,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
                 model_name="TestModel",
                 model_endpoint="text-embedding-005",
                 task_type="TEST_TASK",
-                node_types=["StatVar"],
+                node_types={"StatVar": ["description"]},
                 node_filter_type="NLStatisticalVariable",
             )
         ]
@@ -505,13 +531,14 @@ class TestEmbeddingGenerator(unittest.TestCase):
 
         self.assertEqual(len(jobs), 1)
         mock_delete.assert_called_once()
+        mock_stream.assert_called_once()
         self.mock_executor.execute.assert_called_once()
         query = self.mock_executor.execute.call_args[0][0]
+        expected_query = _load_test_query("run_all_nl_stat_var.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
         job_config = self.mock_executor.execute.call_args[1].get(
             "job_config"
         ) or self.mock_executor.execute.call_args.kwargs.get("job_config")
-        self.assertIn("FROM UNNEST(@nl_stat_vars)", query)
-        self.assertIn("INNER JOIN raw_nodes", query)
         self.assertIsNotNone(job_config)
         struct_params = [
             p.values for p in job_config.query_parameters if p.name == "nl_stat_vars"
@@ -528,14 +555,57 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("sentence1", sentences)
         self.assertIn("sentence2", sentences)
 
+    @patch.object(EmbeddingGenerator, "_get_latest_lock_timestamp", return_value=None)
+    @patch.object(EmbeddingGenerator, "_stream_spanner_to_bq")
+    @patch.object(EmbeddingGenerator, "_get_observation_entity_types", return_value=["City", "PrivateSchool"])
+    @patch.object(EmbeddingGenerator, "_delete_existing_embeddings")
+    def test_run_all_entity_types(self, mock_delete, mock_get_types, mock_stream, mock_lock_ts):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        specs = [
+            EmbeddingSpec(
+                embedding_label="entity_type_embedding",
+                model_name="TestModel",
+                model_endpoint="text-embedding-005",
+                task_type="TEST_TASK",
+                node_types={"Class": ["description"]},
+                node_filter_type="EntityTypes",
+            )
+        ]
+        jobs = generator.run_all(
+            EmbeddingGenerationConfig(
+                specs=specs, embedding_table="CustomEmbeddingTable"
+            )
+        )
+
+        self.assertEqual(len(jobs), 1)
+        mock_delete.assert_called_once()
+        mock_stream.assert_called_once()
+        mock_get_types.assert_called_once()
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        expected_query = _load_test_query("run_all_entity_types.sql")
+        self.assertEqual(query.strip(), expected_query.strip())
+        job_config = self.mock_executor.execute.call_args[1].get(
+            "job_config"
+        ) or self.mock_executor.execute.call_args.kwargs.get("job_config")
+        self.assertIn("WHERE subject_id IN UNNEST(@entity_types)", query)
+        self.assertIsNotNone(job_config)
+        entity_types_param = [
+            p.values for p in job_config.query_parameters if p.name == "entity_types"
+        ][0]
+        self.assertEqual(entity_types_param, ["City", "PrivateSchool"])
+
     @patch.object(EmbeddingGenerator, "spanner_database")
     def test_delete_existing_embeddings(self, mock_db):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
         mock_snapshot = MagicMock()
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
-        mock_snapshot.execute_sql.side_effect = [
-            [(None,)],  # IngestionLock query
-            [("dcid/1",), ("dcid/2",)],  # Node query
+        mock_snapshot.execute_sql.return_value = [
+            ("dcid/1",),
+            ("dcid/2",),
         ]
         mock_db.execute_partitioned_dml.return_value = 2
 
@@ -544,7 +614,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
             model_name="TestModel",
             model_endpoint="text-embedding-005",
             task_type="TEST_TASK",
-            node_types=["StatVar"],
+            node_types={"StatVar": ["description"]},
             node_filter_type="NoFilter",
         )
         deleted = generator._delete_existing_embeddings(
@@ -552,6 +622,58 @@ class TestEmbeddingGenerator(unittest.TestCase):
         )
         self.assertEqual(deleted, 2)
         mock_db.execute_partitioned_dml.assert_called_once()
+
+    @patch.object(EmbeddingGenerator, "_get_observation_entity_types", return_value=["City", "PrivateSchool"])
+    @patch.object(EmbeddingGenerator, "spanner_database")
+    def test_delete_existing_embeddings_entity_types(self, mock_db, mock_get_types):
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = [
+            ("City",),
+            ("PrivateSchool",),
+        ]
+        mock_db.execute_partitioned_dml.return_value = 2
+
+        spec = EmbeddingSpec(
+            embedding_label="entity_type_embedding",
+            model_name="TestModel",
+            model_endpoint="text-embedding-005",
+            task_type="TEST_TASK",
+            node_types={"Class": ["description"]},
+            node_filter_type="EntityTypes",
+        )
+        deleted = generator._delete_existing_embeddings(
+            spec, embedding_table="NodeEmbedding"
+        )
+        self.assertEqual(deleted, 2)
+        mock_get_types.assert_called_once()
+        node_call = mock_snapshot.execute_sql.call_args_list[0]
+        self.assertIn("n.subject_id IN UNNEST(@entity_types)", node_call[0][0])
+        self.assertEqual(node_call[1]["params"]["entity_types"], ["City", "PrivateSchool"])
+
+    @patch.object(EmbeddingGenerator, "spanner_database")
+    def test_get_observation_entity_types(self, mock_db):
+        from aggregation.embedding_generator import _PLACE_TYPE_ORDER
+
+        generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = [
+            ("City",),
+            ("CustomEntityType",),
+        ]
+
+        types = generator._get_observation_entity_types()
+        expected = sorted(set(_PLACE_TYPE_ORDER) | {"City", "CustomEntityType"})
+        self.assertEqual(types, expected)
+        self.assertIn("CustomEntityType", types)
+        self.assertIn("Place", types)
+        mock_snapshot.execute_sql.assert_called_once()
+        sql_query = mock_snapshot.execute_sql.call_args[0][0]
+        self.assertIn("WITH all_type_table AS", sql_query)
+        self.assertIn("Edge@{FORCE_INDEX=InEdge}", sql_query)
+        self.assertIn("TimeSeries@{FORCE_INDEX=TimeSeriesByEntity1}", sql_query)
 
 
 class TestStatVarGroupGenerator(unittest.TestCase):
