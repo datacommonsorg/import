@@ -515,5 +515,46 @@ class TestMain(unittest.TestCase):
             data = response.json()
             self.assertEqual(data['status'], 'SKIPPED')
 
+    def test_get_import_version_success(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_version_history.return_value = [
+            "gs://bucket/path/v1/*/*.mcf"
+        ]
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/imports/version", params={"importName": "foo:bar:imp1"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertEqual(data["importName"], "foo:bar:imp1")
+        self.assertEqual(data["version"], "gs://bucket/path/v1/*/*.mcf")
+        self.assertEqual(data["latestVersion"], "gs://bucket/path/v1/*/*.mcf")
+        mock_spanner_client.get_import_version_history.assert_called_once_with(
+            "imp1", limit=1, status="SUCCESS"
+        )
+
+    def test_get_import_version_not_found(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_version_history.return_value = []
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/imports/version", params={"importName": "imp1"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertEqual(data["importName"], "imp1")
+        self.assertIsNone(data["version"])
+        self.assertIsNone(data["latestVersion"])
+        self.assertIn("No successful version found", data["message"])
+
+    def test_get_import_version_missing_import_name(self):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/imports/version")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["detail"], "importName must be provided.")
+
 if __name__ == '__main__':
     unittest.main()
+

@@ -10,6 +10,7 @@ This directory contains utility and operations scripts for the Data Commons impo
 | :--- | :--- |
 | **[`run_ingestion.sh`](run_ingestion.sh)** | Triggers the Cloud Spanner ingestion workflow for an import via `ingestion-helper` (supports `--dry-run`). |
 | **[`update_lock.sh`](update_lock.sh)** | Releases or force-acquires the global Spanner ingestion lock for a workflow execution. |
+| **[`get_version.sh`](get_version.sh)** | Fetches the last `SUCCESS` version for a given import via `ingestion-helper`. |
 
 ---
 
@@ -25,7 +26,7 @@ Triggers the `spanner-ingestion-workflow` for an import through the `ingestion-h
 
 ### Arguments
 
-- **`importName`** *(required)*: The full import name including script path prefix (e.g. `scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test`). Only the part after `:` is sent.
+- **`importName`** *(required)*: The import name (e.g. `USFed_ConstantMaturityRates_Test` or `scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test`). If a `:` prefix is present, only the part after `:` is sent.
 - **`env`** *(required)*: Target environment (`staging` or `prod`).
 - **`latestVersion`** *(required)*: Full GCS path (with wildcard) to the graph files to ingest (e.g. `'gs://datcom-prod-imports/scripts/us_fed/treasury_constant_maturity_rates/USFed_ConstantMaturityRates_Test/2025_12_17T02_30_27_233484_08_00/**/*.mcf*'`).
 - **`--dry-run`** *(optional)*: The helper resolves the import list and returns it without starting the workflow (`status: SKIPPED`).
@@ -34,7 +35,7 @@ Triggers the `spanner-ingestion-workflow` for an import through the `ingestion-h
 
 ```bash
 ./pipeline/scripts/run_ingestion.sh \
-  scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test \
+  USFed_ConstantMaturityRates_Test \
   staging \
   'gs://datcom-prod-imports/scripts/us_fed/treasury_constant_maturity_rates/USFed_ConstantMaturityRates_Test/2025_12_17T02_30_27_233484_08_00/**/*.mcf*' \
   --dry-run
@@ -78,4 +79,29 @@ Updates the global Spanner ingestion lock (`IngestionLock`) through the `ingesti
 
 # Hand the lock to a waiting rerun execution.
 ./pipeline/scripts/update_lock.sh acquire 12345678-1234-1234-1234-123456789abc prod
+```
+
+---
+
+## `get_version.sh`
+
+Fetches the last `SUCCESS` version for an import from Spanner via the `ingestion-helper` service (`GET /imports/version`).
+
+### Syntax
+
+```bash
+./pipeline/scripts/get_version.sh <importName> <env>
+```
+
+### Arguments
+
+- **`importName`** *(required)*: The import name (e.g. `USFed_ConstantMaturityRates_Test` or `scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test`).
+- **`env`** *(required)*: Target environment (`staging` or `prod`).
+
+### Example
+
+```bash
+./pipeline/scripts/get_version.sh \
+  USFed_ConstantMaturityRates_Test \
+  staging
 ```

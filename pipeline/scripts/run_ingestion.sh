@@ -11,7 +11,7 @@
 #
 # Example:
 #   ./pipeline/scripts/run_ingestion.sh \
-#     scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test staging \
+#     USFed_ConstantMaturityRates_Test staging \
 #     'gs://datcom-prod-imports/scripts/us_fed/treasury_constant_maturity_rates/USFed_ConstantMaturityRates_Test/2025_12_17T02_30_27_233484_08_00/**/*.mcf*' \
 #     --dry-run
 

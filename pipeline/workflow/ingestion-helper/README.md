@@ -55,7 +55,7 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
 | `/embeddings/ingest` | `POST` | `EmbeddingIngestionRequest` | `EmbeddingIngestionResponse` | Generates text embeddings for updated Spanner nodes. |
 | `/imports/ingest` | `POST` | `IngestRequest` | `IngestResponse` | Checks Spanner for ready imports and triggers the ingestion workflow if needed. |
 | `/imports/status` | `POST` | `UpdateImportStatusRequest` | `BaseResponse` | Updates status and refresh windows for multiple imports. |
-| `/imports/version` | `POST` | `UpdateImportVersionRequest` | `BaseResponse` | Updates the version and status of multiple imports. |
+| `/imports/version` | `GET` | *Query: `importName`* | `ImportVersionResponse` | Returns the last `SUCCESS` version for a given import name. |
 | `/imports/ingestion-status` | `POST` | `UpdateIngestionStatusRequest` | `BaseResponse` | Records dataset ingestion status and version history upon completion/failure. |
 | `/imports/ingestion-history` | `POST` | `UpdateIngestionHistoryRequest` | `BaseResponse` | Records pipeline execution history, statuses, and Dataflow metrics. |
 | `/cache/clear` | `POST` | *None* | `BaseResponse` | Flushes the Redis cache (if configured). |
