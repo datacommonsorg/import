@@ -21,7 +21,7 @@ from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
 from stats.data import ValidationErrorType
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
@@ -39,10 +39,10 @@ class EntitiesImporter(Importer):
     + Currently this importer does not resolve any entities and all entities are assumed to be pre-resolved into dcids.
     """
 
-  def __init__(self, input_file: File, db: Db, reporter: FileImportReporter,
-               nodes: Nodes) -> None:
+  def __init__(self, input_file: File, graph_writer: GraphWriter,
+               reporter: FileImportReporter, nodes: Nodes) -> None:
     self.input_file = input_file
-    self.db = db
+    self.graph_writer = graph_writer
     self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
@@ -195,4 +195,4 @@ class EntitiesImporter(Importer):
                              prop_object_ids=prop_object_ids)
       triples.extend(row_entity.triples())
 
-    self.db.insert_triples(triples, self.input_file)
+    self.graph_writer.write_triples(triples, self.input_file)

@@ -1,0 +1,61 @@
+{
+    "name": "Spanner graph rollback pipeline",
+    "description": "Spanner time-travel rollback pipeline.",
+    "parameters": [
+        {
+            "name": "importList",
+            "label": "List of imports for rollback (JSON).",
+            "helpText": "List of imports for rollback (JSON).",
+            "paramType": "TEXT"
+        },
+        {
+            "name": "rollbackTimestamp",
+            "label": "Rollback Pre-run Timestamp",
+            "helpText": "Historical pre-run timestamp (T_pre) to restore from (RFC 3339 / ISO 8601).",
+            "paramType": "TEXT",
+            "isOptional": false
+        },
+        {
+            "name": "projectId",
+            "label": "GCP project Id",
+            "helpText": "GCP project Id",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerInstanceId",
+            "label": "Spanner instance Id",
+            "helpText": "Spanner instance Id",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerDatabaseId",
+            "label": "Spanner database Id",
+            "helpText": "Spanner database Id",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "isBaseDc",
+            "label": "Is Base Data Commons",
+            "helpText": "Whether this is a base Data Commons rollback run.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "numShards",
+            "label": "Number of mutation shards",
+            "helpText": "Number of mutation shards",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "emulatorHost",
+            "label": "Spanner Emulator Host",
+            "helpText": "Local Spanner emulator host override (e.g. localhost:15000).",
+            "paramType": "TEXT",
+            "isOptional": true
+        }
+    ]
+}

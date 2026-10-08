@@ -17,7 +17,7 @@ import logging
 from stats.config import Config
 from stats.data import strip_namespace
 from stats.data import ValidationErrorType
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from stats.util import has_namespace_prefix
 from stats.util import is_uri_or_namespace
 
@@ -30,9 +30,9 @@ class MetadataValidator:
   2. Any defined provenance in the MCF files points to a Source.
   """
 
-  def __init__(self, config: Config, db: Db) -> None:
+  def __init__(self, config: Config, graph_writer: GraphWriter) -> None:
     self.config = config
-    self.db = db
+    self.graph_writer = graph_writer
 
   def validate(self) -> None:
     """Performs all metadata validation checks.
@@ -89,15 +89,15 @@ class MetadataValidator:
     defined_provenances = set()
     provenance_to_source = {}
 
-    if hasattr(self.db, "nodes") and self.db.nodes:
-      for prov_id, prov in self.db.nodes.provenances.items():
+    if hasattr(self.graph_writer, "nodes") and self.graph_writer.nodes:
+      for prov_id, prov in self.graph_writer.nodes.provenances.items():
         clean_prov_id = self._clean_dcid(prov.id)
         defined_provenances.add(clean_prov_id)
         if prov.source_id:
           provenance_to_source[clean_prov_id] = self._clean_dcid(prov.source_id)
 
     all_triples = []
-    db_triples = getattr(self.db, "_triples", {})
+    db_triples = getattr(self.graph_writer, "_triples", {})
     if isinstance(db_triples, dict):
       for triples_list in db_triples.values():
         all_triples.extend(triples_list)

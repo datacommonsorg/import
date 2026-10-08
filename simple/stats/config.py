@@ -20,7 +20,6 @@ from stats.data import AggregationConfig
 from stats.data import EntityType
 from stats.data import EventType
 from stats.data import ImportType
-from stats.data import InputFileFormat
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
@@ -43,7 +42,6 @@ _SOURCES_FIELD = "sources"
 _PROVENANCES_FIELD = "provenances"
 _URL_FIELD = "url"
 _PROVENANCE_FIELD = "provenance"
-_DATABASE_FIELD = "database"
 _EVENT_TYPE_FIELD = "eventType"
 _ID_COLUMN_FIELD = "idColumn"
 _EVENTS_FIELD = "events"
@@ -52,6 +50,8 @@ _AGGREGATION_FIELD = "aggregation"
 _PROPERTIES_FIELD = "properties"
 _DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
 _FORMAT_FIELD = "format"
+# Default and only accepted variable import format
+_VARIABLE_PER_ROW_FORMAT = "variablePerRow"
 _COLUMN_MAPPINGS_FIELD = "columnMappings"
 _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "columnsToResolve"
@@ -77,10 +77,11 @@ class Config:
     self._input_files_config: dict[str, dict] = {}
     input_files = self.data.get(_INPUT_FILES_FIELD, [])
 
-    if isinstance(input_files, list):
-      self._parse_input_files_config(input_files)
-    elif isinstance(input_files, dict):
-      self._parse_legacy_input_files_config(input_files)
+    if not isinstance(input_files, list):
+      raise ValueError(
+          f"'{_INPUT_FILES_FIELD}' must be a list of objects, each with a "
+          f"'pattern' and a 'provenance'. Got: {type(input_files).__name__}")
+    self._parse_input_files_config(input_files)
 
     # If input file paths are specified with wildcards - e.g. "gs://bucket/foo*.csv",
     # this dict maintains a mapping from actual file path to the wildcard key
@@ -95,7 +96,7 @@ class Config:
     self._parse_provenances_and_sources()
 
   def _parse_input_files_config(self, input_files: list) -> None:
-    """Parses the modern list-of-objects format for inputFiles."""
+    """Parses the list-of-objects format for inputFiles."""
     for entry in input_files:
       if not isinstance(entry, dict):
         raise ValueError(
@@ -106,21 +107,21 @@ class Config:
         raise ValueError(
             f"Invalid entry in '{_INPUT_FILES_FIELD}': must specify 'pattern' or 'filename'. Got: {entry}"
         )
+      self._validate_format(key, entry)
       self._input_files_config[key] = entry
 
-  def _parse_legacy_input_files_config(self, input_files: dict) -> None:
-    """Parses the legacy dictionary format for inputFiles.
+  def _validate_format(self, key: str, entry: dict) -> None:
+    """Rejects any `format` other than the one supported CSV layout.
 
-    TODO: Deprecate and completely remove this legacy dictionary format
-    once all test config.json files and legacy custom installations have been
-    migrated to the modern list-of-objects format.
+    `format` is a no-op today because every observations CSV is variable-per-row.
+    It is still validated so that a config carrying a stale value fails loudly
+    instead of having its CSVs silently misread.
     """
-    for key, entry in input_files.items():
-      if not isinstance(entry, dict):
-        raise ValueError(
-            f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
-        )
-      self._input_files_config[key] = entry
+    format_str = entry.get(_FORMAT_FIELD)
+    if format_str and format_str != _VARIABLE_PER_ROW_FORMAT:
+      raise ValueError(
+          f"Unsupported format '{format_str}' for '{key}'. The only supported "
+          f"format is '{_VARIABLE_PER_ROW_FORMAT}', which is also the default.")
 
   def data_download_urls(self) -> list[str]:
     cfg = self.data.get(_DATA_DOWNLOAD_URL_FIELD)
@@ -140,14 +141,6 @@ class Config:
           f"Unsupported import type: {import_type_str} ({input_file.full_path()})"
       )
     return ImportType(import_type_str)
-
-  def format(self, input_file: File) -> InputFileFormat:
-    format_str = self._per_file_config(input_file).get(_FORMAT_FIELD)
-    if not format_str:
-      return InputFileFormat.VARIABLE_PER_ROW
-    if format_str not in iter(InputFileFormat):
-      raise ValueError(f"Unsupported format: {format_str} ({input_file})")
-    return InputFileFormat(format_str)
 
   def column_mappings(self, input_file: File) -> dict[str, str]:
     return self._per_file_config(input_file).get(_COLUMN_MAPPINGS_FIELD, {})
@@ -212,9 +205,6 @@ class Config:
 
   def observation_properties(self, input_file: File) -> dict[str, str]:
     return self._per_file_config(input_file).get(_OBSERVATION_PROPERTIES, {})
-
-  def database(self) -> dict:
-    return self.data.get(_DATABASE_FIELD)
 
   def generate_hierarchy(self) -> bool:
     val = self.data.get(_GROUP_STAT_VARS_BY_PROPERTY)

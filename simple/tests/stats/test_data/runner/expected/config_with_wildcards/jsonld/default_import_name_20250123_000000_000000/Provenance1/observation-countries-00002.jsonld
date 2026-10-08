@@ -1,0 +1,425 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:obs_1de6b79ed3d78a983800dda53605ea41ef3607c6aebc8b13393b106b33593edb",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.19,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AFG"
+            }
+        },
+        {
+            "@id": "dcid:obs_3d400dbef9dfffeac939af1499752e1f9e4a3846bc69c277d730f53086718a0e",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 6,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AFG"
+            }
+        },
+        {
+            "@id": "dcid:obs_af67674467b2304a67bbd3b39a3b551a52d3cb305b8eed2a4f27da8f666f2555",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.21,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/YEM"
+            }
+        },
+        {
+            "@id": "dcid:obs_cd288c1cd1d8035359002369fafd8ced1d62bd9816b36c3270a6d181148f8c59",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 56,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/YEM"
+            }
+        },
+        {
+            "@id": "dcid:obs_f78201b79bd9324ab1edd8890d80d474df7cf287926cec14fdbf4f5a47521cef",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.29,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AGO"
+            }
+        },
+        {
+            "@id": "dcid:obs_538653999b484ddb65aa549f4604cd7045eef28eea891f2eb2210a4dc21a09fe",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 6,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AGO"
+            }
+        },
+        {
+            "@id": "dcid:obs_a87823a11510327a4d83a189bb1fd823c98e5dfe2d1afe7b6eb9eb96b0109489",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.31,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ZMB"
+            }
+        },
+        {
+            "@id": "dcid:obs_d2b440516c599044b975fd6dd24a80c6475f9a0580c46c654b0827afb52d20ec",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 34,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ZMB"
+            }
+        },
+        {
+            "@id": "dcid:obs_4139e6d71920954853034a1ce26d4540a50f3579e72f47897355b7c4b85a69d9",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.37,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ZWE"
+            }
+        },
+        {
+            "@id": "dcid:obs_2682fd6f9e40557998f1ed6e549d0439fac2afdb307d36d792e6c244d562ea06",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 76,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ZWE"
+            }
+        },
+        {
+            "@id": "dcid:obs_ae4a30495331b9a00124f707cc9cbe0b65882a5f257a5a2c9d2c8b4f0b3a027c",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.5,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ALB"
+            }
+        },
+        {
+            "@id": "dcid:obs_0d83c31c6010c3209883cafe3847d86adfa0997fd6574ff2421493dcf681a33a",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 34,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ALB"
+            }
+        },
+        {
+            "@id": "dcid:obs_0548d0a90603f3670a8940229ea046a2f5d7f1cb17b81c62d795c7dd9de1722e",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.5,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:wikidataId/Q22062741"
+            }
+        },
+        {
+            "@id": "dcid:obs_5a6740c64e9cdcf1ba23738cbcd27c95e0a8d4e63135320818b1e06c3c2ef77c",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 97,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:wikidataId/Q22062741"
+            }
+        },
+        {
+            "@id": "dcid:obs_c7e5ce9eb8e7a98948cf362551561c724c6cc6bcdb356ce5247f78275a753794",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.52,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/DZA"
+            }
+        },
+        {
+            "@id": "dcid:obs_2230b8c9c246743c495fc691365139faa3f8c054f1d77cf38805a904f6d830cb",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 92,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/DZA"
+            }
+        },
+        {
+            "@id": "dcid:obs_7bd083a3bfd20d3221cc633cc1ca7b579076ca69ac0c9731c258fbce1ec5feaf",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var1",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 0.76,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AND"
+            }
+        },
+        {
+            "@id": "dcid:obs_0b6cc8d7933bd25fd0b2ca996b5780f0bf292684d233df0d9d2d3c3360b91d47",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 9,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AND"
+            }
+        },
+        {
+            "@id": "dcid:obs_d8f188ee626facb7e708c58752d5a6d36e8fd9b6010e7b7c254b86d396e58ea3",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 34,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ASM"
+            }
+        },
+        {
+            "@id": "dcid:obs_d139d3e87a30cea0ed83c662dfa79f168cbc6c535a0b5487246fe2d220d84f34",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 42,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/AIA"
+            }
+        },
+        {
+            "@id": "dcid:obs_77d0f05d433c7c0f804456859fbe6cc6af735dd7fe866ca11649ae6f49eb8f20",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 75,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/WLF"
+            }
+        },
+        {
+            "@id": "dcid:obs_1ebca931af5314f9d32e4529bbd2020ce76014f5affecf39e5902fe6399e3357",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:var2",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2023,
+            "dcid:value": 65,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/ESH"
+            }
+        }
+    ]
+}

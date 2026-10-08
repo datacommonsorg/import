@@ -25,7 +25,7 @@ from stats.data import ObservationProperties
 from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.data import ValidationErrorType
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
@@ -102,17 +102,20 @@ def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
 
 
 class VariablePerRowImporter(Importer):
-  """Imports a single observations input file where variables are specified in rows (aka "SVObs").
-  This is in contrast to the ObservationsImporter where variables are specified in columns.
+  """Imports a single observations CSV, one observation per row ("SVObs").
 
-  Currently this importer only writes observations and no entities.
-  It also does not resolve any entities and expects all entities to be pre-resolved.
+  The variable is named in a column rather than implied by the column heading,
+  and up to three entity dimensions can be mapped via `columnMappings`.
+
+  Entity columns named in `columnsToResolve` are resolved to DCIDs; everything
+  else is expected to arrive pre-resolved. Resolved entities also get a proxy
+  node each, unless `importProxyEntities` is off.
   """
 
-  def __init__(self, input_file: File, db: Db, reporter: FileImportReporter,
-               nodes: Nodes) -> None:
+  def __init__(self, input_file: File, graph_writer: GraphWriter,
+               reporter: FileImportReporter, nodes: Nodes) -> None:
     self.input_file = input_file
-    self.db = db
+    self.graph_writer = graph_writer
     self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
@@ -288,7 +291,7 @@ class VariablePerRowImporter(Importer):
                             self._ensure_entity_column).pipe(
                                 _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
-        self.db.insert_observations(observations_df, self.input_file)
+        self.graph_writer.write_observations(observations_df, self.input_file)
 
   def _apply_column_mappings(self, df: pd.DataFrame) -> pd.DataFrame:
     """Rename physical CSV columns to logical column names."""

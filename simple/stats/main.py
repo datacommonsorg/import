@@ -21,7 +21,6 @@ from freezegun import freeze_time
 import requests.adapters
 from stats import constants
 from stats.logger import initialize_logger
-from stats.runner import RunMode
 from stats.runner import Runner
 
 FLAGS = flags.FLAGS
@@ -33,11 +32,12 @@ flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
 flags.DEFINE_list("imports", [],
                   "The names of the imports (subdirectories under input_dir).")
-flags.DEFINE_enum(
+flags.DEFINE_string(
     "mode",
-    RunMode.CUSTOM_DC,
-    list(RunMode._member_map_.values()),
-    f"Mode of operation",
+    "",
+    "Deprecated and ignored. The importer only runs the dcpbridge workflow "
+    "now. Any value is accepted so existing callers keep working, but it has "
+    "no effect. The flag will be removed once callers stop passing it.",
 )
 flags.DEFINE_bool(
     "freeze_time",
@@ -59,19 +59,42 @@ flags.DEFINE_bool(
 # i.e. packages where time should not be frozen if it leads to errant behavior.
 _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
+# Values --mode used to accept. Passing one of these now does nothing, so we
+# warn rather than silently proceeding as if the caller got what it asked for.
+_REMOVED_RUN_MODES = frozenset(["customdc", "maindc", "schemaupdate"])
+
+
+def _warn_if_mode_is_set():
+  """Logs a deprecation warning for --mode, which is accepted but ignored."""
+  mode = (FLAGS.mode or "").strip()
+  if not mode or mode == "dcpbridge":
+    return
+  if mode in _REMOVED_RUN_MODES:
+    logging.warning(
+        "--mode=%s is no longer supported and is being ignored. This importer "
+        "only runs the dcpbridge workflow. The run will continue as dcpbridge, "
+        "which does NOT do what %s used to do. Remove the flag from the "
+        "caller.", mode, mode)
+  else:
+    logging.warning(
+        "Unrecognized --mode=%s. The flag is deprecated and "
+        "ignored; running the dcpbridge workflow.", mode)
+
 
 def _run():
   # Configure requests adapter default pool size to support parallel GCS uploads
   requests.adapters.DEFAULT_POOLSIZE = 32
 
   initialize_logger()
-  logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
+
+  _warn_if_mode_is_set()
+
+  logging.info("Starting stats data importer job.")
 
   Runner(
       config_file_path=FLAGS.config_file,
       input_dir_path=FLAGS.input_dir,
       output_dir_path=FLAGS.output_dir,
-      mode=FLAGS.mode,
       import_names=FLAGS.imports,
       import_proxy_entities=FLAGS.import_proxy_entities,
   ).run()

@@ -22,7 +22,6 @@ ingestion-helper/
 │   ├── __init__.py            # Exposes SpannerClient & StorageClient
 │   ├── spanner.py             # Cloud Spanner driver & mutations
 │   ├── storage.py             # Google Cloud Storage driver
-│   ├── schema.sql             # Spanner DDL Schema
 │   └── spanner_test.py        # Client-level unit tests
 │
 ├── utils/                     # Layer 2: Core Processing & Calculations
@@ -51,10 +50,8 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
 
 | Endpoint | Method | Request Body | Response Model | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `/database/initialize` | `POST` | *None* | `BaseResponse` | Boots database DDL schemas & proto descriptors. |
-| `/database/seed` | `POST` | *None* | `BaseResponse` | Seeds baseline empty nodes required by schema. |
-| `/database/lock/acquire` | `POST` | `LockAcquireRequest` | `BaseResponse` | Attempts to acquire the global Spanner ingestion lock. |
-| `/database/lock/release` | `POST` | `LockReleaseRequest` | `BaseResponse` | Releases the global ingestion lock. |
+| `/database/lock/acquire` | `POST` | `LockAcquireRequest` | `BaseResponse` | Attempts to acquire the global Spanner ingestion lock. Succeeds if the lock is free or already assigned to `workflowId`; a lock held by another workflow is never treated as stale. Fields: `workflowId`, `force` (take over the lock even if another workflow holds it, default `false`; used for manual handoff via [`update_lock.sh`](../../scripts/update_lock.sh)). |
+| `/database/lock/release` | `POST` | `LockReleaseRequest` | `BaseResponse` | Releases the global ingestion lock if held by `workflowId`. |
 | `/embeddings/ingest` | `POST` | `EmbeddingIngestionRequest` | `EmbeddingIngestionResponse` | Generates text embeddings for updated Spanner nodes. |
 | `/imports/ingest` | `POST` | `IngestRequest` | `IngestResponse` | Checks Spanner for ready imports and triggers the ingestion workflow if needed. |
 | `/imports/status` | `POST` | `UpdateImportStatusRequest` | `BaseResponse` | Updates status and refresh windows for multiple imports. |
@@ -83,7 +80,6 @@ All application configurations are centralized inside **[config.py](config.py)**
 | `ENABLE_EMBEDDINGS` | `bool` | `false` | Enables/disables Vertex AI embedding generation. |
 | `IS_BASE_DC` | `bool` | `true` | Identifies if this is a Base Data Commons instance. |
 | `TIMEOUT` | `int` | `1700` | Query execution timeout in seconds for Spanner transactions. |
-| `EMBEDDING_MODEL_ID` | `str` | `text-embedding-005` | Vertex AI Text Embedding model version. |
 | `REDIS_HOST` | `str` | *None* | Redis host address (triggers cache clears). |
 | `REDIS_PORT` | `str` | `6379` | Redis port. |
 | `GCS_OUTPUT_PREFIX` | `str` | `""` | Optional folder prefix for GCS writes. |

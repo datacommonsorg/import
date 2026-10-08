@@ -18,48 +18,28 @@ from pydantic import BaseModel
 from clients.spanner import SpannerClient
 from dependencies import get_spanner_client
 from routes.models import BaseResponse, ResponseStatus
-from utils.logging import log_start
 
 class LockAcquireRequest(BaseModel):
     workflowId: str
-    timeout: int
+    # Takes over the lock even if held by another workflow. Intended for
+    # manual handoff (pipeline/scripts/update_lock.sh), not the workflow.
+    force: bool = False
 
 class LockReleaseRequest(BaseModel):
     workflowId: str
 
 router = APIRouter(prefix="/database", tags=["database"])
 
-@router.post("/initialize", response_model=BaseResponse)
-@log_start
-def initialize_database(spanner: SpannerClient = Depends(get_spanner_client)):
-    """Initializes the database by creating all required tables and proto bundles."""
-    try:
-        spanner.initialize_database()
-        return BaseResponse(status=ResponseStatus.OK)
-    except Exception as e:
-        logging.error(f"Failed to initialize database: {e}")
-        raise HTTPException(status_code=500, detail=f"Database initialization failed: {str(e)}")
-
-@router.post("/seed", response_model=BaseResponse)
-@log_start
-def seed_database(spanner: SpannerClient = Depends(get_spanner_client)):
-    """Seeds the database with base empty nodes."""
-    try:
-        spanner.seed_database()
-        return BaseResponse(status=ResponseStatus.OK)
-    except Exception as e:
-        logging.error(f"Failed to seed database: {e}")
-        raise HTTPException(status_code=500, detail=f"Database seeding failed: {str(e)}")
 
 @router.post("/lock/acquire", response_model=BaseResponse)
 def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Attempts to acquire the global lock for ingestion."""
     try:
-        status_ok = spanner.acquire_lock(req.workflowId, req.timeout)
+        status_ok = spanner.acquire_lock(req.workflowId, force=req.force)
         if not status_ok:
             raise HTTPException(
                 status_code=503,
-                detail=f"Failed to acquire lock: Lock already held or acquisition timed out for workflow {req.workflowId}"
+                detail=f"Failed to acquire lock: Lock held by another workflow (requested by {req.workflowId})"
             )
         return BaseResponse(status=ResponseStatus.OK)
     except HTTPException:

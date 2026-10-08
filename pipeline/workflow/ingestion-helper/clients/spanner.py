@@ -14,16 +14,11 @@
 
 import logging
 import os
-import posixpath
 from enum import Enum
 from google.cloud import spanner
-from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
-from google.cloud.spanner_admin_database_v1.types import UpdateDatabaseDdlRequest
 from google.cloud.spanner_v1 import Transaction
 from google.cloud.spanner_v1.param_types import STRING, TIMESTAMP, Array, INT64
 from datetime import datetime, timezone
-from jinja2 import Template
-from utils.sql import parse_sql_to_statements
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -49,22 +44,11 @@ class SpannerClient:
     and getting/updating import statuses.
     """
     _LOCK_ID = "global_ingestion_lock"
-    _EMBEDDING_MODEL_PATH = "//aiplatform.googleapis.com/projects/{project}/locations/{location}/publishers/google/models/{model}"
-    _DEFAULT_MODELS = [{
-        "name": "NodeEmbeddingModel",
-        "endpoint": "text-embedding-005"
-    }]
 
     def __init__(self,
                  project_id: str,
                  instance_id: str,
                  database_id: str,
-                 location: str = None,
-                 models: list[dict] = None,
-                 embedding_space: int = 768,
-                 embedding_table: str = "NodeEmbedding",
-                 embedding_index: str = "NodeEmbeddingIndex",
-                 embedding_label_index: str = "NodeEmbeddingLabelIndex",
                  emulator_host: str = None):
         """Initializes a Spanner client and connects to a specific database."""
         client_options = {"api_endpoint": "spanner.googleapis.com"}
@@ -92,42 +76,27 @@ class SpannerClient:
         logging.info(f"Successfully initialized database: {database.name}")
         self.database = database
         self.project_id = project_id
-        self.location = location
-        self.embedding_space = embedding_space
-        self.embedding_table = embedding_table
-        self.embedding_index = embedding_index
-        self.embedding_label_index = embedding_label_index
 
-        if not models:
-            models = self._DEFAULT_MODELS
-
-        self.models = []
-        for model in models:
-            name = model["name"]
-            endpoint = self._get_embeddings_endpoint(model["endpoint"])
-            self.models.append({"name": name, "endpoint": endpoint})
-
-    def _get_embeddings_endpoint(self, model: str) -> str:
-        """Returns the parameterized embedding model endpoint."""
-        return self._EMBEDDING_MODEL_PATH.format(project=self.project_id,
-                                                 location=self.location or
-                                                 "us-central1",
-                                                 model=model)
-
-    def acquire_lock(self, workflow_id: str, timeout: int) -> bool:
+    def acquire_lock(self, workflow_id: str, force: bool = False) -> bool:
         """Attempts to acquire the global ingestion lock.
+
+        The lock is acquired if it is free or already assigned to
+        `workflow_id`. A lock held by another workflow is never treated as
+        stale; release it or hand it over with `force`.
 
         Args:
             workflow_id: The ID of the workflow attempting to acquire the lock.
-            timeout: The duration in seconds after which a lock is considered stale.
+            force: If True, takes over the lock even if it is held by another
+                workflow (e.g. to hand the lock to a rerun after a failure).
 
         Returns:
             True if the lock was acquired, False otherwise.
         """
-        logging.info(f"Attempting to acquire lock for {workflow_id}")
+        logging.info(
+            f"Attempting to acquire lock for {workflow_id} (force={force})")
 
         def _acquire(transaction: Transaction) -> bool:
-            sql = "SELECT LockOwner, AcquiredTimestamp FROM IngestionLock WHERE LockID = @lockId"
+            sql = "SELECT LockOwner FROM IngestionLock WHERE LockID = @lockId"
             params = {"lockId": self._LOCK_ID}
             param_types = {"lockId": STRING}
 
@@ -135,20 +104,24 @@ class SpannerClient:
             results = transaction.execute_sql(sql, params, param_types)
             for row in results:
                 row_found = True
-                current_owner, acquired_at = row[0], row[1]
+                current_owner = row[0]
 
             lock_is_available = False
             if not row_found:
                 lock_is_available = True
             elif current_owner is None:
                 lock_is_available = True
-            else:
-                timeout_threshold = datetime.now(timezone.utc) - acquired_at
-                if timeout_threshold.total_seconds() > timeout:
-                    logging.info(
-                        f"Stale lock found, owned by {current_owner}. Acquiring."
-                    )
-                    lock_is_available = True
+            elif current_owner == workflow_id:
+                # Lock was assigned to this workflow (e.g. manually during a
+                # rerun after a failure).
+                logging.info(
+                    f"Lock already assigned to {workflow_id}. Acquiring.")
+                lock_is_available = True
+            elif force:
+                logging.warning(
+                    f"Force-acquiring lock held by {current_owner} for {workflow_id}."
+                )
+                lock_is_available = True
 
             if lock_is_available:
                 if not row_found:
@@ -328,6 +301,32 @@ class SpannerClient:
             logging.error(f'Error updating ImportStatus table: {e}')
             raise
 
+    def _get_workflow_execution_time(self,
+                                     transaction: Transaction,
+                                     workflow_id: str) -> int | None:
+        """Calculates workflow execution time in seconds from IngestionHistory.CreationTimestamp."""
+        try:
+            res = list(
+                transaction.execute_sql(
+                    "SELECT CreationTimestamp FROM IngestionHistory WHERE WorkflowExecutionID = @workflowId",
+                    params={"workflowId": workflow_id},
+                    param_types={"workflowId": STRING}))
+            if res and res[0][0] is not None:
+                creation_time = res[0][0]
+                if isinstance(creation_time, datetime):
+                    if creation_time.tzinfo is None:
+                        creation_time = creation_time.replace(
+                            tzinfo=timezone.utc)
+                    return max(
+                        0,
+                        int((datetime.now(timezone.utc) -
+                             creation_time).total_seconds()))
+        except Exception as e:
+            logging.warning(
+                f"Could not calculate execution time from CreationTimestamp: {e}"
+            )
+        return None
+
     def update_ingestion_history(self,
                                  workflow_id: str,
                                  status: IngestionState,
@@ -374,20 +373,11 @@ class SpannerClient:
                                          IngestionState.RETRY))
 
                 # Calculate workflow execution time from CreationTimestamp
-                try:
-                    res = list(transaction.execute_sql(
-                        "SELECT CreationTimestamp FROM IngestionHistory WHERE WorkflowExecutionID = @workflowId",
-                        params={"workflowId": workflow_id},
-                        param_types={"workflowId": STRING}
-                    ))
-                    if res and len(res) > 0 and res[0] and len(res[0]) > 0:
-                        creation_time = res[0][0]
-                        if isinstance(creation_time, datetime):
-                            columns.append("ExecutionTime")
-                            values.append(
-                                max(0, int((datetime.now(timezone.utc) - creation_time).total_seconds())))
-                except Exception as e:
-                    logging.warning(f"Could not calculate execution time from CreationTimestamp: {e}")
+                exec_time = self._get_workflow_execution_time(
+                    transaction, workflow_id)
+                if exec_time is not None:
+                    columns.append("ExecutionTime")
+                    values.append(exec_time)
 
             if job_id:
                 columns.append("DataflowJobID")
@@ -450,6 +440,11 @@ class SpannerClient:
                 "NodeCount", "EdgeCount", "ObservationCount",
                 "TimeSeriesCount", "Comment"
             ]
+            exec_time = self._get_workflow_execution_time(
+                transaction, workflow_id)
+            if exec_time is None:
+                exec_time = m.get('execution_time')
+
             version_history_values = []
             for import_json in import_list_json:
                 import_name = import_json.get('importName')
@@ -462,7 +457,7 @@ class SpannerClient:
                 version_history_values.append([
                     short_name, import_json.get('latestVersion'),
                     spanner.COMMIT_TIMESTAMP, workflow_id, status,
-                    m.get('execution_time'),
+                    exec_time,
                     counts.get('node_count') or counts.get('nodeCount'),
                     counts.get('edge_count') or counts.get('edgeCount'),
                     counts.get('obs_count') or counts.get('obsCount'),
@@ -628,167 +623,3 @@ class SpannerClient:
             return False
 
 
-    def initialize_database(self):
-        """Initializes the database by creating all required tables and proto bundles."""
-        logging.info("Initializing database...")
-
-        query = f"""
-            SELECT 'table' as type, table_name as name FROM information_schema.tables WHERE table_schema = ''
-            UNION ALL
-            SELECT 'index' as type, index_name as name FROM information_schema.indexes
-            WHERE table_schema = '' AND table_name IN ('{self.embedding_table}', 'Edge', 'TimeSeries', 'KeyValueStore')
-            UNION ALL
-            SELECT 'model' as type, model_name as name FROM information_schema.models WHERE model_schema = ''
-        """
-
-        existing_tables = []
-        existing_indexes = []
-        existing_models = []
-
-        with self.database.snapshot() as snapshot:
-            results = snapshot.execute_sql(query)
-            for row in results:
-                if len(row) < 2:
-                    logging.warning(f"Invalid row from query: {row}")
-                    continue
-                obj_type = row[0]
-                obj_name = row[1]
-                if obj_type == 'table':
-                    existing_tables.append(obj_name)
-                elif obj_type == 'index':
-                    existing_indexes.append(obj_name)
-                elif obj_type == 'model':
-                    existing_models.append(obj_name)
-
-        logging.info(f"Existing tables: {existing_tables}")
-        logging.info(f"Existing indexes: {existing_indexes}")
-        logging.info(f"Existing models: {existing_models}")
-
-        required_tables = [
-            "Node", "Edge", "TimeSeries", "Observation", "ImportStatus",
-            "IngestionHistory", "ImportVersionHistory", "IngestionLock",
-            "KeyValueStore", self.embedding_table
-        ]
-        required_indexes = [
-            "InEdge",
-            "EdgeByProvenance",
-            "TimeSeriesByProvenance",
-            "TimeSeriesByEntity1",
-            "TimeSeriesByEntity2",
-            "TimeSeriesByEntity3",
-            self.embedding_index,
-            self.embedding_label_index,
-            "KeyValueStoreByProvenance",
-        ]
-        required_models = [m['name'] for m in self.models]
-
-        missing_tables = [
-            t for t in required_tables if t not in existing_tables
-        ]
-        missing_indexes = [
-            i for i in required_indexes if i not in existing_indexes
-        ]
-        missing_models = [
-            m for m in required_models if m not in existing_models
-        ]
-
-        total_required = len(required_tables) + len(required_indexes) + len(
-            required_models)
-        total_missing = len(missing_tables) + len(missing_indexes) + len(
-            missing_models)
-
-        if total_missing == 0:
-            logging.info("Database is properly initialized.")
-            return
-
-        if total_missing < total_required:
-            raise RuntimeError(
-                f"Database inconsistent state. Missing tables: {missing_tables}, missing indexes: {missing_indexes}, missing models: {missing_models}. Please clean up manually."
-            )
-
-        logging.info("Creating all tables and proto bundles...")
-
-        schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
-        logging.info(f"Reading schema from {schema_path}")
-        try:
-            with open(schema_path, 'r') as f:
-                schema_content = f.read()
-
-            schema_content = Template(schema_content).render(
-                models=self.models,
-                embedding_space=self.embedding_space,
-                embedding_table=self.embedding_table,
-                embedding_index=self.embedding_index,
-                embedding_label_index=self.embedding_label_index)
-
-            ddl_statements = parse_sql_to_statements(schema_content)
-        except Exception as e:
-            logging.error(f"Failed to read schema file: {e}")
-            raise
-
-        database_path = self.database.name
-        logging.info(f"Updating DDL for {database_path}")
-
-        try:
-            admin_client = DatabaseAdminClient()
-            request = UpdateDatabaseDdlRequest(database=database_path,
-                                               statements=ddl_statements)
-            operation = admin_client.update_database_ddl(request=request)
-            operation.result()
-            logging.info("Database initialized successfully.")
-        except Exception as e:
-            logging.error(f"Failed to update DDL: {e}")
-            raise
-
-    def seed_database(self):
-        """Seeds the database with base empty nodes."""
-        logging.info("Seeding database with base nodes...")
-
-        def _seed(transaction: Transaction):
-            candidates = {
-                "StatisticalVariable": [
-                    "StatisticalVariable", "StatisticalVariable",
-                    "StatisticalVariable", ["Class"], spanner.COMMIT_TIMESTAMP
-                ],
-                "StatVarGroup": [
-                    "StatVarGroup", "StatVarGroup", "StatVarGroup", ["Class"],
-                    spanner.COMMIT_TIMESTAMP
-                ],
-                "StatVarObservation": [
-                    "StatVarObservation", "StatVarObservation",
-                    "StatVarObservation", ["Class"], spanner.COMMIT_TIMESTAMP
-                ],
-                "Topic": [
-                    "Topic", "Topic", "Topic", ["Class"],
-                    spanner.COMMIT_TIMESTAMP
-                ],
-                "dc/g/Root": [
-                    "dc/g/Root", "Data Commons Variables", "dc/g/Root",
-                    ["StatVarGroup"], spanner.COMMIT_TIMESTAMP
-                ],
-            }
-            subjects = list(candidates.keys())
-            sql = "SELECT subject_id FROM Node WHERE subject_id IN UNNEST(@subjects)"
-            params = {"subjects": subjects}
-            param_types = {"subjects": Array(STRING)}
-            existing = set()
-            for row in transaction.execute_sql(sql, params, param_types):
-                existing.add(row[0])
-
-            values = [
-                candidates[subj] for subj in subjects if subj not in existing
-            ]
-
-            if values:
-                columns = [
-                    "subject_id", "name", "value", "types",
-                    "last_update_timestamp"
-                ]
-                transaction.insert(table="Node", columns=columns, values=values)
-
-        try:
-            self.database.run_in_transaction(_seed)
-            logging.info("Database seeded successfully.")
-        except Exception as e:
-            logging.error(f"Error seeding database: {e}")
-            raise
