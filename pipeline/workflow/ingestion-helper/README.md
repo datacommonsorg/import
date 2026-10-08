@@ -50,7 +50,8 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
 
 | Endpoint | Method | Request Body | Response Model | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `/database/lock/acquire` | `POST` | `LockAcquireRequest` | `BaseResponse` | Attempts to acquire the global Spanner ingestion lock. Succeeds if the lock is free or already assigned to `workflowId`; a lock held by another workflow is never treated as stale. Fields: `workflowId`, `force` (take over the lock even if another workflow holds it, default `false`; used for manual handoff via [`update_lock.sh`](../../scripts/update_lock.sh)). |
+| `/database/lock/status` | `GET` | *None* | `LockStatusResponse` | Returns the current global Spanner ingestion lock status (`locked`, `lockOwner`, `acquiredTimestamp`). |
+| `/database/lock/acquire` | `POST` | `LockAcquireRequest` | `BaseResponse` | Attempts to acquire the global Spanner ingestion lock. Succeeds if the lock is free or already assigned to `workflowId`; a lock held by another workflow is never treated as stale. Fields: `workflowId`, `force` (take over the lock even if another workflow holds it, default `false`; used for manual handoff via [`manage_lock.sh`](../../scripts/manage_lock.sh)). |
 | `/database/lock/release` | `POST` | `LockReleaseRequest` | `BaseResponse` | Releases the global ingestion lock if held by `workflowId`. |
 | `/embeddings/ingest` | `POST` | `EmbeddingIngestionRequest` | `EmbeddingIngestionResponse` | Generates text embeddings for updated Spanner nodes. |
 | `/imports/ingest` | `POST` | `IngestRequest` | `IngestResponse` | Checks Spanner for ready imports and triggers the ingestion workflow if needed. |

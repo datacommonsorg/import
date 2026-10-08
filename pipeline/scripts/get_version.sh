@@ -4,19 +4,19 @@
 # ingestion-helper service (GET /imports/version).
 #
 # Usage:
-#   ./pipeline/scripts/get_version.sh <importName> <env>
+#   ./pipeline/scripts/get_version.sh <env: staging|prod> <importName>
 #
 # Example:
 #   ./pipeline/scripts/get_version.sh \
-#     USFed_ConstantMaturityRates_Test staging
+#     staging USFed_ConstantMaturityRates_Test
 
 set -e
 
-IMPORT_NAME="$(echo "$1" | xargs)"
-ENV="$(echo "$2" | xargs)"
+ENV="$(echo "$1" | xargs)"
+IMPORT_NAME="$(echo "$2" | xargs)"
 
-if [ -z "$IMPORT_NAME" ] || [ -z "$ENV" ]; then
-  echo "Usage: $0 <importName> <env: staging|prod>"
+if [ -z "$ENV" ] || [ -z "$IMPORT_NAME" ]; then
+  echo "Usage: $0 <env: staging|prod> <importName>"
   exit 1
 fi
 

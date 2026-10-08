@@ -517,9 +517,11 @@ class TestMain(unittest.TestCase):
 
     def test_get_import_version_success(self):
         mock_spanner_client = MagicMock()
-        mock_spanner_client.get_import_version_history.return_value = [
-            "gs://bucket/path/v1/*/*.mcf"
-        ]
+        mock_spanner_client.get_import_version_record.return_value = {
+            "version": "gs://bucket/path/v1/*/*.mcf",
+            "workflowId": "wf-123",
+            "updateTimestamp": "2026-10-08T10:00:00+00:00",
+        }
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
         response = client.get("/imports/version", params={"importName": "foo:bar:imp1"})
@@ -528,14 +530,15 @@ class TestMain(unittest.TestCase):
         self.assertEqual(data["status"], "OK")
         self.assertEqual(data["importName"], "foo:bar:imp1")
         self.assertEqual(data["version"], "gs://bucket/path/v1/*/*.mcf")
-        self.assertEqual(data["latestVersion"], "gs://bucket/path/v1/*/*.mcf")
-        mock_spanner_client.get_import_version_history.assert_called_once_with(
-            "imp1", limit=1, status="SUCCESS"
+        self.assertEqual(data["workflowId"], "wf-123")
+        self.assertEqual(data["updateTimestamp"], "2026-10-08T10:00:00+00:00")
+        mock_spanner_client.get_import_version_record.assert_called_once_with(
+            "imp1", status="SUCCESS"
         )
 
     def test_get_import_version_not_found(self):
         mock_spanner_client = MagicMock()
-        mock_spanner_client.get_import_version_history.return_value = []
+        mock_spanner_client.get_import_version_record.return_value = None
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
         response = client.get("/imports/version", params={"importName": "imp1"})
@@ -544,8 +547,8 @@ class TestMain(unittest.TestCase):
         self.assertEqual(data["status"], "OK")
         self.assertEqual(data["importName"], "imp1")
         self.assertIsNone(data["version"])
-        self.assertIsNone(data["latestVersion"])
-        self.assertIn("No successful version found", data["message"])
+        self.assertIsNone(data["workflowId"])
+        self.assertIsNone(data["updateTimestamp"])
 
     def test_get_import_version_missing_import_name(self):
         mock_spanner_client = MagicMock()
@@ -554,6 +557,40 @@ class TestMain(unittest.TestCase):
         response = client.get("/imports/version")
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["detail"], "importName must be provided.")
+
+    def test_get_lock_status_locked(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_lock_status.return_value = {
+            "lockOwner": "wf-123",
+            "acquiredTimestamp": "2026-10-08T10:00:00+00:00",
+        }
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/database/lock/status")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertTrue(data["locked"])
+        self.assertEqual(data["lockOwner"], "wf-123")
+        self.assertEqual(data["acquiredTimestamp"], "2026-10-08T10:00:00+00:00")
+        mock_spanner_client.get_lock_status.assert_called_once()
+
+    def test_get_lock_status_unlocked(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_lock_status.return_value = {
+            "lockOwner": None,
+            "acquiredTimestamp": None,
+        }
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/database/lock/status")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertFalse(data["locked"])
+        self.assertIsNone(data["lockOwner"])
+        self.assertIsNone(data["acquiredTimestamp"])
+        mock_spanner_client.get_lock_status.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()

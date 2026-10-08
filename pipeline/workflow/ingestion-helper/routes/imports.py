@@ -78,10 +78,12 @@ class RevertImportResponse(BaseResponse):
     dryRun: bool = False
 
 
-class ImportVersionResponse(BaseResponse):
+class ImportVersionResponse(BaseModel):
+    status: ResponseStatus
     importName: str
     version: Optional[str] = None
-    latestVersion: Optional[str] = None
+    workflowId: Optional[str] = None
+    updateTimestamp: Optional[str] = None
 
 
 router = APIRouter(prefix="/imports", tags=["imports"])
@@ -288,23 +290,20 @@ def get_import_version(
         )
 
     short_name = importName.split(":")[-1]
-    history = spanner.get_import_version_history(
-        short_name, limit=1, status=IngestionState.SUCCESS.value
+    record = spanner.get_import_version_record(
+        short_name, status=IngestionState.SUCCESS.value
     )
-    if not history:
+    if not record:
         return ImportVersionResponse(
             status=ResponseStatus.OK,
-            message=f"No successful version found for import '{importName}'.",
             importName=importName,
-            version=None,
-            latestVersion=None,
         )
 
-    version = history[0]
     return ImportVersionResponse(
         status=ResponseStatus.OK,
         importName=importName,
-        version=version,
-        latestVersion=version,
+        version=record.get("version"),
+        workflowId=record.get("workflowId"),
+        updateTimestamp=record.get("updateTimestamp"),
     )
 
