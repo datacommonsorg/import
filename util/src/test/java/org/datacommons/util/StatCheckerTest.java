@@ -125,7 +125,7 @@ public class StatCheckerTest {
         TestUtil.checkLog(
             lw.getLog(),
             "Sanity_InconsistentSvObsValues",
-            "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/SF', variableMeasured: 'WomenIncome', observationDate: '2020', value1: 1.0E7, value2: 1.0000001E7"));
+            "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/SF', variableMeasured: 'WomenIncome', observationDate: '2020', value1: 10000000.0, value2: 10000001.0"));
 
     // check node that differs only in one property from an existing StatVarObservation node.
     mcf =
