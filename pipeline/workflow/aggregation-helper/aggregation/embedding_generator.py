@@ -28,6 +28,7 @@ from google.cloud import spanner
 from google.cloud import storage
 from pydantic import BaseModel
 from .bq_executor import BigQueryExecutor
+from .common import get_low_priority_request_options
 
 
 @dataclass
@@ -123,7 +124,10 @@ class EmbeddingGenerator:
             lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
             latest_lock_timestamp = None
             with db.snapshot() as snapshot:
-                results = snapshot.execute_sql(lock_sql)
+                results = snapshot.execute_sql(
+                    lock_sql,
+                    request_options=get_low_priority_request_options(),
+                )
                 for row in results:
                     latest_lock_timestamp = row[0]
 
@@ -157,7 +161,12 @@ class EmbeddingGenerator:
 
             subject_ids = []
             with db.snapshot() as snapshot:
-                results = snapshot.execute_sql(node_select_sql, params=params, param_types=param_types)
+                results = snapshot.execute_sql(
+                    node_select_sql,
+                    params=params,
+                    param_types=param_types,
+                    request_options=get_low_priority_request_options(),
+                )
                 subject_ids = [row[0] for row in results]
 
             if not subject_ids:
@@ -189,7 +198,12 @@ class EmbeddingGenerator:
                     "embedding_label": spanner.param_types.STRING,
                     "subject_ids": spanner.param_types.Array(spanner.param_types.STRING)
                 }
-                rows = db.execute_partitioned_dml(delete_sql, params=del_params, param_types=del_param_types)
+                rows = db.execute_partitioned_dml(
+                    delete_sql,
+                    params=del_params,
+                    param_types=del_param_types,
+                    request_options=get_low_priority_request_options(),
+                )
                 total_deleted += rows
 
             logging.info(f"Deleted {total_deleted} existing embedding rows for label '{spec.embedding_label}'.")

@@ -12,8 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from google.cloud.spanner_v1 import RequestOptions
+
 BASE_PROVENANCE_PREFIX = "dc/base/"
 TOPIC_LIST_PROVENANCE = "generated/TopicHierarchyLists"
+
+
+def get_low_priority_request_options() -> RequestOptions:
+    """Returns a fresh Spanner RequestOptions instance with PRIORITY_LOW."""
+    return RequestOptions(priority=RequestOptions.Priority.PRIORITY_LOW)
 
 
 def get_provenance_prefix(is_base_dc: bool) -> str:

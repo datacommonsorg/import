@@ -16,6 +16,7 @@
 
 import unittest
 from unittest.mock import MagicMock, patch
+from google.cloud.spanner_v1 import RequestOptions
 from aggregation.deleter import AggregationDeleter
 
 
@@ -52,6 +53,10 @@ class TestAggregationDeleter(unittest.TestCase):
 
         for c in calls:
             self.assertEqual(c[1]["params"], expected_params)
+            self.assertEqual(
+                c[1]["request_options"].priority,
+                RequestOptions.Priority.PRIORITY_LOW,
+            )
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_aggregated_data_empty(self, mock_spanner_client):
@@ -86,6 +91,10 @@ class TestAggregationDeleter(unittest.TestCase):
         calls = mock_db.execute_partitioned_dml.call_args_list
         for c in calls:
             self.assertEqual(c[1]["params"], expected_params)
+            self.assertEqual(
+                c[1]["request_options"].priority,
+                RequestOptions.Priority.PRIORITY_LOW,
+            )
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_aggregated_data_exception_propagates(self, mock_spanner_client):
@@ -121,6 +130,10 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertIn("'memberOf'", sql)
         self.assertIn("'specializationOf'", sql)
         self.assertEqual(params, {"prefix": "dc/base/generated/"})
+        self.assertEqual(
+            call_args[1]["request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_linked_edges(self, mock_spanner_client):
@@ -139,6 +152,10 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertIn("DELETE FROM Edge", sql)
         self.assertIn("provenance IN UNNEST(@provenances)", sql)
         self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA"]})
+        self.assertEqual(
+            call_args[1]["request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_topic_list_edges_base_dc(self, mock_spanner_client):
@@ -153,6 +170,12 @@ class TestAggregationDeleter(unittest.TestCase):
         deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=True)
         deleter.delete_topic_list_edges()
 
+        # Snapshot query uses PRIORITY_LOW
+        self.assertEqual(
+            mock_snapshot.execute_sql.call_args[1]["request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
+
         # Edge table deletion via partitioned DML
         mock_db.execute_partitioned_dml.assert_called_once()
         edge_call = mock_db.execute_partitioned_dml.call_args
@@ -165,9 +188,17 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertEqual(
             edge_params, {"provenance": "dc/base/generated/TopicHierarchyLists"}
         )
+        self.assertEqual(
+            edge_call[1]["request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
 
         # Node table deletion via KeySet transaction
         mock_db.run_in_transaction.assert_called_once()
+        self.assertEqual(
+            mock_db.run_in_transaction.call_args[1]["commit_request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
         mock_tx = MagicMock()
         mock_db.run_in_transaction.call_args[0][0](mock_tx)
         mock_tx.delete.assert_called_once()
@@ -199,6 +230,10 @@ class TestAggregationDeleter(unittest.TestCase):
         self.assertEqual(edge_params, {"provenance": "generated/TopicHierarchyLists"})
 
         mock_db.run_in_transaction.assert_called_once()
+        self.assertEqual(
+            mock_db.run_in_transaction.call_args[1]["commit_request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
         mock_tx = MagicMock()
         mock_db.run_in_transaction.call_args[0][0](mock_tx)
         mock_tx.delete.assert_called_once()
