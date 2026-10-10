@@ -201,6 +201,31 @@ class SpannerClient:
             logging.error(f'Error releasing lock for {workflow_id}: {e}')
             raise
 
+    def get_lock_status(self) -> dict:
+        """Returns the current global ingestion lock owner and acquired timestamp."""
+        sql = "SELECT LockOwner, AcquiredTimestamp FROM IngestionLock WHERE LockID = @lockId"
+        try:
+            with self.database.snapshot() as snapshot:
+                results = snapshot.execute_sql(
+                    sql,
+                    params={"lockId": self._LOCK_ID},
+                    param_types={"lockId": STRING},
+                )
+                for row in results:
+                    lock_owner, acquired_at = row[0], row[1]
+                    return {
+                        "lockOwner": lock_owner,
+                        "acquiredTimestamp": (
+                            acquired_at.isoformat()
+                            if hasattr(acquired_at, "isoformat")
+                            else acquired_at
+                        ),
+                    }
+            return {"lockOwner": None, "acquiredTimestamp": None}
+        except Exception as e:
+            logging.error(f"Error getting lock status: {e}")
+            raise
+
     def get_import_info(self, import_list: list | None, force_ingestion: bool = False) -> list:
         """Get the details of imports to ingest.
 
@@ -547,6 +572,48 @@ class SpannerClient:
         except Exception as e:
             logging.error(f"Error fetching version history for import '{short_name}': {e}")
             return []
+
+    def get_import_version_record(self,
+                                  import_name: str,
+                                  status: str = "SUCCESS") -> dict | None:
+        """Queries ImportVersionHistory for the latest matching version record."""
+        short_name = import_name.split(':')[-1]
+        sql = """
+            SELECT Version, WorkflowExecutionID, UpdateTimestamp
+            FROM ImportVersionHistory
+            WHERE ImportName = @importName AND Status = @status
+            ORDER BY UpdateTimestamp DESC
+            LIMIT 1
+        """
+        try:
+            with self.database.snapshot() as snapshot:
+                results = snapshot.execute_sql(
+                    sql,
+                    params={
+                        'importName': short_name,
+                        'status': status
+                    },
+                    param_types={
+                        'importName': STRING,
+                        'status': STRING
+                    })
+                for row in results:
+                    version, workflow_id, update_ts = row[0], row[1], row[2]
+                    return {
+                        "version": version,
+                        "workflowId": workflow_id,
+                        "updateTimestamp": (
+                            update_ts.isoformat()
+                            if hasattr(update_ts, "isoformat")
+                            else update_ts
+                        ),
+                    }
+            return None
+        except Exception as e:
+            logging.error(
+                f"Error fetching version record for import '{short_name}': {e}"
+            )
+            return None
 
     def get_import_latest_version(self, import_name: str) -> str | None:
         """Queries ImportStatus for an import's current LatestVersion path."""

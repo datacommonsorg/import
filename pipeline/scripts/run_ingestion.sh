@@ -4,21 +4,21 @@
 # ingestion-helper service (POST /imports/ingest).
 #
 # Usage:
-#   ./pipeline/scripts/run_ingestion.sh <importName> <env> <latestVersion: full GCS path with wildcard> [--dry-run]
+#   ./pipeline/scripts/run_ingestion.sh <env: staging|prod> <importName> <latestVersion: full GCS path with wildcard> [--dry-run]
 #
 # With --dry-run, the helper resolves the import list but does not start the
 # workflow.
 #
 # Example:
 #   ./pipeline/scripts/run_ingestion.sh \
-#     scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test staging \
+#     staging USFed_ConstantMaturityRates_Test \
 #     'gs://datcom-prod-imports/scripts/us_fed/treasury_constant_maturity_rates/USFed_ConstantMaturityRates_Test/2025_12_17T02_30_27_233484_08_00/**/*.mcf*' \
 #     --dry-run
 
 set -e
 
-IMPORT_NAME="$(echo "$1" | xargs)"
-ENV="$(echo "$2" | xargs)"
+ENV="$(echo "$1" | xargs)"
+IMPORT_NAME="$(echo "$2" | xargs)"
 LATEST_VERSION="$(echo "$3" | xargs)"
 DRY_RUN=false
 
@@ -31,8 +31,8 @@ case "$4" in
     ;;
 esac
 
-if [ -z "$IMPORT_NAME" ] || [ -z "$ENV" ] || [ -z "$LATEST_VERSION" ]; then
-  echo "Usage: $0 <importName> <env: staging|prod> <latestVersion: full GCS path with wildcard> [--dry-run]"
+if [ -z "$ENV" ] || [ -z "$IMPORT_NAME" ] || [ -z "$LATEST_VERSION" ]; then
+  echo "Usage: $0 <env: staging|prod> <importName> <latestVersion: full GCS path with wildcard> [--dry-run]"
   exit 1
 fi
 
