@@ -9,7 +9,8 @@ This directory contains utility and operations scripts for the Data Commons impo
 | Script | Description |
 | :--- | :--- |
 | **[`run_ingestion.sh`](run_ingestion.sh)** | Triggers the Cloud Spanner ingestion workflow for an import via `ingestion-helper` (supports `--dry-run`). |
-| **[`update_lock.sh`](update_lock.sh)** | Releases or force-acquires the global Spanner ingestion lock for a workflow execution. |
+| **[`manage_lock.sh`](manage_lock.sh)** | Queries, releases, or force-acquires the global Spanner ingestion lock. |
+| **[`get_version.sh`](get_version.sh)** | Fetches the last `SUCCESS` version for a given import via `ingestion-helper`. |
 
 ---
 
@@ -20,13 +21,13 @@ Triggers the `spanner-ingestion-workflow` for an import through the `ingestion-h
 ### Syntax
 
 ```bash
-./pipeline/scripts/run_ingestion.sh <importName> <env> <latestVersion> [--dry-run]
+./pipeline/scripts/run_ingestion.sh <env> <importName> <latestVersion> [--dry-run]
 ```
 
 ### Arguments
 
-- **`importName`** *(required)*: The full import name including script path prefix (e.g. `scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test`). Only the part after `:` is sent.
 - **`env`** *(required)*: Target environment (`staging` or `prod`).
+- **`importName`** *(required)*: The import name (e.g. `USFed_ConstantMaturityRates_Test` or `scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test`). If a `:` prefix is present, only the part after `:` is sent.
 - **`latestVersion`** *(required)*: Full GCS path (with wildcard) to the graph files to ingest (e.g. `'gs://datcom-prod-imports/scripts/us_fed/treasury_constant_maturity_rates/USFed_ConstantMaturityRates_Test/2025_12_17T02_30_27_233484_08_00/**/*.mcf*'`).
 - **`--dry-run`** *(optional)*: The helper resolves the import list and returns it without starting the workflow (`status: SKIPPED`).
 
@@ -34,8 +35,8 @@ Triggers the `spanner-ingestion-workflow` for an import through the `ingestion-h
 
 ```bash
 ./pipeline/scripts/run_ingestion.sh \
-  scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test \
   staging \
+  USFed_ConstantMaturityRates_Test \
   'gs://datcom-prod-imports/scripts/us_fed/treasury_constant_maturity_rates/USFed_ConstantMaturityRates_Test/2025_12_17T02_30_27_233484_08_00/**/*.mcf*' \
   --dry-run
 ```
@@ -44,26 +45,29 @@ On success without `--dry-run`, the response has `status: SUBMITTED` and the wor
 
 ---
 
-## `update_lock.sh`
+## `manage_lock.sh`
 
-Updates the global Spanner ingestion lock (`IngestionLock`) through the `ingestion-helper` service.
+Queries or updates the global Spanner ingestion lock (`IngestionLock`) through the `ingestion-helper` service.
 
 ### Syntax
 
 ```bash
-./pipeline/scripts/update_lock.sh <release|acquire> <workflowId> <env>
+./pipeline/scripts/manage_lock.sh status <env>
+./pipeline/scripts/manage_lock.sh <release|acquire> <env> <workflowId>
 ```
 
 ### Arguments
 
 - **`mode`** *(required)*:
+  - `status`: Returns the current lock status and owner (`GET /database/lock/status`).
   - `release`: Releases the lock held by `workflowId` (`POST /database/lock/release`). Fails if the lock is not held by that workflow.
   - `acquire`: Force-assigns the lock to `workflowId`, even if another workflow holds it (`POST /database/lock/acquire` with `force: true`).
-- **`workflowId`** *(required)*: The Cloud Workflows execution ID.
 - **`env`** *(required)*: Target environment (`staging` or `prod`).
+- **`workflowId`** *(required for `release` / `acquire`)*: The Cloud Workflows execution ID.
 
 ### When to use
 
+- Use `status` to check which workflow execution currently holds the lock.
 - A cancelled or crashed workflow never reaches its release step, so it keeps the lock. Use `release` to free it.
 - Waiting workflows poll for the lock in no particular order, so after a `release` any of them may grab it. To hand the lock to a specific execution (e.g. a rerun after a failure), use `acquire` with that execution's ID instead; it picks up the lock on its next poll.
 
@@ -73,9 +77,37 @@ Updates the global Spanner ingestion lock (`IngestionLock`) through the `ingesti
 ### Examples
 
 ```bash
+# Check which workflow currently holds the lock.
+./pipeline/scripts/manage_lock.sh status staging
+
 # Free the lock held by a cancelled execution.
-./pipeline/scripts/update_lock.sh release 12345678-1234-1234-1234-123456789abc staging
+./pipeline/scripts/manage_lock.sh release staging 12345678-1234-1234-1234-123456789abc
 
 # Hand the lock to a waiting rerun execution.
-./pipeline/scripts/update_lock.sh acquire 12345678-1234-1234-1234-123456789abc prod
+./pipeline/scripts/manage_lock.sh acquire prod 12345678-1234-1234-1234-123456789abc
+```
+
+---
+
+## `get_version.sh`
+
+Fetches the last `SUCCESS` version for an import from Spanner via the `ingestion-helper` service (`GET /imports/version`).
+
+### Syntax
+
+```bash
+./pipeline/scripts/get_version.sh <env> <importName>
+```
+
+### Arguments
+
+- **`env`** *(required)*: Target environment (`staging` or `prod`).
+- **`importName`** *(required)*: The import name (e.g. `USFed_ConstantMaturityRates_Test` or `scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates_Test`).
+
+### Example
+
+```bash
+./pipeline/scripts/get_version.sh \
+  staging \
+  USFed_ConstantMaturityRates_Test
 ```

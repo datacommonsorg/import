@@ -128,6 +128,40 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(kwargs["params"]["workflowId"], "workflow-123")
 
     @patch('google.cloud.spanner.Client')
+    def test_get_lock_status_held(self, mock_spanner_client):
+        from datetime import datetime, timezone
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        ts = datetime(2026, 10, 8, 10, 0, 0, tzinfo=timezone.utc)
+        mock_snapshot.execute_sql.return_value = [["workflow-123", ts]]
+
+        client = SpannerClient("project", "instance", "database")
+        result = client.get_lock_status()
+        self.assertEqual(result["lockOwner"], "workflow-123")
+        self.assertEqual(result["acquiredTimestamp"], ts.isoformat())
+
+    @patch('google.cloud.spanner.Client')
+    def test_get_lock_status_free(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = [[None, None]]
+
+        client = SpannerClient("project", "instance", "database")
+        result = client.get_lock_status()
+        self.assertIsNone(result["lockOwner"])
+        self.assertIsNone(result["acquiredTimestamp"])
+
+    @patch('google.cloud.spanner.Client')
     def test_revert_import_state(self, mock_spanner_client):
         mock_instance = MagicMock()
         mock_db = MagicMock()
@@ -285,6 +319,46 @@ class TestSpannerClient(unittest.TestCase):
         # When force_ingestion=True, nothing is filtered out
         result_forced = client.get_import_info(import_list, force_ingestion=True)
         self.assertEqual(len(result_forced), 3)
+
+    @patch('google.cloud.spanner.Client')
+    def test_get_import_version_record_found(self, mock_spanner_client):
+        from datetime import datetime, timezone
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        ts = datetime(2026, 10, 8, 10, 0, 0, tzinfo=timezone.utc)
+        mock_snapshot.execute_sql.return_value = [
+            ["gs://bucket/path/v1/*/*.mcf", "wf-123", ts]
+        ]
+
+        client = SpannerClient("project", "instance", "database")
+        record = client.get_import_version_record("scripts/foo:imp1")
+        self.assertEqual(
+            record,
+            {
+                "version": "gs://bucket/path/v1/*/*.mcf",
+                "workflowId": "wf-123",
+                "updateTimestamp": ts.isoformat(),
+            },
+        )
+
+    @patch('google.cloud.spanner.Client')
+    def test_get_import_version_record_not_found(self, mock_spanner_client):
+        mock_instance = MagicMock()
+        mock_db = MagicMock()
+        mock_spanner_client.return_value.instance.return_value = mock_instance
+        mock_instance.database.return_value = mock_db
+
+        mock_snapshot = MagicMock()
+        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
+        mock_snapshot.execute_sql.return_value = []
+
+        client = SpannerClient("project", "instance", "database")
+        self.assertIsNone(client.get_import_version_record("imp1"))
 
 
 if __name__ == '__main__':
