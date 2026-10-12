@@ -191,6 +191,44 @@ class SpannerClient:
             logging.error(f'Error releasing lock for {workflow_id}: {e}')
             raise
 
+    def get_lock_status(self) -> dict:
+        """Retrieves the current status of the global ingestion lock.
+
+        Returns:
+            A dict with keys:
+                - is_locked (bool): Whether the lock is currently held.
+                - lock_owner (str | None): The workflow ID holding the lock, if any.
+                - acquired_timestamp (str | None): ISO formatted UTC timestamp when acquired.
+                - age_seconds (float | None): Seconds since the lock was acquired.
+        """
+        sql = "SELECT LockOwner, AcquiredTimestamp FROM IngestionLock WHERE LockID = @lockId"
+        params = {"lockId": self._LOCK_ID}
+        param_types = {"lockId": STRING}
+
+        try:
+            with self.database.snapshot() as snapshot:
+                results = snapshot.execute_sql(sql, params, param_types)
+                for row in results:
+                    owner, acquired_at = row[0], row[1]
+                    if owner is None or acquired_at is None:
+                        continue
+                    age_seconds = (datetime.now(timezone.utc) - acquired_at).total_seconds()
+                    return {
+                        "is_locked": True,
+                        "lock_owner": owner,
+                        "acquired_timestamp": acquired_at.isoformat(),
+                        "age_seconds": max(0.0, age_seconds),
+                    }
+        except Exception as e:
+            logging.error(f"Error querying lock status: {e}")
+            raise
+
+        return {
+            "is_locked": False,
+            "lock_owner": None,
+            "acquired_timestamp": None,
+            "age_seconds": None,
+        }
     def get_import_info(self, import_list: list | None, force_ingestion: bool = False) -> list:
         """Get the details of imports to ingest.
 

@@ -14,9 +14,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
+
 
 class ResponseStatus(str, Enum):
     OK = "OK"
@@ -36,6 +38,29 @@ class ResponseStatus(str, Enum):
         except ValueError:
             return default or cls.ERROR
 
+
+class LockAlertLevel(str, Enum):
+    OK = "OK"
+    WARNING_50PCT = "WARNING_50PCT"
+    WARNING_90PCT = "WARNING_90PCT"
+    CRITICAL_100PCT = "CRITICAL_100PCT"
+
+
 class BaseResponse(BaseModel):
     status: ResponseStatus = Field(description="The execution status of the request")
     message: Optional[str] = Field(default=None, description="Optional informational message")
+
+
+class LockStatus(BaseModel):
+    is_locked: bool = Field(description="Whether the global ingestion lock is currently held")
+    lock_owner: Optional[str] = Field(default=None, description="Workflow ID currently holding the lock")
+    acquired_at: Optional[datetime] = Field(default=None, description="UTC datetime when the lock was acquired")
+    age_seconds: Optional[float] = Field(default=None, description="Duration in seconds the lock has been held")
+
+
+class LockStatusResponse(BaseModel):
+    is_locked: bool = Field(description="Whether the global ingestion lock is currently held")
+    lock_owner: Optional[str] = Field(default=None, description="Workflow ID currently holding the lock")
+    acquired_timestamp: Optional[str] = Field(default=None, description="ISO-8601 formatted UTC timestamp when acquired")
+    age_seconds: Optional[float] = Field(default=None, description="Duration in seconds the lock has been held")
+    alert_level: LockAlertLevel = Field(default=LockAlertLevel.OK, description="Retention SLA alert level based on Spanner PITR horizon")

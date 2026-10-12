@@ -515,5 +515,51 @@ class TestMain(unittest.TestCase):
             data = response.json()
             self.assertEqual(data['status'], 'SKIPPED')
 
+    def test_get_lock_status_unlocked(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_lock_status.return_value = {
+            'is_locked': False,
+            'lock_owner': None,
+            'acquired_timestamp': None,
+            'age_seconds': None,
+        }
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+        response = client.get('/database/lock/status')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data['is_locked'])
+        self.assertEqual(data['alert_level'], 'OK')
+
+    def test_get_lock_status_alert_thresholds(self):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        with patch.object(config, 'SPANNER_RETENTION_SECONDS', 1000):
+            # Under 50%
+            mock_spanner_client.get_lock_status.return_value = {
+                'is_locked': True,
+                'lock_owner': 'wf-1',
+                'acquired_timestamp': '2026-10-12T00:00:00Z',
+                'age_seconds': 400.0,
+            }
+            res = client.get('/database/lock/status')
+            self.assertEqual(res.json()['alert_level'], 'OK')
+
+            # >= 50%
+            mock_spanner_client.get_lock_status.return_value['age_seconds'] = 550.0
+            res = client.get('/database/lock/status')
+            self.assertEqual(res.json()['alert_level'], 'WARNING_50PCT')
+
+            # >= 90%
+            mock_spanner_client.get_lock_status.return_value['age_seconds'] = 920.0
+            res = client.get('/database/lock/status')
+            self.assertEqual(res.json()['alert_level'], 'WARNING_90PCT')
+
+            # >= 100%
+            mock_spanner_client.get_lock_status.return_value['age_seconds'] = 1050.0
+            res = client.get('/database/lock/status')
+            self.assertEqual(res.json()['alert_level'], 'CRITICAL_100PCT')
+
 if __name__ == '__main__':
+
     unittest.main()
