@@ -17,7 +17,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import dev.failsafe.FailsafeException;
 import java.io.ByteArrayOutputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -193,10 +192,27 @@ public class ApiHelperTest {
     try {
       ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf");
       fail("Expected timeout to propagate after retries");
-    } catch (FailsafeException e) {
-      assertSame(timeout, e.getCause());
+    } catch (HttpTimeoutException e) {
+      assertSame(timeout, e);
     }
     verify(mockHttp, org.mockito.Mockito.times(4)).send(any(), any());
+  }
+
+  @Test
+  public void fetchPropertyValuesPropagatesInterruptionWithoutRetrying() throws Exception {
+    HttpClient mockHttp = mock(HttpClient.class);
+    InterruptedException interruption = new InterruptedException("Interrupted");
+    HttpResponse<String> success = apiResponse(200, "{\"data\":{}}");
+    doThrow(interruption).doReturn(success).when(mockHttp).send(any(), any());
+
+    try {
+      ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf");
+      fail("Expected interruption to propagate without retrying");
+    } catch (InterruptedException e) {
+      assertSame(interruption, e);
+    } finally {
+      Thread.interrupted();
+    }
   }
 
   private static HttpResponse<String> apiResponse(int status, String body) {

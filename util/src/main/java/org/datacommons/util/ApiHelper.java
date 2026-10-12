@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.failsafe.Failsafe;
+import dev.failsafe.FailsafeException;
 import dev.failsafe.RetryPolicy;
 import java.io.IOException;
 import java.net.URI;
@@ -105,6 +106,12 @@ public class ApiHelper {
       return v2Response;
     } catch (Exception e) {
       logFailure(request, requestBody, response, "Request or response parsing failed", e);
+      if (e instanceof FailsafeException && e.getCause() instanceof IOException cause) {
+        throw cause;
+      }
+      if (e instanceof FailsafeException && e.getCause() instanceof InterruptedException cause) {
+        throw cause;
+      }
       throw e;
     }
   }
