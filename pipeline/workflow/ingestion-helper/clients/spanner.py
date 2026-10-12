@@ -77,20 +77,26 @@ class SpannerClient:
         self.database = database
         self.project_id = project_id
 
-    def acquire_lock(self, workflow_id: str, timeout: int) -> bool:
+    def acquire_lock(self, workflow_id: str, force: bool = False) -> bool:
         """Attempts to acquire the global ingestion lock.
+
+        The lock is acquired if it is free or already assigned to
+        `workflow_id`. A lock held by another workflow is never treated as
+        stale; release it or hand it over with `force`.
 
         Args:
             workflow_id: The ID of the workflow attempting to acquire the lock.
-            timeout: The duration in seconds after which a lock is considered stale.
+            force: If True, takes over the lock even if it is held by another
+                workflow (e.g. to hand the lock to a rerun after a failure).
 
         Returns:
             True if the lock was acquired, False otherwise.
         """
-        logging.info(f"Attempting to acquire lock for {workflow_id}")
+        logging.info(
+            f"Attempting to acquire lock for {workflow_id} (force={force})")
 
         def _acquire(transaction: Transaction) -> bool:
-            sql = "SELECT LockOwner, AcquiredTimestamp FROM IngestionLock WHERE LockID = @lockId"
+            sql = "SELECT LockOwner FROM IngestionLock WHERE LockID = @lockId"
             params = {"lockId": self._LOCK_ID}
             param_types = {"lockId": STRING}
 
@@ -98,20 +104,24 @@ class SpannerClient:
             results = transaction.execute_sql(sql, params, param_types)
             for row in results:
                 row_found = True
-                current_owner, acquired_at = row[0], row[1]
+                current_owner = row[0]
 
             lock_is_available = False
             if not row_found:
                 lock_is_available = True
             elif current_owner is None:
                 lock_is_available = True
-            else:
-                timeout_threshold = datetime.now(timezone.utc) - acquired_at
-                if timeout_threshold.total_seconds() > timeout:
-                    logging.info(
-                        f"Stale lock found, owned by {current_owner}. Acquiring."
-                    )
-                    lock_is_available = True
+            elif current_owner == workflow_id:
+                # Lock was assigned to this workflow (e.g. manually during a
+                # rerun after a failure).
+                logging.info(
+                    f"Lock already assigned to {workflow_id}. Acquiring.")
+                lock_is_available = True
+            elif force:
+                logging.warning(
+                    f"Force-acquiring lock held by {current_owner} for {workflow_id}."
+                )
+                lock_is_available = True
 
             if lock_is_available:
                 if not row_found:
@@ -189,6 +199,31 @@ class SpannerClient:
             return self.database.run_in_transaction(_release)
         except Exception as e:
             logging.error(f'Error releasing lock for {workflow_id}: {e}')
+            raise
+
+    def get_lock_status(self) -> dict:
+        """Returns the current global ingestion lock owner and acquired timestamp."""
+        sql = "SELECT LockOwner, AcquiredTimestamp FROM IngestionLock WHERE LockID = @lockId"
+        try:
+            with self.database.snapshot() as snapshot:
+                results = snapshot.execute_sql(
+                    sql,
+                    params={"lockId": self._LOCK_ID},
+                    param_types={"lockId": STRING},
+                )
+                for row in results:
+                    lock_owner, acquired_at = row[0], row[1]
+                    return {
+                        "lockOwner": lock_owner,
+                        "acquiredTimestamp": (
+                            acquired_at.isoformat()
+                            if hasattr(acquired_at, "isoformat")
+                            else acquired_at
+                        ),
+                    }
+            return {"lockOwner": None, "acquiredTimestamp": None}
+        except Exception as e:
+            logging.error(f"Error getting lock status: {e}")
             raise
 
     def get_import_info(self, import_list: list | None, force_ingestion: bool = False) -> list:
@@ -537,6 +572,48 @@ class SpannerClient:
         except Exception as e:
             logging.error(f"Error fetching version history for import '{short_name}': {e}")
             return []
+
+    def get_import_version_record(self,
+                                  import_name: str,
+                                  status: str = "SUCCESS") -> dict | None:
+        """Queries ImportVersionHistory for the latest matching version record."""
+        short_name = import_name.split(':')[-1]
+        sql = """
+            SELECT Version, WorkflowExecutionID, UpdateTimestamp
+            FROM ImportVersionHistory
+            WHERE ImportName = @importName AND Status = @status
+            ORDER BY UpdateTimestamp DESC
+            LIMIT 1
+        """
+        try:
+            with self.database.snapshot() as snapshot:
+                results = snapshot.execute_sql(
+                    sql,
+                    params={
+                        'importName': short_name,
+                        'status': status
+                    },
+                    param_types={
+                        'importName': STRING,
+                        'status': STRING
+                    })
+                for row in results:
+                    version, workflow_id, update_ts = row[0], row[1], row[2]
+                    return {
+                        "version": version,
+                        "workflowId": workflow_id,
+                        "updateTimestamp": (
+                            update_ts.isoformat()
+                            if hasattr(update_ts, "isoformat")
+                            else update_ts
+                        ),
+                    }
+            return None
+        except Exception as e:
+            logging.error(
+                f"Error fetching version record for import '{short_name}': {e}"
+            )
+            return None
 
     def get_import_latest_version(self, import_name: str) -> str | None:
         """Queries ImportStatus for an import's current LatestVersion path."""

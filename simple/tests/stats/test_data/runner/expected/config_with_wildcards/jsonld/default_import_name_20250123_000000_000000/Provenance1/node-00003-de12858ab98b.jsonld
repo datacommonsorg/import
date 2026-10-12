@@ -1,0 +1,14 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:Source1",
+            "@type": "dcid:Source",
+            "dcid:name": "Source1",
+            "dcid:url": "http://source1.com",
+            "dcid:domain": "source1.com"
+        }
+    ]
+}

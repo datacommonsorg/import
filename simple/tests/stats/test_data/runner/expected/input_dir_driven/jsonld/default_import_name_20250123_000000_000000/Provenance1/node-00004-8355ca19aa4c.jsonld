@@ -1,0 +1,42 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:Article",
+            "@type": "dcid:Class",
+            "dcid:name": "Article",
+            "dcid:includedIn": [
+                {
+                    "@id": "dcid:Provenance1"
+                },
+                {
+                    "@id": "dcid:Source1"
+                }
+            ]
+        },
+        {
+            "@id": "dcid:Author",
+            "@type": "dcid:Class",
+            "dcid:name": "Author",
+            "dcid:includedIn": [
+                {
+                    "@id": "dcid:Provenance1"
+                },
+                {
+                    "@id": "dcid:Source1"
+                }
+            ]
+        },
+        {
+            "@id": "dcid:Provenance1",
+            "@type": "dcid:Provenance",
+            "dcid:name": "Provenance1",
+            "dcid:source": {
+                "@id": "dcid:Source1"
+            },
+            "dcid:url": "http://source1.com/provenance1"
+        }
+    ]
+}

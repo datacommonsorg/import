@@ -22,16 +22,15 @@ from unittest.mock import MagicMock
 
 from stats import constants
 from stats.config import Config
-from stats.db import create_and_update_db
-from stats.db import create_sqlite_config
 from stats.events_importer import EventsImporter
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
-from tests.stats.test_util import write_observations
-from tests.stats.test_util import write_triples
+from tests.stats.test_util import RecordingGraphWriter
+from tests.stats.test_util import write_observations_df
+from tests.stats.test_util import write_triples_list
 from util.filesystem import create_store
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -52,37 +51,35 @@ def _test_import(test: unittest.TestCase, test_name: str):
                                                 create_if_missing=False)
     input_config_file = input_store.as_dir().open_file("config.json",
                                                        create_if_missing=False)
-    db_file_name = f"{test_name}.db"
-    db_path = os.path.join(temp_dir, db_file_name)
-    db_file = temp_store.as_dir().open_file(db_file_name)
 
-    output_triples_path = os.path.join(temp_dir, f"{test_name}.triples.db.csv")
+    output_triples_path = os.path.join(temp_dir, f"{test_name}.triples.csv")
     expected_triples_path = os.path.join(_EXPECTED_DIR,
-                                         f"{test_name}.triples.db.csv")
+                                         f"{test_name}.triples.csv")
     output_observations_path = os.path.join(temp_dir,
-                                            f"{test_name}.observations.db.csv")
-    expected_observations_path = os.path.join(
-        _EXPECTED_DIR, f"{test_name}.observations.db.csv")
+                                            f"{test_name}.observations.csv")
+    expected_observations_path = os.path.join(_EXPECTED_DIR,
+                                              f"{test_name}.observations.csv")
 
     config = Config(data=json.loads(input_config_file.read()))
     nodes = Nodes(config)
 
-    db = create_and_update_db(create_sqlite_config(db_file))
+    graph_writer = RecordingGraphWriter()
     debug_resolve_file = temp_store.as_dir().open_file("debug.csv")
     report_file = temp_store.as_dir().open_file("report.json")
     reporter = FileImportReporter(input_file.full_path(),
                                   ImportReporter(report_file))
 
     EventsImporter(input_file=input_file,
-                   db=db,
+                   graph_writer=graph_writer,
                    debug_resolve_file=debug_resolve_file,
                    reporter=reporter,
                    nodes=nodes).do_import()
-    db.insert_triples(nodes.triples())
-    db.commit_and_close()
+    graph_writer.write_triples(nodes.triples())
+    graph_writer.commit_and_close()
 
-    write_triples(db_path, output_triples_path)
-    write_observations(db_path, output_observations_path)
+    write_triples_list(graph_writer.triples, output_triples_path)
+    write_observations_df(graph_writer.observations_df,
+                          output_observations_path)
 
     if is_write_mode():
       shutil.copy(output_triples_path, expected_triples_path)
@@ -107,17 +104,16 @@ class TestEventsImporter(unittest.TestCase):
   def test_column_mappings_semantic(self):
     config = Config(
         data={
-            "inputFiles": {
-                "events.csv": {
-                    "eventType": "CrimeEvent",
-                    "entityType": "Country",
-                    "columnMappings": {
-                        "dcid:location": "My_Location",
-                        "dcid:observationDate": "My_Date",
-                        "dcid:IUCR": "My_IUCR",
-                    },
-                }
-            },
+            "inputFiles": [{
+                "pattern": "events.csv",
+                "eventType": "CrimeEvent",
+                "entityType": "Country",
+                "columnMappings": {
+                    "dcid:location": "My_Location",
+                    "dcid:observationDate": "My_Date",
+                    "dcid:IUCR": "My_IUCR",
+                },
+            }],
             "sources": {
                 "S1": {
                     "url": "http://s1",
@@ -135,7 +131,7 @@ class TestEventsImporter(unittest.TestCase):
         "My_Date,My_Location,My_IUCR\n2023-01-01,country/USA,860\n")
     importer = EventsImporter(
         input_file=mock_input,
-        db=MagicMock(),
+        graph_writer=MagicMock(),
         debug_resolve_file=MagicMock(),
         reporter=MagicMock(),
         nodes=nodes,

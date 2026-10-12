@@ -24,7 +24,7 @@ from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.data import TimePeriod
 from stats.data import Triple
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
@@ -43,10 +43,11 @@ class EventsImporter(Importer):
   """Imports a single events input file.
     """
 
-  def __init__(self, input_file: File, db: Db, debug_resolve_file: File,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
+  def __init__(self, input_file: File, graph_writer: GraphWriter,
+               debug_resolve_file: File, reporter: FileImportReporter,
+               nodes: Nodes) -> None:
     self.input_file = input_file
-    self.db = db
+    self.graph_writer = graph_writer
     self.debug_resolve_file = debug_resolve_file
     self.reporter = reporter
     self.nodes = nodes
@@ -147,7 +148,7 @@ class EventsImporter(Importer):
       sv_dcid = self.nodes.variable(sv_name, self.input_file).id
       aggr_cfg = self.config.aggregation(sv_name)
       observations = self._compute_sv_observations(sv_dcid, aggr_cfg)
-      self.db.insert_observations(observations, self.input_file)
+      self.graph_writer.write_observations(observations, self.input_file)
 
   def _compute_sv_observations(
       self, sv_dcid: str, aggr_cfg: AggregationConfig = AggregationConfig()
@@ -190,7 +191,7 @@ class EventsImporter(Importer):
     for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
       obs_df[col] = strip_namespace_series(obs_df[col])
 
-    # Reorder columns to match database schema
+    # Reorder columns to match the graph writer's expected order
     obs_df = obs_df[constants.OBSERVATION_COLUMNS]
 
     return obs_df
@@ -248,7 +249,7 @@ class EventsImporter(Importer):
                     properties=properties)
       triples.extend(event.triples())
 
-    self.db.insert_triples(triples, self.input_file)
+    self.graph_writer.write_triples(triples, self.input_file)
 
   def _resolve_entities(self) -> None:
     self.df = self.resolve_specified_columns(self.df)

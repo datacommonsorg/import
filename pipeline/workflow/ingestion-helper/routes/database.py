@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from clients.spanner import SpannerClient
@@ -21,23 +22,52 @@ from routes.models import BaseResponse, ResponseStatus
 
 class LockAcquireRequest(BaseModel):
     workflowId: str
-    timeout: int
+    # Takes over the lock even if held by another workflow. Intended for
+    # manual handoff (pipeline/scripts/manage_lock.sh), not the workflow.
+    force: bool = False
 
 class LockReleaseRequest(BaseModel):
     workflowId: str
 
+class LockStatusResponse(BaseModel):
+    status: ResponseStatus
+    locked: bool = False
+    lockOwner: Optional[str] = None
+    acquiredTimestamp: Optional[str] = None
+
 router = APIRouter(prefix="/database", tags=["database"])
+
+
+@router.get("/lock/status", response_model=LockStatusResponse)
+def get_ingestion_lock_status(spanner: SpannerClient = Depends(get_spanner_client)):
+    """Returns the current global ingestion lock status and owner workflow ID."""
+    try:
+        lock_info = spanner.get_lock_status()
+        owner = lock_info.get("lockOwner")
+        acquired_at = lock_info.get("acquiredTimestamp")
+        return LockStatusResponse(
+            status=ResponseStatus.OK,
+            locked=bool(owner),
+            lockOwner=owner,
+            acquiredTimestamp=acquired_at,
+        )
+    except Exception as e:
+        logging.error(f"Error getting lock status: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get lock status due to database error: {str(e)}",
+        )
 
 
 @router.post("/lock/acquire", response_model=BaseResponse)
 def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Attempts to acquire the global lock for ingestion."""
     try:
-        status_ok = spanner.acquire_lock(req.workflowId, req.timeout)
+        status_ok = spanner.acquire_lock(req.workflowId, force=req.force)
         if not status_ok:
             raise HTTPException(
                 status_code=503,
-                detail=f"Failed to acquire lock: Lock already held or acquisition timed out for workflow {req.workflowId}"
+                detail=f"Failed to acquire lock: Lock held by another workflow (requested by {req.workflowId})"
             )
         return BaseResponse(status=ResponseStatus.OK)
     except HTTPException:
@@ -62,3 +92,4 @@ def release_ingestion_lock(req: LockReleaseRequest, spanner: SpannerClient = Dep
     except Exception as e:
         logging.error(f"Error during lock release: {e}")
         raise HTTPException(status_code=500, detail=f"Lock release failed due to database error: {str(e)}")
+

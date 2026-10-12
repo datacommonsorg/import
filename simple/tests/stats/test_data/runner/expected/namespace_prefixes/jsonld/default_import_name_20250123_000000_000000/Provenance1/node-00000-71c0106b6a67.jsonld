@@ -1,0 +1,49 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:sv",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+                "@id": "dcid:value"
+            },
+            "dcid:name": "SV",
+            "dcid:populationType": {
+                "@id": "dcid:sv"
+            },
+            "dcid:statType": {
+                "@id": "dcid:measuredValue"
+            }
+        },
+        {
+            "@id": "dcid:sv_female",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+                "@id": "dcid:value"
+            },
+            "dcid:name": "SV Female",
+            "dcid:populationType": {
+                "@id": "dcid:sv"
+            },
+            "dcid:statType": {
+                "@id": "dcid:measuredValue"
+            }
+        },
+        {
+            "@id": "dcid:sv_male",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+                "@id": "dcid:value"
+            },
+            "dcid:name": "SV Male",
+            "dcid:populationType": {
+                "@id": "dcid:sv"
+            },
+            "dcid:statType": {
+                "@id": "dcid:measuredValue"
+            }
+        }
+    ]
+}
