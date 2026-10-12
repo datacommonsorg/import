@@ -77,7 +77,6 @@ def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Dep
                 status_code=503,
                 detail=f"Failed to acquire lock: Lock held by another workflow (requested by {req.workflowId})"
             )
-        # DO NOT MODIFY OR REMOVE: Structured log event monitored by Cloud Monitoring
         timeout_str = f" timeout={req.timeout}" if req.timeout is not None else ""
         extra_payload = {
             "event": "INGESTION_LOCK_ACQUIRED",
@@ -107,7 +106,6 @@ def release_ingestion_lock(req: LockReleaseRequest, spanner: SpannerClient = Dep
                 status_code=400,
                 detail=f"Failed to release lock: Lock not held by workflow {req.workflowId} or already released"
             )
-        # DO NOT MODIFY OR REMOVE: Structured log event monitored by Cloud Monitoring
         logging.info(
             f"INGESTION_LOCK_RELEASED: workflow={req.workflowId}",
             extra={
@@ -128,22 +126,19 @@ def get_ingestion_lock_status(spanner: SpannerClient = Depends(get_spanner_clien
     """Returns the status of the global ingestion lock and emits structured retention SLA alerts."""
     try:
         lock_status = spanner.get_lock_status()
-        is_locked = lock_status.get("is_locked") or lock_status.get("locked") or False
-        owner = lock_status.get("lock_owner") or lock_status.get("lockOwner")
-        acquired_ts = lock_status.get("acquired_timestamp") or lock_status.get("acquiredTimestamp")
-        age_seconds = lock_status.get("age_seconds")
+        is_locked = lock_status.get("locked", False)
+        owner = lock_status.get("lockOwner")
+        acquired_ts = lock_status.get("acquiredTimestamp")
+        age_seconds = lock_status.get("ageSeconds")
 
         if not is_locked or not owner:
             return LockStatusResponse(
                 status=ResponseStatus.OK,
                 locked=False,
-                is_locked=False,
                 lockOwner=None,
-                lock_owner=None,
                 acquiredTimestamp=None,
-                acquired_timestamp=None,
-                age_seconds=None,
-                alert_level=LockAlertLevel.OK
+                ageSeconds=None,
+                alertLevel=LockAlertLevel.OK
             )
 
         alert_level = LockAlertLevel.OK
@@ -167,13 +162,10 @@ def get_ingestion_lock_status(spanner: SpannerClient = Depends(get_spanner_clien
         return LockStatusResponse(
             status=ResponseStatus.OK,
             locked=True,
-            is_locked=True,
             lockOwner=owner,
-            lock_owner=owner,
             acquiredTimestamp=acquired_ts,
-            acquired_timestamp=acquired_ts,
-            age_seconds=age_seconds,
-            alert_level=alert_level
+            ageSeconds=age_seconds,
+            alertLevel=alert_level
         )
     except Exception as e:
         logging.error(f"Error checking lock status: {e}")

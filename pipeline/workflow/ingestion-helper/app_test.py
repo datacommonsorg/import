@@ -562,12 +562,9 @@ class TestMain(unittest.TestCase):
         mock_spanner_client = MagicMock()
         mock_spanner_client.get_lock_status.return_value = {
             "lockOwner": "wf-123",
-            "lock_owner": "wf-123",
             "locked": True,
-            "is_locked": True,
             "acquiredTimestamp": "2026-10-08T10:00:00+00:00",
-            "acquired_timestamp": "2026-10-08T10:00:00+00:00",
-            "age_seconds": 300.0,
+            "ageSeconds": 300.0,
         }
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -576,22 +573,19 @@ class TestMain(unittest.TestCase):
         data = response.json()
         self.assertEqual(data["status"], "OK")
         self.assertTrue(data["locked"])
-        self.assertTrue(data["is_locked"])
         self.assertEqual(data["lockOwner"], "wf-123")
-        self.assertEqual(data["lock_owner"], "wf-123")
         self.assertEqual(data["acquiredTimestamp"], "2026-10-08T10:00:00+00:00")
+        self.assertEqual(data["ageSeconds"], 300.0)
+        self.assertEqual(data["alertLevel"], "OK")
         mock_spanner_client.get_lock_status.assert_called_once()
 
     def test_get_lock_status_unlocked(self):
         mock_spanner_client = MagicMock()
         mock_spanner_client.get_lock_status.return_value = {
             "lockOwner": None,
-            "lock_owner": None,
             "locked": False,
-            "is_locked": False,
             "acquiredTimestamp": None,
-            "acquired_timestamp": None,
-            "age_seconds": None,
+            "ageSeconds": None,
         }
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -600,10 +594,10 @@ class TestMain(unittest.TestCase):
         data = response.json()
         self.assertEqual(data["status"], "OK")
         self.assertFalse(data["locked"])
-        self.assertFalse(data["is_locked"])
         self.assertIsNone(data["lockOwner"])
         self.assertIsNone(data["acquiredTimestamp"])
-        self.assertEqual(data["alert_level"], "OK")
+        self.assertIsNone(data["ageSeconds"])
+        self.assertEqual(data["alertLevel"], "OK")
         mock_spanner_client.get_lock_status.assert_called_once()
 
     def test_get_lock_status_alert_thresholds(self):
@@ -613,31 +607,28 @@ class TestMain(unittest.TestCase):
         with patch.object(config, 'SPANNER_RETENTION_SECONDS', 1000):
             # Under 50%
             mock_spanner_client.get_lock_status.return_value = {
-                "is_locked": True,
                 "locked": True,
-                "lock_owner": "wf-1",
                 "lockOwner": "wf-1",
-                "acquired_timestamp": "2026-10-12T00:00:00Z",
                 "acquiredTimestamp": "2026-10-12T00:00:00Z",
-                "age_seconds": 400.0,
+                "ageSeconds": 400.0,
             }
             res = client.get("/database/lock/status")
-            self.assertEqual(res.json()["alert_level"], "OK")
+            self.assertEqual(res.json()["alertLevel"], "OK")
 
             # >= 50%
-            mock_spanner_client.get_lock_status.return_value["age_seconds"] = 550.0
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 550.0
             res = client.get("/database/lock/status")
-            self.assertEqual(res.json()["alert_level"], "WARNING_50PCT")
+            self.assertEqual(res.json()["alertLevel"], "WARNING_50PCT")
 
             # >= 90%
-            mock_spanner_client.get_lock_status.return_value["age_seconds"] = 920.0
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 920.0
             res = client.get("/database/lock/status")
-            self.assertEqual(res.json()["alert_level"], "WARNING_90PCT")
+            self.assertEqual(res.json()["alertLevel"], "WARNING_90PCT")
 
             # >= 100%
-            mock_spanner_client.get_lock_status.return_value["age_seconds"] = 1050.0
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 1050.0
             res = client.get("/database/lock/status")
-            self.assertEqual(res.json()["alert_level"], "CRITICAL_100PCT")
+            self.assertEqual(res.json()["alertLevel"], "CRITICAL_100PCT")
 
 if __name__ == '__main__':
     unittest.main()
