@@ -29,6 +29,7 @@ public class ExistenceCheckerTest {
   public void testNode() throws IOException, InterruptedException {
     var mockHttp = Mockito.mock(HttpClient.class);
     var mockResp = Mockito.mock(HttpResponse.class);
+    when(mockResp.statusCode()).thenReturn(200);
     when(mockHttp.send(any(), any())).thenReturn(mockResp);
 
     Debug.Log.Builder lb = Debug.Log.newBuilder();
@@ -75,6 +76,7 @@ public class ExistenceCheckerTest {
   public void testTriple() throws IOException, InterruptedException {
     var mockHttp = Mockito.mock(HttpClient.class);
     var mockResp = Mockito.mock(HttpResponse.class);
+    when(mockResp.statusCode()).thenReturn(200);
     when(mockHttp.send(any(), any())).thenReturn(mockResp);
 
     Debug.Log.Builder lb = Debug.Log.newBuilder();

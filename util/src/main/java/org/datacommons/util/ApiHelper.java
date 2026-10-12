@@ -3,7 +3,6 @@ package org.datacommons.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import java.io.IOException;
@@ -66,8 +65,9 @@ public class ApiHelper {
 
     RetryPolicy<HttpResponse<String>> retryPolicy =
         RetryPolicy.<HttpResponse<String>>builder()
-            // TODO: Retry transient HTTP responses such as 429 and 5xx.
             .handle(IOException.class)
+            .handleResultIf(
+                response -> Set.of(408, 429, 500, 502, 503, 504).contains(response.statusCode()))
             .withMaxRetries(maxRetries)
             // Exponential backoff: 1s, 2s, 4s, 8s, 8s... (doubles each retry, capped at
             // MAX_RETRY_DELAY_SECONDS)
@@ -75,62 +75,57 @@ public class ApiHelper {
                 Duration.ofSeconds(INITIAL_RETRY_DELAY_SECONDS),
                 Duration.ofSeconds(MAX_RETRY_DELAY_SECONDS))
             .onRetry(
-                event -> {
-                  logger.warn(
-                      "API call failed (attempt "
-                          + (event.getAttemptCount() + 1)
-                          + "/"
-                          + (maxRetries + 1)
-                          + "), retrying: "
-                          + event.getLastException().getMessage());
-                })
+                event ->
+                    logger.warn(
+                        "DC API call to {} failed; retrying (attempt {}/{}): {}",
+                        request.uri(),
+                        event.getAttemptCount() + 1,
+                        maxRetries + 1,
+                        event.getLastException() != null
+                            ? event.getLastException().getMessage()
+                            : "HTTP " + event.getLastResult().statusCode()))
             .build();
 
-    var response =
-        Failsafe.with(retryPolicy)
-            .onFailure(
-                event -> {
-                  // This runs once after the final failed attempt.
-                  logger.warn(
-                      "DC API call to {} failed; request body length={} chars: [{}]",
-                      request.uri(),
-                      requestBody.length(),
-                      bodyExcerpt(requestBody),
-                      event.getException());
-                })
-            .get(
-                () -> {
-                  return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                });
-
-    String responseBody = response.body().trim();
-    V2NodeResponse v2Response;
+    HttpResponse<String> response = null;
     try {
-      v2Response = GSON.fromJson(responseBody, V2NodeResponse.class);
-    } catch (JsonParseException e) {
-      logger.warn(
-          "DC API call to {} returned HTTP {} with invalid JSON; request body length={} chars: [{}]; response body length={} chars: [{}]",
-          request.uri(),
-          response.statusCode(),
-          requestBody.length(),
-          bodyExcerpt(requestBody),
-          responseBody.length(),
-          bodyExcerpt(responseBody),
-          e);
+      response =
+          Failsafe.with(retryPolicy)
+              .get(() -> httpClient.send(request, HttpResponse.BodyHandlers.ofString()));
+
+      if (response.statusCode() != 200) {
+        logFailure(request, requestBody, response, "Unexpected HTTP status", null);
+        return null;
+      }
+
+      V2NodeResponse v2Response = GSON.fromJson(response.body().trim(), V2NodeResponse.class);
+      if (v2Response == null || v2Response.data == null) {
+        logFailure(request, requestBody, response, "Missing response data", null);
+        return null;
+      }
+      return v2Response;
+    } catch (Exception e) {
+      logFailure(request, requestBody, response, "Request or response parsing failed", e);
       throw e;
     }
-    if (v2Response == null || v2Response.data == null) {
-      logger.warn(
-          "DC API call to {} returned HTTP {} without data; request body length={} chars: [{}]; response body length={} chars: [{}]",
-          request.uri(),
-          response.statusCode(),
-          requestBody.length(),
-          bodyExcerpt(requestBody),
-          responseBody.length(),
-          bodyExcerpt(responseBody));
-      return null;
-    }
-    return v2Response;
+  }
+
+  private static void logFailure(
+      HttpRequest request,
+      String requestBody,
+      HttpResponse<String> response,
+      String reason,
+      Exception exception) {
+    String responseBody = response == null ? "" : response.body();
+    logger.error(
+        "DC API call to {} failed: {}; HTTP status={}; request body length={} chars: [{}]; response body length={} chars: [{}]",
+        request.uri(),
+        reason,
+        response == null ? "no response" : response.statusCode(),
+        requestBody.length(),
+        bodyExcerpt(requestBody),
+        responseBody.length(),
+        bodyExcerpt(responseBody),
+        exception);
   }
 
   private static String bodyExcerpt(String body) {

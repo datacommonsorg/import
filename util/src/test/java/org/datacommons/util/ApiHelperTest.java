@@ -3,9 +3,12 @@ package org.datacommons.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,10 +17,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import dev.failsafe.FailsafeException;
 import java.io.ByteArrayOutputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -64,6 +69,8 @@ public class ApiHelperTest {
     HttpClient mockHttp = mock(HttpClient.class);
     HttpResponse<String> firstResponse = mock(HttpResponse.class);
     HttpResponse<String> secondResponse = mock(HttpResponse.class);
+    when(firstResponse.statusCode()).thenReturn(200);
+    when(secondResponse.statusCode()).thenReturn(200);
     when(firstResponse.body())
         .thenReturn(
             "{\"data\":{"
@@ -103,6 +110,7 @@ public class ApiHelperTest {
     HttpClient mockHttp = mock(HttpClient.class);
     HttpResponse<String> firstResponse = mock(HttpResponse.class);
     HttpResponse<String> invalidResponse = mock(HttpResponse.class);
+    when(firstResponse.statusCode()).thenReturn(200);
     when(invalidResponse.statusCode()).thenReturn(200);
     when(firstResponse.body())
         .thenReturn(
@@ -126,6 +134,76 @@ public class ApiHelperTest {
     doReturn(malformedResponse).when(mockHttp).send(any(), any());
 
     ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf");
+  }
+
+  @Test
+  public void fetchPropertyValuesRetriesTransientHttpErrors() throws Exception {
+    for (int status : List.of(408, 429, 500, 502, 503, 504)) {
+      HttpClient mockHttp = mock(HttpClient.class);
+      doReturn(apiResponse(status, "<html>Unavailable</html>"), apiResponse(200, "{\"data\":{}}"))
+          .when(mockHttp)
+          .send(any(), any());
+
+      JsonObject result = ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf");
+
+      assertTrue(result.has("nodeA"));
+      verify(mockHttp, org.mockito.Mockito.times(2)).send(any(), any());
+    }
+  }
+
+  @Test
+  public void fetchPropertyValuesStopsAfterFourAttempts() throws Exception {
+    HttpClient mockHttp = mock(HttpClient.class);
+    doReturn(apiResponse(503, "<html>Unavailable</html>")).when(mockHttp).send(any(), any());
+
+    assertNull(ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf"));
+    verify(mockHttp, org.mockito.Mockito.times(4)).send(any(), any());
+  }
+
+  @Test
+  public void fetchPropertyValuesRejectsNonretryableNon200Responses() throws Exception {
+    for (int status : List.of(201, 204, 302, 400, 401, 403, 404, 422, 501, 505)) {
+      HttpClient mockHttp = mock(HttpClient.class);
+      doReturn(apiResponse(status, "{\"data\":{}}")).when(mockHttp).send(any(), any());
+
+      assertNull(ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf"));
+      verify(mockHttp).send(any(), any());
+    }
+  }
+
+  @Test
+  public void fetchPropertyValuesStillRetriesClientTimeouts() throws Exception {
+    HttpClient mockHttp = mock(HttpClient.class);
+    HttpResponse<String> success = apiResponse(200, "{\"data\":{}}");
+    doThrow(new HttpTimeoutException("Timed out"))
+        .doReturn(success)
+        .when(mockHttp)
+        .send(any(), any());
+
+    assertTrue(ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf").has("nodeA"));
+    verify(mockHttp, org.mockito.Mockito.times(2)).send(any(), any());
+  }
+
+  @Test
+  public void fetchPropertyValuesPropagatesTimeoutAfterFourAttempts() throws Exception {
+    HttpClient mockHttp = mock(HttpClient.class);
+    HttpTimeoutException timeout = new HttpTimeoutException("Timed out");
+    doThrow(timeout).when(mockHttp).send(any(), any());
+
+    try {
+      ApiHelper.fetchPropertyValues(mockHttp, List.of("nodeA"), "typeOf");
+      fail("Expected timeout to propagate after retries");
+    } catch (FailsafeException e) {
+      assertSame(timeout, e.getCause());
+    }
+    verify(mockHttp, org.mockito.Mockito.times(4)).send(any(), any());
+  }
+
+  private static HttpResponse<String> apiResponse(int status, String body) {
+    HttpResponse<String> response = mock(HttpResponse.class);
+    when(response.statusCode()).thenReturn(status);
+    when(response.body()).thenReturn(body);
+    return response;
   }
 
   @Test
