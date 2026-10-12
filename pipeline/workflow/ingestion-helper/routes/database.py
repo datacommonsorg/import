@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Tuple
+from typing import Optional, Tuple
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -35,7 +35,10 @@ LOCK_CRIT_100PCT_RATIO: float = 1.00
 
 class LockAcquireRequest(BaseModel):
     workflowId: str
-    timeout: int
+    timeout: Optional[int] = None
+    # Takes over the lock even if held by another workflow. Intended for
+    # manual handoff (pipeline/scripts/manage_lock.sh), not the workflow.
+    force: bool = False
 
 
 class LockReleaseRequest(BaseModel):
@@ -68,20 +71,23 @@ def _evaluate_lock_retention_alert(
 def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Attempts to acquire the global lock for ingestion."""
     try:
-        status_ok = spanner.acquire_lock(req.workflowId, req.timeout)
+        status_ok = spanner.acquire_lock(req.workflowId, force=req.force)
         if not status_ok:
             raise HTTPException(
                 status_code=503,
-                detail=f"Failed to acquire lock: Lock already held or acquisition timed out for workflow {req.workflowId}"
+                detail=f"Failed to acquire lock: Lock held by another workflow (requested by {req.workflowId})"
             )
         # DO NOT MODIFY OR REMOVE: Structured log event monitored by Cloud Monitoring
+        timeout_str = f" timeout={req.timeout}" if req.timeout is not None else ""
+        extra_payload = {
+            "event": "INGESTION_LOCK_ACQUIRED",
+            "workflow_id": req.workflowId,
+        }
+        if req.timeout is not None:
+            extra_payload["timeout"] = req.timeout
         logging.info(
-            f"INGESTION_LOCK_ACQUIRED: workflow={req.workflowId} timeout={req.timeout}",
-            extra={
-                "event": "INGESTION_LOCK_ACQUIRED",
-                "workflow_id": req.workflowId,
-                "timeout": req.timeout,
-            }
+            f"INGESTION_LOCK_ACQUIRED: workflow={req.workflowId}{timeout_str}",
+            extra=extra_payload
         )
         return BaseResponse(status=ResponseStatus.OK)
     except HTTPException:
@@ -122,35 +128,56 @@ def get_ingestion_lock_status(spanner: SpannerClient = Depends(get_spanner_clien
     """Returns the status of the global ingestion lock and emits structured retention SLA alerts."""
     try:
         lock_status = spanner.get_lock_status()
-        if not lock_status["is_locked"]:
-            return LockStatusResponse(is_locked=False, alert_level=LockAlertLevel.OK)
+        is_locked = lock_status.get("is_locked") or lock_status.get("locked") or False
+        owner = lock_status.get("lock_owner") or lock_status.get("lockOwner")
+        acquired_ts = lock_status.get("acquired_timestamp") or lock_status.get("acquiredTimestamp")
+        age_seconds = lock_status.get("age_seconds")
 
-        age_seconds = lock_status["age_seconds"]
-        owner = lock_status["lock_owner"]
-        retention_seconds = config.SPANNER_RETENTION_SECONDS
+        if not is_locked or not owner:
+            return LockStatusResponse(
+                status=ResponseStatus.OK,
+                locked=False,
+                is_locked=False,
+                lockOwner=None,
+                lock_owner=None,
+                acquiredTimestamp=None,
+                acquired_timestamp=None,
+                age_seconds=None,
+                alert_level=LockAlertLevel.OK
+            )
 
-        alert_level, event_name = _evaluate_lock_retention_alert(owner, age_seconds, retention_seconds)
+        alert_level = LockAlertLevel.OK
+        if age_seconds is not None:
+            retention_seconds = config.SPANNER_RETENTION_SECONDS
+            alert_level, event_name = _evaluate_lock_retention_alert(owner, age_seconds, retention_seconds)
 
-        if event_name:
-            log_payload = {
-                "event": event_name,
-                "workflow_id": owner,
-                "age_seconds": age_seconds,
-                "retention_seconds": retention_seconds,
-            }
-            msg = f"{event_name}: workflow={owner} age_seconds={age_seconds:.0f} retention_seconds={retention_seconds}"
-            if alert_level == LockAlertLevel.CRITICAL_100PCT:
-                logging.error(msg, extra=log_payload)
-            else:
-                logging.warning(msg, extra=log_payload)
+            if event_name:
+                log_payload = {
+                    "event": event_name,
+                    "workflow_id": owner,
+                    "age_seconds": age_seconds,
+                    "retention_seconds": retention_seconds,
+                }
+                msg = f"{event_name}: workflow={owner} age_seconds={age_seconds:.0f} retention_seconds={retention_seconds}"
+                if alert_level == LockAlertLevel.CRITICAL_100PCT:
+                    logging.error(msg, extra=log_payload)
+                else:
+                    logging.warning(msg, extra=log_payload)
 
         return LockStatusResponse(
+            status=ResponseStatus.OK,
+            locked=True,
             is_locked=True,
+            lockOwner=owner,
             lock_owner=owner,
-            acquired_timestamp=lock_status["acquired_timestamp"],
+            acquiredTimestamp=acquired_ts,
+            acquired_timestamp=acquired_ts,
             age_seconds=age_seconds,
             alert_level=alert_level
         )
     except Exception as e:
         logging.error(f"Error checking lock status: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to check lock status: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to check lock status due to database error: {str(e)}"
+        )
