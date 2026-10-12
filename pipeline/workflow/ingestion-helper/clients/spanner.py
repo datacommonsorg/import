@@ -202,58 +202,45 @@ class SpannerClient:
             raise
 
     def get_lock_status(self) -> dict:
-        """Retrieves the current status of the global ingestion lock.
-
-        Returns:
-            A dict with keys:
-                - is_locked / locked (bool): Whether the lock is currently held.
-                - lock_owner / lockOwner (str | None): The workflow ID holding the lock, if any.
-                - acquired_timestamp / acquiredTimestamp (str | None): ISO formatted UTC timestamp when acquired.
-                - age_seconds (float | None): Seconds since the lock was acquired.
-        """
+        """Returns the current global ingestion lock owner, timestamp, and age."""
         sql = "SELECT LockOwner, AcquiredTimestamp FROM IngestionLock WHERE LockID = @lockId"
-        params = {"lockId": self._LOCK_ID}
-        param_types = {"lockId": STRING}
-
         try:
             with self.database.snapshot() as snapshot:
-                results = snapshot.execute_sql(sql, params, param_types)
+                results = snapshot.execute_sql(
+                    sql,
+                    params={"lockId": self._LOCK_ID},
+                    param_types={"lockId": STRING},
+                )
                 for row in results:
                     owner, acquired_at = row[0], row[1]
-                    if owner is None or acquired_at is None:
+                    if not owner or not acquired_at:
                         continue
-                    age_seconds = (
-                        (datetime.now(timezone.utc) - acquired_at).total_seconds()
-                        if hasattr(acquired_at, "total_seconds") or isinstance(acquired_at, datetime)
-                        else None
-                    )
+
+                    age_seconds = None
+                    if isinstance(acquired_at, datetime):
+                        age_seconds = max(0.0, (datetime.now(timezone.utc) - acquired_at).total_seconds())
+
                     iso_timestamp = (
                         acquired_at.isoformat()
                         if hasattr(acquired_at, "isoformat")
                         else str(acquired_at)
                     )
                     return {
-                        "is_locked": True,
                         "locked": True,
-                        "lock_owner": owner,
                         "lockOwner": owner,
-                        "acquired_timestamp": iso_timestamp,
                         "acquiredTimestamp": iso_timestamp,
-                        "age_seconds": max(0.0, age_seconds) if age_seconds is not None else None,
+                        "ageSeconds": age_seconds,
                     }
+            return {
+                "locked": False,
+                "lockOwner": None,
+                "acquiredTimestamp": None,
+                "ageSeconds": None,
+            }
         except Exception as e:
-            logging.error(f"Error querying lock status: {e}")
+            logging.error(f"Error getting lock status: {e}")
             raise
 
-        return {
-            "is_locked": False,
-            "locked": False,
-            "lock_owner": None,
-            "lockOwner": None,
-            "acquired_timestamp": None,
-            "acquiredTimestamp": None,
-            "age_seconds": None,
-        }
     def get_import_info(self, import_list: list | None, force_ingestion: bool = False) -> list:
         """Get the details of imports to ingest.
 

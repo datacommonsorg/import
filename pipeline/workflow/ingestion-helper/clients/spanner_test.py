@@ -129,7 +129,7 @@ class TestSpannerClient(unittest.TestCase):
 
     @patch('google.cloud.spanner.Client')
     def test_get_lock_status_held(self, mock_spanner_client):
-        from datetime import datetime, timezone
+        from datetime import datetime, timezone, timedelta
         mock_instance = MagicMock()
         mock_db = MagicMock()
         mock_spanner_client.return_value.instance.return_value = mock_instance
@@ -137,13 +137,15 @@ class TestSpannerClient(unittest.TestCase):
 
         mock_snapshot = MagicMock()
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
-        ts = datetime(2026, 10, 8, 10, 0, 0, tzinfo=timezone.utc)
+        ts = datetime.now(timezone.utc) - timedelta(seconds=120)
         mock_snapshot.execute_sql.return_value = [["workflow-123", ts]]
 
         client = SpannerClient("project", "instance", "database")
         result = client.get_lock_status()
+        self.assertTrue(result["locked"])
         self.assertEqual(result["lockOwner"], "workflow-123")
         self.assertEqual(result["acquiredTimestamp"], ts.isoformat())
+        self.assertGreaterEqual(result["ageSeconds"], 119.0)
 
     @patch('google.cloud.spanner.Client')
     def test_get_lock_status_free(self, mock_spanner_client):
@@ -158,47 +160,10 @@ class TestSpannerClient(unittest.TestCase):
 
         client = SpannerClient("project", "instance", "database")
         result = client.get_lock_status()
+        self.assertFalse(result["locked"])
         self.assertIsNone(result["lockOwner"])
         self.assertIsNone(result["acquiredTimestamp"])
-
-    @patch('google.cloud.spanner.Client')
-    def test_get_lock_status_unlocked(self, mock_spanner_client):
-        mock_instance = MagicMock()
-        mock_db = MagicMock()
-        mock_spanner_client.return_value.instance.return_value = mock_instance
-        mock_instance.database.return_value = mock_db
-
-        mock_snapshot = MagicMock()
-        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
-        mock_snapshot.execute_sql.return_value = [[None, None]]
-
-        client = SpannerClient("project", "instance", "database")
-        status = client.get_lock_status()
-
-        self.assertFalse(status["is_locked"])
-        self.assertIsNone(status["lock_owner"])
-        self.assertIsNone(status["age_seconds"])
-
-    @patch('google.cloud.spanner.Client')
-    def test_get_lock_status_locked(self, mock_spanner_client):
-        from datetime import datetime, timezone, timedelta
-        mock_instance = MagicMock()
-        mock_db = MagicMock()
-        mock_spanner_client.return_value.instance.return_value = mock_instance
-        mock_instance.database.return_value = mock_db
-
-        acquired_time = datetime.now(timezone.utc) - timedelta(seconds=120)
-        mock_snapshot = MagicMock()
-        mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
-        mock_snapshot.execute_sql.return_value = [["wf-test", acquired_time]]
-
-        client = SpannerClient("project", "instance", "database")
-        status = client.get_lock_status()
-
-        self.assertTrue(status["is_locked"])
-        self.assertEqual(status["lock_owner"], "wf-test")
-        self.assertGreaterEqual(status["age_seconds"], 119.0)
-
+        self.assertIsNone(result["ageSeconds"])
     @patch('google.cloud.spanner.Client')
     def test_revert_import_state(self, mock_spanner_client):
         mock_instance = MagicMock()

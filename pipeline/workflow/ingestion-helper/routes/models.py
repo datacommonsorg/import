@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -51,20 +50,10 @@ class BaseResponse(BaseModel):
     message: Optional[str] = Field(default=None, description="Optional informational message")
 
 
-class LockStatus(BaseModel):
-    is_locked: bool = Field(description="Whether the global ingestion lock is currently held")
-    lock_owner: Optional[str] = Field(default=None, description="Workflow ID currently holding the lock")
-    acquired_at: Optional[datetime] = Field(default=None, description="UTC datetime when the lock was acquired")
-    age_seconds: Optional[float] = Field(default=None, description="Duration in seconds the lock has been held")
-
-
 class LockStatusResponse(BaseModel):
     status: ResponseStatus = Field(default=ResponseStatus.OK, description="The execution status of the request")
-    locked: bool = Field(default=False, description="Whether the lock is currently held (upstream schema)")
-    is_locked: bool = Field(default=False, description="Whether the lock is currently held")
-    lockOwner: Optional[str] = Field(default=None, description="Workflow ID holding the lock (upstream schema)")
-    lock_owner: Optional[str] = Field(default=None, description="Workflow ID holding the lock")
-    acquiredTimestamp: Optional[str] = Field(default=None, description="ISO-8601 formatted UTC timestamp (upstream schema)")
-    acquired_timestamp: Optional[str] = Field(default=None, description="ISO-8601 formatted UTC timestamp")
-    age_seconds: Optional[float] = Field(default=None, description="Duration in seconds the lock has been held")
-    alert_level: LockAlertLevel = Field(default=LockAlertLevel.OK, description="Retention SLA alert level based on Spanner PITR horizon")
+    locked: bool = Field(default=False, description="Whether the global ingestion lock is currently held")
+    lockOwner: Optional[str] = Field(default=None, description="Workflow ID currently holding the lock")
+    acquiredTimestamp: Optional[str] = Field(default=None, description="ISO-8601 formatted UTC timestamp when acquired")
+    ageSeconds: Optional[float] = Field(default=None, description="Duration in seconds the lock has been held")
+    alertLevel: LockAlertLevel = Field(default=LockAlertLevel.OK, description="Retention SLA alert level based on Spanner PITR horizon")
