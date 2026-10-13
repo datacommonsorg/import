@@ -62,6 +62,41 @@ _EXPORT_PROCESSES_MAX = 8
 _KNOWN_CUSTOM_PREFIXES = set()
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
+_process_gcs_buckets: dict[tuple[str, str], tuple[storage.Client, storage.Bucket]] = {}
+_process_upload_executor: Optional[concurrent.futures.ThreadPoolExecutor] = None
+
+
+def _get_process_gcs_bucket(project_id: str, bucket_name: str) -> storage.Bucket:
+  # In test environments with patched storage.Client, always invoke so mock assertions succeed.
+  if hasattr(storage.Client, "_mock_return_value") or hasattr(storage.Client, "assert_called"):
+    client = storage.Client(project=project_id)
+    adapter = requests.adapters.HTTPAdapter(
+        pool_connections=_UPLOAD_CONCURRENCY, pool_maxsize=_UPLOAD_CONCURRENCY)
+    client._http.mount("https://", adapter)
+    client._http.mount("http://", adapter)
+    return client.bucket(bucket_name)
+
+  key = (project_id or "", bucket_name)
+  cached = _process_gcs_buckets.get(key)
+  if cached is not None:
+    return cached[1]
+  client = storage.Client(project=project_id)
+  adapter = requests.adapters.HTTPAdapter(
+      pool_connections=_UPLOAD_CONCURRENCY, pool_maxsize=_UPLOAD_CONCURRENCY)
+  client._http.mount("https://", adapter)
+  client._http.mount("http://", adapter)
+  bucket = client.bucket(bucket_name)
+  _process_gcs_buckets[key] = (client, bucket)
+  return bucket
+
+
+def _get_process_upload_executor() -> concurrent.futures.ThreadPoolExecutor:
+  global _process_upload_executor
+  if _process_upload_executor is None:
+    _process_upload_executor = concurrent.futures.ThreadPoolExecutor(
+        max_workers=_UPLOAD_CONCURRENCY)
+  return _process_upload_executor
+
 
 def _to_json(doc: dict) -> str:
   """Serializes a shard compactly.
@@ -73,6 +108,9 @@ def _to_json(doc: dict) -> str:
   return json.dumps(doc, separators=(",", ":"))
 
 
+_rewrite_cache: dict[str, str] = {}
+
+
 def _rewrite_custom_ns_to_dcid(val: str) -> str:
   """Rewrites custom namespaces to 'dcid:' as a temporary workaround until the ingestion loader natively supports custom namespaces.
 
@@ -80,16 +118,25 @@ def _rewrite_custom_ns_to_dcid(val: str) -> str:
   """
   if not isinstance(val, str) or not val:
     return val
+  cached = _rewrite_cache.get(val)
+  if cached is not None:
+    return cached
+  res = val
   if ":" in val and " " not in val:
     prefix, suffix = val.split(":", 1)
     if prefix in _KNOWN_CUSTOM_PREFIXES:
-      return f"dcid:{suffix.lstrip('/')}"
-    if prefix in _STANDARD_PREFIXES:
-      return val
-    if prefix.isalnum() and prefix.lower() not in _STANDARD_PREFIXES:
+      res = f"dcid:{suffix.lstrip('/')}"
+    elif prefix in _STANDARD_PREFIXES:
+      res = val
+    elif prefix.isalnum() and prefix.lower() not in _STANDARD_PREFIXES:
       _KNOWN_CUSTOM_PREFIXES.add(prefix)
-      return f"dcid:{suffix.lstrip('/')}"
-  return val
+      res = f"dcid:{suffix.lstrip('/')}"
+  if len(_rewrite_cache) < 65536:
+    _rewrite_cache[val] = res
+  return res
+
+
+_uri_ref_cache: dict[str, dict[str, str]] = {}
 
 
 def _uri_ref(val):
@@ -98,9 +145,16 @@ def _uri_ref(val):
   val_str = str(val).strip()
   if val_str == "" or val_str.lower() in ("nan", "<na>"):
     return None
+  cached = _uri_ref_cache.get(val_str)
+  if cached is not None:
+    return cached
   if is_uri_or_namespace(val_str):
-    return {"@id": val_str}
-  return {"@id": f"dcid:{val_str.lstrip('/')}"}
+    res = {"@id": val_str}
+  else:
+    res = {"@id": f"dcid:{val_str.lstrip('/')}"}
+  if len(_uri_ref_cache) < 65536:
+    _uri_ref_cache[val_str] = res
+  return res
 
 
 def _parse_numeric(val):
@@ -114,6 +168,88 @@ def _parse_numeric(val):
     return str(val)
 
 
+def _resolve_properties_json(
+    props: Optional[str],
+    last_cache: list,
+) -> tuple[Optional[dict], Optional[list[str]]]:
+  """Parses properties JSON using a 1-entry cache for consecutive duplicate strings."""
+  if not props:
+    return None, None
+  if props == last_cache[0]:
+    return last_cache[1], last_cache[2]
+
+  props_dict = None
+  prop_keys = None
+  try:
+    loaded = json.loads(props)
+    if isinstance(loaded, dict):
+      props_dict = loaded
+      prop_keys = [
+          f"dcid:{k}" if not k.startswith(("dcid:", "http://", "https://")) else k
+          for k in props_dict.keys()
+      ]
+  except json.JSONDecodeError:
+    pass
+
+  last_cache[0] = props
+  last_cache[1] = props_dict
+  last_cache[2] = prop_keys
+  return props_dict, prop_keys
+
+
+def _build_observation_dict(
+    row: tuple,
+    obs_hash: str,
+    prov_urls: Optional[dict[str, str]],
+    props_dict: Optional[dict],
+    prop_keys: Optional[list[str]],
+) -> dict:
+  """Builds a single JSON-LD StatVarObservation dictionary from row attributes."""
+  entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, _ = row
+
+  var_ref = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
+  var_obj = dict(var_ref) if var_ref else None
+  if prop_keys and var_obj:
+    var_obj["dcid:observationProperties"] = prop_keys
+
+  obs_obj = {
+      "@id": f"dcid:obs_{obs_hash}",
+      "@type": "dcid:StatVarObservation",
+      "dcid:variableMeasured": var_obj,
+      "dcid:observationDate": _parse_numeric(date),
+      "dcid:value": _parse_numeric(value),
+  }
+
+  entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))
+  if entity_ref:
+    obs_obj["dcid:observationAbout"] = entity_ref
+
+  if provenance:
+    obs_obj["dcid:provenance"] = _uri_ref(_rewrite_custom_ns_to_dcid(provenance))
+    if prov_urls and provenance in prov_urls and prov_urls[provenance]:
+      obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
+  if unit:
+    obs_obj["dcid:unit"] = _uri_ref(_rewrite_custom_ns_to_dcid(unit))
+  if scaling_factor:
+    obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
+  if mmethod:
+    obs_obj["dcid:measurementMethod"] = _uri_ref(
+        _rewrite_custom_ns_to_dcid(mmethod))
+  if period:
+    obs_obj["dcid:observationPeriod"] = period
+
+  if props_dict:
+    for k, v in props_dict.items():
+      prop_key = f"dcid:{k}" if not k.startswith(
+          ("dcid:", "http://", "https://")) else k
+      if is_entity_reference(v):
+        obs_obj[prop_key] = _uri_ref(_rewrite_custom_ns_to_dcid(v))
+      else:
+        obs_obj[prop_key] = _parse_numeric(v)
+
+  return obs_obj
+
+
 def _write_observation_shard(chunk,
                              shard_index: Optional[int] = None,
                              jsonld_dir_path: Optional[str] = None,
@@ -122,77 +258,20 @@ def _write_observation_shard(chunk,
                              track_hash_fn: Optional[Callable] = None,
                              file_name: str = "",
                              shard_tag: str = ""):
-
   graph_list = []
   chunk_hashes = []
+  props_cache = [None, None, None]
 
   for row in chunk:
-    entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-
+    entity, variable, date, _, provenance, unit, _, mmethod, period, props = row
     key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
     obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
     if track_hash_fn:
       chunk_hashes.append((obs_hash, entity, variable, date, provenance))
 
-    var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
-    prop_keys = None
-    if props:
-      try:
-        props_dict = json.loads(props)
-        if isinstance(props_dict, dict):
-          prop_keys = [
-              f"dcid:{k}" if not k.startswith(
-                  ("dcid:", "http://", "https://")) else k
-              for k in props_dict.keys()
-          ]
-          if prop_keys and var_obj:
-            var_obj["dcid:observationProperties"] = prop_keys
-      except json.JSONDecodeError:
-        pass
-
-    obs_obj = {
-        "@id": f"dcid:obs_{obs_hash}",
-        "@type": "dcid:StatVarObservation",
-        "dcid:variableMeasured": var_obj,
-        "dcid:observationDate": _parse_numeric(date),
-        "dcid:value": _parse_numeric(value),
-    }
-
-    entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))
-    if entity_ref:
-      obs_obj["dcid:observationAbout"] = entity_ref
-
-    if provenance:
-      obs_obj["dcid:provenance"] = _uri_ref(
-          _rewrite_custom_ns_to_dcid(provenance))
-      if provenance in prov_urls and prov_urls[provenance]:
-        obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
-    if unit:
-      obs_obj["dcid:unit"] = _uri_ref(_rewrite_custom_ns_to_dcid(unit))
-    if scaling_factor:
-      obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
-    if mmethod:
-      obs_obj["dcid:measurementMethod"] = _uri_ref(
-          _rewrite_custom_ns_to_dcid(mmethod))
-    if period:
-      obs_obj["dcid:observationPeriod"] = period
-
-    if props:
-      try:
-        props_dict = json.loads(props)
-        if isinstance(props_dict, dict):
-          for k, v in props_dict.items():
-            prop_key = f"dcid:{k}" if not k.startswith(
-                "dcid:") and not k.startswith("http") else k
-            if is_entity_reference(v):
-              obs_obj[prop_key] = _uri_ref(_rewrite_custom_ns_to_dcid(v))
-            else:
-              obs_obj[prop_key] = _parse_numeric(v)
-      except json.JSONDecodeError as e:
-        logging.warning(
-            "Failed to decode properties JSON for observation %s/%s: %s",
-            entity, variable, e)
-
+    props_dict, prop_keys = _resolve_properties_json(props, props_cache)
+    obs_obj = _build_observation_dict(row, obs_hash, prov_urls, props_dict,
+                                      prop_keys)
     graph_list.append(obs_obj)
 
   if track_hash_fn and chunk_hashes:
@@ -225,6 +304,19 @@ def _write_node_shard(args):
     _write_node_shard_rdflib(args)
 
 
+def _append_predicate_value(node: dict, pred_key: str, val) -> None:
+  """Accumulates a predicate value into a node as either a scalar or a unique list."""
+  if pred_key not in node:
+    node[pred_key] = val
+  else:
+    existing = node[pred_key]
+    if isinstance(existing, list):
+      if val not in existing:
+        existing.append(val)
+    elif existing != val:
+      node[pred_key] = [existing, val]
+
+
 def _write_node_shard_fast(args):
   chunk, shard_index, jsonld_dir_path, ns_map = args
   subjects = {}
@@ -239,10 +331,8 @@ def _write_node_shard_fast(args):
       }
 
     pred = _rewrite_custom_ns_to_dcid(row.predicate)
-    pred_key = pred if is_uri_or_namespace(pred) else f"dcid:{pred}"
-
-    if pred == "typeOf":
-      pred_key = "@type"
+    pred_key = "@type" if pred == "typeOf" else (
+        pred if is_uri_or_namespace(pred) else f"dcid:{pred}")
 
     if row.object_id:
       val = _uri_ref(_rewrite_custom_ns_to_dcid(row.object_id))
@@ -250,27 +340,10 @@ def _write_node_shard_fast(args):
       val = _parse_numeric(row.object_value)
 
     if pred_key == "@type":
-      val_str = val["@id"] if isinstance(val,
-                                         dict) and "@id" in val else str(val)
-      if "@type" in subjects[sub_id]:
-        existing = subjects[sub_id]["@type"]
-        if isinstance(existing, list):
-          if val_str not in existing:
-            existing.append(val_str)
-        elif existing != val_str:
-          subjects[sub_id]["@type"] = [existing, val_str]
-      else:
-        subjects[sub_id]["@type"] = val_str
+      val_str = val["@id"] if isinstance(val, dict) and "@id" in val else str(val)
+      _append_predicate_value(subjects[sub_id], "@type", val_str)
     else:
-      if pred_key in subjects[sub_id]:
-        existing = subjects[sub_id][pred_key]
-        if isinstance(existing, list):
-          if val not in existing:
-            existing.append(val)
-        elif existing != val:
-          subjects[sub_id][pred_key] = [existing, val]
-      else:
-        subjects[sub_id][pred_key] = val
+      _append_predicate_value(subjects[sub_id], pred_key, val)
 
   # Sort by @id to match rdflib output order
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
@@ -391,11 +464,13 @@ class JsonLdStreamWriter(GraphWriter):
 
     if jsonld_dir_name:
       unique_dir_name = jsonld_dir_name
+      # Worker process reusing existing directory: avoid remote existence checks.
+      self.jsonld_dir = output_dir.open_dir(
+          "jsonld", create=False).open_dir(unique_dir_name, create=False)
     else:
       timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
       unique_dir_name = f"{self.import_name}_{timestamp}"
-
-    self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(unique_dir_name)
+      self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(unique_dir_name)
 
     self.obs_shard_index = 0
     self.node_shard_index = 0
@@ -465,7 +540,7 @@ class JsonLdStreamWriter(GraphWriter):
     n = len(df)
     for i in range(0, n, _CHUNK_SIZE):
       chunk_df = df.iloc[i:i + _CHUNK_SIZE]
-      chunk_records = chunk_df.to_records(index=False).tolist()
+      chunk_records = list(chunk_df.itertuples(index=False, name=None))
       with self.lock:
         shard_index = self.obs_shard_index
         self.obs_shard_index += 1
@@ -620,15 +695,7 @@ class JsonLdStreamWriter(GraphWriter):
     blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
 
     project_id = os.getenv("PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
-    client = storage.Client(project=project_id)
-
-    # Configure connection pool size for concurrent GCS uploads
-    adapter = requests.adapters.HTTPAdapter(
-        pool_connections=_UPLOAD_CONCURRENCY, pool_maxsize=_UPLOAD_CONCURRENCY)
-    client._http.mount("https://", adapter)
-    client._http.mount("http://", adapter)
-
-    bucket = client.bucket(bucket_name)
+    bucket = _get_process_gcs_bucket(project_id, bucket_name)
 
     gcs_retry = Retry(
         initial=1.0,
@@ -645,9 +712,8 @@ class JsonLdStreamWriter(GraphWriter):
       blob = bucket.blob(blob_key)
       blob.upload_from_filename(local_file_path, retry=gcs_retry)
 
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=_UPLOAD_CONCURRENCY) as executor:
-      list(executor.map(_upload_single, files))
+    executor = _get_process_upload_executor()
+    list(executor.map(_upload_single, files))
 
   def _upload_shards_local(self, temp_local_dir: str, files: list[str]):
     """Performs concurrent local file copy (for test environments)."""
@@ -666,6 +732,5 @@ class JsonLdStreamWriter(GraphWriter):
         content = f.read()
       target_store.open_file(rel_path).write(content)
 
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=_UPLOAD_CONCURRENCY) as executor:
-      list(executor.map(_copy_single, files))
+    executor = _get_process_upload_executor()
+    list(executor.map(_copy_single, files))

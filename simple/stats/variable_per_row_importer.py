@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import json
 import logging
 from typing import Iterable
@@ -38,7 +39,7 @@ from util import dc_client as dc
 
 # Rows per pandas chunk when streaming a CSV. This is also the unit that split
 # imports hand out round-robin: part k of n processes chunks k, k+n, k+2n, ...
-_READ_CHUNK_ROWS = 10000
+_READ_CHUNK_ROWS = 50000
 
 # Columns for standard observation properties.
 # These are optional.
@@ -193,7 +194,6 @@ class VariablePerRowImporter(Importer):
     self.num_chunks = num_chunks
     self.custom_dimensions = []
     self.column_mappings = {}
-    self.df = pd.DataFrame()
     self.entity_columns = set(self.config.entity_columns(self.input_file))
     # Unique entity IDs seen in this CSV.
     # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
@@ -206,7 +206,6 @@ class VariablePerRowImporter(Importer):
       errors = self.validate_headers()
       if errors:
         raise ValueError("\n".join(errors))
-      self._read_csv()
       self._map_columns()
       self._write_observations()
       self._add_entity_nodes()
@@ -215,12 +214,6 @@ class VariablePerRowImporter(Importer):
     except Exception as e:
       self.reporter.report_failure(str(e))
       raise e
-
-  def _read_csv(self) -> None:
-    # Read only the header row to extract column names for validation
-    with self.input_file.open_stream(
-        chunk_size=HEADER_READ_CHUNK_SIZE) as stream:
-      self.df = pd.read_csv(stream, nrows=1)
 
   def validate_headers(self) -> list[FileValidationError]:
     column_mappings, custom_dimensions = self._parse_column_mappings()
@@ -342,32 +335,114 @@ class VariablePerRowImporter(Importer):
           ))
     return errors
 
-  def _write_observations(self) -> None:
-    provenance = self.nodes.provenance(self.input_file).id
-    obs_props = ObservationProperties.new(
-        self.config.observation_properties(self.input_file))
+  def _parse_csv_chunk(self, header_bytes: bytes,
+                       lines: list[bytes]) -> pd.DataFrame:
+    """Parses a slice of CSV lines into a typed DataFrame."""
+    return pd.read_csv(io.BytesIO(header_bytes + b"".join(lines)),
+                       na_values=constants.STANDARD_NA_VALUES,
+                       dtype=str)
 
+  def _iter_chunks_unsplit(self) -> Iterable[pd.DataFrame]:
+    """Streams CSV chunks sequentially when the file is processed by a single worker."""
     with self.input_file.open_stream() as stream:
       reader = pd.read_csv(stream,
                            na_values=constants.STANDARD_NA_VALUES,
                            chunksize=_READ_CHUNK_ROWS,
                            dtype=str)
+      for chunk_df in reader:
+        if not chunk_df.empty:
+          yield chunk_df
 
+  def _iter_chunks_byte_range(self, file_size: int) -> Iterable[pd.DataFrame]:
+    """Streams only the assigned byte range for this split worker directly from GCS/disk."""
+    with self.input_file.open_stream(mode="rb") as stream:
+      if not isinstance(stream, io.BufferedReader) and hasattr(stream, "read"):
+        try:
+          stream = io.BufferedReader(stream, buffer_size=8 * 1024 * 1024)
+        except Exception:
+          pass
+
+      header = stream.readline()
+      start_byte = (file_size * self.chunk_index) // self.num_chunks
+      end_byte = (
+          (file_size * (self.chunk_index + 1)) // self.num_chunks
+          if self.chunk_index < self.num_chunks - 1 else file_size)
+
+      if self.chunk_index == 0:
+        stream.seek(len(header))
+      else:
+        stream.seek(start_byte)
+        stream.readline()  # Skip partial line to align on newline boundary.
+
+      lines = []
+      while True:
+        if stream.tell() >= end_byte:
+          break
+        line = stream.readline()
+        if not line:
+          break
+        lines.append(line)
+        if len(lines) >= _READ_CHUNK_ROWS:
+          chunk_df = self._parse_csv_chunk(header, lines)
+          if not chunk_df.empty:
+            yield chunk_df
+          lines = []
+
+      if lines:
+        chunk_df = self._parse_csv_chunk(header, lines)
+        if not chunk_df.empty:
+          yield chunk_df
+
+  def _iter_chunks_round_robin(self) -> Iterable[pd.DataFrame]:
+    """Fallback: partitions rows round-robin across chunks when byte seeking is unsupported."""
+    with self.input_file.open_stream() as stream:
+      reader = pd.read_csv(stream,
+                           na_values=constants.STANDARD_NA_VALUES,
+                           chunksize=_READ_CHUNK_ROWS,
+                           dtype=str)
       for chunk_number, chunk_df in enumerate(reader):
-        if chunk_number % self.num_chunks != self.chunk_index:
-          continue  # Another part of a split import handles this chunk.
-        if chunk_df.empty:
-          continue
-        observations_df = (self.resolve_specified_columns(chunk_df).pipe(
-            self._apply_column_mappings).pipe(self._track_entity_dcids).pipe(
-                _apply_property_defaults, obs_props).pipe(
-                    self._serialize_custom_dimensions,
-                    obs_props.properties).pipe(_format_numeric_values).pipe(
-                        filter_invalid_observation_values).pipe(
-                            self._ensure_entity_column).pipe(
-                                _strip_namespaces, provenance))
-        observations_df = observations_df[constants.OBSERVATION_COLUMNS]
-        self.graph_writer.write_observations(observations_df, self.input_file)
+        if chunk_number % self.num_chunks == self.chunk_index:
+          if not chunk_df.empty:
+            yield chunk_df
+
+  def _iter_observation_chunks(self) -> Iterable[pd.DataFrame]:
+    """Yields parsed observation DataFrames in chunks, using byte-range seeking when split."""
+    if self.num_chunks <= 1:
+      yield from self._iter_chunks_unsplit()
+      return
+
+    try:
+      file_size = self.input_file.size()
+    except Exception:
+      file_size = 0
+
+    if file_size > 0:
+      try:
+        yield from self._iter_chunks_byte_range(file_size)
+        return
+      except (io.UnsupportedOperation, AttributeError, Exception) as e:
+        logging.warning(
+            "Byte-range streaming failed for %s (%s), falling back to round-robin.",
+            self.input_file.path, e)
+
+    yield from self._iter_chunks_round_robin()
+
+  def _write_observations(self) -> None:
+    provenance = self.nodes.provenance(self.input_file).id
+    obs_props = ObservationProperties.new(
+        self.config.observation_properties(self.input_file))
+
+    for chunk_df in self._iter_observation_chunks():
+      observations_df = (self.resolve_specified_columns(chunk_df).pipe(
+          self._apply_column_mappings).pipe(self._track_entity_dcids).pipe(
+              _apply_property_defaults, obs_props).pipe(
+                  self._serialize_custom_dimensions,
+                  obs_props.properties).pipe(_format_numeric_values).pipe(
+                      filter_invalid_observation_values).pipe(
+                          self._ensure_entity_column).pipe(
+                              _strip_namespaces, provenance))
+      observations_df = observations_df[constants.OBSERVATION_COLUMNS]
+      self.graph_writer.write_observations(observations_df, self.input_file)
 
   def _apply_column_mappings(self, df: pd.DataFrame) -> pd.DataFrame:
     """Rename physical CSV columns to logical column names."""
@@ -400,20 +475,22 @@ class VariablePerRowImporter(Importer):
       df[constants.COLUMN_PROPERTIES] = static_json
       return df
 
-    records = df[custom_cols].to_dict(orient="records")
-    serialized = []
-    for r in records:
-      d = dict(static_props)
-      for col, val in r.items():
-        if pd.notna(val) and val != "":
-          d[col] = strip_namespace(str(val))
-      serialized.append(json.dumps(d) if d else "")
+    unique_tuples = df[custom_cols].drop_duplicates()
+    tuple_to_json = _build_custom_dimension_mapping(custom_cols, unique_tuples,
+                                                    static_props)
 
-    df[constants.COLUMN_PROPERTIES] = serialized
+    if len(custom_cols) == 1:
+      col = custom_cols[0]
+      val_to_json = {k[0]: v for k, v in tuple_to_json.items()}
+      fallback = json.dumps(static_props) if static_props else ""
+      df[constants.COLUMN_PROPERTIES] = df[col].map(val_to_json).fillna(fallback)
+    else:
+      df[constants.COLUMN_PROPERTIES] = [
+          tuple_to_json.get(row, "")
+          for row in df[custom_cols].itertuples(index=False)
+      ]
 
-    if custom_cols:
-      df = df.drop(columns=custom_cols)
-    return df
+    return df.drop(columns=custom_cols)
 
   def _ensure_entity_column(self, df: pd.DataFrame) -> pd.DataFrame:
     """Ensures the logical 'entity' column exists in the DataFrame, even if empty."""
@@ -428,3 +505,19 @@ class VariablePerRowImporter(Importer):
       return
     add_proxy_entity_nodes(self.nodes, self.entity_dcids,
                            getattr(self, "provenance", ""))
+
+
+def _build_custom_dimension_mapping(
+    custom_cols: list[str],
+    unique_tuples: pd.DataFrame,
+    static_props: dict[str, str],
+) -> dict[tuple, str]:
+  """Pre-computes JSON property payloads for unique custom dimension tuples."""
+  tuple_to_json = {}
+  for r in unique_tuples.itertuples(index=False):
+    d = dict(static_props)
+    for col, val in zip(custom_cols, r):
+      if pd.notna(val) and val != "":
+        d[col] = strip_namespace(str(val))
+    tuple_to_json[r] = json.dumps(d) if d else ""
+  return tuple_to_json

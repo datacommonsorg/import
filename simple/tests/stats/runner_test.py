@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import json
 import os
 from pathlib import Path
@@ -21,9 +22,11 @@ import unittest
 from unittest import mock
 
 from freezegun import freeze_time
+import numpy as np
 from stats import constants
 from stats.data import ValidationErrorType
 from stats.runner import create_store as real_create_store
+from stats.runner import ImportProcResult
 from stats.runner import Runner
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import use_fake_gzip_time
@@ -705,3 +708,276 @@ class TestMain(unittest.TestCase):
         mock_warn.assert_not_called()
 
     main_module.FLAGS.mode = ""
+
+  def test_merge_split_part_aggregates_collisions_and_dcids(self):
+    """Verifies that split parts are correctly merged and cross-part collisions are detected."""
+    runner = Runner.__new__(Runner)
+    runner._split_parts_left = {}
+    runner._split_entity_dcids = {}
+    runner._split_obs_hashes = {}
+    runner.nodes = mock.MagicMock()
+    runner.graph_writer = mock.MagicMock()
+    runner.graph_writer.obs_collision_count = 0
+    runner.graph_writer.file_collision_counts = collections.defaultdict(int)
+
+    # Simulate part 0 of 2 with 2 observation hashes and entity 'dcid:Place1'
+    res_part0 = ImportProcResult(
+        file_rel_path="data/test.csv",
+        obs_collision_count=0,
+        file_collision_counts={},
+        file_sample_collisions={},
+        resolved_entities={},
+        event_types={},
+        entity_types={},
+        variables={},
+        sources={},
+        provenances={},
+        groups={},
+        properties={},
+        processed_imports=set(),
+        num_chunks=2,
+        entity_dcids=["dcid:Place1"],
+        obs_hashes=np.array([100, 200], dtype=np.uint64),
+    )
+    # Part 0 finishes: returns False because 1 part remains
+    self.assertFalse(runner._merge_split_part(res_part0))
+    self.assertIn("data/test.csv", runner._split_parts_left)
+    self.assertEqual(runner._split_parts_left["data/test.csv"], 1)
+
+    # Simulate part 1 of 2 with duplicate hash 200, new hash 300, and entity 'dcid:Place2'
+    res_part1 = ImportProcResult(
+        file_rel_path="data/test.csv",
+        obs_collision_count=0,
+        file_collision_counts={},
+        file_sample_collisions={},
+        resolved_entities={},
+        event_types={},
+        entity_types={},
+        variables={},
+        sources={},
+        provenances={},
+        groups={},
+        properties={},
+        processed_imports=set(),
+        num_chunks=2,
+        entity_dcids=["dcid:Place2"],
+        obs_hashes=np.array([200, 300], dtype=np.uint64),
+    )
+    # Part 1 finishes: returns True because all parts are completed
+    self.assertTrue(runner._merge_split_part(res_part1))
+    # State cleaned up for this completed file
+    self.assertNotIn("data/test.csv", runner._split_parts_left)
+    # Duplicate hash 200 across parts detected: 4 total - 3 unique = 1 collision
+    self.assertEqual(runner.graph_writer.obs_collision_count, 1)
+    self.assertEqual(runner.graph_writer.file_collision_counts["test.csv"], 1)
+
+  def test_plan_import_tasks_splitting_and_ordering(self):
+    """Verifies that large observation CSVs are split and MCF files prioritized."""
+    from stats.config import Config
+    from util.filesystem import File
+
+    config_dict = {
+        "inputFiles": [
+            {
+                "pattern": "obs_large.csv",
+                "importType": "observations"
+            },
+            {
+                "pattern": "obs_small.csv",
+                "importType": "observations"
+            },
+            {
+                "pattern": "entities.csv",
+                "importType": "entities"
+            },
+            {
+                "pattern": "prov.mcf"
+            },
+        ]
+    }
+    runner = Runner.__new__(Runner)
+    runner.config = Config(config_dict)
+
+    def make_file_mock(path, size_bytes):
+      f = mock.MagicMock(spec=File)
+      f.path = path
+      f.name.return_value = os.path.basename(path)
+      f.full_path.return_value = f"/tmp/{path}"
+      f.size.return_value = size_bytes
+      return f
+
+    file_mcf = make_file_mock("prov.mcf", 1024)
+    file_small = make_file_mock("obs_small.csv", 2 * 1024 * 1024)
+    file_large = make_file_mock("obs_large.csv", 24 * 1024 * 1024)
+    file_entities = make_file_mock("entities.csv", 20 * 1024 * 1024)
+
+    files = [file_small, file_large, file_mcf, file_entities]
+    tasks = runner._plan_import_tasks(files, num_processes=8)
+
+    # 1 mcf + 1 small + 3 large + 1 entities = 6 tasks
+    self.assertEqual(len(tasks), 6)
+
+    # MCF file must be scheduled first
+    self.assertEqual(tasks[0].file.path, "prov.mcf")
+
+    # Tasks for large.csv should have num_chunks=3
+    large_tasks = [t for t in tasks if t.file.path == "obs_large.csv"]
+    self.assertEqual(len(large_tasks), 3)
+    self.assertEqual([t.chunk_index for t in large_tasks], [0, 1, 2])
+    for t in large_tasks:
+      self.assertEqual(t.num_chunks, 3)
+      self.assertEqual(t.est_bytes, 8 * 1024 * 1024)
+
+    # Non-observation files or small files should have num_chunks=1
+    small_task = next(t for t in tasks if t.file.path == "obs_small.csv")
+    self.assertEqual(small_task.num_chunks, 1)
+
+    entities_task = next(t for t in tasks if t.file.path == "entities.csv")
+    self.assertEqual(entities_task.num_chunks, 1)
+
+  def test_validate_all_headers_multi_file_concurrency(self):
+    """Verifies that header validation aggregates errors across multiple files concurrently."""
+    from stats.config import Config
+    from stats.nodes import Nodes
+    from util.filesystem import create_store
+
+    config_dict = {
+        "inputFiles": [{
+            "pattern": "bad1.csv",
+            "importType": "observations",
+            "columnMappings": {
+                "dcid:observationAbout": "entity",
+                "dcid:variableMeasured": "variable",
+                "dcid:observationDate": "date",
+                "dcid:value": "value"
+            }
+        }, {
+            "pattern": "bad2.csv",
+            "importType": "observations",
+            "columnMappings": {
+                "dcid:observationAbout": "entity",
+                "dcid:variableMeasured": "variable",
+                "dcid:observationDate": "date",
+                "dcid:value": "value"
+            }
+        }, {
+            "pattern": "good.csv",
+            "importType": "observations",
+            "columnMappings": {
+                "dcid:observationAbout": "entity",
+                "dcid:variableMeasured": "variable",
+                "dcid:observationDate": "date",
+                "dcid:value": "value"
+            }
+        }]
+    }
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+      with open(os.path.join(temp_dir, "bad1.csv"), "w") as f:
+        f.write("entity,variable,date,value,unmapped1\ngeoId/06,Var,2020,1,foo\n")
+      with open(os.path.join(temp_dir, "bad2.csv"), "w") as f:
+        f.write("entity,variable,date,value,unmapped2\ngeoId/06,Var,2020,1,bar\n")
+      with open(os.path.join(temp_dir, "good.csv"), "w") as f:
+        f.write("entity,variable,date,value\ngeoId/06,Var,2020,1\n")
+
+      store = create_store(temp_dir)
+      csv_files = [
+          store.as_dir().open_file("bad1.csv"),
+          store.as_dir().open_file("bad2.csv"),
+          store.as_dir().open_file("good.csv"),
+      ]
+
+      runner = Runner.__new__(Runner)
+      runner.config = Config(config_dict)
+      runner.input_store = store
+      runner.process_dir = store.as_dir()
+      runner.graph_writer = mock.MagicMock()
+      runner.nodes = Nodes(config=runner.config)
+      runner.reporter = mock.MagicMock()
+      runner.validation_reporter = mock.MagicMock()
+
+      with self.assertRaises(ValueError) as ctx:
+        runner._validate_all_headers(csv_files)
+
+      err_msg = str(ctx.exception)
+      self.assertIn("CSV Header Validation Failed", err_msg)
+      self.assertIn("bad1.csv", err_msg)
+      self.assertIn("unmapped1", err_msg)
+      self.assertIn("bad2.csv", err_msg)
+      self.assertIn("unmapped2", err_msg)
+      self.assertNotIn("good.csv", err_msg)
+
+  def test_runner_multiprocessing_end_to_end_with_splits(self):
+    """End-to-end integration test with use_multiprocessing=True and CSV splitting."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+      input_dir = os.path.join(temp_dir, "input")
+      output_dir = os.path.join(temp_dir, "output")
+      os.makedirs(input_dir)
+      os.makedirs(output_dir)
+
+      csv_content = ("entity,variable,date,value\n"
+                     "geoId/01,Count_Person,2020,10\n"
+                     "geoId/01,Count_Person,2021,11\n"
+                     "geoId/02,Count_Person,2020,20\n"
+                     "geoId/02,Count_Person,2021,21\n"
+                     "geoId/04,Count_Person,2020,30\n"
+                     "geoId/04,Count_Person,2021,31\n")
+      with open(os.path.join(input_dir, "data.csv"), "w") as f:
+        f.write(csv_content)
+
+      config_data = {
+          "inputFiles": [{
+              "pattern": "prov.mcf",
+              "provenance": "dcid:provenance/TestProv"
+          }, {
+              "pattern": "data.csv",
+              "importType": "observations",
+              "format": "variablePerRow",
+              "provenance": "dcid:provenance/TestProv",
+              "columnMappings": {
+                  "dcid:observationAbout": "entity",
+                  "dcid:variableMeasured": "variable",
+                  "dcid:observationDate": "date",
+                  "dcid:value": "value"
+              }
+          }]
+      }
+      with open(os.path.join(input_dir, "config.json"), "w") as f:
+        json.dump(config_data, f)
+
+      prov_mcf = ("Node: dcid:source/TestSource\n"
+                  "typeOf: dcs:Source\n"
+                  "url: \"https://test.org\"\n\n"
+                  "Node: dcid:provenance/TestProv\n"
+                  "typeOf: dcs:Provenance\n"
+                  "source: dcid:source/TestSource\n"
+                  "url: \"https://test.org/prov\"\n")
+      with open(os.path.join(input_dir, "prov.mcf"), "w") as f:
+        f.write(prov_mcf)
+
+      with mock.patch("stats.runner._SPLIT_TARGET_BYTES", 50):
+        runner = Runner(
+            config_file_path=None,
+            input_dir_path=input_dir,
+            output_dir_path=output_dir,
+            use_multiprocessing=True,
+        )
+        runner.run()
+
+      obs = []
+      nodes = []
+      for root, _, files in os.walk(output_dir):
+        for fname in files:
+          if fname.endswith(".jsonld"):
+            with open(os.path.join(root, fname)) as f:
+              g = json.load(f).get("@graph", [])
+              if fname.startswith("node-"):
+                nodes.extend(g)
+              elif fname.startswith("observation-"):
+                obs.extend(g)
+
+      self.assertEqual(len(obs), 6)
+      node_ids = {n["@id"] for n in nodes if "@id" in n}
+      self.assertIn("dcid:provenance/TestProv", node_ids)
+      self.assertIn("dcid:source/TestSource", node_ids)
+

@@ -236,14 +236,15 @@ class Dir(_StoreWrapper):
   def name(self) -> str:
     return fspath.basename(self.path.rstrip("/"))
 
-  def open_dir(self, path: str) -> "Dir":
+  def open_dir(self, path: str, create: bool = True) -> "Dir":
     # The new dir will use the same underlying store with a path relative to
     # the same root.
     new_path = fspath.join(self.path, path)
-    if not self.fs().exists(new_path):
-      self.fs().makedirs(new_path)
-    if not self.fs().isdir(new_path):
-      raise ValueError(f"{self.full_path(path)} exists and is not a directory")
+    if create:
+      if not self.fs().exists(new_path):
+        self.fs().makedirs(new_path)
+      if not self.fs().isdir(new_path):
+        raise ValueError(f"{self.full_path(path)} exists and is not a directory")
     return Dir(self._store, new_path)
 
   def open_file(self, path: str, create_if_missing: bool = True) -> "File":
@@ -331,8 +332,9 @@ class File(_StoreWrapper):
 
   def open_stream(self,
                   max_retries: int = 3,
-                  chunk_size: Optional[int] = None):
-    """Returns an open text stream for streaming line-by-line with retries for transient network drops.
+                  chunk_size: Optional[int] = None,
+                  mode: str = "rt"):
+    """Returns an open text or binary stream for streaming with retries for transient network drops.
 
     On GCS the object is streamed with ranged reads of at least chunk_size
     bytes. GCSFS.open() would download the whole object before returning, so
@@ -344,11 +346,16 @@ class File(_StoreWrapper):
         fs = self.fs()
         if isinstance(fs, GCSFS):
           blob = fs.bucket.blob(_gcs_key(fs, self.path))
-          return blob.open("rt",
+          if "b" in mode:
+            blob_stream = blob.open(mode,
+                                    chunk_size=chunk_size or _GCS_STREAM_CHUNK_SIZE)
+            return io.BufferedReader(blob_stream,
+                                     buffer_size=chunk_size or _GCS_STREAM_CHUNK_SIZE)
+          return blob.open(mode,
                            chunk_size=chunk_size or _GCS_STREAM_CHUNK_SIZE,
                            encoding="utf-8",
                            newline="")
-        return fs.open(self.path, "r")
+        return fs.open(self.path, mode)
       except Exception as e:
         if attempt == max_retries - 1:
           raise e

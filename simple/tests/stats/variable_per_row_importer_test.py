@@ -149,3 +149,55 @@ class TestVariablePerRowImporter(unittest.TestCase):
                              return_value={}) as mock_resolve:
         with self.assertRaises(EntityResolutionError):
           importer.do_import()
+
+  def test_split_import_matches_unsplit(self):
+    import pandas as pd
+    from tests.stats.test_util import RecordingGraphWriter
+    from util.filesystem import create_store
+
+    test_dir = os.path.join(_INPUT_DIR, "single_entity_official_keys")
+    config_path = os.path.join(test_dir, "config.json")
+    input_path = os.path.join(test_dir, "input.csv")
+
+    with open(config_path) as config_file:
+      config = Config(json.load(config_file))
+
+    dc_client.get_property_of_entities = MagicMock(
+        return_value={"geoId/06": "State", "geoId/08": "State"})
+
+    # Run unsplit
+    unsplit_gw = RecordingGraphWriter()
+    with tempfile.TemporaryDirectory() as temp_dir:
+      rep_file = create_store(temp_dir).as_dir().open_file("report1.json")
+      reporter = FileImportReporter(input_path, ImportReporter(rep_file))
+      importer = VariablePerRowImporter(
+          input_file=create_store(input_path).as_file(),
+          graph_writer=unsplit_gw,
+          reporter=reporter,
+          nodes=Nodes(config),
+          chunk_index=0,
+          num_chunks=1)
+      importer.do_import()
+      unsplit_gw.commit_and_close()
+
+    # Run split across 3 parts
+    split_gw = RecordingGraphWriter()
+    with tempfile.TemporaryDirectory() as temp_dir:
+      for chunk_idx in range(3):
+        rep_file = create_store(temp_dir).as_dir().open_file(f"report_{chunk_idx}.json")
+        reporter = FileImportReporter(input_path, ImportReporter(rep_file))
+        importer = VariablePerRowImporter(
+            input_file=create_store(input_path).as_file(),
+            graph_writer=split_gw,
+            reporter=reporter,
+            nodes=Nodes(config),
+            chunk_index=chunk_idx,
+            num_chunks=3)
+        importer.do_import()
+      split_gw.commit_and_close()
+
+    unsplit_df = unsplit_gw.observations_df.sort_values(
+        by=list(unsplit_gw.observations_df.columns)).reset_index(drop=True)
+    split_df = split_gw.observations_df.sort_values(
+        by=list(split_gw.observations_df.columns)).reset_index(drop=True)
+    pd.testing.assert_frame_equal(unsplit_df, split_df)
