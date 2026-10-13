@@ -209,12 +209,10 @@ def _run_single_csv_import_proc(
                                       jsonld_dir_name=jsonld_dir_name,
                                       shard_tag=part_tag)
 
-    sanitized_path = input_store.full_path().replace("://",
-                                                     "_").replace("/", "_")
-    report_suffix = f"_{part_tag}" if is_split else ""
-    report_file = process_store.open_file(
-        f"report_{sanitized_path}{report_suffix}.json")
-    reporter = ImportReporter(report_file).get_file_reporter(input_store)
+    # In-memory reporter for worker processes to eliminate thousands of concurrent
+    # redundant report file writes to GCS. The master process aggregates progress and
+    # writes the final single process/report.json.
+    reporter = ImportReporter().get_file_reporter(input_store)
 
     importer = _create_importer_for_file(config,
                                          input_store,

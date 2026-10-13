@@ -20,6 +20,9 @@ import json
 import threading
 import time
 
+import logging
+from typing import Optional
+
 from util.filesystem import File
 
 # Minimum interval before a report should be saved to disk or cloud.
@@ -44,7 +47,7 @@ class ImportReporter:
     The report is written to report.json in the process directory.
     """
 
-  def __init__(self, report_file: File) -> None:
+  def __init__(self, report_file: Optional[File] = None) -> None:
     self.lock = threading.RLock()
     self.status = Status.NOT_STARTED
     self.start_time = None
@@ -139,7 +142,11 @@ class ImportReporter:
         self.status)
     if should_report:
       self.last_reported = time.time()
-      self.report_file.write(json.dumps(self.json(), indent=2))
+      if self.report_file:
+        try:
+          self.report_file.write(json.dumps(self.json(), indent=2))
+        except Exception as e:
+          logging.warning("Failed to save report to %s: %s", self.report_file, e)
 
 
 class FileImportReporter:
