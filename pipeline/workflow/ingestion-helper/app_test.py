@@ -617,18 +617,24 @@ class TestMain(unittest.TestCase):
 
             # >= 50%
             mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 550.0
-            res = client.get("/database/lock/status")
+            with self.assertLogs(level="WARNING") as cm:
+                res = client.get("/database/lock/status")
             self.assertEqual(res.json()["alertLevel"], "WARNING_50PCT")
+            self.assertTrue(any("INGESTION_LOCK_HELD_50PCT_WARNING" in record.getMessage() for record in cm.records))
 
             # >= 90%
             mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 920.0
-            res = client.get("/database/lock/status")
+            with self.assertLogs(level="WARNING") as cm:
+                res = client.get("/database/lock/status")
             self.assertEqual(res.json()["alertLevel"], "WARNING_90PCT")
+            self.assertTrue(any("INGESTION_LOCK_HELD_90PCT_WARNING" in record.getMessage() for record in cm.records))
 
             # >= 100%
             mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 1050.0
-            res = client.get("/database/lock/status")
+            with self.assertLogs(level="ERROR") as cm:
+                res = client.get("/database/lock/status")
             self.assertEqual(res.json()["alertLevel"], "CRITICAL_100PCT")
+            self.assertTrue(any("INGESTION_LOCK_HELD_100PCT_CRITICAL" in record.getMessage() for record in cm.records))
 
 if __name__ == '__main__':
     unittest.main()

@@ -49,7 +49,6 @@ router = APIRouter(prefix="/database", tags=["database"])
 
 
 def _evaluate_lock_retention_alert(
-    owner: str,
     age_seconds: float,
     retention_seconds: int
 ) -> Tuple[LockAlertLevel, str | None]:
@@ -144,7 +143,7 @@ def get_ingestion_lock_status(spanner: SpannerClient = Depends(get_spanner_clien
         alert_level = LockAlertLevel.OK
         if age_seconds is not None:
             retention_seconds = config.SPANNER_RETENTION_SECONDS
-            alert_level, event_name = _evaluate_lock_retention_alert(owner, age_seconds, retention_seconds)
+            alert_level, event_name = _evaluate_lock_retention_alert(age_seconds, retention_seconds)
 
             if event_name:
                 log_payload = {

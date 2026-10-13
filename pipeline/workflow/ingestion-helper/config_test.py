@@ -129,6 +129,7 @@ class TestConfig(unittest.TestCase):
     def test_parse_duration_seconds(self):
         self.assertEqual(config._parse_duration_seconds("24h"), 86400)
         self.assertEqual(config._parse_duration_seconds("7d"), 7 * 86400)
+        self.assertEqual(config._parse_duration_seconds("90m"), 90 * 60)
         self.assertEqual(config._parse_duration_seconds("3600s"), 3600)
         self.assertEqual(config._parse_duration_seconds("1800"), 1800)
         self.assertEqual(config._parse_duration_seconds("", default_seconds=123), 123)

@@ -35,10 +35,15 @@ def _parse_duration_seconds(duration_str: str, default_seconds: int = 86400) -> 
             return int(val[:-1]) * 86400
         if val.endswith('h'):
             return int(val[:-1]) * 3600
+        if val.endswith('m'):
+            return int(val[:-1]) * 60
         if val.endswith('s'):
             return int(val[:-1])
         return int(val)
     except (ValueError, TypeError):
+        logging.warning(
+            f"Invalid duration string '{duration_str}', falling back to {default_seconds}s."
+        )
         return default_seconds
 
 
