@@ -162,8 +162,10 @@ class TestVariablePerRowImporter(unittest.TestCase):
     with open(config_path) as config_file:
       config = Config(json.load(config_file))
 
-    dc_client.get_property_of_entities = MagicMock(
-        return_value={"geoId/06": "State", "geoId/08": "State"})
+    dc_client.get_property_of_entities = MagicMock(return_value={
+        "geoId/06": "State",
+        "geoId/08": "State"
+    })
 
     # Run unsplit
     unsplit_gw = RecordingGraphWriter()
@@ -184,7 +186,8 @@ class TestVariablePerRowImporter(unittest.TestCase):
     split_gw = RecordingGraphWriter()
     with tempfile.TemporaryDirectory() as temp_dir:
       for chunk_idx in range(3):
-        rep_file = create_store(temp_dir).as_dir().open_file(f"report_{chunk_idx}.json")
+        rep_file = create_store(temp_dir).as_dir().open_file(
+            f"report_{chunk_idx}.json")
         reporter = FileImportReporter(input_path, ImportReporter(rep_file))
         importer = VariablePerRowImporter(
             input_file=create_store(input_path).as_file(),

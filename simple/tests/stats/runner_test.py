@@ -874,9 +874,11 @@ class TestMain(unittest.TestCase):
 
     with tempfile.TemporaryDirectory() as temp_dir:
       with open(os.path.join(temp_dir, "bad1.csv"), "w") as f:
-        f.write("entity,variable,date,value,unmapped1\ngeoId/06,Var,2020,1,foo\n")
+        f.write(
+            "entity,variable,date,value,unmapped1\ngeoId/06,Var,2020,1,foo\n")
       with open(os.path.join(temp_dir, "bad2.csv"), "w") as f:
-        f.write("entity,variable,date,value,unmapped2\ngeoId/06,Var,2020,1,bar\n")
+        f.write(
+            "entity,variable,date,value,unmapped2\ngeoId/06,Var,2020,1,bar\n")
       with open(os.path.join(temp_dir, "good.csv"), "w") as f:
         f.write("entity,variable,date,value\ngeoId/06,Var,2020,1\n")
 
@@ -980,4 +982,3 @@ class TestMain(unittest.TestCase):
       node_ids = {n["@id"] for n in nodes if "@id" in n}
       self.assertIn("dcid:provenance/TestProv", node_ids)
       self.assertIn("dcid:source/TestSource", node_ids)
-
