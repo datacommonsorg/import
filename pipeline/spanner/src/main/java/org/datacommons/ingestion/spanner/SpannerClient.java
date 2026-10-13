@@ -57,6 +57,15 @@ public class SpannerClient implements Serializable {
   // Commit deadline for spanner writes. Use large value for bigger batches.
   private static final int SPANNER_COMMIT_DEADLINE_SECONDS = 120;
 
+  /**
+   * Request priority for batch RPCs issued directly through a {@link DatabaseClient} (e.g.
+   * Partitioned DML deletes) so that they yield CPU to online serving. Spanner treats an unset
+   * priority as HIGH. {@link #getReadTransform()} and {@link #getWriteTransform()} set the same
+   * priority through {@code withLowPriority()}.
+   */
+  public static final Options.ReadQueryUpdateTransactionOption LOW_PRIORITY =
+      Options.priority(RpcPriority.LOW);
+
   private final String gcpProjectId;
   private final String spannerInstanceId;
   private final String spannerDatabaseId;
@@ -121,8 +130,7 @@ public class SpannerClient implements Serializable {
         String dml =
             String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, columnName);
         Statement statement = Statement.newBuilder(dml).bind(columnName).to(value).build();
-        long rowCount =
-            dbClient.executePartitionedUpdate(statement, Options.priority(RpcPriority.LOW));
+        long rowCount = dbClient.executePartitionedUpdate(statement, LOW_PRIORITY);
         LOGGER.info("Deleted {} rows from {} for {} {}", rowCount, tableName, columnName, value);
         c.output(null);
       }

@@ -3,10 +3,15 @@ package org.datacommons.ingestion.spanner;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Options.UpdateOption;
+import com.google.cloud.spanner.Spanner;
+import com.google.cloud.spanner.Statement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.List;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
@@ -14,6 +19,7 @@ import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.data.TimeSeriesKey;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 public class SpannerClientTest {
 
@@ -177,5 +183,38 @@ public class SpannerClientTest {
         "@{spanner_emulator.disable_query_partitionability_check=true} SELECT * FROM TimeSeries WHERE provenance = 'dc/base/Test'",
         query);
     assertTrue(query.startsWith("@{spanner_emulator.disable_query_partitionability_check=true}"));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testDeleteByColumnFn_usesLowPriority() {
+    DatabaseClient dbClient = mock(DatabaseClient.class);
+    SpannerClient client =
+        new SpannerClient(
+            SpannerClient.builder()
+                .gcpProjectId("test-project")
+                .spannerInstanceId("test-instance")
+                .spannerDatabaseId("test-db")) {
+          @Override
+          public Spanner createSpanner() {
+            return mock(Spanner.class);
+          }
+
+          @Override
+          public DatabaseClient getDatabaseClient(Spanner spanner) {
+            return dbClient;
+          }
+        };
+    DoFn<String, Void>.ProcessContext context = mock(DoFn.ProcessContext.class);
+    when(context.element()).thenReturn("dc/base/TestImport");
+
+    new SpannerClient.DeleteByColumnFn(client, "Edge", "provenance").processElement(context);
+
+    ArgumentCaptor<UpdateOption> options = ArgumentCaptor.forClass(UpdateOption.class);
+    verify(dbClient).executePartitionedUpdate(any(Statement.class), options.capture());
+    assertEquals(
+        "DeleteByColumnFn Partitioned DML must pass only SpannerClient.LOW_PRIORITY",
+        List.of(SpannerClient.LOW_PRIORITY),
+        options.getAllValues());
   }
 }

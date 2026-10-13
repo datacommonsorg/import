@@ -15,8 +15,11 @@
 """Unit tests for the AggregationDeleter class."""
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import create_autospec, patch
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1.database import Database
+from google.cloud.spanner_v1.snapshot import Snapshot
+from google.cloud.spanner_v1.transaction import Transaction
 from aggregation.deleter import AggregationDeleter
 
 
@@ -24,7 +27,7 @@ class TestAggregationDeleter(unittest.TestCase):
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_aggregated_data(self, mock_spanner_client):
         # Setup mocks
-        mock_db = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
             mock_db
         )
@@ -60,7 +63,7 @@ class TestAggregationDeleter(unittest.TestCase):
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_aggregated_data_empty(self, mock_spanner_client):
-        mock_db = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
             mock_db
         )
@@ -73,7 +76,7 @@ class TestAggregationDeleter(unittest.TestCase):
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_aggregated_data_not_base_dc(self, mock_spanner_client):
         # Setup mocks
-        mock_db = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
             mock_db
         )
@@ -89,6 +92,7 @@ class TestAggregationDeleter(unittest.TestCase):
         expected_params = {"provenances": expected_provenances}
 
         calls = mock_db.execute_partitioned_dml.call_args_list
+        self.assertEqual(len(calls), 3)
         for c in calls:
             self.assertEqual(c[1]["params"], expected_params)
             self.assertEqual(
@@ -99,7 +103,7 @@ class TestAggregationDeleter(unittest.TestCase):
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_aggregated_data_exception_propagates(self, mock_spanner_client):
         """Verifies that an exception raised in a worker thread is re-raised by delete_aggregated_data."""
-        mock_db = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
         mock_db.execute_partitioned_dml.side_effect = RuntimeError(
             "Spanner deletion error"
         )
@@ -113,7 +117,7 @@ class TestAggregationDeleter(unittest.TestCase):
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_stat_var_group_edges(self, mock_spanner_client):
-        mock_db = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
             mock_db
         )
@@ -137,7 +141,7 @@ class TestAggregationDeleter(unittest.TestCase):
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_linked_edges(self, mock_spanner_client):
-        mock_db = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
             mock_db
         )
@@ -159,8 +163,8 @@ class TestAggregationDeleter(unittest.TestCase):
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_topic_list_edges_base_dc(self, mock_spanner_client):
-        mock_db = MagicMock()
-        mock_snapshot = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         mock_snapshot.execute_sql.return_value = [("literal_node_1",)]
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
@@ -199,7 +203,7 @@ class TestAggregationDeleter(unittest.TestCase):
             mock_db.run_in_transaction.call_args[1]["commit_request_options"].priority,
             RequestOptions.Priority.PRIORITY_LOW,
         )
-        mock_tx = MagicMock()
+        mock_tx = create_autospec(Transaction, instance=True)
         mock_db.run_in_transaction.call_args[0][0](mock_tx)
         mock_tx.delete.assert_called_once()
         call_args = mock_tx.delete.call_args[0]
@@ -208,8 +212,8 @@ class TestAggregationDeleter(unittest.TestCase):
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_topic_list_edges_dcp(self, mock_spanner_client):
-        mock_db = MagicMock()
-        mock_snapshot = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         mock_snapshot.execute_sql.return_value = [("literal_node_1",)]
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
@@ -234,7 +238,7 @@ class TestAggregationDeleter(unittest.TestCase):
             mock_db.run_in_transaction.call_args[1]["commit_request_options"].priority,
             RequestOptions.Priority.PRIORITY_LOW,
         )
-        mock_tx = MagicMock()
+        mock_tx = create_autospec(Transaction, instance=True)
         mock_db.run_in_transaction.call_args[0][0](mock_tx)
         mock_tx.delete.assert_called_once()
         call_args = mock_tx.delete.call_args[0]
@@ -243,8 +247,8 @@ class TestAggregationDeleter(unittest.TestCase):
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_topic_list_edges_empty_nodes(self, mock_spanner_client):
-        mock_db = MagicMock()
-        mock_snapshot = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         mock_snapshot.execute_sql.return_value = []
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
@@ -259,8 +263,8 @@ class TestAggregationDeleter(unittest.TestCase):
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_topic_list_edges_chunked_nodes(self, mock_spanner_client):
-        mock_db = MagicMock()
-        mock_snapshot = MagicMock()
+        mock_db = create_autospec(Database, instance=True)
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         mock_snapshot.execute_sql.return_value = [
             (f"literal_node_{i}",) for i in range(7500)
         ]
@@ -274,6 +278,11 @@ class TestAggregationDeleter(unittest.TestCase):
 
         mock_db.execute_partitioned_dml.assert_called_once()
         self.assertEqual(mock_db.run_in_transaction.call_count, 2)
+        for c in mock_db.run_in_transaction.call_args_list:
+            self.assertEqual(
+                c[1]["commit_request_options"].priority,
+                RequestOptions.Priority.PRIORITY_LOW,
+            )
 
 
 if __name__ == "__main__":
