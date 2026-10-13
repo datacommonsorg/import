@@ -20,14 +20,49 @@ from typing import List
 from pydantic import BaseModel, Field
 import yaml
 
-class EmbeddingSpec(BaseModel):
-    embedding_label: str
-    model_name: str
-    task_type: str
-    node_types: List[str]
-    node_filter_type: str
+
+# ------------------------------------------------------------------------------
+# Helper Functions
+# ------------------------------------------------------------------------------
+
+def _parse_duration_seconds(duration_str: str, default_seconds: int = 86400) -> int:
+    """Parses duration strings like '24h', '7d', '3600s' or integer seconds into seconds."""
+    if not duration_str:
+        return default_seconds
+    val = duration_str.strip().lower()
+    try:
+        if val.endswith('d'):
+            return int(val[:-1]) * 86400
+        if val.endswith('h'):
+            return int(val[:-1]) * 3600
+        if val.endswith('m'):
+            return int(val[:-1]) * 60
+        if val.endswith('s'):
+            return int(val[:-1])
+        return int(val)
+    except (ValueError, TypeError):
+        logging.warning(
+            f"Invalid duration string '{duration_str}', falling back to {default_seconds}s."
+        )
+        return default_seconds
+
+
+# ------------------------------------------------------------------------------
+# Global / GCP Environment Settings
+# ------------------------------------------------------------------------------
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
+LOCATION = os.environ.get('LOCATION') or os.environ.get('REGION')
+GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID')
+GCS_OUTPUT_PREFIX = os.environ.get('GCS_OUTPUT_PREFIX', '')
+IS_BASE_DC = os.environ.get('IS_BASE_DC', 'true').lower() == 'true'
+TIMEOUT = int(os.environ.get('TIMEOUT', 1700))
+
+
+# ------------------------------------------------------------------------------
+# Spanner Settings
+# ------------------------------------------------------------------------------
+
 SPANNER_DATABASE_PATH = os.environ.get('SPANNER_DATABASE_PATH')
 if SPANNER_DATABASE_PATH and len(SPANNER_DATABASE_PATH.split('/')) >= 6:
     _parts = SPANNER_DATABASE_PATH.split('/')
@@ -38,12 +73,43 @@ else:
     SPANNER_PROJECT_ID = os.environ.get('SPANNER_PROJECT_ID')
     SPANNER_INSTANCE_ID = os.environ.get('SPANNER_INSTANCE_ID')
     SPANNER_DATABASE_ID = os.environ.get('SPANNER_DATABASE_ID')
-GCS_BUCKET_ID = os.environ.get('GCS_BUCKET_ID')
-LOCATION = os.environ.get('LOCATION') or os.environ.get('REGION')
+
+SPANNER_EMULATOR_HOST = os.environ.get('SPANNER_EMULATOR_HOST')
 SPANNER_INGESTION_WORKFLOW_NAME = os.environ.get('SPANNER_INGESTION_WORKFLOW_NAME', 'spanner-ingestion-workflow')
+
+# Retention period tracking for Spanner Point-in-Time Recovery (PITR) window protection
+SPANNER_VERSION_RETENTION_PERIOD = os.environ.get('SPANNER_VERSION_RETENTION_PERIOD', '24h')
+SPANNER_RETENTION_SECONDS = _parse_duration_seconds(SPANNER_VERSION_RETENTION_PERIOD)
+
+
+# ------------------------------------------------------------------------------
+# Redis Settings
+# ------------------------------------------------------------------------------
+
+REDIS_HOST = os.environ.get('REDIS_HOST')
+REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD') or None
+REDIS_CA_CERT = os.environ.get('REDIS_CA_CERT') or None
+REDIS_CA_CERT_PATH = None
+if REDIS_CA_CERT:
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as _f:
+        _f.write(REDIS_CA_CERT)
+        REDIS_CA_CERT_PATH = _f.name
+
+
+# ------------------------------------------------------------------------------
+# Embeddings Configuration
+# ------------------------------------------------------------------------------
+
+class EmbeddingSpec(BaseModel):
+    embedding_label: str
+    model_name: str
+    task_type: str
+    node_types: List[str]
+    node_filter_type: str
+
+
 ENABLE_EMBEDDINGS = os.environ.get('ENABLE_EMBEDDINGS', 'false').lower() == 'true'
-IS_BASE_DC = os.environ.get('IS_BASE_DC', 'true').lower() == 'true'
-TIMEOUT = int(os.environ.get('TIMEOUT', 1700))
 
 _DEFAULT_EMBEDDING_SPECS = [
     EmbeddingSpec(
@@ -56,6 +122,7 @@ _DEFAULT_EMBEDDING_SPECS = [
 ]
 
 spec_path = os.environ.get('EMBEDDING_SPEC_PATH')
+
 
 def _load_embedding_specs(spec_path: str) -> List[EmbeddingSpec]:
     """Load embedding specs from file. If failed reading, use default spec.
@@ -90,18 +157,5 @@ def _load_embedding_specs(spec_path: str) -> List[EmbeddingSpec]:
         logging.warning(f"Error reading/validating EMBEDDING_SPEC_PATH file: {e}. Using defaults.")
         return _DEFAULT_EMBEDDING_SPECS
 
+
 EMBEDDING_SPECS = _load_embedding_specs(spec_path)
-
-REDIS_HOST = os.environ.get('REDIS_HOST')
-REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
-REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD') or None
-REDIS_CA_CERT = os.environ.get('REDIS_CA_CERT') or None
-REDIS_CA_CERT_PATH = None
-if REDIS_CA_CERT:
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as _f:
-        _f.write(REDIS_CA_CERT)
-        REDIS_CA_CERT_PATH = _f.name
-GCS_OUTPUT_PREFIX = os.environ.get('GCS_OUTPUT_PREFIX', '')
-
-SPANNER_EMULATOR_HOST = os.environ.get('SPANNER_EMULATOR_HOST')
-
