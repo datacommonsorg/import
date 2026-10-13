@@ -5,8 +5,10 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 
@@ -97,6 +99,18 @@ public class StatVarNameGenerator {
 
   /** Computes a readable display name for a StatisticalVariable based on its property values. */
   public static String generateName(PropertyValues pvs) {
+    return generateName(pvs, null);
+  }
+
+  /**
+   * Computes a readable display name for a StatisticalVariable based on its property values.
+   *
+   * @param pvs The StatVar property values.
+   * @param constraintProps If non-null, only these properties contribute constraint values to the
+   *     name (e.g., an explicitly declared constraintProperties list). If null, every property
+   *     outside {@link Vocabulary#NON_CONSTRAINT_STAT_VAR_PROPERTIES} is treated as a constraint.
+   */
+  public static String generateName(PropertyValues pvs, Set<String> constraintProps) {
     if (pvs == null || pvs.getPvsMap() == null) {
       return "";
     }
@@ -108,7 +122,7 @@ public class StatVarNameGenerator {
     List<String> prefixList = buildPrefixList(statType);
     List<String> mqualList = buildMeasurementQualifiers(pvs, prefixList);
     String measureAndPop = buildMeasureAndPop(measuredProperty, populationType);
-    List<String> constraintVals = buildConstraintVals(pvs);
+    List<String> constraintVals = buildConstraintVals(pvs, constraintProps);
     List<String> mdenomList = buildMeasurementDenominator(measurementDenominator);
 
     return assembleDisplayName(prefixList, mqualList, measureAndPop, constraintVals, mdenomList);
@@ -197,14 +211,26 @@ public class StatVarNameGenerator {
     return measureAndPop;
   }
 
-  private static List<String> buildConstraintVals(PropertyValues pvs) {
+  private static List<String> buildConstraintVals(PropertyValues pvs, Set<String> constraintProps) {
+    if (constraintProps == null) {
+      List<String> declared =
+          GraphUtils.getPropertyValues(pvs.getPvsMap(), Vocabulary.CONSTRAINT_PROPS);
+      if (!declared.isEmpty()) {
+        constraintProps = new HashSet<>(declared);
+      }
+    }
     List<String> constraintVals = new ArrayList<>();
     List<String> sortedProps = new ArrayList<>(pvs.getPvsMap().keySet());
     Collections.sort(sortedProps);
     for (String rawProp : sortedProps) {
       String prop = McfUtil.stripNamespace(rawProp);
-      // Skip non-constraint/core properties like statType, measuredProperty, etc.
-      if (Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
+      if (constraintProps != null) {
+        // Only use the explicitly provided constraint properties.
+        if (!constraintProps.contains(prop)) {
+          continue;
+        }
+      } else if (Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
+        // Skip non-constraint/core properties like statType, measuredProperty, etc.
         continue;
       }
       List<String> vals = GraphUtils.getPropertyValues(pvs.getPvsMap(), rawProp);

@@ -17,15 +17,17 @@ package org.datacommons.util;
 import static org.datacommons.util.McfUtil.getPropVals;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
 // Does additional transformations on parsed MCF nodes
 // - expanding ComplexValues into nodes
-// - adding constraintProperties to StatVar nodes
+// - adding constraintProperties to StatVar nodes (unless explicitly declared on the node)
 //
 // TODO: Pass in a separate SV nodes to clean SVObs double values.
 public class McfMutator {
@@ -125,14 +127,38 @@ public class McfMutator {
 
     if (isStatVar) {
       Map<String, Mcf.McfGraph.Values> constraintPvs = new TreeMap<>();
-      for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
-        String prop = pv.getKey();
-        if (!Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
-          constraintPvs.put(prop, pv.getValue());
+      List<String> declaredConstraintProps = getDeclaredConstraintProps(node);
+      boolean hasDeclaredConstraintProps = !declaredConstraintProps.isEmpty();
+      if (hasDeclaredConstraintProps) {
+        // Respect an explicitly declared constraintProperties list: the declared properties
+        // define the variable, and any other property on the node is treated as metadata.
+        for (String prop : declaredConstraintProps) {
+          Mcf.McfGraph.Values vals = node.getPvsMap().get(prop);
+          if (vals == null || vals.getTypedValuesCount() == 0) {
+            logCtx.addEntry(
+                Debug.Log.Level.LEVEL_WARNING,
+                "Mutator_MissingConstraintPropertyValue",
+                "StatVar declares a constraint property that has no value :: property: '"
+                    + prop
+                    + "', node: '"
+                    + nodeId
+                    + "'",
+                node.getLocationsList());
+            continue;
+          }
+          constraintPvs.put(prop, vals);
+        }
+      } else {
+        for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
+          String prop = pv.getKey();
+          if (!Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
+            constraintPvs.put(prop, pv.getValue());
+          }
         }
       }
 
-      if (!constraintPvs.isEmpty()) {
+      // Only derive constraintProperties when the node does not declare them.
+      if (!hasDeclaredConstraintProps && !constraintPvs.isEmpty()) {
         Mcf.McfGraph.Values.Builder valuesBuilder = Mcf.McfGraph.Values.newBuilder();
         for (String propDcid : constraintPvs.keySet()) {
           valuesBuilder.addTypedValues(
@@ -141,7 +167,7 @@ public class McfMutator {
                   .setType(Mcf.ValueType.RESOLVED_REF)
                   .build());
         }
-        node.putPvs("constraintProperties", valuesBuilder.build());
+        node.putPvs(Vocabulary.CONSTRAINT_PROPS, valuesBuilder.build());
       }
 
       if (generateFallbacks) {
@@ -158,7 +184,9 @@ public class McfMutator {
         }
 
         if (!node.containsPvs(Vocabulary.NAME)) {
-          String name = StatVarNameGenerator.generateName(node.build());
+          String name =
+              StatVarNameGenerator.generateName(
+                  node.build(), hasDeclaredConstraintProps ? constraintPvs.keySet() : null);
           if (!name.isEmpty()) {
             Mcf.McfGraph.Values.Builder valuesBuilder =
                 Mcf.McfGraph.Values.newBuilder()
@@ -174,6 +202,23 @@ public class McfMutator {
     }
 
     return node.build();
+  }
+
+  // Returns the namespace-stripped, de-duplicated properties listed in the node's
+  // constraintProperties, in declaration order. Returns an empty list if none are declared.
+  private static List<String> getDeclaredConstraintProps(
+      Mcf.McfGraph.PropertyValuesOrBuilder node) {
+    Set<String> props = new LinkedHashSet<>();
+    Mcf.McfGraph.Values declared = node.getPvsMap().get(Vocabulary.CONSTRAINT_PROPS);
+    if (declared != null) {
+      for (Mcf.McfGraph.TypedValue tv : declared.getTypedValuesList()) {
+        String prop = McfUtil.stripNamespace(tv.getValue().trim());
+        if (!prop.isEmpty()) {
+          props.add(prop);
+        }
+      }
+    }
+    return new ArrayList<>(props);
   }
 
   private static String prepForDoubleConversion(String v) {
