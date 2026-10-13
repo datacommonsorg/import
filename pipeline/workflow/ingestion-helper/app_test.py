@@ -562,7 +562,9 @@ class TestMain(unittest.TestCase):
         mock_spanner_client = MagicMock()
         mock_spanner_client.get_lock_status.return_value = {
             "lockOwner": "wf-123",
+            "locked": True,
             "acquiredTimestamp": "2026-10-08T10:00:00+00:00",
+            "ageSeconds": 300.0,
         }
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -573,13 +575,17 @@ class TestMain(unittest.TestCase):
         self.assertTrue(data["locked"])
         self.assertEqual(data["lockOwner"], "wf-123")
         self.assertEqual(data["acquiredTimestamp"], "2026-10-08T10:00:00+00:00")
+        self.assertEqual(data["ageSeconds"], 300.0)
+        self.assertEqual(data["alertLevel"], "OK")
         mock_spanner_client.get_lock_status.assert_called_once()
 
     def test_get_lock_status_unlocked(self):
         mock_spanner_client = MagicMock()
         mock_spanner_client.get_lock_status.return_value = {
             "lockOwner": None,
+            "locked": False,
             "acquiredTimestamp": None,
+            "ageSeconds": None,
         }
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -590,8 +596,51 @@ class TestMain(unittest.TestCase):
         self.assertFalse(data["locked"])
         self.assertIsNone(data["lockOwner"])
         self.assertIsNone(data["acquiredTimestamp"])
+        self.assertIsNone(data["ageSeconds"])
+        self.assertEqual(data["alertLevel"], "OK")
         mock_spanner_client.get_lock_status.assert_called_once()
+
+    def test_get_lock_status_alert_thresholds(self):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        with patch.object(config, 'SPANNER_RETENTION_SECONDS', 1000):
+            # Under 50%
+            mock_spanner_client.get_lock_status.return_value = {
+                "locked": True,
+                "lockOwner": "wf-1",
+                "acquiredTimestamp": "2026-10-12T00:00:00Z",
+                "ageSeconds": 400.0,
+            }
+            res = client.get("/database/lock/status")
+            self.assertEqual(res.json()["alertLevel"], "OK")
+
+            # >= 50%
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 550.0
+            with self.assertLogs(level="WARNING") as cm:
+                res = client.get("/database/lock/status")
+            self.assertEqual(res.json()["alertLevel"], "WARNING_50PCT")
+            self.assertTrue(
+                any("INGESTION_LOCK_HELD_50PCT_WARNING" in r.getMessage()
+                    for r in cm.records))
+
+            # >= 90%
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 920.0
+            with self.assertLogs(level="WARNING") as cm:
+                res = client.get("/database/lock/status")
+            self.assertEqual(res.json()["alertLevel"], "WARNING_90PCT")
+            self.assertTrue(
+                any("INGESTION_LOCK_HELD_90PCT_WARNING" in r.getMessage()
+                    for r in cm.records))
+
+            # >= 100%
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 1050.0
+            with self.assertLogs(level="ERROR") as cm:
+                res = client.get("/database/lock/status")
+            self.assertEqual(res.json()["alertLevel"], "CRITICAL_100PCT")
+            self.assertTrue(
+                any("INGESTION_LOCK_HELD_100PCT_CRITICAL" in r.getMessage()
+                    for r in cm.records))
 
 if __name__ == '__main__':
     unittest.main()
-
