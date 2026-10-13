@@ -63,6 +63,16 @@ _KNOWN_CUSTOM_PREFIXES = set()
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
 
+def _to_json(doc: dict) -> str:
+  """Serializes a shard compactly.
+
+  The ingestion pipeline parses each shard as a whole JSON document, so layout
+  doesn't matter. Pretty-printing (indent=...) made shards ~1.7x larger and
+  forces Python's pure-Python encoder instead of the C one.
+  """
+  return json.dumps(doc, separators=(",", ":"))
+
+
 def _rewrite_custom_ns_to_dcid(val: str) -> str:
   """Rewrites custom namespaces to 'dcid:' as a temporary workaround until the ingestion loader natively supports custom namespaces.
 
@@ -110,7 +120,8 @@ def _write_observation_shard(chunk,
                              ns_map: Optional[dict[str, str]] = None,
                              prov_urls: Optional[dict[str, str]] = None,
                              track_hash_fn: Optional[Callable] = None,
-                             file_name: str = ""):
+                             file_name: str = "",
+                             shard_tag: str = ""):
 
   graph_list = []
   chunk_hashes = []
@@ -189,15 +200,15 @@ def _write_observation_shard(chunk,
 
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
+  tag = f"-{shard_tag}" if shard_tag else ""
   if file_name:
     sanitized_stem = file_name.replace("/", "_").rsplit(".", 1)[0]
-    shard_name = f"observation-{sanitized_stem}-{shard_index:05d}.jsonld"
+    shard_name = f"observation-{sanitized_stem}{tag}-{shard_index:05d}.jsonld"
   else:
-    shard_name = f"observation-{shard_index:05d}.jsonld"
+    shard_name = f"observation{tag}-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
-    output_dir.open_file(shard_name).write(
-        json.dumps(compacted_jsonld, indent=4))
+    output_dir.open_file(shard_name).write(_to_json(compacted_jsonld))
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
@@ -270,8 +281,7 @@ def _write_node_shard_fast(args):
   shard_name = f"node-{shard_index:05d}-{unique_id}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
-    output_dir.open_file(shard_name).write(
-        json.dumps(compacted_jsonld, indent=4))
+    output_dir.open_file(shard_name).write(_to_json(compacted_jsonld))
   logging.info(f"Saved JSON-LD shard to {shard_name} (fast path)")
 
 
@@ -312,7 +322,7 @@ def write_shard(g: Graph,
     }
 
   shard_name = f"{prefix}-{index:05d}.jsonld"
-  output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
+  output_dir.open_file(shard_name).write(_to_json(compacted_jsonld))
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
@@ -355,8 +365,13 @@ class JsonLdStreamWriter(GraphWriter):
                output_dir,
                import_names,
                nodes,
-               jsonld_dir_name: Optional[str] = None) -> None:
+               jsonld_dir_name: Optional[str] = None,
+               shard_tag: str = "") -> None:
+    """shard_tag: added to observation shard names. Writers that handle parts
+    of the same input file need distinct tags, since each numbers its shards
+    from zero."""
     self.output_dir = output_dir
+    self.shard_tag = shard_tag
     self.import_names = import_names
     self.nodes = nodes
     self.config = nodes.config
@@ -460,7 +475,8 @@ class JsonLdStreamWriter(GraphWriter):
                                self.ns_map,
                                prov_urls,
                                track_hash_fn=self.track_observation_hash,
-                               file_name=file_name)
+                               file_name=file_name,
+                               shard_tag=self.shard_tag)
 
   def write_observations(self, observations_df: pd.DataFrame, input_file: File):
     if observations_df.empty:

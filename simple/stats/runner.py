@@ -14,16 +14,19 @@
 
 import concurrent.futures
 from dataclasses import dataclass
+from dataclasses import field
 from datetime import datetime
 from datetime import timezone
 import json
 import logging
+import math
 import os
 import threading
 from typing import Optional
 import unittest.mock as mock_module
 
 import fs.path as fspath
+import numpy as np
 from stats import constants
 from stats.config import Config
 from stats.data import FileValidationError
@@ -42,17 +45,48 @@ from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.validation import MetadataValidator
+from stats.variable_per_row_importer import add_proxy_entity_nodes
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
+from util.filesystem import fixed_gcs_roots
 from util.filesystem import join_path
+from util.filesystem import mark_gcs_roots_fixed
 from util.filesystem import Store
 
 from util import dc_client
 
 _ARCHIVES_DIR_NAME = "archives"
+
+# Observation CSVs bigger than this are split into parts that run in separate
+# processes. Every part still parses the whole file (so quoted multi-line
+# values stay intact) but only converts and writes its own share of the rows,
+# which is where nearly all the time goes.
+_SPLIT_TARGET_BYTES = 128 * 1024 * 1024
+_MAX_PARTS_PER_FILE = 16
+
+# Overrides the number of import processes (defaults to the usable CPU count).
+_MAX_PROCESSES_ENV = "SIMPLE_IMPORT_MAX_PROCESSES"
+
+
+def _max_import_processes() -> int:
+  override = os.getenv(_MAX_PROCESSES_ENV)
+  if override:
+    return max(1, int(override))
+  if hasattr(os, "sched_getaffinity"):
+    return max(1, len(os.sched_getaffinity(0)))  # Respects container limits.
+  return max(1, os.cpu_count() or 1)
+
+
+@dataclass
+class _ImportTask:
+  file: File
+  chunk_index: int = 0
+  num_chunks: int = 1
+  # Rough work estimate, used to start the biggest tasks first.
+  est_bytes: int = 0
 
 
 def _create_importer_for_file(
@@ -62,6 +96,8 @@ def _create_importer_for_file(
     graph_writer: GraphWriter,
     reporter: FileImportReporter,
     nodes: Nodes,
+    chunk_index: int = 0,
+    num_chunks: int = 1,
 ) -> Importer:
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
@@ -86,6 +122,8 @@ def _create_importer_for_file(
           graph_writer=graph_writer,
           reporter=reporter,
           nodes=nodes,
+          chunk_index=chunk_index,
+          num_chunks=num_chunks,
       )
 
     case ImportType.EVENTS:
@@ -129,6 +167,17 @@ class ImportProcResult:
   groups: dict
   properties: dict
   processed_imports: set
+  # Set only for parts of a split file (num_chunks > 1):
+  num_chunks: int = 1
+  # Entities the part saw; the parent looks up their types once per file.
+  entity_dcids: list = field(default_factory=list)
+  # Sorted unique observation hashes, for duplicate checks across parts.
+  obs_hashes: Optional[np.ndarray] = None
+
+
+def _init_import_worker(gcs_roots: list[str]) -> None:
+  # The parent already fixed directory markers under these roots.
+  mark_gcs_roots_fixed(gcs_roots)
 
 
 def _run_single_csv_import_proc(
@@ -139,7 +188,11 @@ def _run_single_csv_import_proc(
     import_names: dict,
     config_json_str: str,
     jsonld_dir_name: str,
+    chunk_index: int = 0,
+    num_chunks: int = 1,
 ) -> ImportProcResult:
+  is_split = num_chunks > 1
+  part_tag = f"part{chunk_index:03d}" if is_split else ""
   with create_store(input_dir_path) as input_store_obj, \
        create_store(output_dir_path) as output_store_obj, \
        create_store(process_dir_path) as process_store_obj:
@@ -153,15 +206,24 @@ def _run_single_csv_import_proc(
     graph_writer = JsonLdStreamWriter(output_store,
                                       import_names,
                                       nodes,
-                                      jsonld_dir_name=jsonld_dir_name)
+                                      jsonld_dir_name=jsonld_dir_name,
+                                      shard_tag=part_tag)
 
     sanitized_path = input_store.full_path().replace("://",
                                                      "_").replace("/", "_")
-    report_file = process_store.open_file(f"report_{sanitized_path}.json")
+    report_suffix = f"_{part_tag}" if is_split else ""
+    report_file = process_store.open_file(
+        f"report_{sanitized_path}{report_suffix}.json")
     reporter = ImportReporter(report_file).get_file_reporter(input_store)
 
-    importer = _create_importer_for_file(config, input_store, process_store,
-                                         graph_writer, reporter, nodes)
+    importer = _create_importer_for_file(config,
+                                         input_store,
+                                         process_store,
+                                         graph_writer,
+                                         reporter,
+                                         nodes,
+                                         chunk_index=chunk_index,
+                                         num_chunks=num_chunks)
     importer.do_import()
     graph_writer.commit_and_close()
 
@@ -176,6 +238,15 @@ def _run_single_csv_import_proc(
     provenances = dict(nodes.provenances)
     groups = dict(nodes.groups)
     properties = dict(nodes.properties)
+    entity_dcids = []
+    obs_hashes = None
+    if is_split:
+      entity_dcids = list(getattr(importer, "entity_dcids", {}))
+      # uint64 array: ~8 bytes per observation instead of ~70 for a set of ints.
+      obs_hashes = np.sort(
+          np.fromiter(graph_writer.obs_hash_set,
+                      dtype=np.uint64,
+                      count=len(graph_writer.obs_hash_set)))
     return ImportProcResult(
         file_rel_path=file_rel_path,
         obs_collision_count=graph_writer.obs_collision_count,
@@ -190,6 +261,9 @@ def _run_single_csv_import_proc(
         groups=groups,
         properties=properties,
         processed_imports=set(graph_writer._processed_imports),
+        num_chunks=num_chunks,
+        entity_dcids=entity_dcids,
+        obs_hashes=obs_hashes,
     )
 
 
@@ -688,77 +762,174 @@ class Runner:
             for future in concurrent.futures.as_completed(futures):
               future.result()
       else:
-        num_processes = min(32, len(all_files))
-        config_json_str = json.dumps(self.config.data)
-        jsonld_dir_name = self.graph_writer.jsonld_dir.name()
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=num_processes) as executor:
-          futures = [
-              executor.submit(
-                  _run_single_csv_import_proc,
-                  file.path,
-                  file._store.root_path,
-                  self.output_dir.full_path(),
-                  self.process_dir.full_path(),
-                  self.import_names,
-                  config_json_str,
-                  jsonld_dir_name,
-              ) for file in all_files
-          ]
-          for future in concurrent.futures.as_completed(futures):
-            res = future.result()
+        self._run_imports_in_processes(all_files)
+
+  def _plan_import_tasks(self, files: list[File],
+                         num_processes: int) -> list[_ImportTask]:
+    """One task per file, except big observation CSVs, which are split into
+    parts. Sorted biggest first so the longest tasks don't start last."""
+    tasks: list[_ImportTask] = []
+    for file in files:
+      try:
+        size = file.size()
+      except Exception:  # Size is only a hint.
+        size = 0
+      num_chunks = 1
+      if (size > _SPLIT_TARGET_BYTES and num_processes > 1 and
+          not file.path.lower().endswith(".mcf")):
+        try:
+          splittable = self.config.import_type(file) == ImportType.OBSERVATIONS
+        except ValueError:
+          splittable = False  # The import itself reports the bad config.
+        if splittable:
+          num_chunks = min(math.ceil(size / _SPLIT_TARGET_BYTES),
+                           _MAX_PARTS_PER_FILE, num_processes)
+      if num_chunks > 1:
+        logging.info("Splitting %s (%d bytes) into %d parts.", file.path, size,
+                     num_chunks)
+      for chunk_index in range(num_chunks):
+        tasks.append(
+            _ImportTask(file=file,
+                        chunk_index=chunk_index,
+                        num_chunks=num_chunks,
+                        est_bytes=size // num_chunks))
+    # MCF first, as before: MCF declares the provenance and source nodes that
+    # CSV results refer to. Then CSVs biggest first. The sort is stable.
+    tasks.sort(key=lambda t:
+               (not t.file.path.lower().endswith(".mcf"), -t.est_bytes))
+    return tasks
+
+  def _run_imports_in_processes(self, files: list[File]) -> None:
+    num_processes = _max_import_processes()
+    tasks = self._plan_import_tasks(files, num_processes)
+    num_processes = min(num_processes, len(tasks))
+    logging.info("Running %d import tasks in %d processes.", len(tasks),
+                 num_processes)
+    config_json_str = json.dumps(self.config.data)
+    jsonld_dir_name = self.graph_writer.jsonld_dir.name()
+    # Merge state for split files, keyed by file path.
+    self._split_parts_left: dict[str, int] = {}
+    self._split_entity_dcids: dict[str, dict[str, bool]] = {}
+    self._split_obs_hashes: dict[str, np.ndarray] = {}
+    with concurrent.futures.ProcessPoolExecutor(
+        max_workers=num_processes,
+        initializer=_init_import_worker,
+        initargs=(fixed_gcs_roots(),)) as executor:
+      futures = [
+          executor.submit(
+              _run_single_csv_import_proc,
+              task.file.path,
+              task.file._store.root_path,
+              self.output_dir.full_path(),
+              self.process_dir.full_path(),
+              self.import_names,
+              config_json_str,
+              jsonld_dir_name,
+              task.chunk_index,
+              task.num_chunks,
+          ) for task in tasks
+      ]
+      for future in concurrent.futures.as_completed(futures):
+        res = future.result()
+        self._merge_proc_result(res)
+        if res.num_chunks > 1:
+          if self._merge_split_part(res):
             self._log_file_progress("Imported file", res.file_rel_path)
-            if res.resolved_entities:
-              for dcid, val in res.resolved_entities.items():
-                if isinstance(val, tuple):
-                  t, p_ids = val
-                else:
-                  t, p_ids = val, set()
-                if isinstance(p_ids, set):
-                  for p_id in (p_ids or [""]):
-                    self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
-                else:
-                  self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
-            if res.event_types:
-              self.nodes.event_types.update(res.event_types)
-            if res.entity_types:
-              self.nodes.entity_types.update(res.entity_types)
-            if res.variables:
-              self.nodes.variables.update(res.variables)
-            if res.sources:
-              for src in res.sources.values():
-                self.nodes.register_source(id=src.id,
-                                           name=src.name,
-                                           url=src.url,
-                                           provenance_id=getattr(
-                                               src, "provenance_id", ""))
-            if res.provenances:
-              for prov in res.provenances.values():
-                self.nodes.register_provenance(id=prov.id,
-                                               name=prov.name,
-                                               url=prov.url,
-                                               source_id=prov.source_id,
-                                               properties=prov.properties)
-            if res.groups:
-              self.nodes.groups.update(res.groups)
-              for svg in res.groups.values():
-                self.nodes.ids_to_groups[svg.id] = svg
-            if res.properties:
-              for prop_name, prop_obj in res.properties.items():
-                if prop_name not in self.nodes.properties:
-                  self.nodes.properties[prop_name] = prop_obj
-                else:
-                  self.nodes.properties[prop_name].provenance_ids.update(
-                      getattr(prop_obj, "provenance_ids", set()))
-            if res.processed_imports:
-              self.graph_writer._processed_imports.update(res.processed_imports)
-            if res.obs_collision_count and hasattr(self.graph_writer,
-                                                   "obs_collision_count"):
-              self.graph_writer.obs_collision_count += res.obs_collision_count
-              for f_name, count in res.file_collision_counts.items():
-                self.graph_writer.file_collision_counts[f_name] += count
-                self.graph_writer.file_sample_collisions[f_name].extend(
-                    res.file_sample_collisions.get(f_name, []))
+        else:
+          self._log_file_progress("Imported file", res.file_rel_path)
+
+  def _merge_split_part(self, res: ImportProcResult) -> bool:
+    """Combines one part of a split file. Returns True once all parts are in.
+
+    Each part only sees duplicate observations within its own rows; duplicates
+    across parts are counted here, so totals match an unsplit import.
+    """
+    path = res.file_rel_path
+    parts_left = self._split_parts_left.get(path, res.num_chunks) - 1
+    self._split_parts_left[path] = parts_left
+
+    seen = self._split_obs_hashes.get(path)
+    part_hashes = res.obs_hashes
+    if part_hashes is not None and len(part_hashes):
+      if seen is not None and len(seen):
+        cross_part = len(np.intersect1d(seen, part_hashes, assume_unique=True))
+        if cross_part and hasattr(self.graph_writer, "obs_collision_count"):
+          file_key = os.path.basename(path)
+          logging.warning(
+              "Observation @id collision in '%s': %d duplicates across split parts.",
+              file_key, cross_part)
+          self.graph_writer.obs_collision_count += cross_part
+          self.graph_writer.file_collision_counts[file_key] += cross_part
+        seen = np.union1d(seen, part_hashes)
+      else:
+        seen = part_hashes
+      self._split_obs_hashes[path] = seen
+
+    entity_dcids = self._split_entity_dcids.setdefault(path, {})
+    for dcid in res.entity_dcids:
+      entity_dcids[dcid] = True
+
+    if parts_left > 0:
+      return False
+    # All parts done: look up proxy entities once for the whole file.
+    add_proxy_entity_nodes(self.nodes, self._split_entity_dcids.pop(path, {}))
+    self._split_obs_hashes.pop(path, None)
+    self._split_parts_left.pop(path, None)
+    return True
+
+  def _merge_proc_result(self, res: ImportProcResult) -> None:
+    """Merges the nodes and stats a worker process returned."""
+    if res.resolved_entities:
+      for dcid, val in res.resolved_entities.items():
+        if isinstance(val, tuple):
+          t, p_ids = val
+        else:
+          t, p_ids = val, set()
+        if isinstance(p_ids, set):
+          for p_id in (p_ids or [""]):
+            self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
+        else:
+          self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
+    if res.event_types:
+      self.nodes.event_types.update(res.event_types)
+    if res.entity_types:
+      self.nodes.entity_types.update(res.entity_types)
+    if res.variables:
+      self.nodes.variables.update(res.variables)
+    if res.sources:
+      for src in res.sources.values():
+        self.nodes.register_source(id=src.id,
+                                   name=src.name,
+                                   url=src.url,
+                                   provenance_id=getattr(
+                                       src, "provenance_id", ""))
+    if res.provenances:
+      for prov in res.provenances.values():
+        self.nodes.register_provenance(id=prov.id,
+                                       name=prov.name,
+                                       url=prov.url,
+                                       source_id=prov.source_id,
+                                       properties=prov.properties)
+    if res.groups:
+      self.nodes.groups.update(res.groups)
+      for svg in res.groups.values():
+        self.nodes.ids_to_groups[svg.id] = svg
+    if res.properties:
+      for prop_name, prop_obj in res.properties.items():
+        if prop_name not in self.nodes.properties:
+          self.nodes.properties[prop_name] = prop_obj
+        else:
+          self.nodes.properties[prop_name].provenance_ids.update(
+              getattr(prop_obj, "provenance_ids", set()))
+    if res.processed_imports:
+      self.graph_writer._processed_imports.update(res.processed_imports)
+    if res.obs_collision_count and hasattr(self.graph_writer,
+                                           "obs_collision_count"):
+      self.graph_writer.obs_collision_count += res.obs_collision_count
+      for f_name, count in res.file_collision_counts.items():
+        self.graph_writer.file_collision_counts[f_name] += count
+        self.graph_writer.file_sample_collisions[f_name].extend(
+            res.file_sample_collisions.get(f_name, []))
 
   def _log_file_progress(self, file_prefix: str, file: File):
     """Increments file progress counter thread-safely and logs standard progress line."""

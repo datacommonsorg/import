@@ -14,6 +14,7 @@
 
 import json
 import logging
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -31,8 +32,13 @@ from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.util import has_namespace_prefix
 from util.filesystem import File
+from util.filesystem import HEADER_READ_CHUNK_SIZE
 
 from util import dc_client as dc
+
+# Rows per pandas chunk when streaming a CSV. This is also the unit that split
+# imports hand out round-robin: part k of n processes chunks k, k+n, k+2n, ...
+_READ_CHUNK_ROWS = 10000
 
 # Columns for standard observation properties.
 # These are optional.
@@ -101,6 +107,58 @@ def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
   return df
 
 
+def add_proxy_entity_nodes(nodes: Nodes,
+                           entity_dcids: Iterable[str],
+                           prov_id: str = "") -> None:
+  """Adds proxy nodes, typed via Base DC, for entities not already in nodes.
+
+  Importers call this per file. When a file is split across processes, the
+  parts skip it and the parent calls it once with the union of their entities.
+  """
+  # NOTE: Generation of proxy entity nodes from Base Data Commons is controlled
+  # by import_proxy_entities. Observation nodes already reference the place/entity
+  # DCID directly in observationAbout, and disabling proxy node creation prevents
+  # generating redundant proxy entity nodes in the custom graph and avoids unnecessary
+  # Base DC API calls during ingestion.
+  if not nodes.config.import_proxy_entities():
+    logging.debug(
+        "Skipping proxy entity node generation (import_proxy_entities is disabled)."
+    )
+    return
+
+  entity_dcids = list(entity_dcids)
+  # Get entity nodes that are not already recorded.
+  new_entity_dcids = [
+      strip_namespace(dcid)
+      for dcid in entity_dcids
+      if not nodes.has_entity(strip_namespace(dcid))
+  ]
+
+  if prov_id:
+    for dcid in entity_dcids:
+      clean_dcid = strip_namespace(dcid)
+      if nodes.has_entity(clean_dcid):
+        nodes.entities[clean_dcid].provenance_ids.add(prov_id)
+
+  logging.info("Found %s total entities, of which %s are already imported.",
+               len(entity_dcids),
+               len(entity_dcids) - len(new_entity_dcids))
+
+  if not new_entity_dcids:
+    return
+
+  # Get entity types
+  logging.info("Getting entity types from DC for %s entities.",
+               len(new_entity_dcids))
+  dcid2type: dict[str, str] = dc.get_property_of_entities(
+      new_entity_dcids, sc.PREDICATE_TYPE_OF)
+
+  if dcid2type:
+    logging.info("Importing %s of %s entities.", len(dcid2type),
+                 len(new_entity_dcids))
+    nodes.entities_with_types(dcid2type, provenance_id=prov_id)
+
+
 class VariablePerRowImporter(Importer):
   """Imports a single observations CSV, one observation per row ("SVObs").
 
@@ -112,13 +170,27 @@ class VariablePerRowImporter(Importer):
   node each, unless `importProxyEntities` is off.
   """
 
-  def __init__(self, input_file: File, graph_writer: GraphWriter,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
+  def __init__(self,
+               input_file: File,
+               graph_writer: GraphWriter,
+               reporter: FileImportReporter,
+               nodes: Nodes,
+               chunk_index: int = 0,
+               num_chunks: int = 1) -> None:
+    """chunk_index / num_chunks: when a large file is split across processes,
+    this importer handles only every num_chunks-th chunk of rows, starting at
+    chunk_index. Split parts skip the proxy-entity lookup: the caller runs it
+    once on the union of `entity_dcids` from all parts."""
+    if not 0 <= chunk_index < num_chunks:
+      raise ValueError(
+          f"Invalid chunk {chunk_index} of {num_chunks} for {input_file.path}")
     self.input_file = input_file
     self.graph_writer = graph_writer
     self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
+    self.chunk_index = chunk_index
+    self.num_chunks = num_chunks
     self.custom_dimensions = []
     self.column_mappings = {}
     self.df = pd.DataFrame()
@@ -146,7 +218,8 @@ class VariablePerRowImporter(Importer):
 
   def _read_csv(self) -> None:
     # Read only the header row to extract column names for validation
-    with self.input_file.open_stream() as stream:
+    with self.input_file.open_stream(
+        chunk_size=HEADER_READ_CHUNK_SIZE) as stream:
       self.df = pd.read_csv(stream, nrows=1)
 
   def validate_headers(self) -> list[FileValidationError]:
@@ -157,7 +230,8 @@ class VariablePerRowImporter(Importer):
       return errors
 
     try:
-      with self.input_file.open_stream() as stream:
+      with self.input_file.open_stream(
+          chunk_size=HEADER_READ_CHUNK_SIZE) as stream:
         header_df = pd.read_csv(stream, nrows=0)
       actual_column_names = set(header_df.columns)
     except Exception as e:
@@ -276,10 +350,12 @@ class VariablePerRowImporter(Importer):
     with self.input_file.open_stream() as stream:
       reader = pd.read_csv(stream,
                            na_values=constants.STANDARD_NA_VALUES,
-                           chunksize=10000,
+                           chunksize=_READ_CHUNK_ROWS,
                            dtype=str)
 
-      for chunk_df in reader:
+      for chunk_number, chunk_df in enumerate(reader):
+        if chunk_number % self.num_chunks != self.chunk_index:
+          continue  # Another part of a split import handles this chunk.
         if chunk_df.empty:
           continue
         observations_df = (self.resolve_specified_columns(chunk_df).pipe(
@@ -346,46 +422,9 @@ class VariablePerRowImporter(Importer):
     return df
 
   def _add_entity_nodes(self) -> None:
-    # NOTE: Generation of proxy entity nodes from Base Data Commons is controlled
-    # by import_proxy_entities. Observation nodes already reference the place/entity
-    # DCID directly in observationAbout, and disabling proxy node creation prevents
-    # generating redundant proxy entity nodes in the custom graph and avoids unnecessary
-    # Base DC API calls during ingestion.
-    if not self.config.import_proxy_entities():
-      logging.debug(
-          "Skipping proxy entity node generation (import_proxy_entities is disabled)."
-      )
+    if self.num_chunks > 1:
+      # Part of a split import: the caller looks up the union of all parts'
+      # entities once, instead of every part repeating the DC API calls.
       return
-
-    # Get entity nodes that are not already recorded.
-    new_entity_dcids = [
-        strip_namespace(dcid)
-        for dcid in self.entity_dcids
-        if not self.nodes.has_entity(strip_namespace(dcid))
-    ]
-
-    prov_id = getattr(self, "provenance", "")
-    if prov_id:
-      for dcid in self.entity_dcids:
-        clean_dcid = strip_namespace(dcid)
-        if self.nodes.has_entity(clean_dcid):
-          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
-
-    logging.info("Found %s total entities, of which %s are already imported.",
-                 len(self.entity_dcids),
-                 len(self.entity_dcids) - len(new_entity_dcids))
-
-    if not new_entity_dcids:
-      return
-
-    # Get entity types
-    logging.info("Getting entity types from DC for %s entities.",
-                 len(new_entity_dcids))
-    dcid2type: dict[str,
-                    str] = dc.get_property_of_entities(new_entity_dcids,
-                                                       sc.PREDICATE_TYPE_OF)
-
-    if dcid2type:
-      logging.info("Importing %s of %s entities.", len(dcid2type),
-                   len(new_entity_dcids))
-      self.nodes.entities_with_types(dcid2type, provenance_id=prov_id)
+    add_proxy_entity_nodes(self.nodes, self.entity_dcids,
+                           getattr(self, "provenance", ""))
