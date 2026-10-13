@@ -151,8 +151,9 @@ def add_proxy_entity_nodes(nodes: Nodes,
   # Get entity types
   logging.info("Getting entity types from DC for %s entities.",
                len(new_entity_dcids))
-  dcid2type: dict[str, str] = dc.get_property_of_entities(
-      new_entity_dcids, sc.PREDICATE_TYPE_OF)
+  dcid2type: dict[str,
+                  str] = dc.get_property_of_entities(new_entity_dcids,
+                                                     sc.PREDICATE_TYPE_OF)
 
   if dcid2type:
     logging.info("Importing %s of %s entities.", len(dcid2type),
@@ -364,9 +365,9 @@ class VariablePerRowImporter(Importer):
 
       header = stream.readline()
       start_byte = (file_size * self.chunk_index) // self.num_chunks
-      end_byte = (
-          (file_size * (self.chunk_index + 1)) // self.num_chunks
-          if self.chunk_index < self.num_chunks - 1 else file_size)
+      end_byte = ((file_size * (self.chunk_index + 1)) //
+                  self.num_chunks if self.chunk_index < self.num_chunks -
+                  1 else file_size)
 
       if self.chunk_index == 0:
         stream.seek(len(header))
@@ -483,7 +484,8 @@ class VariablePerRowImporter(Importer):
       col = custom_cols[0]
       val_to_json = {k[0]: v for k, v in tuple_to_json.items()}
       fallback = json.dumps(static_props) if static_props else ""
-      df[constants.COLUMN_PROPERTIES] = df[col].map(val_to_json).fillna(fallback)
+      df[constants.COLUMN_PROPERTIES] = df[col].map(val_to_json).fillna(
+          fallback)
     else:
       df[constants.COLUMN_PROPERTIES] = [
           tuple_to_json.get(row, "")

@@ -17,10 +17,9 @@ from enum import auto
 from enum import Enum
 from functools import wraps
 import json
+import logging
 import threading
 import time
-
-import logging
 from typing import Optional
 
 from util.filesystem import File
@@ -146,7 +145,8 @@ class ImportReporter:
         try:
           self.report_file.write(json.dumps(self.json(), indent=2))
         except Exception as e:
-          logging.warning("Failed to save report to %s: %s", self.report_file, e)
+          logging.warning("Failed to save report to %s: %s", self.report_file,
+                          e)
 
 
 class FileImportReporter:

@@ -65,8 +65,7 @@ _ARCHIVES_DIR_NAME = "archives"
 # avoiding straggler cores on large multi-megabyte files.
 _SPLIT_TARGET_BYTES = int(
     os.getenv("SIMPLE_IMPORT_SPLIT_TARGET_BYTES", 8 * 1024 * 1024))
-_MAX_PARTS_PER_FILE = int(
-    os.getenv("SIMPLE_IMPORT_MAX_PARTS_PER_FILE", 64))
+_MAX_PARTS_PER_FILE = int(os.getenv("SIMPLE_IMPORT_MAX_PARTS_PER_FILE", 64))
 
 # Overrides the number of import processes (defaults to the usable CPU count).
 _MAX_PROCESSES_ENV = "SIMPLE_IMPORT_MAX_PROCESSES"
@@ -235,7 +234,7 @@ def _run_single_csv_import_proc(
   importer.do_import()
   graph_writer.commit_and_close()
   return _collect_proc_result(file_rel_path, nodes, graph_writer, importer,
-                             is_split, num_chunks)
+                              is_split, num_chunks)
 
 
 def _collect_proc_result(
@@ -661,7 +660,9 @@ class Runner:
 
   def _matches_config(self, file: File) -> bool:
     """Checks whether the file matches any inputFiles pattern in config.json."""
-    return any(match(file, pattern) for pattern in self.config._input_files_config.keys())
+    return any(
+        match(file, pattern)
+        for pattern in self.config._input_files_config.keys())
 
   def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
     """Discovers, filters, sorts, and returns matched CSV and MCF files."""
@@ -814,8 +815,8 @@ class Runner:
                         num_chunks=num_chunks,
                         est_bytes=chunk_bytes))
     # MCF files must run first to declare sources and provenances, followed by largest CSVs.
-    tasks.sort(key=lambda t:
-               (not t.file.path.lower().endswith(".mcf"), -t.est_bytes))
+    tasks.sort(
+        key=lambda t: (not t.file.path.lower().endswith(".mcf"), -t.est_bytes))
     return tasks
 
   def _run_imports_in_processes(self, files: list[File]) -> None:
@@ -929,7 +930,8 @@ class Runner:
         self.nodes.register_source(id=src.id,
                                    name=src.name,
                                    url=src.url,
-                                   provenance_id=getattr(src, "provenance_id", ""))
+                                   provenance_id=getattr(
+                                       src, "provenance_id", ""))
     if res.provenances:
       for prov in res.provenances.values():
         self.nodes.register_provenance(id=prov.id,
@@ -953,7 +955,8 @@ class Runner:
 
   def _merge_collision_stats(self, res: ImportProcResult) -> None:
     """Merges intra-file collision metrics reported by a worker."""
-    if not (res.obs_collision_count and hasattr(self.graph_writer, "obs_collision_count")):
+    if not (res.obs_collision_count and
+            hasattr(self.graph_writer, "obs_collision_count")):
       return
     self.graph_writer.obs_collision_count += res.obs_collision_count
     for f_name, count in res.file_collision_counts.items():

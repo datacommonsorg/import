@@ -62,13 +62,16 @@ _EXPORT_PROCESSES_MAX = 8
 _KNOWN_CUSTOM_PREFIXES = set()
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
-_process_gcs_buckets: dict[tuple[str, str], tuple[storage.Client, storage.Bucket]] = {}
+_process_gcs_buckets: dict[tuple[str, str], tuple[storage.Client,
+                                                  storage.Bucket]] = {}
 _process_upload_executor: Optional[concurrent.futures.ThreadPoolExecutor] = None
 
 
-def _get_process_gcs_bucket(project_id: str, bucket_name: str) -> storage.Bucket:
+def _get_process_gcs_bucket(project_id: str,
+                            bucket_name: str) -> storage.Bucket:
   # In test environments with patched storage.Client, always invoke so mock assertions succeed.
-  if hasattr(storage.Client, "_mock_return_value") or hasattr(storage.Client, "assert_called"):
+  if hasattr(storage.Client, "_mock_return_value") or hasattr(
+      storage.Client, "assert_called"):
     client = storage.Client(project=project_id)
     adapter = requests.adapters.HTTPAdapter(
         pool_connections=_UPLOAD_CONCURRENCY, pool_maxsize=_UPLOAD_CONCURRENCY)
@@ -81,8 +84,8 @@ def _get_process_gcs_bucket(project_id: str, bucket_name: str) -> storage.Bucket
   if cached is not None:
     return cached[1]
   client = storage.Client(project=project_id)
-  adapter = requests.adapters.HTTPAdapter(
-      pool_connections=_UPLOAD_CONCURRENCY, pool_maxsize=_UPLOAD_CONCURRENCY)
+  adapter = requests.adapters.HTTPAdapter(pool_connections=_UPLOAD_CONCURRENCY,
+                                          pool_maxsize=_UPLOAD_CONCURRENCY)
   client._http.mount("https://", adapter)
   client._http.mount("http://", adapter)
   bucket = client.bucket(bucket_name)
@@ -185,7 +188,8 @@ def _resolve_properties_json(
     if isinstance(loaded, dict):
       props_dict = loaded
       prop_keys = [
-          f"dcid:{k}" if not k.startswith(("dcid:", "http://", "https://")) else k
+          f"dcid:{k}" if not k.startswith(
+              ("dcid:", "http://", "https://")) else k
           for k in props_dict.keys()
       ]
   except json.JSONDecodeError:
@@ -225,7 +229,8 @@ def _build_observation_dict(
     obs_obj["dcid:observationAbout"] = entity_ref
 
   if provenance:
-    obs_obj["dcid:provenance"] = _uri_ref(_rewrite_custom_ns_to_dcid(provenance))
+    obs_obj["dcid:provenance"] = _uri_ref(
+        _rewrite_custom_ns_to_dcid(provenance))
     if prov_urls and provenance in prov_urls and prov_urls[provenance]:
       obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
   if unit:
@@ -340,7 +345,8 @@ def _write_node_shard_fast(args):
       val = _parse_numeric(row.object_value)
 
     if pred_key == "@type":
-      val_str = val["@id"] if isinstance(val, dict) and "@id" in val else str(val)
+      val_str = val["@id"] if isinstance(val,
+                                         dict) and "@id" in val else str(val)
       _append_predicate_value(subjects[sub_id], "@type", val_str)
     else:
       _append_predicate_value(subjects[sub_id], pred_key, val)
@@ -465,8 +471,8 @@ class JsonLdStreamWriter(GraphWriter):
     if jsonld_dir_name:
       unique_dir_name = jsonld_dir_name
       # Worker process reusing existing directory: avoid remote existence checks.
-      self.jsonld_dir = output_dir.open_dir(
-          "jsonld", create=False).open_dir(unique_dir_name, create=False)
+      self.jsonld_dir = output_dir.open_dir("jsonld", create=False).open_dir(
+          unique_dir_name, create=False)
     else:
       timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
       unique_dir_name = f"{self.import_name}_{timestamp}"

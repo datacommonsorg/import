@@ -91,8 +91,8 @@ def _gcs_dir_prefix(fs: GCSFS, path: str) -> str:
 
 def _enlarge_gcs_http_pool(fs: GCSFS) -> None:
   try:
-    adapter = requests.adapters.HTTPAdapter(pool_connections=_GCS_HTTP_POOL_SIZE,
-                                            pool_maxsize=_GCS_HTTP_POOL_SIZE)
+    adapter = requests.adapters.HTTPAdapter(
+        pool_connections=_GCS_HTTP_POOL_SIZE, pool_maxsize=_GCS_HTTP_POOL_SIZE)
     fs.client._http.mount("https://", adapter)
   except Exception as e:  # Best effort: the default pool still works.
     logging.debug("Could not resize the GCS connection pool: %s", e)
@@ -244,7 +244,8 @@ class Dir(_StoreWrapper):
       if not self.fs().exists(new_path):
         self.fs().makedirs(new_path)
       if not self.fs().isdir(new_path):
-        raise ValueError(f"{self.full_path(path)} exists and is not a directory")
+        raise ValueError(
+            f"{self.full_path(path)} exists and is not a directory")
     return Dir(self._store, new_path)
 
   def open_file(self, path: str, create_if_missing: bool = True) -> "File":
@@ -272,9 +273,8 @@ class Dir(_StoreWrapper):
     """
     gcs_fs = self.fs()
     root_prefix = _gcs_dir_prefix(gcs_fs, "")
-    blobs = gcs_fs.bucket.list_blobs(
-        prefix=_gcs_dir_prefix(gcs_fs, self.path),
-        delimiter=None if include_subdirs else "/")
+    blobs = gcs_fs.bucket.list_blobs(prefix=_gcs_dir_prefix(gcs_fs, self.path),
+                                     delimiter=None if include_subdirs else "/")
     files = []
     for blob in blobs:
       if blob.name.endswith("/"):
@@ -348,9 +348,11 @@ class File(_StoreWrapper):
           blob = fs.bucket.blob(_gcs_key(fs, self.path))
           if "b" in mode:
             blob_stream = blob.open(mode,
-                                    chunk_size=chunk_size or _GCS_STREAM_CHUNK_SIZE)
+                                    chunk_size=chunk_size or
+                                    _GCS_STREAM_CHUNK_SIZE)
             return io.BufferedReader(blob_stream,
-                                     buffer_size=chunk_size or _GCS_STREAM_CHUNK_SIZE)
+                                     buffer_size=chunk_size or
+                                     _GCS_STREAM_CHUNK_SIZE)
           return blob.open(mode,
                            chunk_size=chunk_size or _GCS_STREAM_CHUNK_SIZE,
                            encoding="utf-8",
