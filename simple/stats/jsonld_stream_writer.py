@@ -619,7 +619,8 @@ class JsonLdStreamWriter(GraphWriter):
     bucket_name = parts[0]
     blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
 
-    client = storage.Client()
+    project_id = os.getenv("PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
+    client = storage.Client(project=project_id)
 
     # Configure connection pool size for concurrent GCS uploads
     adapter = requests.adapters.HTTPAdapter(
