@@ -71,17 +71,25 @@ class AggregationDeleter:
         this database's own client (which also covers the deleter's snapshot
         queries). Fails loudly rather than silently falling back to 1 hour;
         deleter_timeout_test.py pins this against the locked
-        google-cloud-spanner version.
+        google-cloud-spanner and google-api-core versions.
         """
-        transport = database.spanner_api._transport
-        streaming_sql = transport._wrapped_methods[transport.execute_streaming_sql]
-        if not hasattr(streaming_sql, "_timeout"):
+        deadline = float(self.timeout)
+        try:
+            transport = database.spanner_api.transport
+            streaming_sql = transport._wrapped_methods[transport.execute_streaming_sql]
+            # Read before writing: assigning to a renamed attribute would
+            # silently do nothing.
+            library_default = streaming_sql._timeout
+            streaming_sql._timeout = deadline
+        except (AttributeError, KeyError) as e:
             raise RuntimeError(
-                "google-cloud-spanner internals changed: cannot set the "
-                "ExecuteStreamingSql deadline used by Partitioned DML deletes."
-            )
-        streaming_sql._timeout = float(self.timeout)
-        logging.info(f"Set Spanner ExecuteStreamingSql deadline to {self.timeout}s.")
+                "google-cloud-spanner/google-api-core internals changed: cannot set "
+                "the ExecuteStreamingSql deadline used by Partitioned DML deletes."
+            ) from e
+        logging.info(
+            f"Set Spanner ExecuteStreamingSql deadline to {deadline}s "
+            f"(library default: {library_default}s)."
+        )
 
     def delete_aggregated_data(self, imports_to_delete: List[str]) -> None:
         """Deletes aggregated data for the specified imports from Spanner concurrently.

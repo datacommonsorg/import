@@ -17,7 +17,7 @@
 import functools
 import types
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from google.auth.credentials import AnonymousCredentials
 from google.cloud import spanner
@@ -55,7 +55,7 @@ class TestDeletionTimeout(unittest.TestCase):
             The row count and a dict of RPC name -> deadline it was sent with.
         """
         database = deleter.spanner_database
-        transport = database.spanner_api._transport
+        transport = database.spanner_api.transport
         deadlines = {}
 
         def fake_rpc(name, response):
@@ -109,18 +109,50 @@ class TestDeletionTimeout(unittest.TestCase):
         )
 
     def test_fails_loudly_if_library_internals_change(self):
-        transport = MagicMock()
-        # Simulates a library version whose wrapper no longer has `_timeout`.
-        transport._wrapped_methods = {
-            transport.execute_streaming_sql: types.SimpleNamespace()
-        }
-        database = MagicMock()
-        database.spanner_api._transport = transport
+        stub = object()  # Stands in for transport.execute_streaming_sql.
 
-        with self.assertRaisesRegex(RuntimeError, "internals changed"):
-            AggregationDeleter("proj", "inst", "db")._configure_streaming_timeout(
-                database
+        class ReadOnlyTimeout:
+            _timeout = property(lambda self: 3600.0)
+
+        def database_with(transport):
+            return types.SimpleNamespace(
+                spanner_api=types.SimpleNamespace(transport=transport)
             )
+
+        # Each case breaks one library internal the override relies on.
+        cases = {
+            "no spanner_api": types.SimpleNamespace(),
+            "no transport": types.SimpleNamespace(spanner_api=types.SimpleNamespace()),
+            "no _wrapped_methods": database_with(
+                types.SimpleNamespace(execute_streaming_sql=stub)
+            ),
+            "no execute_streaming_sql": database_with(
+                types.SimpleNamespace(_wrapped_methods={})
+            ),
+            "no ExecuteStreamingSql wrapper": database_with(
+                types.SimpleNamespace(execute_streaming_sql=stub, _wrapped_methods={})
+            ),
+            "wrapper has no _timeout": database_with(
+                types.SimpleNamespace(
+                    execute_streaming_sql=stub,
+                    _wrapped_methods={stub: types.SimpleNamespace()},
+                )
+            ),
+            "wrapper _timeout is read-only": database_with(
+                types.SimpleNamespace(
+                    execute_streaming_sql=stub,
+                    _wrapped_methods={stub: ReadOnlyTimeout()},
+                )
+            ),
+        }
+        deleter = AggregationDeleter("proj", "inst", "db")
+        for name, database in cases.items():
+            with self.subTest(name):
+                with self.assertRaisesRegex(RuntimeError, "internals changed") as ctx:
+                    deleter._configure_streaming_timeout(database)
+                self.assertIsInstance(
+                    ctx.exception.__cause__, (AttributeError, KeyError)
+                )
 
     def test_database_not_cached_if_deadline_cannot_be_set(self):
         deleter = AggregationDeleter("proj", "inst", "db")
