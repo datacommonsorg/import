@@ -74,6 +74,7 @@ def mark_gcs_roots_fixed(roots: Iterable[str]) -> None:
 
 
 def _gcs_root_id(fs: GCSFS) -> str:
+  """Returns unique identifier string for a GCSFS root."""
   return f"{_GCS_PATH_PREFIX}{fs.bucket.name}/{(fs.root_path or '').strip('/')}"
 
 
@@ -90,6 +91,7 @@ def _gcs_dir_prefix(fs: GCSFS, path: str) -> str:
 
 
 def _enlarge_gcs_http_pool(fs: GCSFS) -> None:
+  """Configures an enlarged HTTP connection pool for the GCSFS client."""
   try:
     adapter = requests.adapters.HTTPAdapter(
         pool_connections=_GCS_HTTP_POOL_SIZE, pool_maxsize=_GCS_HTTP_POOL_SIZE)
@@ -99,12 +101,13 @@ def _enlarge_gcs_http_pool(fs: GCSFS) -> None:
 
 
 def _fix_gcsfs_storage_once(fs: GCSFS) -> None:
+  """Configures GCSFS storage once per root under lock to prevent race conditions."""
   root_id = _gcs_root_id(fs)
   with _FIXED_GCS_ROOTS_LOCK:
     if root_id in _FIXED_GCS_ROOTS:
       return
-  _fix_gcsfs_storage(fs)
-  mark_gcs_roots_fixed([root_id])
+    _fix_gcsfs_storage(fs)
+    _FIXED_GCS_ROOTS.add(root_id)
 
 
 def join_path(base: str, *args: str) -> str:

@@ -206,7 +206,7 @@ class VariablePerRowImporter(Importer):
     try:
       errors = self.validate_headers()
       if errors:
-        raise ValueError("\n".join(errors))
+        raise ValueError("\n".join(err.error_message for err in errors))
       self._map_columns()
       self._write_observations()
       self._add_entity_nodes()
@@ -372,8 +372,13 @@ class VariablePerRowImporter(Importer):
       if self.chunk_index == 0:
         stream.seek(len(header))
       else:
+        # To avoid skipping a line if start_byte is exactly at a line boundary,
+        # check if the previous character is a newline.
+        stream.seek(start_byte - 1)
+        prev_char = stream.read(1)
         stream.seek(start_byte)
-        stream.readline()  # Skip partial line to align on newline boundary.
+        if prev_char != b"\n":
+          stream.readline()  # Skip partial line to align on newline boundary.
 
       lines = []
       while True:

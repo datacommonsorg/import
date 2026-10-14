@@ -64,11 +64,13 @@ _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
 _process_gcs_buckets: dict[tuple[str, str], tuple[storage.Client,
                                                   storage.Bucket]] = {}
-_process_upload_executor: Optional[concurrent.futures.ThreadPoolExecutor] = None
+_process_upload_executor: Optional[tuple[
+    int, concurrent.futures.ThreadPoolExecutor]] = None
 
 
 def _get_process_gcs_bucket(project_id: str,
                             bucket_name: str) -> storage.Bucket:
+  """Returns a cached GCS bucket client configured with an enlarged HTTP pool."""
   # In test environments with patched storage.Client, always invoke so mock assertions succeed.
   if hasattr(storage.Client, "_mock_return_value") or hasattr(
       storage.Client, "assert_called"):
@@ -94,11 +96,18 @@ def _get_process_gcs_bucket(project_id: str,
 
 
 def _get_process_upload_executor() -> concurrent.futures.ThreadPoolExecutor:
+  """Returns a process-local ThreadPoolExecutor for concurrent shard uploads.
+
+  Cached per PID so child processes forked under POSIX multiprocessing never
+  inherit a parent's thread pool whose worker threads no longer exist.
+  """
   global _process_upload_executor
-  if _process_upload_executor is None:
-    _process_upload_executor = concurrent.futures.ThreadPoolExecutor(
-        max_workers=_UPLOAD_CONCURRENCY)
-  return _process_upload_executor
+  pid = os.getpid()
+  if _process_upload_executor is None or _process_upload_executor[0] != pid:
+    _process_upload_executor = (pid,
+                                concurrent.futures.ThreadPoolExecutor(
+                                    max_workers=_UPLOAD_CONCURRENCY))
+  return _process_upload_executor[1]
 
 
 def _to_json(doc: dict) -> str:

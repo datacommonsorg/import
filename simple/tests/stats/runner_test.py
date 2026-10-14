@@ -25,6 +25,7 @@ from freezegun import freeze_time
 import numpy as np
 from stats import constants
 from stats.data import ValidationErrorType
+from stats.reporter import Status
 from stats.runner import create_store as real_create_store
 from stats.runner import ImportProcResult
 from stats.runner import Runner
@@ -982,3 +983,9 @@ class TestMain(unittest.TestCase):
       node_ids = {n["@id"] for n in nodes if "@id" in n}
       self.assertIn("dcid:provenance/TestProv", node_ids)
       self.assertIn("dcid:source/TestSource", node_ids)
+
+      # Verify that worker status was merged into master reporter
+      self.assertEqual(runner.reporter.status, Status.SUCCESS)
+      self.assertTrue(len(runner.reporter.file_reporters_by_full_path) > 0)
+      for file_rep in runner.reporter.file_reporters_by_full_path.values():
+        self.assertEqual(file_rep.status, Status.SUCCESS)

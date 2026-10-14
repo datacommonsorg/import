@@ -72,6 +72,7 @@ _MAX_PROCESSES_ENV = "SIMPLE_IMPORT_MAX_PROCESSES"
 
 
 def _max_import_processes() -> int:
+  """Determines max worker processes based on environment or available CPU cores."""
   override = os.getenv(_MAX_PROCESSES_ENV)
   if override:
     return max(1, int(override))
@@ -82,6 +83,7 @@ def _max_import_processes() -> int:
 
 @dataclass
 class _ImportTask:
+  """Represents a planned import task unit (full file or byte chunk)."""
   file: File
   chunk_index: int = 0
   num_chunks: int = 1
@@ -99,7 +101,8 @@ def _create_importer_for_file(
     chunk_index: int = 0,
     num_chunks: int = 1,
 ) -> Importer:
-  if input_file.path.lower().endswith(".mcf"):
+  """Instantiates the appropriate Importer implementation for a given file."""
+  if ".mcf" in input_file.path.lower():
     return McfImporter(
         input_file=input_file,
         graph_writer=graph_writer,
@@ -154,6 +157,7 @@ def _create_importer_for_file(
 
 @dataclass
 class ImportProcResult:
+  """Aggregated execution result returned from an isolated worker process."""
   file_rel_path: str
   obs_collision_count: int
   file_collision_counts: dict
@@ -173,21 +177,29 @@ class ImportProcResult:
   entity_dcids: list = field(default_factory=list)
   # Sorted unique observation hashes, for duplicate checks across parts.
   obs_hashes: Optional[np.ndarray] = None
+  # Final status and unresolved entities reported by worker
+  status: str = "SUCCESS"
+  unresolved_entities: list[str] = field(default_factory=list)
 
 
 _WORKER_STORES: dict[str, Store] = {}
 
 
 def _get_worker_store(root_path: str) -> Store:
+  """Retrieves or initializes a cached Store for the given root path."""
   if root_path not in _WORKER_STORES:
     _WORKER_STORES[root_path] = create_store(root_path)
   return _WORKER_STORES[root_path]
 
 
 def _init_import_worker(gcs_roots: list[str]) -> None:
+  """Initializes worker processes, clearing cached stores and executors."""
   # The parent already fixed directory markers under these roots.
   mark_gcs_roots_fixed(gcs_roots)
   _WORKER_STORES.clear()
+  import stats.jsonld_stream_writer as jsw
+  jsw._process_upload_executor = None
+  jsw._process_gcs_buckets.clear()
 
 
 def _run_single_csv_import_proc(
@@ -201,6 +213,7 @@ def _run_single_csv_import_proc(
     chunk_index: int = 0,
     num_chunks: int = 1,
 ) -> ImportProcResult:
+  """Executes an isolated import task within a child worker process."""
   is_split = num_chunks > 1
   part_tag = f"part{chunk_index:03d}" if is_split else ""
   input_store_obj = _get_worker_store(input_dir_path)
@@ -234,7 +247,7 @@ def _run_single_csv_import_proc(
   importer.do_import()
   graph_writer.commit_and_close()
   return _collect_proc_result(file_rel_path, nodes, graph_writer, importer,
-                              is_split, num_chunks)
+                              reporter, is_split, num_chunks)
 
 
 def _collect_proc_result(
@@ -242,6 +255,7 @@ def _collect_proc_result(
     nodes: Nodes,
     graph_writer: JsonLdStreamWriter,
     importer,
+    reporter,
     is_split: bool,
     num_chunks: int,
 ) -> ImportProcResult:
@@ -275,6 +289,8 @@ def _collect_proc_result(
       num_chunks=num_chunks,
       entity_dcids=entity_dcids,
       obs_hashes=obs_hashes,
+      status=reporter.status.name,
+      unresolved_entities=list(reporter.data.get("unresolvedEntities", [])),
   )
 
 
@@ -716,9 +732,11 @@ class Runner:
                 error_message=f"Failed to validate headers: {str(e)}")
         ]
 
-    validation_workers = min(
-        int(os.getenv("HEADER_VALIDATION_MAX_WORKERS", 128)),
-        len(csv_files) or 1)
+    try:
+      validation_workers = int(os.getenv("HEADER_VALIDATION_MAX_WORKERS", "8"))
+    except (ValueError, TypeError):
+      validation_workers = 8
+    validation_workers = min(validation_workers, len(csv_files) or 1)
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=validation_workers) as executor:
       results = executor.map(validate_single_file, csv_files)
@@ -784,7 +802,7 @@ class Runner:
                                    num_processes: int) -> int:
     """Calculates number of parallel chunks to split a large observation CSV into."""
     if (size <= _SPLIT_TARGET_BYTES or num_processes <= 1 or
-        file.path.lower().endswith(".mcf")):
+        ".mcf" in file.path.lower()):
       return 1
     try:
       if self.config.import_type(file) != ImportType.OBSERVATIONS:
@@ -815,8 +833,7 @@ class Runner:
                         num_chunks=num_chunks,
                         est_bytes=chunk_bytes))
     # MCF files must run first to declare sources and provenances, followed by largest CSVs.
-    tasks.sort(
-        key=lambda t: (not t.file.path.lower().endswith(".mcf"), -t.est_bytes))
+    tasks.sort(key=lambda t: (not ".mcf" in t.file.path.lower(), -t.est_bytes))
     return tasks
 
   def _run_imports_in_processes(self, files: list[File]) -> None:
@@ -831,6 +848,7 @@ class Runner:
     self._split_parts_left: dict[str, int] = {}
     self._split_entity_dcids: dict[str, dict[str, bool]] = {}
     self._split_obs_hashes: dict[str, list[np.ndarray]] = {}
+    self._split_unresolved_entities: dict[str, list[str]] = {}
     with concurrent.futures.ProcessPoolExecutor(
         max_workers=num_processes,
         initializer=_init_import_worker,
@@ -849,14 +867,33 @@ class Runner:
               task.num_chunks,
           ) for task in tasks
       ]
+      file_map = {f.path: f for f in files}
       for future in concurrent.futures.as_completed(futures):
         res = future.result()
         self._merge_proc_result(res)
+        file_obj = file_map.get(res.file_rel_path)
         if res.num_chunks > 1:
           if self._merge_split_part(res):
             self._log_file_progress("Imported file", res.file_rel_path)
+            if file_obj:
+              file_reporter = self.reporter.get_file_reporter(file_obj)
+              file_reporter.report_started()
+              unresolved = sorted(
+                  list(
+                      set(
+                          self._split_unresolved_entities.pop(
+                              res.file_rel_path, []))))
+              if unresolved:
+                file_reporter.report_unresolved_entities(unresolved)
+              file_reporter.report_success()
         else:
           self._log_file_progress("Imported file", res.file_rel_path)
+          if file_obj:
+            file_reporter = self.reporter.get_file_reporter(file_obj)
+            file_reporter.report_started()
+            if res.unresolved_entities:
+              file_reporter.report_unresolved_entities(res.unresolved_entities)
+            file_reporter.report_success()
 
   def _record_cross_part_collisions(self, path: str) -> None:
     """Computes and records duplicate observations across split parts in one vectorized pass."""
@@ -886,6 +923,10 @@ class Runner:
 
     if res.obs_hashes is not None and len(res.obs_hashes):
       self._split_obs_hashes.setdefault(path, []).append(res.obs_hashes)
+
+    if res.unresolved_entities:
+      self._split_unresolved_entities.setdefault(path, []).extend(
+          res.unresolved_entities)
 
     entity_dcids = self._split_entity_dcids.setdefault(path, {})
     for dcid in res.entity_dcids:

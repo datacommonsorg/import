@@ -204,3 +204,55 @@ class TestVariablePerRowImporter(unittest.TestCase):
     split_df = split_gw.observations_df.sort_values(
         by=list(split_gw.observations_df.columns)).reset_index(drop=True)
     pd.testing.assert_frame_equal(unsplit_df, split_df)
+
+  def test_split_import_exact_newline_boundary(self):
+    """Verifies that rows are not skipped when start_byte falls exactly on a newline."""
+    config_dict = {
+        "inputFiles": [{
+            "pattern": "data.csv",
+            "importType": "observations",
+            "format": "variablePerRow",
+            "entityType": "Country",
+            "provenance": "dcid:prov1",
+            "ignoreColumns": ["xx"],
+            "columnMappings": {
+                "dcid:observationAbout": "entity",
+                "dcid:variableMeasured": "variable",
+                "dcid:observationDate": "date",
+                "dcid:value": "value"
+            }
+        }]
+    }
+    config = Config(config_dict)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+      input_path = os.path.join(temp_dir, "data.csv")
+      # Each line is exactly 30 bytes. Total size = 120 bytes.
+      # With num_chunks=4, chunk size = 30 bytes:
+      # Chunk 0: [0, 30) -> Header
+      # Chunk 1: [30, 60) -> starts on byte 30 (Row 1)
+      # Chunk 2: [60, 90) -> starts on byte 60 (Row 2)
+      # Chunk 3: [90, 120) -> starts on byte 90 (Row 3)
+      content = ("entity,variable,date,value,xx\n"
+                 "USA,Var1,2020,10,000000000000\n"
+                 "USA,Var2,2020,20,000000000000\n"
+                 "USA,Var3,2020,30,000000000000\n")
+      with open(input_path, "w") as f:
+        f.write(content)
+
+      split_gw = RecordingGraphWriter()
+      for chunk_idx in range(4):
+        rep_file = create_store(temp_dir).as_dir().open_file(
+            f"report_{chunk_idx}.json")
+        reporter = FileImportReporter(input_path, ImportReporter(rep_file))
+        importer = VariablePerRowImporter(
+            input_file=create_store(input_path).as_file(),
+            graph_writer=split_gw,
+            reporter=reporter,
+            nodes=Nodes(config),
+            chunk_index=chunk_idx,
+            num_chunks=4)
+        importer.do_import()
+      split_gw.commit_and_close()
+
+      self.assertEqual(len(split_gw.observations_df), 3)
