@@ -202,7 +202,7 @@ class SpannerClient:
             raise
 
     def get_lock_status(self) -> dict:
-        """Returns the current global ingestion lock owner and acquired timestamp."""
+        """Returns the current global ingestion lock owner, timestamp, and age."""
         sql = "SELECT LockOwner, AcquiredTimestamp FROM IngestionLock WHERE LockID = @lockId"
         try:
             with self.database.snapshot() as snapshot:
@@ -212,16 +212,31 @@ class SpannerClient:
                     param_types={"lockId": STRING},
                 )
                 for row in results:
-                    lock_owner, acquired_at = row[0], row[1]
+                    owner, acquired_at = row[0], row[1]
+                    if not owner or not acquired_at:
+                        continue
+
+                    age_seconds = None
+                    if isinstance(acquired_at, datetime):
+                        age_seconds = max(0.0, (datetime.now(timezone.utc) - acquired_at).total_seconds())
+
+                    iso_timestamp = (
+                        acquired_at.isoformat()
+                        if hasattr(acquired_at, "isoformat")
+                        else str(acquired_at)
+                    )
                     return {
-                        "lockOwner": lock_owner,
-                        "acquiredTimestamp": (
-                            acquired_at.isoformat()
-                            if hasattr(acquired_at, "isoformat")
-                            else acquired_at
-                        ),
+                        "locked": True,
+                        "lockOwner": owner,
+                        "acquiredTimestamp": iso_timestamp,
+                        "ageSeconds": age_seconds,
                     }
-            return {"lockOwner": None, "acquiredTimestamp": None}
+            return {
+                "locked": False,
+                "lockOwner": None,
+                "acquiredTimestamp": None,
+                "ageSeconds": None,
+            }
         except Exception as e:
             logging.error(f"Error getting lock status: {e}")
             raise
