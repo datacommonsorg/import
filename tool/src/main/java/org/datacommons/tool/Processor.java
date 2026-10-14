@@ -540,7 +540,9 @@ public class Processor {
     if (statChecker == null) return;
     logger.info("Performing stats checks");
     statChecker.check();
-    statChecker.fetchSamplePlaceNames(httpClient);
+    if (args.doExistenceChecks) {
+      statChecker.fetchSamplePlaceNames(httpClient);
+    }
   }
 
   /**
