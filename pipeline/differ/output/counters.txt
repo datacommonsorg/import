@@ -1,0 +1,5 @@
+numModifiedObs: 1
+numTotalObs: 22
+numUnmodifiedObs: 18
+numDeletedObs: 2
+numAddedObs: 1

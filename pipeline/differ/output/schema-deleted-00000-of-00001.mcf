@@ -1,0 +1,20 @@
+Node: InterestRate_TreasuryBill_3Month
+dcid: "InterestRate_TreasuryBill_3Month"
+maturity: [3 Month]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryBill_3Month"
+populationType: dcid:TreasuryBill
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+
+
+Node: InterestRate_TreasuryBill_1Month
+dcid: "InterestRate_TreasuryBill_1Month"
+maturity: [1 Month]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryBill_1Month"
+populationType: dcid:TreasuryBill
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+
+
