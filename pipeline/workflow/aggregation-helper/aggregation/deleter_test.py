@@ -132,13 +132,22 @@ class TestAggregationDeleter(unittest.TestCase):
         deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=True)
         deleter.delete_linked_edges(["ImportA"])
 
-        mock_db.execute_partitioned_dml.assert_called_once()
-        call_args = mock_db.execute_partitioned_dml.call_args
-        sql = call_args[0][0]
-        params = call_args[1]["params"]
-        self.assertIn("DELETE FROM Edge", sql)
-        self.assertIn("provenance IN UNNEST(@provenances)", sql)
-        self.assertEqual(params, {"provenances": ["dc/base/generated/ImportA"]})
+        # Verify execute_partitioned_dml calls (order-independent due to parallel execution)
+        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 2)
+
+        expected_params = {"provenances": ["dc/base/generated/ImportA"]}
+        expected_provenance_filter = "provenance IN UNNEST(@provenances)"
+
+        calls = mock_db.execute_partitioned_dml.call_args_list
+        executed_sqls = [c[0][0] for c in calls]
+
+        self.assertTrue(any("DELETE FROM Edge" in sql for sql in executed_sqls))
+        self.assertTrue(any("DELETE FROM LinkedEdge" in sql for sql in executed_sqls))
+        for sql in executed_sqls:
+            self.assertIn(expected_provenance_filter, sql)
+
+        for c in calls:
+            self.assertEqual(c[1]["params"], expected_params)
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_topic_list_edges_base_dc(self, mock_spanner_client):
