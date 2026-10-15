@@ -491,7 +491,7 @@ public class McfMutatorTest {
             + "statType: dcs:medianValue\n"
             + "measuredProperty: dcs:income\n"
             + "populationType: schema:Person\n"
-            + "measurementQualifier: dcs:Annual, dcs:Nominal\n"
+            + "measurementQualifier: dcs:Annual\n"
             + "measurementDenominator: dcs:Count_Person\n"
             + "constraintProperties: dcs:populationType, dcs:measuredProperty, dcs:gender\n"
             + "gender: schema:Female\n"
@@ -507,7 +507,7 @@ public class McfMutatorTest {
     Mcf.McfGraph.PropertyValues node = got.getNodesOrThrow("dcid:Median_Income_Person_Female");
     assertEquals(List.of("gender"), McfUtil.getPropVals(node, Vocabulary.CONSTRAINT_PROPS));
     assertEquals(
-        "Median Annual Income Of Person (Nominal): Female (Per Capita)",
+        "Median Annual Income Of Person: Female (Per Capita)",
         McfUtil.getPropVal(node, Vocabulary.NAME));
     assertEquals(
         "md=Count_Person,mq=Annual,st=medianValue,mp=income,pt=Person,gender=Female",
