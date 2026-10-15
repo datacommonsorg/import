@@ -212,11 +212,12 @@ public class StatVarNameGenerator {
   }
 
   private static List<String> buildConstraintVals(PropertyValues pvs, Set<String> constraintProps) {
-    if (constraintProps == null) {
+    Set<String> effectiveConstraintProps = constraintProps;
+    if (effectiveConstraintProps == null) {
       List<String> declared =
           GraphUtils.getPropertyValues(pvs.getPvsMap(), Vocabulary.CONSTRAINT_PROPS);
       if (!declared.isEmpty()) {
-        constraintProps = new HashSet<>(declared);
+        effectiveConstraintProps = new HashSet<>(declared);
       }
     }
     List<String> constraintVals = new ArrayList<>();
@@ -224,13 +225,11 @@ public class StatVarNameGenerator {
     Collections.sort(sortedProps);
     for (String rawProp : sortedProps) {
       String prop = McfUtil.stripNamespace(rawProp);
-      if (constraintProps != null) {
-        // Only use the explicitly provided constraint properties.
-        if (!constraintProps.contains(prop)) {
-          continue;
-        }
-      } else if (Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
-        // Skip non-constraint/core properties like statType, measuredProperty, etc.
+      // Skip non-constraint/core properties like statType, measuredProperty, etc.
+      if (Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
+        continue;
+      }
+      if (effectiveConstraintProps != null && !effectiveConstraintProps.contains(prop)) {
         continue;
       }
       List<String> vals = GraphUtils.getPropertyValues(pvs.getPvsMap(), rawProp);

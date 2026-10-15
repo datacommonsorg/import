@@ -133,7 +133,19 @@ public class McfMutator {
         // Respect an explicitly declared constraintProperties list: the declared properties
         // define the variable, and any other property on the node is treated as metadata.
         for (String prop : declaredConstraintProps) {
-          Mcf.McfGraph.Values vals = node.getPvsMap().get(prop);
+          if (Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
+            logCtx.addEntry(
+                Debug.Log.Level.LEVEL_WARNING,
+                "Mutator_InvalidConstraintProperty",
+                "StatVar declares a non-constraint property in constraintProperties :: property: '"
+                    + prop
+                    + "', node: '"
+                    + nodeId
+                    + "'",
+                node.getLocationsList());
+            continue;
+          }
+          Mcf.McfGraph.Values vals = getPv(node, prop);
           if (vals == null || vals.getTypedValuesCount() == 0) {
             logCtx.addEntry(
                 Debug.Log.Level.LEVEL_WARNING,
@@ -150,15 +162,17 @@ public class McfMutator {
         }
       } else {
         for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
-          String prop = pv.getKey();
+          String prop = McfUtil.stripNamespace(pv.getKey());
           if (!Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
             constraintPvs.put(prop, pv.getValue());
           }
         }
       }
 
-      // Only derive constraintProperties when the node does not declare them.
-      if (!hasDeclaredConstraintProps && !constraintPvs.isEmpty()) {
+      // Write the validated, de-duplicated constraintProperties to the node (or remove
+      // constraintProperties if none of the declared properties are valid).
+      removePv(node, Vocabulary.CONSTRAINT_PROPS);
+      if (!constraintPvs.isEmpty()) {
         Mcf.McfGraph.Values.Builder valuesBuilder = Mcf.McfGraph.Values.newBuilder();
         for (String propDcid : constraintPvs.keySet()) {
           valuesBuilder.addTypedValues(
@@ -184,9 +198,7 @@ public class McfMutator {
         }
 
         if (!node.containsPvs(Vocabulary.NAME)) {
-          String name =
-              StatVarNameGenerator.generateName(
-                  node.build(), hasDeclaredConstraintProps ? constraintPvs.keySet() : null);
+          String name = StatVarNameGenerator.generateName(node.build(), constraintPvs.keySet());
           if (!name.isEmpty()) {
             Mcf.McfGraph.Values.Builder valuesBuilder =
                 Mcf.McfGraph.Values.newBuilder()
@@ -209,7 +221,7 @@ public class McfMutator {
   private static List<String> getDeclaredConstraintProps(
       Mcf.McfGraph.PropertyValuesOrBuilder node) {
     Set<String> props = new LinkedHashSet<>();
-    Mcf.McfGraph.Values declared = node.getPvsMap().get(Vocabulary.CONSTRAINT_PROPS);
+    Mcf.McfGraph.Values declared = getPv(node, Vocabulary.CONSTRAINT_PROPS);
     if (declared != null) {
       for (Mcf.McfGraph.TypedValue tv : declared.getTypedValuesList()) {
         String prop = McfUtil.stripNamespace(tv.getValue().trim());
@@ -219,6 +231,34 @@ public class McfMutator {
       }
     }
     return new ArrayList<>(props);
+  }
+
+  private static Mcf.McfGraph.Values getPv(
+      Mcf.McfGraph.PropertyValuesOrBuilder node, String targetProp) {
+    Mcf.McfGraph.Values vals = node.getPvsMap().get(targetProp);
+    if (vals != null) {
+      return vals;
+    }
+    String strippedTarget = McfUtil.stripNamespace(targetProp);
+    for (Map.Entry<String, Mcf.McfGraph.Values> entry : node.getPvsMap().entrySet()) {
+      if (McfUtil.stripNamespace(entry.getKey()).equals(strippedTarget)) {
+        return entry.getValue();
+      }
+    }
+    return null;
+  }
+
+  private static void removePv(Mcf.McfGraph.PropertyValues.Builder node, String targetProp) {
+    String strippedTarget = McfUtil.stripNamespace(targetProp);
+    List<String> keysToRemove = new ArrayList<>();
+    for (String key : node.getPvsMap().keySet()) {
+      if (McfUtil.stripNamespace(key).equals(strippedTarget)) {
+        keysToRemove.add(key);
+      }
+    }
+    for (String key : keysToRemove) {
+      node.removePvs(key);
+    }
   }
 
   private static String prepForDoubleConversion(String v) {

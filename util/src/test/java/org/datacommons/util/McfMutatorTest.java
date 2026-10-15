@@ -354,9 +354,9 @@ public class McfMutatorTest {
     assertEquals(want, McfUtil.serializeMcfGraph(got, true));
   }
 
-  // A declared constraint property without a value on the node is kept in the declaration
-  // (we never rewrite the user's list), but a warning is logged and it is excluded from the
-  // generated name/definition.
+  // A declared constraint property without a value on the node is removed from
+  // constraintProperties on the node (so downstream stages like SVG hierarchy generation don't
+  // fail), a warning is logged, and it is excluded from the generated name/definition.
   @Test
   public void testDeclaredConstraintPropertyMissingValue() throws IOException {
     String mcf =
@@ -377,7 +377,7 @@ public class McfMutatorTest {
 
     String want =
         "Node: dcid:Count_Person_Female\n"
-            + "constraintProperties: dcid:age, dcid:gender\n"
+            + "constraintProperties: dcid:gender\n"
             + "dcid: \"Count_Person_Female\"\n"
             + "definition: \"mp=count,pt=Person,gender=Female\"\n"
             + "gender: dcid:Female\n"
@@ -396,45 +396,123 @@ public class McfMutatorTest {
     assertEquals(1, TestUtil.getCounter(logCtx.getLog(), "Mutator_MissingConstraintPropertyValue"));
   }
 
-  // Duplicate entries (with and without namespace prefixes) in the declaration don't produce
-  // duplicate name/definition parts, and the declaration itself is left untouched. Built directly
-  // as a proto since the MCF parser already de-duplicates values.
+  // Duplicate entries in constraintProperties in MCF input are collapsed on the node and in the
+  // generated name/definition.
   @Test
   public void testDuplicateDeclaredConstraintProperties() throws IOException {
     String mcf =
-        "Node: dcid:Count_Person_Female\n"
+        "Node: dcid:Count_Person_Female_18Years\n"
             + "typeOf: dcs:StatisticalVariable\n"
             + "populationType: schema:Person\n"
             + "measuredProperty: dcs:count\n"
+            + "constraintProperties: dcid:age, dcid:gender, dcid:age\n"
+            + "age: dcid:Years18\n"
+            + "gender: schema:Female\n"
+            + "sourceIndicatorCode: \"XYZ\"\n";
+    Mcf.McfGraph gotFromMcf =
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(mcf).toBuilder(),
+            TestUtil.newLogCtx(),
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
+
+    String want =
+        "Node: dcid:Count_Person_Female_18Years\n"
+            + "age: dcid:Years18\n"
+            + "constraintProperties: dcid:age, dcid:gender\n"
+            + "dcid: \"Count_Person_Female_18Years\"\n"
+            + "definition: \"mp=count,pt=Person,age=Years18,gender=Female\"\n"
+            + "gender: dcid:Female\n"
+            + "measuredProperty: dcid:count\n"
+            + "name: \"Population: Years 18, Female\"\n"
+            + "populationType: dcid:Person\n"
+            + "sourceIndicatorCode: \"XYZ\"\n"
+            + "typeOf: dcid:StatisticalVariable\n"
+            + "\n";
+    assertEquals(want, McfUtil.serializeMcfGraph(gotFromMcf, true));
+  }
+
+  // Duplicate entries injected directly into the proto (with mixed namespace prefixes, bypassing
+  // McfParser deduplication) are also collapsed on the node and in the generated name/definition.
+  @Test
+  public void testDuplicateDeclaredConstraintPropertiesInProto() throws IOException {
+    String mcf =
+        "Node: dcid:Count_Person_Female_18Years\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "populationType: schema:Person\n"
+            + "measuredProperty: dcs:count\n"
+            + "age: dcid:Years18\n"
             + "gender: schema:Female\n"
             + "sourceIndicatorCode: \"XYZ\"\n";
     Mcf.McfGraph.Builder graph = TestUtil.graphFromMcf(mcf).toBuilder();
-    Mcf.McfGraph.Values declared =
+    Mcf.McfGraph.Values declaredWithDups =
         Mcf.McfGraph.Values.newBuilder()
+            .addTypedValues(
+                Mcf.McfGraph.TypedValue.newBuilder()
+                    .setValue("dcid:age")
+                    .setType(Mcf.ValueType.RESOLVED_REF))
             .addTypedValues(
                 Mcf.McfGraph.TypedValue.newBuilder()
                     .setValue("dcid:gender")
                     .setType(Mcf.ValueType.RESOLVED_REF))
             .addTypedValues(
                 Mcf.McfGraph.TypedValue.newBuilder()
-                    .setValue("gender")
+                    .setValue("age")
                     .setType(Mcf.ValueType.RESOLVED_REF))
             .build();
     graph.putNodes(
-        "dcid:Count_Person_Female",
-        graph.getNodesOrThrow("dcid:Count_Person_Female").toBuilder()
-            .putPvs(Vocabulary.CONSTRAINT_PROPS, declared)
+        "dcid:Count_Person_Female_18Years",
+        graph.getNodesOrThrow("dcid:Count_Person_Female_18Years").toBuilder()
+            .putPvs(Vocabulary.CONSTRAINT_PROPS, declaredWithDups)
             .build());
 
-    Mcf.McfGraph got =
+    Mcf.McfGraph gotFromProto =
         McfMutator.mutate(
             graph, TestUtil.newLogCtx(), /* isBaseDc= */ true, /* generateFallbacks= */ true);
 
-    Mcf.McfGraph.PropertyValues node = got.getNodesOrThrow("dcid:Count_Person_Female");
-    assertEquals(declared, node.getPvsOrThrow(Vocabulary.CONSTRAINT_PROPS));
+    Mcf.McfGraph.PropertyValues node =
+        gotFromProto.getNodesOrThrow("dcid:Count_Person_Female_18Years");
+    assertEquals(List.of("age", "gender"), McfUtil.getPropVals(node, Vocabulary.CONSTRAINT_PROPS));
     assertEquals(
-        "mp=count,pt=Person,gender=Female", McfUtil.getPropVal(node, Vocabulary.DEFINITION));
-    assertEquals("Population: Female", McfUtil.getPropVal(node, Vocabulary.NAME));
+        "mp=count,pt=Person,age=Years18,gender=Female",
+        McfUtil.getPropVal(node, Vocabulary.DEFINITION));
+    assertEquals("Population: Years 18, Female", McfUtil.getPropVal(node, Vocabulary.NAME));
+  }
+
+  // Non-constraint properties (e.g. populationType, measuredProperty) mistakenly listed in
+  // constraintProperties are stripped from constraintProperties with a warning, while still
+  // contributing normally as core properties to the generated name and definition.
+  @Test
+  public void testDeclaredNonConstraintPropertyFilteredAndCorePropsPreservedInName()
+      throws IOException {
+    String mcf =
+        "Node: dcid:Median_Income_Person_Female\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "statType: dcs:medianValue\n"
+            + "measuredProperty: dcs:income\n"
+            + "populationType: schema:Person\n"
+            + "measurementQualifier: dcs:Annual, dcs:Nominal\n"
+            + "measurementDenominator: dcs:Count_Person\n"
+            + "constraintProperties: dcs:populationType, dcs:measuredProperty, dcs:gender\n"
+            + "gender: schema:Female\n"
+            + "sourceIndicatorCode: \"INC_F\"\n";
+    LogWrapper logCtx = TestUtil.newLogCtx();
+    Mcf.McfGraph got =
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(mcf).toBuilder(),
+            logCtx,
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ true);
+
+    Mcf.McfGraph.PropertyValues node = got.getNodesOrThrow("dcid:Median_Income_Person_Female");
+    assertEquals(List.of("gender"), McfUtil.getPropVals(node, Vocabulary.CONSTRAINT_PROPS));
+    assertEquals(
+        "Median Annual Income Of Person (Nominal): Female (Per Capita)",
+        McfUtil.getPropVal(node, Vocabulary.NAME));
+    assertEquals(
+        "md=Count_Person,mq=Annual,st=medianValue,mp=income,pt=Person,gender=Female",
+        McfUtil.getPropVal(node, Vocabulary.DEFINITION));
+    assertEquals(2, TestUtil.getCounter(logCtx.getLog(), "Mutator_InvalidConstraintProperty"));
   }
 
   // An explicit name and definition are still preserved alongside a declared constraint list.

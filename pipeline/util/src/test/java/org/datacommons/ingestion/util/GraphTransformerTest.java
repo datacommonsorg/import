@@ -2,6 +2,7 @@ package org.datacommons.ingestion.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 import org.apache.beam.sdk.testing.PAssert;
@@ -685,6 +686,7 @@ public class GraphTransformerTest {
 
     PCollection<McfGraph> output =
         p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer(/* isBaseDc= */ false)));
+    assertNotNull(output);
 
     PAssert.thatSingleton(output)
         .satisfies(
@@ -813,7 +815,7 @@ public class GraphTransformerTest {
                         Values.newBuilder()
                             .addTypedValues(
                                 TypedValue.newBuilder()
-                                    .setValue("dcid:incidentType")
+                                    .setValue("incidentType")
                                     .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
