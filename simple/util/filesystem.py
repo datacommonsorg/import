@@ -30,15 +30,84 @@ have been tested. In-memory (mem://) and temp (temp://) paths are also built in.
 
 import io
 import logging
+import threading
 import time
+from typing import Iterable, Optional
 
 from fs import open_fs
 import fs.errors as fserrors
 import fs.path as fspath
 from fs_gcsfs import GCSFS
+import requests
 
 # Paths with this prefix refer to Google Cloud Storage.
 _GCS_PATH_PREFIX = "gs://"
+
+# Minimum bytes fetched per request when streaming a GCS object.
+_GCS_STREAM_CHUNK_SIZE = 8 * 1024 * 1024
+# Use with File.open_stream() when only the first lines (e.g. a CSV header)
+# are needed, so a header check doesn't download megabytes.
+HEADER_READ_CHUNK_SIZE = 256 * 1024
+
+# HTTP connection pool size for GCS clients. The default (10) is smaller than
+# the thread pools that read files concurrently, so connections get discarded
+# and re-opened.
+_GCS_HTTP_POOL_SIZE = 64
+
+# GCS roots ("gs://bucket/root") whose directory markers were already fixed in
+# this process. Fixing lists every object under the root, so it must not run
+# every time a store is opened: import workers open three stores per file.
+_FIXED_GCS_ROOTS: set[str] = set()
+_FIXED_GCS_ROOTS_LOCK = threading.Lock()
+
+
+def fixed_gcs_roots() -> list[str]:
+  """GCS roots already fixed in this process, for handing to worker processes."""
+  with _FIXED_GCS_ROOTS_LOCK:
+    return sorted(_FIXED_GCS_ROOTS)
+
+
+def mark_gcs_roots_fixed(roots: Iterable[str]) -> None:
+  """Records GCS roots as fixed so stores opened on them skip the fix-up."""
+  with _FIXED_GCS_ROOTS_LOCK:
+    _FIXED_GCS_ROOTS.update(roots)
+
+
+def _gcs_root_id(fs: GCSFS) -> str:
+  """Returns unique identifier string for a GCSFS root."""
+  return f"{_GCS_PATH_PREFIX}{fs.bucket.name}/{(fs.root_path or '').strip('/')}"
+
+
+def _gcs_key(fs: GCSFS, path: str) -> str:
+  """GCS object key for a path relative to the store root."""
+  parts = [(fs.root_path or "").strip("/"), fspath.relpath(path).strip("/")]
+  return "/".join(part for part in parts if part)
+
+
+def _gcs_dir_prefix(fs: GCSFS, path: str) -> str:
+  """GCS key prefix that matches everything under a directory path."""
+  key = _gcs_key(fs, path)
+  return f"{key}/" if key else ""
+
+
+def _enlarge_gcs_http_pool(fs: GCSFS) -> None:
+  """Configures an enlarged HTTP connection pool for the GCSFS client."""
+  try:
+    adapter = requests.adapters.HTTPAdapter(
+        pool_connections=_GCS_HTTP_POOL_SIZE, pool_maxsize=_GCS_HTTP_POOL_SIZE)
+    fs.client._http.mount("https://", adapter)
+  except Exception as e:  # Best effort: the default pool still works.
+    logging.debug("Could not resize the GCS connection pool: %s", e)
+
+
+def _fix_gcsfs_storage_once(fs: GCSFS) -> None:
+  """Configures GCSFS storage once per root under lock to prevent race conditions."""
+  root_id = _gcs_root_id(fs)
+  with _FIXED_GCS_ROOTS_LOCK:
+    if root_id in _FIXED_GCS_ROOTS:
+      return
+    _fix_gcsfs_storage(fs)
+    _FIXED_GCS_ROOTS.add(root_id)
 
 
 def join_path(base: str, *args: str) -> str:
@@ -76,8 +145,9 @@ class Store:
         if self.root_path.startswith(_GCS_PATH_PREFIX):
           self.fs = open_fs(f"{self.root_path}?strict=False",
                             create=create_if_missing)
+          _enlarge_gcs_http_pool(self.fs)
           # Fix GCS storage if needed.
-          _fix_gcsfs_storage(self.fs)
+          _fix_gcsfs_storage_once(self.fs)
         else:
           self.fs = open_fs(self.root_path, create=create_if_missing)
 
@@ -169,14 +239,16 @@ class Dir(_StoreWrapper):
   def name(self) -> str:
     return fspath.basename(self.path.rstrip("/"))
 
-  def open_dir(self, path: str) -> "Dir":
+  def open_dir(self, path: str, create: bool = True) -> "Dir":
     # The new dir will use the same underlying store with a path relative to
     # the same root.
     new_path = fspath.join(self.path, path)
-    if not self.fs().exists(new_path):
-      self.fs().makedirs(new_path)
-    if not self.fs().isdir(new_path):
-      raise ValueError(f"{self.full_path(path)} exists and is not a directory")
+    if create:
+      if not self.fs().exists(new_path):
+        self.fs().makedirs(new_path)
+      if not self.fs().isdir(new_path):
+        raise ValueError(
+            f"{self.full_path(path)} exists and is not a directory")
     return Dir(self._store, new_path)
 
   def open_file(self, path: str, create_if_missing: bool = True) -> "File":
@@ -187,6 +259,8 @@ class Dir(_StoreWrapper):
     return File(self._store, new_path, create_if_missing)
 
   def all_files(self, include_subdirs: bool = False):
+    if isinstance(self.fs(), GCSFS):
+      return self._all_gcs_files(include_subdirs)
     files = []
     subfs = self.fs().opendir(self.path)
     max_depth = None if include_subdirs else 1
@@ -194,11 +268,41 @@ class Dir(_StoreWrapper):
       files.append(self.open_file(abspath.lstrip("/")))
     return files
 
+  def _all_gcs_files(self, include_subdirs: bool) -> list["File"]:
+    """Lists files with one paginated GCS list call.
+
+    Walking through PyFilesystem sends requests per directory and checks each
+    file exists one by one, which took minutes for a few thousand inputs.
+    """
+    gcs_fs = self.fs()
+    root_prefix = _gcs_dir_prefix(gcs_fs, "")
+    blobs = gcs_fs.bucket.list_blobs(prefix=_gcs_dir_prefix(gcs_fs, self.path),
+                                     delimiter=None if include_subdirs else "/")
+    files = []
+    for blob in blobs:
+      if blob.name.endswith("/"):
+        continue  # Directory marker, not a file.
+      files.append(
+          File(self._store,
+               blob.name[len(root_prefix):],
+               create_if_missing=False,
+               known_size=blob.size))
+    return files
+
 
 class File(_StoreWrapper):
 
-  def __init__(self, store: "Store", path: str, create_if_missing: bool):
+  def __init__(self,
+               store: "Store",
+               path: str,
+               create_if_missing: bool,
+               known_size: Optional[int] = None):
+    """known_size: size from a directory listing. The file is then known to
+    exist, so the existence check (a request per file on GCS) is skipped."""
     super().__init__(store, path)
+    self._size = known_size
+    if known_size is not None:
+      return
     if not self.fs().exists(self.path):
       if create_if_missing:
         parent_dir_path = fspath.dirname(path)
@@ -229,11 +333,34 @@ class File(_StoreWrapper):
   def read_string_io(self) -> io.StringIO:
     return io.StringIO(self.read())
 
-  def open_stream(self, max_retries: int = 3):
-    """Returns an open text stream for streaming line-by-line with retries for transient network drops."""
+  def open_stream(self,
+                  max_retries: int = 3,
+                  chunk_size: Optional[int] = None,
+                  mode: str = "rt"):
+    """Returns an open text or binary stream for streaming with retries for transient network drops.
+
+    On GCS the object is streamed with ranged reads of at least chunk_size
+    bytes. GCSFS.open() would download the whole object before returning, so
+    reading just a header used to fetch the entire file. Pass
+    HEADER_READ_CHUNK_SIZE when only the first lines are needed.
+    """
     for attempt in range(max_retries):
       try:
-        return self.fs().open(self.path, "r")
+        fs = self.fs()
+        if isinstance(fs, GCSFS):
+          blob = fs.bucket.blob(_gcs_key(fs, self.path))
+          if "b" in mode:
+            blob_stream = blob.open(mode,
+                                    chunk_size=chunk_size or
+                                    _GCS_STREAM_CHUNK_SIZE)
+            return io.BufferedReader(blob_stream,
+                                     buffer_size=chunk_size or
+                                     _GCS_STREAM_CHUNK_SIZE)
+          return blob.open(mode,
+                           chunk_size=chunk_size or _GCS_STREAM_CHUNK_SIZE,
+                           encoding="utf-8",
+                           newline="")
+        return fs.open(self.path, mode)
       except Exception as e:
         if attempt == max_retries - 1:
           raise e
@@ -244,6 +371,8 @@ class File(_StoreWrapper):
 
   def size(self) -> int:
     """Returns the size of the file in bytes."""
+    if self._size is not None:
+      return self._size  # From the listing that created this File.
     return self.fs().getsize(self.path)
 
   def copy_to(self, dest: "File"):

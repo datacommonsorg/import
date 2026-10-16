@@ -89,7 +89,7 @@ function py_test {
   echo -e "#### Running ingestion helper tests"
   cd "${ROOT_DIR}/pipeline/workflow/ingestion-helper"
   pip3 install uv -q
-  uv run pytest --ignore=aggregation/e2e_tests/
+  uv run --python 3.12 pytest --ignore=aggregation/e2e_tests/
 
   cd "${ROOT_DIR}"
   deactivate
