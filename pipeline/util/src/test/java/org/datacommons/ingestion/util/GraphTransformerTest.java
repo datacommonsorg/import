@@ -1,5 +1,10 @@
 package org.datacommons.ingestion.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
@@ -10,6 +15,9 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.ValueType;
+import org.datacommons.util.McfUtil;
+import org.datacommons.util.TestUtil;
+import org.datacommons.util.Vocabulary;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -662,6 +670,42 @@ public class GraphTransformerTest {
   }
 
   @Test
+  public void testStatVarTransformationPreservesDeclaredConstraintPropertiesWithMetadata() {
+    // Example from the bug report: a declared constraintProperties must not be expanded to
+    // include other (metadata) properties on the node such as sourceIndicatorCode.
+    McfGraph inputGraph =
+        TestUtil.graphFromMcf(
+            "Node: dcid:Example_StatVar\n"
+                + "typeOf: dcid:StatisticalVariable\n"
+                + "populationType: dcid:EconomicProduction\n"
+                + "measuredProperty: dcid:valueAdded\n"
+                + "statType: dcid:measuredValue\n"
+                + "constraintProperties: dcid:productTaxBasis\n"
+                + "productTaxBasis: dcid:IncludingProductTaxes\n"
+                + "sourceIndicatorCode: \"NGDP\"\n");
+
+    PCollection<McfGraph> output =
+        p.apply(Create.of(inputGraph)).apply(ParDo.of(new GraphTransformer(/* isBaseDc= */ false)));
+    assertNotNull(output);
+
+    PAssert.thatSingleton(output)
+        .satisfies(
+            graph -> {
+              PropertyValues node = graph.getNodesOrThrow("dcid:Example_StatVar");
+              assertEquals(
+                  List.of("productTaxBasis"),
+                  McfUtil.getPropVals(node, Vocabulary.CONSTRAINT_PROPS));
+              assertEquals(
+                  "Value Added Of Economic Production: Including Product Taxes",
+                  McfUtil.getPropVal(node, Vocabulary.NAME));
+              assertFalse(node.containsPvs(Vocabulary.DEFINITION));
+              assertEquals("NGDP", McfUtil.getPropVal(node, "sourceIndicatorCode"));
+              return null;
+            });
+    p.run().waitUntilFinish();
+  }
+
+  @Test
   public void testStatVarTransformationWithExistingConstraintProperties() {
     McfGraph inputGraph =
         McfGraph.newBuilder()
@@ -719,6 +763,8 @@ public class GraphTransformerTest {
                     .build())
             .build();
 
+    // The declared constraintProperties (incidentType) is preserved rather than overwritten with
+    // every non-excluded property, and the generated definition and name only use it.
     McfGraph expectedGraph =
         McfGraph.newBuilder()
             .putNodes(
@@ -771,10 +817,6 @@ public class GraphTransformerTest {
                                 TypedValue.newBuilder()
                                     .setValue("incidentType")
                                     .setType(ValueType.RESOLVED_REF))
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setValue("medicalStatus")
-                                    .setType(ValueType.RESOLVED_REF))
                             .build())
                     .putPvs(
                         "definition",
@@ -782,7 +824,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue(
-                                        "mp=cumulativeCount,pt=MedicalConditionIncident,incidentType=COVID_19,medicalStatus=ConfirmedCase")
+                                        "mp=cumulativeCount,pt=MedicalConditionIncident,incidentType=COVID_19")
                                     .setType(ValueType.TEXT))
                             .build())
                     .putPvs(
@@ -791,7 +833,7 @@ public class GraphTransformerTest {
                             .addTypedValues(
                                 TypedValue.newBuilder()
                                     .setValue(
-                                        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case")
+                                        "Cumulative Count Of Medical Condition Incident: COVID 19")
                                     .setType(ValueType.TEXT))
                             .build())
                     .build())
