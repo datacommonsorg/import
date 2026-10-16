@@ -427,8 +427,8 @@ class TestNodes(unittest.TestCase):
 
   def test_root_stat_var_group_created(self):
     nodes = Nodes(CONFIG)
-    nodes.group("My Category/My Subcategory")
     self.assertIn(sc.ROOT_SVG_ID, nodes.groups)
+    self.assertNotIn(sc.DEFAULT_CUSTOM_ROOT_SVG_ID, nodes.ids_to_groups)
     root_svg = nodes.groups[sc.ROOT_SVG_ID]
     self.assertEqual(root_svg.id, "dc/g/Root")
     self.assertEqual(root_svg.name, "Data Commons Variables")
