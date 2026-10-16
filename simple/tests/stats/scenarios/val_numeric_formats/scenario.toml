@@ -1,0 +1,21 @@
+description = """
+Numeric spellings that pass numeric validation (1e5, inf, 007, -0, 100.0, \
+-12.5) must be emitted as finite JSON numbers. The golden pins today's exact \
+representation of each one."""
+features = ["val.numeric_formats"]
+oracle = "vpr"
+
+[[must_contain_observation]]
+variable = "Count_C"
+value = 7
+
+[[known_issues]]
+id = "E1"
+check = "numeric_values"
+note = "1e5 and inf are emitted as JSON strings."
+
+[[known_issues]]
+id = "E11"
+check = "node_records_typed"
+modes = ["tiny_chunks"]
+note = "The MCF Source is a global triple; tiny chunks split it across shards."

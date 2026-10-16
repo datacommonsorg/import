@@ -1,0 +1,12 @@
+description = """
+An ignored free-text column whose quoted values span lines. Every record must \
+come through exactly once. This guards PR #792's byte-range split path (E8): \
+add a split mode here when that path lands."""
+features = ["csv.multiline_quoted", "obs.ignore_columns"]
+oracle = "vpr"
+
+[[known_issues]]
+id = "E11"
+check = "node_records_typed"
+modes = ["tiny_chunks"]
+note = "The MCF Source is a global triple; tiny chunks split it across shards."

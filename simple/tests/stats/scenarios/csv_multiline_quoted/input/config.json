@@ -1,0 +1,23 @@
+{
+  "inputFiles": [
+    {
+      "pattern": "observations.csv",
+      "importType": "observations",
+      "entityType": "Country",
+      "provenance": "dcid:TestProvenance",
+      "columnMappings": {
+        "dcid:observationAbout": "place",
+        "dcid:variableMeasured": "variable",
+        "dcid:observationDate": "year",
+        "dcid:value": "value"
+      },
+      "ignoreColumns": [
+        "notes"
+      ]
+    },
+    {
+      "pattern": "provenance.mcf",
+      "provenance": "dcid:TestProvenance"
+    }
+  ]
+}

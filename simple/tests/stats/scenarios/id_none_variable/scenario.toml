@@ -1,0 +1,24 @@
+description = """
+A variable literally named 'None' must not turn into a null \
+variableMeasured."""
+features = ["id.none_variable"]
+oracle = "vpr"
+
+[[known_issues]]
+id = "E3"
+check = "no_null_values"
+note = "pandas reads None as missing; variableMeasured is written as null."
+
+[[known_issues]]
+id = "E3"
+check = "observation_required_props"
+
+[[known_issues]]
+id = "E3"
+check = "row_oracle"
+
+[[known_issues]]
+id = "E11"
+check = "node_records_typed"
+modes = ["tiny_chunks"]
+note = "The MCF Source is a global triple; tiny chunks split it across shards."

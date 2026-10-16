@@ -1,0 +1,6 @@
+place,variable,year,value
+country/USA,Count_Person,2020,331000000
+country/USA,Count_Person,2021,332000000
+country/FRA,Count_Person,2020,67400000
+country/FRA,Median_Age_Person,2020,42.3
+country/USA,Median_Age_Person,2020,38.5

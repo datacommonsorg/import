@@ -1,0 +1,51 @@
+# Loader-view facts (see simple/tests/stats/scenario_lib/facts.py).
+# Columns: folder, subject, predicate, kind (ref|uref|lit), object.
+# Generated in 'threaded' mode. Regenerate with TEST_MODE=write; never edit by hand.
+TestProvenance	TestProvenance	name	lit	"Test Provenance"
+TestProvenance	TestProvenance	source	ref	TestSource
+TestProvenance	TestProvenance	typeOf	ref	Provenance
+TestProvenance	TestProvenance	url	lit	"https://source.example.org/provenance"
+TestProvenance	TestSource	domain	lit	"source.example.org"
+TestProvenance	TestSource	name	lit	"Test Source"
+TestProvenance	TestSource	typeOf	ref	Source
+TestProvenance	TestSource	url	lit	"https://source.example.org"
+TestProvenance	obs_774e0a254eb5b7d1	observationAbout	ref	country/FRA
+TestProvenance	obs_774e0a254eb5b7d1	observationDate	lit	2020
+TestProvenance	obs_774e0a254eb5b7d1	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_774e0a254eb5b7d1	provenance	ref	TestProvenance
+TestProvenance	obs_774e0a254eb5b7d1	provenanceUrl	lit	"https://source.example.org/provenance"
+TestProvenance	obs_774e0a254eb5b7d1	typeOf	ref	StatVarObservation
+TestProvenance	obs_774e0a254eb5b7d1	value	lit	67400000
+TestProvenance	obs_774e0a254eb5b7d1	variableMeasured	ref	Count_Person
+TestProvenance	obs_1bbdcd9814135765	observationAbout	ref	country/FRA
+TestProvenance	obs_1bbdcd9814135765	observationDate	lit	2020
+TestProvenance	obs_1bbdcd9814135765	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_1bbdcd9814135765	provenance	ref	TestProvenance
+TestProvenance	obs_1bbdcd9814135765	provenanceUrl	lit	"https://source.example.org/provenance"
+TestProvenance	obs_1bbdcd9814135765	typeOf	ref	StatVarObservation
+TestProvenance	obs_1bbdcd9814135765	value	lit	42.3
+TestProvenance	obs_1bbdcd9814135765	variableMeasured	ref	Median_Age_Person
+TestProvenance	obs_484468857564d123	observationAbout	ref	country/USA
+TestProvenance	obs_484468857564d123	observationDate	lit	2020
+TestProvenance	obs_484468857564d123	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_484468857564d123	provenance	ref	TestProvenance
+TestProvenance	obs_484468857564d123	provenanceUrl	lit	"https://source.example.org/provenance"
+TestProvenance	obs_484468857564d123	typeOf	ref	StatVarObservation
+TestProvenance	obs_484468857564d123	value	lit	331000000
+TestProvenance	obs_484468857564d123	variableMeasured	ref	Count_Person
+TestProvenance	obs_6b27388803ef2518	observationAbout	ref	country/USA
+TestProvenance	obs_6b27388803ef2518	observationDate	lit	2021
+TestProvenance	obs_6b27388803ef2518	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_6b27388803ef2518	provenance	ref	TestProvenance
+TestProvenance	obs_6b27388803ef2518	provenanceUrl	lit	"https://source.example.org/provenance"
+TestProvenance	obs_6b27388803ef2518	typeOf	ref	StatVarObservation
+TestProvenance	obs_6b27388803ef2518	value	lit	332000000
+TestProvenance	obs_6b27388803ef2518	variableMeasured	ref	Count_Person
+TestProvenance	obs_2f6fd3407999f68b	observationAbout	ref	country/USA
+TestProvenance	obs_2f6fd3407999f68b	observationDate	lit	2020
+TestProvenance	obs_2f6fd3407999f68b	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_2f6fd3407999f68b	provenance	ref	TestProvenance
+TestProvenance	obs_2f6fd3407999f68b	provenanceUrl	lit	"https://source.example.org/provenance"
+TestProvenance	obs_2f6fd3407999f68b	typeOf	ref	StatVarObservation
+TestProvenance	obs_2f6fd3407999f68b	value	lit	38.5
+TestProvenance	obs_2f6fd3407999f68b	variableMeasured	ref	Median_Age_Person

@@ -1,0 +1,7 @@
+place,variable,year,value
+country/USA,Count_A,2020,1e5
+country/USA,Count_B,2020,inf
+country/USA,Count_C,2020,007
+country/USA,Count_D,2020,-0
+country/USA,Count_E,2020,100.0
+country/USA,Count_F,2020,-12.5

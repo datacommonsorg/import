@@ -1,0 +1,20 @@
+description = """
+'NA' in an entity column is a real id (Namibia's ISO code), not a missing \
+value. The observation must keep observationAbout = NA."""
+features = ["id.na_entity"]
+oracle = "vpr"
+
+[[known_issues]]
+id = "E2"
+check = "observation_required_props"
+note = "pandas reads NA as missing; the observation loses observationAbout and the ingestion pipeline throws."
+
+[[known_issues]]
+id = "E2"
+check = "row_oracle"
+
+[[known_issues]]
+id = "E11"
+check = "node_records_typed"
+modes = ["tiny_chunks"]
+note = "The MCF Source is a global triple; tiny chunks split it across shards."

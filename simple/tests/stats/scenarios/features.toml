@@ -1,0 +1,22 @@
+# Feature registry for the scenario suite.
+#
+# Every feature here must be covered by at least one scenario, and every
+# feature a scenario cites must be listed here (enforced by
+# scenarios_test.py). Add a feature here when you add behavior to the
+# preprocessor, and a scenario that exercises it.
+
+[features]
+"obs.vpr" = "Variable-per-row observations (importType: observations)."
+"obs.column_mappings" = "Physical CSV column names mapped to dcid properties via columnMappings."
+"obs.provenance_url" = "The provenance node's url is copied onto every observation as provenanceUrl."
+"mcf.provenance_source" = "Provenance and Source nodes defined in an MCF file and linked via 'source'."
+"err.unmapped_columns" = "A CSV column that is neither mapped nor ignored fails header validation."
+"handshake.failure" = "A failed run writes a FAILURE handshake with structured errors and uploads nothing."
+"obs.ignore_columns" = "Columns listed in ignoreColumns are dropped without failing header validation."
+"csv.multiline_quoted" = "Quoted CSV fields may contain newlines; every record is still read exactly once."
+"val.numeric_formats" = "Numeric spellings (exponent, leading zeros, -0, trailing .0, inf) and how they are emitted."
+"id.na_entity" = "Missing-value tokens (NA) used as real entity ids."
+"id.none_variable" = "Missing-value tokens (None) used as real variable ids."
+"id.duplicate_keys" = "Rows sharing entity, variable and date (observation id collisions)."
+"id.whitespace" = "Surrounding whitespace in id cells."
+"id.invalid_chars" = "Ids containing whitespace or control characters."

@@ -1,0 +1,52 @@
+# Loader-view facts (see simple/tests/stats/scenario_lib/facts.py).
+# Columns: folder, subject, predicate, kind (ref|uref|lit), object.
+# Generated in 'threaded' mode. Regenerate with TEST_MODE=write; never edit by hand.
+TestProvenance	TestProvenance	name	lit	"Test Provenance"
+TestProvenance	TestProvenance	source	ref	TestSource
+TestProvenance	TestProvenance	typeOf	ref	Provenance
+TestProvenance	TestSource	domain	lit	"source.example.org"
+TestProvenance	TestSource	name	lit	"Test Source"
+TestProvenance	TestSource	typeOf	ref	Source
+TestProvenance	TestSource	url	lit	"https://source.example.org"
+TestProvenance	obs_ec13082893236b1f	observationAbout	ref	country/USA
+TestProvenance	obs_ec13082893236b1f	observationDate	lit	2020
+TestProvenance	obs_ec13082893236b1f	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_ec13082893236b1f	provenance	ref	TestProvenance
+TestProvenance	obs_ec13082893236b1f	typeOf	ref	StatVarObservation
+TestProvenance	obs_ec13082893236b1f	value	lit	"1e5"
+TestProvenance	obs_ec13082893236b1f	variableMeasured	ref	Count_A
+TestProvenance	obs_cb1015249b13b934	observationAbout	ref	country/USA
+TestProvenance	obs_cb1015249b13b934	observationDate	lit	2020
+TestProvenance	obs_cb1015249b13b934	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_cb1015249b13b934	provenance	ref	TestProvenance
+TestProvenance	obs_cb1015249b13b934	typeOf	ref	StatVarObservation
+TestProvenance	obs_cb1015249b13b934	value	lit	"inf"
+TestProvenance	obs_cb1015249b13b934	variableMeasured	ref	Count_B
+TestProvenance	obs_217c1c91d329f31b	observationAbout	ref	country/USA
+TestProvenance	obs_217c1c91d329f31b	observationDate	lit	2020
+TestProvenance	obs_217c1c91d329f31b	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_217c1c91d329f31b	provenance	ref	TestProvenance
+TestProvenance	obs_217c1c91d329f31b	typeOf	ref	StatVarObservation
+TestProvenance	obs_217c1c91d329f31b	value	lit	7
+TestProvenance	obs_217c1c91d329f31b	variableMeasured	ref	Count_C
+TestProvenance	obs_e969f8157e352785	observationAbout	ref	country/USA
+TestProvenance	obs_e969f8157e352785	observationDate	lit	2020
+TestProvenance	obs_e969f8157e352785	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_e969f8157e352785	provenance	ref	TestProvenance
+TestProvenance	obs_e969f8157e352785	typeOf	ref	StatVarObservation
+TestProvenance	obs_e969f8157e352785	value	lit	0
+TestProvenance	obs_e969f8157e352785	variableMeasured	ref	Count_D
+TestProvenance	obs_e29e0cb1f2faf997	observationAbout	ref	country/USA
+TestProvenance	obs_e29e0cb1f2faf997	observationDate	lit	2020
+TestProvenance	obs_e29e0cb1f2faf997	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_e29e0cb1f2faf997	provenance	ref	TestProvenance
+TestProvenance	obs_e29e0cb1f2faf997	typeOf	ref	StatVarObservation
+TestProvenance	obs_e29e0cb1f2faf997	value	lit	100.0
+TestProvenance	obs_e29e0cb1f2faf997	variableMeasured	ref	Count_E
+TestProvenance	obs_7d0d049f92b22c85	observationAbout	ref	country/USA
+TestProvenance	obs_7d0d049f92b22c85	observationDate	lit	2020
+TestProvenance	obs_7d0d049f92b22c85	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_7d0d049f92b22c85	provenance	ref	TestProvenance
+TestProvenance	obs_7d0d049f92b22c85	typeOf	ref	StatVarObservation
+TestProvenance	obs_7d0d049f92b22c85	value	lit	-12.5
+TestProvenance	obs_7d0d049f92b22c85	variableMeasured	ref	Count_F

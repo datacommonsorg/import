@@ -1,0 +1,38 @@
+# Known preprocessor issues pinned by the scenario suite.
+#
+# A scenario declares which check an issue breaks, and in which modes, in its
+# scenario.toml [[known_issues]]. Waivers are strict: if the check starts
+# passing, the test fails until the waiver (and the entry below) is removed.
+# IDs match preprocessor_test_strategy.md.
+
+[E7]
+title = "Multiprocess (production) runs drop dcid:provenanceUrl from observations"
+impact = "provenanceUrl is part of the loader's time-series key, so source attribution is lost in production while the threaded test path looks correct."
+
+[E11]
+title = "Global node triples are split across JSON-LD shards mid-subject"
+impact = "JsonLdStreamWriter.commit_and_close chunks '_global' triples by _CHUNK_SIZE without keeping a subject's triples together (unlike _write_triples_to_disk). Once a folder has more than 10,000 global triples, a node can land in two shards; the loader builds a record without typeOf for one of them and types it Thing."
+
+[E1]
+title = "Numeric values such as 1e5 and inf are emitted as JSON strings"
+impact = "The loader stores values as text, so 1e5 is stored in a different form from other numbers; inf is not a valid number for numeric consumers."
+
+[E2]
+title = "Entity id NA is read as a missing value"
+impact = "The observation loses observationAbout; GraphReader throws 'missing observationAbout' and the whole ingestion job fails."
+
+[E3]
+title = "Variable id None is read as a missing value"
+impact = "variableMeasured is written as JSON null; the observation reaches the loader without a variable."
+
+[E4]
+title = "Rows with the same key are written as two records under one observation id"
+impact = "Only a log warning is emitted; the stored value depends on parse order."
+
+[E5]
+title = "Whitespace in id cells changes the observation id"
+impact = "The same data point gets two ids, bypassing duplicate detection and producing two points for one key."
+
+[E6]
+title = "Ids containing newlines are emitted"
+impact = "An invalid dcid is ingested."
