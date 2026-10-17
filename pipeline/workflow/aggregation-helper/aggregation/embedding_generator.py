@@ -12,22 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import csv
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
-import io
 import itertools
 import json
 import logging
-from typing import Any, Dict, List, Optional
-import urllib.request
-import urllib.error
+from typing import Any, Dict, List, Optional, Union
+import pandas as pd
 
 from google.cloud import bigquery
 from google.cloud import spanner
-from google.cloud import storage
 from pydantic import BaseModel
 from .bq_executor import BigQueryExecutor
+from .spanner_query import EMBEDDING_CONTENT_QUERY_BY_NODE_TYPE
 
 
 @dataclass
@@ -39,13 +37,68 @@ class EmbeddingGenerationConfig:
 
 _NL_STAT_VAR_FILE = "gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
 
+_PLACE_TYPE_ORDER = [
+    "Place",
+    "OceanicBasin",
+    "Continent",
+    "Country",
+    "CensusRegion",
+    "CensusDivision",
+    "State",
+    "AdministrativeArea1",
+    "County",
+    "AdministrativeArea2",
+    "CensusCountyDivision",
+    "EurostatNUTS1",
+    "EurostatNUTS2",
+    "CongressionalDistrict",
+    "UDISEDistrict",
+    "CensusCoreBasedStatisticalArea",
+    "EurostatNUTS3",
+    "SuperfundSite",
+    "Glacier",
+    "AdministrativeArea3",
+    "AdministrativeArea4",
+    "PublicUtility",
+    "CollegeOrUniversity",
+    "EpaParentCompany",
+    "UDISEBlock",
+    "AdministrativeArea5",
+    "EpaReportingFacility",
+    "SchoolDistrict",
+    "CensusZipCodeTabulationArea",
+    "PrivateSchool",
+    "CensusTract",
+    "City",
+    "AirQualitySite",
+    "PublicSchool",
+    "Neighborhood",
+    "CensusBlockGroup",
+    "AdministrativeArea",
+    "Village",
+]
+
+
 class EmbeddingSpec(BaseModel):
+    """Specification for generating and indexing embeddings for graph nodes.
+
+    Attributes:
+        embedding_label: Identifier key for the embedding dataset (e.g. 'base_text_embedding').
+        model_name: Name of the BigQuery ML model endpoint used for vector generation.
+        model_endpoint: Vertex AI model endpoint (e.g. 'text-embedding-005').
+        task_type: Embedding task type passed to ML.GENERATE_EMBEDDING (e.g. 'RETRIEVAL_QUERY').
+        node_types: Maps each node type (e.g. 'StatisticalVariable', 'Topic') to the list of
+            predicate names (e.g. ['description']) whose connected object values will be embedded.
+        node_filter_type: Node filtering strategy ('NoFilter', 'NLStatisticalVariable', or 'EntityTypes').
+    """
     embedding_label: str
     model_name: str
     model_endpoint: str = "text-embedding-005"
     task_type: str
-    node_types: List[str]
+    # Maps each node type to the list of predicate names to be read and embedded.
+    node_types: Dict[str, List[str]]
     node_filter_type: str
+
 
 _DEFAULT_EMBEDDING_SPECS = [
     EmbeddingSpec(
@@ -53,45 +106,38 @@ _DEFAULT_EMBEDDING_SPECS = [
         model_name="NodeEmbeddingModel",
         model_endpoint="text-embedding-005",
         task_type="RETRIEVAL_QUERY",
-        node_types=["StatisticalVariable", "Topic"],
+        node_types={
+            "StatisticalVariable": [],
+            "Topic": []
+        },
         node_filter_type="NoFilter"
     )
 ]
 
 
+def _recording_nl_dcid_sentence_pair(
+    dcid_str: str, sentence: str, seen: set, records: list[dict[str, str]]
+) -> None:
+    """Parses semicolon-separated dcids and records new (dcid, sentence) pairs."""
+    for item in str(dcid_str).split(";"):
+        dcid = item.strip()
+        if not dcid or (dcid, sentence) in seen:
+            continue
+        seen.add((dcid, sentence))
+        records.append({"dcid": dcid, "sentence": sentence})
+
+
 @lru_cache(maxsize=1)
 def _extract_nl_stat_var() -> list[dict[str, str]]:
-    path = _NL_STAT_VAR_FILE
-    content = ""
-    if path.startswith("gs://"):
-        try:
-            url = "https://storage.googleapis.com/" + path[5:]
-            with urllib.request.urlopen(url) as resp:
-                content = resp.read().decode("utf-8")
-        except urllib.error.URLError as e:
-            logging.info(f"HTTP fetch for NL stat var file failed ({e}), falling back to GCS client.")
-            parts = path[5:].split("/", 1)
-            client = storage.Client()
-            content = client.bucket(parts[0]).blob(parts[1]).download_as_text()
-    else:
-        with open(path, "r", encoding="utf-8") as f:
-            content = f.read()
-
+    """Extracts deduplicated (dcid, sentence) pairs from NL stat var CSV file."""
+    output_df = pd.read_csv(_NL_STAT_VAR_FILE).dropna(subset=["dcid", "sentence"])
     seen = set()
     records = []
-    reader = csv.DictReader(io.StringIO(content))
-    for row in reader:
-        dcid_str = row.get("dcid")
-        sentence = row.get("sentence")
-        if dcid_str and sentence:
-            sentence = sentence.strip()
-            for item in dcid_str.split(";"):
-                item = item.strip()
-                if item and sentence:
-                    pair = (item, sentence)
-                    if pair not in seen:
-                        seen.add(pair)
-                        records.append({"dcid": item, "sentence": sentence})
+    for _, row in output_df.iterrows():
+        sentence = str(row["sentence"]).strip()
+        if not sentence:
+            continue
+        _recording_nl_dcid_sentence_pair(row["dcid"], sentence, seen, records)
     return records
 
 
@@ -116,48 +162,115 @@ class EmbeddingGenerator:
             logging.info(f"Initialized Spanner client for EmbeddingGenerator: {self._spanner_database.name}")
         return self._spanner_database
 
-    def _delete_existing_embeddings(self, spec: EmbeddingSpec, embedding_table: str = "NodeEmbedding") -> int:
-        """Deletes existing embeddings in Spanner for nodes matching the spec before re-generation."""
+    def _get_observation_entity_types(self) -> List[str]:
+        """Finds distinct node types (Class nodes) that have at least one observation entity
+        in TimeSeries, using an index-backed short-circuit EXISTS check, and merges with _PLACE_TYPE_ORDER."""
+        db = self.spanner_database
+        sql = """
+            WITH all_type_table AS (
+                SELECT DISTINCT
+                    subject_id AS t
+                FROM
+                    Edge@{FORCE_INDEX=InEdge}
+                WHERE
+                    object_id = 'Class'
+                    AND predicate = 'typeOf'
+            )
+            SELECT
+                c.t
+            FROM
+                all_type_table c
+            INNER JOIN@{JOIN_METHOD=APPLY_JOIN}
+                UNNEST(
+                    ARRAY(
+                        SELECT
+                            1
+                        FROM
+                            Edge@{FORCE_INDEX=InEdge} e
+                        INNER JOIN@{JOIN_METHOD=APPLY_JOIN}
+                            TimeSeries@{FORCE_INDEX=TimeSeriesByEntity1} ts
+                            ON e.subject_id = ts.entity1
+                        WHERE
+                            e.object_id = c.t
+                            AND e.predicate = 'typeOf'
+                        LIMIT 1
+                    )
+                )
+            ORDER BY
+                c.t
+        """
+        with db.snapshot() as snapshot:
+            results = snapshot.execute_sql(sql)
+            spanner_types = [row[0] for row in results]
+        return sorted(set(spanner_types) | set(_PLACE_TYPE_ORDER))
+
+    def _get_latest_lock_timestamp(self) -> Optional[datetime]:
+        """Gets the latest AcquiredTimestamp from IngestionLock table.
+
+        Returns:
+            The latest AcquiredTimestamp as a datetime, or None if no entries exist.
+        """
+        lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
         try:
             db = self.spanner_database
-            lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
             latest_lock_timestamp = None
             with db.snapshot() as snapshot:
                 results = snapshot.execute_sql(lock_sql)
                 for row in results:
                     latest_lock_timestamp = row[0]
+            return latest_lock_timestamp
+        except Exception as e:
+            logging.error(f"Failed to fetch latest lock timestamp from Spanner: {e}")
+            return None
 
-            params = {"node_types": spec.node_types}
-            param_types = {"node_types": spanner.param_types.Array(spanner.param_types.STRING)}
+    def _get_node_filter_condition(
+        self,
+        node_filter_type: str,
+        params: Dict[str, Any],
+        param_types: Dict[str, Any],
+    ) -> str:
+        """Builds the GQL filter condition and populates Spanner query parameters."""
+        if node_filter_type == "NoFilter":
+            return "TRUE"
+        elif node_filter_type == "NLStatisticalVariable":
+            nl_records = _extract_nl_stat_var()
+            dcids = sorted(list({r["dcid"] for r in nl_records}))
+            params["nl_stat_vars"] = dcids
+            param_types["nl_stat_vars"] = spanner.param_types.Array(spanner.param_types.STRING)
+            return "n.subject_id IN UNNEST(@nl_stat_vars)"
+        elif node_filter_type == "EntityTypes":
+            dcids = self._get_observation_entity_types()
+            params["entity_types"] = dcids
+            param_types["entity_types"] = spanner.param_types.Array(spanner.param_types.STRING)
+            return "n.subject_id IN UNNEST(@entity_types)"
+        else:
+            logging.error(f"Unknown node filter type: {node_filter_type}")
+            raise ValueError(f"Unknown node filter type: {node_filter_type}")
 
-            timestamp_condition = "last_update_timestamp > @timestamp" if latest_lock_timestamp else "TRUE"
-            if latest_lock_timestamp:
-                params["timestamp"] = latest_lock_timestamp
-                param_types["timestamp"] = spanner.param_types.TIMESTAMP
+    def _delete_existing_embeddings(
+        self,
+        spec: EmbeddingSpec,
+        latest_lock_timestamp: Optional[Union[datetime, str]] = None,
+        embedding_table: str = "NodeEmbedding",
+    ) -> int:
+        """Deletes existing embeddings in Spanner for nodes matching the spec before re-generation."""
+        try:
+            db = self.spanner_database
+            params: Dict[str, Any] = {"timestamp": latest_lock_timestamp}
+            param_types: Dict[str, Any] = {"timestamp": spanner.param_types.TIMESTAMP}
 
-            if spec.node_filter_type == "NLStatisticalVariable":
-                nl_records = _extract_nl_stat_var()
-                dcids = sorted(list({r["dcid"] for r in nl_records}))
-                params["nl_stat_vars"] = dcids
-                param_types["nl_stat_vars"] = spanner.param_types.Array(spanner.param_types.STRING)
-                filter_condition = "subject_id IN UNNEST(@nl_stat_vars)"
-            else:
-                filter_condition = "TRUE"
-
-            node_select_sql = f"""
-                SELECT subject_id FROM Node
-                WHERE name IS NOT NULL
-                  AND name <> ''
-                  AND {timestamp_condition}
-                  AND {filter_condition}
-                  AND EXISTS (
-                    SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST(@node_types)
-                  )
-            """
+            filter_condition = self._get_node_filter_condition(
+                spec.node_filter_type, params, param_types
+            )
+            node_select_sql = self._generate_spanner_query(
+                spec.node_types, filter_condition
+            )
 
             subject_ids = []
             with db.snapshot() as snapshot:
-                results = snapshot.execute_sql(node_select_sql, params=params, param_types=param_types)
+                results = snapshot.execute_sql(
+                    node_select_sql, params=params, param_types=param_types
+                )
                 subject_ids = [row[0] for row in results]
 
             if not subject_ids:
@@ -198,6 +311,106 @@ class EmbeddingGenerator:
             logging.error(f"Failed to delete existing embeddings in Spanner: {e}")
             raise
 
+    @staticmethod
+    def _generate_spanner_query(
+        nodes: Dict[str, List[str]], filter_condition: str = "TRUE"
+    ) -> str:
+        """Generates the Spanner GQL statement to perform a graph query that reads all related predicates and constructs JSON content to be embedded.
+
+        Args:
+            nodes: Mapping of node types to the list of predicate names to read and embed.
+            filter_condition: Additional SQL/GQL condition to filter nodes (e.g. 'TRUE' or node ID filter).
+
+        Returns:
+            The generated Spanner GQL query string.
+        """
+        list_of_graph_traversal_statements = []
+        for node_type, predicate_types in nodes.items():
+            # Escape single quotes and wrap each predicate string in single quotes to safely construct
+            # an inlined GQL array literal (e.g. ['description', 'name']).
+            safe_predicate_types = [
+                f"'{pt.replace(chr(39), chr(92) + chr(39))}'"
+                for pt in predicate_types
+            ]
+            predicate_types_list_sql = f"[{', '.join(safe_predicate_types)}]"
+            graph_traversal_statement = EMBEDDING_CONTENT_QUERY_BY_NODE_TYPE.format(
+                node_type=node_type,
+                filter_condition=filter_condition,
+                predicate_types_list_sql=predicate_types_list_sql,
+            )
+            list_of_graph_traversal_statements.append(graph_traversal_statement)
+
+        unioned_graph_statement_over_type = "\nUNION ALL\n".join(
+            list_of_graph_traversal_statements
+        )
+        return f"""
+Graph DCGraph
+{unioned_graph_statement_over_type}
+"""
+
+    def _stream_spanner_to_bq(
+        self,
+        spanner_query: str,
+        raw_nodes_table_id: str,
+        latest_lock_timestamp: Optional[Union[datetime, str]] = None,
+        batch_size: int = 5000,
+    ) -> None:
+        """Streams Spanner query results in batches into a BigQuery table."""
+        bq_schema = [
+            bigquery.SchemaField("subject_id", "STRING"),
+            bigquery.SchemaField("node_types", "STRING", mode="REPEATED"),
+            bigquery.SchemaField("embedding_content", "JSON"),
+        ]
+        db = self.spanner_database
+        bq_client = self.executor.client
+        params = {"timestamp": latest_lock_timestamp}
+        param_types = {"timestamp": spanner.param_types.TIMESTAMP}
+
+        total_rows = 0
+        with db.snapshot() as snapshot:
+            results = snapshot.execute_sql(
+                spanner_query, params=params, param_types=param_types
+            )
+            batch = []
+            first_batch = True
+            for row in results:
+                subj_id = row[0]
+                types_list = row[1] if isinstance(row[1], list) else list(row[1]) if row[1] else []
+                emb_content = row[2]
+                if isinstance(emb_content, str):
+                    try:
+                        emb_content = json.loads(emb_content)
+                    except Exception:
+                        pass
+
+                batch.append({
+                    "subject_id": subj_id,
+                    "node_types": types_list,
+                    "embedding_content": emb_content
+                })
+                total_rows += 1
+
+                if len(batch) >= batch_size:
+                    write_disp = "WRITE_TRUNCATE" if first_batch else "WRITE_APPEND"
+                    load_config = bigquery.LoadJobConfig(schema=bq_schema, write_disposition=write_disp)
+                    load_job = bq_client.load_table_from_json(batch, raw_nodes_table_id, job_config=load_config)
+                    load_job.result()
+                    logging.info(f"Streamed {total_rows} rows from Spanner to BigQuery ({raw_nodes_table_id})...")
+                    first_batch = False
+                    batch = []
+
+            if batch:
+                write_disp = "WRITE_TRUNCATE" if first_batch else "WRITE_APPEND"
+                load_config = bigquery.LoadJobConfig(schema=bq_schema, write_disposition=write_disp)
+                load_job = bq_client.load_table_from_json(batch, raw_nodes_table_id, job_config=load_config)
+                load_job.result()
+            elif first_batch:
+                bq_client.delete_table(raw_nodes_table_id, not_found_ok=True)
+                table = bigquery.Table(raw_nodes_table_id, schema=bq_schema)
+                bq_client.create_table(table)
+
+        logging.info(f"Successfully finished streaming to BigQuery table {raw_nodes_table_id}. Total ingested: {total_rows} rows.")
+
     def run_all(self,
                 config: EmbeddingGenerationConfig) -> List[bigquery.job.QueryJob]:
         """Runs all embedding generations asynchronously and returns their jobs."""
@@ -237,35 +450,51 @@ class EmbeddingGenerator:
         node_types = spec.node_types
         node_filter_type = spec.node_filter_type
 
+        if node_filter_type not in ("NoFilter", "NLStatisticalVariable", "EntityTypes"):
+            logging.error(f"Unknown node filter type: {node_filter_type}")
+            return None
+
+        latest_lock_timestamp = self._get_latest_lock_timestamp()
+
         # 1. Pre-delete existing embeddings in Spanner for updated nodes
-        self._delete_existing_embeddings(spec, embedding_table=embedding_table)
+        self._delete_existing_embeddings(
+            spec,
+            latest_lock_timestamp=latest_lock_timestamp,
+            embedding_table=embedding_table,
+        )
 
-        # 1. Format node types list for Spanner
-        safe_types = [f"'{nt.replace(chr(39), chr(92) + chr(39))}'" for nt in node_types]
-        node_types_list_sql = f"[{', '.join(safe_types)}]"
+        # 2. Execute GQL query directly in Spanner and stream results in batches to a BigQuery table
+        raw_nodes_table_id = f"{project_id}.{bq_dataset_id}.temp_raw_nodes_{embedding_label}"
+        spanner_query = self._generate_spanner_query(node_types)
+        logging.info(f"Querying Spanner directly for '{embedding_label}' nodes and streaming to BigQuery...")
+        self._stream_spanner_to_bq(
+            spanner_query,
+            raw_nodes_table_id,
+            latest_lock_timestamp=latest_lock_timestamp,
+        )
 
-        # 2. Build the select query and query parameters for BigQuery
+        # Update select_nodes_sql to query the streamed BigQuery raw_nodes table
         job_config = None
         if node_filter_type == "NoFilter":
-            select_nodes_sql = """
+            select_nodes_sql = f"""
                 SELECT 
                   subject_id, 
-                  CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content, '$.name')) AS STRING) AS embedding_content_key,
+                  CAST(FARM_FINGERPRINT(TO_JSON_STRING(embedding_content)) AS STRING) AS embedding_content_key,
                   TO_JSON_STRING(embedding_content) AS content, 
                   embedding_content, 
                   node_types 
-                FROM raw_nodes
+                FROM `{raw_nodes_table_id}`
             """
         elif node_filter_type == "NLStatisticalVariable":
-            select_nodes_sql = """
+            select_nodes_sql = f"""
                 SELECT 
                   r.subject_id, 
                   CAST(FARM_FINGERPRINT(m.sentence) AS STRING) AS embedding_content_key,
                   m.sentence AS content, 
-                  JSON_OBJECT("title", r.subject_id, "name", m.sentence) AS embedding_content, 
+                  JSON_OBJECT("title", r.subject_id, "sentence", m.sentence) AS embedding_content, 
                   r.node_types 
                 FROM UNNEST(@nl_stat_vars) m
-                INNER JOIN raw_nodes r ON r.subject_id = m.dcid
+                INNER JOIN `{raw_nodes_table_id}` r ON r.subject_id = m.dcid
             """
             nl_records = _extract_nl_stat_var()
             job_config = bigquery.QueryJobConfig(
@@ -284,50 +513,30 @@ class EmbeddingGenerator:
                     )
                 ]
             )
-        else:
-            logging.error(f"Unknown node filter type: {node_filter_type}")
-            return None
-
-        # 3. Construct the query to extract raw nodes from Spanner, generate embeddings in BigQuery, and export back to Spanner
-        spanner_query = f"""
-            SELECT 
-              subject_id, 
-              JSON_OBJECT("title", subject_id, "name", name) AS embedding_content, 
-              types AS node_types
-            FROM Node
-            WHERE name IS NOT NULL
-              AND name <> ''
-              AND %s
-              AND EXISTS (
-                SELECT 1 FROM UNNEST(types) AS t WHERE t IN UNNEST({node_types_list_sql})
-              )
-        """
-        spanner_query_str = f'"""{spanner_query}"""'
+        elif node_filter_type == "EntityTypes":
+            select_nodes_sql = f"""
+                SELECT 
+                  subject_id, 
+                  CAST(FARM_FINGERPRINT(TO_JSON_STRING(embedding_content)) AS STRING) AS embedding_content_key,
+                  TO_JSON_STRING(embedding_content) AS content, 
+                  embedding_content, 
+                  node_types 
+                FROM `{raw_nodes_table_id}`
+                WHERE subject_id IN UNNEST(@entity_types)
+            """
+            entity_types = self._get_observation_entity_types()
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ArrayQueryParameter(
+                        "entity_types",
+                        "STRING",
+                        entity_types
+                    )
+                ]
+            )
 
         query = f"""
-        DECLARE latest_lock_timestamp TIMESTAMP;
-        DECLARE timelock_condition STRING;
-
-        SET latest_lock_timestamp = (
-          SELECT MAX(CAST(val AS TIMESTAMP))
-          FROM EXTERNAL_QUERY("{conn_id}", "SELECT AcquiredTimestamp AS val FROM IngestionLock")
-        );
-        
-        IF latest_lock_timestamp IS NOT NULL THEN
-          SET timelock_condition = FORMAT('last_update_timestamp > \\\'%s\\\'', CAST(latest_lock_timestamp AS STRING));
-        ELSE
-          SET timelock_condition = 'TRUE';
-        END IF;
-
-        EXECUTE IMMEDIATE FORMAT('''
-          -- 1. Get raw text from Spanner
-          CREATE TEMP TABLE raw_nodes AS
-          SELECT * FROM EXTERNAL_QUERY("{conn_id}", {spanner_query_str});
-        ''', 
-        timelock_condition
-        );
-
-        -- 2. Generate embeddings natively in BigQuery
+        -- 1. Generate embeddings natively in BigQuery
         CREATE TEMP TABLE embedding_staging AS
         SELECT 
           subject_id, 
@@ -342,7 +551,7 @@ class EmbeddingGenerator:
           STRUCT("{task_type}" AS task_type)
         );
 
-        -- 3. Export back to Spanner
+        -- 2. Export back to Spanner
         EXPORT DATA OPTIONS(
           uri="{dest}",
           format="CLOUD_SPANNER",
@@ -351,4 +560,12 @@ class EmbeddingGenerator:
         SELECT * FROM embedding_staging;
         """
         logging.info(f"Submitting embedding generation job for {embedding_label}...")
-        return self.executor.execute(query, job_config=job_config)
+        job = self.executor.execute(query, job_config=job_config)
+
+        if job:
+            try:
+                job.result()
+            finally:
+                self.executor.client.delete_table(raw_nodes_table_id, not_found_ok=True)
+
+        return job
