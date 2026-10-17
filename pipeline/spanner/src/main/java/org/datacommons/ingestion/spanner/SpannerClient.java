@@ -4,6 +4,7 @@ import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
@@ -11,6 +12,7 @@ import com.google.cloud.spanner.Value;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,6 +56,9 @@ public class SpannerClient implements Serializable {
   private static final int SPANNER_GROUPING_FACTOR = 3000;
   // Commit deadline for spanner writes. Use large value for bigger batches.
   private static final int SPANNER_COMMIT_DEADLINE_SECONDS = 120;
+  // Client-side deadline for Partitioned DML (Spanner client default is 2 hours). Large
+  // provenance deletes cascade to millions of interleaved Observation rows in production.
+  private static final long PARTITIONED_DML_TIMEOUT_HOURS = 6;
 
   private final String gcpProjectId;
   private final String spannerInstanceId;
@@ -100,6 +105,72 @@ public class SpannerClient implements Serializable {
             ParDo.of(new DeleteByColumnFn(this, tableName, columnName)));
   }
 
+  /**
+   * Deletes TimeSeries rows (and their interleaved Observation rows via ON DELETE CASCADE) for the
+   * given provenances, issuing one Partitioned DML statement per {@code variable_measured}.
+   *
+   * <p>A single {@code DELETE FROM TimeSeries WHERE provenance = ...} over a large import can leave
+   * a few dense variables undeleted: the partitions covering them cascade to millions of
+   * Observation rows (amplified by change streams in production), never complete, and the statement
+   * runs until the Partitioned DML deadline. Bounding each statement by {@code variable_measured}
+   * (the leading primary key column) keeps every statement to a contiguous key range of the base
+   * table.
+   *
+   * @return the total number of TimeSeries rows deleted.
+   */
+  public long deleteTimeSeriesByProvenances(
+      DatabaseClient dbClient, String tableName, List<String> provenances) {
+    if (provenances == null || provenances.isEmpty()) {
+      return 0L;
+    }
+    // Index-only lookup on TimeSeriesByProvenance (provenance, variable_measured, ...).
+    Statement variablesQuery =
+        Statement.newBuilder(
+                String.format(
+                    "SELECT DISTINCT %s FROM %s WHERE %s IN UNNEST(@%s)",
+                    TimeSeriesRecord.COL_VARIABLE_MEASURED,
+                    tableName,
+                    TimeSeriesRecord.COL_PROVENANCE,
+                    TimeSeriesRecord.COL_PROVENANCE))
+            .bind(TimeSeriesRecord.COL_PROVENANCE)
+            .toStringArray(provenances)
+            .build();
+    List<String> variables = new ArrayList<>();
+    try (ResultSet rs = dbClient.singleUse().executeQuery(variablesQuery)) {
+      while (rs.next()) {
+        variables.add(rs.getString(TimeSeriesRecord.COL_VARIABLE_MEASURED));
+      }
+    }
+
+    String deleteDml =
+        String.format(
+            "DELETE FROM %s WHERE %s = @%s AND %s IN UNNEST(@%s)",
+            getDeleteTarget(tableName, TimeSeriesRecord.COL_PROVENANCE),
+            TimeSeriesRecord.COL_VARIABLE_MEASURED,
+            TimeSeriesRecord.COL_VARIABLE_MEASURED,
+            TimeSeriesRecord.COL_PROVENANCE,
+            TimeSeriesRecord.COL_PROVENANCE);
+    long totalDeleted = 0L;
+    for (String variable : variables) {
+      Statement deleteStmt =
+          Statement.newBuilder(deleteDml)
+              .bind(TimeSeriesRecord.COL_VARIABLE_MEASURED)
+              .to(variable)
+              .bind(TimeSeriesRecord.COL_PROVENANCE)
+              .toStringArray(provenances)
+              .build();
+      long deleted = dbClient.executePartitionedUpdate(deleteStmt);
+      LOGGER.info(
+          "Deleted {} rows from {} for variable_measured {} and provenance IN {}",
+          deleted,
+          tableName,
+          variable,
+          provenances);
+      totalDeleted += deleted;
+    }
+    return totalDeleted;
+  }
+
   static class DeleteByColumnFn extends DoFn<String, Void> {
     private final SpannerClient spannerClient;
     private final String tableName;
@@ -116,10 +187,16 @@ public class SpannerClient implements Serializable {
       String value = c.element();
       try (Spanner spanner = spannerClient.createSpanner()) {
         DatabaseClient dbClient = spannerClient.getDatabaseClient(spanner);
-        String dml =
-            String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, columnName);
-        Statement statement = Statement.newBuilder(dml).bind(columnName).to(value).build();
-        long rowCount = dbClient.executePartitionedUpdate(statement);
+        long rowCount;
+        if (spannerClient.isTimeSeriesProvenanceDelete(tableName, columnName)) {
+          rowCount =
+              spannerClient.deleteTimeSeriesByProvenances(dbClient, tableName, List.of(value));
+        } else {
+          String dml =
+              String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, columnName);
+          Statement statement = Statement.newBuilder(dml).bind(columnName).to(value).build();
+          rowCount = dbClient.executePartitionedUpdate(statement);
+        }
         LOGGER.info("Deleted {} rows from {} for {} {}", rowCount, tableName, columnName, value);
         c.output(null);
       }
@@ -140,7 +217,11 @@ public class SpannerClient implements Serializable {
   }
 
   public Spanner createSpanner() {
-    SpannerOptions.Builder builder = SpannerOptions.newBuilder().setProjectId(gcpProjectId);
+    SpannerOptions.Builder builder =
+        SpannerOptions.newBuilder()
+            .setProjectId(gcpProjectId)
+            .setPartitionedDmlTimeoutDuration(
+                java.time.Duration.ofHours(PARTITIONED_DML_TIMEOUT_HOURS));
     if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
       builder.setEmulatorHost(emulatorHost.trim());
       builder.setCredentials(NoCredentials.getInstance());
@@ -275,6 +356,33 @@ public class SpannerClient implements Serializable {
 
   public String getEmulatorHost() {
     return emulatorHost;
+  }
+
+  /** Returns true if this is a delete of TimeSeries rows by provenance. */
+  public boolean isTimeSeriesProvenanceDelete(String tableName, String columnName) {
+    return tableName.equals(timeSeriesTableName)
+        && TimeSeriesRecord.COL_PROVENANCE.equals(columnName);
+  }
+
+  /**
+   * Returns the table reference to use in a Partitioned DML {@code DELETE ... WHERE columnName ...}
+   * statement.
+   *
+   * <p>For {@code TimeSeries} deletes by {@code provenance}, the query planner otherwise picks the
+   * {@code TimeSeriesByProvenance} index, whose partitions are not aligned with the interleaved
+   * {@code Observation} rows. Cascading deletes across unaligned partitions can exceed
+   * per-partition transaction limits (especially with change streams) and stall until {@code
+   * DEADLINE_EXCEEDED}. Forcing a base table scan aligns partitions with the {@code
+   * TimeSeries}/{@code Observation} key ranges. The hint is skipped on the emulator.
+   */
+  public String getDeleteTarget(String tableName, String columnName) {
+    boolean isEmulator = emulatorHost != null && !emulatorHost.trim().isEmpty();
+    if (!isEmulator
+        && tableName.equals(timeSeriesTableName)
+        && TimeSeriesRecord.COL_PROVENANCE.equals(columnName)) {
+      return tableName + "@{FORCE_INDEX=_BASE_TABLE}";
+    }
+    return tableName;
   }
 
   /**
