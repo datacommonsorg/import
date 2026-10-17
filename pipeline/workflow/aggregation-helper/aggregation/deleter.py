@@ -19,7 +19,12 @@ import logging
 from typing import List
 from google.cloud import spanner
 
-from .common import TOPIC_LIST_PROVENANCE, get_provenance_name, get_provenance_prefix
+from .common import (
+    TOPIC_LIST_PROVENANCE,
+    get_low_priority_request_options,
+    get_provenance_name,
+    get_provenance_prefix,
+)
 
 # Default timeout for partitioned DML streaming RPCs (6 hours = 21600 seconds),
 # matching Cloud Run Job / Workflow execution limits.
@@ -101,7 +106,10 @@ class AggregationDeleter:
 
         def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
             rows = db.execute_partitioned_dml(
-                sql, params=params, param_types=param_types
+                sql,
+                params=params,
+                param_types=param_types,
+                request_options=get_low_priority_request_options(),
             )
             logging.info(f"Deleted {rows} rows from {table_name} table{extra_desc}.")
             return rows
@@ -131,7 +139,10 @@ class AggregationDeleter:
         params = {"prefix": prefix}
         param_types = {"prefix": spanner.param_types.STRING}
         rows = self.spanner_database.execute_partitioned_dml(
-            sql, params=params, param_types=param_types
+            sql,
+            params=params,
+            param_types=param_types,
+            request_options=get_low_priority_request_options(),
         )
         logging.info(f"Deleted {rows} StatVarGroup edges across all provenances.")
         return rows
@@ -150,7 +161,10 @@ class AggregationDeleter:
             "provenances": spanner.param_types.Array(spanner.param_types.STRING)
         }
         rows = self.spanner_database.execute_partitioned_dml(
-            sql, params=params, param_types=param_types
+            sql,
+            params=params,
+            param_types=param_types,
+            request_options=get_low_priority_request_options(),
         )
         logging.info(
             f"Deleted {rows} linked relationship edges for imports: {imports_to_delete}"
@@ -173,7 +187,10 @@ class AggregationDeleter:
 
         with self.spanner_database.snapshot() as snapshot:
             results = snapshot.execute_sql(
-                sql_fetch_nodes, params=params, param_types=param_types
+                sql_fetch_nodes,
+                params=params,
+                param_types=param_types,
+                request_options=get_low_priority_request_options(),
             )
             string_literal_node_ids = [row[0] for row in results]
 
@@ -184,7 +201,10 @@ class AggregationDeleter:
             "AND predicate IN ('relevantVariableList', 'memberList')"
         )
         edge_rows = self.spanner_database.execute_partitioned_dml(
-            sql_delete_edges, params=params, param_types=param_types
+            sql_delete_edges,
+            params=params,
+            param_types=param_types,
+            request_options=get_low_priority_request_options(),
         )
 
         # 3. Delete the corresponding literal nodes from Node table
@@ -197,7 +217,10 @@ class AggregationDeleter:
                 def _delete_chunk(transaction, k=keyset):
                     transaction.delete("Node", k)
 
-                self.spanner_database.run_in_transaction(_delete_chunk)
+                self.spanner_database.run_in_transaction(
+                    _delete_chunk,
+                    commit_request_options=get_low_priority_request_options(),
+                )
 
         logging.info(
             f"Deleted {edge_rows} topic and peer group list edges and {len(string_literal_node_ids)} literal nodes for provenance: {provenance_name}"
