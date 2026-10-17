@@ -17,6 +17,7 @@ class WriterPair {
   private final File csvFile;
   private BufferedWriter successWriter = null;
   private BufferedWriter failureWriter = null;
+  private AvroObservationWriter avroWriter = null;
 
   public WriterPair(
       Args args, Args.OutputFileType successType, Args.OutputFileType failureType, File csvFile)
@@ -25,6 +26,11 @@ class WriterPair {
     this.successType = successType;
     this.failureType = failureType;
     this.csvFile = csvFile;
+    if (successType == Args.OutputFileType.TABLE_MCF_NODES
+        && args.outputFiles != null
+        && args.outputFiles.containsKey(successType)) {
+      this.avroWriter = new AvroObservationWriter(getAvroFile(successType));
+    }
   }
 
   public void writeSuccess(Mcf.McfGraph g) throws IOException {
@@ -32,6 +38,9 @@ class WriterPair {
       successWriter = newWriter(successType);
     }
     successWriter.write(McfUtil.serializeMcfGraph(g, false));
+    if (avroWriter != null) {
+      avroWriter.writeGraph(g);
+    }
   }
 
   public void writeFailure(Mcf.McfGraph g) throws IOException {
@@ -44,6 +53,16 @@ class WriterPair {
   public void close() throws IOException {
     if (failureWriter != null) failureWriter.close();
     if (successWriter != null) successWriter.close();
+    if (avroWriter != null) avroWriter.close();
+  }
+
+  private File getAvroFile(Args.OutputFileType type) {
+    String basePath = FilenameUtils.getFullPath(args.outputFiles.get(type).toString());
+    if (csvFile != null) {
+      String csvStem = FilenameUtils.removeExtension(csvFile.getName());
+      return new File(basePath, "table_observations_" + csvStem + ".avro");
+    }
+    return new File(basePath, "table_observations.avro");
   }
 
   private BufferedWriter newWriter(Args.OutputFileType type) throws IOException {
