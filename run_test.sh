@@ -91,6 +91,10 @@ function py_test {
   pip3 install uv -q
   uv run pytest --ignore=aggregation/e2e_tests/
 
+  echo -e "#### Running aggregation helper tests"
+  cd "${ROOT_DIR}/pipeline/workflow/aggregation-helper"
+  uv run pytest
+
   cd "${ROOT_DIR}"
   deactivate
 }
