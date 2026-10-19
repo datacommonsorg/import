@@ -9,6 +9,11 @@
             "dcid:name": "Source1",
             "dcid:url": "http://source1.com",
             "dcid:domain": "source1.com"
+        },
+        {
+            "@id": "dcid:dc/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Data Commons Variables"
         }
     ]
 }
