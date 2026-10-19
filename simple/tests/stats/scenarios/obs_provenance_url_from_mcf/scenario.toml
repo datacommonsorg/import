@@ -24,9 +24,3 @@ modes = ["multiprocess"]
 id = "E7"
 check = "must_contain"
 modes = ["multiprocess"]
-
-[[known_issues]]
-id = "E11"
-check = "node_records_typed"
-modes = ["tiny_chunks"]
-note = "The MCF Source is a global triple; tiny chunks split it across shards."

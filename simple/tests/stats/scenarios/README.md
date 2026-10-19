@@ -2,8 +2,7 @@
 
 Data-integrity tests for the `simple/` preprocessor. Each scenario is a folder
 of inputs plus expectations, run through the real `Runner` in every execution
-mode and checked against **what the Data Commons loader would store**. The
-design is described in `preprocessor_test_strategy.md` at the repo root.
+mode and checked against **what the Data Commons loader would store**.
 
 ```bash
 cd simple

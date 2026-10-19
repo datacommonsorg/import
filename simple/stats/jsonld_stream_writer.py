@@ -539,11 +539,10 @@ class JsonLdStreamWriter(GraphWriter):
       dir_name = target_import.replace("/", "_")
       import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
       os.makedirs(import_temp_dir, exist_ok=True)
-      for i in range(0, len(global_triples), _CHUNK_SIZE):
-        chunk = global_triples[i:i + _CHUNK_SIZE]
-        _write_node_shard(
-            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-        self.node_shard_index += 1
+      # Group each subject's triples together (stable, so per-subject order is
+      # kept) so that shard boundaries never split a node across shards.
+      global_triples.sort(key=lambda t: t.subject_id)
+      self._write_triples_to_disk(global_triples, target_import)
 
     has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
         self.temp_local_dir) else False

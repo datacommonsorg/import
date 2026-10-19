@@ -58,6 +58,15 @@ _MAX_LINES_PER_CHECK = 15
 # Other test modules replace dc_client functions with MagicMocks and never
 # restore them. Capture the real functions at import (collection) time and put
 # them back for every run, so scenario results never depend on test order.
+# This only works if nothing is mocked yet when this module is imported, so
+# fail loudly rather than silently leaving a mock in place.
+_ALREADY_MOCKED = sorted(name for name, value in vars(dc_client).items()
+                         if isinstance(value, mock.NonCallableMock))
+if _ALREADY_MOCKED:
+  raise RuntimeError(
+      "util.dc_client functions were replaced at import time by another test"
+      f" module: {_ALREADY_MOCKED}. Use mock.patch inside the test instead, so"
+      " the scenario harness can restore the real functions.")
 _REAL_DC_CLIENT_FUNCTIONS = {
     name: value
     for name, value in vars(dc_client).items()

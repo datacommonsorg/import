@@ -16,9 +16,3 @@ check = "observation_required_props"
 [[known_issues]]
 id = "E3"
 check = "row_oracle"
-
-[[known_issues]]
-id = "E11"
-check = "node_records_typed"
-modes = ["tiny_chunks"]
-note = "The MCF Source is a global triple; tiny chunks split it across shards."

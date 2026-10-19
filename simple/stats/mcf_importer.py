@@ -95,7 +95,11 @@ class McfImporter(Importer):
 
       # Register all collected metadata nodes at the end
       if all_metadata_triples:
-        prov_id = getattr(self, "provenance", "")
+        # Tie Source nodes to this MCF file's import folder. Without it they are
+        # emitted as global triples, which land in an arbitrary folder when one
+        # input folder has several provenances.
+        prov_id = (self.nodes.config.import_name(self.input_file)
+                   if self.nodes else "")
         _register_metadata_nodes(all_metadata_triples,
                                  self.nodes,
                                  provenance_id=prov_id)

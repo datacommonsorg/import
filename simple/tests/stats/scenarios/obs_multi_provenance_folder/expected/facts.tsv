@@ -1,0 +1,41 @@
+# Loader-view facts (see simple/tests/stats/scenario_lib/facts.py).
+# Columns: folder, subject, predicate, kind (ref|uref|lit), object.
+# Generated in 'threaded' mode. Regenerate with TEST_MODE=write; never edit by hand.
+AgeProvenance	AgeProvenance	name	lit	"Age Provenance"
+AgeProvenance	AgeProvenance	source	ref	TestSource
+AgeProvenance	AgeProvenance	typeOf	ref	Provenance
+AgeProvenance	obs_7de3c6be8e31eb9b	observationAbout	ref	country/FRA
+AgeProvenance	obs_7de3c6be8e31eb9b	observationDate	lit	2020
+AgeProvenance	obs_7de3c6be8e31eb9b	observationProperties	lit	"dcid:observationAbout"
+AgeProvenance	obs_7de3c6be8e31eb9b	provenance	ref	AgeProvenance
+AgeProvenance	obs_7de3c6be8e31eb9b	typeOf	ref	StatVarObservation
+AgeProvenance	obs_7de3c6be8e31eb9b	value	lit	42.3
+AgeProvenance	obs_7de3c6be8e31eb9b	variableMeasured	ref	Median_Age_Person
+AgeProvenance	obs_ff86eecf8b918647	observationAbout	ref	country/USA
+AgeProvenance	obs_ff86eecf8b918647	observationDate	lit	2020
+AgeProvenance	obs_ff86eecf8b918647	observationProperties	lit	"dcid:observationAbout"
+AgeProvenance	obs_ff86eecf8b918647	provenance	ref	AgeProvenance
+AgeProvenance	obs_ff86eecf8b918647	typeOf	ref	StatVarObservation
+AgeProvenance	obs_ff86eecf8b918647	value	lit	38.5
+AgeProvenance	obs_ff86eecf8b918647	variableMeasured	ref	Median_Age_Person
+PopulationProvenance	PopulationProvenance	name	lit	"Population Provenance"
+PopulationProvenance	PopulationProvenance	source	ref	TestSource
+PopulationProvenance	PopulationProvenance	typeOf	ref	Provenance
+PopulationProvenance	TestSource	domain	lit	"source.example.org"
+PopulationProvenance	TestSource	name	lit	"Test Source"
+PopulationProvenance	TestSource	typeOf	ref	Source
+PopulationProvenance	TestSource	url	lit	"https://source.example.org"
+PopulationProvenance	obs_3befcbee8b461d42	observationAbout	ref	country/FRA
+PopulationProvenance	obs_3befcbee8b461d42	observationDate	lit	2020
+PopulationProvenance	obs_3befcbee8b461d42	observationProperties	lit	"dcid:observationAbout"
+PopulationProvenance	obs_3befcbee8b461d42	provenance	ref	PopulationProvenance
+PopulationProvenance	obs_3befcbee8b461d42	typeOf	ref	StatVarObservation
+PopulationProvenance	obs_3befcbee8b461d42	value	lit	67400000
+PopulationProvenance	obs_3befcbee8b461d42	variableMeasured	ref	Count_Person
+PopulationProvenance	obs_e1c2ca5b4e3a2672	observationAbout	ref	country/USA
+PopulationProvenance	obs_e1c2ca5b4e3a2672	observationDate	lit	2020
+PopulationProvenance	obs_e1c2ca5b4e3a2672	observationProperties	lit	"dcid:observationAbout"
+PopulationProvenance	obs_e1c2ca5b4e3a2672	provenance	ref	PopulationProvenance
+PopulationProvenance	obs_e1c2ca5b4e3a2672	typeOf	ref	StatVarObservation
+PopulationProvenance	obs_e1c2ca5b4e3a2672	value	lit	331000000
+PopulationProvenance	obs_e1c2ca5b4e3a2672	variableMeasured	ref	Count_Person

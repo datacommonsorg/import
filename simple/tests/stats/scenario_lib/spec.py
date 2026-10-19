@@ -279,6 +279,12 @@ def load_feature_registry() -> dict[str, str]:
     return dict(tomllib.load(f).get("features", {}))
 
 
+def load_config_key_registry() -> dict[str, str]:
+  """config.json key -> covering feature id ("" = not covered yet)."""
+  with open(FEATURES_FILE, "rb") as f:
+    return dict(tomllib.load(f).get("config_keys", {}))
+
+
 def load_known_issue_registry() -> dict[str, dict[str, Any]]:
   with open(KNOWN_ISSUES_FILE, "rb") as f:
     return dict(tomllib.load(f))

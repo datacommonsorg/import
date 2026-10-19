@@ -8,9 +8,3 @@ oracle = "vpr"
 id = "E6"
 check = "dcid_charset"
 note = "The newline is kept inside the dcid."
-
-[[known_issues]]
-id = "E11"
-check = "node_records_typed"
-modes = ["tiny_chunks"]
-note = "The MCF Source is a global triple; tiny chunks split it across shards."

@@ -3,15 +3,10 @@
 # A scenario declares which check an issue breaks, and in which modes, in its
 # scenario.toml [[known_issues]]. Waivers are strict: if the check starts
 # passing, the test fails until the waiver (and the entry below) is removed.
-# IDs match preprocessor_test_strategy.md.
 
 [E7]
 title = "Multiprocess (production) runs drop dcid:provenanceUrl from observations"
 impact = "provenanceUrl is part of the loader's time-series key, so source attribution is lost in production while the threaded test path looks correct."
-
-[E11]
-title = "Global node triples are split across JSON-LD shards mid-subject"
-impact = "JsonLdStreamWriter.commit_and_close chunks '_global' triples by _CHUNK_SIZE without keeping a subject's triples together (unlike _write_triples_to_disk). Once a folder has more than 10,000 global triples, a node can land in two shards; the loader builds a record without typeOf for one of them and types it Thing."
 
 [E1]
 title = "Numeric values such as 1e5 and inf are emitted as JSON strings"

@@ -22,12 +22,16 @@ Regenerate goldens (from 'threaded' mode) with:
 """
 
 import pytest
+from stats import config as config_module
 from tests.stats.scenario_lib import harness
 from tests.stats.scenario_lib import modes as modes_lib
 from tests.stats.scenario_lib import spec
 from tests.stats.test_util import is_write_mode
 
 _SCENARIOS = spec.discover_scenarios()
+
+# Module-level string constants in stats/config.py that are values, not keys.
+_CONFIG_CONSTANTS_THAT_ARE_NOT_KEYS = {"_VARIABLE_PER_ROW_FORMAT"}
 
 
 def _cases():
@@ -57,11 +61,37 @@ def test_at_least_one_scenario_exists():
 
 def test_every_scenario_feature_is_registered():
   registry = spec.load_feature_registry()
-  unknown = {(s.name, f) for s in _SCENARIOS for f in s.features
-            } - {(s.name, f) for s in _SCENARIOS for f in registry}
+  unknown = sorted(
+      (s.name, f) for s in _SCENARIOS for f in s.features if f not in registry)
   assert not unknown, (
       f"scenarios cite features missing from {spec.FEATURES_FILE.name}:"
-      f" {sorted(unknown)}")
+      f" {unknown}")
+
+
+def test_every_config_key_is_tracked():
+  """Every config.json key the preprocessor reads must be accounted for.
+
+  A new key in stats/config.py fails this test until it is added to
+  [config_keys] in features.toml, either mapped to the feature that covers it
+  or left empty as explicitly untested.
+  """
+  config_keys = spec.load_config_key_registry()
+  read_keys = {
+      value for name, value in vars(config_module).items()
+      if name.startswith("_") and name.isupper() and isinstance(value, str) and
+      name not in _CONFIG_CONSTANTS_THAT_ARE_NOT_KEYS
+  }
+  untracked = sorted(read_keys - set(config_keys))
+  assert not untracked, (
+      f"config.json keys read by stats/config.py but missing from"
+      f" [config_keys] in {spec.FEATURES_FILE.name}: {untracked}")
+  stale = sorted(set(config_keys) - read_keys)
+  assert not stale, (f"[config_keys] in {spec.FEATURES_FILE.name} lists keys"
+                     f" stats/config.py no longer reads: {stale}")
+  registry = spec.load_feature_registry()
+  unknown = sorted(
+      f"{k} -> {f}" for k, f in config_keys.items() if f and f not in registry)
+  assert not unknown, f"[config_keys] cites unregistered features: {unknown}"
 
 
 def test_every_registered_feature_has_a_scenario():
