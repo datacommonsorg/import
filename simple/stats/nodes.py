@@ -106,6 +106,9 @@ class Nodes:
     self._entity_type_generated_id_count = 0
     # Used to generate custom group IDs
     self._group_generated_id_count = 0
+    # Always ensure the global root StatVarGroup (dc/g/Root) exists so manually
+    # defined StatVarGroup hierarchies in MCF have a root Node in Spanner.
+    self._ensure_root_group()
     # If generating SV hierarchy, create default custom dc group at the outset.
     if config.generate_hierarchy():
       self.group("")

@@ -25,6 +25,11 @@
         {
             "@id": "dcid:country/FAKE4",
             "@type": "dcid:FakeType1"
+        },
+        {
+            "@id": "dcid:dc/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Data Commons Variables"
         }
     ]
 }
