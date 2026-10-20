@@ -149,3 +149,110 @@ class TestVariablePerRowImporter(unittest.TestCase):
                              return_value={}) as mock_resolve:
         with self.assertRaises(EntityResolutionError):
           importer.do_import()
+
+  def test_split_import_matches_unsplit(self):
+    import pandas as pd
+    from tests.stats.test_util import RecordingGraphWriter
+    from util.filesystem import create_store
+
+    test_dir = os.path.join(_INPUT_DIR, "single_entity_official_keys")
+    config_path = os.path.join(test_dir, "config.json")
+    input_path = os.path.join(test_dir, "input.csv")
+
+    with open(config_path) as config_file:
+      config = Config(json.load(config_file))
+
+    dc_client.get_property_of_entities = MagicMock(return_value={
+        "geoId/06": "State",
+        "geoId/08": "State"
+    })
+
+    # Run unsplit
+    unsplit_gw = RecordingGraphWriter()
+    with tempfile.TemporaryDirectory() as temp_dir:
+      rep_file = create_store(temp_dir).as_dir().open_file("report1.json")
+      reporter = FileImportReporter(input_path, ImportReporter(rep_file))
+      importer = VariablePerRowImporter(
+          input_file=create_store(input_path).as_file(),
+          graph_writer=unsplit_gw,
+          reporter=reporter,
+          nodes=Nodes(config),
+          chunk_index=0,
+          num_chunks=1)
+      importer.do_import()
+      unsplit_gw.commit_and_close()
+
+    # Run split across 3 parts
+    split_gw = RecordingGraphWriter()
+    with tempfile.TemporaryDirectory() as temp_dir:
+      for chunk_idx in range(3):
+        rep_file = create_store(temp_dir).as_dir().open_file(
+            f"report_{chunk_idx}.json")
+        reporter = FileImportReporter(input_path, ImportReporter(rep_file))
+        importer = VariablePerRowImporter(
+            input_file=create_store(input_path).as_file(),
+            graph_writer=split_gw,
+            reporter=reporter,
+            nodes=Nodes(config),
+            chunk_index=chunk_idx,
+            num_chunks=3)
+        importer.do_import()
+      split_gw.commit_and_close()
+
+    unsplit_df = unsplit_gw.observations_df.sort_values(
+        by=list(unsplit_gw.observations_df.columns)).reset_index(drop=True)
+    split_df = split_gw.observations_df.sort_values(
+        by=list(split_gw.observations_df.columns)).reset_index(drop=True)
+    pd.testing.assert_frame_equal(unsplit_df, split_df)
+
+  def test_split_import_exact_newline_boundary(self):
+    """Verifies that rows are not skipped when start_byte falls exactly on a newline."""
+    config_dict = {
+        "inputFiles": [{
+            "pattern": "data.csv",
+            "importType": "observations",
+            "format": "variablePerRow",
+            "entityType": "Country",
+            "provenance": "dcid:prov1",
+            "ignoreColumns": ["xx"],
+            "columnMappings": {
+                "dcid:observationAbout": "entity",
+                "dcid:variableMeasured": "variable",
+                "dcid:observationDate": "date",
+                "dcid:value": "value"
+            }
+        }]
+    }
+    config = Config(config_dict)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+      input_path = os.path.join(temp_dir, "data.csv")
+      # Each line is exactly 30 bytes. Total size = 120 bytes.
+      # With num_chunks=4, chunk size = 30 bytes:
+      # Chunk 0: [0, 30) -> Header
+      # Chunk 1: [30, 60) -> starts on byte 30 (Row 1)
+      # Chunk 2: [60, 90) -> starts on byte 60 (Row 2)
+      # Chunk 3: [90, 120) -> starts on byte 90 (Row 3)
+      content = ("entity,variable,date,value,xx\n"
+                 "USA,Var1,2020,10,000000000000\n"
+                 "USA,Var2,2020,20,000000000000\n"
+                 "USA,Var3,2020,30,000000000000\n")
+      with open(input_path, "w") as f:
+        f.write(content)
+
+      split_gw = RecordingGraphWriter()
+      for chunk_idx in range(4):
+        rep_file = create_store(temp_dir).as_dir().open_file(
+            f"report_{chunk_idx}.json")
+        reporter = FileImportReporter(input_path, ImportReporter(rep_file))
+        importer = VariablePerRowImporter(
+            input_file=create_store(input_path).as_file(),
+            graph_writer=split_gw,
+            reporter=reporter,
+            nodes=Nodes(config),
+            chunk_index=chunk_idx,
+            num_chunks=4)
+        importer.do_import()
+      split_gw.commit_and_close()
+
+      self.assertEqual(len(split_gw.observations_df), 3)

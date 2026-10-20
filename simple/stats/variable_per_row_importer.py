@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import json
 import logging
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -31,8 +33,13 @@ from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.util import has_namespace_prefix
 from util.filesystem import File
+from util.filesystem import HEADER_READ_CHUNK_SIZE
 
 from util import dc_client as dc
+
+# Rows per pandas chunk when streaming a CSV. This is also the unit that split
+# imports hand out round-robin: part k of n processes chunks k, k+n, k+2n, ...
+_READ_CHUNK_ROWS = 50000
 
 # Columns for standard observation properties.
 # These are optional.
@@ -101,6 +108,59 @@ def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
   return df
 
 
+def add_proxy_entity_nodes(nodes: Nodes,
+                           entity_dcids: Iterable[str],
+                           prov_id: str = "") -> None:
+  """Adds proxy nodes, typed via Base DC, for entities not already in nodes.
+
+  Importers call this per file. When a file is split across processes, the
+  parts skip it and the parent calls it once with the union of their entities.
+  """
+  # NOTE: Generation of proxy entity nodes from Base Data Commons is controlled
+  # by import_proxy_entities. Observation nodes already reference the place/entity
+  # DCID directly in observationAbout, and disabling proxy node creation prevents
+  # generating redundant proxy entity nodes in the custom graph and avoids unnecessary
+  # Base DC API calls during ingestion.
+  if not nodes.config.import_proxy_entities():
+    logging.debug(
+        "Skipping proxy entity node generation (import_proxy_entities is disabled)."
+    )
+    return
+
+  entity_dcids = list(entity_dcids)
+  # Get entity nodes that are not already recorded.
+  new_entity_dcids = [
+      strip_namespace(dcid)
+      for dcid in entity_dcids
+      if not nodes.has_entity(strip_namespace(dcid))
+  ]
+
+  if prov_id:
+    for dcid in entity_dcids:
+      clean_dcid = strip_namespace(dcid)
+      if nodes.has_entity(clean_dcid):
+        nodes.entities[clean_dcid].provenance_ids.add(prov_id)
+
+  logging.info("Found %s total entities, of which %s are already imported.",
+               len(entity_dcids),
+               len(entity_dcids) - len(new_entity_dcids))
+
+  if not new_entity_dcids:
+    return
+
+  # Get entity types
+  logging.info("Getting entity types from DC for %s entities.",
+               len(new_entity_dcids))
+  dcid2type: dict[str,
+                  str] = dc.get_property_of_entities(new_entity_dcids,
+                                                     sc.PREDICATE_TYPE_OF)
+
+  if dcid2type:
+    logging.info("Importing %s of %s entities.", len(dcid2type),
+                 len(new_entity_dcids))
+    nodes.entities_with_types(dcid2type, provenance_id=prov_id)
+
+
 class VariablePerRowImporter(Importer):
   """Imports a single observations CSV, one observation per row ("SVObs").
 
@@ -112,16 +172,29 @@ class VariablePerRowImporter(Importer):
   node each, unless `importProxyEntities` is off.
   """
 
-  def __init__(self, input_file: File, graph_writer: GraphWriter,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
+  def __init__(self,
+               input_file: File,
+               graph_writer: GraphWriter,
+               reporter: FileImportReporter,
+               nodes: Nodes,
+               chunk_index: int = 0,
+               num_chunks: int = 1) -> None:
+    """chunk_index / num_chunks: when a large file is split across processes,
+    this importer handles only every num_chunks-th chunk of rows, starting at
+    chunk_index. Split parts skip the proxy-entity lookup: the caller runs it
+    once on the union of `entity_dcids` from all parts."""
+    if not 0 <= chunk_index < num_chunks:
+      raise ValueError(
+          f"Invalid chunk {chunk_index} of {num_chunks} for {input_file.path}")
     self.input_file = input_file
     self.graph_writer = graph_writer
     self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
+    self.chunk_index = chunk_index
+    self.num_chunks = num_chunks
     self.custom_dimensions = []
     self.column_mappings = {}
-    self.df = pd.DataFrame()
     self.entity_columns = set(self.config.entity_columns(self.input_file))
     # Unique entity IDs seen in this CSV.
     # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
@@ -133,8 +206,7 @@ class VariablePerRowImporter(Importer):
     try:
       errors = self.validate_headers()
       if errors:
-        raise ValueError("\n".join(errors))
-      self._read_csv()
+        raise ValueError("\n".join(err.error_message for err in errors))
       self._map_columns()
       self._write_observations()
       self._add_entity_nodes()
@@ -144,11 +216,6 @@ class VariablePerRowImporter(Importer):
       self.reporter.report_failure(str(e))
       raise e
 
-  def _read_csv(self) -> None:
-    # Read only the header row to extract column names for validation
-    with self.input_file.open_stream() as stream:
-      self.df = pd.read_csv(stream, nrows=1)
-
   def validate_headers(self) -> list[FileValidationError]:
     column_mappings, custom_dimensions = self._parse_column_mappings()
     errors = self._validate_mappings(column_mappings, custom_dimensions)
@@ -157,7 +224,8 @@ class VariablePerRowImporter(Importer):
       return errors
 
     try:
-      with self.input_file.open_stream() as stream:
+      with self.input_file.open_stream(
+          chunk_size=HEADER_READ_CHUNK_SIZE) as stream:
         header_df = pd.read_csv(stream, nrows=0)
       actual_column_names = set(header_df.columns)
     except Exception as e:
@@ -268,30 +336,119 @@ class VariablePerRowImporter(Importer):
           ))
     return errors
 
+  def _parse_csv_chunk(self, header_bytes: bytes,
+                       lines: list[bytes]) -> pd.DataFrame:
+    """Parses a slice of CSV lines into a typed DataFrame."""
+    return pd.read_csv(io.BytesIO(header_bytes + b"".join(lines)),
+                       na_values=constants.STANDARD_NA_VALUES,
+                       dtype=str)
+
+  def _iter_chunks_unsplit(self) -> Iterable[pd.DataFrame]:
+    """Streams CSV chunks sequentially when the file is processed by a single worker."""
+    with self.input_file.open_stream() as stream:
+      reader = pd.read_csv(stream,
+                           na_values=constants.STANDARD_NA_VALUES,
+                           chunksize=_READ_CHUNK_ROWS,
+                           dtype=str)
+      for chunk_df in reader:
+        if not chunk_df.empty:
+          yield chunk_df
+
+  def _iter_chunks_byte_range(self, file_size: int) -> Iterable[pd.DataFrame]:
+    """Streams only the assigned byte range for this split worker directly from GCS/disk."""
+    with self.input_file.open_stream(mode="rb") as stream:
+      if not isinstance(stream, io.BufferedReader) and hasattr(stream, "read"):
+        try:
+          stream = io.BufferedReader(stream, buffer_size=8 * 1024 * 1024)
+        except Exception:
+          pass
+
+      header = stream.readline()
+      start_byte = (file_size * self.chunk_index) // self.num_chunks
+      end_byte = ((file_size * (self.chunk_index + 1)) //
+                  self.num_chunks if self.chunk_index < self.num_chunks -
+                  1 else file_size)
+
+      if self.chunk_index == 0:
+        stream.seek(len(header))
+      else:
+        # To avoid skipping a line if start_byte is exactly at a line boundary,
+        # check if the previous character is a newline.
+        stream.seek(start_byte - 1)
+        prev_char = stream.read(1)
+        stream.seek(start_byte)
+        if prev_char != b"\n":
+          stream.readline()  # Skip partial line to align on newline boundary.
+
+      lines = []
+      while True:
+        if stream.tell() >= end_byte:
+          break
+        line = stream.readline()
+        if not line:
+          break
+        lines.append(line)
+        if len(lines) >= _READ_CHUNK_ROWS:
+          chunk_df = self._parse_csv_chunk(header, lines)
+          if not chunk_df.empty:
+            yield chunk_df
+          lines = []
+
+      if lines:
+        chunk_df = self._parse_csv_chunk(header, lines)
+        if not chunk_df.empty:
+          yield chunk_df
+
+  def _iter_chunks_round_robin(self) -> Iterable[pd.DataFrame]:
+    """Fallback: partitions rows round-robin across chunks when byte seeking is unsupported."""
+    with self.input_file.open_stream() as stream:
+      reader = pd.read_csv(stream,
+                           na_values=constants.STANDARD_NA_VALUES,
+                           chunksize=_READ_CHUNK_ROWS,
+                           dtype=str)
+      for chunk_number, chunk_df in enumerate(reader):
+        if chunk_number % self.num_chunks == self.chunk_index:
+          if not chunk_df.empty:
+            yield chunk_df
+
+  def _iter_observation_chunks(self) -> Iterable[pd.DataFrame]:
+    """Yields parsed observation DataFrames in chunks, using byte-range seeking when split."""
+    if self.num_chunks <= 1:
+      yield from self._iter_chunks_unsplit()
+      return
+
+    try:
+      file_size = self.input_file.size()
+    except Exception:
+      file_size = 0
+
+    if file_size > 0:
+      try:
+        yield from self._iter_chunks_byte_range(file_size)
+        return
+      except (io.UnsupportedOperation, AttributeError, Exception) as e:
+        logging.warning(
+            "Byte-range streaming failed for %s (%s), falling back to round-robin.",
+            self.input_file.path, e)
+
+    yield from self._iter_chunks_round_robin()
+
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file).id
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
-    with self.input_file.open_stream() as stream:
-      reader = pd.read_csv(stream,
-                           na_values=constants.STANDARD_NA_VALUES,
-                           chunksize=10000,
-                           dtype=str)
-
-      for chunk_df in reader:
-        if chunk_df.empty:
-          continue
-        observations_df = (self.resolve_specified_columns(chunk_df).pipe(
-            self._apply_column_mappings).pipe(self._track_entity_dcids).pipe(
-                _apply_property_defaults, obs_props).pipe(
-                    self._serialize_custom_dimensions,
-                    obs_props.properties).pipe(_format_numeric_values).pipe(
-                        filter_invalid_observation_values).pipe(
-                            self._ensure_entity_column).pipe(
-                                _strip_namespaces, provenance))
-        observations_df = observations_df[constants.OBSERVATION_COLUMNS]
-        self.graph_writer.write_observations(observations_df, self.input_file)
+    for chunk_df in self._iter_observation_chunks():
+      observations_df = (self.resolve_specified_columns(chunk_df).pipe(
+          self._apply_column_mappings).pipe(self._track_entity_dcids).pipe(
+              _apply_property_defaults, obs_props).pipe(
+                  self._serialize_custom_dimensions,
+                  obs_props.properties).pipe(_format_numeric_values).pipe(
+                      filter_invalid_observation_values).pipe(
+                          self._ensure_entity_column).pipe(
+                              _strip_namespaces, provenance))
+      observations_df = observations_df[constants.OBSERVATION_COLUMNS]
+      self.graph_writer.write_observations(observations_df, self.input_file)
 
   def _apply_column_mappings(self, df: pd.DataFrame) -> pd.DataFrame:
     """Rename physical CSV columns to logical column names."""
@@ -324,20 +481,23 @@ class VariablePerRowImporter(Importer):
       df[constants.COLUMN_PROPERTIES] = static_json
       return df
 
-    records = df[custom_cols].to_dict(orient="records")
-    serialized = []
-    for r in records:
-      d = dict(static_props)
-      for col, val in r.items():
-        if pd.notna(val) and val != "":
-          d[col] = strip_namespace(str(val))
-      serialized.append(json.dumps(d) if d else "")
+    unique_tuples = df[custom_cols].drop_duplicates()
+    tuple_to_json = _build_custom_dimension_mapping(custom_cols, unique_tuples,
+                                                    static_props)
 
-    df[constants.COLUMN_PROPERTIES] = serialized
+    if len(custom_cols) == 1:
+      col = custom_cols[0]
+      val_to_json = {k[0]: v for k, v in tuple_to_json.items()}
+      fallback = json.dumps(static_props) if static_props else ""
+      df[constants.COLUMN_PROPERTIES] = df[col].map(val_to_json).fillna(
+          fallback)
+    else:
+      df[constants.COLUMN_PROPERTIES] = [
+          tuple_to_json.get(row, "")
+          for row in df[custom_cols].itertuples(index=False)
+      ]
 
-    if custom_cols:
-      df = df.drop(columns=custom_cols)
-    return df
+    return df.drop(columns=custom_cols)
 
   def _ensure_entity_column(self, df: pd.DataFrame) -> pd.DataFrame:
     """Ensures the logical 'entity' column exists in the DataFrame, even if empty."""
@@ -346,46 +506,25 @@ class VariablePerRowImporter(Importer):
     return df
 
   def _add_entity_nodes(self) -> None:
-    # NOTE: Generation of proxy entity nodes from Base Data Commons is controlled
-    # by import_proxy_entities. Observation nodes already reference the place/entity
-    # DCID directly in observationAbout, and disabling proxy node creation prevents
-    # generating redundant proxy entity nodes in the custom graph and avoids unnecessary
-    # Base DC API calls during ingestion.
-    if not self.config.import_proxy_entities():
-      logging.debug(
-          "Skipping proxy entity node generation (import_proxy_entities is disabled)."
-      )
+    if self.num_chunks > 1:
+      # Part of a split import: the caller looks up the union of all parts'
+      # entities once, instead of every part repeating the DC API calls.
       return
+    add_proxy_entity_nodes(self.nodes, self.entity_dcids,
+                           getattr(self, "provenance", ""))
 
-    # Get entity nodes that are not already recorded.
-    new_entity_dcids = [
-        strip_namespace(dcid)
-        for dcid in self.entity_dcids
-        if not self.nodes.has_entity(strip_namespace(dcid))
-    ]
 
-    prov_id = getattr(self, "provenance", "")
-    if prov_id:
-      for dcid in self.entity_dcids:
-        clean_dcid = strip_namespace(dcid)
-        if self.nodes.has_entity(clean_dcid):
-          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
-
-    logging.info("Found %s total entities, of which %s are already imported.",
-                 len(self.entity_dcids),
-                 len(self.entity_dcids) - len(new_entity_dcids))
-
-    if not new_entity_dcids:
-      return
-
-    # Get entity types
-    logging.info("Getting entity types from DC for %s entities.",
-                 len(new_entity_dcids))
-    dcid2type: dict[str,
-                    str] = dc.get_property_of_entities(new_entity_dcids,
-                                                       sc.PREDICATE_TYPE_OF)
-
-    if dcid2type:
-      logging.info("Importing %s of %s entities.", len(dcid2type),
-                   len(new_entity_dcids))
-      self.nodes.entities_with_types(dcid2type, provenance_id=prov_id)
+def _build_custom_dimension_mapping(
+    custom_cols: list[str],
+    unique_tuples: pd.DataFrame,
+    static_props: dict[str, str],
+) -> dict[tuple, str]:
+  """Pre-computes JSON property payloads for unique custom dimension tuples."""
+  tuple_to_json = {}
+  for r in unique_tuples.itertuples(index=False):
+    d = dict(static_props)
+    for col, val in zip(custom_cols, r):
+      if pd.notna(val) and val != "":
+        d[col] = strip_namespace(str(val))
+    tuple_to_json[r] = json.dumps(d) if d else ""
+  return tuple_to_json
