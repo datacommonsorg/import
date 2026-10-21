@@ -1,9 +1,14 @@
 package org.datacommons.ingestion.spanner;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.ReadOnlyTransaction;
+import com.google.cloud.spanner.ResultSet;
+import com.google.cloud.spanner.Statement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.List;
@@ -177,5 +182,91 @@ public class SpannerClientTest {
         "@{spanner_emulator.disable_query_partitionability_check=true} SELECT * FROM TimeSeries WHERE provenance = 'dc/base/Test'",
         query);
     assertTrue(query.startsWith("@{spanner_emulator.disable_query_partitionability_check=true}"));
+  }
+
+  @Test
+  public void testGetDeleteTarget_timeSeriesByProvenance_forcesBaseTable() {
+    assertEquals(
+        "TimeSeries@{FORCE_INDEX=_BASE_TABLE}",
+        spannerClient.getDeleteTarget("TimeSeries", "provenance"));
+  }
+
+  @Test
+  public void testGetDeleteTarget_otherTablesOrColumns_unchanged() {
+    assertEquals("Edge", spannerClient.getDeleteTarget("Edge", "provenance"));
+    assertEquals("TimeSeries", spannerClient.getDeleteTarget("TimeSeries", "variable_measured"));
+  }
+
+  @Test
+  public void testGetDeleteTarget_emulator_skipsHint() {
+    SpannerClient emulatorClient =
+        SpannerClient.builder()
+            .gcpProjectId("test-project")
+            .spannerInstanceId("test-instance")
+            .spannerDatabaseId("test-db")
+            .timeSeriesTableName("TimeSeries")
+            .emulatorHost("localhost:9010")
+            .build();
+    assertEquals("TimeSeries", emulatorClient.getDeleteTarget("TimeSeries", "provenance"));
+  }
+
+  @Test
+  public void testIsTimeSeriesProvenanceDelete() {
+    assertTrue(spannerClient.isTimeSeriesProvenanceDelete("TimeSeries", "provenance"));
+    assertFalse(spannerClient.isTimeSeriesProvenanceDelete("Edge", "provenance"));
+    assertFalse(spannerClient.isTimeSeriesProvenanceDelete("TimeSeries", "variable_measured"));
+  }
+
+  @Test
+  public void testDeleteTimeSeriesByProvenances_deletesOneVariableAtATime() {
+    DatabaseClient dbClient = mock(DatabaseClient.class);
+    ReadOnlyTransaction readTx = mock(ReadOnlyTransaction.class);
+    ResultSet rs = mock(ResultSet.class);
+    when(dbClient.singleUse()).thenReturn(readTx);
+    when(readTx.executeQuery(any(Statement.class))).thenReturn(rs);
+    when(rs.next()).thenReturn(true, true, false);
+    when(rs.getString("variable_measured")).thenReturn("VarA", "VarB");
+    when(dbClient.executePartitionedUpdate(any(Statement.class))).thenReturn(3L, 4L);
+
+    long deleted =
+        spannerClient.deleteTimeSeriesByProvenances(dbClient, "TimeSeries", List.of("dc/base/EPA"));
+
+    assertEquals(7L, deleted);
+    org.mockito.ArgumentCaptor<Statement> captor =
+        org.mockito.ArgumentCaptor.forClass(Statement.class);
+    verify(dbClient, times(2)).executePartitionedUpdate(captor.capture());
+    List<Statement> stmts = captor.getAllValues();
+    assertEquals(
+        "DELETE FROM TimeSeries@{FORCE_INDEX=_BASE_TABLE}"
+            + " WHERE variable_measured = @variable_measured AND provenance IN UNNEST(@provenance)",
+        stmts.get(0).getSql());
+    assertEquals("VarA", stmts.get(0).getParameters().get("variable_measured").getString());
+    assertEquals("VarB", stmts.get(1).getParameters().get("variable_measured").getString());
+    assertEquals(
+        List.of("dc/base/EPA"), stmts.get(1).getParameters().get("provenance").getStringArray());
+  }
+
+  @Test
+  public void testDeleteTimeSeriesByProvenances_noRows_skipsDelete() {
+    DatabaseClient dbClient = mock(DatabaseClient.class);
+    ReadOnlyTransaction readTx = mock(ReadOnlyTransaction.class);
+    ResultSet rs = mock(ResultSet.class);
+    when(dbClient.singleUse()).thenReturn(readTx);
+    when(readTx.executeQuery(any(Statement.class))).thenReturn(rs);
+    when(rs.next()).thenReturn(false);
+
+    assertEquals(
+        0L,
+        spannerClient.deleteTimeSeriesByProvenances(
+            dbClient, "TimeSeries", List.of("dc/base/EPA")));
+    verify(dbClient, never()).executePartitionedUpdate(any(Statement.class));
+  }
+
+  @Test
+  public void testDeleteTimeSeriesByProvenances_emptyProvenances_noQueries() {
+    DatabaseClient dbClient = mock(DatabaseClient.class);
+    assertEquals(
+        0L, spannerClient.deleteTimeSeriesByProvenances(dbClient, "TimeSeries", List.of()));
+    verifyNoInteractions(dbClient);
   }
 }
