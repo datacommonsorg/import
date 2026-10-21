@@ -16,7 +16,12 @@ import os
 import sys
 import unittest
 from unittest.mock import MagicMock
+from unittest.mock import create_autospec
 from unittest.mock import patch
+
+from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1.database import Database
+from google.cloud.spanner_v1.snapshot import Snapshot
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -32,6 +37,7 @@ from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.common import (
     BASE_PROVENANCE_PREFIX,
     _escape_sql_literal,
+    get_low_priority_request_options,
     get_provenance_prefix,
     get_provenance_name,
     get_generated_provenance_name,
@@ -48,6 +54,13 @@ class TestCommonUtils(unittest.TestCase):
 
     def test_base_provenance_prefix(self):
         self.assertEqual(BASE_PROVENANCE_PREFIX, "dc/base/")
+
+    def test_get_low_priority_request_options(self):
+        first = get_low_priority_request_options()
+        second = get_low_priority_request_options()
+        self.assertEqual(first.priority, RequestOptions.Priority.PRIORITY_LOW)
+        # The SDK mutates the instance it is given, so instances must not be shared.
+        self.assertIsNot(first, second)
 
     def test_get_provenance_prefix(self):
         self.assertEqual(get_provenance_prefix(is_base_dc=True), "dc/base/")
@@ -528,10 +541,14 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("sentence1", sentences)
         self.assertIn("sentence2", sentences)
 
-    @patch.object(EmbeddingGenerator, "spanner_database")
+    @patch.object(
+        EmbeddingGenerator,
+        "spanner_database",
+        new_callable=lambda: create_autospec(Database, instance=True),
+    )
     def test_delete_existing_embeddings(self, mock_db):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_snapshot.execute_sql.side_effect = [
             [(None,)],  # IngestionLock query
@@ -551,7 +568,17 @@ class TestEmbeddingGenerator(unittest.TestCase):
             spec, embedding_table="NodeEmbedding"
         )
         self.assertEqual(deleted, 2)
+        self.assertEqual(mock_snapshot.execute_sql.call_count, 2)
+        for sql_call in mock_snapshot.execute_sql.call_args_list:
+            self.assertEqual(
+                sql_call[1]["request_options"].priority,
+                RequestOptions.Priority.PRIORITY_LOW,
+            )
         mock_db.execute_partitioned_dml.assert_called_once()
+        self.assertEqual(
+            mock_db.execute_partitioned_dml.call_args[1]["request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
 
 
 class TestStatVarGroupGenerator(unittest.TestCase):
