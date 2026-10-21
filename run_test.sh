@@ -91,6 +91,11 @@ function py_test {
   pip3 install uv -q
   uv run --python 3.12 pytest --ignore=aggregation/e2e_tests/
 
+  echo -e "#### Running aggregation helper unit tests"
+  cd "${ROOT_DIR}/pipeline/workflow/aggregation-helper"
+  # The e2e suite is too slow for CI.
+  uv run --python 3.12 pytest --ignore=aggregation/e2e_tests/
+
   cd "${ROOT_DIR}"
   deactivate
 }
