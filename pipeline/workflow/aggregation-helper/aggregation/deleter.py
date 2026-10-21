@@ -63,7 +63,7 @@ class AggregationDeleter:
         """Deletes aggregated data for the specified imports from Spanner concurrently.
 
         Uses Partitioned DML to execute deletions, which is safe for large volumes.
-        Runs deletions for Edge, TimeSeries, and KeyValueStore in parallel using ThreadPoolExecutor.
+        Runs deletions for Edge and TimeSeries in parallel using ThreadPoolExecutor.
 
         Args:
             imports_to_delete: List of import names (without dc/base/ prefix) to delete.
@@ -92,11 +92,6 @@ class AggregationDeleter:
                 "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)",
                 " (and cascaded Observations)",
             ),
-            (
-                "KeyValueStore",
-                "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)",
-                "",
-            ),
         ]
 
         def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
@@ -119,6 +114,43 @@ class AggregationDeleter:
         except Exception as e:
             logging.error(f"Failed to execute partitioned DML for deletions: {e}")
             raise
+
+    def delete_provenance_summaries(self, imports_to_delete: List[str]) -> int:
+        """Deletes ProvenanceSummary records from KeyValueStore for the specified imports.
+
+        Uses Partitioned DML to execute deletions across the secondary index KeyValueStoreByProvenance.
+
+        Args:
+            imports_to_delete: List of import names to delete summaries for.
+
+        Returns:
+            Number of rows deleted.
+        """
+        if not imports_to_delete:
+            return 0
+
+        logging.info(
+            f"Deleting KeyValueStore ProvenanceSummary records for imports: {imports_to_delete}"
+        )
+
+        provenance_names = [
+            get_provenance_name(name, self.is_base_dc) for name in imports_to_delete
+        ]
+
+        sql = (
+            "DELETE FROM KeyValueStore "
+            "WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)"
+        )
+        params = {"provenances": provenance_names}
+        param_types = {
+            "provenances": spanner.param_types.Array(spanner.param_types.STRING)
+        }
+
+        rows = self.spanner_database.execute_partitioned_dml(
+            sql, params=params, param_types=param_types
+        )
+        logging.info(f"Deleted {rows} ProvenanceSummary rows from KeyValueStore table.")
+        return rows
 
     def delete_stat_var_group_edges(self) -> int:
         """Deletes all generated StatVarGroup edges across all provenances in Spanner."""
