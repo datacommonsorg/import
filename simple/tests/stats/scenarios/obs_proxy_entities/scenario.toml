@@ -1,0 +1,26 @@
+description = """
+Entities given as namespaced dcids (dcid:country/USA) are looked up in the DC \
+API and get a proxy node typed with their Base DC type (importProxyEntities \
+defaults to true). Exercises the DC API stub in every mode, including the \
+multiprocess workers."""
+features = ["obs.proxy_entities"]
+oracle = "vpr"
+
+[dc_api.types]
+"country/USA" = "Country"
+"country/FRA" = "Country"
+
+[[must_contain]]
+subject = "country/USA"
+predicate = "typeOf"
+ref = "Country"
+
+[[must_contain]]
+subject = "country/FRA"
+predicate = "typeOf"
+ref = "Country"
+
+[[must_contain_observation]]
+about = "country/FRA"
+variable = "Count_Person"
+value = 67400000

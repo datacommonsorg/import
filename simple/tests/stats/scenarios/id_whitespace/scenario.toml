@@ -1,0 +1,10 @@
+description = """
+'country/USA ' (trailing space) and 'country/USA' are the same entity, so the \
+two rows are the same data point and must share one observation id."""
+features = ["id.whitespace"]
+oracle = "vpr"
+
+[[known_issues]]
+id = "E5"
+check = "observation_identity"
+note = "The id hashes the raw string, so whitespace yields two ids and bypasses collision detection."

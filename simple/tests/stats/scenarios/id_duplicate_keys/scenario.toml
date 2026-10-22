@@ -1,0 +1,11 @@
+description = """
+Two rows with the same entity, variable and date but different values. Each \
+observation id must map to exactly one record; today both records share one id \
+and the stored value depends on parse order."""
+features = ["id.duplicate_keys"]
+oracle = "vpr"
+
+[[known_issues]]
+id = "E4"
+check = "unique_observation_records"
+note = "Both rows are written under the same @id (only a log warning)."

@@ -1,0 +1,26 @@
+description = """
+The provenance declared in MCF has a url. Every observation must carry it as \
+provenanceUrl, because the loader puts provenanceUrl in the time-series key."""
+features = ["obs.provenance_url", "mcf.provenance_source"]
+oracle = "vpr"
+
+[[must_contain_observation]]
+about = "country/FRA"
+variable = "Median_Age_Person"
+provenanceUrl = "https://source.example.org/provenance"
+
+[[known_issues]]
+id = "E7"
+check = "provenance_url"
+modes = ["multiprocess"]
+note = "Worker processes write observations before the MCF provenance url is known."
+
+[[known_issues]]
+id = "E7"
+check = "golden"
+modes = ["multiprocess"]
+
+[[known_issues]]
+id = "E7"
+check = "must_contain"
+modes = ["multiprocess"]

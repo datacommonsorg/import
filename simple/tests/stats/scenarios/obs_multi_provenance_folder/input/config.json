@@ -1,0 +1,24 @@
+{
+  "inputFiles": [
+    {
+      "pattern": "population.*",
+      "provenance": "dcid:PopulationProvenance",
+      "columnMappings": {
+        "dcid:observationAbout": "place",
+        "dcid:variableMeasured": "variable",
+        "dcid:observationDate": "year",
+        "dcid:value": "value"
+      }
+    },
+    {
+      "pattern": "age.*",
+      "provenance": "dcid:AgeProvenance",
+      "columnMappings": {
+        "dcid:observationAbout": "place",
+        "dcid:variableMeasured": "variable",
+        "dcid:observationDate": "year",
+        "dcid:value": "value"
+      }
+    }
+  ]
+}

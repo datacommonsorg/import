@@ -1,0 +1,11 @@
+description = """
+A CSV column ('notes') that is neither mapped nor listed in ignoreColumns must \
+fail header validation before anything is written, and the failure must reach \
+the ingestion workflow as a structured UNMAPPED_COLUMNS error."""
+features = ["err.unmapped_columns", "handshake.failure"]
+expect = "error"
+
+[error]
+type = "ValueError"
+message_contains = ["CSV Header Validation Failed", "notes"]
+handshake_error_types = ["UNMAPPED_COLUMNS"]

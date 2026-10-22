@@ -1,0 +1,16 @@
+place,variable,year,value,notes
+country/C00,Count_Person,2000,1,"Revised estimate.
+See methodology, section 2."
+country/C01,Count_Person,2001,2,provisional
+country/C02,Count_Person,2002,3,provisional
+country/C03,Count_Person,2003,4,provisional
+country/C04,Count_Person,2004,5,"Revised estimate.
+See methodology, section 2."
+country/C05,Count_Person,2005,6,provisional
+country/C06,Count_Person,2006,7,provisional
+country/C07,Count_Person,2007,8,provisional
+country/C08,Count_Person,2008,9,"Revised estimate.
+See methodology, section 2."
+country/C09,Count_Person,2009,10,provisional
+country/C10,Count_Person,2010,11,provisional
+country/C11,Count_Person,2011,12,provisional

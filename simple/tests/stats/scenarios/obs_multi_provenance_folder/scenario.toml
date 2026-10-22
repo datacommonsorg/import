@@ -1,0 +1,29 @@
+description = """
+One input folder with two provenances (the DCP integration-test layout). Each \
+provenance's observations and Provenance node must land in that provenance's \
+import folder, because the ingestion handshake selects shards per folder."""
+features = ["obs.multi_provenance_folder"]
+oracle = "vpr"
+
+[[must_contain_observation]]
+folder = "PopulationProvenance"
+about = "country/USA"
+variable = "Count_Person"
+provenance = "PopulationProvenance"
+
+[[must_contain_observation]]
+folder = "AgeProvenance"
+about = "country/FRA"
+variable = "Median_Age_Person"
+provenance = "AgeProvenance"
+
+[[must_contain]]
+folder = "AgeProvenance"
+subject = "AgeProvenance"
+predicate = "typeOf"
+ref = "Provenance"
+
+[[must_not_contain]]
+folder = "PopulationProvenance"
+predicate = "variableMeasured"
+ref = "Median_Age_Person"

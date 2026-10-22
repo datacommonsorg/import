@@ -1,0 +1,9 @@
+Node: dcid:TestSource
+typeOf: dcs:Source
+name: "Test Source"
+url: "https://source.example.org"
+
+Node: dcid:PopulationProvenance
+typeOf: dcs:Provenance
+name: "Population Provenance"
+source: dcid:TestSource

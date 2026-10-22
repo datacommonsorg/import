@@ -1,0 +1,22 @@
+# Loader-view facts (see simple/tests/stats/scenario_lib/facts.py).
+# Columns: folder, subject, predicate, kind (ref|uref|lit), object.
+# Generated in 'threaded' mode. Regenerate with TEST_MODE=write; never edit by hand.
+TestProvenance	TestProvenance	name	lit	"Test Provenance"
+TestProvenance	TestProvenance	source	ref	TestSource
+TestProvenance	TestProvenance	typeOf	ref	Provenance
+TestProvenance	TestSource	domain	lit	"source.example.org"
+TestProvenance	TestSource	name	lit	"Test Source"
+TestProvenance	TestSource	typeOf	ref	Source
+TestProvenance	TestSource	url	lit	"https://source.example.org"
+TestProvenance	obs_15ac3c83e41a5d93	observationAbout	ref	country/USA
+TestProvenance	obs_15ac3c83e41a5d93	observationDate	lit	2020
+TestProvenance	obs_15ac3c83e41a5d93	provenance	ref	TestProvenance
+TestProvenance	obs_15ac3c83e41a5d93	typeOf	ref	StatVarObservation
+TestProvenance	obs_15ac3c83e41a5d93	value	lit	1
+TestProvenance	obs_484468857564d123	observationAbout	ref	country/USA
+TestProvenance	obs_484468857564d123	observationDate	lit	2020
+TestProvenance	obs_484468857564d123	observationProperties	lit	"dcid:observationAbout"
+TestProvenance	obs_484468857564d123	provenance	ref	TestProvenance
+TestProvenance	obs_484468857564d123	typeOf	ref	StatVarObservation
+TestProvenance	obs_484468857564d123	value	lit	331000000
+TestProvenance	obs_484468857564d123	variableMeasured	ref	Count_Person

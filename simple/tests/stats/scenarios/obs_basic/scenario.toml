@@ -1,0 +1,27 @@
+description = """
+Variable-per-row observations whose physical column names (place, year) are \
+mapped through columnMappings. Entities are pre-resolved dcids, so no DC API \
+calls are needed. The provenance has no url, which isolates E7 to its own \
+scenario."""
+features = ["obs.vpr", "obs.column_mappings", "mcf.provenance_source"]
+oracle = "vpr"
+
+[[must_contain_observation]]
+folder = "TestProvenance"
+about = "country/FRA"
+variable = "Median_Age_Person"
+date = 2020
+value = 42.3
+provenance = "TestProvenance"
+
+[[must_contain_observation]]
+folder = "TestProvenance"
+about = "country/USA"
+variable = "Count_Person"
+date = 2021
+value = 332000000
+
+[[must_contain]]
+subject = "TestProvenance"
+predicate = "source"
+ref = "TestSource"

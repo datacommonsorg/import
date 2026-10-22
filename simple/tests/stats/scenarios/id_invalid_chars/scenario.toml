@@ -1,0 +1,10 @@
+description = """
+A quoted variable containing a newline must not be emitted as a dcid (dcids \
+cannot contain whitespace or control characters)."""
+features = ["id.invalid_chars"]
+oracle = "vpr"
+
+[[known_issues]]
+id = "E6"
+check = "dcid_charset"
+note = "The newline is kept inside the dcid."

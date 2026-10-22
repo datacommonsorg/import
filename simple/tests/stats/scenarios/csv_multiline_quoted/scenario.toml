@@ -1,0 +1,6 @@
+description = """
+An ignored free-text column whose quoted values span lines. Every record must \
+come through exactly once. This guards the planned byte-range split path: \
+add a split mode here when that path lands."""
+features = ["csv.multiline_quoted", "obs.ignore_columns"]
+oracle = "vpr"
