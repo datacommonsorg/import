@@ -1,0 +1,52 @@
+Node: InterestRate_TreasuryNote_7Year
+dcid: "InterestRate_TreasuryNote_7Year"
+maturity: [7 Year]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryNote_7Year"
+populationType: dcid:TreasuryNote
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+DiffType: ADDED
+
+Node: InterestRate_TreasuryBill_1Month
+dcid: "InterestRate_TreasuryBill_1Month"
+maturity: [1 Month]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryBill_1Month"
+populationType: dcid:TreasuryBill
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+DiffType: DELETED
+
+Node: InterestRate_TreasuryNote_2Year
+dcid: "InterestRate_TreasuryNote_2Year"
+maturity: [2 Year]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryNote_02Year"
+populationType: dcid:TreasuryNote
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+DiffType: MODIFIED_PREVIOUS
+
+Node: InterestRate_TreasuryNote_3Year
+dcid: "InterestRate_TreasuryNote_3Year"
+maturity: [3 Year]
+measuredProperty: dcid:interestRate
+name: "InterestRate_TreasuryNote_3Year"
+populationType: dcid:TreasuryNote
+statType: dcid:measuredValue
+typeOf: dcid:StatisticalVariable
+DiffType: ADDED
+
+Node: dc/o/v9wehq1lfrf55
+dcid: "dc/o/v9wehq1lfrf55"
+keyString: "observationAbout=country/USAvariableMeasured=InterestRate_TreasuryBond_20YearobservationDate=2025-01-30value=4.81unit=PercentmeasurementMethod=ConstantMaturityRate"
+measurementMethod: dcid:ConstantMaturityRate
+observationAbout: dcid:country/USA
+observationDate: "2025-01-30"
+typeOf: dcid:StatVarObservation
+unit: dcid:Percent
+value: 4.81
+variableMeasured: dcid:InterestRate_TreasuryBond_20Year
+DiffType: MODIFIED_PREVIOUS
+
