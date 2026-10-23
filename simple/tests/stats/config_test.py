@@ -18,7 +18,6 @@ from stats.config import Config
 from stats.data import AggregationConfig
 from stats.data import AggregationMethod
 from stats.data import ImportType
-from stats.data import InputFileFormat
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
@@ -27,25 +26,30 @@ from util.filesystem import create_store
 from util.filesystem import File
 
 CONFIG_DATA = {
-    "inputFiles": {
-        "a.csv": {
+    "inputFiles": [
+        {
+            "pattern": "a.csv",
             "entityType": "Country",
             "provenance": "Provenance21 Name"
         },
-        "b.csv": {
+        {
+            "pattern": "b.csv",
             "entityType": "",
             "ignoreColumns": ["ignore1", "ignore2"]
         },
-        "observations.csv": {
+        {
+            "pattern": "observations.csv",
             "importType": "observations"
         },
-        "events.csv": {
+        {
+            "pattern": "events.csv",
             "importType": "events"
         },
-        "invalid_import_type.csv": {
+        {
+            "pattern": "invalid_import_type.csv",
             "importType": "eVeNtS"
         },
-    },
+    ],
     "variables": {
         "Variable 1": {
             "group": "Parent Group/Child Group 1",
@@ -233,105 +237,75 @@ class TestConfig(unittest.TestCase):
   def test_input_file(self):
     self.assertDictEqual(
         Config({})._per_file_config(self.make_file("foo.csv")), {}, "empty")
-    self.assertDictEqual(
-        Config({
-            "inputFiles": {
-                "foo.csv": {
-                    "x": "y"
-                }
-            }
-        })._per_file_config(self.make_file("foo.csv")), {"x": "y"},
-        "exact match")
-    self.assertDictEqual(
-        Config({
-            "inputFiles": {
-                "foo.csv": {
-                    "x": "y"
-                }
-            }
-        })._per_file_config(self.make_file("path/to/foo.csv")), {"x": "y"},
-        "subdir match")
-    self.assertDictEqual(
-        Config({
-            "inputFiles": {
-                "path/to/*.csv": {
-                    "x": "y"
-                }
-            }
-        })._per_file_config(self.make_file("path/to/foo.csv")), {"x": "y"},
-        "subdir match with path")
-    self.assertDictEqual(
-        Config({
-            "inputFiles": {
-                "path/to/*.csv": {
-                    "x": "y"
-                }
-            }
-        })._per_file_config(self.make_file("foo.csv")), {}, "different subdir")
-    self.assertDictEqual(
-        Config({
-            "inputFiles": {
-                "//to/*.csv": {
-                    "x": "y"
-                }
-            }
-        })._per_file_config(self.make_file("path/to/foo.csv")), {},
-        "wrong subdir")
-    self.assertDictEqual(
-        Config({
-            "inputFiles": {
-                "foo*.csv": {
-                    "x": "y"
-                }
-            }
-        })._per_file_config(self.make_file("foo1.csv")), {"x": "y"},
-        "wildcard match")
-    self.assertDictEqual(
-        Config({
-            "inputFiles": {
-                "bar.csv": {
-                    "x": "y"
-                }
-            }
-        })._per_file_config(self.make_file("foo.csv")), {}, "no exact match")
-    self.assertDictEqual(
-        Config({
-            "inputFiles": {
-                "bar*.csv": {
-                    "x": "y"
-                }
-            }
-        })._per_file_config(self.make_file("foo1.csv")), {},
-        "no wildcard match")
 
-  def test_input_file_format(self):
-    config = Config({})
-    self.assertEqual(config.format(self.make_file("foo.csv")),
-                     InputFileFormat.VARIABLE_PER_ROW, "empty")
+    # (description, configured pattern, file path, expected per-file config)
+    cases = [
+        ("exact match", "foo.csv", "foo.csv", {
+            "x": "y"
+        }),
+        ("subdir match", "foo.csv", "path/to/foo.csv", {
+            "x": "y"
+        }),
+        ("subdir match with path", "path/to/*.csv", "path/to/foo.csv", {
+            "x": "y"
+        }),
+        ("wildcard match", "foo*.csv", "foo1.csv", {
+            "x": "y"
+        }),
+        ("different subdir", "path/to/*.csv", "foo.csv", {}),
+        ("wrong subdir", "//to/*.csv", "path/to/foo.csv", {}),
+        ("no exact match", "bar.csv", "foo.csv", {}),
+        ("no wildcard match", "bar*.csv", "foo1.csv", {}),
+    ]
 
-    config = Config({"inputFiles": {"foo.csv": {"format": "variablePerRow"}}})
-    self.assertEqual(config.format(self.make_file("foo.csv")),
-                     InputFileFormat.VARIABLE_PER_ROW)
+    for description, pattern, file_path, expected in cases:
+      with self.subTest(description):
+        config = Config({"inputFiles": [{"pattern": pattern, "x": "y"}]})
+        actual = config._per_file_config(self.make_file(file_path))
+        # A matched entry also carries the pattern it was keyed on.
+        actual = {k: v for k, v in actual.items() if k != "pattern"}
+        self.assertDictEqual(actual, expected, description)
 
-    config = Config(
-        {"inputFiles": {
-            "foo.csv": {
-                "format": "variablePerColumn"
-            }
-        }})
-    self.assertEqual(config.format(self.make_file("foo.csv")),
-                     InputFileFormat.VARIABLE_PER_COLUMN)
+  def test_input_files_must_be_a_list(self):
+    """A dict `inputFiles` is rejected rather than silently accepted.
 
-    config = Config({"inputFiles": {"foo.csv": {"format": "INVALID"}}})
-    with self.assertRaisesRegex(ValueError, "Unsupported format"):
-      config.format(self.make_file("foo.csv"))
+    MetadataValidator iterates inputFiles and skips anything that is not an
+    object. Over a dict that yields pattern strings, so accepting the dict form
+    would silently disable provenance and source validation.
+    """
+    with self.assertRaisesRegex(ValueError, "must be a list of objects"):
+      Config({"inputFiles": {"foo.csv": {"x": "y"}}})
+
+  def test_input_file_entry_must_have_a_pattern(self):
+    with self.assertRaisesRegex(ValueError, "must specify 'pattern'"):
+      Config({"inputFiles": [{"provenance": "dcid:Provenance1"}]})
+
+  def test_input_file_format_is_validated_at_parse_time(self):
+    # `format` is optional and only ever names the variable-per-row layout.
+    Config({"inputFiles": [{"pattern": "foo.csv"}]})
+    Config({"inputFiles": [{"pattern": "foo.csv", "format": "variablePerRow"}]})
+
+    for unsupported in ["variablePerColumn", "INVALID"]:
+      with self.subTest(format=unsupported):
+        with self.assertRaisesRegex(ValueError, "Unsupported format"):
+          Config(
+              {"inputFiles": [{
+                  "pattern": "foo.csv",
+                  "format": unsupported
+              }]})
 
   def test_column_mappings(self):
     config = Config({})
     self.assertDictEqual(config.column_mappings(self.make_file("foo.csv")), {},
                          "empty")
 
-    config = Config({"inputFiles": {"foo.csv": {"columnMappings": {"x": "y"}}}})
+    config = Config(
+        {"inputFiles": [{
+            "pattern": "foo.csv",
+            "columnMappings": {
+                "x": "y"
+            }
+        }]})
     self.assertDictEqual(config.column_mappings(self.make_file("foo.csv")),
                          {"x": "y"})
 
@@ -340,10 +314,14 @@ class TestConfig(unittest.TestCase):
     self.assertEqual(config.row_entity_type(self.make_file("foo.csv")), "",
                      "empty")
 
-    config = Config({"inputFiles": {"foo.csv": {"rowEntityType": "Foo"}}})
+    config = Config(
+        {"inputFiles": [{
+            "pattern": "foo.csv",
+            "rowEntityType": "Foo"
+        }]})
     self.assertEqual(config.row_entity_type(self.make_file("foo.csv")), "Foo")
 
-    config = Config({"inputFiles": {"foo.csv": {}}})
+    config = Config({"inputFiles": [{"pattern": "foo.csv"}]})
     self.assertEqual(config.row_entity_type(self.make_file("foo.csv")), "",
                      "unspecified")
 
@@ -352,16 +330,16 @@ class TestConfig(unittest.TestCase):
     self.assertListEqual(config.entity_columns(self.make_file("foo.csv")), [],
                          "empty")
 
-    config = Config(
-        {"inputFiles": {
-            "foo.csv": {
-                "columnsToResolve": ["foo", "bar"]
-            }
-        }})
+    config = Config({
+        "inputFiles": [{
+            "pattern": "foo.csv",
+            "columnsToResolve": ["foo", "bar"]
+        }]
+    })
     self.assertListEqual(config.entity_columns(self.make_file("foo.csv")),
                          ["foo", "bar"])
 
-    config = Config({"inputFiles": {"foo.csv": {}}})
+    config = Config({"inputFiles": [{"pattern": "foo.csv"}]})
     self.assertListEqual(config.entity_columns(self.make_file("foo.csv")), [],
                          "unspecified")
 

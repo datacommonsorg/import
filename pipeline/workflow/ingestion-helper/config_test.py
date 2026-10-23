@@ -126,5 +126,19 @@ class TestConfig(unittest.TestCase):
         importlib.reload(config)
         self.assertEqual(config.EMBEDDING_SPECS, config._DEFAULT_EMBEDDING_SPECS)
 
+    def test_parse_duration_seconds(self):
+        self.assertEqual(config._parse_duration_seconds("24h"), 86400)
+        self.assertEqual(config._parse_duration_seconds("7d"), 7 * 86400)
+        self.assertEqual(config._parse_duration_seconds("90m"), 90 * 60)
+        self.assertEqual(config._parse_duration_seconds("3600s"), 3600)
+        self.assertEqual(config._parse_duration_seconds("1800"), 1800)
+        self.assertEqual(config._parse_duration_seconds("", default_seconds=123), 123)
+        self.assertEqual(config._parse_duration_seconds("invalid", default_seconds=456), 456)
+
+    def test_spanner_retention_period_env(self):
+        os.environ['SPANNER_VERSION_RETENTION_PERIOD'] = '12h'
+        importlib.reload(config)
+        self.assertEqual(config.SPANNER_RETENTION_SECONDS, 12 * 3600)
+
 if __name__ == '__main__':
     unittest.main()

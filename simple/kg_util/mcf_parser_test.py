@@ -21,7 +21,7 @@ import io
 import unittest
 from unittest.mock import patch
 
-import mcf_parser
+from kg_util import mcf_parser
 
 
 def _triplify(mcf_str):
@@ -201,7 +201,8 @@ class MCFParserTest(unittest.TestCase):
       got = _triplify(mcf)
       self.assertEqual(got, want)
 
-  @patch('mcf_parser.reader', side_effect=Exception('Mock reader error'))
+  @patch('kg_util.mcf_parser.reader',
+         side_effect=Exception('Mock reader error'))
   def test_parse_error(self, mock_reader):
     mcf = """
         Node: dcid:dc/mx44

@@ -29,8 +29,14 @@ def clear_redis_cache():
         logging.warning("REDIS_HOST not set, skipping cache flush.")
         return BaseResponse(status=ResponseStatus.SKIPPED, message="REDIS_HOST not set")
     try:
-        r = redis.Redis(host=redis_host, port=int(redis_port))
-        r.flushall(asynchronous=True)
+        ssl_kwargs = {"ssl": True, "ssl_ca_certs": config.REDIS_CA_CERT_PATH} if config.REDIS_CA_CERT_PATH else {}
+        with redis.Redis(
+            host=redis_host,
+            port=int(redis_port),
+            password=config.REDIS_PASSWORD,
+            **ssl_kwargs,
+        ) as r:
+            r.flushall(asynchronous=True)
         logging.info(f"Redis cache at {redis_host}:{redis_port} flushed successfully (async).")
         return BaseResponse(status=ResponseStatus.SUCCESS, message="Cache cleared")
     except Exception as e:

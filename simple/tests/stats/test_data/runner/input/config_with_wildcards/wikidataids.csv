@@ -1,3 +1,5 @@
-wikidataid,year,var1,var2
-Q30,2021,555,666
-Q668,2022,321,123
+wikidataid,year,variable,value
+Q30,2021,var1,555
+Q30,2021,var2,666
+Q668,2022,var1,321
+Q668,2022,var2,123

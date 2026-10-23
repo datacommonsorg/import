@@ -27,7 +27,6 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.mock_spanner = MagicMock()
         self.mock_database = MagicMock()
         self.mock_spanner.database = self.mock_database
-        self.mock_spanner.embedding_table = "NodeEmbedding"
         self.utils = EmbeddingUtils(self.mock_spanner)
 
     def test_get_latest_lock_timestamp(self):
@@ -252,7 +251,6 @@ class TestEmbeddingUtils(unittest.TestCase):
         affected_rows = self.utils._generate_embeddings_partitioned(
             nodes,
             model_name="NodeEmbeddingModel",
-            embedding_table="NodeEmbedding",
             embedding_label="base_text_embedding",
             task_type="RETRIEVAL_QUERY",
             timeout=3600
@@ -295,7 +293,6 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.mock_database.run_in_transaction.side_effect = side_effect
 
         deleted = self.utils._delete_existing_embeddings(
-            embedding_table="NodeEmbedding",
             embedding_label="base_text_embedding",
             subject_ids_iterable=(s for s in subject_ids),
             timeout=3600

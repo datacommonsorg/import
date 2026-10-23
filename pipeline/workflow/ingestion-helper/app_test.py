@@ -40,8 +40,6 @@ class TestMain(unittest.TestCase):
         mock_spanner_client = MagicMock()
         mock_database = MagicMock()
         mock_spanner_client.database = mock_database
-        mock_spanner_client.embedding_table = "NodeEmbedding"
-        mock_spanner_client.embedding_index = "NodeEmbeddingIndex"
 
         # Mock snapshot and execute_sql
         mock_snapshot = MagicMock()
@@ -150,16 +148,6 @@ class TestMain(unittest.TestCase):
         self.assertEqual(rows[1][0], "dc/3")
         self.assertEqual(rows[0][2], [0.1, 0.2])
 
-    def test_seed_database_success(self):
-        mock_spanner_client = MagicMock()
-        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
-
-        # Call the FastAPI endpoint
-        response = client.post("/database/seed")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "OK")
-        mock_spanner_client.seed_database.assert_called_once()
 
     def test_revert_single_import(self):
         mock_spanner_client = MagicMock()
@@ -498,6 +486,161 @@ class TestMain(unittest.TestCase):
         mock_spanner_client.get_import_info.assert_called_once()
         mock_workflow_client.create_execution.assert_not_called()
 
+
+
+    @patch('routes.cache.redis.Redis')
+    def test_clear_redis_cache_success(self, mock_redis_class):
+        mock_redis_instance = MagicMock()
+        mock_redis_class.return_value.__enter__.return_value = mock_redis_instance
+
+        with patch.object(config, 'REDIS_HOST', '10.0.0.5'),              patch.object(config, 'REDIS_PORT', '6379'),              patch.object(config, 'REDIS_PASSWORD', 'test-pass'),              patch.object(config, 'REDIS_CA_CERT_PATH', '/path/to/cert.pem'):
+            response = client.post('/cache/clear')
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data['status'], 'SUCCESS')
+            self.assertEqual(data['message'], 'Cache cleared')
+            mock_redis_class.assert_called_once_with(
+                host='10.0.0.5',
+                port=6379,
+                password='test-pass',
+                ssl=True,
+                ssl_ca_certs='/path/to/cert.pem',
+            )
+            mock_redis_instance.flushall.assert_called_once_with(asynchronous=True)
+
+    def test_clear_redis_cache_skipped_when_no_host(self):
+        with patch.object(config, 'REDIS_HOST', None):
+            response = client.post('/cache/clear')
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data['status'], 'SKIPPED')
+
+    def test_get_import_version_success(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_version_record.return_value = {
+            "version": "gs://bucket/path/v1/*/*.mcf",
+            "workflowId": "wf-123",
+            "updateTimestamp": "2026-10-08T10:00:00+00:00",
+        }
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/imports/version", params={"importName": "foo:bar:imp1"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertEqual(data["importName"], "foo:bar:imp1")
+        self.assertEqual(data["version"], "gs://bucket/path/v1/*/*.mcf")
+        self.assertEqual(data["workflowId"], "wf-123")
+        self.assertEqual(data["updateTimestamp"], "2026-10-08T10:00:00+00:00")
+        mock_spanner_client.get_import_version_record.assert_called_once_with(
+            "imp1", status="SUCCESS"
+        )
+
+    def test_get_import_version_not_found(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_import_version_record.return_value = None
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/imports/version", params={"importName": "imp1"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertEqual(data["importName"], "imp1")
+        self.assertIsNone(data["version"])
+        self.assertIsNone(data["workflowId"])
+        self.assertIsNone(data["updateTimestamp"])
+
+    def test_get_import_version_missing_import_name(self):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/imports/version")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["detail"], "importName must be provided.")
+
+    def test_get_lock_status_locked(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_lock_status.return_value = {
+            "lockOwner": "wf-123",
+            "locked": True,
+            "acquiredTimestamp": "2026-10-08T10:00:00+00:00",
+            "ageSeconds": 300.0,
+        }
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/database/lock/status")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertTrue(data["locked"])
+        self.assertEqual(data["lockOwner"], "wf-123")
+        self.assertEqual(data["acquiredTimestamp"], "2026-10-08T10:00:00+00:00")
+        self.assertEqual(data["ageSeconds"], 300.0)
+        self.assertEqual(data["alertLevel"], "OK")
+        mock_spanner_client.get_lock_status.assert_called_once()
+
+    def test_get_lock_status_unlocked(self):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client.get_lock_status.return_value = {
+            "lockOwner": None,
+            "locked": False,
+            "acquiredTimestamp": None,
+            "ageSeconds": None,
+        }
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        response = client.get("/database/lock/status")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "OK")
+        self.assertFalse(data["locked"])
+        self.assertIsNone(data["lockOwner"])
+        self.assertIsNone(data["acquiredTimestamp"])
+        self.assertIsNone(data["ageSeconds"])
+        self.assertEqual(data["alertLevel"], "OK")
+        mock_spanner_client.get_lock_status.assert_called_once()
+
+    def test_get_lock_status_alert_thresholds(self):
+        mock_spanner_client = MagicMock()
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
+
+        with patch.object(config, 'SPANNER_RETENTION_SECONDS', 1000):
+            # Under 50%
+            mock_spanner_client.get_lock_status.return_value = {
+                "locked": True,
+                "lockOwner": "wf-1",
+                "acquiredTimestamp": "2026-10-12T00:00:00Z",
+                "ageSeconds": 400.0,
+            }
+            res = client.get("/database/lock/status")
+            self.assertEqual(res.json()["alertLevel"], "OK")
+
+            # >= 50%
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 550.0
+            with self.assertLogs(level="WARNING") as cm:
+                res = client.get("/database/lock/status")
+            self.assertEqual(res.json()["alertLevel"], "WARNING_50PCT")
+            self.assertTrue(
+                any("INGESTION_LOCK_HELD_50PCT_WARNING" in r.getMessage()
+                    for r in cm.records))
+
+            # >= 90%
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 920.0
+            with self.assertLogs(level="WARNING") as cm:
+                res = client.get("/database/lock/status")
+            self.assertEqual(res.json()["alertLevel"], "WARNING_90PCT")
+            self.assertTrue(
+                any("INGESTION_LOCK_HELD_90PCT_WARNING" in r.getMessage()
+                    for r in cm.records))
+
+            # >= 100%
+            mock_spanner_client.get_lock_status.return_value["ageSeconds"] = 1050.0
+            with self.assertLogs(level="ERROR") as cm:
+                res = client.get("/database/lock/status")
+            self.assertEqual(res.json()["alertLevel"], "CRITICAL_100PCT")
+            self.assertTrue(
+                any("INGESTION_LOCK_HELD_100PCT_CRITICAL" in r.getMessage()
+                    for r in cm.records))
 
 if __name__ == '__main__':
     unittest.main()
