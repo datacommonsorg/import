@@ -44,17 +44,14 @@ class BigQueryExecutor:
         self.bq_dataset_id = bq_dataset_id or "datacommons"
         # TODO: Remove run_sequential logic once DCP migrates to async execution.
         self.run_sequential = run_sequential
-        self._client: Optional[bigquery.Client] = None
-        self._client_lock = threading.Lock()
+        self._thread_local = threading.local()
 
     @property
     def client(self) -> bigquery.Client:
-        """Lazily initializes and returns the BigQuery client."""
-        if self._client is None:
-            with self._client_lock:
-                if self._client is None:
-                    self._client = bigquery.Client(project=self.project_id, location=self.location)
-        return self._client
+        """Lazily initializes and returns the BigQuery client (thread-safe)."""
+        if not hasattr(self._thread_local, "client"):
+            self._thread_local.client = bigquery.Client(project=self.project_id, location=self.location)
+        return self._thread_local.client
 
     def get_spanner_destination_uri(self) -> str:
         """Returns the Spanner destination URI for EXPORT DATA."""
