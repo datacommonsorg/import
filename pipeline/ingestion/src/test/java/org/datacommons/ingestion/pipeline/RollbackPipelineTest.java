@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.runners.TransformHierarchy;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -174,7 +175,58 @@ public class RollbackPipelineTest implements Serializable {
 
     assertNotNull(signals.delTsSignal());
     assertNotNull(signals.delEdgeSignal());
+    assertNotNull(signals.delLinkedEdgeSignal());
     assertNotNull(signals.delKvSignal());
+  }
+
+  @Test
+  public void testBuildPipeline_restoresEveryProvenanceScopedTable() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setRollbackTimestamp("2026-01-01T00:00:00Z");
+    options.setImportList("[{\"importName\": \"Place\"}]");
+    options.setIsBaseDc(true);
+    Pipeline localPipeline = Pipeline.create();
+    SpannerClient spannerClient =
+        SpannerClient.builder()
+            .gcpProjectId("test")
+            .spannerInstanceId("test")
+            .spannerDatabaseId("test")
+            .build();
+
+    RollbackPipeline.buildPipeline(localPipeline, options, spannerClient);
+
+    // Every table the aggregation step writes under a generated provenance must be deleted at
+    // HEAD and restored from T_pre, or a rollback leaves it inconsistent with Edge.
+    List<String> transformNames = new ArrayList<>();
+    localPipeline.traverseTopologically(
+        new Pipeline.PipelineVisitor.Defaults() {
+          @Override
+          public void leaveCompositeTransform(TransformHierarchy.Node node) {
+            transformNames.add(node.getFullName());
+          }
+
+          @Override
+          public void visitPrimitiveTransform(TransformHierarchy.Node node) {
+            transformNames.add(node.getFullName());
+          }
+        });
+    for (String table : List.of("Edge", "LinkedEdge", "TimeSeries", "KeyValueStore")) {
+      assertTrue(
+          "missing HEAD delete for " + table,
+          transformNames.contains("ExecuteDeleteProvs-" + table));
+    }
+    for (String step :
+        List.of(
+            "ReadHistoricalEdges",
+            "ReadHistoricalLinkedEdges",
+            "ReadHistoricalTimeSeries",
+            "ReadHistoricalKeyValueStore",
+            "WriteRestoredEdges",
+            "WriteRestoredLinkedEdges",
+            "WriteRestoredTimeSeries",
+            "WriteRestoredKeyValueStore")) {
+      assertTrue("missing rollback step " + step, transformNames.contains(step));
+    }
   }
 
   @Test
