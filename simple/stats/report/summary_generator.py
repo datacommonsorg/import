@@ -15,8 +15,7 @@
 
 This module holds all of the report's logic:
   - Recording facts as the run progresses: input files, observations, nodes.
-  - Merging the state returned by worker processes into the parent's state.
-  - Building the report models (see model/summary.py) and writing
+  - Building the report models defined in model/summary.py and writing
     ingestion_report.json once per run, on success and on failure.
 
 Report code must never change the outcome of a run, so errors while
