@@ -1,0 +1,32 @@
+{
+  "error": {
+    "message": "CSV Header Validation Failed! The following errors were found:\nFile 'data.csv': The CSV file 'data.csv' contains unmapped columns: ['notes']. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json.",
+    "type": "ValueError"
+  },
+  "handshake": {
+    "errors": [
+      {
+        "errorMessage": "The CSV file 'data.csv' contains unmapped columns: ['notes']. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json.",
+        "errorType": "UNMAPPED_COLUMNS",
+        "file": "data.csv",
+        "problemColumns": [
+          "notes"
+        ]
+      }
+    ],
+    "status": "FAILURE"
+  },
+  "records": {
+    "any_folder": [],
+    "folders": {}
+  },
+  "report": {
+    "error": "CSV Header Validation Failed! The following errors were found:\nFile 'data.csv': The CSV file 'data.csv' contains unmapped columns: ['notes']. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json.",
+    "importFiles": {
+      "<input>/data.csv": {
+        "status": "NOT_STARTED"
+      }
+    },
+    "status": "FAILURE"
+  }
+}

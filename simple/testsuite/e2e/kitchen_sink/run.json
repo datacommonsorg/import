@@ -1,0 +1,7 @@
+{
+  "description": "One import exercising every input type at once: MCF schema and local refs, two observation CSVs (column mappings, unit, ignored column with quoted commas/newlines, a custom entity dimension), an entities CSV and an events CSV with a computed variable. Proxy entities are typed through the fake DC API.",
+  "dc_api": {
+    "country/USA": {"typeOf": "Country"},
+    "country/FRA": {"typeOf": "Country"}
+  }
+}

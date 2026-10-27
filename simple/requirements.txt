@@ -21,3 +21,6 @@ tzdata==2023.3
 urllib3==1.26.20
 zipp==3.19.1
 google-auth>=2.0.0
+hypothesis==6.170.5
+gcp-storage-emulator==2026.7.19
+pytest-xdist==3.8.0

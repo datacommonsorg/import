@@ -86,6 +86,9 @@ function py_test {
   echo -e "#### Running stats tests"
   python3 -m pytest tests/ kg_util/ -s
 
+  echo -e "#### Running preprocessor test suite"
+  python3 -m pytest testsuite/ -n auto
+
   echo -e "#### Running ingestion helper tests"
   cd "${ROOT_DIR}/pipeline/workflow/ingestion-helper"
   pip3 install uv -q
