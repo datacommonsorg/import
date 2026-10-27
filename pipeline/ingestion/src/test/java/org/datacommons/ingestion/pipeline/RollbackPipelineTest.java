@@ -53,6 +53,12 @@ public class RollbackPipelineTest implements Serializable {
 
   public static List<Mutation> capturedMutations = Collections.synchronizedList(new ArrayList<>());
 
+  private static final List<String> PROVENANCE_SCOPED_TABLES =
+      List.of("Edge", "LinkedEdge", "TimeSeries", "KeyValueStore");
+  private static final List<String> LINKED_EDGE_STEPS =
+      List.of(
+          "ExecuteDeleteProvs-LinkedEdge", "ReadHistoricalLinkedEdges", "WriteRestoredLinkedEdges");
+
   @Before
   public void setUp() {
     capturedMutations.clear();
@@ -187,12 +193,6 @@ public class RollbackPipelineTest implements Serializable {
             spannerClient);
     assertTrue(signalsWithoutLinkedEdge.delLinkedEdgeSignal().isEmpty());
   }
-
-  private static final List<String> PROVENANCE_SCOPED_TABLES =
-      List.of("Edge", "LinkedEdge", "TimeSeries", "KeyValueStore");
-  private static final List<String> LINKED_EDGE_STEPS =
-      List.of(
-          "ExecuteDeleteProvs-LinkedEdge", "ReadHistoricalLinkedEdges", "WriteRestoredLinkedEdges");
 
   @Test
   public void testBuildPipeline_restoresEveryProvenanceScopedTable() {
