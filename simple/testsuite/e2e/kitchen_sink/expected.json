@@ -226,10 +226,6 @@
             "@id": "dcid:country/BRA",
             "@type": "dcid:Country"
           },
-          "dcid:country/FRA": {
-            "@id": "dcid:country/FRA",
-            "@type": "dcid:Country"
-          },
           "dcid:country/USA": {
             "@id": "dcid:country/USA",
             "@type": "dcid:Country"

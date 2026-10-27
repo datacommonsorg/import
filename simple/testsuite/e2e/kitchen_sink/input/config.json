@@ -48,6 +48,5 @@
   ],
   "events": {"CrimeEvent": {"name": "Crime Event"}},
   "variables": {"Count_CrimeEvent": {"name": "Number of Crime Events", "group": "Public Safety"}},
-  "groupStatVarsByProperty": true,
-  "importProxyEntities": true
+  "groupStatVarsByProperty": true
 }

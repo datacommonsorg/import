@@ -21,8 +21,7 @@ source: dcid:TestSource
     {"pattern": "*.mcf", "provenance": "dcid:TestProvenance"},
     {"pattern": "case.csv", "importType": "entities", "rowEntityType": "Author",
      "idColumn": "author_id", "provenance": "dcid:TestProvenance"}
-  ],
-  "importProxyEntities": false
+  ]
 }
 ```
 

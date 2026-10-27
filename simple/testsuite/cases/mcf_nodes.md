@@ -19,8 +19,7 @@ source: dcid:TestSource
 
 ```config
 {
-  "inputFiles": [{"pattern": "*.mcf", "provenance": "dcid:TestProvenance"}],
-  "importProxyEntities": false
+  "inputFiles": [{"pattern": "*.mcf", "provenance": "dcid:TestProvenance"}]
 }
 ```
 
@@ -187,21 +186,6 @@ code: "00123"
 
 ```expect
 [{"@id": "dcid:Thing8", "@type": "dcid:Thing", "dcid:code": "00123"}]
-```
-
-## legacy rdflib writer keeps numbers
-
-> xfail: the legacy rdflib node writer (FAST_NODE_EXPORT=false) emits numeric literals as strings ("42" instead of 42); found by test_fuzz.py
-> modes: rdflib_nodes
-
-```mcf
-Node: dcid:ThingR
-typeOf: dcs:Thing
-count: 42
-```
-
-```expect
-[{"@id": "dcid:ThingR", "@type": "dcid:Thing", "dcid:count": 42}]
 ```
 
 ## numeric spellings

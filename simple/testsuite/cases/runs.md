@@ -32,8 +32,7 @@ source: dcid:TestSource
         "dcid:value": "value"
       }
     }
-  ],
-  "importProxyEntities": false
+  ]
 }
 ```
 
@@ -116,27 +115,6 @@ not,a,csv
 ```expect
 [
   "$obs_FRA_Count_Person_2020_value_2",
-  "$obs_USA_Count_Person_2020_value_1"
-]
-```
-
-## importProxyEntities accepts the string "false"
-
-```csv
-entity,variable,date,value
-dcid:country/USA,Count_Person,2020,1
-```
-
-```config
-{"importProxyEntities": "false"}
-```
-
-```dc_api
-{"country/USA": {"typeOf": "Country"}}
-```
-
-```expect
-[
   "$obs_USA_Count_Person_2020_value_1"
 ]
 ```

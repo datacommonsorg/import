@@ -29,7 +29,7 @@ python3 -m pytest testsuite/test_baseline.py --baseline=origin/master   # perf/r
 
 Execution modes (`lib/run.py`): `threaded`, `multiprocess`, `gcs` (GCS input
 and output, as in production; the only mode that writes a success handshake),
-`tiny_chunks` (every chunk/shard boundary crossed) and `rdflib_nodes`.
+and `tiny_chunks` (every chunk/shard boundary crossed).
 
 ## Case files
 

@@ -39,7 +39,12 @@
               },
               "dcid:url": "https://kitchen.example.org/dataset"
             }
-          ]
+          ],
+          "dcid:dc/g/Root": {
+            "@id": "dcid:dc/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Data Commons Variables"
+          }
         },
         "observations": {
           "dcid:obs_41991db529c0d64682ac5cc488694d1ca1eb9147d2558623c1c1ba3f4bb7b5a5": {

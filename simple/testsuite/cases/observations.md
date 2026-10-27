@@ -31,8 +31,7 @@ source: dcid:TestSource
         "dcid:value": "value"
       }
     }
-  ],
-  "importProxyEntities": false
+  ]
 }
 ```
 
@@ -611,67 +610,6 @@ country/USA,Count_Person,2020,1
 ]
 ```
 
-## proxy entity nodes are typed from Data Commons
-
-Entity ids with a namespace prefix are looked up in Data Commons and get a
-proxy node with their type. Proxy nodes are being phased out; this case pins
-today's behavior until they are removed.
-
-```csv
-entity,variable,date,value
-dcid:country/USA,Count_Person,2020,1
-dcid:geoId/06,Count_Person,2020,2
-```
-
-```config
-{"importProxyEntities": true}
-```
-
-```dc_api
-{"country/USA": {"typeOf": "Country"}, "geoId/06": {"typeOf": "State"}}
-```
-
-```expect
-[
-  "$obs_USA_Count_Person_2020_value_1",
-  "$proxy_country_USA",
-  {"@id": "dcid:geoId/06", "@type": "dcid:State"},
-  {
-    "@id": "dcid:obs_ff6e19d5699a209ff0b013c387ce560c3331b340e950754b5c410a31580a187a",
-    "@type": "dcid:StatVarObservation",
-    "dcid:observationAbout": {"@id": "dcid:geoId/06"},
-    "dcid:observationDate": 2020,
-    "dcid:provenance": {"@id": "dcid:TestProvenance"},
-    "dcid:value": 2,
-    "dcid:variableMeasured": {"@id": "dcid:Count_Person", "dcid:observationProperties": ["dcid:observationAbout"]}
-  }
-]
-```
-
-## entity ids without a prefix get no proxy node
-
-Proxy nodes are being phased out: ids without a namespace prefix (and not in
-columnsToResolve) are never looked up, and that is intended.
-
-```csv
-entity,variable,date,value
-country/USA,Count_Person,2020,1
-```
-
-```config
-{"importProxyEntities": true}
-```
-
-```dc_api
-{"country/USA": {"typeOf": "Country"}}
-```
-
-```expect
-[
-  "$obs_USA_Count_Person_2020_value_1"
-]
-```
-
 ## custom namespace entity ids become dcid
 
 ```csv
@@ -708,62 +646,3 @@ country/FRA,Count_Person,2020,2
 ]
 ```
 
-## entity names that cannot be resolved fail the run
-
-```csv
-entity,variable,date,value
-Atlantis,Count_Person,2020,1
-```
-
-```config
-{"inputFiles": [
-  {"pattern": "*.mcf", "provenance": "dcid:TestProvenance"},
-  {"pattern": "case.csv", "provenance": "dcid:TestProvenance", "columnsToResolve": ["entity"],
-   "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable",
-                      "dcid:observationDate": "date", "dcid:value": "value"}}]}
-```
-
-```expect-error
-{
-  "type": "EntityResolutionError",
-  "contains": [
-    "Entity resolution failed for 1 entities in file 'case.csv': ['Atlantis']... Please check the debug resolution CSV file for the complete list."
-  ],
-  "handshake_error_types": [
-    "UNRESOLVED_ENTITY"
-  ]
-}
-```
-
-## entity names in columnsToResolve are resolved through Data Commons
-
-```csv
-entity,variable,date,value
-California,Count_Person,2020,1
-```
-
-```config
-{"inputFiles": [
-  {"pattern": "*.mcf", "provenance": "dcid:TestProvenance"},
-  {"pattern": "case.csv", "provenance": "dcid:TestProvenance", "columnsToResolve": ["entity"],
-   "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable",
-                      "dcid:observationDate": "date", "dcid:value": "value"}}]}
-```
-
-```dc_api
-{"geoId/06": {"typeOf": "State", "name": "California", "description": "California"}}
-```
-
-```expect
-[
-  {
-    "@id": "dcid:obs_ff6e19d5699a209ff0b013c387ce560c3331b340e950754b5c410a31580a187a",
-    "@type": "dcid:StatVarObservation",
-    "dcid:observationAbout": {"@id": "dcid:geoId/06"},
-    "dcid:observationDate": 2020,
-    "dcid:provenance": {"@id": "dcid:TestProvenance"},
-    "dcid:value": 1,
-    "dcid:variableMeasured": {"@id": "dcid:Count_Person", "dcid:observationProperties": ["dcid:observationAbout"]}
-  }
-]
-```

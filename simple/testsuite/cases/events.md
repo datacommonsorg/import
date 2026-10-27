@@ -29,8 +29,7 @@ source: dcid:TestSource
                         "dcid:observationDate": "DATE OF OCCURRENCE"}}
   ],
   "events": {"CrimeEvent": {"name": "Crime Event", "description": "Crime Event description"}},
-  "variables": {"Count_CrimeEvent": {"name": "Number of Crime Events", "aggregation": {"period": "day"}}},
-  "importProxyEntities": false
+  "variables": {"Count_CrimeEvent": {"name": "Number of Crime Events", "aggregation": {"period": "day"}}}
 }
 ```
 
@@ -56,7 +55,6 @@ USA,09/17/2023 3:00:00 AM,JG427641,THEFT
   "$proxy_country_USA",
   "$statvar_Count_CrimeEvent",
   "$svg_custom_root",
-  "$svg_dc_root",
   {
     "@id": "dcid:JG427641",
     "@type": "dcid:CrimeEvent",
@@ -148,7 +146,6 @@ USA,03/04/2024 1:00:00 AM,JG3
   "$proxy_country_USA",
   "$statvar_Count_CrimeEvent",
   "$svg_custom_root",
-  "$svg_dc_root",
   {
     "@id": "dcid:JG1",
     "@type": "dcid:CrimeEvent",
@@ -224,7 +221,6 @@ USA,11/08/2023 8:50:00 PM,JG1
   "$proxy_country_USA",
   "$statvar_Count_CrimeEvent",
   "$svg_custom_root",
-  "$svg_dc_root",
   {
     "@id": "dcid:CrimeEvent_0",
     "@type": "dcid:CrimeEvent",
@@ -274,7 +270,6 @@ USA,11/08/2023 8:50:00 PM,JG1
   "$provenance_TestProvenance_registry_copy",
   "$proxy_country_USA",
   "$svg_custom_root",
-  "$svg_dc_root",
   {
     "@id": "dcid:Count_CrimeEvent",
     "@type": "dcid:StatisticalVariable",
@@ -334,7 +329,6 @@ XXX,11/08/2023 8:50:00 PM,JG1
   "$provenance_TestProvenance_registry_copy",
   "$statvar_Count_CrimeEvent",
   "$svg_custom_root",
-  "$svg_dc_root",
   {
     "@id": "dcid:JG1",
     "@type": "dcid:CrimeEvent",
@@ -388,7 +382,6 @@ USA,11/08/2023 8:50:00 PM,JG1,vol
   "$property_CASE",
   "$provenance_TestProvenance_registry_copy",
   "$proxy_country_USA",
-  "$svg_dc_root",
   {
     "@id": "dcid:Count_CrimeEvent",
     "@type": "dcid:StatisticalVariable",

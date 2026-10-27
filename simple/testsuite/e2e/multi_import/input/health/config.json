@@ -5,6 +5,5 @@
     {"pattern": "data.csv", "provenance": "dcid:healthProvenance",
      "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable",
                         "dcid:observationDate": "date", "dcid:value": "value"}}
-  ],
-  "importProxyEntities": false
+  ]
 }

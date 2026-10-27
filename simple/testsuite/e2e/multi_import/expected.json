@@ -45,6 +45,11 @@
     "folders": {
       "healthProvenance": {
         "nodes": {
+          "dcid:dc/g/Root": {
+            "@id": "dcid:dc/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Data Commons Variables"
+          },
           "dcid:healthProvenance": [
             {
               "@id": "dcid:healthProvenance",
