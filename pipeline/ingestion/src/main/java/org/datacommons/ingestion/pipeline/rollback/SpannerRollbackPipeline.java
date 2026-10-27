@@ -23,6 +23,7 @@ import com.google.gson.JsonParser;
 import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -100,14 +101,14 @@ public class SpannerRollbackPipeline implements Serializable {
   public record DeletionSignals(
       PCollection<Void> delTsSignal,
       PCollection<Void> delEdgeSignal,
-      PCollection<Void> delLinkedEdgeSignal,
+      Optional<PCollection<Void>> delLinkedEdgeSignal,
       PCollection<Void> delKvSignal) {}
 
   public record HistoricalSnapshots(
       PCollection<Mutation> timeSeriesMutations,
       PCollection<Mutation> observationMutations,
       PCollection<Mutation> edgeMutations,
-      PCollection<Mutation> linkedEdgeMutations,
+      Optional<PCollection<Mutation>> linkedEdgeMutations,
       PCollection<Mutation> keyValueStoreMutations) {}
 
   public record NodeReconciliationResult(
@@ -129,12 +130,25 @@ public class SpannerRollbackPipeline implements Serializable {
     LOGGER.info("Starting Spanner Time-Travel Rollback to T_pre: {}", tPre);
     LOGGER.info("Target provenances for rollback: {}", targetProvenances);
 
+    // LinkedEdge arrives through a separate schema migration, so a database may legitimately not
+    // have it yet (or ever, if it never ran the aggregation that populates it). A missing table has
+    // nothing to roll back, and the recovery path must not fail on it, so its steps are omitted.
+    boolean includeLinkedEdge = spannerClient.tableExists(TABLE_LINKED_EDGE);
+    if (!includeLinkedEdge) {
+      LOGGER.warn(
+          "Table {} does not exist in the target database; skipping its rollback steps. Apply the"
+              + " LinkedEdge schema migration so future rollbacks cover it.",
+          TABLE_LINKED_EDGE);
+    }
+
     // Phase 1: Partitioned Deletions at HEAD
-    DeletionSignals delSignals = applyHeadDeletions(pipeline, targetProvenances, spannerClient);
+    DeletionSignals delSignals =
+        applyHeadDeletions(pipeline, targetProvenances, includeLinkedEdge, spannerClient);
 
     // Phase 2: Parallel Historical Snapshot Reads at T_pre
     HistoricalSnapshots snapshots =
-        readHistoricalSnapshots(pipeline, tPre, targetProvenances, spannerClient);
+        readHistoricalSnapshots(
+            pipeline, tPre, targetProvenances, includeLinkedEdge, spannerClient);
 
     // Phase 3: Shared Table Reconciliation (Node & NodeEmbedding)
     NodeReconciliationResult nodeReconciliation =
@@ -148,7 +162,10 @@ public class SpannerRollbackPipeline implements Serializable {
   // Phase 1: Partitioned Deletions at HEAD
   // ---------------------------------------------------------------------------
   public static DeletionSignals applyHeadDeletions(
-      Pipeline pipeline, List<String> targetProvenances, SpannerClient spannerClient) {
+      Pipeline pipeline,
+      List<String> targetProvenances,
+      boolean includeLinkedEdge,
+      SpannerClient spannerClient) {
     PCollection<Void> delTsSignal =
         deleteDataForProvenances(pipeline, targetProvenances, TABLE_TIMESERIES, spannerClient);
     PCollection<Void> delEdgeSignal =
@@ -156,8 +173,12 @@ public class SpannerRollbackPipeline implements Serializable {
     // LinkedEdge rows are written by the aggregation step under the import's generated
     // provenance, so the same provenance-scoped delete applies. The table has no index on
     // provenance (it is the last primary-key column), so this is a partitioned full-table scan.
-    PCollection<Void> delLinkedEdgeSignal =
-        deleteDataForProvenances(pipeline, targetProvenances, TABLE_LINKED_EDGE, spannerClient);
+    Optional<PCollection<Void>> delLinkedEdgeSignal =
+        includeLinkedEdge
+            ? Optional.of(
+                deleteDataForProvenances(
+                    pipeline, targetProvenances, TABLE_LINKED_EDGE, spannerClient))
+            : Optional.empty();
     PCollection<Void> delKvSignal =
         deleteDataForProvenances(
             pipeline,
@@ -176,6 +197,7 @@ public class SpannerRollbackPipeline implements Serializable {
       Pipeline pipeline,
       Timestamp tPre,
       List<String> targetProvenances,
+      boolean includeLinkedEdge,
       SpannerClient spannerClient) {
     // Keep batching enabled so each read is partitioned across workers. Spanner only partitions
     // queries whose plan is rooted at a Distributed Union; the Edge, TimeSeries and KeyValueStore
@@ -203,8 +225,12 @@ public class SpannerRollbackPipeline implements Serializable {
         readHistoricalObservations(historicalTimeSeriesRows, tPre, spannerClient);
     PCollection<Mutation> restoreEdgeMutations =
         readHistoricalEdges(pipeline, baseRead, tPre, targetProvenances, spannerClient);
-    PCollection<Mutation> restoreLinkedEdgeMutations =
-        readHistoricalLinkedEdges(pipeline, baseRead, tPre, targetProvenances, spannerClient);
+    Optional<PCollection<Mutation>> restoreLinkedEdgeMutations =
+        includeLinkedEdge
+            ? Optional.of(
+                readHistoricalLinkedEdges(
+                    pipeline, baseRead, tPre, targetProvenances, spannerClient))
+            : Optional.empty();
     PCollection<Mutation> restoreKvMutations =
         readHistoricalKeyValueStore(pipeline, baseRead, tPre, targetProvenances, spannerClient);
 
@@ -327,6 +353,14 @@ public class SpannerRollbackPipeline implements Serializable {
    * <p>LinkedEdge has no secondary index on {@code provenance}, so unlike the Edge read this is a
    * filtered scan of the whole table. It is still rooted at a Distributed Union and therefore
    * partitionable across workers.
+   *
+   * <p>Expected size on base DC: ~280M rows / ~37 GB, 95% of them under {@code
+   * dc/base/generated/Place}. Measured on a prod-sized copy, one provenance-filtered pass over the
+   * whole table costs ~75 CPU-s on the row store (what the Partitioned DML delete uses) and ~12 s
+   * on the columnar engine, once per rollback -- small next to deleting and restoring the Place
+   * rows themselves. A {@code ByProvenance} index would roughly double the table's footprint, add
+   * an index write to every row of each 265M-row regeneration, and have a four-valued key, so it is
+   * deliberately omitted; {@code CREATE INDEX} is online if these timings ever matter.
    */
   private static PCollection<Mutation> readHistoricalLinkedEdges(
       Pipeline pipeline,
@@ -512,12 +546,16 @@ public class SpannerRollbackPipeline implements Serializable {
       SpannerClient spannerClient,
       DeletionSignals delSignals,
       HistoricalSnapshots snapshots) {
+    if (snapshots.linkedEdgeMutations().isEmpty()) {
+      return; // Table absent from this database; see buildPipeline.
+    }
     // LinkedEdge is a standalone table (not interleaved, no foreign keys), so its restore only has
     // to wait for its own Phase 1 delete and is independent of the Node/Edge track.
     PCollection<Mutation> linkedEdgeMutationsToWrite =
         snapshots
             .linkedEdgeMutations()
-            .apply("WaitOnDelLinkedEdges", Wait.on(delSignals.delLinkedEdgeSignal()));
+            .get()
+            .apply("WaitOnDelLinkedEdges", Wait.on(delSignals.delLinkedEdgeSignal().orElseThrow()));
     spannerClient.writeMutations(pipeline, "WriteRestoredLinkedEdges", linkedEdgeMutationsToWrite);
   }
 

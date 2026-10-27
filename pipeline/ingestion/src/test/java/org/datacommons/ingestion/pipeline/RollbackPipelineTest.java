@@ -15,6 +15,7 @@
 package org.datacommons.ingestion.pipeline;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
@@ -171,46 +172,35 @@ public class RollbackPipelineTest implements Serializable {
 
     var signals =
         SpannerRollbackPipeline.applyHeadDeletions(
-            localPipeline, List.of("dc/base/Test"), spannerClient);
+            localPipeline, List.of("dc/base/Test"), /* includeLinkedEdge= */ true, spannerClient);
 
     assertNotNull(signals.delTsSignal());
     assertNotNull(signals.delEdgeSignal());
-    assertNotNull(signals.delLinkedEdgeSignal());
+    assertTrue(signals.delLinkedEdgeSignal().isPresent());
     assertNotNull(signals.delKvSignal());
+
+    var signalsWithoutLinkedEdge =
+        SpannerRollbackPipeline.applyHeadDeletions(
+            Pipeline.create(),
+            List.of("dc/base/Test"),
+            /* includeLinkedEdge= */ false,
+            spannerClient);
+    assertTrue(signalsWithoutLinkedEdge.delLinkedEdgeSignal().isEmpty());
   }
+
+  private static final List<String> PROVENANCE_SCOPED_TABLES =
+      List.of("Edge", "LinkedEdge", "TimeSeries", "KeyValueStore");
+  private static final List<String> LINKED_EDGE_STEPS =
+      List.of(
+          "ExecuteDeleteProvs-LinkedEdge", "ReadHistoricalLinkedEdges", "WriteRestoredLinkedEdges");
 
   @Test
   public void testBuildPipeline_restoresEveryProvenanceScopedTable() {
-    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
-    options.setRollbackTimestamp("2026-01-01T00:00:00Z");
-    options.setImportList("[{\"importName\": \"Place\"}]");
-    options.setIsBaseDc(true);
-    Pipeline localPipeline = Pipeline.create();
-    SpannerClient spannerClient =
-        SpannerClient.builder()
-            .gcpProjectId("test")
-            .spannerInstanceId("test")
-            .spannerDatabaseId("test")
-            .build();
-
-    RollbackPipeline.buildPipeline(localPipeline, options, spannerClient);
+    List<String> transformNames = buildRollbackGraph(/* linkedEdgeTableExists= */ true);
 
     // Every table the aggregation step writes under a generated provenance must be deleted at
     // HEAD and restored from T_pre, or a rollback leaves it inconsistent with Edge.
-    List<String> transformNames = new ArrayList<>();
-    localPipeline.traverseTopologically(
-        new Pipeline.PipelineVisitor.Defaults() {
-          @Override
-          public void leaveCompositeTransform(TransformHierarchy.Node node) {
-            transformNames.add(node.getFullName());
-          }
-
-          @Override
-          public void visitPrimitiveTransform(TransformHierarchy.Node node) {
-            transformNames.add(node.getFullName());
-          }
-        });
-    for (String table : List.of("Edge", "LinkedEdge", "TimeSeries", "KeyValueStore")) {
+    for (String table : PROVENANCE_SCOPED_TABLES) {
       assertTrue(
           "missing HEAD delete for " + table,
           transformNames.contains("ExecuteDeleteProvs-" + table));
@@ -227,6 +217,54 @@ public class RollbackPipelineTest implements Serializable {
             "WriteRestoredKeyValueStore")) {
       assertTrue("missing rollback step " + step, transformNames.contains(step));
     }
+  }
+
+  @Test
+  public void testBuildPipeline_skipsLinkedEdgeWhenTableIsMissing() {
+    // A database that has not run the LinkedEdge schema migration must still get a working
+    // rollback of every other table; the LinkedEdge steps are simply absent from the graph.
+    List<String> transformNames = buildRollbackGraph(/* linkedEdgeTableExists= */ false);
+
+    for (String step : LINKED_EDGE_STEPS) {
+      assertFalse("unexpected LinkedEdge step " + step, transformNames.contains(step));
+    }
+    for (String step :
+        List.of(
+            "ExecuteDeleteProvs-Edge",
+            "ExecuteDeleteProvs-TimeSeries",
+            "ExecuteDeleteProvs-KeyValueStore",
+            "ReadHistoricalEdges",
+            "WriteRestoredEdges",
+            "WriteRestoredTimeSeries",
+            "WriteRestoredKeyValueStore")) {
+      assertTrue("missing rollback step " + step, transformNames.contains(step));
+    }
+  }
+
+  private static List<String> buildRollbackGraph(boolean linkedEdgeTableExists) {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setRollbackTimestamp("2026-01-01T00:00:00Z");
+    options.setImportList("[{\"importName\": \"Place\"}]");
+    options.setIsBaseDc(true);
+    Pipeline localPipeline = Pipeline.create();
+
+    RollbackPipeline.buildPipeline(
+        localPipeline, options, new TableAwareSpannerClient(linkedEdgeTableExists));
+
+    List<String> transformNames = new ArrayList<>();
+    localPipeline.traverseTopologically(
+        new Pipeline.PipelineVisitor.Defaults() {
+          @Override
+          public void leaveCompositeTransform(TransformHierarchy.Node node) {
+            transformNames.add(node.getFullName());
+          }
+
+          @Override
+          public void visitPrimitiveTransform(TransformHierarchy.Node node) {
+            transformNames.add(node.getFullName());
+          }
+        });
+    return transformNames;
   }
 
   @Test
@@ -310,6 +348,28 @@ public class RollbackPipelineTest implements Serializable {
     assertThrows(
         IllegalArgumentException.class,
         () -> ReadHistoricalObservationsFn.toParentPrefixKeySet(batch));
+  }
+
+  /** Answers {@link SpannerClient#tableExists} without a database, for graph-shape tests. */
+  static class TableAwareSpannerClient extends SpannerClient {
+    private final boolean linkedEdgeTableExists;
+
+    TableAwareSpannerClient(boolean linkedEdgeTableExists) {
+      super(
+          SpannerClient.builder()
+              .gcpProjectId("test")
+              .spannerInstanceId("test")
+              .spannerDatabaseId("test"));
+      this.linkedEdgeTableExists = linkedEdgeTableExists;
+    }
+
+    @Override
+    public boolean tableExists(String tableName) {
+      if (SpannerRollbackPipeline.TABLE_LINKED_EDGE.equals(tableName)) {
+        return linkedEdgeTableExists;
+      }
+      return true;
+    }
   }
 
   static class MockRollbackSpannerClient extends SpannerClient {
