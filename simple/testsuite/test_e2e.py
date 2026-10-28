@@ -29,8 +29,7 @@ differs:
 
   test_e2e[kitchen_sink-production-records]
 
-Modes must not change the output. The one exception is the success handshake,
-which only the production mode (GCS output) writes.
+Modes must not change the output.
 
 Records whose @type is listed in run.json "any_folder_types" (default:
 dcid:Source) are compared without regard to the import folder they land in:
@@ -138,9 +137,7 @@ def _write_expected(dataset: str) -> None:
   expected = {
       "records": _records_view(dataset, reference["records"]),
       "report": reference["report"],
-      # Only GCS output gets a success handshake; a failure handshake is
-      # written in every mode.
-      "handshake": _output(dataset, "production")["handshake"],
+      "handshake": reference["handshake"],
       "error": reference["error"],
   }
   with open(_expected_path(dataset), "w", encoding="utf-8") as f:
@@ -197,8 +194,6 @@ def test_e2e(dataset: str, mode: str, aspect: str, update_expected: bool):
     expected = json.load(f)[aspect]
   output = _output(dataset, mode)
   actual = _actual(dataset, output, aspect)
-  if aspect == "handshake" and mode != "production" and not output["error"]:
-    expected = None  # Local output: no success handshake.
   if output["error"] and aspect != "error" and "_traceback" in output and (
       not expected_error(dataset)):
     pytest.fail(f"run failed:\n{output['_traceback']}", pytrace=False)

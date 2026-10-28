@@ -258,7 +258,7 @@ def obs(about: str = "country/USA",
         variable: str = "Count_Person",
         date: Any = 2020,
         value: Any = 1,
-        dims: dict[str, Any] | None = None,
+        observation_properties: tuple[str, ...] = ("observationAbout",),
         **props: Any) -> dict:
   """An expected observation record, without "@id".
 
@@ -266,12 +266,12 @@ def obs(about: str = "country/USA",
   hashes; compare them through Result.observations, which drops them (the e2e
   expected.json files pin exact ids).
 
-  dims are properties that are also listed in observationProperties (extra
-  entity dimensions and custom properties), with their JSON-LD values, e.g.
-  dims={"destination": ref("country/FRA")} or dims={"sex": "Female"}.
-  props are other observation properties, e.g. unit=ref("USDollar").
+  observation_properties is the exact, ordered list the variable's
+  dcid:observationProperties must hold: config observationProperties first,
+  then the entity-dimension columns in columnMappings order. The default fits
+  OBS_MAPPINGS. props are other observation properties with their JSON-LD
+  values, e.g. destination=ref("country/FRA") or unit=ref("USDollar").
   """
-  dims = dims or {}
   out: dict[str, Any] = {
       "@type": "dcid:StatVarObservation",
       "dcid:observationAbout": ref(about),
@@ -280,12 +280,10 @@ def obs(about: str = "country/USA",
       "dcid:value": value,
       "dcid:variableMeasured": {
           **ref(variable), "dcid:observationProperties": [
-              "dcid:observationAbout", *(f"dcid:{d}" for d in dims)
+              f"dcid:{p}" for p in observation_properties
           ]
       },
   }
-  for dim, dim_value in dims.items():
-    out[f"dcid:{dim}"] = dim_value
   for prop, value_ in props.items():
     out[f"dcid:{prop}"] = value_
   return out
@@ -389,7 +387,9 @@ def run_csv(csv_text: str,
 
 
 def _freeze(value: dict | None) -> str:
-  return json.dumps(value, sort_keys=True)
+  # No sort_keys: key order is input (columnMappings order sets the order of
+  # observationProperties), so it must reach config.json unchanged.
+  return json.dumps(value)
 
 
 @functools.lru_cache(maxsize=256)
@@ -412,17 +412,12 @@ def _records(counts: collections.Counter) -> list[dict]:
 
 
 def _key(rec: dict) -> str:
-  return json.dumps(_sorted_lists(rec), sort_keys=True, ensure_ascii=False)
+  """A hashable, order-preserving form of rec.
 
-
-def _sorted_lists(value: Any) -> Any:
-  """Sorts every list, at any depth: multi-values have no order in JSON-LD."""
-  if isinstance(value, dict):
-    return {k: _sorted_lists(v) for k, v in value.items()}
-  if isinstance(value, list):
-    return sorted((_sorted_lists(v) for v in value),
-                  key=lambda v: json.dumps(v, sort_keys=True))
-  return value
+  Top-level multi-value lists are already sorted by load_jsonld; nested lists
+  (e.g. observationProperties) keep their order because it is meaningful.
+  """
+  return json.dumps(rec, sort_keys=True, ensure_ascii=False)
 
 
 # --- Assertions ---------------------------------------------------------------

@@ -228,10 +228,12 @@ def test_observation_property_from_config(given, expect):
 
 
 def test_custom_observation_property_from_config_is_a_dimension():
-  """Custom properties are also listed in observationProperties."""
+  """Custom properties are also listed in observationProperties, first."""
   result = b.run_csv(b.csv_file(b.obs_row()),
                      b.obs_config(observationProperties={"sex": "Female"}))
-  b.assert_records(result.observations, [b.obs(dims={"sex": "Female"})])
+  b.assert_records(
+      result.observations,
+      [b.obs(observation_properties=("sex", "observationAbout"), sex="Female")])
 
 
 def test_column_value_overrides_observation_property_from_config():
@@ -263,7 +265,37 @@ def test_second_entity_dimension():
   b.assert_records(result.observations, [
       b.obs(variable="Count_Trip",
             value=10,
-            dims={"destination": b.ref("country/FRA")})
+            observation_properties=("observationAbout", "destination"),
+            destination=b.ref("country/FRA"))
+  ])
+
+
+def test_observation_properties_order():
+  """Config observationProperties first (config order), then the dimension
+  columns in columnMappings order; CSV header order does not matter."""
+  result = b.run_csv(
+      b.csv_file(["Count_Trip", "2020", "10", "country/USA", "country/FRA"],
+                 header=["variable", "date", "value", "origin", "destination"]),
+      b.obs_config(
+          {
+              "dcid:destination": "destination",
+              "dcid:variableMeasured": "variable",
+              "dcid:observationAbout": "origin",
+              "dcid:observationDate": "date",
+              "dcid:value": "value",
+          },
+          observationProperties={
+              "sex": "Female",
+              "age": "Years25To34"
+          }))
+  b.assert_records(result.observations, [
+      b.obs(variable="Count_Trip",
+            value=10,
+            observation_properties=("sex", "age", "destination",
+                                    "observationAbout"),
+            sex="Female",
+            age="Years25To34",
+            destination=b.ref("country/FRA"))
   ])
 
 

@@ -15,17 +15,17 @@
 
 Every test in the suite goes through run_preprocessor(): it takes an input
 directory (config.json plus data files), runs Runner in the requested mode
-with a fake GCS, and returns the canonical output (see canonical.py).
+and returns the canonical output (see canonical.py). Runner always writes to
+a fake GCS, as in the ingestion workflow; the output is read back from there.
 
 The preprocessor must not call the Data Commons API. DC_API_ROOT points at a
 closed local port, so any call fails the run instead of reaching the network.
 
 Modes change *how* the preprocessor runs, never *what* it must produce:
 
-  threaded      use_multiprocessing=False, local disk. The fast default.
-  production    use_multiprocessing=True, input and output on (fake) GCS: how
-                the ingestion workflow runs it. Only this mode produces a
-                success handshake.
+  threaded      use_multiprocessing=False, input on local disk. The default.
+  production    use_multiprocessing=True, input on (fake) GCS too: how the
+                ingestion workflow runs it.
   tiny_chunks   threaded, with shard and CSV chunk sizes shrunk to 1-2 so that
                 every chunk/shard boundary is crossed even by tiny inputs.
 """
@@ -74,7 +74,7 @@ def _tiny_chunks() -> Iterator[None]:
 class Mode:
   name: str
   use_multiprocessing: bool = False
-  gcs: bool = False
+  gcs_input: bool = False  # Runner reads its input from GCS, not local disk.
   env: dict = dataclasses.field(default_factory=dict)
   patches: Callable[[], contextlib.AbstractContextManager] = _no_patches
 
@@ -82,7 +82,7 @@ class Mode:
 MODES = {
     m.name: m for m in [
         Mode("threaded"),
-        Mode("production", use_multiprocessing=True, gcs=True),
+        Mode("production", use_multiprocessing=True, gcs_input=True),
         Mode("tiny_chunks", patches=_tiny_chunks),
     ]
 }
@@ -125,10 +125,14 @@ def run_preprocessor(input_dir: str,
 @dataclasses.dataclass(frozen=True)
 class _Paths:
   """Where one run reads and writes."""
-  local_out: str  # Local copy of the output, read back after the run.
+  local_out: str  # Local copy of the output, downloaded after the run.
   gcs_root: str  # This run's prefix on the fake GCS.
   input: str  # What Runner reads: local, or on GCS in production mode.
-  output: str  # What Runner writes: local, or on GCS in production mode.
+
+  @property
+  def output(self) -> str:
+    """What Runner writes: always on GCS."""
+    return f"{self.gcs_root}/output"
 
   @property
   def temp(self) -> str:
@@ -141,11 +145,9 @@ def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
   """Stages input_dir under work, runs Runner and reads its output back."""
   gcs_root = fake_gcs.new_prefix()
   local_out = os.path.join(work, "output")
-  if mode.gcs:
-    paths = _Paths(local_out, gcs_root, f"{gcs_root}/input",
-                   f"{gcs_root}/output")
-  else:
-    paths = _Paths(local_out, gcs_root, os.path.join(work, "input"), local_out)
+  input_path = (f"{gcs_root}/input" if mode.gcs_input else os.path.join(
+      work, "input"))
+  paths = _Paths(local_out, gcs_root, input_path)
   _stage_input(input_dir, os.path.join(work, "staged"), paths, mode,
                config_file)
   error = _run_runner(paths, mode, runner_kwargs, config_file)
@@ -162,7 +164,7 @@ def _stage_input(input_dir: str, staged: str, paths: _Paths, mode: Mode,
       text = f.read().replace("<input>", paths.input)
     with open(config_path, "w", encoding="utf-8") as f:
       f.write(text)
-  if mode.gcs:
+  if mode.gcs_input:
     fake_gcs.upload_dir(staged, paths.input)
   else:
     shutil.copytree(staged, paths.input)
@@ -203,8 +205,7 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
 
 def _read_output(paths: _Paths, mode: Mode, error: dict | None) -> dict:
   """Reads the run's records, report and handshake into canonical form."""
-  if mode.gcs:
-    fake_gcs.download_dir(paths.output, paths.local_out)
+  fake_gcs.download_dir(paths.output, paths.local_out)
   handshake_text = fake_gcs.read_text(
       f"{paths.temp}/datacommons/ingestion_records/{WORKFLOW_ID}.json")
   report = _read_json(os.path.join(paths.local_out, "process", "report.json"))
