@@ -100,3 +100,30 @@ To manually build and push a custom image tag via Cloud Build (without overwriti
 ```
 
 If `project-id` is omitted, it defaults to `datcom-ci` (`gcr.io/datcom-ci/datacommons-data:<image-tag>`).
+
+### Local Docker Build & Run
+
+To build and run the container locally from the `simple/` directory:
+
+```shell
+docker build -t datacommons-data:local simple/
+
+docker run --rm \
+  -e DC_API_KEY="${DC_API_KEY}" \
+  -v /path/to/local/data:/data \
+  datacommons-data:local \
+  --config_file=/data/config.json \
+  --output_dir=/data/output
+```
+
+If your config or output uses Google Cloud Storage (`gs://`), mount your local `gcloud` credentials into `/root/.config/gcloud`:
+
+```shell
+docker run --rm \
+  -e DC_API_KEY="${DC_API_KEY}" \
+  -v "${HOME}/.config/gcloud:/root/.config/gcloud:ro" \
+  datacommons-data:local \
+  --config_file=gs://my-bucket/input/config.json \
+  --output_dir=gs://my-bucket/output
+```
+
