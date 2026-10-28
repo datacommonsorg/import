@@ -28,8 +28,6 @@ from stats.runner import Runner
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import use_fake_gzip_time
 
-from util import dc_client
-
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "runner")
 _CONFIG_DIR = os.path.join(_TEST_DATA_DIR, "config")
@@ -50,28 +48,14 @@ def _test_runner(test: unittest.TestCase,
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
-    if config_path:
-      input_dir = None
-      remote_entity_types_path = None
-    else:
-      input_dir = os.path.join(_INPUT_DIR, test_name)
-      remote_entity_types_path = os.path.join(input_dir,
-                                              "remote_entity_types.json")
+    input_dir = None if config_path else os.path.join(_INPUT_DIR, test_name)
 
     output_dir_name = output_dir_name if output_dir_name else test_name
     expected_dir = os.path.join(_EXPECTED_DIR, output_dir_name)
     expected_jsonld_dir = os.path.join(expected_dir, "jsonld")
     output_jsonld_dir = os.path.join(temp_dir, "jsonld")
 
-    dc_client.get_property_of_entities = mock.MagicMock(return_value={})
-    if remote_entity_types_path and os.path.exists(remote_entity_types_path):
-      with open(remote_entity_types_path, "r") as f:
-        dc_client.get_property_of_entities = mock.MagicMock(
-            return_value=json.load(f))
-
     # TODO: Run these tests with use_multiprocessing=True to match production.
-    # Child processes don't inherit the dc_client mocks above, so this needs a
-    # stub DC API server (e.g. via DC_API_ROOT) first.
     Runner(config_file_path=config_path,
            input_dir_path=input_dir,
            output_dir_path=temp_dir,
@@ -134,10 +118,6 @@ class TestRunner(unittest.TestCase):
     """Config discovered as config.json inside the input dir, as DCP does it."""
     _test_runner(self, "input_dir_driven")
 
-  def test_remote_entity_types(self):
-    """Proxy entity nodes typed from what Base DC reports."""
-    _test_runner(self, "remote_entity_types")
-
   def test_entities(self):
     _test_runner(self, "entities")
 
@@ -199,7 +179,6 @@ class TestRunner(unittest.TestCase):
                   "dcid:observationDate": "year",
                   "dcid:value": "value",
               },
-              "columnsToResolve": ["place"],
           }, {
               "pattern": "wikidataids.csv",
               "importType": "observations",
@@ -211,7 +190,6 @@ class TestRunner(unittest.TestCase):
                   "dcid:observationDate": "year",
                   "dcid:value": "value",
               },
-              "columnsToResolve": ["wikidataid"],
           }, {
               "pattern": "variable_per_row.csv",
               "importType": "observations",
@@ -256,8 +234,6 @@ class TestRunner(unittest.TestCase):
                         "source: dcid:Source1\n")
       with open(os.path.join(input_dir, "provenance.mcf"), "w") as f:
         f.write(provenance_mcf)
-
-      dc_client.get_property_of_entities = mock.MagicMock(return_value={})
 
       Runner(
           config_file_path=None,
@@ -458,9 +434,6 @@ class TestRunner(unittest.TestCase):
       with open(os.path.join(ilo_dir, "ilo.mcf"), "w") as f:
         f.write(ilo_mcf)
 
-      # Mock DC Client calls
-      dc_client.get_property_of_entities = mock.MagicMock(return_value={})
-
       # Run runner with mocked GCS output path and workflow name
       from util.filesystem import _StoreWrapper
       original_full_path = _StoreWrapper.full_path
@@ -645,7 +618,6 @@ class TestMain(unittest.TestCase):
         input_dir_path="/base/input",
         output_dir_path="/output",
         import_names=["oecd"],
-        import_proxy_entities=True,
     )
 
   @mock.patch('stats.main.Runner')
@@ -679,7 +651,6 @@ class TestMain(unittest.TestCase):
             input_dir_path="/base/input",
             output_dir_path="/output",
             import_names=[],
-            import_proxy_entities=True,
         )
         self.assertNotIn("mode", mock_runner.call_args.kwargs)
 
