@@ -271,8 +271,11 @@ def test_second_entity_dimension():
 
 
 def test_observation_properties_order():
-  """Config observationProperties first (config order), then the dimension
-  columns in columnMappings order; CSV header order does not matter."""
+  """observationProperties order: config properties, then dimension columns.
+
+  Config observationProperties come first, in config order, then the entity
+  dimension columns in columnMappings order. CSV header order does not matter.
+  """
   result = b.run_csv(
       b.csv_file(["Count_Trip", "2020", "10", "country/USA", "country/FRA"],
                  header=["variable", "date", "value", "origin", "destination"]),
