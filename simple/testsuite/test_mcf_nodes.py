@@ -141,7 +141,7 @@ _MCF_OBSERVATION_BUG = (
 
 
 def _variable(dcid: str, *observation_properties: str) -> dict:
-  """variableMeasured of an observation, with its observationProperties."""
+  """The variableMeasured of an observation, with observationProperties."""
   return {
       **b.ref(dcid), "dcid:observationProperties": [
           f"dcid:{p}" for p in observation_properties

@@ -62,7 +62,7 @@ def test_without_an_id_column_ids_are_generated():
 
 
 def test_reference_columns_hold_one_reference_per_listed_value():
-  """columnsToResolve marks reference columns in entities imports."""
+  """In entities imports, columnsToResolve marks reference columns."""
   result = b.run_csv(
       b.csv_file(["article1", "author1"], ["article2", "author1,author2"],
                  ["article3", "author2, author3"],

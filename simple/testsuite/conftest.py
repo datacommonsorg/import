@@ -33,7 +33,7 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-  # Parallel workers would race on rewriting the expected.json files.
+  """Parallel workers would race on rewriting the expected.json files."""
   workers = getattr(config.option, "numprocesses", None)
   if config.getoption("--update-expected") and workers:
     raise pytest.UsageError("--update-expected cannot run with pytest-xdist;"
@@ -47,7 +47,7 @@ def update_expected(request) -> bool:
 
 @pytest.fixture(autouse=True)
 def _quiet_logs():
-  # The preprocessor logs heavily at INFO; keep test output readable.
+  """The preprocessor logs heavily at INFO; keep test output readable."""
   previous = logging.root.manager.disable
   logging.disable(logging.INFO)
   yield

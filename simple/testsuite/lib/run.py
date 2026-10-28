@@ -125,6 +125,7 @@ def run_preprocessor(input_dir: str,
 @dataclasses.dataclass(frozen=True)
 class _Paths:
   """Where one run reads and writes."""
+
   local_out: str  # Local copy of the output, downloaded after the run.
   gcs_root: str  # This run's prefix on the fake GCS.
   input: str  # What Runner reads: local, or on GCS in production mode.
@@ -172,7 +173,11 @@ def _stage_input(input_dir: str, staged: str, paths: _Paths, mode: Mode,
 
 def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
                 config_file: str | None) -> dict | None:
-  """Runs Runner; returns the exception it raised, as a dict, or None."""
+  """Runs Runner; returns the exception it raised, as a dict, or None.
+
+  The writer caches custom namespace prefixes in a module global; every run
+  starts from a clean slate so runs cannot influence each other.
+  """
   env = {
       "DC_API_ROOT": _NO_DC_API,
       "DC_API_KEY": "",
@@ -181,8 +186,6 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
       **fake_gcs.env(),
       **mode.env,
   }
-  # The writer caches custom namespace prefixes in a module global; start
-  # every run from a clean slate so runs cannot influence each other.
   with mock.patch.dict(os.environ, env), \
        mock.patch("stats.jsonld_stream_writer._KNOWN_CUSTOM_PREFIXES", set()), \
        mode.patches():

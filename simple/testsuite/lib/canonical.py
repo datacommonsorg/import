@@ -101,13 +101,13 @@ def normalize_handshake(handshake: dict | None, path_tokens: dict[str, str]):
   if isinstance(out.get("importList"), str):
     out["importList"] = json.loads(out["importList"])
   text = replace_paths(json.dumps(out, sort_keys=True), path_tokens)
-  # The run directory under jsonld/ is "<import name>_<timestamp>".
-  text = re.sub(r"/jsonld/[^/\"]+_\d{8}_\d{6}_\d+/", "/jsonld/<run>/", text)
+  text = re.sub(r"/jsonld/[^/\"]+_\d{8}_\d{6}_\d+/", "/jsonld/<run>/",
+                text)  # The run dir is "<import name>_<timestamp>".
   return json.loads(text)
 
 
 def replace_paths(text: str, path_tokens: dict[str, str]) -> str:
-  # Longest first, so nested paths are replaced before their parents.
+  """Replaces paths with tokens, longest first (nested before parents)."""
   for path, token in sorted(path_tokens.items(), key=lambda x: -len(x[0])):
     stripped = path.rstrip("/")
     if stripped:  # An empty pattern would match between every character.

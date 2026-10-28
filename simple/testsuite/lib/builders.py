@@ -141,6 +141,7 @@ class Case:
   Case("integer", given="42", expect=42)
   Case("quoted number", given='"00123"', expect="00123", bug="loses zeros")
   """
+
   name: str  # The pytest id, e.g. test_value[integer].
   given: Any  # The input, written as the preprocessor reads it.
   expect: Any  # The expected output.
@@ -223,9 +224,9 @@ def csv_file(*rows: list[str],
 
 
 def ref(dcid: str) -> dict:
-  """An object reference as written in JSON-LD: ref("A") -> {"@id": "dcid:A"}.
+  """An object reference as written in JSON-LD.
 
-  Full URIs are kept as they are.
+  ref("A") -> {"@id": "dcid:A"}. Full URIs are kept as they are.
   """
   if "://" in dcid or dcid.startswith("dcid:"):
     return {"@id": dcid}
@@ -335,7 +336,7 @@ class Result:
     return [r for r in self.added if r.get("@type") != _OBSERVATION_TYPE]
 
   def of_type(self, type_name: str) -> list[dict]:
-    """Added records of one type, e.g. of_type("Author")."""
+    """Added records of one type name, e.g. "Author"."""
     return [r for r in self.added if r.get("@type") == f"dcid:{type_name}"]
 
   @property
@@ -362,8 +363,7 @@ def run(files: dict[str, str],
   output = _run(_freeze({**shared_files, **files}), _freeze(config), mode)
   if output["error"]:
     return Result(output=output, added=[], removed=[])
-  # What the shared files write on their own, so tests can leave it out.
-  shared_only = _record_counts(
+  shared_only = _record_counts(  # What the shared files write on their own.
       _run(_freeze(shared_files), _freeze(MCF_CONFIG), mode))
   actual = _record_counts(output)
   return Result(output=output,
@@ -387,14 +387,13 @@ def run_csv(csv_text: str,
 
 
 def _freeze(value: dict | None) -> str:
-  # No sort_keys: key order is input (columnMappings order sets the order of
-  # observationProperties), so it must reach config.json unchanged.
+  """JSON for value, keeping key order (columnMappings order is input)."""
   return json.dumps(value)
 
 
 @functools.lru_cache(maxsize=256)
 def _run(files_json: str, config_json: str, mode: str) -> dict:
-  # Cached: the shared-files run is the same for most tests in a file.
+  """Runs once per input; the shared-files run is reused across tests."""
   input_dir = runlib.write_input_dir(json.loads(files_json),
                                      json.loads(config_json))
   try:
@@ -425,12 +424,15 @@ def _key(rec: dict) -> str:
 
 @dataclasses.dataclass(frozen=True)
 class Fails:
-  """How a run is expected to fail, for a Case's expect (see assert_fails)."""
+  """How a run is expected to fail, for a Case's expect (see assert_fails).
+
+  handshake is empty when the error is raised while Runner is being
+  constructed, before run(): then no FAILURE handshake is written and the
+  ingestion workflow gets no structured error.
+  """
+
   error_type: str
   message: str
-  # Empty when the error is raised while Runner is being constructed, before
-  # run(): then no FAILURE handshake is written and the ingestion workflow
-  # gets no structured error.
   handshake: tuple[str, ...] = ("GENERIC_ERROR",)
 
 
