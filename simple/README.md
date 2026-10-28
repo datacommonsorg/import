@@ -103,27 +103,29 @@ If `project-id` is omitted, it defaults to `datcom-ci` (`gcr.io/datcom-ci/dataco
 
 ### Local Docker Build & Run
 
-To build and run the container locally from the `simple/` directory:
+To build the image locally from the repo root and run it on a local data directory:
 
 ```shell
 docker build -t datacommons-data:local simple/
 
 docker run --rm \
   -e DC_API_KEY="${DC_API_KEY}" \
+  -e INPUT_DIR=/data/input \
+  -e OUTPUT_DIR=/data/output \
   -v /path/to/local/data:/data \
-  datacommons-data:local \
-  --config_file=/data/config.json \
-  --output_dir=/data/output
+  datacommons-data:local
 ```
 
-If your config or output uses Google Cloud Storage (`gs://`), mount your local `gcloud` credentials into `/root/.config/gcloud`:
+The container's `run.sh` entrypoint requires `DC_API_KEY`, `INPUT_DIR`, and `OUTPUT_DIR`, and writes results under `$OUTPUT_DIR/datacommons/`.
+
+To read from or write to Google Cloud Storage (`gs://`), mount your Application Default Credentials file:
 
 ```shell
 docker run --rm \
   -e DC_API_KEY="${DC_API_KEY}" \
-  -v "${HOME}/.config/gcloud:/root/.config/gcloud:ro" \
-  datacommons-data:local \
-  --config_file=gs://my-bucket/input/config.json \
-  --output_dir=gs://my-bucket/output
+  -e INPUT_DIR=gs://my-bucket/input \
+  -e OUTPUT_DIR=gs://my-bucket/output \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
+  -v "${HOME}/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro" \
+  datacommons-data:local
 ```
-

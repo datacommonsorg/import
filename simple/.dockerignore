@@ -1,12 +1,11 @@
 tests/
 sample/
-*.md
-__pycache__/
-*.pyc
-.pytest_cache/
+**/*.md
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
 .env/
 .venv*/
 .data/
 .vscode/
 datacommons.db
-

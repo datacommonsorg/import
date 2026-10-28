@@ -42,15 +42,15 @@ steps:
           --tag gcr.io/${_PROJECT_ID}/datacommons-data:${_VERSION} \
           .
         docker push gcr.io/${_PROJECT_ID}/datacommons-data:${_TAG}
-        if [[ "${_VERSION}" != "${_TAG}" && -n "${_VERSION}" ]]; then
+        if [[ "${_VERSION}" != "${_TAG}" ]]; then
           docker push gcr.io/${_PROJECT_ID}/datacommons-data:${_VERSION}
         fi
     waitFor: ["pull-cache"]
 
 substitutions:
-  # Directory containing the Dockerfile, relative to the top level of the files
-  # Cloud Build receives. Automated trigger builds receive the whole repo, so the
-  # default is "simple".
+  # _BUILD_DIR is the directory containing the Dockerfile, relative to the top
+  # level of the files sent to Cloud Build. Automated triggers send the whole
+  # repo, so the default is "simple".
   _BUILD_DIR: "simple"
   _PROJECT_ID: "datcom-ci"
   _TAG: "latest"

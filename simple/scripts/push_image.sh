@@ -33,14 +33,8 @@ SIMPLE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 set -x
 
-# _BUILD_DIR tells simple/cloudbuild.yaml where the Dockerfile is, relative to
-# the top level of the files Cloud Build receives.
-#
-# This script sends only the contents of simple/, so the Dockerfile is at the
-# top level and _BUILD_DIR is ".".
-#
-# Automated trigger builds receive the whole repo instead, so the Dockerfile is
-# under simple/ and they use the default _BUILD_DIR of "simple" from cloudbuild.yaml.
+# This script sends only the contents of simple/ to Cloud Build, so the
+# Dockerfile is at the top level and _BUILD_DIR is ".".
 gcloud builds submit "$SIMPLE_DIR" \
   --async \
   --project="$PROJECT_ID" \
