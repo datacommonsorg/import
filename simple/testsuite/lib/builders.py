@@ -356,12 +356,13 @@ def run(files: dict[str, str],
   output = _run(_freeze({**shared_files, **files}), _freeze(config), mode)
   if output["error"]:
     return Result(output=output, added=[], removed=[])
-  baseline = _record_counts(
+  # What the shared files write on their own, so tests can leave it out.
+  shared_only = _record_counts(
       _run(_freeze(shared_files), _freeze(MCF_CONFIG), mode))
   actual = _record_counts(output)
   return Result(output=output,
-                added=_records(actual - baseline),
-                removed=_records(baseline - actual))
+                added=_records(actual - shared_only),
+                removed=_records(shared_only - actual))
 
 
 def run_mcf(*blocks: str, mode: str = "threaded") -> Result:
