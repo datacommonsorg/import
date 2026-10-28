@@ -20,14 +20,9 @@ import unittest
 from unittest import mock
 
 import pandas as pd
-from rdflib import Graph
-from rdflib import Literal
-from rdflib import URIRef
 from stats.data import Triple
 from stats.jsonld_stream_writer import DCID_URL
-from stats.jsonld_stream_writer import expand_id
 from stats.jsonld_stream_writer import JsonLdStreamWriter
-from stats.jsonld_stream_writer import write_shard
 from util.filesystem import create_store
 
 _NS_MAP = {"dcid": DCID_URL}
@@ -246,10 +241,9 @@ class TestJsonLdStreamWriter(unittest.TestCase):
       )
       mock_blob.upload_from_filename.assert_called_once()
 
-  def test_node_fast_vs_rdflib_parity(self):
-    """Rigorous parity test: Compares fast path output with rdflib path output."""
-    from stats.jsonld_stream_writer import _write_node_shard_fast
-    from stats.jsonld_stream_writer import _write_node_shard_rdflib
+  def test_node_shard_export(self):
+    """Verifies direct JSON-LD node shard serialization."""
+    from stats.jsonld_stream_writer import _write_node_shard
 
     complex_triples = [
         Triple(subject_id="sub1",
@@ -273,7 +267,6 @@ class TestJsonLdStreamWriter(unittest.TestCase):
         Triple(subject_id="sub1", predicate="memberOf", object_id="groupA"),
         # Number types
         Triple(subject_id="sub1", predicate="countValue", object_value=15.8),
-        Triple(subject_id="sub1", predicate="intValue", object_value=99),
         # External URL predicate/object
         Triple(subject_id="sub1",
                predicate="http://schema.org/url",
@@ -281,45 +274,27 @@ class TestJsonLdStreamWriter(unittest.TestCase):
     ]
     ns_map = {"dcid": DCID_URL}
 
-    with tempfile.TemporaryDirectory() as temp_dir_fast, \
-         tempfile.TemporaryDirectory() as temp_dir_rdflib:
+    with tempfile.TemporaryDirectory() as temp_dir:
+      _write_node_shard((complex_triples, 0, temp_dir, ns_map))
+      node_file = self._find_shard(temp_dir, "node-00000")
+      self.assertIsNotNone(node_file)
 
-      _write_node_shard_fast((complex_triples, 0, temp_dir_fast, ns_map))
-      _write_node_shard_rdflib((complex_triples, 0, temp_dir_rdflib, ns_map))
+      with open(node_file, "r") as f:
+        node_json = json.load(f)
 
-      fast_file = self._find_shard(temp_dir_fast, "node-00000")
-      rdflib_file = self._find_shard(temp_dir_rdflib, "node-00000")
-
-      self.assertIsNotNone(fast_file)
-      self.assertIsNotNone(rdflib_file)
-
-      with open(fast_file, "r") as f:
-        fast_json = json.load(f)
-      with open(rdflib_file, "r") as f:
-        rdflib_json = json.load(f)
-
-      # Helper to normalize a JSON-LD graph for strict comparison
-      def normalize_graph(graph):
-        normalized = {}
-        for item in graph["@graph"]:
-          item_id = item["@id"]
-          normalized_item = {}
-          for k, v in item.items():
-            if k == "@id":
-              continue
-            # If value is list, sort it to ensure order-independence
-            if isinstance(v, list):
-              sorted_v = sorted(
-                  v,
-                  key=lambda x: x["@id"]
-                  if isinstance(x, dict) and "@id" in x else str(x))
-              normalized_item[k] = sorted_v
-            else:
-              normalized_item[k] = v
-          normalized[item_id] = normalized_item
-        return normalized
-
-      self.assertEqual(normalize_graph(fast_json), normalize_graph(rdflib_json))
+      self.assertEqual(node_json["@context"], ns_map)
+      self.assertEqual(len(node_json["@graph"]), 1)
+      node = node_json["@graph"][0]
+      self.assertEqual(node["@id"], "dcid:sub1")
+      self.assertCountEqual(node["@type"],
+                            ["dcid:StatisticalVariable", "dcid:Thing"])
+      self.assertEqual(node["dcid:name"], "Test Node")
+      self.assertCountEqual(node["dcid:alternateName"], ["Alias A", "Alias B"])
+      self.assertEqual(node["dcid:intValue"], 99)
+      self.assertEqual(node["dcid:countValue"], 15.8)
+      self.assertEqual(node["dcid:memberOf"], {"@id": "dcid:groupA"})
+      self.assertEqual(node["http://schema.org/url"],
+                       {"@id": "https://example.org"})
 
   def test_observation_parsing_edge_cases(self):
     """Rigorous data type & properties parsing check to ensure zero property loss."""
@@ -472,93 +447,6 @@ class TestJsonLdStreamWriter(unittest.TestCase):
         self.assertIn("var1", graph_writer.obs_sample_collisions[0])
       finally:
         graph_writer._temp_dir_obj.cleanup()
-
-
-class TestExpandId(unittest.TestCase):
-  """expand_id turns the short ids used in triples into absolute URIs."""
-
-  def test_empty_input_has_no_uri(self):
-    for empty in [None, ""]:
-      with self.subTest(item=empty):
-        self.assertIsNone(expand_id(empty))
-
-  def test_absolute_urls_are_left_alone(self):
-    for url in ["http://example.com/a", "https://example.com/b"]:
-      with self.subTest(url=url):
-        self.assertEqual(expand_id(url), URIRef(url))
-
-  def test_dcid_prefix_is_replaced_with_the_browser_url(self):
-    self.assertEqual(expand_id("dcid:country/USA"),
-                     URIRef(f"{DCID_URL}country/USA"))
-
-  def test_bare_ids_are_treated_as_dcids(self):
-    self.assertEqual(expand_id("country/USA"), URIRef(f"{DCID_URL}country/USA"))
-
-  def test_leading_slash_does_not_double_up(self):
-    self.assertEqual(expand_id("/country/USA"),
-                     URIRef(f"{DCID_URL}country/USA"))
-
-
-class TestWriteShard(unittest.TestCase):
-  """write_shard serializes an RDF graph as a compacted JSON-LD shard."""
-
-  def _write_and_read(self, graph: Graph, index: int, prefix: str) -> dict:
-    with tempfile.TemporaryDirectory() as temp_dir:
-      with create_store(temp_dir) as store:
-        write_shard(graph, index, store.as_dir(), _NS_MAP, prefix=prefix)
-        shard_path = os.path.join(temp_dir, f"{prefix}-{index:05d}.jsonld")
-        self.assertTrue(os.path.exists(shard_path), shard_path)
-        with open(shard_path, "r") as f:
-          return json.load(f)
-
-  def _graph_with(self, *triples) -> Graph:
-    graph = Graph()
-    for triple in triples:
-      graph.add(triple)
-    return graph
-
-  def test_ids_are_compacted_against_the_namespace_map(self):
-    subject = expand_id("dcid:country/USA")
-    doc = self._write_and_read(
-        self._graph_with(
-            (subject, expand_id("typeOf"), expand_id("Country")),
-            (subject, expand_id("name"), Literal("United States"))), 0, "node")
-
-    self.assertEqual(doc["@context"], _NS_MAP)
-    by_id = {node["@id"]: node for node in doc["@graph"]}
-    self.assertIn("dcid:country/USA", by_id)
-    node = by_id["dcid:country/USA"]
-    self.assertEqual(node["dcid:typeOf"], {"@id": "dcid:Country"})
-    self.assertEqual(node["dcid:name"], "United States")
-
-  def test_every_subject_gets_its_own_graph_entry(self):
-    doc = self._write_and_read(
-        self._graph_with(
-            (expand_id("dcid:a"), expand_id("name"), Literal("A")),
-            (expand_id("dcid:b"), expand_id("name"), Literal("B"))), 1, "node")
-
-    self.assertCountEqual([node["@id"] for node in doc["@graph"]],
-                          ["dcid:a", "dcid:b"])
-
-  def test_single_subject_is_still_wrapped_in_a_graph(self):
-    # pyld compacts a lone subject to a top-level node rather than a @graph.
-    # write_shard re-wraps it so every shard has the same shape.
-    doc = self._write_and_read(
-        self._graph_with(
-            (expand_id("dcid:only"), expand_id("name"), Literal("Only"))), 2,
-        "node")
-
-    self.assertEqual(doc["@context"], _NS_MAP)
-    self.assertEqual(len(doc["@graph"]), 1)
-    self.assertEqual(doc["@graph"][0]["@id"], "dcid:only")
-
-  def test_shard_name_uses_the_prefix_and_zero_padded_index(self):
-    graph = self._graph_with(
-        (expand_id("dcid:x"), expand_id("name"), Literal("X")))
-    with tempfile.TemporaryDirectory() as temp_dir:
-      with create_store(temp_dir) as store:
-        write_shard(graph, 42, store.as_dir(), _NS_MAP, prefix="observation")
-      self.assertEqual(os.listdir(temp_dir), ["observation-00042.jsonld"])
 
 
 if __name__ == "__main__":
