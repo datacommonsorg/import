@@ -459,10 +459,18 @@ def assert_fails(
   error = result.error
   if error is None:
     pytest.fail("expected the run to fail, but it succeeded", pytrace=False)
-  assert error["type"] == error_type, error
-  assert message in error["message"], error["message"]
+  problems = []
+  if error["type"] != error_type:
+    problems.append(f"error type: want {error_type}, got {error['type']}")
+  if message not in error["message"]:
+    problems.append(f"error message lacks {message!r}:\n{error['message']}")
   handshake = result.output["handshake"] or {}
   got_types = sorted({e.get("errorType") for e in handshake.get("errors", [])})
-  assert got_types == sorted(handshake_error_types), handshake
-  leftovers = result.output["records"]
-  assert not leftovers, f"a failed run left JSON-LD behind: {leftovers[:3]}"
+  if got_types != sorted(handshake_error_types):
+    problems.append(f"handshake error types: want"
+                    f" {sorted(handshake_error_types)}, got {got_types}")
+  if result.output["records"]:
+    problems.append("a failed run left JSON-LD behind: "
+                    f"{result.output['records'][:3]}")
+  if problems:
+    pytest.fail("\n".join(problems), pytrace=False)

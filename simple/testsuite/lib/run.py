@@ -122,36 +122,60 @@ def run_preprocessor(input_dir: str,
       shutil.rmtree(work, ignore_errors=True)
 
 
+@dataclasses.dataclass(frozen=True)
+class _Paths:
+  """Where one run reads and writes."""
+  local_out: str  # Local copy of the output, read back after the run.
+  gcs_root: str  # This run's prefix on the fake GCS.
+  input: str  # What Runner reads: local, or on GCS in production mode.
+  output: str  # What Runner writes: local, or on GCS in production mode.
+
+  @property
+  def temp(self) -> str:
+    """TEMP_LOCATION, where the workflow handshake is written."""
+    return f"{self.gcs_root}/temp"
+
+
 def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
             config_file: str | None) -> dict:
   """Stages input_dir under work, runs Runner and reads its output back."""
-  local_out = os.path.join(work, "output")
   gcs_root = fake_gcs.new_prefix()
+  local_out = os.path.join(work, "output")
   if mode.gcs:
-    in_path = f"{gcs_root}/input"
-    out_path = f"{gcs_root}/output"
+    paths = _Paths(local_out, gcs_root, f"{gcs_root}/input",
+                   f"{gcs_root}/output")
   else:
-    in_path = os.path.join(work, "input")
-    out_path = local_out
-  staged = os.path.join(work, "staged")
+    paths = _Paths(local_out, gcs_root, os.path.join(work, "input"), local_out)
+  _stage_input(input_dir, os.path.join(work, "staged"), paths, mode,
+               config_file)
+  error = _run_runner(paths, mode, runner_kwargs, config_file)
+  return _read_output(paths, mode, error)
+
+
+def _stage_input(input_dir: str, staged: str, paths: _Paths, mode: Mode,
+                 config_file: str | None) -> None:
+  """Copies input_dir to where Runner reads it (local disk or GCS)."""
   shutil.copytree(input_dir, staged)
   if config_file:
     config_path = os.path.join(staged, config_file)
     with open(config_path, encoding="utf-8") as f:
-      text = f.read().replace("<input>", in_path)
+      text = f.read().replace("<input>", paths.input)
     with open(config_path, "w", encoding="utf-8") as f:
       f.write(text)
   if mode.gcs:
-    fake_gcs.upload_dir(staged, in_path)
+    fake_gcs.upload_dir(staged, paths.input)
   else:
-    shutil.copytree(staged, in_path)
+    shutil.copytree(staged, paths.input)
 
-  error = None
+
+def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
+                config_file: str | None) -> dict | None:
+  """Runs Runner; returns the exception it raised, as a dict, or None."""
   env = {
       "DC_API_ROOT": _NO_DC_API,
       "DC_API_KEY": "",
       "WORKFLOW_EXECUTION_ID": WORKFLOW_ID,
-      "TEMP_LOCATION": f"{gcs_root}/tmp",
+      "TEMP_LOCATION": paths.temp,
       **fake_gcs.env(),
       **mode.env,
   }
@@ -162,30 +186,36 @@ def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
        mode.patches():
     from stats.runner import Runner  # pylint: disable=import-outside-toplevel
     try:
-      Runner(config_file_path=(f"{in_path}/{config_file}"
+      Runner(config_file_path=(f"{paths.input}/{config_file}"
                                if config_file else None),
-             input_dir_path=None if config_file else in_path,
-             output_dir_path=out_path,
+             input_dir_path=None if config_file else paths.input,
+             output_dir_path=paths.output,
              use_multiprocessing=mode.use_multiprocessing,
              **(runner_kwargs or {})).run()
     except Exception as e:  # pylint: disable=broad-except
-      error = {
+      return {
           "type": type(e).__name__,
           "message": str(e),
           "traceback": "".join(traceback.format_exception(e)),
       }
+  return None
 
+
+def _read_output(paths: _Paths, mode: Mode, error: dict | None) -> dict:
+  """Reads the run's records, report and handshake into canonical form."""
   if mode.gcs:
-    fake_gcs.download_dir(out_path, local_out)
+    fake_gcs.download_dir(paths.output, paths.local_out)
   handshake_text = fake_gcs.read_text(
-      f"{gcs_root}/tmp/datacommons/ingestion_records/{WORKFLOW_ID}.json")
-  report = _read_json(os.path.join(local_out, "process", "report.json"))
-
-  tokens = {in_path: "<input>", out_path: "<output>", gcs_root: "<gcs>"}
-  records = canonical.load_jsonld(os.path.join(local_out, "jsonld"))
+      f"{paths.temp}/datacommons/ingestion_records/{WORKFLOW_ID}.json")
+  report = _read_json(os.path.join(paths.local_out, "process", "report.json"))
+  tokens = {
+      paths.input: "<input>",
+      paths.output: "<output>",
+      paths.gcs_root: "<gcs>"
+  }
   output = {
       "records":
-          records,
+          canonical.load_jsonld(os.path.join(paths.local_out, "jsonld")),
       "report":
           canonical.normalize_report(report, tokens),
       "handshake":
