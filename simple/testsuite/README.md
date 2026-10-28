@@ -9,7 +9,7 @@ preprocessor is mocked.
 ```bash
 cd simple
 python3 -m pytest testsuite/ -n auto                       # everything
-python3 -m pytest testsuite/test_observations.py -k entity # one area / one table
+python3 -m pytest testsuite/test_observations.py -k about  # one table
 python3 -m pytest testsuite/test_e2e.py --modes=production # one execution mode
 python3 -m pytest testsuite/test_e2e.py --update-expected  # rewrite expected.json, then review the diff
 ```

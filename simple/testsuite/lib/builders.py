@@ -77,9 +77,9 @@ MCF_CONFIG = {
 }
 
 # The CSV header obs_row() fills, and how obs_config() maps it by default.
-OBS_HEADER = ["entity", "variable", "date", "value"]
+OBS_HEADER = ["about", "variable", "date", "value"]
 OBS_MAPPINGS = {
-    "dcid:observationAbout": "entity",
+    "dcid:observationAbout": "about",
     "dcid:variableMeasured": "variable",
     "dcid:observationDate": "date",
     "dcid:value": "value",
@@ -188,12 +188,16 @@ def mcf(*blocks: str) -> str:
   return "\n".join(block.strip("\n") + "\n" for block in blocks)
 
 
-def obs_row(entity: str = "country/USA",
+def obs_row(about: str = "country/USA",
             variable: str = "Count_Person",
             date: str = "2020",
             value: str = "1") -> list[str]:
-  """One row for OBS_HEADER. All cells are raw CSV text."""
-  return [entity, variable, date, value]
+  """One row for OBS_HEADER. All cells are raw CSV text.
+
+  about is the observationAbout cell: the place or other entity the
+  observation is about.
+  """
+  return [about, variable, date, value]
 
 
 def csv_file(*rows: list[str],

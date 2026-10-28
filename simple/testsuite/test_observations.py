@@ -14,7 +14,8 @@
 """Observations: variable-per-row CSV in, exact observation records out.
 
 Every test imports case*.csv under the shared test provenance with the
-columns entity, variable, date, value (see obs_config() in lib/builders.py).
+columns about (observationAbout), variable, date, value (see obs_config() in
+lib/builders.py).
 Observation ids are content hashes, so these tests compare records without
 "@id"; the e2e expected.json files pin exact ids.
 """
@@ -75,7 +76,8 @@ def test_value(given, expect):
   b.assert_records(result.observations, want)
 
 
-ENTITIES = [
+# The observationAbout cell: the id of the place or entity observed.
+OBSERVATION_ABOUT = [
     Case("plain dcid", given="country/USA", expect="country/USA"),
     Case("dcid prefix is stripped",
          given="dcid:country/USA",
@@ -97,9 +99,9 @@ ENTITIES = [
 ]
 
 
-@cases(*ENTITIES)
-def test_entity(given, expect):
-  result = b.run_csv(b.csv_file(b.obs_row(entity=given)))
+@cases(*OBSERVATION_ABOUT)
+def test_observation_about(given, expect):
+  result = b.run_csv(b.csv_file(b.obs_row(about=given)))
   b.assert_records(result.observations, [b.obs(about=expect)])
 
 
@@ -254,23 +256,16 @@ def test_column_value_overrides_observation_property_from_config():
   ])
 
 
-def test_custom_entity_dimension():
-  result = b.run(
-      {
-          "case.csv":
-              b.csv_file(
-                  ["country/USA", "country/FRA", "Count_Trip", "2020", "10"],
-                  header=["origin", "destination", "variable", "date", "value"
-                         ]),
-          "dims.mcf":
-              b.mcf_node("dcid:destination", typeOf="dcs:Property"),
-      },
+def test_second_entity_dimension():
+  """A column mapped to another property is a second entity dimension."""
+  result = b.run_csv(
+      b.csv_file(["country/USA", "country/FRA", "Count_Trip", "2020", "10"],
+                 header=["origin", "destination", "variable", "date", "value"]),
       b.obs_config({
           **b.OBS_MAPPINGS,
           "dcid:observationAbout": "origin",
           "dcid:destination": "destination",
       }))
-  b.assert_records(result.nodes, [b.record("destination", "Property")])
   b.assert_records(result.observations, [
       b.obs(variable="Count_Trip",
             value=10,
@@ -297,9 +292,9 @@ def test_unmapped_column_fails_header_validation():
 def test_missing_required_mapping_fails():
   result = b.run_csv(
       b.csv_file(["country/USA", "Count_Person", "1"],
-                 header=["entity", "variable", "value"]),
+                 header=["about", "variable", "value"]),
       b.obs_config({
-          "dcid:observationAbout": "entity",
+          "dcid:observationAbout": "about",
           "dcid:variableMeasured": "variable",
           "dcid:value": "value",
       }))
