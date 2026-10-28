@@ -127,24 +127,58 @@ def test_type(given, expect):
   b.assert_records(result.added, [b.record("T", expect)])
 
 
-def test_statistical_variable_passes_through():
-  result = b.run_mcf(
-      b.mcf_node("dcid:Count_Person_Female",
-                 typeOf="dcs:StatisticalVariable",
-                 populationType="dcs:Person",
-                 measuredProperty="dcs:count",
-                 statType="dcs:measuredValue",
-                 gender="dcs:Female",
-                 name='"Female population"'))
-  b.assert_records(result.added, [
-      b.record("Count_Person_Female",
-               "StatisticalVariable",
-               populationType=b.ref("Person"),
-               measuredProperty=b.ref("count"),
-               statType=b.ref("measuredValue"),
-               gender=b.ref("Female"),
-               name="Female population")
-  ])
+# --- Whole nodes --------------------------------------------------------------
+#
+# One case per node shape: given is the node's MCF properties (typeOf included),
+# expect is the record's types and properties. Every property must pass
+# through, and nothing else may be added. To pin a new shape, add a case.
+# Source and Provenance nodes are special (they are also registered and written
+# a second time); they are covered in test_provenance.py.
+
+NODES = [
+    Case("statistical variable",
+         given=dict(typeOf="dcs:StatisticalVariable",
+                    populationType="dcs:Person",
+                    measuredProperty="dcs:count",
+                    statType="dcs:measuredValue",
+                    gender="dcs:Female",
+                    name='"Female population"'),
+         expect=dict(types="StatisticalVariable",
+                     populationType=b.ref("Person"),
+                     measuredProperty=b.ref("count"),
+                     statType=b.ref("measuredValue"),
+                     gender=b.ref("Female"),
+                     name="Female population")),
+    Case("place with several types",
+         given=dict(typeOf="dcs:City, dcs:Place",
+                    name='"Paris"',
+                    containedInPlace="dcid:country/FRA, dcid:Earth",
+                    latitude="48.8566",
+                    population="2102650"),
+         expect=dict(types=["City", "Place"],
+                     name="Paris",
+                     containedInPlace=[b.ref("Earth"),
+                                       b.ref("country/FRA")],
+                     latitude=48.8566,
+                     population=2102650)),
+    Case("custom property",
+         given={
+             "typeOf": "dcs:Thing",
+             "c/prop/1": '"custom value"',
+             "description": '"has a custom property"'
+         },
+         expect={
+             "types": "Thing",
+             "c/prop/1": "custom value",
+             "description": "has a custom property"
+         }),
+]
+
+
+@cases(*NODES)
+def test_node_passes_through(given, expect):
+  result = b.run_mcf(b.mcf_node("dcid:T", **given))
+  b.assert_records(result.added, [b.record("T", **expect)])
 
 
 # --- File structure -----------------------------------------------------------
