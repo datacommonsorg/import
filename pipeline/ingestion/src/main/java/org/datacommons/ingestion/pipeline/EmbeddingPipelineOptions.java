@@ -19,8 +19,8 @@ import org.apache.beam.sdk.options.Description;
 
 /** Pipeline options for the Spanner NodeEmbedding ingestion Dataflow pipeline. */
 public interface EmbeddingPipelineOptions extends SpannerPipelineOptions {
-  @Description("Local file path to the embedding JSON config.")
-  @Default.String("src/main/resources/default.json")
+  @Description("Classpath resource name to the embedding JSON config.")
+  @Default.String("default.json")
   String getEmbeddingConfigPath();
 
   void setEmbeddingConfigPath(String embeddingConfigPath);
@@ -36,12 +36,6 @@ public interface EmbeddingPipelineOptions extends SpannerPipelineOptions {
   String getLocation();
 
   void setLocation(String location);
-
-  @Description("GCP project ID.")
-  @Default.String("")
-  String getProjectId();
-
-  void setProjectId(String projectId);
 
   @Description("GCS URI or local path to the NL statistical variable sentences CSV file.")
   @Default.String("gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv")

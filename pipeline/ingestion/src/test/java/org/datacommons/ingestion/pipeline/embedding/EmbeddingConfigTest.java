@@ -120,8 +120,8 @@ public class EmbeddingConfigTest {
   }
 
   @Test
-  public void testLoad_fromLocalSpecPath() {
-    EmbeddingConfig config = EmbeddingConfig.load("src/main/resources/default.json");
+  public void testLoad_fromPackagedResource() {
+    EmbeddingConfig config = EmbeddingConfig.load("default.json");
     assertEquals(3, config.specs().size());
     assertEquals("base_text_embedding", config.specs().get(0).embeddingLabel());
     assertEquals("nl_stat_var_embedding", config.specs().get(1).embeddingLabel());

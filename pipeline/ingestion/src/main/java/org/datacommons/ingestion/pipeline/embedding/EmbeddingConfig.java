@@ -18,11 +18,9 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 /** Global configuration for embedding ingestion, parsed from a JSON configuration file. */
@@ -37,20 +35,27 @@ public record EmbeddingConfig(List<EmbeddingSpec> specs) implements Serializable
     if (specs == null || specs.isEmpty()) {
       throw new IllegalArgumentException("specs must not be empty");
     }
+    if (specs.contains(null)) {
+      throw new IllegalArgumentException("specs must not contain null elements");
+    }
   }
 
-  /** Loads {@link EmbeddingConfig} from a local JSON file path. */
+  /**
+   * Loads {@link EmbeddingConfig} from a packaged classpath resource (e.g., {@code default.json} in
+   * the bundled Dataflow JAR).
+   */
   public static EmbeddingConfig load(String configPath) {
     if (configPath == null || configPath.trim().isEmpty()) {
       throw new IllegalArgumentException("embeddingConfigPath must not be empty");
     }
-    Path localPath = Paths.get(configPath.trim());
-    if (!Files.exists(localPath)) {
-      throw new IllegalArgumentException("Embedding configuration file not found: " + configPath);
-    }
-    try {
-      String rawContent = Files.readString(localPath, StandardCharsets.UTF_8);
-      return parseJson(rawContent);
+    String trimmed = configPath.trim();
+    String resourceName = trimmed.startsWith("/") ? trimmed.substring(1) : trimmed;
+    try (InputStream is =
+        EmbeddingConfig.class.getClassLoader().getResourceAsStream(resourceName)) {
+      if (is == null) {
+        throw new IllegalArgumentException("Embedding configuration file not found: " + configPath);
+      }
+      return parseJson(new String(is.readAllBytes(), StandardCharsets.UTF_8));
     } catch (IOException e) {
       throw new IllegalStateException(
           "Failed to read embedding configuration from: " + configPath, e);
