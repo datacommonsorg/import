@@ -269,7 +269,6 @@ def obs(about: str = "country/USA",
         variable: str = "Count_Person",
         date: Any = 2020,
         value: Any = 1,
-        observation_properties: tuple[str, ...] = ("observationAbout",),
         **props: Any) -> dict:
   """
   An expected observation record, without "@id".
@@ -278,11 +277,10 @@ def obs(about: str = "country/USA",
   hashes; compare them through Result.observations, which drops them (the e2e
   expected.json files pin exact ids).
 
-  observation_properties is the exact, ordered list the variable's
-  dcid:observationProperties must hold: config observationProperties first,
-  then the entity-dimension columns in columnMappings order. The default fits
-  OBS_MAPPINGS. props are other observation properties with their JSON-LD
-  values, e.g. destination=ref("country/FRA") or unit=ref("USDollar").
+  props are other observation properties with their JSON-LD values, e.g.
+  destination=ref("country/FRA") or unit=ref("USDollar"). Which properties
+  are dimensions is declared on the variable, not on the observation: check
+  it with Result.dimensions().
   """
   out: dict[str, Any] = {
       "@type": "dcid:StatVarObservation",
@@ -290,11 +288,7 @@ def obs(about: str = "country/USA",
       "dcid:observationDate": date,
       "dcid:provenance": ref(PROVENANCE),
       "dcid:value": value,
-      "dcid:variableMeasured": {
-          **ref(variable), "dcid:observationProperties": [
-              f"dcid:{p}" for p in observation_properties
-          ]
-      },
+      "dcid:variableMeasured": ref(variable),
   }
   for prop, value_ in props.items():
     out[f"dcid:{prop}"] = value_
@@ -322,6 +316,14 @@ def property_node(name: str, dcid: str | None = None) -> dict:
 # --- Running ------------------------------------------------------------------
 
 _OBSERVATION_TYPE = "dcid:StatVarObservation"
+_VARIABLE_MEASURED = "dcid:variableMeasured"
+_OBSERVATION_PROPERTIES = "dcid:observationProperties"
+
+
+def _dimension_names(declared: Any) -> list[str]:
+  values = declared if isinstance(declared, list) else [declared]
+  ids = [v["@id"] if isinstance(v, dict) else v for v in values]
+  return [i.removeprefix("dcid:") for i in ids]
 
 
 @dataclasses.dataclass
@@ -336,10 +338,44 @@ class Result:
 
   @property
   def observations(self) -> list[dict]:
-    """Added observation records, without their "@id" (see obs())."""
-    return [{
-        k: v for k, v in r.items() if k != "@id"
-    } for r in self.added if r.get("@type") == _OBSERVATION_TYPE]
+    """
+    Added observation records, without their "@id" (see obs()).
+
+    variableMeasured is reduced to the variable's id: statements about the
+    variable embedded in it (observationProperties, today) are checked with
+    dimensions().
+    """
+    out = []
+    for r in self.added:
+      if r.get("@type") != _OBSERVATION_TYPE:
+        continue
+      r = {k: v for k, v in r.items() if k != "@id"}
+      variable = r.get(_VARIABLE_MEASURED)
+      if isinstance(variable, dict):
+        r[_VARIABLE_MEASURED] = {"@id": variable["@id"]}
+      out.append(r)
+    return out
+
+  def dimensions(self, variable: str) -> list[str] | None:
+    """
+    The observationProperties declared for variable, in order, or None.
+
+    Reads them wherever the run declares them: on the variable's node record,
+    or embedded in the observations' variableMeasured (what CSV imports do
+    today). Names are returned without "dcid:", whether written as strings or
+    references. Every declaration must agree.
+    """
+    declared = []
+    for r in self.added:
+      if r.get("@id") == f"dcid:{variable}":
+        declared.append(r.get(_OBSERVATION_PROPERTIES))
+      embedded = r.get(_VARIABLE_MEASURED)
+      if (isinstance(embedded, dict) and
+          embedded.get("@id") == f"dcid:{variable}"):
+        declared.append(embedded.get(_OBSERVATION_PROPERTIES))
+    names = {tuple(_dimension_names(d)) for d in declared if d is not None}
+    assert len(names) <= 1, f"conflicting observationProperties: {names}"
+    return list(names.pop()) if names else None
 
   @property
   def nodes(self) -> list[dict]:

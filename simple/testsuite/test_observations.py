@@ -24,6 +24,7 @@ Observation ids are content hashes, so these tests compare records without
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
+from testsuite.lib.builders import known_bug
 
 
 def test_basic_rows():
@@ -232,9 +233,8 @@ def test_custom_observation_property_from_config_is_a_dimension():
   """Custom properties are also listed in observationProperties, first."""
   result = b.run_csv(b.csv_file(b.obs_row()),
                      b.obs_config(observationProperties={"sex": "Female"}))
-  b.assert_records(
-      result.observations,
-      [b.obs(observation_properties=("sex", "observationAbout"), sex="Female")])
+  b.assert_records(result.observations, [b.obs(sex="Female")])
+  assert result.dimensions("Count_Person") == ["sex", "observationAbout"]
 
 
 def test_column_value_overrides_observation_property_from_config():
@@ -264,10 +264,39 @@ def test_second_entity_dimension():
           "dcid:destination": "destination",
       }))
   b.assert_records(result.observations, [
-      b.obs(variable="Count_Trip",
-            value=10,
-            observation_properties=("observationAbout", "destination"),
-            destination=b.ref("country/FRA"))
+      b.obs(variable="Count_Trip", value=10, destination=b.ref("country/FRA"))
+  ])
+  assert result.dimensions("Count_Trip") == ["observationAbout", "destination"]
+
+
+@known_bug(reason="observationProperties is embedded in every observation's"
+           " variableMeasured, as strings, instead of being declared once on"
+           " the StatisticalVariable node, as references")
+def test_dimensions_are_declared_on_the_variable_node():
+  """
+  The variable declares its dimensions; observations only carry the values.
+
+  Per the "Import Management & Multi-Entity Variable Support" design
+  (section 4), the StatisticalVariable node in the node output holds
+  observationProperties, and the observations hold the dimension values.
+  """
+  result = b.run_csv(
+      b.csv_file(["country/USA", "country/FRA", "Count_Trip", "2020", "10"],
+                 header=["origin", "destination", "variable", "date", "value"]),
+      b.obs_config({
+          **b.OBS_MAPPINGS,
+          "dcid:observationAbout": "origin",
+          "dcid:destination": "destination",
+      }))
+  observations = [r for r in result.added if "dcid:variableMeasured" in r]
+  assert [r["dcid:variableMeasured"] for r in observations
+         ] == [b.ref("Count_Trip")]
+  b.assert_records(result.nodes, [
+      b.record("Count_Trip",
+               observationProperties=[
+                   b.ref("observationAbout"),
+                   b.ref("destination")
+               ])
   ])
 
 
@@ -296,12 +325,13 @@ def test_observation_properties_order():
   b.assert_records(result.observations, [
       b.obs(variable="Count_Trip",
             value=10,
-            observation_properties=("sex", "age", "destination",
-                                    "observationAbout"),
             sex="Female",
             age="Years25To34",
             destination=b.ref("country/FRA"))
   ])
+  assert result.dimensions("Count_Trip") == [
+      "sex", "age", "destination", "observationAbout"
+  ]
 
 
 def test_ignored_column_is_dropped():
