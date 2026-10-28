@@ -74,3 +74,29 @@ of the run.
 | `FAST_NODE_EXPORT` | `true` | If true, node shards are serialized directly instead of going through rdflib. |
 | `WORKFLOW_EXECUTION_ID` | *unset* | Set by the ingestion workflow. When set (and the output dir is on GCS), the run writes a handshake JSON file for the workflow. |
 | `TEMP_LOCATION` | *unset* | GCS path the workflow handshake file is written under. |
+
+## Container Build & CI/CD (`datacommons-data`)
+
+This directory is packaged into the `gcr.io/datcom-ci/datacommons-data` container image using `simple/Dockerfile` and `simple/cloudbuild.yaml`.
+
+### Automated CI/CD Builds
+
+Cloud Build automatically runs `simple/cloudbuild.yaml` when commits are pushed to `master` that modify files under `simple/**` (excluding `simple/tests/**`, `simple/sample/**`, and `**.md`). Each automated build tags and pushes:
+* `gcr.io/datcom-ci/datacommons-data:<7-char-import-sha>`
+* `gcr.io/datcom-ci/datacommons-data:latest`
+
+Because commits outside `simple/` do not trigger a new image build, find the latest published preprocessor commit hash for releases by running:
+
+```shell
+git log -n 1 --pretty=format:%h -- simple/
+```
+
+### Manual Dev Builds
+
+To manually build and push a custom image tag via Cloud Build (without overwriting `:latest`):
+
+```shell
+./simple/scripts/push_image.sh <image-tag> [project-id]
+```
+
+If `project-id` is omitted, it defaults to `datcom-ci` (`gcr.io/datcom-ci/datacommons-data:<image-tag>`).
