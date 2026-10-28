@@ -46,7 +46,8 @@ def test_include_input_subdirs_picks_up_nested_files():
 
 
 def test_first_matching_input_files_entry_wins():
-  """countries_b.csv matches both CSV entries; the first one's mappings apply.
+  """
+  countries_b.csv matches both CSV entries; the first one's mappings apply.
 
   other.txt matches no entry and is ignored.
   """
@@ -72,7 +73,8 @@ def test_first_matching_input_files_entry_wins():
 
 
 def test_empty_config_imports_only_the_default_provenance():
-  """With an input directory, an empty config.json is accepted.
+  """
+  With an input directory, an empty config.json is accepted.
 
   No file matches, so only the default provenance and source are written.
   """

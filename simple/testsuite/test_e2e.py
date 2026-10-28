@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""End-to-end: these input files produce exactly this output, in every mode.
+"""
+End-to-end: these input files produce exactly this output, in every mode.
 
 Each folder under e2e/ is one dataset:
 
@@ -148,7 +149,8 @@ _DEFAULT_ANY_FOLDER_TYPES = ["dcid:Source"]
 
 
 def _records_view(dataset: str, records: list) -> dict:
-  """The expected.json view of records: {folder: {kind: {@id: record}}}.
+  """
+  The expected.json view of records: {folder: {kind: {@id: record}}}.
 
   A record written more than once is a list of its copies. Records of an
   any_folder_types type are listed apart, without their folder.

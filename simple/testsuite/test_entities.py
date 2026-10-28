@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Entities (importType: entities): each CSV row becomes a typed node.
+"""
+Entities (importType: entities): each CSV row becomes a typed node.
 
 Every test imports case.csv under the shared test provenance as rows of type
 Author keyed by author_id, unless it says otherwise (see entities_config()

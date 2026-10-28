@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""CSV files: the same data, written differently, gives the same records.
+"""
+CSV files: the same data, written differently, gives the same records.
 
 Each CSV import type has one table. Every case writes the same three rows,
 whose last column holds the cells that need CSV quoting.

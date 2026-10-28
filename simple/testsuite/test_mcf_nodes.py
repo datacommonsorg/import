@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""MCF nodes: MCF text in, exact JSON-LD node records out.
+"""
+MCF nodes: MCF text in, exact JSON-LD node records out.
 
 Every test imports its MCF under the shared test provenance (see
 lib/builders.py). Records the provenance produces on its own are not listed.

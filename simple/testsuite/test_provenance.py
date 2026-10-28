@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Provenances and sources: how they're registered, attached and validated.
+"""
+Provenances and sources: how they're registered, attached and validated.
 
 Every inputFiles entry names a provenance, which an MCF file must define with
 a source. Most tests here replace the shared provenance.mcf (see
@@ -28,7 +29,8 @@ _ONE_ROW = b.csv_file(b.obs_row())
 
 def _provenance_mcf(with_source: bool = True,
                     **provenance_props: str) -> dict[str, str]:
-  """A provenance.mcf to use as shared_files: the test provenance and source.
+  """
+  A provenance.mcf to use as shared_files: the test provenance and source.
 
   provenance_props are extra properties of the provenance (raw MCF). With
   with_source=False, the source node is left out and the provenance links to

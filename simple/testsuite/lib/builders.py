@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Builders for test inputs and expected JSON-LD records.
+"""
+Builders for test inputs and expected JSON-LD records.
 
 Inputs and expectations are built separately, on purpose:
 
@@ -89,7 +90,8 @@ OBS_MAPPINGS = {
 def obs_config(mappings: dict[str, str] | None = None,
                pattern: str = "case*.csv",
                **file_options: Any) -> dict:
-  """Config importing *.mcf and variable-per-row CSVs matching pattern.
+  """
+  Config importing *.mcf and variable-per-row CSVs matching pattern.
 
   mappings defaults to OBS_MAPPINGS. file_options are added to the CSV's
   inputFiles entry, e.g. obs_config(ignoreColumns=["notes"]).
@@ -110,7 +112,8 @@ def obs_config(mappings: dict[str, str] | None = None,
 def entities_config(row_type: str = "Author",
                     id_column: str | None = "author_id",
                     **file_options: Any) -> dict:
-  """Config importing *.mcf and case*.csv as entities of row_type.
+  """
+  Config importing *.mcf and case*.csv as entities of row_type.
 
   Pass id_column=None for no idColumn. file_options are added to the CSV's
   inputFiles entry.
@@ -136,7 +139,8 @@ known_bug = functools.partial(pytest.mark.xfail, strict=True)
 
 @dataclasses.dataclass(frozen=True)
 class Case:
-  """One row of a parametrized test.
+  """
+  One row of a parametrized test.
 
   Case("integer", given="42", expect=42)
   Case("quoted number", given='"00123"', expect="00123", bug="loses zeros")
@@ -153,7 +157,8 @@ class Case:
 
 
 def cases(*all_cases: Case):
-  """Parametrizes a test(given, expect) with Cases.
+  """
+  Parametrizes a test(given, expect) with Cases.
 
   @cases(*VALUES)
   def test_value(given, expect): ...
@@ -167,7 +172,8 @@ def cases(*all_cases: Case):
 def mcf_node(subject: str,
              typeOf: str | None = "dcs:Thing",
              **props: str) -> str:  # pylint: disable=invalid-name
-  """One MCF block. All values are raw MCF text.
+  """
+  One MCF block. All values are raw MCF text.
 
   mcf_node("dcid:T", name='"x"') ->
     Node: dcid:T
@@ -193,7 +199,8 @@ def obs_row(about: str = "country/USA",
             variable: str = "Count_Person",
             date: str = "2020",
             value: str = "1") -> list[str]:
-  """One row for OBS_HEADER. All cells are raw CSV text.
+  """
+  One row for OBS_HEADER. All cells are raw CSV text.
 
   about is the observationAbout cell: the place or other entity the
   observation is about.
@@ -206,7 +213,8 @@ def csv_file(*rows: list[str],
              quote_all: bool = False,
              line_end: str = "\n",
              bom: bool = False) -> str:
-  """A CSV file. header defaults to OBS_HEADER.
+  """
+  A CSV file. header defaults to OBS_HEADER.
 
   Cells are quoted only where CSV needs it (commas, quotes, newlines), unless
   quote_all is set.
@@ -224,7 +232,8 @@ def csv_file(*rows: list[str],
 
 
 def ref(dcid: str) -> dict:
-  """An object reference as written in JSON-LD.
+  """
+  An object reference as written in JSON-LD.
 
   ref("A") -> {"@id": "dcid:A"}. Full URIs are kept as they are.
   """
@@ -236,7 +245,8 @@ def ref(dcid: str) -> dict:
 def record(dcid: str,
            types: str | list[str] | None = None,
            **props: Any) -> dict:
-  """An expected JSON-LD node record.
+  """
+  An expected JSON-LD node record.
 
   record("T", "Thing", name="x", parent=ref("P")) ->
     {"@id": "dcid:T", "@type": "dcid:Thing", "dcid:name": "x",
@@ -261,7 +271,8 @@ def obs(about: str = "country/USA",
         value: Any = 1,
         observation_properties: tuple[str, ...] = ("observationAbout",),
         **props: Any) -> dict:
-  """An expected observation record, without "@id".
+  """
+  An expected observation record, without "@id".
 
   obs() is the observation obs_row() produces. Observation ids are content
   hashes; compare them through Result.observations, which drops them (the e2e
@@ -349,7 +360,8 @@ def run(files: dict[str, str],
         config: dict | None,
         mode: str = "threaded",
         shared_files: dict[str, str] | None = None) -> Result:
-  """Runs the preprocessor on files plus the shared files.
+  """
+  Runs the preprocessor on files plus the shared files.
 
   config is written as config.json; None leaves config.json out.
 
@@ -411,7 +423,8 @@ def _records(counts: collections.Counter) -> list[dict]:
 
 
 def _key(rec: dict) -> str:
-  """A hashable, order-preserving form of rec.
+  """
+  A hashable, order-preserving form of rec.
 
   Top-level multi-value lists are already sorted by load_jsonld; nested lists
   (e.g. observationProperties) keep their order because it is meaningful.
@@ -424,7 +437,8 @@ def _key(rec: dict) -> str:
 
 @dataclasses.dataclass(frozen=True)
 class Fails:
-  """How a run is expected to fail, for a Case's expect (see assert_fails).
+  """
+  How a run is expected to fail, for a Case's expect (see assert_fails).
 
   handshake is empty when the error is raised while Runner is being
   constructed, before run(): then no FAILURE handshake is written and the

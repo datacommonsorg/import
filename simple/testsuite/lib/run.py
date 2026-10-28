@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Runs the real preprocessor (stats.runner.Runner) hermetically.
+"""
+Runs the real preprocessor (stats.runner.Runner) hermetically.
 
 Every test in the suite goes through run_preprocessor(): it takes an input
 directory (config.json plus data files), runs Runner in the requested mode
@@ -101,7 +102,8 @@ def run_preprocessor(input_dir: str,
                      mode: Mode | str = "threaded",
                      runner_kwargs: dict | None = None,
                      config_file: str | None = None) -> RunResult:
-  """Runs Runner on a copy of input_dir and returns its canonical output.
+  """
+  Runs Runner on a copy of input_dir and returns its canonical output.
 
   By default Runner discovers config.json in the input dir. With config_file
   (a path relative to input_dir), Runner is driven by that config file
@@ -173,7 +175,8 @@ def _stage_input(input_dir: str, staged: str, paths: _Paths, mode: Mode,
 
 def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
                 config_file: str | None) -> dict | None:
-  """Runs Runner; returns the exception it raised, as a dict, or None.
+  """
+  Runs Runner; returns the exception it raised, as a dict, or None.
 
   The writer caches custom namespace prefixes in a module global; every run
   starts from a clean slate so runs cannot influence each other.

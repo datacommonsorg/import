@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Observations: variable-per-row CSV in, exact observation records out.
+"""
+Observations: variable-per-row CSV in, exact observation records out.
 
 Every test imports case*.csv under the shared test provenance with the
 columns about (observationAbout), variable, date, value (see obs_config() in
@@ -271,7 +272,8 @@ def test_second_entity_dimension():
 
 
 def test_observation_properties_order():
-  """observationProperties order: config properties, then dimension columns.
+  """
+  observationProperties order: config properties, then dimension columns.
 
   Config observationProperties come first, in config order, then the entity
   dimension columns in columnMappings order. CSV header order does not matter.

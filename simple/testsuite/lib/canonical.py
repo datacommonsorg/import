@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Canonical form of a preprocessor run's output, for comparisons.
+"""
+Canonical form of a preprocessor run's output, for comparisons.
 
 The raw output has details that legitimately change between runs and modes:
 timestamped directory names, shard file names and boundaries, record order,
@@ -57,7 +58,8 @@ def _sort_key(value: Any) -> str:
 
 
 def load_jsonld(jsonld_root: str) -> list[tuple[str, str, dict]]:
-  """(import folder, kind, record) for every record of every shard.
+  """
+  (import folder, kind, record) for every record of every shard.
 
   Shards live at <jsonld_root>/<run dir>/<import folder>/*.jsonld; the kind is
   OBSERVATIONS for observation-*.jsonld shards and NODES otherwise.

@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""An in-process fake GCS, so gs:// paths run the real GCS code paths.
+"""
+An in-process fake GCS, so gs:// paths run the real GCS code paths.
 
 Uses the gcp-storage-emulator package (an HTTP implementation of the GCS JSON
 API) and points google-cloud-storage at it via STORAGE_EMULATOR_HOST. The
