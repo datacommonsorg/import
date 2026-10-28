@@ -29,14 +29,12 @@ steps:
 
   - id: build-and-push-datacommons-data
     name: gcr.io/cloud-builders/docker
+    dir: ${_BUILD_DIR}
     entrypoint: "bash"
     args:
       - -c
       - |
         set -e
-        if [[ -d "simple" && -f "simple/Dockerfile" ]]; then
-          cd simple
-        fi
         DOCKER_BUILDKIT=1 docker build -f Dockerfile \
           --cache-from gcr.io/datcom-ci/datacommons-data:latest \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
@@ -50,6 +48,10 @@ steps:
     waitFor: ["pull-cache"]
 
 substitutions:
+  # Directory containing the Dockerfile, relative to the top level of the files
+  # Cloud Build receives. Automated trigger builds receive the whole repo, so the
+  # default is "simple".
+  _BUILD_DIR: "simple"
   _PROJECT_ID: "datcom-ci"
   _TAG: "latest"
   _VERSION: "${SHORT_SHA}"
