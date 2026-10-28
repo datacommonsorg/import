@@ -136,20 +136,6 @@ def test_type(given, expect):
 # Source and Provenance nodes are special (they are also registered and written
 # a second time); they are covered in test_provenance.py.
 
-_MCF_OBSERVATION_BUG = (
-    "StatVarObservation nodes from MCF pass through as plain nodes: no"
-    " dcid:provenance and no observationProperties on the variable")
-
-
-def _variable(dcid: str, *observation_properties: str) -> dict:
-  """The variableMeasured of an observation, with observationProperties."""
-  return {
-      **b.ref(dcid), "dcid:observationProperties": [
-          f"dcid:{p}" for p in observation_properties
-      ]
-  }
-
-
 NODES = [
     Case("statistical variable",
          given=dict(typeOf="dcs:StatisticalVariable",
@@ -176,23 +162,24 @@ NODES = [
                                        b.ref("country/FRA")],
                      latitude=48.8566,
                      population=2102650)),
-    # Observations can be written as MCF nodes too. They must come out like
-    # CSV observations: with the provenance, and with the variable's
-    # observationProperties listing their entity dimensions in MCF order.
+    # Observations can be written as MCF nodes too. The node states its own
+    # provenance and observationProperties; they pass through as written, in
+    # the order written.
     Case("observation",
          given=dict(typeOf="dcs:StatVarObservation",
                     observationAbout="dcid:country/USA",
                     variableMeasured="dcid:Count_Person",
                     observationDate='"2020"',
-                    value="100"),
+                    value="100",
+                    provenance=f"dcid:{b.PROVENANCE}",
+                    observationProperties="dcid:observationAbout"),
          expect=dict(types="StatVarObservation",
                      observationAbout=b.ref("country/USA"),
-                     variableMeasured=_variable("Count_Person",
-                                                "observationAbout"),
+                     variableMeasured=b.ref("Count_Person"),
                      observationDate=2020,
                      value=100,
-                     provenance=b.ref(b.PROVENANCE)),
-         bug=_MCF_OBSERVATION_BUG),
+                     provenance=b.ref(b.PROVENANCE),
+                     observationProperties=b.ref("observationAbout"))),
     Case("observation with all standard properties",
          given=dict(typeOf="dcs:StatVarObservation",
                     observationAbout="dcid:geoId/06",
@@ -202,36 +189,41 @@ NODES = [
                     unit="dcs:USDollar",
                     scalingFactor="100",
                     measurementMethod="dcs:CensusACS",
-                    observationPeriod='"P1Y"'),
+                    observationPeriod='"P1Y"',
+                    provenance=f"dcid:{b.PROVENANCE}",
+                    observationProperties="dcid:observationAbout"),
          expect=dict(types="StatVarObservation",
                      observationAbout=b.ref("geoId/06"),
-                     variableMeasured=_variable("Median_Income",
-                                                "observationAbout"),
+                     variableMeasured=b.ref("Median_Income"),
                      observationDate="2021-06",
                      value=5.5,
                      unit=b.ref("USDollar"),
                      scalingFactor=100,
                      measurementMethod=b.ref("CensusACS"),
                      observationPeriod="P1Y",
-                     provenance=b.ref(b.PROVENANCE)),
-         bug=_MCF_OBSERVATION_BUG),
+                     provenance=b.ref(b.PROVENANCE),
+                     observationProperties=b.ref("observationAbout"))),
     Case("observation with a second entity dimension",
-         given=dict(typeOf="dcs:StatVarObservation",
-                    observationAbout="dcid:country/USA",
-                    destination="dcid:country/FRA",
-                    variableMeasured="dcid:Count_Trip",
-                    observationDate="2020",
-                    value="7"),
+         given=dict(
+             typeOf="dcs:StatVarObservation",
+             observationAbout="dcid:country/USA",
+             destination="dcid:country/FRA",
+             variableMeasured="dcid:Count_Trip",
+             observationDate="2020",
+             value="7",
+             provenance=f"dcid:{b.PROVENANCE}",
+             observationProperties=("dcid:observationAbout, dcid:destination")),
          expect=dict(types="StatVarObservation",
                      observationAbout=b.ref("country/USA"),
                      destination=b.ref("country/FRA"),
-                     variableMeasured=_variable("Count_Trip",
-                                                "observationAbout",
-                                                "destination"),
+                     variableMeasured=b.ref("Count_Trip"),
                      observationDate=2020,
                      value=7,
-                     provenance=b.ref(b.PROVENANCE)),
-         bug=_MCF_OBSERVATION_BUG),
+                     provenance=b.ref(b.PROVENANCE),
+                     observationProperties=[
+                         b.ref("observationAbout"),
+                         b.ref("destination")
+                     ])),
     Case("custom property",
          given={
              "typeOf": "dcs:Thing",

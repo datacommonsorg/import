@@ -42,12 +42,16 @@ from typing import Any
 OBSERVATIONS = "observations"
 NODES = "nodes"
 
+# Lists whose order is meaningful: the order of observationProperties is the
+# order of the observation's dimensions.
+_ORDERED_PROPERTIES = frozenset({"dcid:observationProperties"})
+
 
 def canonical_record(record: dict) -> dict:
   """Sorts multi-value lists; keeps all keys and JSON types."""
   out = {}
   for key, value in record.items():
-    if isinstance(value, list):
+    if isinstance(value, list) and key not in _ORDERED_PROPERTIES:
       value = sorted(value, key=_sort_key)
     out[key] = value
   return out
