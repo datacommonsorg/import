@@ -64,11 +64,12 @@ public record EmbeddingSpec(
     if (nodeTypes.isEmpty()) {
       throw new IllegalArgumentException("nodeTypes must not be empty");
     }
-    nodeTypes.forEach((key, value) -> {
-      if (key == null || key.trim().isEmpty()) {
-        throw new IllegalArgumentException("nodeTypes key must not be null or empty");
-      }
-    });
+    nodeTypes.forEach(
+        (key, value) -> {
+          if (key == null || key.trim().isEmpty()) {
+            throw new IllegalArgumentException("nodeTypes key must not be null or empty");
+          }
+        });
     nodeFilterType = nodeFilterType == null ? NodeFilterType.NO_FILTER : nodeFilterType;
   }
 
