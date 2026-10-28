@@ -41,7 +41,7 @@ class RunMode(str, Enum):
   # TODO: Add DRY_RUN once the workflow supports dry runs.
 
 
-class Status(str, Enum):
+class RunStatus(str, Enum):
   """Outcome of the preprocessor run."""
   SUCCESS = "SUCCESS"
   FAILURE = "FAILURE"
