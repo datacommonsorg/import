@@ -90,16 +90,6 @@ imports ignore it and take entity types from Base Data Commons.
 The list of column names to be ignored by the importer, if any.
 
 
-## `importProxyEntities`
-
-If `true` (the default), the importer looks up the observation entities against
-Base Data Commons and emits a proxy node for each one it finds a type for. Set
-it to `false` to skip both the lookups and the nodes; observations still
-reference the entity DCIDs directly.
-
-Can also be set per-run with the `--import_proxy_entities` flag or the
-`IMPORT_PROXY_ENTITIES` environment variable.
-
 ## `variables`
 
 Events imports only. Provides display names and other metadata for the

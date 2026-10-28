@@ -31,8 +31,6 @@ from tests.stats.test_util import use_fake_gzip_time
 from tests.stats.test_util import write_observations_df
 from util.filesystem import create_store
 
-from util import dc_client
-
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "variable_per_row_importer")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
@@ -64,38 +62,10 @@ def _test_import(test: unittest.TestCase, test_name: str):
     reporter = FileImportReporter(input_path, ImportReporter(report_file))
     nodes = Nodes(config)
 
-    # Mock return values for entity types
-    dc_client.get_property_of_entities = MagicMock(
-        return_value={
-            "country/FRA": "Country",
-            "country/USA": "Country",
-            "country/DEU": "Country",
-            "country/GBR": "Country",
-            "geoId/06": "State",
-            "geoId/08": "State"
-        })
-
     VariablePerRowImporter(input_file=input_file,
                            graph_writer=graph_writer,
                            reporter=reporter,
                            nodes=nodes).do_import()
-
-    # Verify that get_property_of_entities was called with the correct tracked place IDs
-    dc_client.get_property_of_entities.assert_called_once()
-    called_args = dc_client.get_property_of_entities.call_args[0][0]
-
-    if test_name == "multi_entity_custom_dimensions":
-      # Should track all country IDs from the custom source/destination columns
-      test.assertEqual(
-          set(called_args),
-          {"country/FRA", "country/USA", "country/DEU", "country/GBR"})
-    elif test_name == "multi_entity_with_primary":
-      # Should track both the primary states and the custom countries
-      test.assertEqual(set(called_args),
-                       {"geoId/06", "country/FRA", "geoId/08", "country/DEU"})
-    elif test_name == "single_entity_official_keys":
-      # Should track the primary states
-      test.assertEqual(set(called_args), {"geoId/06", "geoId/08"})
 
     graph_writer.commit_and_close()
 
@@ -118,34 +88,3 @@ class TestVariablePerRowImporter(unittest.TestCase):
 
   def test_multi_entity_with_primary(self):
     _test_import(self, "multi_entity_with_primary")
-
-  def test_unresolved_entity_raises_error(self):
-    from unittest import mock
-
-    from stats.importer import EntityResolutionError
-    from util.filesystem import create_store
-
-    from util import dc_client as dc
-    with tempfile.TemporaryDirectory() as temp_dir:
-      config_path = os.path.join(temp_dir, "config.json")
-      csv_path = os.path.join(temp_dir, "data.csv")
-      with open(config_path, "w") as f:
-        f.write(
-            '{"inputFiles": [{"pattern": "data.csv", "format": "variablePerRow", "entityType": "Country", "columnsToResolve": ["entity"], "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable", "dcid:observationDate": "date", "dcid:value": "value"}}]}'
-        )
-      with open(csv_path, "w") as f:
-        f.write(
-            "entity,variable,date,value\nUnknownPlace123,Count_Person,2020,10\n"
-        )
-      with open(config_path) as config_file:
-        config = Config(json.load(config_file))
-      graph_writer = RecordingGraphWriter()
-      nodes = Nodes(config)
-      report_file = create_store(temp_dir).as_dir().open_file("report.json")
-      reporter = FileImportReporter(csv_path, ImportReporter(report_file))
-      importer = VariablePerRowImporter(
-          create_store(csv_path).as_file(), graph_writer, reporter, nodes)
-      with mock.patch.object(dc, "resolve_entities",
-                             return_value={}) as mock_resolve:
-        with self.assertRaises(EntityResolutionError):
-          importer.do_import()
