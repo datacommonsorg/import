@@ -39,7 +39,7 @@ folders, and which one is not specified. They are listed under
 "records.any_folder" in expected.json; everything else under
 "records.folders".
 
-  pytest testsuite/test_e2e.py --update-expected   # rewrite expected.json
+  pytest testsuite/test_e2e.py --update-expected -n 0   # rewrite expected.json
 """
 
 import functools
@@ -191,7 +191,7 @@ def test_e2e(dataset: str, mode: str, aspect: str, update_expected: bool):
     _write_expected(dataset)
   if not os.path.exists(_expected_path(dataset)):
     pytest.fail(f"{_expected_path(dataset)} is missing; generate it with"
-                " --update-expected and review it")
+                " --update-expected -n 0 and review it")
   with open(_expected_path(dataset), encoding="utf-8") as f:
     expected = json.load(f)[aspect]
   output = _output(dataset, mode)

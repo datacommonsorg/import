@@ -36,8 +36,8 @@ def pytest_configure(config):
   """Parallel workers would race on rewriting the expected.json files."""
   workers = getattr(config.option, "numprocesses", None)
   if config.getoption("--update-expected") and workers:
-    raise pytest.UsageError("--update-expected cannot run with pytest-xdist;"
-                            " drop -n")
+    raise pytest.UsageError("--update-expected cannot run in parallel;"
+                            " add -n 0")
 
 
 @pytest.fixture(scope="session")

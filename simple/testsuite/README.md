@@ -8,10 +8,10 @@ preprocessor is mocked.
 
 ```bash
 cd simple
-python3 -m pytest testsuite/ -n auto                       # everything
+python3 -m pytest testsuite/                               # everything, in parallel (-n auto is the default; -n 0 for serial)
 python3 -m pytest testsuite/test_observations.py -k about  # one table
 python3 -m pytest testsuite/test_e2e.py --modes=production # one execution mode
-python3 -m pytest testsuite/test_e2e.py --update-expected  # rewrite expected.json, then review the diff
+python3 -m pytest testsuite/test_e2e.py --update-expected -n 0  # rewrite expected.json, then review the diff
 ```
 
 ## Two kinds of tests
