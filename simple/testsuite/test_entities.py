@@ -18,16 +18,9 @@ Author keyed by author_id, unless it says otherwise (see entities_config()
 in lib/builders.py).
 """
 
-from testsuite.lib.builders import assert_records
+from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
-from testsuite.lib.builders import class_node
-from testsuite.lib.builders import csv_file
-from testsuite.lib.builders import entities_config
-from testsuite.lib.builders import entity
-from testsuite.lib.builders import property_node
-from testsuite.lib.builders import ref
-from testsuite.lib.builders import run_csv
 
 
 def _rows(result, row_type: str = "Author") -> list[dict]:
@@ -35,63 +28,67 @@ def _rows(result, row_type: str = "Author") -> list[dict]:
 
 
 def test_rows_become_typed_nodes_keyed_by_the_id_column():
-  result = run_csv(
-      csv_file(["author1", "Jane Doe", "country/USA"],
-               ["author2", "Joe Smith", "country/CAN"],
-               header=["author_id", "author_name", "author_country"]),
-      entities_config())
-  assert_records(result.nodes, [
-      class_node("Author"),
-      property_node("author_id"),
-      property_node("author_name"),
-      property_node("author_country"),
-      entity("author1",
-             author_id="author1",
-             author_name="Jane Doe",
-             author_country="country/USA"),
-      entity("author2",
-             author_id="author2",
-             author_name="Joe Smith",
-             author_country="country/CAN"),
+  result = b.run_csv(
+      b.csv_file(["author1", "Jane Doe", "country/USA"],
+                 ["author2", "Joe Smith", "country/CAN"],
+                 header=["author_id", "author_name", "author_country"]),
+      b.entities_config())
+  b.assert_records(result.nodes, [
+      b.class_node("Author"),
+      b.property_node("author_id"),
+      b.property_node("author_name"),
+      b.property_node("author_country"),
+      b.entity("author1",
+               author_id="author1",
+               author_name="Jane Doe",
+               author_country="country/USA"),
+      b.entity("author2",
+               author_id="author2",
+               author_name="Joe Smith",
+               author_country="country/CAN"),
   ])
 
 
 def test_without_an_id_column_ids_are_generated():
-  result = run_csv(
-      csv_file(["Jane Doe", "country/USA"], ["Joe Smith", "country/CAN"],
-               header=["author_name", "author_country"]),
-      entities_config(id_column=None))
-  assert_records(result.nodes, [
-      class_node("Author"),
-      property_node("author_name"),
-      property_node("author_country"),
-      entity("Author_0", author_name="Jane Doe", author_country="country/USA"),
-      entity("Author_1", author_name="Joe Smith", author_country="country/CAN"),
+  result = b.run_csv(
+      b.csv_file(["Jane Doe", "country/USA"], ["Joe Smith", "country/CAN"],
+                 header=["author_name", "author_country"]),
+      b.entities_config(id_column=None))
+  b.assert_records(result.nodes, [
+      b.class_node("Author"),
+      b.property_node("author_name"),
+      b.property_node("author_country"),
+      b.entity("Author_0", author_name="Jane Doe",
+               author_country="country/USA"),
+      b.entity(
+          "Author_1", author_name="Joe Smith", author_country="country/CAN"),
   ])
 
 
 def test_reference_columns_hold_one_reference_per_listed_value():
   """columnsToResolve marks reference columns in entities imports."""
-  result = run_csv(
-      csv_file(["article1", "author1"], ["article2", "author1,author2"],
-               ["article3", "author2, author3"],
-               header=["article_id", "article_author"]),
-      entities_config("Article",
-                      "article_id",
-                      columnsToResolve=["article_author"]))
-  assert_records(_rows(result, "Article"), [
-      entity("article1",
-             "Article",
-             article_id="article1",
-             article_author=ref("author1")),
-      entity("article2",
-             "Article",
-             article_id="article2",
-             article_author=[ref("author1"), ref("author2")]),
-      entity("article3",
-             "Article",
-             article_id="article3",
-             article_author=[ref("author2"), ref("author3")]),
+  result = b.run_csv(
+      b.csv_file(["article1", "author1"], ["article2", "author1,author2"],
+                 ["article3", "author2, author3"],
+                 header=["article_id", "article_author"]),
+      b.entities_config("Article",
+                        "article_id",
+                        columnsToResolve=["article_author"]))
+  b.assert_records(_rows(result, "Article"), [
+      b.entity("article1",
+               "Article",
+               article_id="article1",
+               article_author=b.ref("author1")),
+      b.entity("article2",
+               "Article",
+               article_id="article2",
+               article_author=[b.ref("author1"),
+                               b.ref("author2")]),
+      b.entity("article3",
+               "Article",
+               article_id="article3",
+               article_author=[b.ref("author2"),
+                               b.ref("author3")]),
   ])
 
 
@@ -104,10 +101,11 @@ VALUES = [
 
 @cases(*VALUES)
 def test_value(given, expect):
-  result = run_csv(csv_file(["author1", given], header=["author_id", "value"]),
-                   entities_config())
-  assert_records(_rows(result),
-                 [entity("author1", author_id="author1", value=expect)])
+  result = b.run_csv(
+      b.csv_file(["author1", given], header=["author_id", "value"]),
+      b.entities_config())
+  b.assert_records(_rows(result),
+                   [b.entity("author1", author_id="author1", value=expect)])
 
 
 # A column becomes a Property named after it. Its id is the column name when
@@ -123,8 +121,8 @@ PROPERTY_IDS = [
 
 @cases(*PROPERTY_IDS)
 def test_column_property_id(given, expect):
-  result = run_csv(csv_file(["author1", "x"], header=["author_id", given]),
-                   entities_config())
-  assert_records(_rows(result),
-                 [entity("author1", author_id="author1", **{expect: "x"})])
-  assert property_node(given, expect) in result.nodes
+  result = b.run_csv(b.csv_file(["author1", "x"], header=["author_id", given]),
+                     b.entities_config())
+  b.assert_records(_rows(result),
+                   [b.entity("author1", author_id="author1", **{expect: "x"})])
+  assert b.property_node(given, expect) in result.nodes

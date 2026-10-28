@@ -39,9 +39,11 @@ what the preprocessor reads; expectation builders write the JSON-LD a test
 expects. Nothing computes one from the other.
 
 ```python
+from testsuite.lib import builders as b
+
 def test_basic_node():
-  result = run_mcf(mcf_node("dcid:Thing1", name='"Thing One"'))
-  assert_records(result.added, [record("Thing1", "Thing", name="Thing One")])
+  result = b.run_mcf(b.mcf_node("dcid:Thing1", name='"Thing One"'))
+  b.assert_records(result.added, [b.record("Thing1", "Thing", name="Thing One")])
 ```
 
 `result.added` holds only what the test's own input adds: records that the
@@ -52,6 +54,9 @@ kind of record.
 For one rule with many inputs, add a row to a table of `Case`s:
 
 ```python
+from testsuite.lib.builders import Case
+from testsuite.lib.builders import cases
+
 VALUES = [
     Case("integer", given="42", expect=42),
     Case("quoted number stays a string", given='"00123"', expect="00123",
@@ -60,8 +65,8 @@ VALUES = [
 
 @cases(*VALUES)
 def test_value(given, expect):
-  result = run_mcf(mcf_node("dcid:T", prop=given))
-  assert_records(result.added, [record("T", "Thing", prop=expect)])
+  result = b.run_mcf(b.mcf_node("dcid:T", prop=given))
+  b.assert_records(result.added, [b.record("T", "Thing", prop=expect)])
 ```
 
 | To build | Use |
