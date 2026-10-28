@@ -21,3 +21,33 @@ This module holds all of the report's logic:
 Report code must never change the outcome of a run, so errors while
 collecting or writing the report are logged rather than raised.
 """
+
+from util.filesystem import Dir
+from util.filesystem import File
+
+
+class SummaryGenerator:
+  """Generates the ingestion report for a preprocessor run."""
+
+  def __init__(self, workflow_execution_id: str | None = None) -> None:
+    """Creates a generator for one preprocessor run.
+
+    Args:
+      workflow_execution_id: Ingestion workflow execution ID, used to
+        identify this preprocessor run.
+    """
+    self._workflow_execution_id = workflow_execution_id
+    # TODO: Add record_run_start(start_time, folder_names) and counters for
+    # input files, observations and nodes.
+
+  def write_summary(self, output_dir: Dir) -> File | None:
+    """Writes the ingestion report as JSON into output_dir.
+
+    Args:
+      output_dir: Directory where the report should be written.
+
+    Returns:
+      The written report file, or None if writing failed.
+    """
+    # TODO: Build the report and write it as ingestion_report.json.
+    return None

@@ -11,15 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Tests for stats.report.summary_generator."""
 
 import unittest
 
+from stats.report.summary_generator import SummaryGenerator
+
 
 class TestSummaryGenerator(unittest.TestCase):
+  """Tests for SummaryGenerator."""
 
-  def test_module_imports(self):
-    from stats.report import summary_generator
-    self.assertIsNotNone(summary_generator.__doc__)
+  def test_init_with_and_without_workflow_id(self):
+    """A generator can be created with or without a workflow execution ID."""
+    self.assertIsInstance(SummaryGenerator("wf-123"), SummaryGenerator)
+    self.assertIsInstance(SummaryGenerator(), SummaryGenerator)
 
 
 if __name__ == "__main__":

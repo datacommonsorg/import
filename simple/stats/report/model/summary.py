@@ -54,16 +54,16 @@ class _ReportModel(BaseModel):
 
 class RunMetadata(_ReportModel):
   """The `run` block: metadata for one preprocessor run."""
-  workflow_execution_id: str = Field(description="Ingestion workflow execution ID")
-  mode: RunMode = Field(
-                        description="How the preprocessor was run")
+  workflow_execution_id: str = Field(
+      description="Ingestion workflow execution ID")
+  mode: RunMode = Field(description="How the preprocessor was run")
   status: RunStatus = Field(description="Outcome of the preprocessor run")
   start_time: str = Field(description="ISO-8601 UTC time the run started")
   end_time: str = Field(description="ISO-8601 UTC time the run ended")
   folder_names: list[str] = Field(
       default_factory=list, description="Import folders requested for the run")
-  output_path: str = Field(default="",
-                           description="Path where the run's JSON-LD was written")
+  output_path: str = Field(
+      default="", description="Path where the run's JSON-LD was written")
 
 
 class Provenance(_ReportModel):
