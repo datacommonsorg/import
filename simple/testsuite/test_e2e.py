@@ -115,7 +115,7 @@ def pytest_generate_tests(metafunc):
 
 
 def _spec(dataset: str) -> dict:
-  with open(os.path.join(E2E_DIR, dataset, "run.json")) as f:
+  with open(os.path.join(E2E_DIR, dataset, "run.json"), encoding="utf-8") as f:
     return json.load(f)
 
 
@@ -143,7 +143,7 @@ def _write_expected(dataset: str) -> None:
       "handshake": _output(dataset, "production")["handshake"],
       "error": reference["error"],
   }
-  with open(_expected_path(dataset), "w") as f:
+  with open(_expected_path(dataset), "w", encoding="utf-8") as f:
     f.write(canonical.dumps(expected))
 
 
@@ -181,7 +181,7 @@ def test_e2e(dataset: str, mode: str, aspect: str, update_expected: bool):
   if not os.path.exists(_expected_path(dataset)):
     pytest.fail(f"{_expected_path(dataset)} is missing; generate it with"
                 " --update-expected and review it")
-  with open(_expected_path(dataset)) as f:
+  with open(_expected_path(dataset), encoding="utf-8") as f:
     expected = json.load(f)[aspect]
   output = _output(dataset, mode)
   actual = _actual(dataset, output, aspect)
@@ -201,5 +201,5 @@ def expected_error(dataset: str):
   path = _expected_path(dataset)
   if not os.path.exists(path):
     return None
-  with open(path) as f:
+  with open(path, encoding="utf-8") as f:
     return json.load(f).get("error")

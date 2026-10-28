@@ -137,9 +137,9 @@ def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
   shutil.copytree(input_dir, staged)
   if config_file:
     config_path = os.path.join(staged, config_file)
-    with open(config_path) as f:
+    with open(config_path, encoding="utf-8") as f:
       text = f.read().replace("<input>", in_path)
-    with open(config_path, "w") as f:
+    with open(config_path, "w", encoding="utf-8") as f:
       f.write(text)
   if mode.gcs:
     fake_gcs.upload_dir(staged, in_path)
@@ -208,7 +208,7 @@ def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
 def _read_json(path: str) -> Any:
   if not os.path.exists(path):
     return None
-  with open(path) as f:
+  with open(path, encoding="utf-8") as f:
     return json.load(f)
 
 
@@ -219,9 +219,10 @@ def write_input_dir(files: dict[str, str | bytes], config: dict | None) -> str:
     path = os.path.join(root, rel)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     mode = "wb" if isinstance(content, bytes) else "w"
-    with open(path, mode, **({} if mode == "wb" else {"newline": ""})) as f:
+    text_args = {} if mode == "wb" else {"newline": "", "encoding": "utf-8"}
+    with open(path, mode, **text_args) as f:
       f.write(content)
   if config is not None:
-    with open(os.path.join(root, "config.json"), "w") as f:
+    with open(os.path.join(root, "config.json"), "w", encoding="utf-8") as f:
       json.dump(config, f, indent=2)
   return root

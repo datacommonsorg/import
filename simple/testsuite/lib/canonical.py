@@ -76,7 +76,7 @@ def load_jsonld(jsonld_root: str) -> tuple[dict, list]:
           continue
         folder = os.path.relpath(root, run_path)
         kind = OBSERVATIONS if name.startswith("observation") else NODES
-        with open(os.path.join(root, name)) as f:
+        with open(os.path.join(root, name), encoding="utf-8") as f:
           doc = json.load(f)
         if doc.get("@context") not in contexts:
           contexts.append(doc.get("@context"))
@@ -127,8 +127,9 @@ def normalize_handshake(handshake: dict | None, path_tokens: dict[str, str]):
 def replace_paths(text: str, path_tokens: dict[str, str]) -> str:
   # Longest first, so nested paths are replaced before their parents.
   for path, token in sorted(path_tokens.items(), key=lambda x: -len(x[0])):
-    if path:
-      text = text.replace(path.rstrip("/"), token)
+    stripped = path.rstrip("/")
+    if stripped:  # An empty pattern would match between every character.
+      text = text.replace(stripped, token)
   return text
 
 

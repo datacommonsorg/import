@@ -22,7 +22,6 @@ One emulator serves the whole test session; each run gets its own prefix.
 """
 
 import os
-import socket
 import threading
 import uuid
 
@@ -56,17 +55,22 @@ def _ensure_started() -> None:
     if _server:
       return
     from gcp_storage_emulator.server import create_server  # pylint: disable=import-outside-toplevel
-    sock = socket.socket()
-    sock.bind(("127.0.0.1", 0))
-    port = sock.getsockname()[1]
-    sock.close()
+
+    # Port 0: the OS picks a free port while binding, so parallel workers
+    # can't race for the same port. Read the port back once it's bound.
     _server = create_server("127.0.0.1",
-                            port,
+                            0,
                             in_memory=True,
                             default_bucket=BUCKET)
+    api = _server._api  # pylint: disable=protected-access
     # Daemon thread, so the emulator never keeps the test process alive.
-    _server._api.daemon = True  # pylint: disable=protected-access
+    api.daemon = True
     _server.start()
+    try:
+      port = api._httpd.server_address[1]  # pylint: disable=protected-access
+    except AttributeError as e:
+      raise RuntimeError("gcp-storage-emulator internals changed: can't read"
+                         " the port its HTTP server is bound to") from e
     _host = f"http://127.0.0.1:{port}"
     # Set process-wide: google-cloud-storage reads these lazily (e.g. when a
     # client first opens its HTTP session), and forked workers inherit them.
