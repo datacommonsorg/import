@@ -182,52 +182,6 @@ def test_local_reference_resolves_to_dcid():
   ])
 
 
-# --- Sources and provenances --------------------------------------------------
-#
-# Source and Provenance nodes are written twice into the same folder: once
-# from the MCF triples and once from the node registry, which adds `domain`
-# and, when missing, a `name` equal to the id.
-
-
-def test_source_url_adds_a_domain():
-  result = b.run_mcf(
-      b.mcf_node("dcid:OtherSource",
-                 typeOf="dcs:Source",
-                 name='"Other Source"',
-                 url='"https://data.example.com/path"'))
-  from_mcf = b.record("OtherSource",
-                      "Source",
-                      name="Other Source",
-                      url="https://data.example.com/path")
-  from_registry = {**from_mcf, "dcid:domain": "data.example.com"}
-  b.assert_records(result.added, [from_mcf, from_registry])
-
-
-def test_provenance_without_a_name_gets_its_id_as_name():
-  result = b.run_mcf(
-      b.mcf_node("dcid:OtherSource2",
-                 typeOf="dcs:Source",
-                 url='"https://other.example.com"'),
-      b.mcf_node("dcid:OtherProvenance",
-                 typeOf="dcs:Provenance",
-                 source="dcid:OtherSource2"))
-  source = b.record("OtherSource2", "Source", url="https://other.example.com")
-  provenance = b.record("OtherProvenance",
-                        "Provenance",
-                        source=b.ref("OtherSource2"))
-  b.assert_records(result.added, [
-      source,
-      {
-          **source, "dcid:name": "OtherSource2",
-          "dcid:domain": "other.example.com"
-      },
-      provenance,
-      {
-          **provenance, "dcid:name": "OtherProvenance"
-      },
-  ])
-
-
 # --- Invalid MCF --------------------------------------------------------------
 
 

@@ -23,7 +23,6 @@ Observation ids are content hashes, so these tests compare records without
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
-from testsuite.lib.builders import known_bug
 
 
 def test_basic_rows():
@@ -302,84 +301,3 @@ def test_missing_required_mapping_fails():
                  "ValueError",
                  "CSV Header Validation Failed!",
                  handshake_error_types=("MISSING_REQUIRED_COLUMNS",))
-
-
-# --- CSV formatting -----------------------------------------------------------
-#
-# Every case is the same three observations, written differently. The ignored
-# notes column holds the cells that need CSV quoting.
-
-_HEADER = b.OBS_HEADER + ["notes"]
-_ROWS = [
-    b.obs_row("country/USA", value="1") + ["a, b"],
-    b.obs_row("country/FRA", value="2") + ['line one\nline "two"'],
-    b.obs_row("country/DEU", value="3") + ["plain"],
-]
-_NOTES_FIRST = ["notes"] + b.OBS_HEADER
-_SAME_THREE = [
-    b.obs("country/USA", value=1),
-    b.obs("country/FRA", value=2),
-    b.obs("country/DEU", value=3),
-]
-
-FORMATS = [
-    Case("commas, quotes and newlines inside cells",
-         given={"case.csv": b.csv_file(*_ROWS, header=_HEADER)},
-         expect=_SAME_THREE),
-    Case(
-        "CRLF line endings",
-        given={"case.csv": b.csv_file(*_ROWS, header=_HEADER, line_end="\r\n")},
-        expect=_SAME_THREE),
-    Case("every cell quoted",
-         given={"case.csv": b.csv_file(*_ROWS, header=_HEADER, quote_all=True)},
-         expect=_SAME_THREE),
-    Case("byte order mark before the header",
-         given={"case.csv": b.csv_file(*_ROWS, header=_HEADER, bom=True)},
-         expect=_SAME_THREE),
-    Case("ignored column first",
-         given={
-             "case.csv":
-                 b.csv_file(*[[r[-1]] + r[:-1] for r in _ROWS],
-                            header=_NOTES_FIRST)
-         },
-         expect=_SAME_THREE),
-    Case("rows in another order",
-         given={"case.csv": b.csv_file(*reversed(_ROWS), header=_HEADER)},
-         expect=_SAME_THREE),
-    Case("rows split across two files",
-         given={
-             "case.csv": b.csv_file(*_ROWS[:1], header=_HEADER),
-             "case_2.csv": b.csv_file(*_ROWS[1:], header=_HEADER),
-         },
-         expect=_SAME_THREE),
-]
-
-
-@cases(*FORMATS)
-def test_csv_format(given, expect):
-  result = b.run(given, b.obs_config(ignoreColumns=["notes"]))
-  b.assert_records(result.observations, expect)
-
-
-# --- Provenance ---------------------------------------------------------------
-
-_PROVENANCE_WITH_URL = {
-    "provenance.mcf":
-        b.PROVENANCE_MCF + 'url: "https://source.example.org/dataset"\n'
-}
-
-
-def test_provenance_url_is_copied_onto_observations():
-  result = b.run_csv(b.csv_file(b.obs_row()), shared_files=_PROVENANCE_WITH_URL)
-  b.assert_records(result.observations,
-                   [b.obs(provenanceUrl="https://source.example.org/dataset")])
-
-
-@known_bug(reason="with use_multiprocessing=True (production), observations"
-           " lose dcid:provenanceUrl")
-def test_provenance_url_survives_the_production_path():
-  result = b.run_csv(b.csv_file(b.obs_row()),
-                     mode="production",
-                     shared_files=_PROVENANCE_WITH_URL)
-  b.assert_records(result.observations,
-                   [b.obs(provenanceUrl="https://source.example.org/dataset")])

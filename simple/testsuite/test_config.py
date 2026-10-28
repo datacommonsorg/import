@@ -13,8 +13,6 @@
 # limitations under the License.
 """Config: how config.json selects input files, and how bad configs fail."""
 
-import dataclasses
-
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
@@ -89,14 +87,6 @@ def test_empty_config_imports_only_the_default_provenance():
   ])
 
 
-def test_provenance_linked_to_an_undefined_source_is_accepted():
-  provenance = ("Node: dcid:TestProvenance\ntypeOf: dcs:Provenance\n"
-                'name: "Test Provenance"\nsource: dcid:ElsewhereSource\n')
-  result = b.run_csv(_USA, shared_files={"provenance.mcf": provenance})
-  assert result.error is None, result.error
-  b.assert_records(result.observations, [b.obs()])
-
-
 # --- StatVar groups -----------------------------------------------------------
 #
 # groupStatVarsByProperty asks the ingestion workflow to generate StatVarGroups
@@ -134,18 +124,6 @@ def test_stat_var_groups_are_not_requested_by_default():
 
 # --- Invalid configs ----------------------------------------------------------
 
-
-@dataclasses.dataclass(frozen=True)
-class Fails:
-  """How a run is expected to fail (see assert_fails)."""
-  error_type: str
-  message: str
-  # Empty when the error is raised while Runner is being constructed, before
-  # run(): then no FAILURE handshake is written and the ingestion workflow
-  # gets no structured error.
-  handshake: tuple[str, ...] = ("GENERIC_ERROR",)
-
-
 INVALID_CONFIGS = [
     Case(
         "inputFiles given as a map",
@@ -154,50 +132,25 @@ INVALID_CONFIGS = [
                 "provenance": f"dcid:{b.PROVENANCE}"
             }
         }},
-        expect=Fails(
+        expect=b.Fails(
             "ValueError", "'inputFiles' must be a list of objects, each with a"
             " 'pattern' and a 'provenance'. Got: dict", ())),
     Case("inputFiles entry without a pattern",
          given={"inputFiles": [{
              "provenance": f"dcid:{b.PROVENANCE}"
          }]},
-         expect=Fails(
+         expect=b.Fails(
              "ValueError", "Invalid entry in 'inputFiles': must specify"
              " 'pattern' or 'filename'.", ())),
     Case("unsupported format",
          given=b.obs_config(format="variablePerColumn"),
-         expect=Fails(
+         expect=b.Fails(
              "ValueError", "Unsupported format 'variablePerColumn' for"
              " 'case*.csv'. The only supported format is 'variablePerRow'",
              ())),
     Case("unsupported importType",
          given=b.obs_config(importType="Observations"),
-         expect=Fails("ValueError", "CSV Header Validation Failed!")),
-    Case("inputFiles entry without a provenance",
-         given={
-             "inputFiles": [
-                 *b.MCF_CONFIG["inputFiles"], {
-                     "pattern": "case*.csv",
-                     "columnMappings": b.OBS_MAPPINGS
-                 }
-             ]
-         },
-         expect=Fails(
-             "ValueError", "Could not determine import name: missing"
-             " 'provenance' configuration for file 'case.csv'.")),
-    Case("provenance without a namespace prefix",
-         given=b.obs_config(provenance=b.PROVENANCE),
-         expect=Fails(
-             "ValueError", "The 'provenance' property must be a valid DCID or"
-             f" URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL)."
-             f" Found invalid provenance: '{b.PROVENANCE}'")),
-    # The message talks about missing *sources*, and the error type is
-    # GENERIC_ERROR, although the validator has a MISSING_PROVENANCE type.
-    Case("provenance that no MCF defines",
-         given=b.obs_config(provenance="dcid:UndefinedProvenance"),
-         expect=Fails(
-             "ValueError", "Metadata Validation Failed: Linked sources are"
-             " missing for defined provenances:")),
+         expect=b.Fails("ValueError", "CSV Header Validation Failed!")),
 ]
 
 
@@ -213,33 +166,3 @@ def test_missing_config_json_fails():
                  "FileNotFoundError",
                  "File not found: <input>/config.json",
                  handshake_error_types=())
-
-
-def test_provenance_without_a_source_fails():
-  provenance = ("Node: dcid:TestProvenance\ntypeOf: dcs:Provenance\n"
-                'name: "Test Provenance"\n')
-  result = b.run_csv(_USA, shared_files={"provenance.mcf": provenance})
-  b.assert_fails(
-      result, "ValueError",
-      "Metadata Validation Failed: Linked sources are missing for defined"
-      " provenances:")
-
-
-def test_provenance_declared_only_in_the_config_sources_block_fails():
-  """A provenance from the config's sources block does not count for MCF."""
-  config = {
-      "sources": {
-          "Config Source": {
-              "url": "https://config-source.example.org",
-              "provenances": {
-                  "Config Provenance": "https://config-source.example.org/p"
-              },
-          }
-      },
-      "inputFiles": [b.obs_config()["inputFiles"][-1]],
-  }
-  result = b.run_csv(_USA, config, shared_files={})
-  b.assert_fails(
-      result, "ValueError",
-      "Metadata Validation Failed: Linked sources are missing for defined"
-      " provenances:")

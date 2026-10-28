@@ -424,6 +424,17 @@ def _sorted_lists(value: Any) -> Any:
 # --- Assertions ---------------------------------------------------------------
 
 
+@dataclasses.dataclass(frozen=True)
+class Fails:
+  """How a run is expected to fail, for a Case's expect (see assert_fails)."""
+  error_type: str
+  message: str
+  # Empty when the error is raised while Runner is being constructed, before
+  # run(): then no FAILURE handshake is written and the ingestion workflow
+  # gets no structured error.
+  handshake: tuple[str, ...] = ("GENERIC_ERROR",)
+
+
 def assert_records(actual: list[dict], expected: list[dict]) -> None:
   """Order-insensitive comparison of record lists (duplicates count)."""
   want = sorted(_key(r) for r in expected)

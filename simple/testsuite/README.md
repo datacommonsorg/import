@@ -18,8 +18,17 @@ python3 -m pytest testsuite/test_e2e.py --update-expected  # rewrite expected.js
 
 | Files | What they check | Expected output |
 |---|---|---|
-| `test_mcf_nodes.py`, `test_observations.py`, `test_entities.py`, `test_config.py` | One small input in, exact records (or an exact error) out | Written in the test, with `lib/builders.py` |
+| Small tests, one file per input type or shared concern (below) | One small input in, exact records (or an exact error) out | Written in the test, with `lib/builders.py` |
 | `test_e2e.py` + `e2e/<dataset>/` | A realistic multi-file import, in every execution mode | `expected.json`, reviewed |
+
+| Small test file | Covers |
+|---|---|
+| `test_mcf_nodes.py` | MCF files: values, subjects and types, file structure, parse errors, limits |
+| `test_observations.py` | Observation CSVs: observationAbout / variable / date / value cells, columns, observationProperties, dimensions, ids, header errors |
+| `test_entities.py` | Entities CSVs: rows, ids, reference columns, values, property ids |
+| `test_csv_files.py` | CSV formatting (quoting, CRLF, BOM, column and row order, split files), for every CSV import type |
+| `test_provenance.py` | Provenances and sources: registered nodes, provenance URL on observations, validation |
+| `test_config.py` | config.json: which files are imported, top-level flags, invalid configs |
 
 For a refactor or performance PR, `test_e2e.py` passing with every
 `expected.json` unchanged means the output did not change.
