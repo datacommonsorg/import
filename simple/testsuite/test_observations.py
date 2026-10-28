@@ -159,25 +159,20 @@ def test_non_numeric_values_are_listed_ten_at_most():
 # --- Observation ids ----------------------------------------------------------
 
 
-def _ids(result) -> list[str]:
-  """The "@id" of every added observation."""
-  return [
-      r["@id"]
-      for r in result.added
-      if r.get("@type") == "dcid:StatVarObservation"
-  ]
+def _ids(result) -> set[str]:
+  return {r["@id"] for r in result.of_type("StatVarObservation")}
 
 
 def test_rows_with_the_same_key_keep_both_values_under_one_id():
   """The collision is only logged; both records are written."""
   result = b.run_csv(b.csv_file(b.obs_row(value="1"), b.obs_row(value="2")))
   b.assert_records(result.observations, [b.obs(value=1), b.obs(value=2)])
-  assert len(set(_ids(result))) == 1
+  assert len(_ids(result)) == 1
 
 
 def test_rows_with_different_keys_get_different_ids():
   result = b.run_csv(b.csv_file(b.obs_row(date="2020"), b.obs_row(date="2021")))
-  assert len(set(_ids(result))) == 2
+  assert len(_ids(result)) == 2
 
 
 # --- Columns ------------------------------------------------------------------

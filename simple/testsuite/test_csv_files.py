@@ -13,100 +13,145 @@
 # limitations under the License.
 """CSV files: the same data, written differently, gives the same records.
 
-Every format runs against each CSV import type. Each import type's last
-column holds the cells that need CSV quoting (commas, quotes, newlines).
+Each CSV import type has one table. Every case writes the same three rows,
+whose last column holds the cells that need CSV quoting.
 """
 
-import dataclasses
-from typing import Callable
-
-import pytest
 from testsuite.lib import builders as b
+from testsuite.lib.builders import Case
+from testsuite.lib.builders import cases
 
-_TRICKY_CELLS = ["a, b", 'line one\nline "two"', "plain"]
+# --- Observation CSVs ---------------------------------------------------------
 
+_OBS_HEADER = b.OBS_HEADER + ["notes"]
+_OBS_ROWS = [
+    b.obs_row("country/USA", value="1") + ["a, b"],
+    b.obs_row("country/FRA", value="2") + ['line one\nline "two"'],
+    b.obs_row("country/DEU", value="3") + ["plain"],
+]
+_OBS_EXPECTED = [
+    b.obs("country/USA", value=1),
+    b.obs("country/FRA", value=2),
+    b.obs("country/DEU", value=3),
+]
 
-@dataclasses.dataclass(frozen=True)
-class _Importer:
-  header: list[str]
-  rows: list[list[str]]
-  config: dict
-  records: Callable[[b.Result], list[dict]]  # The records to compare.
-  expect: list[dict]
-
-
-IMPORTERS = {
-    "observations":
-        _Importer(header=b.OBS_HEADER + ["notes"],
-                  rows=[
-                      b.obs_row(about, value=value) + [notes]
-                      for about, value, notes in
-                      zip(["country/USA", "country/FRA", "country/DEU"],
-                          ["1", "2", "3"], _TRICKY_CELLS)
-                  ],
-                  config=b.obs_config(ignoreColumns=["notes"]),
-                  records=lambda result: result.observations,
-                  expect=[
-                      b.obs("country/USA", value=1),
-                      b.obs("country/FRA", value=2),
-                      b.obs("country/DEU", value=3),
-                  ]),
-    "entities":
-        _Importer(header=["author_id", "bio"],
-                  rows=[[f"author{i}", bio]
-                        for i, bio in enumerate(_TRICKY_CELLS, start=1)],
-                  config=b.entities_config(),
-                  records=lambda result:
-                  [n for n in result.nodes if n.get("@type") == "dcid:Author"],
-                  expect=[
-                      b.entity(f"author{i}", author_id=f"author{i}", bio=bio)
-                      for i, bio in enumerate(_TRICKY_CELLS, start=1)
-                  ]),
-}
-
-
-def _last_column_first(header, rows):
-
-  def move(row):
-    return [row[-1]] + row[:-1]
-
-  return {"case.csv": b.csv_file(*map(move, rows), header=move(header))}
-
-
-# Each format turns (header, rows) into the files of one import.
-FORMATS = {
-    "commas, quotes and newlines inside cells":
-        lambda header, rows: {
-            "case.csv": b.csv_file(*rows, header=header)
-        },
-    "CRLF line endings":
-        lambda header, rows: {
-            "case.csv": b.csv_file(*rows, header=header, line_end="\r\n")
-        },
-    "every cell quoted":
-        lambda header, rows: {
-            "case.csv": b.csv_file(*rows, header=header, quote_all=True)
-        },
-    "byte order mark before the header":
-        lambda header, rows: {
-            "case.csv": b.csv_file(*rows, header=header, bom=True)
-        },
-    "last column first":
-        _last_column_first,
-    "rows in another order":
-        lambda header, rows: {
-            "case.csv": b.csv_file(*reversed(rows), header=header)
-        },
-    "rows split across two files":
-        lambda header, rows: {
-            "case.csv": b.csv_file(*rows[:1], header=header),
-            "case_2.csv": b.csv_file(*rows[1:], header=header),
-        },
-}
+OBSERVATION_FORMATS = [
+    Case("commas, quotes and newlines inside cells",
+         given={"case.csv": b.csv_file(*_OBS_ROWS, header=_OBS_HEADER)},
+         expect=_OBS_EXPECTED),
+    Case("CRLF line endings",
+         given={
+             "case.csv":
+                 b.csv_file(*_OBS_ROWS, header=_OBS_HEADER, line_end="\r\n")
+         },
+         expect=_OBS_EXPECTED),
+    Case("every cell quoted",
+         given={
+             "case.csv":
+                 b.csv_file(*_OBS_ROWS, header=_OBS_HEADER, quote_all=True)
+         },
+         expect=_OBS_EXPECTED),
+    Case("byte order mark before the header",
+         given={
+             "case.csv": b.csv_file(*_OBS_ROWS, header=_OBS_HEADER, bom=True)
+         },
+         expect=_OBS_EXPECTED),
+    Case("ignored column first",
+         given={
+             "case.csv":
+                 b.csv_file(
+                     ["a, b", "country/USA", "Count_Person", "2020", "1"], [
+                         'line one\nline "two"', "country/FRA", "Count_Person",
+                         "2020", "2"
+                     ], ["plain", "country/DEU", "Count_Person", "2020", "3"],
+                     header=["notes"] + b.OBS_HEADER)
+         },
+         expect=_OBS_EXPECTED),
+    Case("rows in another order",
+         given={
+             "case.csv": b.csv_file(*reversed(_OBS_ROWS), header=_OBS_HEADER)
+         },
+         expect=_OBS_EXPECTED),
+    Case("rows split across two files",
+         given={
+             "case.csv": b.csv_file(*_OBS_ROWS[:1], header=_OBS_HEADER),
+             "case_2.csv": b.csv_file(*_OBS_ROWS[1:], header=_OBS_HEADER),
+         },
+         expect=_OBS_EXPECTED),
+]
 
 
-@pytest.mark.parametrize("csv_format", FORMATS.values(), ids=FORMATS.keys())
-@pytest.mark.parametrize("importer", IMPORTERS.values(), ids=IMPORTERS.keys())
-def test_csv_format(importer, csv_format):
-  result = b.run(csv_format(importer.header, importer.rows), importer.config)
-  b.assert_records(importer.records(result), importer.expect)
+@cases(*OBSERVATION_FORMATS)
+def test_observation_csv_format(given, expect):
+  result = b.run(given, b.obs_config(ignoreColumns=["notes"]))
+  b.assert_records(result.observations, expect)
+
+
+# --- Entities CSVs ------------------------------------------------------------
+
+_ENTITY_HEADER = ["author_id", "bio"]
+_ENTITY_ROWS = [
+    ["author1", "a, b"],
+    ["author2", 'line one\nline "two"'],
+    ["author3", "plain"],
+]
+_ENTITY_EXPECTED = [
+    b.entity("author1", author_id="author1", bio="a, b"),
+    b.entity("author2", author_id="author2", bio='line one\nline "two"'),
+    b.entity("author3", author_id="author3", bio="plain"),
+]
+
+ENTITY_FORMATS = [
+    Case("commas, quotes and newlines inside cells",
+         given={"case.csv": b.csv_file(*_ENTITY_ROWS, header=_ENTITY_HEADER)},
+         expect=_ENTITY_EXPECTED),
+    Case("CRLF line endings",
+         given={
+             "case.csv":
+                 b.csv_file(*_ENTITY_ROWS,
+                            header=_ENTITY_HEADER,
+                            line_end="\r\n")
+         },
+         expect=_ENTITY_EXPECTED),
+    Case("every cell quoted",
+         given={
+             "case.csv":
+                 b.csv_file(*_ENTITY_ROWS,
+                            header=_ENTITY_HEADER,
+                            quote_all=True)
+         },
+         expect=_ENTITY_EXPECTED),
+    Case("byte order mark before the header",
+         given={
+             "case.csv":
+                 b.csv_file(*_ENTITY_ROWS, header=_ENTITY_HEADER, bom=True)
+         },
+         expect=_ENTITY_EXPECTED),
+    Case("id column last",
+         given={
+             "case.csv":
+                 b.csv_file(["a, b", "author1"],
+                            ['line one\nline "two"', "author2"],
+                            ["plain", "author3"],
+                            header=["bio", "author_id"])
+         },
+         expect=_ENTITY_EXPECTED),
+    Case("rows in another order",
+         given={
+             "case.csv":
+                 b.csv_file(*reversed(_ENTITY_ROWS), header=_ENTITY_HEADER)
+         },
+         expect=_ENTITY_EXPECTED),
+    Case("rows split across two files",
+         given={
+             "case.csv": b.csv_file(*_ENTITY_ROWS[:1], header=_ENTITY_HEADER),
+             "case_2.csv": b.csv_file(*_ENTITY_ROWS[1:], header=_ENTITY_HEADER),
+         },
+         expect=_ENTITY_EXPECTED),
+]
+
+
+@cases(*ENTITY_FORMATS)
+def test_entity_csv_format(given, expect):
+  result = b.run(given, b.entities_config())
+  b.assert_records(result.of_type("Author"), expect)

@@ -14,7 +14,8 @@
 """Provenances and sources: how they're registered, attached and validated.
 
 Every inputFiles entry names a provenance, which an MCF file must define with
-a source. Most tests here replace the shared provenance.mcf to vary that.
+a source. Most tests here replace the shared provenance.mcf (see
+_provenance_mcf) to vary that.
 """
 
 from testsuite.lib import builders as b
@@ -25,15 +26,28 @@ from testsuite.lib.builders import known_bug
 _ONE_ROW = b.csv_file(b.obs_row())
 
 
-def _provenance_mcf(**props: str) -> dict[str, str]:
-  """A provenance.mcf defining only the test provenance, with props."""
-  return {
-      "provenance.mcf":
-          b.mcf_node(f"dcid:{b.PROVENANCE}",
-                     typeOf="dcs:Provenance",
-                     name='"Test Provenance"',
-                     **props)
-  }
+def _provenance_mcf(with_source: bool = True,
+                    **provenance_props: str) -> dict[str, str]:
+  """A provenance.mcf to use as shared_files: the test provenance and source.
+
+  provenance_props are extra properties of the provenance (raw MCF). With
+  with_source=False, the source node is left out and the provenance links to
+  no source, unless provenance_props sets one.
+  """
+  blocks = []
+  if with_source:
+    blocks.append(
+        b.mcf_node(f"dcid:{b.SOURCE}",
+                   typeOf="dcs:Source",
+                   name='"Test Source"',
+                   url='"https://source.example.org"'))
+    provenance_props = {"source": f"dcid:{b.SOURCE}", **provenance_props}
+  blocks.append(
+      b.mcf_node(f"dcid:{b.PROVENANCE}",
+                 typeOf="dcs:Provenance",
+                 name='"Test Provenance"',
+                 **provenance_props))
+  return {"provenance.mcf": b.mcf(*blocks)}
 
 
 # --- Registered nodes ---------------------------------------------------------
@@ -84,10 +98,8 @@ def test_provenance_without_a_name_gets_its_id_as_name():
 
 # --- Provenance URL on observations -------------------------------------------
 
-_PROVENANCE_WITH_URL = {
-    "provenance.mcf":
-        b.PROVENANCE_MCF + 'url: "https://source.example.org/dataset"\n'
-}
+_PROVENANCE_WITH_URL = _provenance_mcf(
+    url='"https://source.example.org/dataset"')
 
 
 def test_provenance_url_is_copied_onto_observations():
@@ -145,13 +157,14 @@ def test_invalid_provenance_config(given, expect):
 
 
 def test_provenance_without_a_source_fails():
-  result = b.run_csv(_ONE_ROW, shared_files=_provenance_mcf())
+  result = b.run_csv(_ONE_ROW, shared_files=_provenance_mcf(with_source=False))
   b.assert_fails(result, "ValueError", _MISSING_SOURCES)
 
 
 def test_provenance_linked_to_an_undefined_source_is_accepted():
-  result = b.run_csv(
-      _ONE_ROW, shared_files=_provenance_mcf(source="dcid:ElsewhereSource"))
+  result = b.run_csv(_ONE_ROW,
+                     shared_files=_provenance_mcf(
+                         with_source=False, source="dcid:ElsewhereSource"))
   assert result.error is None, result.error
   b.assert_records(result.observations, [b.obs()])
 

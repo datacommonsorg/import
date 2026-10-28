@@ -336,6 +336,10 @@ class Result:
     """Added records that are not observations."""
     return [r for r in self.added if r.get("@type") != _OBSERVATION_TYPE]
 
+  def of_type(self, type_name: str) -> list[dict]:
+    """Added records of one type, e.g. of_type("Author")."""
+    return [r for r in self.added if r.get("@type") == f"dcid:{type_name}"]
+
   @property
   def records(self) -> list[dict]:
     """Every record the run wrote, shared or not."""

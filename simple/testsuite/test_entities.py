@@ -23,10 +23,6 @@ from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
 
 
-def _rows(result, row_type: str = "Author") -> list[dict]:
-  return [n for n in result.nodes if n.get("@type") == f"dcid:{row_type}"]
-
-
 def test_rows_become_typed_nodes_keyed_by_the_id_column():
   result = b.run_csv(
       b.csv_file(["author1", "Jane Doe", "country/USA"],
@@ -74,7 +70,7 @@ def test_reference_columns_hold_one_reference_per_listed_value():
       b.entities_config("Article",
                         "article_id",
                         columnsToResolve=["article_author"]))
-  b.assert_records(_rows(result, "Article"), [
+  b.assert_records(result.of_type("Article"), [
       b.entity("article1",
                "Article",
                article_id="article1",
@@ -104,7 +100,7 @@ def test_value(given, expect):
   result = b.run_csv(
       b.csv_file(["author1", given], header=["author_id", "value"]),
       b.entities_config())
-  b.assert_records(_rows(result),
+  b.assert_records(result.of_type("Author"),
                    [b.entity("author1", author_id="author1", value=expect)])
 
 
@@ -123,6 +119,6 @@ PROPERTY_IDS = [
 def test_column_property_id(given, expect):
   result = b.run_csv(b.csv_file(["author1", "x"], header=["author_id", given]),
                      b.entities_config())
-  b.assert_records(_rows(result),
+  b.assert_records(result.of_type("Author"),
                    [b.entity("author1", author_id="author1", **{expect: "x"})])
   assert b.property_node(given, expect) in result.nodes
