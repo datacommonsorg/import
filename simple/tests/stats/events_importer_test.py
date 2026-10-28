@@ -64,14 +64,12 @@ def _test_import(test: unittest.TestCase, test_name: str):
     nodes = Nodes(config)
 
     graph_writer = RecordingGraphWriter()
-    debug_resolve_file = temp_store.as_dir().open_file("debug.csv")
     report_file = temp_store.as_dir().open_file("report.json")
     reporter = FileImportReporter(input_file.full_path(),
                                   ImportReporter(report_file))
 
     EventsImporter(input_file=input_file,
                    graph_writer=graph_writer,
-                   debug_resolve_file=debug_resolve_file,
                    reporter=reporter,
                    nodes=nodes).do_import()
     graph_writer.write_triples(nodes.triples())
@@ -132,7 +130,6 @@ class TestEventsImporter(unittest.TestCase):
     importer = EventsImporter(
         input_file=mock_input,
         graph_writer=MagicMock(),
-        debug_resolve_file=MagicMock(),
         reporter=MagicMock(),
         nodes=nodes,
     )

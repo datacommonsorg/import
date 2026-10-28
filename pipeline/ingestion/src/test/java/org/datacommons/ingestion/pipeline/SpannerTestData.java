@@ -25,6 +25,9 @@ public final class SpannerTestData {
   public static final String SUBJECT_ID_CA = "geoId/06";
   public static final String SUBJECT_ID_DIRTY = "geoId/999";
   public static final String PROVENANCE = "dc/base/TestImport";
+  public static final String GENERATED_PROVENANCE = "dc/base/generated/TestImport";
+  public static final String LINKED_EDGE_ANCESTOR = "country/USA";
+  public static final String LINKED_EDGE_CHILD_TYPE = "State";
   public static final String STAT_VAR = "Count_Person";
   public static final String FACET_ID = "F1";
   public static final String DATE_2020 = "2020";
@@ -42,6 +45,7 @@ public final class SpannerTestData {
 
   // Other Import Identifiers (For Provenance Isolation Testing)
   public static final String OTHER_PROVENANCE = "dc/base/OtherImport";
+  public static final String OTHER_GENERATED_PROVENANCE = "dc/base/generated/OtherImport";
   public static final String SUBJECT_ID_OTHER = "geoId/02";
   public static final String STAT_VAR_OTHER = "UnemploymentRate";
   public static final String OTHER_OBS_VALUE = "5.2";
@@ -59,6 +63,8 @@ public final class SpannerTestData {
               List.of("State"),
               java.util.Collections.nCopies(768, 0.1)),
           edgeMutation(SUBJECT_ID_CA, "typeOf", "Place", PROVENANCE),
+          linkedEdgeMutation(
+              LINKED_EDGE_ANCESTOR, LINKED_EDGE_CHILD_TYPE, SUBJECT_ID_CA, GENERATED_PROVENANCE),
           timeSeriesMutation(STAT_VAR, SUBJECT_ID_CA, FACET_ID, PROVENANCE),
           observationMutation(STAT_VAR, SUBJECT_ID_CA, FACET_ID, DATE_2020, VALUE_2020),
           keyValueMutation(STAT_VAR, PROVENANCE, KV_VALUE_BASELINE),
@@ -83,6 +89,8 @@ public final class SpannerTestData {
               List.of("Place"),
               java.util.Collections.nCopies(768, 0.5)),
           edgeMutation(SUBJECT_ID_DIRTY, "typeOf", "Place", PROVENANCE),
+          linkedEdgeMutation(
+              LINKED_EDGE_ANCESTOR, LINKED_EDGE_CHILD_TYPE, SUBJECT_ID_DIRTY, GENERATED_PROVENANCE),
           observationMutation(STAT_VAR, SUBJECT_ID_CA, FACET_ID, DATE_2021, VALUE_2021),
           keyValueMutation(STAT_VAR, PROVENANCE, KV_VALUE_CORRUPTED));
 
@@ -92,6 +100,11 @@ public final class SpannerTestData {
   public static final List<Mutation> OTHER_IMPORT_CONCURRENT_MUTATIONS =
       List.of(
           edgeMutation(SUBJECT_ID_OTHER, "typeOf", "Place", OTHER_PROVENANCE),
+          linkedEdgeMutation(
+              LINKED_EDGE_ANCESTOR,
+              LINKED_EDGE_CHILD_TYPE,
+              SUBJECT_ID_OTHER,
+              OTHER_GENERATED_PROVENANCE),
           timeSeriesMutation(STAT_VAR_OTHER, SUBJECT_ID_OTHER, FACET_ID, OTHER_PROVENANCE),
           observationMutation(
               STAT_VAR_OTHER, SUBJECT_ID_OTHER, FACET_ID, DATE_2020, OTHER_OBS_VALUE),
@@ -151,6 +164,22 @@ public final class SpannerTestData {
         .to(provenance)
         .set("last_update_timestamp")
         .to(Value.COMMIT_TIMESTAMP)
+        .build();
+  }
+
+  public static Mutation linkedEdgeMutation(
+      String ancestor, String childType, String child, String provenance) {
+    return Mutation.newInsertOrUpdateBuilder("LinkedEdge")
+        .set("predicate")
+        .to("containedInPlace")
+        .set("ancestor")
+        .to(ancestor)
+        .set("child_type")
+        .to(childType)
+        .set("child")
+        .to(child)
+        .set("provenance")
+        .to(provenance)
         .build();
   }
 

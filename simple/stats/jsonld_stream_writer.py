@@ -34,12 +34,6 @@ from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
 from google.cloud import storage
 import pandas as pd
-from pyld import jsonld
-from rdflib import Graph
-from rdflib import Literal
-from rdflib import Namespace
-from rdflib import RDF
-from rdflib import URIRef
 import requests
 from stats import constants
 from stats.data import strip_namespace
@@ -205,16 +199,6 @@ def _write_observation_shard(chunk,
 # include the sanitized file_name in the shard name (e.g., node-{sanitized_stem}-{shard_index:05d}.jsonld)
 # to prevent shard filename collisions across parallel workers, similar to observation shards.
 def _write_node_shard(args):
-  # TODO(gmechali): Get rid of this and keep only the "fast" mode.
-  fast_export = os.getenv("FAST_NODE_EXPORT",
-                          "true").lower() in ("true", "1", "yes")
-  if fast_export:
-    _write_node_shard_fast(args)
-  else:
-    _write_node_shard_rdflib(args)
-
-
-def _write_node_shard_fast(args):
   chunk, shard_index, jsonld_dir_path, ns_map = args
   subjects = {}
 
@@ -261,7 +245,7 @@ def _write_node_shard_fast(args):
       else:
         subjects[sub_id][pred_key] = val
 
-  # Sort by @id to match rdflib output order
+  # Sort by @id to match deterministic output order
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
@@ -272,80 +256,7 @@ def _write_node_shard_fast(args):
     output_dir = store.as_dir()
     output_dir.open_file(shard_name).write(
         json.dumps(compacted_jsonld, indent=4))
-  logging.info(f"Saved JSON-LD shard to {shard_name} (fast path)")
-
-
-def expand_id(item):
-  """Expands a short ID into a full URIRef."""
-  if not item:
-    return None
-  if item.startswith("http://") or item.startswith("https://"):
-    return URIRef(item)
-  if item.startswith("dcid:"):
-    return URIRef(f"{DCID_URL}{item[5:]}")
-  return URIRef(f"{DCID_URL}{item.lstrip('/')}")
-
-
-def write_shard(g: Graph,
-                index: int,
-                output_dir,
-                ns_map: dict,
-                prefix: str = "output"):
-  """Serializes and writes an RDF graph to a JSON-LD shard.
-
-  Args:
-    g: The RDF graph to serialize.
-    index: The shard index for the filename.
-    output_dir: The directory to write the shard file to.
-    ns_map: The namespace map for context compaction.
-    prefix: The file name prefix (e.g. 'node' or 'observation').
-  """
-  jsonld_str = g.serialize(context=ns_map, format="json-ld", indent=4)
-  expanded_jsonld = json.loads(jsonld_str)
-  compacted_jsonld = jsonld.compact(expanded_jsonld, ns_map)
-
-  if "@graph" not in compacted_jsonld:
-    data_only = {k: v for k, v in compacted_jsonld.items() if k != "@context"}
-    compacted_jsonld = {
-        "@context": compacted_jsonld.get("@context"),
-        "@graph": [data_only]
-    }
-
-  shard_name = f"{prefix}-{index:05d}.jsonld"
-  output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
   logging.info(f"Saved JSON-LD shard to {shard_name}")
-
-
-def _write_node_shard_rdflib(args):
-  """
-  Writes a chunk of triples to a JSON-LD shard using rdflib.
-  Args:
-    args: Tuple containing (chunk, shard_index, jsonld_dir_path, ns_map)
-  """
-
-  # TODO(gmechali): Completely deprecate this path after we have 100% certainty in the direct export.
-  # note that this path is exponentially slower.
-  chunk, shard_index, jsonld_dir_path, ns_map = args
-  DCID = Namespace(DCID_URL)
-  g = Graph()
-  g.bind("dcid", DCID)
-
-  for row in chunk:
-    sub = expand_id(_rewrite_custom_ns_to_dcid(row.subject_id))
-    p = expand_id(_rewrite_custom_ns_to_dcid(row.predicate))
-    if row.object_id:
-      o = expand_id(_rewrite_custom_ns_to_dcid(row.object_id))
-    else:
-      o = Literal(row.object_value)
-
-    if row.predicate == 'typeOf':
-      g.add((sub, RDF.type, o))
-    else:
-      g.add((sub, p, o))
-
-  with create_store(jsonld_dir_path) as store:
-    output_dir = store.as_dir()
-    write_shard(g, shard_index, output_dir, ns_map, prefix="node")
 
 
 class JsonLdStreamWriter(GraphWriter):
