@@ -1,10 +1,15 @@
 {
   "inputFiles": [
-    {"pattern": "*.mcf", "provenance": "dcid:KitchenProvenance"},
+    {
+      "pattern": "*.mcf",
+      "provenance": "dcid:KitchenProvenance"
+    },
     {
       "pattern": "observations.csv",
       "provenance": "dcid:KitchenProvenance",
-      "ignoreColumns": ["notes"],
+      "ignoreColumns": [
+        "notes"
+      ],
       "columnMappings": {
         "dcid:observationAbout": "place",
         "dcid:variableMeasured": "stat",
@@ -30,23 +35,7 @@
       "rowEntityType": "Author",
       "idColumn": "author_id",
       "provenance": "dcid:KitchenProvenance"
-    },
-    {
-      "pattern": "crimes.csv",
-      "importType": "events",
-      "eventType": "CrimeEvent",
-      "entityType": "Country",
-      "idColumn": "CASE",
-      "provenance": "dcid:KitchenProvenance",
-      "computedVariables": ["Count_CrimeEvent"],
-      "columnsToResolve": ["countryAlpha3Code"],
-      "columnMappings": {
-        "dcid:location": "countryAlpha3Code",
-        "dcid:observationDate": "DATE OF OCCURRENCE"
-      }
     }
   ],
-  "events": {"CrimeEvent": {"name": "Crime Event"}},
-  "variables": {"Count_CrimeEvent": {"name": "Number of Crime Events", "group": "Public Safety"}},
   "groupStatVarsByProperty": true
 }

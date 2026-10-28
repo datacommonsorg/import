@@ -2,66 +2,80 @@
 
 Tests for the `simple/` preprocessor that check **what it outputs**: the
 JSON-LD records, the `report.json` summary and the ingestion-workflow
-handshake. Every test runs the real `stats.runner.Runner`, hermetically: a
-local fake of the DC API and an in-process GCS emulator stand in for the
-network, so nothing is mocked inside the preprocessor.
+handshake. Every test runs the real `stats.runner.Runner` hermetically, with
+an in-process GCS emulator standing in for the network, so nothing inside the
+preprocessor is mocked.
 
 ```bash
 cd simple
-python3 -m pytest testsuite/                          # everything (PR budget)
-python3 -m pytest testsuite/test_cases.py -k mcf      # one case file
-python3 -m pytest testsuite/test_e2e.py --modes=gcs   # one execution mode
-python3 -m pytest testsuite/ --update-expected        # rewrite expectations, then review the diff
-HYPOTHESIS_PROFILE=nightly python3 -m pytest testsuite/test_fuzz.py testsuite/test_metamorphic.py
-python3 -m pytest testsuite/test_baseline.py --baseline=origin/master   # perf/refactor PRs
+python3 -m pytest testsuite/ -n auto                       # everything
+python3 -m pytest testsuite/test_observations.py -k entity # one area / one table
+python3 -m pytest testsuite/test_e2e.py --modes=production # one execution mode
+python3 -m pytest testsuite/test_e2e.py --update-expected  # rewrite expected.json, then review the diff
 ```
 
-## Layers
+## Two kinds of tests
 
-| File | Question it answers | Expected output comes from |
+| Files | What they check | Expected output |
 |---|---|---|
-| `test_cases.py` + `cases/*.md` | Does this exact input produce exactly these JSON-LD records? | A person, in the case file |
-| `test_e2e.py` + `e2e/<dataset>/` | Do these input files produce this output, in every execution mode? | `expected.json`, reviewed |
-| `test_fuzz.py` | Do random valid inputs produce the records the rules predict? | `lib/strategies.py` (the model) |
-| `test_metamorphic.py` | Do shuffling, splitting, re-quoting, BOM/CRLF or another mode change the output? | The untransformed run |
-| `test_baseline.py` | Does this checkout produce the same output as another git ref? | The baseline run |
-| `test_limits.py` | Cases too big to write by hand | Inline asserts |
+| `test_mcf_nodes.py`, `test_observations.py`, `test_entities.py`, `test_config.py` | One small input in, exact records (or an exact error) out | Written in the test, with `lib/builders.py` |
+| `test_e2e.py` + `e2e/<dataset>/` | A realistic multi-file import, in every execution mode | `expected.json`, reviewed |
 
-Execution modes (`lib/run.py`): `threaded`, `multiprocess`, `gcs` (GCS input
-and output, as in production; the only mode that writes a success handshake),
-and `tiny_chunks` (every chunk/shard boundary crossed).
+For a refactor or performance PR, `test_e2e.py` passing with every
+`expected.json` unchanged means the output did not change.
 
-## Case files
+Execution modes (`lib/run.py`):
 
-Markdown. Blocks before the first `## ` heading are the file's defaults; each
-`## ` heading is one test:
+- `threaded`: local disk, no multiprocessing. Fast; used by every small test.
+- `production`: multiprocessing, with input and output on (fake) GCS, as the
+  ingestion workflow runs it. The only mode that writes a success handshake.
+- `tiny_chunks`: threaded, with chunk and shard sizes shrunk so that every
+  boundary is crossed even by tiny inputs.
 
-````markdown
-## quoted string containing a comma stays one value
+## Writing a test
 
-```mcf
-Node: dcid:Thing5
-typeOf: dcs:Thing
-name: "Paris, France"
+Inputs and expectations are built separately. Input builders write exactly
+what the preprocessor reads; expectation builders write the JSON-LD a test
+expects. Nothing computes one from the other.
+
+```python
+def test_basic_node():
+  result = run_mcf(mcf_node("dcid:Thing1", name='"Thing One"'))
+  assert_records(result.added, [record("Thing1", "Thing", name="Thing One")])
 ```
 
-```expect
-[{"@id": "dcid:Thing5", "@type": "dcid:Thing", "dcid:name": "Paris, France"}]
+`result.added` holds only what the test's own input adds: records that the
+shared test provenance and source produce on their own are left out. Use
+`result.observations` (without the hash ids) and `result.nodes` to look at one
+kind of record.
+
+For one rule with many inputs, add a row to a table of `Case`s:
+
+```python
+VALUES = [
+    Case("integer", given="42", expect=42),
+    Case("quoted number stays a string", given='"00123"', expect="00123",
+         bug='quoted values that look numeric become numbers'),
+]
+
+@cases(*VALUES)
+def test_value(given, expect):
+  result = run_mcf(mcf_node("dcid:T", prop=given))
+  assert_records(result.added, [record("T", "Thing", prop=expect)])
 ```
-````
 
-Blocks: `mcf` / `csv` (optional `file=path`), `config` (deep-merged over the
-default; `null` deletes a key), `dc_api` (fake DC API graph), `expect` (every
-record the case adds to the defaults' output; `"@id": "*"` matches any id),
-`expect-error` (`type`, `contains`, `handshake_error_types`). Options:
-`> xfail: <reason>` for a known bug (strict: the test fails once it is fixed)
-and `> modes: all` or `> modes: multiprocess, gcs`.
-
-See `lib/casefile.py` for the full format.
+| To build | Use |
+|---|---|
+| MCF input | `mcf_node(subject, typeOf=..., **props)`, `mcf(*blocks)` |
+| CSV input | `csv_file(*rows, header=..., quote_all=, line_end=, bom=)`, `obs_row(...)` |
+| Config | `obs_config(mappings, pattern=, **options)`, `entities_config(...)`, `MCF_CONFIG` |
+| Expected records | `record(dcid, type, **props)`, `ref(dcid)`, `obs(...)`, `entity(...)`, `class_node(...)`, `property_node(...)` |
+| Running | `run(files, config, mode=, shared_files=)`, `run_mcf(...)`, `run_csv(...)` |
+| Checking | `assert_records(actual, expected)`, `assert_fails(result, type, message, handshake_error_types)` |
 
 ## Known bugs
 
-Known bugs are strict xfails, never edited goldens: `> xfail:` in a case, or
-an entry in `KNOWN_ISSUES` in `test_e2e.py`. When a fix lands, the test
-XPASSes and fails until the marker is removed. Fuzz counterexamples become
-cases (with `> xfail:` if the fix comes later).
+Known bugs are strict xfails, never wrong expectations: `bug="..."` on a
+`Case`, `@known_bug(reason=...)` on a test, or an entry in `KNOWN_ISSUES` in
+`test_e2e.py`. When a fix lands, the test XPASSes and fails until the marker
+is removed.

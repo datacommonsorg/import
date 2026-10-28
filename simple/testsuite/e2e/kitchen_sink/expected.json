@@ -41,36 +41,6 @@
             ],
             "dcid:name": "Author"
           },
-          "dcid:CASE": {
-            "@id": "dcid:CASE",
-            "@type": "dcid:Property",
-            "dcid:name": "CASE"
-          },
-          "dcid:Count_CrimeEvent": {
-            "@id": "dcid:Count_CrimeEvent",
-            "@type": "dcid:StatisticalVariable",
-            "dcid:includedIn": [
-              {
-                "@id": "dcid:KitchenProvenance"
-              },
-              {
-                "@id": "dcid:KitchenSource"
-              }
-            ],
-            "dcid:measuredProperty": {
-              "@id": "dcs:Count_CrimeEvent"
-            },
-            "dcid:memberOf": {
-              "@id": "dcid:custom/g/group_1"
-            },
-            "dcid:name": "Number of Crime Events",
-            "dcid:populationType": {
-              "@id": "schema:Thing"
-            },
-            "dcid:statType": {
-              "@id": "dcs:measuredValue"
-            }
-          },
           "dcid:Count_Person_Female": {
             "@id": "dcid:Count_Person_Female",
             "@type": "dcid:StatisticalVariable",
@@ -88,58 +58,6 @@
               "@id": "dcid:measuredValue"
             }
           },
-          "dcid:CrimeEvent": {
-            "@id": "dcid:CrimeEvent",
-            "@type": "dcid:Class",
-            "dcid:includedIn": [
-              {
-                "@id": "dcid:KitchenProvenance"
-              },
-              {
-                "@id": "dcid:KitchenSource"
-              }
-            ],
-            "dcid:name": "Crime Event",
-            "dcid:subClassOf": {
-              "@id": "dcid:Event"
-            }
-          },
-          "dcid:JG1": {
-            "@id": "dcid:JG1",
-            "@type": "dcid:CrimeEvent",
-            "dcid:PRIMARY_DESCRIPTION": "THEFT",
-            "dcid:includedIn": {
-              "@id": "dcid:KitchenProvenance"
-            },
-            "dcid:location": {
-              "@id": "dcid:country/USA"
-            },
-            "dcid:observationDate": "11/08/2023 8:50:00 PM"
-          },
-          "dcid:JG2": {
-            "@id": "dcid:JG2",
-            "@type": "dcid:CrimeEvent",
-            "dcid:PRIMARY_DESCRIPTION": "ASSAULT",
-            "dcid:includedIn": {
-              "@id": "dcid:KitchenProvenance"
-            },
-            "dcid:location": {
-              "@id": "dcid:country/BRA"
-            },
-            "dcid:observationDate": "11/08/2023 3:14:00 PM"
-          },
-          "dcid:JG3": {
-            "@id": "dcid:JG3",
-            "@type": "dcid:CrimeEvent",
-            "dcid:PRIMARY_DESCRIPTION": "ASSAULT",
-            "dcid:includedIn": {
-              "@id": "dcid:KitchenProvenance"
-            },
-            "dcid:location": {
-              "@id": "dcid:country/USA"
-            },
-            "dcid:observationDate": "11/08/2023 8:25:00 AM"
-          },
           "dcid:KitchenProvenance": [
             {
               "@id": "dcid:KitchenProvenance",
@@ -153,7 +71,7 @@
             {
               "@id": "dcid:KitchenProvenance",
               "@type": "dcid:Provenance",
-              "dcid:name": "KitchenProvenance",
+              "dcid:name": "Kitchen Provenance",
               "dcid:source": {
                 "@id": "dcid:KitchenSource"
               },
@@ -173,11 +91,6 @@
             "dcid:statType": {
               "@id": "dcid:medianValue"
             }
-          },
-          "dcid:PRIMARY_DESCRIPTION": {
-            "@id": "dcid:PRIMARY_DESCRIPTION",
-            "@type": "dcid:Property",
-            "dcid:name": "PRIMARY DESCRIPTION"
           },
           "dcid:author1": {
             "@id": "dcid:author1",
@@ -218,30 +131,6 @@
             "@id": "dcid:c/g/Root",
             "@type": "dcid:StatVarGroup",
             "dcid:name": "Custom Variables",
-            "dcid:specializationOf": {
-              "@id": "dcid:dc/g/Root"
-            }
-          },
-          "dcid:country/BRA": {
-            "@id": "dcid:country/BRA",
-            "@type": "dcid:Country"
-          },
-          "dcid:country/USA": {
-            "@id": "dcid:country/USA",
-            "@type": "dcid:Country"
-          },
-          "dcid:custom/g/group_1": {
-            "@id": "dcid:custom/g/group_1",
-            "@type": "dcid:StatVarGroup",
-            "dcid:includedIn": [
-              {
-                "@id": "dcid:KitchenProvenance"
-              },
-              {
-                "@id": "dcid:KitchenSource"
-              }
-            ],
-            "dcid:name": "Public Safety",
             "dcid:specializationOf": {
               "@id": "dcid:dc/g/Root"
             }
@@ -371,22 +260,6 @@
               ]
             }
           },
-          "dcid:obs_550c4c73d173a5b99c87162edfd9b5081b0999e23e4218c041ae77da18e0f5b1": {
-            "@id": "dcid:obs_550c4c73d173a5b99c87162edfd9b5081b0999e23e4218c041ae77da18e0f5b1",
-            "@type": "dcid:StatVarObservation",
-            "dcid:observationAbout": {
-              "@id": "dcid:country/BRA"
-            },
-            "dcid:observationDate": 2023,
-            "dcid:provenance": {
-              "@id": "dcid:KitchenProvenance"
-            },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
-            "dcid:value": 1,
-            "dcid:variableMeasured": {
-              "@id": "dcid:Count_CrimeEvent"
-            }
-          },
           "dcid:obs_67c52bc86d852d7490faed5a10828baed6bfd2d0e5b99eae2066e48c2440af3f": {
             "@id": "dcid:obs_67c52bc86d852d7490faed5a10828baed6bfd2d0e5b99eae2066e48c2440af3f",
             "@type": "dcid:StatVarObservation",
@@ -425,22 +298,6 @@
               ]
             }
           },
-          "dcid:obs_b3ad0dc59cad36c289ea50e6dcff4fa4f0701af3762013817b69aacd3c9f4f8c": {
-            "@id": "dcid:obs_b3ad0dc59cad36c289ea50e6dcff4fa4f0701af3762013817b69aacd3c9f4f8c",
-            "@type": "dcid:StatVarObservation",
-            "dcid:observationAbout": {
-              "@id": "dcid:country/USA"
-            },
-            "dcid:observationDate": 2023,
-            "dcid:provenance": {
-              "@id": "dcid:KitchenProvenance"
-            },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
-            "dcid:value": 2,
-            "dcid:variableMeasured": {
-              "@id": "dcid:Count_CrimeEvent"
-            }
-          },
           "dcid:obs_e3db16a4e39af8db99372286075642e3b2ee3c4c3e2ee46891322da43592a1de": {
             "@id": "dcid:obs_e3db16a4e39af8db99372286075642e3b2ee3c4c3e2ee46891322da43592a1de",
             "@type": "dcid:StatVarObservation",
@@ -471,9 +328,6 @@
   "report": {
     "importFiles": {
       "<input>/authors.csv": {
-        "status": "SUCCESS"
-      },
-      "<input>/crimes.csv": {
         "status": "SUCCESS"
       },
       "<input>/observations.csv": {

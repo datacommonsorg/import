@@ -1,0 +1,268 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""MCF nodes: MCF text in, exact JSON-LD node records out.
+
+Every test imports its MCF under the shared test provenance (see
+lib/builders.py). Records the provenance produces on its own are not listed.
+"""
+
+from testsuite.lib.builders import assert_fails
+from testsuite.lib.builders import assert_records
+from testsuite.lib.builders import Case
+from testsuite.lib.builders import cases
+from testsuite.lib.builders import known_bug
+from testsuite.lib.builders import mcf_node
+from testsuite.lib.builders import record
+from testsuite.lib.builders import ref
+from testsuite.lib.builders import run_mcf
+
+# --- Property values ----------------------------------------------------------
+#
+# One case per rule: given is the value as written in MCF, expect is the value
+# in JSON-LD. To pin a new rule, add a case.
+
+VALUES = [
+    # Numbers
+    Case("integer", given="42", expect=42),
+    Case("negative integer", given="-3", expect=-3),
+    Case("decimal", given="0.25", expect=0.25),
+    Case("decimal with trailing zero", given="2.0", expect=2.0),
+    Case("leading zeros are dropped", given="007", expect=7),
+    Case("exponent stays a string", given="1e5", expect="1e5"),
+    Case("inf stays a string", given="inf", expect="inf"),
+    Case("quoted number stays a string",
+         given='"00123"',
+         expect="00123",
+         bug="quoted values that look numeric become numbers, so \"00123\""
+         " loses its leading zeros"),
+    # Other literals
+    Case("boolean is a string", given="true", expect="true"),
+    Case("quoted string", given='"Thing One"', expect="Thing One"),
+    Case("quoted string with a comma is one value",
+         given='"Paris, France"',
+         expect="Paris, France"),
+    Case("unicode is preserved",
+         given='"Zürich – 東京 🚀"',
+         expect="Zürich – 東京 🚀"),
+    Case("complex value is kept verbatim",
+         given="[10 20 dcs:Years]",
+         expect="[10 20 dcs:Years]"),
+    # Custom namespaces stay plain strings for now; they become references
+    # once the loader supports custom namespaces.
+    Case("custom namespace value is a string",
+         given="undata:Other",
+         expect="undata:Other"),
+    # References
+    Case("dcid reference", given="dcid:Thing1", expect=ref("Thing1")),
+    Case("dcs reference is normalized",
+         given="dcs:country/USA",
+         expect=ref("country/USA")),
+    Case("schema reference is normalized",
+         given="schema:Place",
+         expect=ref("Place")),
+    Case("comma-separated references",
+         given="dcid:A, dcid:B, dcs:C",
+         expect=[ref("A"), ref("B"), ref("C")]),
+    Case("repeated references are deduplicated",
+         given="dcid:A, dcid:A",
+         expect=ref("A")),
+]
+
+
+@cases(*VALUES)
+def test_value(given, expect):
+  result = run_mcf(mcf_node("dcid:T", prop=given))
+  assert_records(result.added, [record("T", "Thing", prop=expect)])
+
+
+def test_all_values_on_one_node():
+  """The value rules must not interfere with each other."""
+  working = [c for c in VALUES if not c.bug]
+  result = run_mcf(
+      mcf_node("dcid:T", **{
+          f"p{i}": c.given for i, c in enumerate(working)
+      }))
+  assert_records(result.added, [
+      record("T", "Thing", **{
+          f"p{i}": c.expect for i, c in enumerate(working)
+      })
+  ])
+
+
+# --- Subjects and types -------------------------------------------------------
+
+
+def test_basic_node():
+  result = run_mcf(mcf_node("dcid:Thing1", name='"Thing One"'))
+  assert_records(result.added, [record("Thing1", "Thing", name="Thing One")])
+
+
+def test_dcid_property_names_a_local_node():
+  result = run_mcf(mcf_node("LocalName", dcid='"Thing2"'))
+  assert_records(result.added, [record("Thing2", "Thing")])
+
+
+def test_custom_namespace_subject_becomes_dcid():
+  result = run_mcf(mcf_node("undata:Thing16"))
+  assert_records(result.added, [record("Thing16", "Thing")])
+
+
+@cases(
+    Case("dcs", given="dcs:Thing", expect="Thing"),
+    Case("schema", given="schema:Thing", expect="Thing"),
+    Case("quoted", given='"Thing"', expect="Thing"),
+    Case("several types",
+         given="dcs:Thing, dcs:Place",
+         expect=["Place", "Thing"]),
+)
+def test_type(given, expect):
+  result = run_mcf(mcf_node("dcid:T", typeOf=given))
+  assert_records(result.added, [record("T", expect)])
+
+
+def test_statistical_variable_passes_through():
+  result = run_mcf(
+      mcf_node("dcid:Count_Person_Female",
+               typeOf="dcs:StatisticalVariable",
+               populationType="dcs:Person",
+               measuredProperty="dcs:count",
+               statType="dcs:measuredValue",
+               gender="dcs:Female",
+               name='"Female population"'))
+  assert_records(result.added, [
+      record("Count_Person_Female",
+             "StatisticalVariable",
+             populationType=ref("Person"),
+             measuredProperty=ref("count"),
+             statType=ref("measuredValue"),
+             gender=ref("Female"),
+             name="Female population")
+  ])
+
+
+# --- File structure -----------------------------------------------------------
+
+
+def test_one_node_in_two_blocks_is_merged():
+  result = run_mcf(mcf_node("dcid:T", name='"First"'),
+                   mcf_node("dcid:T", typeOf=None, description='"Second"'))
+  assert_records(result.added,
+                 [record("T", "Thing", name="First", description="Second")])
+
+
+def test_comments_and_blank_lines_are_ignored():
+  result = run_mcf("// A comment\n# Another comment\n\nNode: dcid:T\n\n"
+                   "typeOf: dcs:Thing\n")
+  assert_records(result.added, [record("T", "Thing")])
+
+
+def test_context_namespace_expands_to_full_uri():
+  result = run_mcf('Context:\nnamespace: "ex=http://example.org/"\n',
+                   mcf_node("dcid:T", sameAs="ex:item/1"))
+  assert_records(
+      result.added,
+      [record("T", "Thing", sameAs=ref("http://example.org/item/1"))])
+
+
+@known_bug(reason="object values written as l:<local id> are not resolved to"
+           " the referenced node's dcid (points at dcid:L2, not dcid:Parent)")
+def test_local_reference_resolves_to_dcid():
+  result = run_mcf(mcf_node("L1", dcid='"Child"', parent="l:L2"),
+                   mcf_node("L2", dcid='"Parent"'))
+  assert_records(result.added, [
+      record("Child", "Thing", parent=ref("Parent")),
+      record("Parent", "Thing"),
+  ])
+
+
+# --- Sources and provenances --------------------------------------------------
+#
+# Source and Provenance nodes are written twice into the same folder: once
+# from the MCF triples and once from the node registry, which adds `domain`
+# and, when missing, a `name` equal to the id.
+
+
+def test_source_url_adds_a_domain():
+  result = run_mcf(
+      mcf_node("dcid:OtherSource",
+               typeOf="dcs:Source",
+               name='"Other Source"',
+               url='"https://data.example.com/path"'))
+  from_mcf = record("OtherSource",
+                    "Source",
+                    name="Other Source",
+                    url="https://data.example.com/path")
+  from_registry = {**from_mcf, "dcid:domain": "data.example.com"}
+  assert_records(result.added, [from_mcf, from_registry])
+
+
+def test_provenance_without_a_name_gets_its_id_as_name():
+  result = run_mcf(
+      mcf_node("dcid:OtherSource2",
+               typeOf="dcs:Source",
+               url='"https://other.example.com"'),
+      mcf_node("dcid:OtherProvenance",
+               typeOf="dcs:Provenance",
+               source="dcid:OtherSource2"))
+  source = record("OtherSource2", "Source", url="https://other.example.com")
+  provenance = record("OtherProvenance",
+                      "Provenance",
+                      source=ref("OtherSource2"))
+  assert_records(result.added, [
+      source,
+      {
+          **source, "dcid:name": "OtherSource2",
+          "dcid:domain": "other.example.com"
+      },
+      provenance,
+      {
+          **provenance, "dcid:name": "OtherProvenance"
+      },
+  ])
+
+
+# --- Invalid MCF --------------------------------------------------------------
+
+
+def test_node_without_a_dcid_fails():
+  result = run_mcf(mcf_node("NoDcid"))
+  assert_fails(result, "ValueError", "dcid not specified for node: NoDcid")
+
+
+def test_line_without_a_colon_fails():
+  result = run_mcf("Node: dcid:T\nthis line has no colon\n")
+  assert_fails(result, "AssertionError",
+               "Line 2: Malformed line without a colon delimiter")
+
+
+def test_property_before_any_node_fails():
+  result = run_mcf("typeOf: dcs:Thing\nNode: dcid:T\n")
+  assert_fails(result, "AssertionError",
+               "Line 1: Prop-Values before Node or Context block")
+
+
+# --- Limits -------------------------------------------------------------------
+#
+# MCF values are limited to 65535 characters (a MySQL TEXT column).
+
+
+def test_value_of_65535_characters_is_accepted():
+  value = "x" * (2**16 - 1)
+  result = run_mcf(mcf_node("dcid:Big", name=f'"{value}"'))
+  assert_records(result.added, [record("Big", "Thing", name=value)])
+
+
+def test_value_of_65536_characters_fails():
+  result = run_mcf(mcf_node("dcid:Big", name=f'"{"x" * 2**16}"'))
+  assert_fails(result, "ValueError", "too long")
