@@ -82,6 +82,7 @@ This directory is packaged into the `gcr.io/datcom-ci/datacommons-data` containe
 ### Automated CI/CD Builds
 
 Cloud Build automatically runs `simple/cloudbuild.yaml` when commits are pushed to `master` that modify files under `simple/**` (excluding `simple/tests/**`, `simple/sample/**`, and `**.md`). Each automated build tags and pushes:
+
 * `gcr.io/datcom-ci/datacommons-data:<7-char-import-sha>`
 * `gcr.io/datcom-ci/datacommons-data:latest`
 
