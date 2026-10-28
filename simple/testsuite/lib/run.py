@@ -182,12 +182,10 @@ def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
   report = _read_json(os.path.join(local_out, "process", "report.json"))
 
   tokens = {in_path: "<input>", out_path: "<output>", gcs_root: "<gcs>"}
-  folders, contexts = canonical.load_jsonld(os.path.join(local_out, "jsonld"))
+  records = canonical.load_jsonld(os.path.join(local_out, "jsonld"))
   output = {
-      "folders":
-          folders,
-      "contexts":
-          contexts,
+      "records":
+          records,
       "report":
           canonical.normalize_report(report, tokens),
       "handshake":

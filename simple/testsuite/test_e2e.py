@@ -136,7 +136,7 @@ def _expected_path(dataset: str) -> str:
 def _write_expected(dataset: str) -> None:
   reference = _output(dataset, "threaded")
   expected = {
-      "records": _records_view(dataset, reference["folders"]),
+      "records": _records_view(dataset, reference["records"]),
       "report": reference["report"],
       # Only GCS output gets a success handshake; a failure handshake is
       # written in every mode.
@@ -150,28 +150,40 @@ def _write_expected(dataset: str) -> None:
 _DEFAULT_ANY_FOLDER_TYPES = ["dcid:Source"]
 
 
-def _records_view(dataset: str, folders: dict) -> dict:
-  """Splits records into folder-bound ones and folder-independent ones."""
+def _records_view(dataset: str, records: list) -> dict:
+  """The expected.json view of records: {folder: {kind: {@id: record}}}.
+
+  A record written more than once is a list of its copies. Records of an
+  any_folder_types type are listed apart, without their folder.
+  """
   any_types = set(
       _spec(dataset).get("any_folder_types", _DEFAULT_ANY_FOLDER_TYPES))
-  bound, anywhere = {}, []
-  for folder, kinds in folders.items():
-    bound[folder] = {}
-    for kind, records in kinds.items():
-      bound[folder][kind] = {}
-      for rid, rec in records.items():
-        copies = rec if isinstance(rec, list) else [rec]
-        if any(c.get("@type") in any_types for c in copies):
-          anywhere.extend(copies)
-        else:
-          bound[folder][kind][rid] = rec
-  anywhere.sort(key=lambda r: json.dumps(r, sort_keys=True))
-  return {"folders": bound, "any_folder": anywhere}
+  folders, anywhere = {}, []
+  for folder, kind, rec in records:
+    kinds = folders.setdefault(folder, {
+        canonical.NODES: {},
+        canonical.OBSERVATIONS: {}
+    })
+    if rec.get("@type") in any_types:
+      anywhere.append(rec)
+    else:
+      kinds[kind].setdefault(rec.get("@id"), []).append(rec)
+  for kinds in folders.values():
+    for kind, by_id in kinds.items():
+      kinds[kind] = {
+          rid: copies[0] if len(copies) == 1 else sorted(copies, key=_dumps)
+          for rid, copies in by_id.items()
+      }
+  return {"folders": folders, "any_folder": sorted(anywhere, key=_dumps)}
+
+
+def _dumps(record: dict) -> str:
+  return json.dumps(record, sort_keys=True)
 
 
 def _actual(dataset: str, output: dict, aspect: str):
   if aspect == "records":
-    return _records_view(dataset, output["folders"])
+    return _records_view(dataset, output["records"])
   return output[aspect]
 
 

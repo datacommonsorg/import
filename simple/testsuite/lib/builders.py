@@ -396,8 +396,7 @@ def _run(files_json: str, config_json: str, mode: str) -> dict:
 
 
 def _record_counts(output: dict) -> collections.Counter:
-  return collections.Counter(
-      _key(rec) for _, _, _, rec in canonical.all_records(output))
+  return collections.Counter(_key(rec) for _, _, rec in output["records"])
 
 
 def _records(counts: collections.Counter) -> list[dict]:
@@ -446,5 +445,5 @@ def assert_fails(
   handshake = result.output["handshake"] or {}
   got_types = sorted({e.get("errorType") for e in handshake.get("errors", [])})
   assert got_types == sorted(handshake_error_types), handshake
-  leftovers = list(canonical.all_records(result.output))
+  leftovers = result.output["records"]
   assert not leftovers, f"a failed run left JSON-LD behind: {leftovers[:3]}"

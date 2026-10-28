@@ -21,24 +21,18 @@ records into the same import folders and the workflow would get the same
 report and handshake.
 
     {
-      "folders": {
-        "<import folder>": {
-          "nodes":        {"<@id>": {record}, ...},
-          "observations": {"<@id>": {record}, ...}
-        }
-      },
-      "contexts": [{"dcid": "https://datacommons.org/browser/"}],
+      "records": [("<import folder>", "nodes" | "observations", {record}), ...],
       "report": {...},     # process/report.json, times and paths removed
       "handshake": {...},  # ingestion-workflow record, or null
       "error": {...}       # exception raised by Runner.run(), or null
     }
 
-A record that appears more than once in one folder (e.g. a node split across
-shards) is kept as a list of its copies, so duplication shows up in diffs
-instead of being merged away.
+Every copy of a record is kept (e.g. a node split across shards), so
+duplication shows up in comparisons instead of being merged away.
 """
 
 import difflib
+import glob
 import json
 import os
 import re
@@ -62,35 +56,23 @@ def _sort_key(value: Any) -> str:
   return json.dumps(value, sort_keys=True)
 
 
-def load_jsonld(jsonld_root: str) -> tuple[dict, list]:
-  """Reads every *.jsonld under jsonld_root/<run dir>/<folder>/."""
-  folders: dict[str, dict[str, dict[str, list]]] = {}
-  contexts: list = []
-  if not os.path.isdir(jsonld_root):
-    return {}, []
-  for run_dir in sorted(os.listdir(jsonld_root)):
-    run_path = os.path.join(jsonld_root, run_dir)
-    for root, _, files in os.walk(run_path):
-      for name in sorted(files):
-        if not name.endswith(".jsonld"):
-          continue
-        folder = os.path.relpath(root, run_path)
-        kind = OBSERVATIONS if name.startswith("observation") else NODES
-        with open(os.path.join(root, name), encoding="utf-8") as f:
-          doc = json.load(f)
-        if doc.get("@context") not in contexts:
-          contexts.append(doc.get("@context"))
-        bucket = folders.setdefault(folder, {NODES: {}, OBSERVATIONS: {}})[kind]
-        for record in doc.get("@graph", []):
-          bucket.setdefault(record.get("@id"),
-                            []).append(canonical_record(record))
-  for kinds in folders.values():
-    for kind, records in kinds.items():
-      kinds[kind] = {
-          rid: copies[0] if len(copies) == 1 else sorted(copies, key=_sort_key)
-          for rid, copies in sorted(records.items(), key=lambda x: str(x[0]))
-      }
-  return folders, contexts
+def load_jsonld(jsonld_root: str) -> list[tuple[str, str, dict]]:
+  """(import folder, kind, record) for every record of every shard.
+
+  Shards live at <jsonld_root>/<run dir>/<import folder>/*.jsonld; the kind is
+  OBSERVATIONS for observation-*.jsonld shards and NODES otherwise.
+  """
+  pattern = os.path.join(jsonld_root, "*", "**", "*.jsonld")
+  records = []
+  for path in sorted(glob.glob(pattern, recursive=True)):
+    *_, folder_and_file = os.path.relpath(path, jsonld_root).split(os.sep, 1)
+    folder = os.path.dirname(folder_and_file) or "."
+    kind = OBSERVATIONS if os.path.basename(path).startswith(
+        "observation") else NODES
+    with open(path, encoding="utf-8") as f:
+      records += [(folder, kind, canonical_record(r))
+                  for r in json.load(f).get("@graph", [])]
+  return records
 
 
 def normalize_report(report: dict | None, path_tokens: dict[str, str]):
@@ -152,14 +134,3 @@ def diff(expected: Any,
   if len(lines) > max_lines:
     lines = lines[:max_lines] + [f"... {len(lines) - max_lines} more lines"]
   return "\n".join(lines)
-
-
-def all_records(output: dict, kind: str | None = None):
-  """Yields (folder, kind, @id, record) for every record copy."""
-  for folder, kinds in output.get("folders", {}).items():
-    for k, records in kinds.items():
-      if kind and k != kind:
-        continue
-      for rid, rec in records.items():
-        for copy in rec if isinstance(rec, list) else [rec]:
-          yield folder, k, rid, copy
