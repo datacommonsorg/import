@@ -1,4 +1,12 @@
 {
-  "description": "Bulk load of two imports, each in its own subdirectory with its own config.json and provenance (import_names = [ALL_IMPORTS]). Output folders are named after the provenance (importName is not used for folders), and the handshake must list both.",
-  "runner_kwargs": {"import_names": ["ALL_IMPORTS"]}
+  "description": "Bulk load of two imports, each in its own subdirectory with its own config.json and provenance (import_names = [ALL_IMPORTS]). Output folders are named after the provenance (importName is not used for folders), and the handshake must list both. Global nodes (Sources, and the dc/g/Root StatVarGroup) can land in either import folder, so they are checked as present in some folder.",
+  "runner_kwargs": {
+    "import_names": [
+      "ALL_IMPORTS"
+    ]
+  },
+  "any_folder_types": [
+    "dcid:Source",
+    "dcid:StatVarGroup"
+  ]
 }

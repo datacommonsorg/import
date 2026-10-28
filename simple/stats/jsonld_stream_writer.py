@@ -445,8 +445,8 @@ class JsonLdStreamWriter(GraphWriter):
       self._processed_imports.add(self.import_name)
 
     if global_triples:
-      target_import = self.import_name if self.import_name in self._processed_imports else sorted(
-          self._processed_imports)[0]
+      target_import = self.import_name if self.import_name in self._processed_imports else next(
+          iter(self._processed_imports))
       dir_name = target_import.replace("/", "_")
       import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
       os.makedirs(import_temp_dir, exist_ok=True)

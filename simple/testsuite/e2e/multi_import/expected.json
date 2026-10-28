@@ -16,6 +16,11 @@
   "records": {
     "any_folder": [
       {
+        "@id": "dcid:dc/g/Root",
+        "@type": "dcid:StatVarGroup",
+        "dcid:name": "Data Commons Variables"
+      },
+      {
         "@id": "dcid:healthSource",
         "@type": "dcid:Source",
         "dcid:domain": "health.example.org",
@@ -45,11 +50,6 @@
     "folders": {
       "healthProvenance": {
         "nodes": {
-          "dcid:dc/g/Root": {
-            "@id": "dcid:dc/g/Root",
-            "@type": "dcid:StatVarGroup",
-            "dcid:name": "Data Commons Variables"
-          },
           "dcid:healthProvenance": [
             {
               "@id": "dcid:healthProvenance",
