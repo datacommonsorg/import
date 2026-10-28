@@ -54,9 +54,6 @@ All output is written under `--output_dir`, which can be a local path or a
   shards. Node shards are named `node-<index>-<uid>.jsonld` and observation
   shards are named `observation-<sanitized_input_file>-<index>.jsonld`.
 * `process/report.json`: the import report, including per-file status.
-* `process/debug_resolve_*.csv`: debug files for entity name resolution. These
-  are useful for checking whether names were resolved to the correct DCIDs and
-  for addressing unresolved ones.
 
 There is no database output. The importer streams shards to a local temporary
 directory as it runs and bulk uploads them to the output directory at the end
@@ -70,8 +67,6 @@ of the run.
 | `DC_API_ROOT` | `https://api.datacommons.org` | Data Commons REST API endpoint root. |
 | `DC_CLIENT_DEBUG` | `false` | If true, logs DC API request details and writes debug dumps to `.data/debug`. Note that this logs the API key, so keep it off outside of local debugging. |
 | `LOG_LEVEL` | `INFO` | Python logging level. |
-| `IMPORT_PROXY_ENTITIES` | `true` | Whether to generate proxy entity nodes for entities resolved from Base Data Commons. Can also be set with `--import_proxy_entities`. |
-| `FAST_NODE_EXPORT` | `true` | If true, node shards are serialized directly instead of going through rdflib. |
 | `WORKFLOW_EXECUTION_ID` | *unset* | Set by the ingestion workflow. When set (and the output dir is on GCS), the run writes a handshake JSON file for the workflow. |
 | `TEMP_LOCATION` | *unset* | GCS path the workflow handshake file is written under. |
 

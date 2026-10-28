@@ -33,7 +33,6 @@ from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.graph_writer import GraphWriter
-from stats.importer import EntityResolutionError
 from stats.importer import Importer
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
@@ -49,8 +48,6 @@ from util.filesystem import Dir
 from util.filesystem import File
 from util.filesystem import join_path
 from util.filesystem import Store
-
-from util import dc_client
 
 _ARCHIVES_DIR_NAME = "archives"
 
@@ -89,14 +86,9 @@ def _create_importer_for_file(
       )
 
     case ImportType.EVENTS:
-      sanitized_path = input_file.full_path().replace("://",
-                                                      "_").replace("/", "_")
-      debug_resolve_file = process_dir.open_file(
-          f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
       return EventsImporter(
           input_file=input_file,
           graph_writer=graph_writer,
-          debug_resolve_file=debug_resolve_file,
           reporter=reporter,
           nodes=nodes,
       )
@@ -203,7 +195,6 @@ class Runner:
       output_dir_path: str,
       import_names: Optional[list[str]] = None,
       use_multiprocessing: bool = True,
-      import_proxy_entities: Optional[bool] = None,
   ) -> None:
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
@@ -283,10 +274,6 @@ class Runner:
             config_file_dir=input_store.as_dir(),
         )
 
-    # Special file handlers and flags
-    if import_proxy_entities is not None:
-      self.config.data["importProxyEntities"] = import_proxy_entities
-
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
     self.special_file_names_by_type = self.config.special_files()
@@ -333,21 +320,12 @@ class Runner:
       self.reporter.report_failure(error=str(e))
 
       if not hasattr(self, "_failure_errors"):
-        if isinstance(e, EntityResolutionError):
-          self._failure_errors = [
-              FileValidationError(
-                  file=e.file_path,
-                  error_type=ValidationErrorType.UNRESOLVED_ENTITY,
-                  problem_columns=["entity"],
-                  error_message=str(e))
-          ]
-        else:
-          file_path = getattr(e, "file_path", "")
-          self._failure_errors = [
-              FileValidationError(file=file_path,
-                                  error_type=ValidationErrorType.GENERIC_ERROR,
-                                  error_message=str(e))
-          ]
+        file_path = getattr(e, "file_path", "")
+        self._failure_errors = [
+            FileValidationError(file=file_path,
+                                error_type=ValidationErrorType.GENERIC_ERROR,
+                                error_message=str(e))
+        ]
 
       for store in self.all_stores:
         try:
