@@ -26,55 +26,65 @@ The report has three levels:
                count, observation count, date range and node counts.
 """
 
-from dataclasses import dataclass
-from dataclasses import field
-from enum import StrEnum
+from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import ConfigDict
+from pydantic import Field
+from pydantic.alias_generators import to_camel
 
 
-class RunMode(StrEnum):
+class RunMode(str, Enum):
   """How the preprocessor was run."""
   INGEST = "INGEST"
   # TODO: Add DRY_RUN once the workflow supports dry runs.
 
 
-class RunStatus(StrEnum):
+class Status(str, Enum):
   """Outcome of the preprocessor run."""
   SUCCESS = "SUCCESS"
   FAILURE = "FAILURE"
 
 
-@dataclass
-class Run:
+class _ReportModel(BaseModel):
+  """Base for report models: camelCase JSON keys, snake_case attributes."""
+  model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+
+class RunMetadata(_ReportModel):
   """The `run` block: metadata for one preprocessor run."""
-  workflow_execution_id: str | None
-  mode: RunMode
-  status: RunStatus
-  start_time: str
-  end_time: str
-  folder_names: list[str] = field(default_factory=list)
-  output_path: str = ""
+  workflow_execution_id: str = Field(description="Ingestion workflow execution ID")
+  mode: RunMode = Field(
+                        description="How the preprocessor was run")
+  status: RunStatus = Field(description="Outcome of the preprocessor run")
+  start_time: str = Field(description="ISO-8601 UTC time the run started")
+  end_time: str = Field(description="ISO-8601 UTC time the run ended")
+  folder_names: list[str] = Field(
+      default_factory=list, description="Import folders requested for the run")
+  output_path: str = Field(default="",
+                           description="Path where the run's JSON-LD was written")
 
 
-@dataclass
-class Provenance:
+class Provenance(_ReportModel):
   """One entry in `folders[].provenances[]`."""
-  id: str
-  # TODO: Add source_id, file_count, observation_count, date_range, 
-  #node counts by type, and provenance-level errors.
+  id: str = Field(description="Provenance DCID")
+  # TODO: Add source_id, file_count, observation_count, date_range,
+  # node counts by type, and provenance-level errors.
 
 
-@dataclass
-class Folder:
-  """One entry in `folders[]`: summary of one import folder."""
-  folder_name: str
-  provenances: list[Provenance] = field(default_factory=list)
-  # TODO: Add provenance_count, observation_count, file counts by type, 
+class Folder(_ReportModel):
+  """One entry in `folders[]`: summary of one imported folder."""
+  folder_name: str = Field(description="Name of the imported folder")
+  provenances: list[Provenance] = Field(
+      default_factory=list, description="Provenances in this folder")
+  # TODO: Add provenance_count, observation_count, file counts by type,
   # node counts by type, and configUri.
 
 
-@dataclass
-class IngestionReport:
+class IngestionReport(_ReportModel):
   """Root of ingestion_report.json."""
-  run: Run
-  folders: list[Folder] = field(default_factory=list)
-  # TODO : Add error field in the ingestion report.
+  run: RunMetadata = Field(description="Metadata for each preprocessor run")
+  folders: list[Folder] = Field(default_factory=list,
+                                description="One entry per import folder")
+  # TODO: Add error field in the ingestion report.
