@@ -96,7 +96,8 @@ public class RollbackPipelineIntegrationTest {
     // Clear tables
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
     DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
-    List<String> tables = List.of("Observation", "TimeSeries", "Edge", "Node", "KeyValueStore");
+    List<String> tables =
+        List.of("Observation", "TimeSeries", "Edge", "LinkedEdge", "Node", "KeyValueStore");
     dbClient
         .readWriteTransaction()
         .run(
@@ -202,6 +203,14 @@ public class RollbackPipelineIntegrationTest {
         "Place",
         SpannerTestData.PROVENANCE,
         "should be restored from T_pre after the Phase 1 provenance-wide delete");
+    // LinkedEdge is keyed by the generated provenance, which resolveTargetProvenances includes, so
+    // the clean V1 row is deleted in Phase 1 and must come back from T_pre; the dirty one must not.
+    assertLinkedEdgeExists(
+        dbClient,
+        SpannerTestData.SUBJECT_ID_CA,
+        SpannerTestData.GENERATED_PROVENANCE,
+        "should be restored from T_pre after the Phase 1 provenance-wide delete");
+    assertLinkedEdgeDeleted(dbClient, SpannerTestData.SUBJECT_ID_DIRTY);
     assertTimeSeriesRestored(dbClient, SpannerTestData.STAT_VAR);
     assertObservationRestoredAndDirtyDeleted(dbClient);
     assertKeyValueRestored(dbClient);
@@ -253,6 +262,13 @@ public class RollbackPipelineIntegrationTest {
         dbClient,
         SpannerTestData.STAT_VAR_OTHER,
         SpannerTestData.OTHER_PROVENANCE,
+        "belongs to an unrelated import and must survive the provenance-scoped delete");
+    // The LinkedEdge delete has no index to narrow it (a partitioned full scan filtered by
+    // provenance), so this is where an over-broad delete would show up first.
+    assertLinkedEdgeExists(
+        dbClient,
+        SpannerTestData.SUBJECT_ID_OTHER,
+        SpannerTestData.OTHER_GENERATED_PROVENANCE,
         "belongs to an unrelated import and must survive the provenance-scoped delete");
     try (ResultSet rs =
         dbClient
@@ -377,6 +393,39 @@ public class RollbackPipelineIntegrationTest {
       assertEquals(predicate, rs.getString("predicate"));
       assertEquals(objectId, rs.getString("object_id"));
       assertEquals(provenance, rs.getString("provenance"));
+    }
+  }
+
+  private void assertLinkedEdgeExists(
+      DatabaseClient dbClient, String child, String provenance, String context) {
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format(
+                        "SELECT predicate, ancestor, child_type, child, provenance FROM LinkedEdge"
+                            + " WHERE child = '%s' AND provenance = '%s'",
+                        child, provenance)))) {
+      assertTrue(
+          String.format("LinkedEdge for %s (provenance %s) %s", child, provenance, context),
+          rs.next());
+      assertEquals("containedInPlace", rs.getString("predicate"));
+      assertEquals(SpannerTestData.LINKED_EDGE_ANCESTOR, rs.getString("ancestor"));
+      assertEquals(SpannerTestData.LINKED_EDGE_CHILD_TYPE, rs.getString("child_type"));
+      assertEquals(child, rs.getString("child"));
+      assertEquals(provenance, rs.getString("provenance"));
+    }
+  }
+
+  private void assertLinkedEdgeDeleted(DatabaseClient dbClient, String child) {
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.of(
+                    String.format("SELECT child FROM LinkedEdge WHERE child = '%s'", child)))) {
+      assertFalse(String.format("Dirty LinkedEdge for %s should be deleted", child), rs.next());
     }
   }
 

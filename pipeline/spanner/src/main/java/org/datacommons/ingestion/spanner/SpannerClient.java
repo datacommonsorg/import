@@ -4,6 +4,7 @@ import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
@@ -151,6 +152,26 @@ public class SpannerClient implements Serializable {
   public DatabaseClient getDatabaseClient(Spanner spanner) {
     return spanner.getDatabaseClient(
         DatabaseId.of(gcpProjectId, spannerInstanceId, spannerDatabaseId));
+  }
+
+  /**
+   * Returns whether a top-level table exists in the database.
+   *
+   * <p>Consults {@code INFORMATION_SCHEMA} rather than probing the table, so a transient error is
+   * never mistaken for a missing table: anything other than a definitive answer propagates.
+   */
+  public boolean tableExists(String tableName) {
+    Statement statement =
+        Statement.newBuilder(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES"
+                    + " WHERE TABLE_SCHEMA = '' AND TABLE_NAME = @tableName")
+            .bind("tableName")
+            .to(tableName)
+            .build();
+    try (Spanner spanner = createSpanner();
+        ResultSet resultSet = getDatabaseClient(spanner).singleUse().executeQuery(statement)) {
+      return resultSet.next() && resultSet.getLong(0) > 0;
+    }
   }
 
   public SpannerIO.Write getWriteTransform() {
