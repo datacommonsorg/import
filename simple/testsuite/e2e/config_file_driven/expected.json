@@ -1,0 +1,114 @@
+{
+  "error": null,
+  "handshake": {
+    "generateStatVarGroups": false,
+    "importList": [
+      {
+        "graphPath": "<output>/jsonld/<run>/KitchenProvenance/**/*.jsonld",
+        "importName": "KitchenProvenance"
+      }
+    ]
+  },
+  "records": {
+    "any_folder": [
+      {
+        "@id": "dcid:KitchenSource",
+        "@type": "dcid:Source",
+        "dcid:domain": "kitchen.example.org",
+        "dcid:name": "Kitchen Source",
+        "dcid:url": "https://kitchen.example.org"
+      },
+      {
+        "@id": "dcid:KitchenSource",
+        "@type": "dcid:Source",
+        "dcid:name": "Kitchen Source",
+        "dcid:url": "https://kitchen.example.org"
+      }
+    ],
+    "folders": {
+      "KitchenProvenance": {
+        "nodes": {
+          "dcid:KitchenProvenance": [
+            {
+              "@id": "dcid:KitchenProvenance",
+              "@type": "dcid:Provenance",
+              "dcid:name": "Kitchen Provenance",
+              "dcid:source": {
+                "@id": "dcid:KitchenSource"
+              },
+              "dcid:url": "https://kitchen.example.org/dataset"
+            },
+            {
+              "@id": "dcid:KitchenProvenance",
+              "@type": "dcid:Provenance",
+              "dcid:name": "Kitchen Provenance",
+              "dcid:source": {
+                "@id": "dcid:KitchenSource"
+              },
+              "dcid:url": "https://kitchen.example.org/dataset"
+            }
+          ],
+          "dcid:dc/g/Root": {
+            "@id": "dcid:dc/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Data Commons Variables"
+          }
+        },
+        "observations": {
+          "dcid:obs_41991db529c0d64682ac5cc488694d1ca1eb9147d2558623c1c1ba3f4bb7b5a5": {
+            "@id": "dcid:obs_41991db529c0d64682ac5cc488694d1ca1eb9147d2558623c1c1ba3f4bb7b5a5",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:value": 1,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Person",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          },
+          "dcid:obs_75edc34ef8f86f210d5b7901f33b4cf8c0733b10dfb9a448391720fc5a303306": {
+            "@id": "dcid:obs_75edc34ef8f86f210d5b7901f33b4cf8c0733b10dfb9a448391720fc5a303306",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/FRA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:value": 2,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Person",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "report": {
+    "importFiles": {
+      "<input>/data/countries_a.csv": {
+        "status": "SUCCESS"
+      },
+      "<input>/data/countries_b.csv": {
+        "status": "SUCCESS"
+      },
+      "<input>/data/provenance.mcf": {
+        "status": "SUCCESS"
+      }
+    },
+    "status": "SUCCESS"
+  }
+}

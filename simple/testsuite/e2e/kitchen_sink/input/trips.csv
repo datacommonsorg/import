@@ -1,0 +1,3 @@
+origin,destination,variable,date,value
+dcid:country/USA,dcid:country/FRA,Count_Trip,2020,10
+dcid:country/FRA,dcid:country/USA,Count_Trip,2020,7

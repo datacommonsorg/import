@@ -1,0 +1,9 @@
+{
+  "dataDownloadUrl": ["<input>/data"],
+  "inputFiles": [
+    {"pattern": "*.mcf", "provenance": "dcid:KitchenProvenance"},
+    {"pattern": "countries_*.csv", "provenance": "dcid:KitchenProvenance",
+     "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable",
+                        "dcid:observationDate": "date", "dcid:value": "value"}}
+  ]
+}
