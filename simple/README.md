@@ -72,7 +72,7 @@ of the run.
 
 ## Container Build & CI/CD (`datacommons-data`)
 
-This directory is packaged into the `gcr.io/datcom-ci/datacommons-data` container image using `simple/Dockerfile` and `simple/cloudbuild.yaml`.
+This directory is packaged into the [gcr.io/datcom-ci/datacommons-data](https://console.cloud.google.com/artifacts/docker/datcom-ci/us/gcr.io/datacommons-data) container image using `simple/Dockerfile` and `simple/cloudbuild.yaml`.
 
 ### Automated CI/CD Builds
 
@@ -81,15 +81,9 @@ Cloud Build automatically runs `simple/cloudbuild.yaml` when commits are pushed 
 * `gcr.io/datcom-ci/datacommons-data:<7-char-import-sha>`
 * `gcr.io/datcom-ci/datacommons-data:latest`
 
-Because commits outside `simple/` do not trigger a new image build, find the latest published preprocessor commit hash for releases by running:
-
-```shell
-git log -n 1 --pretty=format:%h -- simple/
-```
-
 ### Manual Dev Builds
 
-To manually build and push a custom image tag via Cloud Build (without overwriting `:latest`):
+To manually build and push a custom image tag to Artifact Registry via Cloud Build (without overwriting `:latest`):
 
 ```shell
 ./simple/scripts/push_image.sh <image-tag> [project-id]
@@ -99,24 +93,22 @@ If `project-id` is omitted, it defaults to `datcom-ci` (`gcr.io/datcom-ci/dataco
 
 ### Local Docker Build & Run
 
-To build the image locally from the repo root and run it on a local data directory:
+The container's `run.sh` entrypoint requires `DC_API_KEY`, `INPUT_DIR`, and `OUTPUT_DIR`, and writes results under `$OUTPUT_DIR/datacommons/`. From the repo root:
 
 ```shell
+# 1. Build the image locally.
 docker build -t datacommons-data:local simple/
 
+# 2a. Run it on a local data directory.
 docker run --rm \
   -e DC_API_KEY="${DC_API_KEY}" \
   -e INPUT_DIR=/data/input \
   -e OUTPUT_DIR=/data/output \
   -v /path/to/local/data:/data \
   datacommons-data:local
-```
 
-The container's `run.sh` entrypoint requires `DC_API_KEY`, `INPUT_DIR`, and `OUTPUT_DIR`, and writes results under `$OUTPUT_DIR/datacommons/`.
-
-To read from or write to Google Cloud Storage (`gs://`), mount your Application Default Credentials file:
-
-```shell
+# 2b. Or run it on Google Cloud Storage (gs://) paths, mounting your
+#     Application Default Credentials file for access.
 docker run --rm \
   -e DC_API_KEY="${DC_API_KEY}" \
   -e INPUT_DIR=gs://my-bucket/input \
