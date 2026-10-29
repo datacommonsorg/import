@@ -25,20 +25,13 @@ collecting or writing the report are logged rather than raised.
 from util.filesystem import Dir
 from util.filesystem import File
 
-
 class SummaryGenerator:
   """Generates the ingestion report for a preprocessor run."""
 
-  def __init__(self, workflow_execution_id: str | None = None) -> None:
-    """Creates a generator for one preprocessor run.
-
-    Args:
-      workflow_execution_id: Ingestion workflow execution ID, used to
-        identify this preprocessor run.
-    """
-    self._workflow_execution_id = workflow_execution_id
+  def __init__(self) -> None:
+    """Creates a generator for one preprocessor run. """
     # TODO: Add record_run_start(start_time, folder_names) and counters for
-    # input files, observations and nodes.
+    # input files, observations, and nodes.
 
   def write_summary(self, output_dir: Dir) -> File | None:
     """Writes the ingestion report as JSON into output_dir.

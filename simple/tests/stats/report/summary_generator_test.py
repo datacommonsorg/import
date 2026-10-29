@@ -21,9 +21,8 @@ from stats.report.summary_generator import SummaryGenerator
 class TestSummaryGenerator(unittest.TestCase):
   """Tests for SummaryGenerator."""
 
-  def test_init_with_and_without_workflow_id(self):
-    """A generator can be created with or without a workflow execution ID."""
-    self.assertIsInstance(SummaryGenerator("wf-123"), SummaryGenerator)
+  def test_init(self):
+    """A generator can be created."""
     self.assertIsInstance(SummaryGenerator(), SummaryGenerator)
 
 
