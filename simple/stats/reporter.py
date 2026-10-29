@@ -110,26 +110,16 @@ class ImportReporter:
                for reporter in self.file_reporters_by_full_path.values())
 
   def json(self) -> dict:
-    report = {}
-
-    def _maybe_report(field: str, func=None):
-      value = self.data.get(field)
-      if value:
-        report[field] = value if not func else func(value)
-
-    report["status"] = self.status.name
-    _maybe_report("error")
-
+    report = {"status": self.status.name}
+    if self.data.get("error"):
+      report["error"] = self.data["error"]
     if self.start_time:
       report["startTime"] = str(self.start_time)
       report["lastUpdate"] = str(self.last_update)
-
-    import_files_output = {}
-    for full_path, file_reporter in self.file_reporters_by_full_path.items():
-      import_files_output[full_path] = file_reporter.json()
-
-    report["importFiles"] = import_files_output
-
+    report["importFiles"] = {
+        full_path: file_reporter.json() for full_path, file_reporter in
+        self.file_reporters_by_full_path.items()
+    }
     return report
 
   def save(self) -> None:
@@ -182,25 +172,13 @@ class FileImportReporter:
     self.status = Status.FAILURE
     self.data["error"] = error
 
-  def report_unresolved_entities(self, unresolved_list: list[str]):
-    self.data["unresolvedEntities"] = unresolved_list
-
   def json(self) -> dict:
-    report = {}
-
-    def _maybe_report(field: str, func=None):
-      value = self.data.get(field)
-      if value is not None:
-        report[field] = value if not func else func(value)
-
-    report["status"] = self.status.name
-    _maybe_report("error")
-    _maybe_report("unresolvedEntities")
-
+    report = {"status": self.status.name}
+    if self.data.get("error") is not None:
+      report["error"] = self.data["error"]
     if self.start_time:
       report["startTime"] = str(self.start_time)
       report["lastUpdate"] = str(self.last_update)
-
     return report
 
   def report(self) -> None:

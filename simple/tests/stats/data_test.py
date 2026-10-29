@@ -16,7 +16,6 @@ import unittest
 
 import pandas as pd
 from stats import constants
-from stats.data import McfNode
 from stats.data import StatVarGroup
 from stats.data import Triple
 from stats.data import validate_numeric_values
@@ -46,28 +45,6 @@ class TestData(unittest.TestCase):
         Triple("dc/g/Root", "name", object_value="Data Commons Variables"),
     ]
     self.assertListEqual(result, expected)
-
-  def test_mcf_node(self):
-    triples: list[Triple] = [
-        Triple("sv1", "typeOf", object_id="StatisticalVariable"),
-        Triple("sv1", "name", object_value="sv name"),
-        Triple("sv1", "description", object_value="sv desc"),
-        Triple("sv1", "memberOf", object_id="svg1"),
-        Triple("sv1", "includedIn", object_id="prov1")
-    ]
-
-    node = McfNode("sv1")
-    for triple in triples:
-      node.add_triple(triple)
-
-    expected = """
-Node: dcid:sv1
-typeOf: StatisticalVariable
-name: "sv name"
-description: "sv desc"
-memberOf: svg1""".strip()
-
-    self.assertEqual(node.to_mcf(), expected)
 
 
 class TestValidateNumericValues(unittest.TestCase):

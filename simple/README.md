@@ -13,10 +13,6 @@ python3 -m stats.main
 By default it reads input files from the `.data/input` folder and writes output
 to the `.data/output` folder.
 
-To enable Data Commons API lookups, set a `DC_API_KEY` environment variable. See
-[API documentation](https://docs.datacommons.org/api/rest/v2/getting_started#authentication)
-to learn more about getting and using API keys.
-
 ## Other options
 
 To see all parameters and overrides supported by the script:
@@ -63,9 +59,6 @@ of the run.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `DC_API_KEY` | *unset* | Data Commons API key, used for entity resolution and schema lookups. |
-| `DC_API_ROOT` | `https://api.datacommons.org` | Data Commons REST API endpoint root. |
-| `DC_CLIENT_DEBUG` | `false` | If true, logs DC API request details and writes debug dumps to `.data/debug`. Note that this logs the API key, so keep it off outside of local debugging. |
 | `LOG_LEVEL` | `INFO` | Python logging level. |
 | `WORKFLOW_EXECUTION_ID` | *unset* | Set by the ingestion workflow. When set (and the output dir is on GCS), the run writes a handshake JSON file for the workflow. |
 | `TEMP_LOCATION` | *unset* | GCS path the workflow handshake file is written under. |

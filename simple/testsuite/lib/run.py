@@ -19,9 +19,6 @@ directory (config.json plus data files), runs Runner in the requested mode
 and returns the canonical output (see canonical.py). Runner always writes to
 a fake GCS, as in the ingestion workflow; the output is read back from there.
 
-The preprocessor must not call the Data Commons API. DC_API_ROOT points at a
-closed local port, so any call fails the run instead of reaching the network.
-
 Modes change *how* the preprocessor runs, never *what* it must produce:
 
   threaded      use_multiprocessing=False, input on local disk. The default.
@@ -46,8 +43,6 @@ from testsuite.lib import canonical
 from testsuite.lib import fake_gcs
 
 WORKFLOW_ID = "testsuite-run"
-# Nothing listens on port 9 (discard): calls fail fast with a connection error.
-_NO_DC_API = "http://127.0.0.1:9"
 
 
 @contextlib.contextmanager
@@ -190,8 +185,6 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
   starts from a clean slate so runs cannot influence each other.
   """
   env = {
-      "DC_API_ROOT": _NO_DC_API,
-      "DC_API_KEY": "",
       "WORKFLOW_EXECUTION_ID": WORKFLOW_ID,
       "TEMP_LOCATION": paths.temp,
       **fake_gcs.env(),

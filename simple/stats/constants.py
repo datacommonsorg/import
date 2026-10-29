@@ -23,16 +23,7 @@ DEFAULT_FROZEN_TIME = "2023-01-01"
 CONFIG_JSON_FILE_NAME = "config.json"
 ALL_IMPORTS = "ALL_IMPORTS"
 REPORT_JSON_FILE_NAME = "report.json"
-TRIPLES_FILE_NAME = "triples.csv"
-SENTENCES_FILE_NAME = "sentences.csv"
-TOPIC_CACHE_FILE_NAME = "custom_dc_topic_cache.json"
-
-OBSERVATIONS_FILE_NAME_PREFIX = "observations"
-DEBUG_RESOLVE_FILE_NAME_PREFIX = "debug_resolve"
 PROCESS_DIR_NAME = "process"
-NL_DIR_NAME = "nl"
-
-PROPERTY_DESCRIPTION = "description"
 """
 Dictionary of columns names that are considered to be already resolved 
 to prefixes that the corresponding values should be prefixed with before the CSV is imported.
@@ -50,27 +41,11 @@ PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES = dict([
     ("countryAlpha3Code".lower(), "country/"),
     ("geoId".lower(), "geoId/"),
 ])
-"""
-Dictionary of columns names that need to be externally resolved 
-to property names that should be used for resolution.
-
-Note that the lookup into these columns will always be lower-cased so ensure that 
-the keys in the dictionary are lower-case as well.
-
-Also, keep the keys sorted so it's easier to spot check should the list get large.
-"""
-EXTERNALLY_RESOLVED_INPUT_COLUMNS_TO_PREFIXES = dict([
-    ("lat#lng", "geoCoordinate"), ("name", PROPERTY_DESCRIPTION),
-    ("wikidataId".lower(), "wikidataId")
-])
-
-DCID_OVERRIDE_PREFIX = "dcid:"
 
 # Standard NA/null value representations
 STANDARD_NA_VALUES = ["-", "nil", "n/a", "na", "none", "null", "<na>"]
 
 # Observations CSV columns.
-COLUMN_DCID = "dcid"
 COLUMN_VARIABLE = "variable"
 COLUMN_DATE = "date"
 COLUMN_VALUE = "value"
@@ -83,15 +58,6 @@ COLUMN_SCALING_FACTOR = "scaling_factor"
 COLUMN_MEASUREMENT_METHOD = "measurement_method"
 COLUMN_OBSERVATION_PERIOD = "observation_period"
 COLUMN_PROPERTIES = "properties"
-
-# List of all observation property columns
-OBSERVATION_PROPERTY_COLUMNS = [
-    COLUMN_UNIT,
-    COLUMN_SCALING_FACTOR,
-    COLUMN_MEASUREMENT_METHOD,
-    COLUMN_OBSERVATION_PERIOD,
-    COLUMN_PROPERTIES,
-]
 
 # Standard observation column ordering used by the graph writer.
 OBSERVATION_COLUMNS = [
@@ -116,18 +82,3 @@ COLUMNS_TO_STRIP_NAMESPACES = [
     COLUMN_MEASUREMENT_METHOD,
     COLUMN_OBSERVATION_PERIOD,
 ]
-
-# Debug CSV columns and values
-DEBUG_COLUMN_INPUT = "input"
-DEBUG_COLUMN_DCID = "dcid"
-DEBUG_COLUMN_LINK = "link"
-DEBUG_UNRESOLVED_DCID = "*UNRESOLVED*"
-
-# DC links
-DC_HOME = "https://datacommons.org"
-DC_BROWSER = "https://datacommons.org/browser"
-
-# "Special" file types.
-# i.e. files of these types will be handled in specific ways.
-VERTICAL_SPECS_FILE_TYPE = "verticalSpecsFile"
-SPECIAL_FILE_TYPES = set([VERTICAL_SPECS_FILE_TYPE])

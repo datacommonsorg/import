@@ -13,9 +13,7 @@
 # limitations under the License.
 
 import json
-import logging
 
-import numpy as np
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
@@ -29,17 +27,7 @@ from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
-from stats.util import has_namespace_prefix
 from util.filesystem import File
-
-# Columns for standard observation properties.
-# These are optional.
-_OBS_PROPERTY_COLUMNS = [
-    sc.PREDICATE_UNIT,
-    sc.PREDICATE_SCALING_FACTOR,
-    sc.PREDICATE_MEASUREMENT_METHOD,
-    sc.PREDICATE_OBSERVATION_PERIOD,
-]
 
 # Mapping from official DCID keys in config.json to internal importer columns.
 STANDARD_PROPERTY_MAPPING = {
@@ -116,7 +104,6 @@ class VariablePerRowImporter(Importer):
     self.config = nodes.config
     self.custom_dimensions = []
     self.column_mappings = {}
-    self.df = pd.DataFrame()
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -124,18 +111,12 @@ class VariablePerRowImporter(Importer):
       errors = self.validate_headers()
       if errors:
         raise ValueError("\n".join(errors))
-      self._read_csv()
       self._map_columns()
       self._write_observations()
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
       raise e
-
-  def _read_csv(self) -> None:
-    # Read only the header row to extract column names for validation
-    with self.input_file.open_stream() as stream:
-      self.df = pd.read_csv(stream, nrows=1)
 
   def validate_headers(self) -> list[FileValidationError]:
     column_mappings, custom_dimensions = self._parse_column_mappings()
@@ -296,23 +277,24 @@ class VariablePerRowImporter(Importer):
       df[constants.COLUMN_PROPERTIES] = static_json
       return df
 
-    records = df[custom_cols].to_dict(orient="records")
-    serialized = []
-    for r in records:
-      d = dict(static_props)
-      for col, val in r.items():
-        if pd.notna(val) and val != "":
-          d[col] = strip_namespace(str(val))
-      serialized.append(json.dumps(d) if d else "")
-
+    serialized = [
+        _serialize_row_dimensions(row, static_props)
+        for row in df[custom_cols].to_dict(orient="records")
+    ]
     df[constants.COLUMN_PROPERTIES] = serialized
-
-    if custom_cols:
-      df = df.drop(columns=custom_cols)
-    return df
+    return df.drop(columns=custom_cols)
 
   def _ensure_entity_column(self, df: pd.DataFrame) -> pd.DataFrame:
     """Ensures the logical 'entity' column exists in the DataFrame, even if empty."""
     if constants.COLUMN_ENTITY not in df.columns:
       df[constants.COLUMN_ENTITY] = None
     return df
+
+
+def _serialize_row_dimensions(row: dict[str, object],
+                              static_props: dict[str, str]) -> str:
+  props = dict(static_props)
+  for col, val in row.items():
+    if pd.notna(val) and val != "":
+      props[col] = strip_namespace(str(val))
+  return json.dumps(props) if props else ""

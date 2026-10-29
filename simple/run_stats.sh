@@ -140,13 +140,6 @@ function check_simple_import {
     echo_fatal "No input directory or config. Specify one of '-i' or '-c' command line options.
 $USAGE"
   fi
-
-  # Check for DC API key
-  if [[ "$DC_API_KEY" == "" ]]; then
-    echo_log "Warning: DC_API_KEY not set and may cause failures.
-Set a DataCommons API key with '-k' option.
-To get a key, please refer to https://docs.datacommons.org/api/rest/v2/getting_started#authentication"
-  fi
 }
 
 # Run the simple import on the specified config/input files.
@@ -154,9 +147,6 @@ To get a key, please refer to https://docs.datacommons.org/api/rest/v2/getting_s
 function simple_import {
   check_simple_import
   setup_python
-
-  # Export env variables for simple stats importer
-  export DC_API_KEY=${DC_API_KEY}
 
   # Build options for simple importer
   local importer_options=""

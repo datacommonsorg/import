@@ -15,9 +15,6 @@
 import logging
 
 from kg_util.mcf_parser import mcf_to_triples
-import pandas as pd
-from stats import constants
-from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
 from stats.graph_writer import GraphWriter
@@ -104,33 +101,6 @@ class McfImporter(Importer):
     except Exception as e:
       self.reporter.report_failure(str(e))
       raise e
-
-  def _mcf_to_triples(self) -> list[Triple]:
-    parser_triples: list[list[str]] = []
-    # DCID references
-    local2dcid: dict[str, str] = {}
-
-    for parser_triple in mcf_to_triples(self.input_file.read_string_io()):
-      [subject_id, predicate, value, _] = parser_triple
-
-      # If it's not a DCID property, save it for later processing and move on
-      if predicate != _DCID:
-        parser_triples.append(parser_triple)
-        continue
-
-      # Ignore empty DCID values
-      if not value:
-        continue
-
-      # If we have seen it, warn if there is a conflict, but maintain legacy behavior (overwrite)
-      if subject_id in local2dcid and local2dcid[subject_id] != value:
-        logging.warning(
-            "Conflicting DCID for subject %s: '%s' vs '%s'. Overwriting as per legacy behavior.",
-            subject_id, local2dcid[subject_id], value)
-
-      local2dcid[subject_id] = value
-
-    return list(map(lambda x: _to_triple(x, local2dcid), parser_triples))
 
 
 def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:

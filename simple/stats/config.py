@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from stats import constants
 from stats.data import EntityType
 from stats.data import ImportType
 from stats.data import strip_namespace
@@ -147,14 +146,6 @@ class Config:
 
   def include_input_subdirs(self) -> bool:
     return self.data.get(_INCLUDE_INPUT_SUBDIRS_PROPERTY) or False
-
-  def special_files(self) -> dict[str, str]:
-    special_files: dict[str, str] = {}
-    for special_file_type in constants.SPECIAL_FILE_TYPES:
-      special_file_name = self.data.get(special_file_type, "")
-      if special_file_name:
-        special_files[special_file_type] = special_file_name
-    return special_files
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""

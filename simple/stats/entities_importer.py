@@ -15,7 +15,6 @@
 import logging
 
 import pandas as pd
-from stats import constants
 from stats.data import FileValidationError
 from stats.data import RowEntity
 from stats.data import strip_namespace
@@ -27,6 +26,12 @@ from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.util import has_namespace_prefix
 from util.filesystem import File
+
+
+def _parse_object_ids(v_str: str) -> str | list[str]:
+  if "," in v_str:
+    return [strip_namespace(x.strip()) for x in v_str.split(",")]
+  return strip_namespace(v_str)
 
 
 class EntitiesImporter(Importer):
@@ -72,7 +77,6 @@ class EntitiesImporter(Importer):
       self.provenance_id = self.nodes.provenance(self.input_file).id
       self._read_csv()
       self._drop_ignored_columns()
-      self._sanitize_values()
       self._rename_columns()
       self._write_row_entity_triples()
       self.reporter.report_success()
@@ -131,10 +135,6 @@ class EntitiesImporter(Importer):
     if self.ignore_columns:
       self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
 
-  def _sanitize_values(self):
-    # Convert to best possible dtypes (i.e. keep ints as ints even when some values are NaN)
-    self.df = self.df.convert_dtypes()
-
   def _is_entity_reference_column(self, col: str) -> bool:
     return col in self.entity_columns
 
@@ -148,8 +148,23 @@ class EntitiesImporter(Importer):
         self.entity_columns.add(id)
     self.df = self.df.rename(columns=renamed)
 
+  def _extract_row_properties(
+      self,
+      row: pd.Series) -> tuple[dict[str, str], dict[str, str | list[str]]]:
+    prop_object_values: dict[str, str] = {}
+    prop_object_ids: dict[str, str | list[str]] = {}
+    for k, v in row.items():
+      if pd.isna(v):
+        continue
+      v_str = str(v)
+      if self._is_entity_reference_column(k) or has_namespace_prefix(v_str):
+        prop_object_ids[k] = _parse_object_ids(v_str)
+      else:
+        prop_object_values[k] = v
+    return prop_object_values, prop_object_ids
+
   def _write_row_entity_triples(self) -> None:
-    # Add event type node - it will be written to DB later.
+    # Add entity type node - it will be written later.
     # This is to avoid duplicate entity types in scenarios where entities of the same type
     # are spread across files.
     self.nodes.entity_type(self.row_entity_type, self.input_file)
@@ -163,33 +178,14 @@ class EntitiesImporter(Importer):
           self.nodes.property(self.id_column).dcid)
 
     triples: list[Triple] = []
+    entity_type = strip_namespace(self.row_entity_type)
     for index, row in self.df.iterrows():
-      # If id column is configured, use it as the entity dcid else generate based on row index.
-      dcid = row[
+      raw_dcid = row[
           id_column_name] if id_column_name else f"{self.row_entity_type}_{index}"
-
-      # Normalize subject ID
-      dcid = strip_namespace(str(dcid))
-
-      prop_object_values: dict[str, str] = {}
-      prop_object_ids: dict[str, str | list[str]] = {}
-
-      for i, (k, v) in enumerate(row.items()):
-        if pd.isna(v):
-          continue
-        v_str = str(v)
-        if self._is_entity_reference_column(k) or has_namespace_prefix(v_str):
-          if "," in v_str:
-            ids = list(
-                map(lambda x: strip_namespace(x.strip()), v_str.split(",")))
-            prop_object_ids[k] = ids
-          else:
-            prop_object_ids[k] = strip_namespace(v_str)
-        else:
-          prop_object_values[k] = v
-
+      dcid = strip_namespace(str(raw_dcid))
+      prop_object_values, prop_object_ids = self._extract_row_properties(row)
       row_entity = RowEntity(dcid,
-                             strip_namespace(self.row_entity_type),
+                             entity_type,
                              provenance_id=self.provenance_id,
                              prop_object_values=prop_object_values,
                              prop_object_ids=prop_object_ids)
