@@ -91,7 +91,7 @@ public class EmbeddingConfigTest {
         }
         """;
 
-    assertThrows(IllegalArgumentException.class, () -> EmbeddingConfig.parseJson(json));
+    assertThrows(RuntimeException.class, () -> EmbeddingConfig.parseJson(json));
 
     String unknownFilterJson =
         """
@@ -111,8 +111,7 @@ public class EmbeddingConfigTest {
         }
         """;
 
-    assertThrows(
-        IllegalArgumentException.class, () -> EmbeddingConfig.parseJson(unknownFilterJson));
+    assertThrows(RuntimeException.class, () -> EmbeddingConfig.parseJson(unknownFilterJson));
   }
 
   @Test

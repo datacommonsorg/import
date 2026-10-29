@@ -7,10 +7,10 @@
       "task_type": "RETRIEVAL_QUERY",
       "node_types": {
         "StatisticalVariable": [
-          "description"
+          "name"
         ],
         "Topic": [
-          "description"
+          "name"
         ]
       },
       "node_filter_type": "NO_FILTER"
@@ -22,6 +22,7 @@
       "task_type": "RETRIEVAL_QUERY",
       "node_types": {
         "Class": [
+          "name",
           "description"
         ]
       },
