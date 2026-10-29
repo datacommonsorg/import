@@ -25,14 +25,12 @@ from stats.data import ObservationProperties
 from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.data import ValidationErrorType
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.util import has_namespace_prefix
 from util.filesystem import File
-
-from util import dc_client as dc
 
 # Columns for standard observation properties.
 # These are optional.
@@ -102,28 +100,23 @@ def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
 
 
 class VariablePerRowImporter(Importer):
-  """Imports a single observations input file where variables are specified in rows (aka "SVObs").
-  This is in contrast to the ObservationsImporter where variables are specified in columns.
+  """Imports a single observations CSV, one observation per row ("SVObs").
 
-  Currently this importer only writes observations and no entities.
-  It also does not resolve any entities and expects all entities to be pre-resolved.
+  The variable is named in a column rather than implied by the column heading,
+  and up to three entity dimensions can be mapped via `columnMappings`.
+  All entity DCIDs are expected to arrive pre-resolved in the CSV.
   """
 
-  def __init__(self, input_file: File, db: Db, reporter: FileImportReporter,
-               nodes: Nodes) -> None:
+  def __init__(self, input_file: File, graph_writer: GraphWriter,
+               reporter: FileImportReporter, nodes: Nodes) -> None:
     self.input_file = input_file
-    self.db = db
+    self.graph_writer = graph_writer
     self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
     self.custom_dimensions = []
     self.column_mappings = {}
     self.df = pd.DataFrame()
-    self.entity_columns = set(self.config.entity_columns(self.input_file))
-    # Unique entity IDs seen in this CSV.
-    # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
-    self.entity_dcids: dict[str, bool] = {}
-    self.all_unresolved_entities: set[str] = set()
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -134,8 +127,6 @@ class VariablePerRowImporter(Importer):
       self._read_csv()
       self._map_columns()
       self._write_observations()
-      self._add_entity_nodes()
-      self.check_and_report_unresolved_entities(self.all_unresolved_entities)
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
@@ -280,7 +271,7 @@ class VariablePerRowImporter(Importer):
         if chunk_df.empty:
           continue
         observations_df = (self.resolve_specified_columns(chunk_df).pipe(
-            self._apply_column_mappings).pipe(self._track_entity_dcids).pipe(
+            self._apply_column_mappings).pipe(
                 _apply_property_defaults, obs_props).pipe(
                     self._serialize_custom_dimensions,
                     obs_props.properties).pipe(_format_numeric_values).pipe(
@@ -288,28 +279,12 @@ class VariablePerRowImporter(Importer):
                             self._ensure_entity_column).pipe(
                                 _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
-        self.db.insert_observations(observations_df, self.input_file)
+        self.graph_writer.write_observations(observations_df, self.input_file)
 
   def _apply_column_mappings(self, df: pd.DataFrame) -> pd.DataFrame:
     """Rename physical CSV columns to logical column names."""
     reverse_mappings = {v: k for k, v in self.column_mappings.items()}
     return df.rename(columns=reverse_mappings)
-
-  def _track_entity_dcids(self, df: pd.DataFrame) -> pd.DataFrame:
-    """Track unique entity DCIDs seen in all entity dimension columns in this CSV."""
-    cols_to_check = list(self.custom_dimensions)
-    if constants.COLUMN_ENTITY in df.columns:
-      cols_to_check.append(constants.COLUMN_ENTITY)
-    for col in cols_to_check:
-      if col in df.columns:
-        valid_dcids = df[col].dropna().unique()
-        for dcid in valid_dcids:
-          if dcid != "" and (col in self.entity_columns or
-                             self.column_mappings.get(col)
-                             in self.entity_columns or
-                             has_namespace_prefix(str(dcid))):
-            self.entity_dcids[dcid] = True
-    return df
 
   def _serialize_custom_dimensions(
       self, df: pd.DataFrame, static_props: dict[str, str]) -> pd.DataFrame:
@@ -341,48 +316,3 @@ class VariablePerRowImporter(Importer):
     if constants.COLUMN_ENTITY not in df.columns:
       df[constants.COLUMN_ENTITY] = None
     return df
-
-  def _add_entity_nodes(self) -> None:
-    # NOTE: Generation of proxy entity nodes from Base Data Commons is controlled
-    # by import_proxy_entities. Observation nodes already reference the place/entity
-    # DCID directly in observationAbout, and disabling proxy node creation prevents
-    # generating redundant proxy entity nodes in the custom graph and avoids unnecessary
-    # Base DC API calls during ingestion.
-    if not self.config.import_proxy_entities():
-      logging.debug(
-          "Skipping proxy entity node generation (import_proxy_entities is disabled)."
-      )
-      return
-
-    # Get entity nodes that are not already recorded.
-    new_entity_dcids = [
-        strip_namespace(dcid)
-        for dcid in self.entity_dcids
-        if not self.nodes.has_entity(strip_namespace(dcid))
-    ]
-
-    prov_id = getattr(self, "provenance", "")
-    if prov_id:
-      for dcid in self.entity_dcids:
-        clean_dcid = strip_namespace(dcid)
-        if self.nodes.has_entity(clean_dcid):
-          self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
-
-    logging.info("Found %s total entities, of which %s are already imported.",
-                 len(self.entity_dcids),
-                 len(self.entity_dcids) - len(new_entity_dcids))
-
-    if not new_entity_dcids:
-      return
-
-    # Get entity types
-    logging.info("Getting entity types from DC for %s entities.",
-                 len(new_entity_dcids))
-    dcid2type: dict[str,
-                    str] = dc.get_property_of_entities(new_entity_dcids,
-                                                       sc.PREDICATE_TYPE_OF)
-
-    if dcid2type:
-      logging.info("Importing %s of %s entities.", len(dcid2type),
-                   len(new_entity_dcids))
-      self.nodes.entities_with_types(dcid2type, provenance_id=prov_id)

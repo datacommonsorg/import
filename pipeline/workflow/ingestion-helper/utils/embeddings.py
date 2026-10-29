@@ -28,6 +28,7 @@ import config
 
 
 _BATCH_SIZE = 1000
+_EMBEDDING_TABLE = "NodeEmbedding"
 _NL_STAT_VAR_FILE = f"gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv"
 
 @lru_cache(maxsize=1)
@@ -165,7 +166,7 @@ class EmbeddingUtils:
                     ]))
                     yield (subject_id, embedding_content, node.get("types"))
 
-    def _delete_existing_embeddings(self, embedding_table: str, embedding_label: str, subject_ids_iterable, timeout: int) -> int:
+    def _delete_existing_embeddings(self, embedding_label: str, subject_ids_iterable, timeout: int) -> int:
         """Deletes existing embeddings for subject_ids from a generator or iterable in batches.
 
         Args:
@@ -179,7 +180,7 @@ class EmbeddingUtils:
         """
         global _BATCH_SIZE
         delete_sql = f"""
-            DELETE FROM {embedding_table}
+            DELETE FROM {_EMBEDDING_TABLE}
             WHERE embedding_label = @embedding_label
               AND subject_id IN UNNEST(@subject_ids)
         """
@@ -223,7 +224,7 @@ class EmbeddingUtils:
         logging.info(f"Deleted {total_deleted} existing embedding rows (embedding_label: {embedding_label}).")
         return total_deleted
 
-    def _generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_table, embedding_label, task_type, timeout):
+    def _generate_embeddings_partitioned(self, nodes_generator, model_name, embedding_label, task_type, timeout):
         """Generates embeddings in batches using standard transactions.
         Processes nodes in chunks of 500 to avoid transaction size limits.
         Accepts a generator or list to avoid loading all nodes into memory.
@@ -253,7 +254,7 @@ class EmbeddingUtils:
         """
 
         insert_sql = f"""
-            INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_label, embedding_content_key, embedding_content, embeddings, node_types)
+            INSERT OR UPDATE INTO {_EMBEDDING_TABLE} (subject_id, embedding_label, embedding_content_key, embedding_content, embeddings, node_types)
             SELECT subject_id, @embedding_label, CAST(FARM_FINGERPRINT(JSON_VALUE(embedding_content, '$.name')) AS STRING), embedding_content, embeddings, node_types
             FROM UNNEST(@rows)
         """
@@ -361,7 +362,6 @@ class EmbeddingUtils:
             subject_ids_generator = (item[0] for item in converted_stream)
 
             self._delete_existing_embeddings(
-                embedding_table=self.spanner.embedding_table,
                 embedding_label=embedding_label,
                 subject_ids_iterable=subject_ids_generator,
                 timeout=config.TIMEOUT
@@ -375,7 +375,6 @@ class EmbeddingUtils:
             affected_rows = self._generate_embeddings_partitioned(
                 converted_nodes,
                 model_name=model_name,
-                embedding_table=self.spanner.embedding_table,
                 embedding_label=embedding_label,
                 task_type=task_type,
                 timeout=config.TIMEOUT

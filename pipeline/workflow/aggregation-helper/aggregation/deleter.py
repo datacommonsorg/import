@@ -53,11 +53,43 @@ class AggregationDeleter:
                 disable_builtin_metrics=True,
             )
             instance = spanner_client.instance(self.instance_id)
-            self._spanner_database = instance.database(self.database_id)
+            database = instance.database(self.database_id)
+            self._configure_streaming_timeout(database)
+            self._spanner_database = database
             logging.info(
                 f"Initialized Spanner client for deleter: {self._spanner_database.name}"
             )
         return self._spanner_database
+
+    def _configure_streaming_timeout(self, database) -> None:
+        """Applies self.timeout as the deadline for ExecuteStreamingSql RPCs.
+
+        Partitioned DML runs as one ExecuteStreamingSql stream, but
+        Database.execute_partitioned_dml() takes no timeout argument, so the
+        generated client's 3600s default would cut every delete off at 1 hour.
+        The library has no public setting for this, so override the default on
+        this database's own client (which also covers the deleter's snapshot
+        queries). Fails loudly rather than silently falling back to 1 hour;
+        deleter_timeout_test.py pins this against the locked
+        google-cloud-spanner and google-api-core versions.
+        """
+        deadline = float(self.timeout)
+        try:
+            transport = database.spanner_api.transport
+            streaming_sql = transport._wrapped_methods[transport.execute_streaming_sql]
+            # Read before writing: assigning to a renamed attribute would
+            # silently do nothing.
+            library_default = streaming_sql._timeout
+            streaming_sql._timeout = deadline
+        except (AttributeError, KeyError) as e:
+            raise RuntimeError(
+                "google-cloud-spanner/google-api-core internals changed: cannot set "
+                "the ExecuteStreamingSql deadline used by Partitioned DML deletes."
+            ) from e
+        logging.info(
+            f"Set Spanner ExecuteStreamingSql deadline to {deadline}s "
+            f"(library default: {library_default}s)."
+        )
 
     def delete_aggregated_data(self, imports_to_delete: List[str]) -> None:
         """Deletes aggregated data for the specified imports from Spanner concurrently.

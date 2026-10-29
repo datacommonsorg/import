@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.proto.Mcf.McfGraph.Values;
@@ -113,6 +114,50 @@ public class StatVarNameGeneratorTest {
             .build();
 
     assertEquals("Count Person", StatVarNameGenerator.generateName(pvs));
+  }
+
+  @Test
+  public void testGenerateNameWithExplicitConstraintProps() {
+    PropertyValues pvs =
+        PropertyValues.newBuilder()
+            .putPvs("typeOf", Values.newBuilder().addTypedValues(tv("StatisticalVariable")).build())
+            .putPvs(
+                "measuredProperty",
+                Values.newBuilder().addTypedValues(tv("cumulativeCount")).build())
+            .putPvs(
+                "populationType",
+                Values.newBuilder().addTypedValues(tv("MedicalConditionIncident")).build())
+            .putPvs("incidentType", Values.newBuilder().addTypedValues(tv("COVID_19")).build())
+            .putPvs(
+                "medicalStatus", Values.newBuilder().addTypedValues(tv("ConfirmedCase")).build())
+            .build();
+
+    // Only the provided constraint props contribute to the name.
+    assertEquals(
+        "Cumulative Count Of Medical Condition Incident: COVID 19",
+        StatVarNameGenerator.generateName(pvs, Set.of("incidentType")));
+    // An empty set means no constraints.
+    assertEquals(
+        "Cumulative Count Of Medical Condition Incident",
+        StatVarNameGenerator.generateName(pvs, Set.of()));
+    // Null falls back to deriving constraints from all non-excluded props when the node does not
+    // declare constraintProperties.
+    assertEquals(
+        "Cumulative Count Of Medical Condition Incident: COVID 19, Confirmed Case",
+        StatVarNameGenerator.generateName(pvs, null));
+
+    // When constraintProperties is declared on the node itself, the 1-arg generateName(pvs) also
+    // respects it and ignores undeclared properties like sourceIndicatorCode.
+    PropertyValues pvsWithDeclaredConstraints =
+        pvs.toBuilder()
+            .putPvs(
+                "constraintProperties",
+                Values.newBuilder().addTypedValues(tv("dcid:incidentType")).build())
+            .putPvs("sourceIndicatorCode", Values.newBuilder().addTypedValues(tv("NGDP")).build())
+            .build();
+    assertEquals(
+        "Cumulative Count Of Medical Condition Incident: COVID 19",
+        StatVarNameGenerator.generateName(pvsWithDeclaredConstraints));
   }
 
   private static TypedValue tv(String val) {

@@ -33,6 +33,7 @@ public class StatVarStateTest {
     // Common setup
     var mockHttp = Mockito.mock(HttpClient.class);
     var mockResp = Mockito.mock(HttpResponse.class);
+    when(mockResp.statusCode()).thenReturn(200);
     when(mockHttp.send(any(), any())).thenReturn(mockResp);
 
     Debug.Log.Builder lb = Debug.Log.newBuilder();

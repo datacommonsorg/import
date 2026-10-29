@@ -1,0 +1,140 @@
+{
+    "@context": {
+        "dcid": "https://datacommons.org/browser/"
+    },
+    "@graph": [
+        {
+            "@id": "dcid:obs_76f085ac0247110a51ccebdfd441324355fb753903e8f03d4f499d9e84d7baaa",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:sv_female",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2019,
+            "dcid:value": 1.2,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE1"
+            }
+        },
+        {
+            "@id": "dcid:obs_09bca5e667e9010dbc400925511a836df5aff6ff67d410d9a757f33ef9596604",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:sv_male",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2019,
+            "dcid:value": 13.4,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE1"
+            }
+        },
+        {
+            "@id": "dcid:obs_e33c066c28f67d1c5b883d6c8b01e5247a5eeb127c3fcdd1b587ffbabf876b57",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:sv",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2019,
+            "dcid:value": 7.5,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE1"
+            }
+        },
+        {
+            "@id": "dcid:obs_b43eb8e9f5840b8101aedfc7e06de71ae7539310e3738ededc9214f146181944",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:sv_female",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2016,
+            "dcid:value": 1.8,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE2"
+            }
+        },
+        {
+            "@id": "dcid:obs_24100a8d28428b2ce26a16672db1593f651d81645fc9fb04c21000fad734471e",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:sv_male",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2016,
+            "dcid:value": 14.3,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE2"
+            }
+        },
+        {
+            "@id": "dcid:obs_c981511edb8af943da5d4d746a7acd24a3932f24636b43e61f901d80614ac1bb",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:sv_female",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2018,
+            "dcid:value": 4.5,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE3"
+            }
+        },
+        {
+            "@id": "dcid:obs_660a5001a4550c65a3922c560a97654b8d8dd0ba0da08c368c8c0c3eaba07dcb",
+            "@type": "dcid:StatVarObservation",
+            "dcid:variableMeasured": {
+                "@id": "dcid:sv_male",
+                "dcid:observationProperties": [
+                    "dcid:observationAbout"
+                ]
+            },
+            "dcid:observationDate": 2018,
+            "dcid:value": 35.7,
+            "dcid:provenance": {
+                "@id": "dcid:Provenance1"
+            },
+            "dcid:provenanceUrl": "http://source1.com/provenance1",
+            "dcid:observationAbout": {
+                "@id": "dcid:country/FAKE3"
+            }
+        }
+    ]
+}

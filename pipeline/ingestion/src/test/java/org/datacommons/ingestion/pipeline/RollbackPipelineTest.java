@@ -1,0 +1,402 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package org.datacommons.ingestion.pipeline;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
+import com.google.cloud.spanner.KeySet;
+import com.google.cloud.spanner.Mutation;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.runners.TransformHierarchy;
+import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.ingestion.pipeline.rollback.ReadHistoricalObservationsFn;
+import org.datacommons.ingestion.pipeline.rollback.ReconcileNodeEmbeddingsFn;
+import org.datacommons.ingestion.pipeline.rollback.SpannerPartitionedDeleteFn;
+import org.datacommons.ingestion.pipeline.rollback.SpannerRollbackPipeline;
+import org.datacommons.ingestion.spanner.SpannerClient;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
+public class RollbackPipelineTest implements Serializable {
+
+  @Rule public final transient TestPipeline pipeline = TestPipeline.create();
+
+  public static List<Mutation> capturedMutations = Collections.synchronizedList(new ArrayList<>());
+
+  private static final List<String> PROVENANCE_SCOPED_TABLES =
+      List.of("Edge", "LinkedEdge", "TimeSeries", "KeyValueStore");
+  private static final List<String> LINKED_EDGE_STEPS =
+      List.of(
+          "ExecuteDeleteProvs-LinkedEdge", "ReadHistoricalLinkedEdges", "WriteRestoredLinkedEdges");
+
+  @Before
+  public void setUp() {
+    capturedMutations.clear();
+  }
+
+  @Test
+  public void testResolveTargetProvenances_malformedJson_throwsException() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setImportList("[{\"importName\": \"CensusACS5YearSurvey\""); // truncated JSON
+    options.setIsBaseDc(true);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.resolveTargetProvenances(options));
+
+    assertTrue(exception.getMessage().contains("Failed to parse --importList as JSON"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_nonJson_throwsException() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setImportList("CensusACS5YearSurvey,BLS_Data"); // not valid JSON
+    options.setIsBaseDc(true);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.resolveTargetProvenances(options));
+
+    assertTrue(exception.getMessage().contains("Failed to parse --importList as JSON"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_nonArrayJson_throwsException() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setImportList("{\"importName\": \"CensusACS5YearSurvey\"}"); // JSON object, not array
+    options.setIsBaseDc(true);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.resolveTargetProvenances(options));
+
+    assertTrue(exception.getMessage().contains("Failed to parse --importList as JSON array"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_fromJsonArray_baseDc() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setImportList(
+        "[{\"importName\": \"CensusACS5YearSurvey\"}, {\"importName\": \"BLS_Data\"}]");
+    options.setIsBaseDc(true);
+
+    assertEquals(
+        List.of(
+            "dc/base/CensusACS5YearSurvey",
+            "dc/base/generated/CensusACS5YearSurvey",
+            "dc/base/BLS_Data",
+            "dc/base/generated/BLS_Data"),
+        RollbackPipeline.resolveTargetProvenances(options));
+  }
+
+  @Test
+  public void testMissingRollbackTimestamp_throwsException() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setRollbackTimestamp(null);
+
+    SpannerClient spannerClient =
+        SpannerClient.builder()
+            .gcpProjectId("test")
+            .spannerInstanceId("test")
+            .spannerDatabaseId("test")
+            .build();
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.buildPipeline(pipeline, options, spannerClient));
+
+    assertTrue(exception.getMessage().contains("--rollbackTimestamp must be specified"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_empty_throwsException() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setImportList(null);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> RollbackPipeline.resolveTargetProvenances(options));
+
+    assertTrue(exception.getMessage().contains("--importList must be specified for rollback"));
+  }
+
+  @Test
+  public void testResolveTargetProvenances_fromImportList_customDc() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setImportList("[{\"importName\": \"CustomSurvey\"}]");
+    options.setIsBaseDc(false);
+
+    assertEquals(
+        List.of("CustomSurvey", "generated/CustomSurvey"),
+        RollbackPipeline.resolveTargetProvenances(options));
+  }
+
+  @Test
+  public void testApplyHeadDeletions_alwaysReturnsSignals() {
+    Pipeline localPipeline = Pipeline.create();
+    SpannerClient spannerClient =
+        SpannerClient.builder()
+            .gcpProjectId("test")
+            .spannerInstanceId("test")
+            .spannerDatabaseId("test")
+            .build();
+
+    var signals =
+        SpannerRollbackPipeline.applyHeadDeletions(
+            localPipeline, List.of("dc/base/Test"), /* includeLinkedEdge= */ true, spannerClient);
+
+    assertNotNull(signals.delTsSignal());
+    assertNotNull(signals.delEdgeSignal());
+    assertTrue(signals.delLinkedEdgeSignal().isPresent());
+    assertNotNull(signals.delKvSignal());
+
+    var signalsWithoutLinkedEdge =
+        SpannerRollbackPipeline.applyHeadDeletions(
+            Pipeline.create(),
+            List.of("dc/base/Test"),
+            /* includeLinkedEdge= */ false,
+            spannerClient);
+    assertTrue(signalsWithoutLinkedEdge.delLinkedEdgeSignal().isEmpty());
+  }
+
+  @Test
+  public void testBuildPipeline_restoresEveryProvenanceScopedTable() {
+    List<String> transformNames = buildRollbackGraph(/* linkedEdgeTableExists= */ true);
+
+    // Every table the aggregation step writes under a generated provenance must be deleted at
+    // HEAD and restored from T_pre, or a rollback leaves it inconsistent with Edge.
+    for (String table : PROVENANCE_SCOPED_TABLES) {
+      assertTrue(
+          "missing HEAD delete for " + table,
+          transformNames.contains("ExecuteDeleteProvs-" + table));
+    }
+    for (String step :
+        List.of(
+            "ReadHistoricalEdges",
+            "ReadHistoricalLinkedEdges",
+            "ReadHistoricalTimeSeries",
+            "ReadHistoricalKeyValueStore",
+            "WriteRestoredEdges",
+            "WriteRestoredLinkedEdges",
+            "WriteRestoredTimeSeries",
+            "WriteRestoredKeyValueStore")) {
+      assertTrue("missing rollback step " + step, transformNames.contains(step));
+    }
+  }
+
+  @Test
+  public void testBuildPipeline_skipsLinkedEdgeWhenTableIsMissing() {
+    // A database that has not run the LinkedEdge schema migration must still get a working
+    // rollback of every other table; the LinkedEdge steps are simply absent from the graph.
+    List<String> transformNames = buildRollbackGraph(/* linkedEdgeTableExists= */ false);
+
+    for (String step : LINKED_EDGE_STEPS) {
+      assertFalse("unexpected LinkedEdge step " + step, transformNames.contains(step));
+    }
+    for (String step :
+        List.of(
+            "ExecuteDeleteProvs-Edge",
+            "ExecuteDeleteProvs-TimeSeries",
+            "ExecuteDeleteProvs-KeyValueStore",
+            "ReadHistoricalEdges",
+            "WriteRestoredEdges",
+            "WriteRestoredTimeSeries",
+            "WriteRestoredKeyValueStore")) {
+      assertTrue("missing rollback step " + step, transformNames.contains(step));
+    }
+  }
+
+  private static List<String> buildRollbackGraph(boolean linkedEdgeTableExists) {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setRollbackTimestamp("2026-01-01T00:00:00Z");
+    options.setImportList("[{\"importName\": \"Place\"}]");
+    options.setIsBaseDc(true);
+    Pipeline localPipeline = Pipeline.create();
+
+    RollbackPipeline.buildPipeline(
+        localPipeline, options, new TableAwareSpannerClient(linkedEdgeTableExists));
+
+    List<String> transformNames = new ArrayList<>();
+    localPipeline.traverseTopologically(
+        new Pipeline.PipelineVisitor.Defaults() {
+          @Override
+          public void leaveCompositeTransform(TransformHierarchy.Node node) {
+            transformNames.add(node.getFullName());
+          }
+
+          @Override
+          public void visitPrimitiveTransform(TransformHierarchy.Node node) {
+            transformNames.add(node.getFullName());
+          }
+        });
+    return transformNames;
+  }
+
+  @Test
+  public void testCreateSpannerClient_usesHardcodedTableNames() {
+    RollbackPipelineOptions options = PipelineOptionsFactory.as(RollbackPipelineOptions.class);
+    options.setProjectId("test-proj");
+    options.setSpannerInstanceId("test-inst");
+    options.setSpannerDatabaseId("test-db");
+
+    SpannerClient client = RollbackPipeline.createSpannerClient(options);
+    assertEquals("Node", client.getNodeTableName());
+    assertEquals("Edge", client.getEdgeTableName());
+    assertEquals("TimeSeries", client.getTimeSeriesTableName());
+    assertEquals("Observation", client.getObservationTableName());
+  }
+
+  @Test
+  public void testBuildDml_withoutAdditionalPredicate() {
+    String dml = SpannerPartitionedDeleteFn.buildDml("Edge", "provenance", null);
+    assertEquals("DELETE FROM Edge WHERE provenance IN UNNEST(@provenance)", dml);
+  }
+
+  @Test
+  public void testBuildDml_withAdditionalPredicate() {
+    String dml =
+        SpannerPartitionedDeleteFn.buildDml(
+            "KeyValueStore", "provenance", "type = 'ProvenanceSummary'");
+    assertEquals(
+        "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenance)",
+        dml);
+  }
+
+  @Test
+  public void testReconcileNodeEmbeddings_distinctTupleTags() {
+    assertNotEquals(
+        ReconcileNodeEmbeddingsFn.DELETE_EMBEDDINGS_TAG.getId(),
+        ReconcileNodeEmbeddingsFn.RESTORE_EMBEDDINGS_TAG.getId());
+  }
+
+  @Test
+  public void testToPrefixKeySet_generatesPrefixRanges() {
+    KeySet keySet = ReconcileNodeEmbeddingsFn.toPrefixKeySet(List.of("geoId/06", "geoId/02"));
+    List<?> ranges = (List<?>) keySet.getRanges();
+    assertEquals(2, ranges.size());
+  }
+
+  @Test
+  public void testToParentPrefixKeySet_generatesOneRangePerParentKey() {
+    KeySet keySet =
+        ReadHistoricalObservationsFn.toParentPrefixKeySet(
+            List.of(
+                List.of("Count_Person", "geoId/06", "", "facet1"),
+                List.of("Count_Person", "geoId/02", "", "facet2")));
+    List<?> ranges = (List<?>) keySet.getRanges();
+    assertEquals(2, ranges.size());
+  }
+
+  @Test
+  public void testToParentPrefixKeySet_emptyBatch_yieldsNoRanges() {
+    KeySet keySet = ReadHistoricalObservationsFn.toParentPrefixKeySet(List.of());
+    assertTrue(((List<?>) keySet.getRanges()).isEmpty());
+  }
+
+  @Test
+  public void testToParentPrefixKeySet_wrongArity_throwsException() {
+    // A TimeSeries primary key has exactly 4 components; a short key would silently widen the
+    // prefix range and delete or restore unrelated Observation rows.
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ReadHistoricalObservationsFn.toParentPrefixKeySet(
+                    List.of(List.of("Count_Person", "geoId/06", ""))));
+    assertTrue(e.getMessage().contains("TimeSeries primary key of 4 columns"));
+  }
+
+  @Test
+  public void testToParentPrefixKeySet_nullKey_throwsException() {
+    List<List<String>> batch = new ArrayList<>();
+    batch.add(null);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ReadHistoricalObservationsFn.toParentPrefixKeySet(batch));
+  }
+
+  /** Answers {@link SpannerClient#tableExists} without a database, for graph-shape tests. */
+  static class TableAwareSpannerClient extends SpannerClient {
+    private final boolean linkedEdgeTableExists;
+
+    TableAwareSpannerClient(boolean linkedEdgeTableExists) {
+      super(
+          SpannerClient.builder()
+              .gcpProjectId("test")
+              .spannerInstanceId("test")
+              .spannerDatabaseId("test"));
+      this.linkedEdgeTableExists = linkedEdgeTableExists;
+    }
+
+    @Override
+    public boolean tableExists(String tableName) {
+      if (SpannerRollbackPipeline.TABLE_LINKED_EDGE.equals(tableName)) {
+        return linkedEdgeTableExists;
+      }
+      return true;
+    }
+  }
+
+  static class MockRollbackSpannerClient extends SpannerClient {
+    private final transient SpannerWriteResult mockWriteResult;
+
+    public MockRollbackSpannerClient(SpannerWriteResult mockWriteResult) {
+      super(
+          SpannerClient.builder()
+              .gcpProjectId("test")
+              .spannerInstanceId("test")
+              .spannerDatabaseId("test"));
+      this.mockWriteResult = mockWriteResult;
+    }
+
+    @Override
+    public SpannerWriteResult writeMutations(
+        Pipeline pipeline, String name, PCollection<Mutation> mutations) {
+      mutations.apply(
+          "Capture" + name + "Mutations",
+          ParDo.of(
+              new DoFn<Mutation, Void>() {
+                @ProcessElement
+                public void processElement(@Element Mutation m) {
+                  capturedMutations.add(m);
+                }
+              }));
+      return mockWriteResult;
+    }
+  }
+}

@@ -24,7 +24,7 @@ from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.data import TimePeriod
 from stats.data import Triple
-from stats.db import Db
+from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
@@ -32,22 +32,15 @@ from stats.util import get_namespace_prefix_and_suffix
 from stats.util import has_namespace_prefix
 from util.filesystem import File
 
-from util import dc_client as dc
-
-# Number of entity IDs that will be sampled to resolved their entity type, if one is not specified by the user.
-# Note that the importer assumes that all entities in a given CSV are all of the same type.
-_SAMPLE_ENTITY_RESOLUTION_SIZE = 5
-
 
 class EventsImporter(Importer):
   """Imports a single events input file.
     """
 
-  def __init__(self, input_file: File, db: Db, debug_resolve_file: File,
+  def __init__(self, input_file: File, graph_writer: GraphWriter,
                reporter: FileImportReporter, nodes: Nodes) -> None:
     self.input_file = input_file
-    self.db = db
-    self.debug_resolve_file = debug_resolve_file
+    self.graph_writer = graph_writer
     self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
@@ -61,10 +54,7 @@ class EventsImporter(Importer):
     assert self.event_type, f"Event type must be specified: {self.input_file.full_path()}"
 
     self.id_column = self.config.id_column(self.input_file)
-
     self.df = pd.DataFrame()
-    self.debug_resolve_df = None
-    self.all_unresolved_entities: set[str] = set()
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -72,20 +62,14 @@ class EventsImporter(Importer):
       self._read_csv()
       self._drop_ignored_columns()
       self._sanitize_values()
-      self._resolve_entities()
+      self._register_event_entities()
       self._rename_columns()
-
-      self.check_and_report_unresolved_entities(self.all_unresolved_entities)
-
       self._write_event_triples()
       self._write_observations()
       self.reporter.report_success()
     except Exception as e:
-      self._write_debug_csvs()
       self.reporter.report_failure(str(e))
       raise e
-
-    self._write_debug_csvs()
 
   def _read_csv(self) -> None:
     # Read CSVs with the following behaviors:
@@ -147,7 +131,7 @@ class EventsImporter(Importer):
       sv_dcid = self.nodes.variable(sv_name, self.input_file).id
       aggr_cfg = self.config.aggregation(sv_name)
       observations = self._compute_sv_observations(sv_dcid, aggr_cfg)
-      self.db.insert_observations(observations, self.input_file)
+      self.graph_writer.write_observations(observations, self.input_file)
 
   def _compute_sv_observations(
       self, sv_dcid: str, aggr_cfg: AggregationConfig = AggregationConfig()
@@ -190,7 +174,7 @@ class EventsImporter(Importer):
     for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
       obs_df[col] = strip_namespace_series(obs_df[col])
 
-    # Reorder columns to match database schema
+    # Reorder columns to match the graph writer's expected order
     obs_df = obs_df[constants.OBSERVATION_COLUMNS]
 
     return obs_df
@@ -248,18 +232,17 @@ class EventsImporter(Importer):
                     properties=properties)
       triples.extend(event.triples())
 
-    self.db.insert_triples(triples, self.input_file)
+    self.graph_writer.write_triples(triples, self.input_file)
 
-  def _resolve_entities(self) -> None:
+  def _register_event_entities(self) -> None:
     self.df = self.resolve_specified_columns(self.df)
-
     prov_id = getattr(self, "provenance", "")
     entity_col = (constants.COLUMN_DCID
                   if constants.COLUMN_DCID in self.df.columns else getattr(
                       self, "entity_column_name", None))
     if entity_col and entity_col in self.df.columns:
       for dcid in self.df[entity_col].dropna().unique():
-        clean_dcid = strip_namespace(dcid)
+        clean_dcid = strip_namespace(str(dcid))
         if self.nodes.has_entity(clean_dcid):
           if prov_id:
             self.nodes.entities[clean_dcid].provenance_ids.add(prov_id)
@@ -269,67 +252,6 @@ class EventsImporter(Importer):
               self.entity_type or "Thing",
               provenance_id=prov_id,
           )
-
-  def _resolve(self, entities: list[str]) -> dict[str, str]:
-    lower_case_entity_name = self.entity_column_name.lower()
-
-    # Check if the entities can be resolved locally.
-    # If so, return them by prefixing the values as appropriate.
-    if lower_case_entity_name in constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES:
-      prefix = constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES[
-          lower_case_entity_name]
-      return dict([(entity, f"{prefix}{entity}") for entity in entities])
-
-    # Resolve entities externally.
-    property_name = constants.EXTERNALLY_RESOLVED_INPUT_COLUMNS_TO_PREFIXES.get(
-        lower_case_entity_name, constants.PROPERTY_DESCRIPTION)
-    return dc.resolve_entities(entities=entities,
-                               entity_type=self.entity_type,
-                               property_name=property_name)
-
-  def _create_debug_resolve_dataframe(
-      self,
-      resolved: dict[str, str],
-      pre_resolved: dict[str, str],
-      unresolved: list[str],
-  ):
-    # Add unresolved inputs first
-    inputs = unresolved[:]
-    dcids = [constants.DEBUG_UNRESOLVED_DCID] * len(unresolved)
-
-    # Add pre-resolved next.
-    inputs.extend(list(pre_resolved.keys()))
-    dcids.extend(list(pre_resolved.values()))
-
-    # Add resolved inputs and dcids
-    inputs.extend(list(resolved.keys()))
-    dcids.extend(list(resolved.values()))
-
-    # Create browser links
-    links = []
-    for dcid in dcids:
-      if dcid == constants.DEBUG_UNRESOLVED_DCID:
-        links.append("")
-      else:
-        links.append(f"{constants.DC_BROWSER}/{dcid}")
-
-    # Create dataframe
-    new_df = pd.DataFrame({
-        constants.DEBUG_COLUMN_INPUT: inputs,
-        constants.DEBUG_COLUMN_DCID: dcids,
-        constants.DEBUG_COLUMN_LINK: links,
-    })
-    if self.debug_resolve_df is None:
-      self.debug_resolve_df = new_df
-    else:
-      self.debug_resolve_df = pd.concat([self.debug_resolve_df, new_df],
-                                        ignore_index=True).drop_duplicates()
-
-  def _write_debug_csvs(self) -> None:
-    if self.debug_resolve_df is not None:
-      logging.info("Writing resolutions (for debugging) to: %s",
-                   self.debug_resolve_file)
-      self.debug_resolve_file.write(self.debug_resolve_df.to_csv(index=False))
 
 
 # Utility methods

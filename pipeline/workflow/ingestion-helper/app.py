@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from fastapi import FastAPI
 from routes import imports, database, embeddings, cache
 from utils.logging import log_requests
 from __init__ import __version__
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 app = FastAPI(
     title="Data Commons Ingestion Helper",

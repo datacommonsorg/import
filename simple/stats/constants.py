@@ -26,7 +26,6 @@ REPORT_JSON_FILE_NAME = "report.json"
 TRIPLES_FILE_NAME = "triples.csv"
 SENTENCES_FILE_NAME = "sentences.csv"
 TOPIC_CACHE_FILE_NAME = "custom_dc_topic_cache.json"
-DB_FILE_NAME = "datacommons.db"
 
 OBSERVATIONS_FILE_NAME_PREFIX = "observations"
 DEBUG_RESOLVE_FILE_NAME_PREFIX = "debug_resolve"
@@ -94,7 +93,7 @@ OBSERVATION_PROPERTY_COLUMNS = [
     COLUMN_PROPERTIES,
 ]
 
-# Standard observation column ordering for database schema
+# Standard observation column ordering used by the graph writer.
 OBSERVATION_COLUMNS = [
     COLUMN_ENTITY,
     COLUMN_VARIABLE,

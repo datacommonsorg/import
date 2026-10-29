@@ -19,22 +19,17 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock
 
-import pandas as pd
 from stats.config import Config
-from stats.data import Observation
-from stats.db import create_and_update_db
-from stats.db import create_sqlite_config
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from stats.variable_per_row_importer import VariablePerRowImporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import RecordingGraphWriter
 from tests.stats.test_util import use_fake_gzip_time
-from tests.stats.test_util import write_observations
+from tests.stats.test_util import write_observations_df
 from util.filesystem import create_store
-
-from util import dc_client
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "variable_per_row_importer")
@@ -50,65 +45,31 @@ def _test_import(test: unittest.TestCase, test_name: str):
   with tempfile.TemporaryDirectory() as temp_dir:
     input_dir = os.path.join(_INPUT_DIR, test_name)
     expected_dir = os.path.join(_EXPECTED_DIR, test_name)
-    temp_store = create_store(temp_dir)
 
     input_path = os.path.join(input_dir, "input.csv")
     config_path = os.path.join(input_dir, "config.json")
-    db_file_name = f"{test_name}.db"
-    db_path = os.path.join(temp_dir, db_file_name)
-    db_file = temp_store.as_dir().open_file(db_file_name)
 
-    output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
-    expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
-    output_path = os.path.join(temp_dir, "observations.db.csv")
-    expected_path = os.path.join(expected_dir, "observations.db.csv")
+    output_path = os.path.join(temp_dir, "observations.csv")
+    expected_path = os.path.join(expected_dir, "observations.csv")
 
     input_file = create_store(input_path).as_file()
 
     with open(config_path) as config_file:
       config = Config(json.load(config_file))
 
-    db = create_and_update_db(create_sqlite_config(db_file))
+    graph_writer = RecordingGraphWriter()
     report_file = create_store(temp_dir).as_dir().open_file("report.json")
     reporter = FileImportReporter(input_path, ImportReporter(report_file))
     nodes = Nodes(config)
 
-    # Mock return values for entity types
-    dc_client.get_property_of_entities = MagicMock(
-        return_value={
-            "country/FRA": "Country",
-            "country/USA": "Country",
-            "country/DEU": "Country",
-            "country/GBR": "Country",
-            "geoId/06": "State",
-            "geoId/08": "State"
-        })
-
     VariablePerRowImporter(input_file=input_file,
-                           db=db,
+                           graph_writer=graph_writer,
                            reporter=reporter,
                            nodes=nodes).do_import()
 
-    # Verify that get_property_of_entities was called with the correct tracked place IDs
-    dc_client.get_property_of_entities.assert_called_once()
-    called_args = dc_client.get_property_of_entities.call_args[0][0]
+    graph_writer.commit_and_close()
 
-    if test_name == "multi_entity_custom_dimensions":
-      # Should track all country IDs from the custom source/destination columns
-      test.assertEqual(
-          set(called_args),
-          {"country/FRA", "country/USA", "country/DEU", "country/GBR"})
-    elif test_name == "multi_entity_with_primary":
-      # Should track both the primary states and the custom countries
-      test.assertEqual(set(called_args),
-                       {"geoId/06", "country/FRA", "geoId/08", "country/DEU"})
-    elif test_name == "single_entity_official_keys":
-      # Should track the primary states
-      test.assertEqual(set(called_args), {"geoId/06", "geoId/08"})
-
-    db.commit_and_close()
-
-    write_observations(db_path, output_path)
+    write_observations_df(graph_writer.observations_df, output_path)
 
     if is_write_mode():
       shutil.copy(output_path, expected_path)
@@ -127,37 +88,3 @@ class TestVariablePerRowImporter(unittest.TestCase):
 
   def test_multi_entity_with_primary(self):
     _test_import(self, "multi_entity_with_primary")
-
-  def test_unresolved_entity_raises_error(self):
-    from unittest import mock
-
-    from stats.db import create_and_update_db
-    from stats.db import create_sqlite_config
-    from stats.importer import EntityResolutionError
-    from util.filesystem import create_store
-
-    from util import dc_client as dc
-    with tempfile.TemporaryDirectory() as temp_dir:
-      config_path = os.path.join(temp_dir, "config.json")
-      csv_path = os.path.join(temp_dir, "data.csv")
-      with open(config_path, "w") as f:
-        f.write(
-            '{"inputFiles": [{"pattern": "data.csv", "format": "variablePerRow", "entityType": "Country", "columnsToResolve": ["entity"], "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable", "dcid:observationDate": "date", "dcid:value": "value"}}]}'
-        )
-      with open(csv_path, "w") as f:
-        f.write(
-            "entity,variable,date,value\nUnknownPlace123,Count_Person,2020,10\n"
-        )
-      with open(config_path) as config_file:
-        config = Config(json.load(config_file))
-      db_file = create_store(temp_dir).as_dir().open_file("test.db")
-      db = create_and_update_db(create_sqlite_config(db_file))
-      nodes = Nodes(config)
-      report_file = create_store(temp_dir).as_dir().open_file("report.json")
-      reporter = FileImportReporter(csv_path, ImportReporter(report_file))
-      importer = VariablePerRowImporter(
-          create_store(csv_path).as_file(), db, reporter, nodes)
-      with mock.patch.object(dc, "resolve_entities",
-                             return_value={}) as mock_resolve:
-        with self.assertRaises(EntityResolutionError):
-          importer.do_import()

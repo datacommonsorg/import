@@ -128,7 +128,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludes>
-                        <exclude>**/GraphIngestionPipelineIntegrationTest.java</exclude>
+                        <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

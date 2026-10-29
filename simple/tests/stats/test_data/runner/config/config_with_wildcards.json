@@ -2,40 +2,49 @@
   "dataDownloadUrl": [
     "tests/stats/test_data/runner/input/config_with_wildcards"
   ],
-  "inputFiles": {
-    "variable_per_row.csv": {
+  "inputFiles": [
+    {
+      "pattern": "variable_per_row.csv",
       "importType": "observations",
-      "format": "variablePerRow",
-      "entityType": "Country",
-      "provenance": "Provenance1 Name"
-    },
-    "countr*.csv": {
-      "importType": "observations",
-      "format": "variablePerColumn",
-      "entityType": "Country",
-      "provenance": "Provenance1 Name",
+      "provenance": "dcid:Provenance1",
       "columnMappings": {
+        "dcid:variableMeasured": "variable",
+        "dcid:observationAbout": "entity",
+        "dcid:observationDate": "date",
+        "dcid:value": "value"
+      }
+    },
+    {
+      "pattern": "countr*.csv",
+      "importType": "observations",
+      "provenance": "dcid:Provenance1",
+      "columnMappings": {
+        "dcid:variableMeasured": "variable",
         "dcid:observationAbout": "place",
-        "dcid:observationDate": "year"
-      }
+        "dcid:observationDate": "year",
+        "dcid:value": "value"
+      },
+      "columnsToResolve": [
+        "place"
+      ]
     },
-    "wiki*.csv": {
+    {
+      "pattern": "wiki*.csv",
       "importType": "observations",
-      "format": "variablePerColumn",
-      "entityType": "Country",
-      "provenance": "Provenance1 Name",
+      "provenance": "dcid:Provenance1",
       "columnMappings": {
+        "dcid:variableMeasured": "variable",
         "dcid:observationAbout": "wikidataid",
-        "dcid:observationDate": "year"
-      }
+        "dcid:observationDate": "year",
+        "dcid:value": "value"
+      },
+      "columnsToResolve": [
+        "wikidataid"
+      ]
+    },
+    {
+      "pattern": "*.mcf",
+      "provenance": "dcid:Provenance1"
     }
-  },
-  "sources": {
-    "Source1 Name": {
-      "url": "http://source1.com",
-      "provenances": {
-        "Provenance1 Name": "http://source1.com/provenance1"
-      }
-    }
-  }
+  ]
 }
