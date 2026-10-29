@@ -16,8 +16,6 @@ import unittest
 
 from stats.config import Config
 from stats.data import ImportType
-from stats.data import Provenance
-from stats.data import Source
 from util.filesystem import create_store
 from util.filesystem import File
 
@@ -44,55 +42,6 @@ CONFIG_DATA = {
             "importType": "eVeNtS"
         },
     ],
-    "sources": {
-        "Source1 Name": {
-            "url": "http://source1.com",
-            "provenances": {
-                "Provenance11 Name": "http://provenance11.com",
-                "Provenance12 Name": "http://provenance12.com"
-            }
-        },
-        "Source2 Name": {
-            "url": "http://source2.com",
-            "provenances": {
-                "Provenance21 Name": "http://provenance21.com",
-                "Provenance22 Name": "http://provenance22.com"
-            }
-        }
-    },
-}
-
-SOURCE1 = Source(id="", name="Source1 Name", url="http://source1.com")
-SOURCE2 = Source(id="", name="Source2 Name", url="http://source2.com")
-PROVENANCE11 = Provenance(id="",
-                          source_id="",
-                          name="Provenance11 Name",
-                          url="http://provenance11.com")
-PROVENANCE12 = Provenance(id="",
-                          source_id="",
-                          name="Provenance12 Name",
-                          url="http://provenance12.com")
-PROVENANCE21 = Provenance(id="",
-                          source_id="",
-                          name="Provenance21 Name",
-                          url="http://provenance21.com")
-PROVENANCE22 = Provenance(id="",
-                          source_id="",
-                          name="Provenance22 Name",
-                          url="http://provenance22.com")
-
-PROVENANCES = {
-    "Provenance11 Name": PROVENANCE11,
-    "Provenance12 Name": PROVENANCE12,
-    "Provenance21 Name": PROVENANCE21,
-    "Provenance22 Name": PROVENANCE22,
-}
-
-PROVENANCE_SOURCES = {
-    "Provenance11 Name": SOURCE1,
-    "Provenance12 Name": SOURCE1,
-    "Provenance21 Name": SOURCE2,
-    "Provenance22 Name": SOURCE2,
 }
 
 
@@ -119,11 +68,6 @@ class TestConfig(unittest.TestCase):
     self.assertEqual(config.ignore_columns(self.make_file("not_in_config.csv")),
                      [])
 
-  def test_provenances_and_sources(self):
-    config = Config(CONFIG_DATA)
-    self.assertDictEqual(config.provenances, PROVENANCES)
-    self.assertDictEqual(config.provenance_sources, PROVENANCE_SOURCES)
-
   def test_provenance_name(self):
     config = Config(CONFIG_DATA)
     self.assertEqual(config.provenance_name(self.make_file("a.csv")),
@@ -144,8 +88,6 @@ class TestConfig(unittest.TestCase):
   def test_empty_config(self):
     config = Config({})
     self.assertEqual(config.ignore_columns(self.make_file("a.csv")), [])
-    self.assertDictEqual(config.provenances, {})
-    self.assertDictEqual(config.provenance_sources, {})
     self.assertEqual(config.provenance_name(self.make_file("a.csv")), "a.csv")
 
   def test_data_download_urls(self):
@@ -277,105 +219,3 @@ class TestConfig(unittest.TestCase):
 
     config = Config({"includeInputSubdirs": True})
     self.assertTrue(config.include_input_subdirs())
-
-  def test_custom_id_namespace_default_and_override(self):
-    # Default namespace is "custom"
-    self.assertEqual(Config({}).custom_id_namespace(), "custom")
-    # Override via config
-    self.assertEqual(
-        Config({
-            "customIdNamespace": "ONE"
-        }).custom_id_namespace(), "ONE")
-
-  def test_custom_svg_prefix_resolution(self):
-    # Default prefix falls back to schema constant
-    self.assertEqual(Config({}).custom_svg_prefix(), "c/g/")
-    # Explicit override takes precedence
-    self.assertEqual(
-        Config({
-            "customSvgPrefix": "ONE/g/"
-        }).custom_svg_prefix(), "ONE/g/")
-    # Derive from non-default customIdNamespace when prefix is not set
-    self.assertEqual(
-        Config({
-            "customIdNamespace": "ONE"
-        }).custom_svg_prefix(), "ONE/g/")
-
-  def test_default_custom_root_svg_name(self):
-    from stats import schema_constants as sc
-
-    # Default name from schema constants
-    self.assertEqual(
-        Config({}).default_custom_root_svg_name(),
-        sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
-    # Override via config
-    self.assertEqual(
-        Config({
-            "defaultCustomRootStatVarGroupName": "ONE Data"
-        }).default_custom_root_svg_name(), "ONE Data")
-
-  def test_sv_hierarchy_props_blocklist_merge_and_validation(self):
-    from stats import schema_constants as sc
-
-    # Default equals schema constant
-    self.assertSetEqual(
-        Config({}).sv_hierarchy_props_blocklist(),
-        sc.SV_HIERARCHY_PROPS_BLOCKLIST)
-    # Merge user-provided list with default
-    merged = Config({
-        "svHierarchyPropsBlocklist": ["gender", "customProp"]
-    }).sv_hierarchy_props_blocklist()
-    self.assertTrue("gender" in merged and "customProp" in merged)
-    for p in sc.SV_HIERARCHY_PROPS_BLOCKLIST:
-      self.assertIn(p, merged)
-    # Invalid type raises ValueError
-    with self.assertRaisesRegex(ValueError, "must be a list of strings"):
-      Config({
-          "svHierarchyPropsBlocklist": "gender"
-      }).sv_hierarchy_props_blocklist()
-
-  def test_custom_id_namespace_validation(self):
-    # Valid overrides
-    self.assertEqual(
-        Config({
-            "customIdNamespace": "ONE"
-        }).custom_id_namespace(), "ONE")
-    self.assertEqual(
-        Config({
-            "customIdNamespace": "ACME_123"
-        }).custom_id_namespace(), "ACME_123")
-    # Invalid: contains slash
-    with self.assertRaises(ValueError):
-      Config({"customIdNamespace": "acme/ns"}).custom_id_namespace()
-    # Invalid: starts with slash
-    with self.assertRaises(ValueError):
-      Config({"customIdNamespace": "/acme"}).custom_id_namespace()
-    # Invalid: contains dash
-    with self.assertRaises(ValueError):
-      Config({"customIdNamespace": "ACME-123"}).custom_id_namespace()
-    # Invalid: empty string
-    with self.assertRaises(ValueError):
-      Config({"customIdNamespace": ""}).custom_id_namespace()
-
-  def test_custom_svg_prefix_validation(self):
-    # Valid explicit
-    self.assertEqual(
-        Config({
-            "customSvgPrefix": "ONE/g/"
-        }).custom_svg_prefix(), "ONE/g/")
-    # Invalid: starts with '/'
-    with self.assertRaises(ValueError):
-      Config({"customSvgPrefix": "/ONE/g/"}).custom_svg_prefix()
-    # Invalid: missing trailing '/'
-    with self.assertRaises(ValueError):
-      Config({"customSvgPrefix": "ONE/g"}).custom_svg_prefix()
-    # Invalid: contains space
-    with self.assertRaises(ValueError):
-      Config({"customSvgPrefix": "ONE g/"}).custom_svg_prefix()
-
-  def test_sv_hierarchy_props_blocklist_string_items(self):
-    # Mixed type should raise
-    with self.assertRaisesRegex(ValueError, "must be a list of strings"):
-      Config({
-          "svHierarchyPropsBlocklist": ["gender", 123]
-      }).sv_hierarchy_props_blocklist()

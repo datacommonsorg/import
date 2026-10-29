@@ -62,6 +62,29 @@ def test_without_an_id_column_ids_are_generated():
   ])
 
 
+def test_entity_type_name_and_description_from_config():
+  config = {
+      **b.entities_config(),
+      "entities": {
+          "Author": {
+              "name": "Published Author",
+              "description": "A person who wrote an article",
+          }
+      },
+  }
+  result = b.run_csv(
+      b.csv_file(["author1", "Jane Doe"], header=["author_id", "author_name"]),
+      config)
+  b.assert_records(result.of_type("Class"), [
+      b.record("Author",
+               "Class",
+               name="Published Author",
+               description="A person who wrote an article",
+               includedIn=[b.ref(b.PROVENANCE),
+                           b.ref(b.SOURCE)]),
+  ])
+
+
 def test_reference_columns_hold_one_reference_per_listed_value():
   """In entities imports, columnsToResolve marks reference columns."""
   result = b.run_csv(

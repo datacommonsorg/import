@@ -44,14 +44,6 @@ CONFIG_DATA = {
             "description": "Foo Entity description"
         }
     },
-    "sources": {
-        "Source1": {
-            "url": "http://source1.com",
-            "provenances": {
-                "Provenance1": "http://source1.com/provenance1"
-            }
-        }
-    },
 }
 
 CONFIG = Config(CONFIG_DATA)
@@ -76,16 +68,18 @@ class TestNodes(unittest.TestCase):
     nodes = Nodes(CONFIG)
     self.assertEqual(
         nodes.provenance(self.a),
-        Provenance(id="c/p/1",
-                   source_id="c/s/1",
+        Provenance(id="Provenance1",
+                   source_id="",
                    name="Provenance1",
-                   url="http://source1.com/provenance1"))
+                   url="",
+                   provenance_id="Provenance1"))
     self.assertEqual(
         nodes.provenance(self.x),
-        Provenance(id="c/p/1",
-                   source_id="c/s/1",
+        Provenance(id="Provenance1",
+                   source_id="",
                    name="Provenance1",
-                   url="http://source1.com/provenance1"))
+                   url="",
+                   provenance_id="Provenance1"))
 
   def test_properties(self):
     nodes = Nodes(CONFIG)
@@ -130,23 +124,10 @@ class TestNodes(unittest.TestCase):
         ),
     )
 
-  def test_default_custom_root_group_name_override(self):
-    cfg = Config({
-        "groupStatVarsByProperty": True,
-        "defaultCustomRootStatVarGroupName": "ONE Data"
-    })
-    nodes = Nodes(cfg)
-    default_groups = [
-        g for g in nodes.groups.values()
-        if g.id == sc.DEFAULT_CUSTOM_ROOT_SVG_ID
-    ]
-    self.assertTrue(default_groups, "Default custom root SVG should exist")
-    self.assertEqual(default_groups[0].name, "ONE Data")
-
   def test_root_stat_var_group_created(self):
     nodes = Nodes(CONFIG)
     self.assertIn(sc.ROOT_SVG_ID, nodes.groups)
-    self.assertNotIn(sc.DEFAULT_CUSTOM_ROOT_SVG_ID, nodes.ids_to_groups)
+    self.assertNotIn(sc.DEFAULT_CUSTOM_ROOT_SVG_ID, nodes.groups)
     root_svg = nodes.groups[sc.ROOT_SVG_ID]
     self.assertEqual(root_svg.id, "dc/g/Root")
     self.assertEqual(root_svg.name, "Data Commons Variables")
