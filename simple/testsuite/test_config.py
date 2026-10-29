@@ -13,14 +13,85 @@
 # limitations under the License.
 """Config: how config.json selects input files, and how bad configs fail."""
 
+import json
+
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
 
 _USA = b.csv_file(b.obs_row("country/USA", value="1"))
 _FRA = b.csv_file(b.obs_row("country/FRA", value="2"))
+_DEU = b.csv_file(b.obs_row("country/DEU", value="3"))
+_GBR = b.csv_file(b.obs_row("country/GBR", value="4"))
 
 # --- Selecting input files ----------------------------------------------------
+
+_PATTERN_FILES = {
+    "foo.csv": _USA,
+    "bar.csv": _FRA,
+    "dirA/foo.csv": _DEU,
+    "dirB/sub/foo.csv": _GBR,
+}
+
+PATTERNS = [
+    Case("exact filename matches at any depth",
+         given="foo.csv",
+         expect=[("country/USA", 1), ("country/DEU", 3), ("country/GBR", 4)]),
+    Case("filename wildcard matches at any depth",
+         given="f*.csv",
+         expect=[("country/USA", 1), ("country/DEU", 3), ("country/GBR", 4)]),
+    Case("root-anchored filename matches only root",
+         given="/foo.csv",
+         expect=[("country/USA", 1)]),
+    Case("root-anchored subdirectory path",
+         given="/dirA/foo.csv",
+         expect=[("country/DEU", 3)]),
+    Case("root-anchored single directory wildcard",
+         given="/*/foo.csv",
+         expect=[("country/DEU", 3)]),
+    Case("root-anchored two directory wildcards",
+         given="/*/*/foo.csv",
+         expect=[("country/GBR", 4)]),
+    Case("relative directory suffix matches at any depth",
+         given="sub/foo.csv",
+         expect=[("country/GBR", 4)]),
+    Case("relative single directory wildcard matches nested files",
+         given="*/foo.csv",
+         expect=[("country/DEU", 3), ("country/GBR", 4)]),
+    Case("double wildcard matches zero or more directories",
+         given="**/foo.csv",
+         expect=[("country/USA", 1), ("country/DEU", 3), ("country/GBR", 4)]),
+    Case("root-anchored double wildcard",
+         given="/**/foo.csv",
+         expect=[("country/USA", 1), ("country/DEU", 3), ("country/GBR", 4)]),
+    Case("brace alternation over filenames",
+         given="/{foo.csv,bar.csv}",
+         expect=[("country/USA", 1), ("country/FRA", 2)]),
+    Case("brace alternation over directories",
+         given="{dirA,dirB/sub}/foo.csv",
+         expect=[("country/DEU", 3), ("country/GBR", 4)]),
+    Case("brace alternation mixing root and nested patterns",
+         given="{/bar.csv,**/sub/foo.csv}",
+         expect=[("country/FRA", 2), ("country/GBR", 4)]),
+]
+
+
+@cases(*PATTERNS)
+def test_input_files_pattern_matching(given, expect):
+  result = b.run(_PATTERN_FILES, {
+      "includeInputSubdirs": True,
+      **b.obs_config(pattern=given),
+  })
+  b.assert_records(result.observations,
+                   [b.obs(about, value=val) for about, val in expect])
+
+
+def _import_subdir(name: str, csv_text: str) -> dict[str, str]:
+  return {
+      f"{name}/config.json": json.dumps(b.obs_config()),
+      f"{name}/provenance.mcf": b.PROVENANCE_MCF,
+      f"{name}/case.csv": csv_text,
+  }
 
 
 def test_files_in_subdirectories_are_skipped_by_default():
@@ -89,6 +160,30 @@ def test_empty_config_imports_only_the_default_provenance():
   ])
 
 
+def test_single_import_name_runs_only_that_subdirectory():
+  result = b.run_dir(
+      {
+          **_import_subdir("oecd", _USA),
+          **_import_subdir("ilo", _FRA),
+      },
+      runner_kwargs={"import_names": ["oecd"]})
+  b.assert_records(result.observations, [b.obs("country/USA", value=1)])
+
+
+def test_selected_import_names_run_only_those_subdirectories():
+  result = b.run_dir(
+      {
+          **_import_subdir("oecd", _USA),
+          **_import_subdir("ilo", _FRA),
+          **_import_subdir("ignored", _DEU),
+      },
+      runner_kwargs={"import_names": ["oecd", "ilo"]})
+  b.assert_records(
+      result.observations,
+      [b.obs("country/USA", value=1),
+       b.obs("country/FRA", value=2)])
+
+
 # --- StatVar groups -----------------------------------------------------------
 #
 # groupStatVarsByProperty asks the ingestion workflow to generate StatVarGroups
@@ -151,6 +246,12 @@ INVALID_CONFIGS = [
     Case("unsupported importType",
          given=b.obs_config(importType="Observations"),
          expect=b.Fails("ValueError", "CSV Header Validation Failed!")),
+    Case("double wildcard in filename pattern",
+         given=b.obs_config(pattern="**.csv"),
+         expect=b.Fails(
+             "ValueError",
+             "Adjacent double wildcards in the name portion of a pattern are"
+             " not supported")),
 ]
 
 
@@ -165,4 +266,28 @@ def test_missing_config_json_fails():
   b.assert_fails(result,
                  "FileNotFoundError",
                  "File not found: <input>/config.json",
+                 handshake_error_types=())
+
+
+def test_empty_input_directory_fails():
+  result = b.run_dir({})
+  b.assert_fails(result,
+                 "FileNotFoundError",
+                 "File not found: <input>/config.json",
+                 handshake_error_types=())
+
+
+def test_config_file_without_data_download_url_fails():
+  result = b.run_dir({}, {}, config_file="config.json")
+  b.assert_fails(result,
+                 "ValueError",
+                 "Data Download URLs not found in config.",
+                 handshake_error_types=())
+
+
+def test_missing_config_file_fails():
+  result = b.run_dir({}, config_file="nonexistent.json")
+  b.assert_fails(result,
+                 "FileNotFoundError",
+                 "<input>/nonexistent.json",
                  handshake_error_types=())

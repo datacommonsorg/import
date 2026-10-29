@@ -117,13 +117,26 @@ VARIABLES = [
     Case("surrounding whitespace is trimmed",
          given=" Count_Person ",
          expect="Count_Person"),
+    Case("None in variable column fails",
+         given="None",
+         expect=b.Fails("ValueError", ""),
+         bug="pandas reads None as a missing value, so the observation is"
+         " written with variableMeasured: null instead of failing"),
+    Case("newline inside a variable id fails",
+         given="Count_\nPerson",
+         expect=b.Fails("ValueError", ""),
+         bug="a newline inside an id is emitted as part of the dcid instead"
+         " of failing"),
 ]
 
 
 @cases(*VARIABLES)
 def test_variable(given, expect):
   result = b.run_csv(b.csv_file(b.obs_row(variable=given)))
-  b.assert_records(result.observations, [b.obs(variable=expect)])
+  if isinstance(expect, b.Fails):
+    b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
+  else:
+    b.assert_records(result.observations, [b.obs(variable=expect)])
 
 
 DATES = [
@@ -175,6 +188,15 @@ def test_rows_with_the_same_key_keep_both_values_under_one_id():
 def test_rows_with_different_keys_get_different_ids():
   result = b.run_csv(b.csv_file(b.obs_row(date="2020"), b.obs_row(date="2021")))
   assert len(_ids(result)) == 2
+
+
+@known_bug(reason="the observation id is hashed before trimming whitespace, so"
+           " 'country/USA ' and 'country/USA' get different ids")
+def test_surrounding_whitespace_does_not_change_observation_id():
+  result = b.run_csv(
+      b.csv_file(b.obs_row("country/USA ", value="1"),
+                 b.obs_row("country/USA", value="2")))
+  assert len(_ids(result)) == 1
 
 
 # --- Columns ------------------------------------------------------------------

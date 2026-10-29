@@ -35,9 +35,9 @@ For a refactor or performance PR, `test_e2e.py` passing with every
 
 Execution modes (`lib/run.py`):
 
-- `threaded`: local disk, no multiprocessing. Fast; used by every small test.
+- `threaded`: local disk input, no multiprocessing. Fast; used by every small test.
 - `production`: multiprocessing, with input and output on (fake) GCS, as the
-  ingestion workflow runs it. The only mode that writes a success handshake.
+  ingestion workflow runs it.
 - `tiny_chunks`: threaded, with chunk and shard sizes shrunk so that every
   boundary is crossed even by tiny inputs.
 
@@ -84,7 +84,7 @@ def test_value(given, expect):
 | CSV input | `csv_file(*rows, header=..., quote_all=, line_end=, bom=)`, `obs_row(...)` |
 | Config | `obs_config(mappings, pattern=, **options)`, `entities_config(...)`, `MCF_CONFIG` |
 | Expected records | `record(dcid, type, **props)`, `ref(dcid)`, `obs(...)`, `entity(...)`, `class_node(...)`, `property_node(...)` |
-| Running | `run(files, config, mode=, shared_files=)`, `run_mcf(...)`, `run_csv(...)` |
+| Running | `run(files, config, mode=, shared_files=)`, `run_mcf(...)`, `run_csv(...)`, `run_dir(...)` |
 | Checking | `assert_records(actual, expected)`, `assert_fails(result, type, message, handshake_error_types)` |
 
 ## Known bugs

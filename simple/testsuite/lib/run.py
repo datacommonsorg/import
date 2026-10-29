@@ -154,23 +154,31 @@ def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
   _stage_input(input_dir, os.path.join(work, "staged"), paths, mode,
                config_file)
   error = _run_runner(paths, mode, runner_kwargs, config_file)
-  return _read_output(paths, mode, error)
+  return _read_output(paths, error)
 
 
 def _stage_input(input_dir: str, staged: str, paths: _Paths, mode: Mode,
                  config_file: str | None) -> None:
   """Copies input_dir to where Runner reads it (local disk or GCS)."""
   shutil.copytree(input_dir, staged)
-  if config_file:
-    config_path = os.path.join(staged, config_file)
-    with open(config_path, encoding="utf-8") as f:
-      text = f.read().replace("<input>", paths.input)
-    with open(config_path, "w", encoding="utf-8") as f:
-      f.write(text)
+  _replace_input_token_in_config_file(staged, config_file, paths.input)
   if mode.gcs_input:
     fake_gcs.upload_dir(staged, paths.input)
   else:
     shutil.copytree(staged, paths.input)
+
+
+def _replace_input_token_in_config_file(staged: str, config_file: str | None,
+                                        input_path: str) -> None:
+  if not config_file:
+    return
+  config_path = os.path.join(staged, config_file)
+  if not os.path.exists(config_path):
+    return
+  with open(config_path, encoding="utf-8") as f:
+    text = f.read().replace("<input>", input_path)
+  with open(config_path, "w", encoding="utf-8") as f:
+    f.write(text)
 
 
 def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
@@ -209,7 +217,7 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
   return None
 
 
-def _read_output(paths: _Paths, mode: Mode, error: dict | None) -> dict:
+def _read_output(paths: _Paths, error: dict | None) -> dict:
   """Reads the run's records, report and handshake into canonical form."""
   fake_gcs.download_dir(paths.output, paths.local_out)
   handshake_text = fake_gcs.read_text(
@@ -247,8 +255,10 @@ def _read_json(path: str) -> Any:
     return json.load(f)
 
 
-def write_input_dir(files: dict[str, str | bytes], config: dict | None) -> str:
-  """Materializes {relative path: content} (+ config.json) in a temp dir."""
+def write_input_dir(files: dict[str, str | bytes],
+                    config: dict | None,
+                    config_file: str | None = None) -> str:
+  """Materializes {relative path: content} (+ config) in a temp dir."""
   root = tempfile.mkdtemp(prefix="testsuite-input-")
   for rel, content in files.items():
     path = os.path.join(root, rel)
@@ -258,6 +268,8 @@ def write_input_dir(files: dict[str, str | bytes], config: dict | None) -> str:
     with open(path, mode, **text_args) as f:
       f.write(content)
   if config is not None:
-    with open(os.path.join(root, "config.json"), "w", encoding="utf-8") as f:
+    config_path = os.path.join(root, config_file or "config.json")
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    with open(config_path, "w", encoding="utf-8") as f:
       json.dump(config, f, indent=2)
   return root
