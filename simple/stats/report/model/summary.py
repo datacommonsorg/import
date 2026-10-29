@@ -48,28 +48,22 @@ class RunStatus(str, Enum):
   FAILURE = "FAILURE"
 
 
-class _ReportModel(BaseModel):
-  """Base for report models: camelCase JSON keys, snake_case attributes."""
-
-  model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
-
-class RunMetadata(_ReportModel):
+class ExecutionMetadata(BaseModel):
   """The `run` block: metadata for one preprocessor run."""
 
-  workflow_execution_id: str = Field(
+  workflowExecutionId: str = Field(
       description="Ingestion workflow execution ID")
   mode: RunMode = Field(description="How the preprocessor was run")
   status: RunStatus = Field(description="Outcome of the preprocessor run")
-  start_time: str = Field(description="ISO-8601 UTC time the run started")
-  end_time: str = Field(description="ISO-8601 UTC time the run ended")
-  folder_names: list[str] = Field(
+  startTime: str = Field(description="ISO-8601 UTC time the run started")
+  endTime: str = Field(description="ISO-8601 UTC time the run ended")
+  folderNames: list[str] = Field(
       default_factory=list, description="Import folders requested for the run")
-  output_path: str = Field(
+  outputPath: str = Field(
       default="", description="Path where the run's JSON-LD was written")
 
 
-class Provenance(_ReportModel):
+class Provenance(BaseModel):
   """One entry in `folders[].provenances[]`."""
 
   id: str = Field(description="Provenance DCID")
@@ -77,20 +71,20 @@ class Provenance(_ReportModel):
   # node counts by type, and provenance-level errors.
 
 
-class Folder(_ReportModel):
+class Folder(BaseModel):
   """One entry in `folders[]`: summary of one imported folder."""
 
-  folder_name: str = Field(description="Name of the imported folder")
+  folderName: str = Field(description="Name of the imported folder")
   provenances: list[Provenance] = Field(
       default_factory=list, description="Provenances in this folder")
   # TODO: Add provenance_count, observation_count, file counts by type,
   # node counts by type, and configUri.
 
 
-class IngestionReport(_ReportModel):
+class IngestionReport(BaseModel):
   """Root of ingestion_report.json."""
 
-  run: RunMetadata = Field(description="Metadata for each preprocessor run")
+  run: ExecutionMetadata = Field(description="Metadata for each preprocessor run")
   folders: list[Folder] = Field(default_factory=list,
                                 description="One entry per import folder")
   # TODO: Add error field in the ingestion report.
