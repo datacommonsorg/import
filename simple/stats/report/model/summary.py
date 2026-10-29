@@ -29,9 +29,7 @@ The report has three levels:
 from enum import Enum
 
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import Field
-from pydantic.alias_generators import to_camel
 
 
 class RunMode(str, Enum):
@@ -84,7 +82,8 @@ class Folder(BaseModel):
 class IngestionReport(BaseModel):
   """Root of ingestion_report.json."""
 
-  run: ExecutionMetadata = Field(description="Metadata for each preprocessor run")
+  run: ExecutionMetadata = Field(
+      description="Metadata for each preprocessor run")
   folders: list[Folder] = Field(default_factory=list,
                                 description="One entry per import folder")
   # TODO: Add error field in the ingestion report.
