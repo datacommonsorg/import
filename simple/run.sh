@@ -32,15 +32,12 @@ if [[ $OUTPUT_DIR == "" ]]; then
     exit 1
 fi
 
-if [[ $DATA_RUN_MODE != "" ]]; then
-    if [[ $DATA_RUN_MODE != "schemaupdate" && $DATA_RUN_MODE != "dcpbridge" ]]; then
-      echo "DATA_RUN_MODE must be either empty, 'schemaupdate', or 'dcpbridge'"
-      exit 1
-    fi
-    echo "DATA_RUN_MODE=$DATA_RUN_MODE"
-else
-  DATA_RUN_MODE="customdc"
+if [[ $DATA_RUN_MODE != "" && $DATA_RUN_MODE != "dcpbridge" ]]; then
+    echo "DATA_RUN_MODE must be either empty or 'dcpbridge'"
+    exit 1
 fi
+DATA_RUN_MODE="dcpbridge"
+echo "DATA_RUN_MODE=$DATA_RUN_MODE"
 
 echo "INPUT_DIR=$INPUT_DIR"
 echo "OUTPUT_DIR=$OUTPUT_DIR"
@@ -53,13 +50,6 @@ WORKSPACE_DIR=$(pwd)
 
 # Paths based off of OUTPUT_DIR.
 DC_OUTPUT_DIR=$OUTPUT_DIR/datacommons
-
-if [[ $USE_SQLITE == "true" ]]; then
-    # Set SQLITE_PATH for sqlite imports.
-    # This is used by the simple importer.
-    export SQLITE_PATH=$DC_OUTPUT_DIR/datacommons.db
-    echo "SQLITE_PATH=$SQLITE_PATH"
-fi
 
 # cd into simple importer dir to run the importer.
 cd $WORKSPACE_DIR/import/simple
