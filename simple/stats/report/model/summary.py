@@ -27,7 +27,6 @@ The report has three levels:
 """
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -37,23 +36,27 @@ from pydantic.alias_generators import to_camel
 
 class RunMode(str, Enum):
   """How the preprocessor was run."""
+
   INGEST = "INGEST"
   # TODO: Add DRY_RUN once the workflow supports dry runs.
 
 
 class RunStatus(str, Enum):
   """Outcome of the preprocessor run."""
+
   SUCCESS = "SUCCESS"
   FAILURE = "FAILURE"
 
 
 class _ReportModel(BaseModel):
   """Base for report models: camelCase JSON keys, snake_case attributes."""
+
   model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
 
 class RunMetadata(_ReportModel):
   """The `run` block: metadata for one preprocessor run."""
+
   workflow_execution_id: str = Field(
       description="Ingestion workflow execution ID")
   mode: RunMode = Field(description="How the preprocessor was run")
@@ -68,6 +71,7 @@ class RunMetadata(_ReportModel):
 
 class Provenance(_ReportModel):
   """One entry in `folders[].provenances[]`."""
+
   id: str = Field(description="Provenance DCID")
   # TODO: Add source_id, file_count, observation_count, date_range,
   # node counts by type, and provenance-level errors.
@@ -75,6 +79,7 @@ class Provenance(_ReportModel):
 
 class Folder(_ReportModel):
   """One entry in `folders[]`: summary of one imported folder."""
+
   folder_name: str = Field(description="Name of the imported folder")
   provenances: list[Provenance] = Field(
       default_factory=list, description="Provenances in this folder")
@@ -84,6 +89,7 @@ class Folder(_ReportModel):
 
 class IngestionReport(_ReportModel):
   """Root of ingestion_report.json."""
+
   run: RunMetadata = Field(description="Metadata for each preprocessor run")
   folders: list[Folder] = Field(default_factory=list,
                                 description="One entry per import folder")
