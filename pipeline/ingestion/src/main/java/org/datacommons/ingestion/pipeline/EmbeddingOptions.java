@@ -21,7 +21,7 @@ import org.apache.beam.sdk.options.PipelineOptions;
 /** Embedding-specific pipeline options for Spanner NodeEmbedding generation. */
 public interface EmbeddingOptions extends PipelineOptions {
   @Description("Classpath resource name to the embedding JSON config.")
-  @Default.String("embedding/base_dc.json")
+  @Default.String("embedding/default.json")
   String getEmbeddingConfigPath();
 
   void setEmbeddingConfigPath(String embeddingConfigPath);

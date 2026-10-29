@@ -44,17 +44,6 @@ public class EmbeddingConfigTest {
               "node_filter_type": "NO_FILTER"
             },
             {
-              "embedding_label": "nl_stat_var_embedding",
-              "model_name": "NodeEmbeddingModel",
-              "model_endpoint": "text-embedding-005",
-              "task_type": "RETRIEVAL_QUERY",
-              "node_types": {
-                "StatisticalVariable": [],
-                "Topic": []
-              },
-              "node_filter_type": "NL_STATISTICAL_VARIABLE"
-            },
-            {
               "embedding_label": "type_embedding",
               "model_name": "NodeEmbeddingModel",
               "model_endpoint": "text-embedding-005",
@@ -69,7 +58,7 @@ public class EmbeddingConfigTest {
         """;
 
     EmbeddingConfig config = EmbeddingConfig.parseJson(json);
-    assertEquals(3, config.specs().size());
+    assertEquals(2, config.specs().size());
 
     EmbeddingSpec baseSpec = config.specs().get(0);
     assertEquals("base_text_embedding", baseSpec.embeddingLabel());
@@ -78,12 +67,7 @@ public class EmbeddingConfigTest {
     assertEquals(List.of("description"), baseSpec.nodeTypes().get("StatisticalVariable"));
     assertEquals(List.of("description"), baseSpec.nodeTypes().get("Topic"));
 
-    EmbeddingSpec nlSpec = config.specs().get(1);
-    assertEquals("nl_stat_var_embedding", nlSpec.embeddingLabel());
-    assertEquals(EmbeddingSpec.NodeFilterType.NL_STATISTICAL_VARIABLE, nlSpec.nodeFilterType());
-    assertEquals(List.of("StatisticalVariable", "Topic"), nlSpec.getNodeTypeNames());
-
-    EmbeddingSpec typeSpec = config.specs().get(2);
+    EmbeddingSpec typeSpec = config.specs().get(1);
     assertEquals("type_embedding", typeSpec.embeddingLabel());
     assertEquals(EmbeddingSpec.NodeFilterType.ENTITY_TYPES, typeSpec.nodeFilterType());
     assertEquals(List.of("Class"), typeSpec.getNodeTypeNames());
@@ -133,16 +117,10 @@ public class EmbeddingConfigTest {
 
   @Test
   public void testLoad_fromPackagedResource() {
-    EmbeddingConfig baseDcConfig = EmbeddingConfig.load("embedding/base_dc.json");
-    assertEquals(3, baseDcConfig.specs().size());
-    assertEquals("base_text_embedding", baseDcConfig.specs().get(0).embeddingLabel());
-    assertEquals("nl_stat_var_embedding", baseDcConfig.specs().get(1).embeddingLabel());
-    assertEquals("type_embedding", baseDcConfig.specs().get(2).embeddingLabel());
-
-    EmbeddingConfig dcpConfig = EmbeddingConfig.load("embedding/dcp.json");
-    assertEquals(2, dcpConfig.specs().size());
-    assertEquals("base_text_embedding", dcpConfig.specs().get(0).embeddingLabel());
-    assertEquals("type_embedding", dcpConfig.specs().get(1).embeddingLabel());
+    EmbeddingConfig config = EmbeddingConfig.load("embedding/default.json");
+    assertEquals(2, config.specs().size());
+    assertEquals("base_text_embedding", config.specs().get(0).embeddingLabel());
+    assertEquals("type_embedding", config.specs().get(1).embeddingLabel());
   }
 
   @Test
