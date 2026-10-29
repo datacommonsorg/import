@@ -29,6 +29,13 @@ if [[ $IMAGE_TAG == "" ]]; then
   exit 1
 fi
 
+# 'latest' is published by the import-simple-on-push-to-branch trigger, and
+# 'stable' is the legacy Custom DC release image. Never overwrite either from a dev build.
+if [[ $IMAGE_TAG == "latest" || $IMAGE_TAG == "stable" ]]; then
+  echo "Image tag '$IMAGE_TAG' is reserved. Use a different tag for dev builds." >&2
+  exit 1
+fi
+
 SIMPLE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 set -x
