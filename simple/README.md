@@ -69,3 +69,51 @@ of the run.
 | `LOG_LEVEL` | `INFO` | Python logging level. |
 | `WORKFLOW_EXECUTION_ID` | *unset* | Set by the ingestion workflow. When set (and the output dir is on GCS), the run writes a handshake JSON file for the workflow. |
 | `TEMP_LOCATION` | *unset* | GCS path the workflow handshake file is written under. |
+
+## Container Build & CI/CD (`datacommons-data`)
+
+This directory is packaged into the [gcr.io/datcom-ci/datacommons-data](https://console.cloud.google.com/artifacts/docker/datcom-ci/us/gcr.io/datacommons-data) container image using `simple/Dockerfile` and `simple/cloudbuild.yaml`.
+
+### Automated CI/CD Builds
+
+Cloud Build automatically runs `simple/cloudbuild.yaml` when commits are pushed to `master` that modify files under `simple/**` (excluding `simple/tests/**`, `simple/sample/**`, and `**.md`). Each automated build tags and pushes:
+
+* `gcr.io/datcom-ci/datacommons-data:<7-char-import-sha>`
+* `gcr.io/datcom-ci/datacommons-data:latest`
+
+### Manual Dev Builds
+
+To manually build and push a custom image tag to Artifact Registry via Cloud Build (without overwriting `:latest`):
+
+```shell
+./simple/scripts/push_image.sh <image-tag> [project-id]
+```
+
+If `project-id` is omitted, it defaults to `datcom-ci` (`gcr.io/datcom-ci/datacommons-data:<image-tag>`).
+
+### Local Docker Build & Run
+
+The container's `run.sh` entrypoint requires `DC_API_KEY`, `INPUT_DIR`, and `OUTPUT_DIR`, and writes results under `$OUTPUT_DIR/datacommons/`. From the repo root:
+
+```shell
+# 1. Build the image locally.
+docker build -t datacommons-data:local simple/
+
+# 2a. Run it on a local data directory.
+docker run --rm \
+  -e DC_API_KEY="${DC_API_KEY}" \
+  -e INPUT_DIR=/data/input \
+  -e OUTPUT_DIR=/data/output \
+  -v /path/to/local/data:/data \
+  datacommons-data:local
+
+# 2b. Or run it on Google Cloud Storage (gs://) paths, mounting your
+#     Application Default Credentials file for access.
+docker run --rm \
+  -e DC_API_KEY="${DC_API_KEY}" \
+  -e INPUT_DIR=gs://my-bucket/input \
+  -e OUTPUT_DIR=gs://my-bucket/output \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
+  -v "${HOME}/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro" \
+  datacommons-data:local
+```
