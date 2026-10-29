@@ -14,24 +14,19 @@
 
 import concurrent.futures
 from dataclasses import dataclass
-from datetime import datetime
-from datetime import timezone
 import json
 import logging
 import os
 import threading
 from typing import Optional
-import unittest.mock as mock_module
 
 import fs.path as fspath
 from stats import constants
 from stats.config import Config
 from stats.data import FileValidationError
 from stats.data import ImportType
-from stats.data import Triple
 from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
-from stats.events_importer import EventsImporter
 from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.jsonld_stream_writer import JsonLdStreamWriter
@@ -39,7 +34,6 @@ from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
-import stats.schema_constants as sc
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
@@ -85,14 +79,6 @@ def _create_importer_for_file(
           nodes=nodes,
       )
 
-    case ImportType.EVENTS:
-      return EventsImporter(
-          input_file=input_file,
-          graph_writer=graph_writer,
-          reporter=reporter,
-          nodes=nodes,
-      )
-
     case ImportType.ENTITIES:
       return EntitiesImporter(
           input_file=input_file,
@@ -112,10 +98,7 @@ class ImportProcResult:
   obs_collision_count: int
   file_collision_counts: dict
   file_sample_collisions: dict
-  resolved_entities: dict
-  event_types: dict
   entity_types: dict
-  variables: dict
   sources: dict
   provenances: dict
   groups: dict
@@ -157,13 +140,7 @@ def _run_single_csv_import_proc(
     importer.do_import()
     graph_writer.commit_and_close()
 
-    resolved_entities = {
-        e.entity_dcid: (e.entity_type, getattr(e, "provenance_ids", set()))
-        for e in nodes.entities.values()
-    }
-    event_types = dict(nodes.event_types)
     entity_types = dict(nodes.entity_types)
-    variables = dict(nodes.variables)
     sources = dict(nodes.sources)
     provenances = dict(nodes.provenances)
     groups = dict(nodes.groups)
@@ -173,10 +150,7 @@ def _run_single_csv_import_proc(
         obs_collision_count=graph_writer.obs_collision_count,
         file_collision_counts=dict(graph_writer.file_collision_counts),
         file_sample_collisions=dict(graph_writer.file_sample_collisions),
-        resolved_entities=resolved_entities,
-        event_types=event_types,
         entity_types=entity_types,
-        variables=variables,
         sources=sources,
         provenances=provenances,
         groups=groups,
@@ -409,7 +383,6 @@ class Runner:
     merged_data = {
         "includeInputSubdirs": True,
         "inputFiles": [],
-        "variables": {},
         "sources": {},
         "_dir_import_names": {}
     }
@@ -450,11 +423,6 @@ class Runner:
             new_entry[key_field] = fspath.join(rel_dir, new_entry[key_field])
         new_entry["_import_name"] = import_name
         merged_data["inputFiles"].append(new_entry)
-
-      # Merge variables
-      variables = config_data.get("variables", {})
-      for k, v in variables.items():
-        merged_data["variables"][k] = v
 
       # Merge sources
       sources = config_data.get("sources", {})
@@ -686,23 +654,8 @@ class Runner:
           for future in concurrent.futures.as_completed(futures):
             res = future.result()
             self._log_file_progress("Imported file", res.file_rel_path)
-            if res.resolved_entities:
-              for dcid, val in res.resolved_entities.items():
-                if isinstance(val, tuple):
-                  t, p_ids = val
-                else:
-                  t, p_ids = val, set()
-                if isinstance(p_ids, set):
-                  for p_id in (p_ids or [""]):
-                    self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
-                else:
-                  self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
-            if res.event_types:
-              self.nodes.event_types.update(res.event_types)
             if res.entity_types:
               self.nodes.entity_types.update(res.entity_types)
-            if res.variables:
-              self.nodes.variables.update(res.variables)
             if res.sources:
               for src in res.sources.values():
                 self.nodes.register_source(id=src.id,

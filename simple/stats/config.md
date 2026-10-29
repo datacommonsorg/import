@@ -79,58 +79,13 @@ built-in default column names.
 required, along with at least one entity mapping: either `dcid:observationAbout`
 or a custom observation property you have defined in MCF.
 
-#### `entityType`
-
-Events imports only. All entities in the file are assumed to be of this type,
-and the importer resolves entity names to DCIDs of that type. Observations
-imports ignore it and take entity types from Base Data Commons.
-
 #### `ignoreColumns`
 
 The list of column names to be ignored by the importer, if any.
 
+## `dataDownloadUrl`
 
-## `variables`
-
-Events imports only. Provides display names and other metadata for the
-variables named in an events CSV.
-
-Variables for observations imports are declared in MCF, not here.
-
-### Variable parameters
-
-#### `name`
-
-The display name of the variable.
-If not specified, the column name will be used as the display name.
-
-#### `description`
-
-The long form description of the variable.
-
-The description is carried through to the graph and used downstream for search.
-
-#### `properties`
-
-The properties of this variable.
-
-These are DC property entities encoded as a dictionary.
-More information on the properties that can be associated with variables can be found [here](https://github.com/datacommonsorg/data/blob/master/docs/representing_statistics.md#statisticalvariable).
-
-#### `group`
-
-Variables can be arranged in groups.
-The group hierarchy can be specified using the `group` property.
-Use "/" as a separator to specify a multi-level hierarchy.
-
-#### `searchDescriptions` _(formerly `nlSentences`)_
-
-Extra phrasings to index the variable under for search.
-If not specified, the variable name is used.
-
-Note that `nlSentences` is deprecated and will be removed in the future.
-
-### Examples
+Examples:
 
 Web URLs _(coming soon)_:
 

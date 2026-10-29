@@ -16,37 +16,24 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
-from dataclasses import fields
-from dataclasses import is_dataclass
 from enum import StrEnum
-import json
 from typing import Self
 from urllib.parse import urlparse
 
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
-from stats.util import base64_decode_and_gunzip_json
-from stats.util import gzip_and_base64_encode_json
 from stats.util import has_namespace_prefix
 from stats.util import is_uri_or_namespace
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
 _PREDICATE_DESCRIPTION = "description"
-_PREDICATE_MEMBER_OF = "memberOf"
 _PREDICATE_SPECIALIZATION_OF = "specializationOf"
 _PREDICATE_URL = "url"
 _PREDICATE_SOURCE = "source"
 _PREDICATE_DOMAIN = "domain"
 _PREDICATE_INCLUDED_IN = "includedIn"
-_PREDICATE_SUB_CLASS_OF = "subClassOf"
-_PREDICATE_OBSERVATION_DATE = "observationDate"
-_PREDICATE_LOCATION = "location"
-_PREDICATE_POPULATION_TYPE = "populationType"
-_PREDICATE_MEASURED_PROPERTY = "measuredProperty"
-_PREDICATE_STAT_TYPE = "statType"
-_PREDICATE_SEARCH_DESCRIPTION = "searchDescription"
 
 STATISTICAL_VARIABLE = "StatisticalVariable"
 STAT_VAR_GROUP = "StatVarGroup"
@@ -54,13 +41,8 @@ _SOURCE = "Source"
 _PROVENANCE = "Provenance"
 _PROPERTY = "Property"
 _CLASS = "Class"
-_EVENT = "Event"
-_THING = "schema:Thing"
-_MEASURED_VALUE = "measuredValue"
 
 _MCF_PREDICATE_BLOCKLIST = set([_PREDICATE_INCLUDED_IN])
-
-_DCS_PREFIX = "dcs:"
 
 _NAMESPACE_DELIMITER = ':'
 
@@ -82,18 +64,6 @@ class StatVarGroup:
   id: str
   name: str
   parent_id: str
-  provenance_ids: list[str] = field(default_factory=list)
-  source_ids: list[str] = field(default_factory=list)
-
-  def add_provenance(self, provenance: "Provenance") -> "StatVarGroup":
-    provenance_id = provenance.id
-    source_id = provenance.source_id
-    if provenance_id not in self.provenance_ids:
-      self.provenance_ids.append(provenance_id)
-    if source_id not in self.source_ids:
-      self.source_ids.append(source_id)
-
-    return self
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = [
@@ -105,94 +75,7 @@ class StatVarGroup:
           Triple(self.id,
                  _PREDICATE_SPECIALIZATION_OF,
                  object_id=self.parent_id))
-    for provenance_id in self.provenance_ids:
-      triples.append(
-          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=provenance_id))
-    for source_id in self.source_ids:
-      triples.append(
-          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=source_id))
     return triples
-
-
-@dataclass
-class StatVar:
-  id: str
-  name: str
-  description: str = ""
-  search_descriptions: list[str] = field(default_factory=list)
-  group_id: str = ""
-  group_path: str = ""
-  provenance_ids: list[str] = field(default_factory=list)
-  source_ids: list[str] = field(default_factory=list)
-  properties: dict[str, str] = field(default_factory=dict)
-
-  def __post_init__(self):
-    if _PREDICATE_POPULATION_TYPE not in self.properties:
-      self.properties[_PREDICATE_POPULATION_TYPE] = _THING
-    # If measuredProperty is not specified, we set it to the SV dcid,
-    # thereby making it schema-less.
-    if _PREDICATE_MEASURED_PROPERTY not in self.properties and self.id:
-      self.properties[_PREDICATE_MEASURED_PROPERTY] = self.id
-    if _PREDICATE_STAT_TYPE not in self.properties:
-      self.properties[_PREDICATE_STAT_TYPE] = _MEASURED_VALUE
-
-    # Add dcs: prefix to prop values if not specified.
-    for p, v in self.properties.items():
-      if ":" not in v:
-        self.properties[p] = f"{_DCS_PREFIX}{v}"
-
-  def add_provenance(self, provenance: "Provenance") -> "StatVar":
-    provenance_id = provenance.id
-    source_id = provenance.source_id
-    if provenance_id not in self.provenance_ids:
-      self.provenance_ids.append(provenance_id)
-    if source_id not in self.source_ids:
-      self.source_ids.append(source_id)
-
-    return self
-
-  def triples(self) -> list[Triple]:
-    triples: list[Triple] = [
-        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STATISTICAL_VARIABLE),
-        Triple(self.id, _PREDICATE_NAME, object_value=self.name),
-    ]
-    if self.description:
-      triples.append(
-          Triple(self.id, _PREDICATE_DESCRIPTION,
-                 object_value=self.description))
-
-    # Encode search descriptions as searchDescription triples.
-    for search_description in self.search_descriptions:
-      triples.append(
-          Triple(self.id,
-                 _PREDICATE_SEARCH_DESCRIPTION,
-                 object_value=search_description))
-
-    if self.group_id:
-      triples.append(
-          Triple(self.id, _PREDICATE_MEMBER_OF, object_id=self.group_id))
-    for provenance_id in self.provenance_ids:
-      triples.append(
-          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=provenance_id))
-    for source_id in self.source_ids:
-      triples.append(
-          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=source_id))
-    for p, v in self.properties.items():
-      triples.append(Triple(self.id, p, object_id=v))
-    return triples
-
-
-@dataclass
-class Entity:
-  entity_dcid: str
-  entity_type: str
-  provenance_ids: set[str] = field(default_factory=set)
-
-  def triples(self) -> list[Triple]:
-    # Currently only 1 triple is generated but could be more in the future (e.g. name)
-    return [
-        Triple(self.entity_dcid, _PREDICATE_TYPE_OF, object_id=self.entity_type)
-    ]
 
 
 @dataclass
@@ -299,43 +182,6 @@ class ObservationProperties:
 
 
 @dataclass
-class Observation:
-  entity: str
-  variable: str
-  date: str
-  value: str
-  provenance: str
-  properties: ObservationProperties = field(
-      default_factory=ObservationProperties.new)
-
-  def normalized_tuple(self):
-    return (strip_namespace(self.entity), strip_namespace(self.variable),
-            self.date, self.value, strip_namespace(self.provenance),
-            strip_namespace(self.properties.unit),
-            self.properties.scaling_factor,
-            strip_namespace(self.properties.measurement_method),
-            strip_namespace(self.properties.observation_period),
-            json.dumps(self.properties.properties or {}))
-
-
-def _get_flattened_dataclass_field_names(cls) -> list[str]:
-  """Flattens the field names from the specified class and any of it's nested member classes.
-  In practice, this is used to flatten the fields from the Observation and ObservationProperties classes
-  which is used to populate test CSVs.
-  """
-  field_names: list[str] = []
-  for field in fields(cls):
-    if is_dataclass(field.type):
-      field_names.extend(_get_flattened_dataclass_field_names(field.type))
-    else:
-      field_names.append(field.name)
-  return field_names
-
-
-OBSERVATION_FIELD_NAMES = _get_flattened_dataclass_field_names(Observation)
-
-
-@dataclass
 class Property:
   dcid: str
   name: str
@@ -346,69 +192,6 @@ class Property:
         Triple(self.dcid, _PREDICATE_TYPE_OF, object_id=_PROPERTY),
         Triple(self.dcid, _PREDICATE_NAME, object_value=self.name),
     ]
-
-
-@dataclass
-class EventType:
-  id: str
-  name: str
-  description: str = ""
-  provenance_ids: list[str] = field(default_factory=list)
-  source_ids: list[str] = field(default_factory=list)
-
-  def add_provenance(self, provenance: Provenance) -> Self:
-    provenance_id = provenance.id
-    source_id = provenance.source_id
-    if provenance_id not in self.provenance_ids:
-      self.provenance_ids.append(provenance_id)
-    if source_id not in self.source_ids:
-      self.source_ids.append(source_id)
-
-    return self
-
-  def triples(self) -> list[Triple]:
-    triples: list[Triple] = []
-    triples.append(Triple(self.id, _PREDICATE_TYPE_OF, object_id=_CLASS))
-    triples.append(Triple(self.id, _PREDICATE_SUB_CLASS_OF, object_id=_EVENT))
-    triples.append(Triple(self.id, _PREDICATE_NAME, object_value=self.name))
-    if self.description:
-      triples.append(
-          Triple(self.id, _PREDICATE_DESCRIPTION,
-                 object_value=self.description))
-    for provenance_id in self.provenance_ids:
-      triples.append(
-          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=provenance_id))
-    for source_id in self.source_ids:
-      triples.append(
-          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=source_id))
-    return triples
-
-
-@dataclass
-class Event:
-  id: str
-  event_type: str
-  entity: str = ""
-  date: str = ""
-  provenance_id: str = ""
-  properties: dict[str, str] = field(default_factory=lambda: defaultdict(dict))
-
-  def triples(self) -> list[Triple]:
-    triples: list[Triple] = [
-        Triple(self.id, _PREDICATE_TYPE_OF, object_id=self.event_type)
-    ]
-    if self.entity:
-      triples.append(Triple(self.id, _PREDICATE_LOCATION,
-                            object_id=self.entity))
-    if self.date:
-      triples.append(
-          Triple(self.id, _PREDICATE_OBSERVATION_DATE, object_value=self.date))
-    if self.provenance_id:
-      triples.append(
-          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=self.provenance_id))
-    for prop, value in self.properties.items():
-      triples.append(Triple(self.id, prop, object_value=value))
-    return triples
 
 
 @dataclass
@@ -502,30 +285,7 @@ class FileValidationError:
 
 class ImportType(StrEnum):
   OBSERVATIONS = "observations"
-  EVENTS = "events"
   ENTITIES = "entities"
-
-
-class TimePeriod(StrEnum):
-  DAY = "day"
-  MONTH = "month"
-  YEAR = "year"
-
-
-class AggregationMethod(StrEnum):
-  COUNT = "count"
-
-
-@dataclass
-class AggregationConfig:
-  period: TimePeriod = TimePeriod.YEAR
-  method: AggregationMethod = AggregationMethod.COUNT
-
-  def __post_init__(self):
-    if self.period not in TimePeriod._member_map_.values():
-      raise ValueError(f"invalid period: {self.period}")
-    if self.method not in AggregationMethod._member_map_.values():
-      raise ValueError(f"invalid method: {self.method}")
 
 
 @dataclass
@@ -638,45 +398,3 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
           f"them under 'naValues' in config.json.")
       ex.file_path = file_path
       raise ex
-
-
-def prepare_observations_df(df: pd.DataFrame, provenance: str,
-                            obs_props: "ObservationProperties") -> pd.DataFrame:
-  """
-  Transforms an observations DataFrame into the form the graph writer persists.
-
-  Does the filtering, namespace stripping and JSON serialization with vectorized
-  pandas operations, so no per-row Observation objects are created.
-
-  Args:
-    df: DataFrame with columns [entity, variable, date, value]
-    provenance: Provenance ID (may include namespace prefix)
-    obs_props: Observation properties
-
-  Returns:
-    DataFrame with the columns the graph writer expects:
-    [entity, variable, date, value, provenance, unit, scaling_factor,
-     measurement_method, observation_period, properties]
-  """
-
-  # Filter out invalid values (vectorized)
-  df = filter_invalid_observation_values(df)
-
-  # Add provenance and properties
-  df[constants.COLUMN_PROVENANCE] = provenance
-  df[constants.COLUMN_UNIT] = obs_props.unit if obs_props.unit else ""
-  df[constants.COLUMN_SCALING_FACTOR] = obs_props.scaling_factor
-  df[constants.COLUMN_MEASUREMENT_METHOD] = (
-      obs_props.measurement_method if obs_props.measurement_method else "")
-  df[constants.COLUMN_OBSERVATION_PERIOD] = (
-      obs_props.observation_period if obs_props.observation_period else "")
-
-  # Strip namespaces from all DCID columns (vectorized)
-  for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
-    df[col] = strip_namespace_series(df[col])
-
-    # Serialize custom properties dict to JSON (even when empty)
-  df[constants.COLUMN_PROPERTIES] = json.dumps(obs_props.properties or {})
-
-  # Reorder columns to match the graph writer's expected order
-  return df[constants.OBSERVATION_COLUMNS]

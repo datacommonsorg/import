@@ -14,40 +14,25 @@
 
 import re
 
-import fs.path as fspath
 from stats import constants
-from stats.data import AggregationConfig
 from stats.data import EntityType
-from stats.data import EventType
 from stats.data import ImportType
 from stats.data import Provenance
 from stats.data import Source
-from stats.data import StatVar
 from stats.data import strip_namespace
 from util.file_match import match
 from util.filesystem import File
 
 _INPUT_FILES_FIELD = "inputFiles"
 _IMPORT_TYPE_FIELD = "importType"
-_ENTITY_TYPE_FIELD = "entityType"
 _IGNORE_COLUMNS_FIELD = "ignoreColumns"
-_VARIABLES_FIELD = "variables"
 _NAME_FIELD = "name"
 _DESCRIPTION_FIELD = "description"
-_SEARCH_DESCRIPTIONS_FIELD = "searchDescriptions"
-# DEPRECATED: Use searchDescriptions instead.
-_NL_SENTENCES_FIELD = "nlSentences"
-_GROUP_FIELD = "group"
 _SOURCES_FIELD = "sources"
 _PROVENANCES_FIELD = "provenances"
 _URL_FIELD = "url"
 _PROVENANCE_FIELD = "provenance"
-_EVENT_TYPE_FIELD = "eventType"
 _ID_COLUMN_FIELD = "idColumn"
-_EVENTS_FIELD = "events"
-_COMPUTED_VARIABLES_FIELD = "computedVariables"
-_AGGREGATION_FIELD = "aggregation"
-_PROPERTIES_FIELD = "properties"
 _DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
 _FORMAT_FIELD = "format"
 # Default and only accepted variable import format
@@ -144,38 +129,6 @@ class Config:
   def column_mappings(self, input_file: File) -> dict[str, str]:
     return self._per_file_config(input_file).get(_COLUMN_MAPPINGS_FIELD, {})
 
-  def computed_variables(self, input_file: File) -> list[str]:
-    return self._per_file_config(input_file).get(_COMPUTED_VARIABLES_FIELD, [])
-
-  def variable(self, variable_name: str) -> StatVar:
-    var_cfg = self.data.get(_VARIABLES_FIELD, {}).get(variable_name, {})
-    # Combine search descriptions and the deprecated NL sentences until the latter is removed.
-    search_descriptions = var_cfg.get(_SEARCH_DESCRIPTIONS_FIELD,
-                                      []) + var_cfg.get(_NL_SENTENCES_FIELD, [])
-    return StatVar(
-        "",
-        var_cfg.get(_NAME_FIELD, variable_name),
-        description=var_cfg.get(_DESCRIPTION_FIELD, ""),
-        search_descriptions=search_descriptions,
-        group_path=var_cfg.get(_GROUP_FIELD, ""),
-        properties=var_cfg.get(_PROPERTIES_FIELD, {}),
-    )
-
-  def aggregation(self, variable_name: str) -> AggregationConfig:
-    aggregation_cfg = self.data.get(_VARIABLES_FIELD, {}) \
-      .get(variable_name, {}) \
-      .get(_AGGREGATION_FIELD, {})
-    return AggregationConfig(**aggregation_cfg)
-
-  def event_type(self, input_file: File) -> str:
-    return self._per_file_config(input_file).get(_EVENT_TYPE_FIELD, "")
-
-  def event(self, event_type_name: str) -> EventType:
-    event_type_cfg = self.data.get(_EVENTS_FIELD, {}).get(event_type_name, {})
-    return EventType("",
-                     event_type_cfg.get(_NAME_FIELD, event_type_name),
-                     description=event_type_cfg.get(_DESCRIPTION_FIELD, ""))
-
   def entity(self, entity_type_name: str) -> EntityType:
     entity_type_cfg = self.data.get(_ENTITIES_FIELD,
                                     {}).get(entity_type_name, {})
@@ -185,9 +138,6 @@ class Config:
 
   def id_column(self, input_file: File) -> str:
     return self._per_file_config(input_file).get(_ID_COLUMN_FIELD, "")
-
-  def entity_type(self, input_file: File) -> str:
-    return self._per_file_config(input_file).get(_ENTITY_TYPE_FIELD, "")
 
   def ignore_columns(self, input_file: File) -> list[str]:
     return self._per_file_config(input_file).get(_IGNORE_COLUMNS_FIELD, [])
@@ -248,10 +198,7 @@ class Config:
     - Generated SV ids: '<namespace>/statvar_<n>'
     - Generated manual group ids: '<namespace>/g/group_<n>'
     """
-    from stats import nodes
-
-    default_ns = nodes._CUSTOM_GROUP_ID_PREFIX.rsplit("/")[0]
-    ns = self.data.get(_CUSTOM_ID_NAMESPACE_FIELD, default_ns)
+    ns = self.data.get(_CUSTOM_ID_NAMESPACE_FIELD, "custom")
 
     if not ns:
       raise ValueError(

@@ -246,6 +246,9 @@ INVALID_CONFIGS = [
     Case("unsupported importType",
          given=b.obs_config(importType="Observations"),
          expect=b.Fails("ValueError", "CSV Header Validation Failed!")),
+    Case("events importType is not supported",
+         given=b.obs_config(importType="events"),
+         expect=b.Fails("ValueError", "Unsupported import type: events")),
     Case("double wildcard in filename pattern",
          given=b.obs_config(pattern="**.csv"),
          expect=b.Fails(
