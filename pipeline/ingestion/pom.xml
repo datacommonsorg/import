@@ -118,7 +118,7 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>
-                    <include>**/*.json</include>
+                    <include>embedding/*.json</include>
                 </includes>
             </resource>
         </resources>

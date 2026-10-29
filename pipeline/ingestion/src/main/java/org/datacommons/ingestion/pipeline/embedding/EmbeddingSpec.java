@@ -18,14 +18,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
- * Specification for a single embedding generation setup, mirroring {@code EmbeddingSpec} in
- * aggregation-helper.
+ * Specification for a single embedding generation setup.
  *
- * <p>Supports both the list-based {@code node_types} format (e.g., {@code ["StatisticalVariable",
- * "Topic"]}) and the predicate-mapped format (e.g., {@code {"Class": ["description"]}}).
+ * <p>Supports the following fields: 1. embedding_label: The label of the embedding, used to
+ * identify the embedding 2. modelName: The name of the model to use for embedding generation 3.
+ * modelEndpoint: The endpoint of the model to use for embedding generation 4. taskType: The task
+ * type for embedding generation 5. nodeTypes: The node types to use for embedding generation, this
+ * is a map of node_type with the list of properties to include for the node 6. nodeFilterType: The
+ * type of node filter to use for embedding generation
  */
 public record EmbeddingSpec(
     String embeddingLabel,
@@ -36,10 +38,6 @@ public record EmbeddingSpec(
     NodeFilterType nodeFilterType)
     implements Serializable {
 
-  public static final String DEFAULT_MODEL_NAME = "NodeEmbeddingModel";
-  public static final String DEFAULT_MODEL_ENDPOINT = "text-embedding-005";
-  public static final String DEFAULT_TASK_TYPE = "RETRIEVAL_QUERY";
-
   /** Supported node filtering strategies from aggregation-helper. */
   public enum NodeFilterType {
     NO_FILTER,
@@ -48,21 +46,20 @@ public record EmbeddingSpec(
   }
 
   public EmbeddingSpec {
-    Objects.requireNonNull(embeddingLabel, "embeddingLabel must not be null");
-    if (embeddingLabel.trim().isEmpty()) {
-      throw new IllegalArgumentException("embeddingLabel must not be empty");
+    if (embeddingLabel == null || embeddingLabel.trim().isEmpty()) {
+      throw new IllegalArgumentException("embeddingLabel must not be null or empty");
     }
-    modelName =
-        (modelName == null || modelName.trim().isEmpty()) ? DEFAULT_MODEL_NAME : modelName.trim();
-    modelEndpoint =
-        (modelEndpoint == null || modelEndpoint.trim().isEmpty())
-            ? DEFAULT_MODEL_ENDPOINT
-            : modelEndpoint.trim();
-    taskType =
-        (taskType == null || taskType.trim().isEmpty()) ? DEFAULT_TASK_TYPE : taskType.trim();
-    Objects.requireNonNull(nodeTypes, "nodeTypes must not be null");
-    if (nodeTypes.isEmpty()) {
-      throw new IllegalArgumentException("nodeTypes must not be empty");
+    if (modelName == null || modelName.trim().isEmpty()) {
+      throw new IllegalArgumentException("modelName must not be null or empty");
+    }
+    if (modelEndpoint == null || modelEndpoint.trim().isEmpty()) {
+      throw new IllegalArgumentException("modelEndpoint must not be null or empty");
+    }
+    if (taskType == null || taskType.trim().isEmpty()) {
+      throw new IllegalArgumentException("taskType must not be null or empty");
+    }
+    if (nodeTypes == null || nodeTypes.isEmpty()) {
+      throw new IllegalArgumentException("nodeTypes must not be null or empty");
     }
     nodeTypes.forEach(
         (key, value) -> {
@@ -70,7 +67,9 @@ public record EmbeddingSpec(
             throw new IllegalArgumentException("nodeTypes key must not be null or empty");
           }
         });
-    nodeFilterType = nodeFilterType == null ? NodeFilterType.NO_FILTER : nodeFilterType;
+    if (nodeFilterType == null) {
+      throw new IllegalArgumentException("nodeFilterType must not be null or unknown");
+    }
   }
 
   /** Returns the ordered list of target node types configured in this spec. */

@@ -16,11 +16,12 @@ package org.datacommons.ingestion.pipeline;
 
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.PipelineOptions;
 
-/** Pipeline options for the Spanner NodeEmbedding ingestion Dataflow pipeline. */
-public interface EmbeddingPipelineOptions extends SpannerPipelineOptions {
+/** Embedding-specific pipeline options for Spanner NodeEmbedding generation. */
+public interface EmbeddingOptions extends PipelineOptions {
   @Description("Classpath resource name to the embedding JSON config.")
-  @Default.String("default.json")
+  @Default.String("embedding/base_dc.json")
   String getEmbeddingConfigPath();
 
   void setEmbeddingConfigPath(String embeddingConfigPath);
@@ -31,14 +32,7 @@ public interface EmbeddingPipelineOptions extends SpannerPipelineOptions {
 
   void setEmbeddingTableName(String embeddingTableName);
 
-  @Description("GCP region/location.")
-  @Default.String("us-central1")
-  String getLocation();
-
-  void setLocation(String location);
-
   @Description("GCS URI or local path to the NL statistical variable sentences CSV file.")
-  @Default.String("gs://datcom-nl-models/base_uae_mem_2025_11_03_07_10_42/embeddings.csv")
   String getNlStatVarFilePath();
 
   void setNlStatVarFilePath(String nlStatVarFilePath);
@@ -49,21 +43,10 @@ public interface EmbeddingPipelineOptions extends SpannerPipelineOptions {
 
   void setEmbeddingBatchSize(int embeddingBatchSize);
 
-  @Description("Whether to skip pre-deleting existing embeddings in Spanner.")
-  @Default.Boolean(false)
-  boolean getSkipDelete();
+  /** TODO: add the IncrementalEmbedding option and related incremental ingestion logic. */
+  // @Description("Whether to generate embeddings incrementally based on timestamp.")
+  // @Default.Boolean(true)
+  // boolean getIncrementalEmbedding();
 
-  void setSkipDelete(boolean skipDelete);
-
-  @Description("Whether to ignore IngestionLock timestamp and process all matching nodes.")
-  @Default.Boolean(false)
-  boolean getIgnoreLockTimestamp();
-
-  void setIgnoreLockTimestamp(boolean ignoreLockTimestamp);
-
-  @Description("Spanner Property Graph name for GQL predicate queries.")
-  @Default.String("DCGraph")
-  String getGraphName();
-
-  void setGraphName(String graphName);
+  // void setIncrementalEmbedding(boolean incrementalEmbedding);
 }

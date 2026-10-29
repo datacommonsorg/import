@@ -91,7 +91,7 @@ public class EmbeddingConfigTest {
   }
 
   @Test
-  public void testParseJson_withDefaults() {
+  public void testParseJson_missingFieldsThrowsException() {
     String json =
         """
         {
@@ -107,25 +107,42 @@ public class EmbeddingConfigTest {
         }
         """;
 
-    EmbeddingConfig config = EmbeddingConfig.parseJson(json);
-    assertEquals(1, config.specs().size());
+    assertThrows(IllegalArgumentException.class, () -> EmbeddingConfig.parseJson(json));
 
-    EmbeddingSpec typeSpec = config.specs().get(0);
-    assertEquals("type_embedding", typeSpec.embeddingLabel());
-    assertEquals(EmbeddingSpec.DEFAULT_MODEL_NAME, typeSpec.modelName());
-    assertEquals(EmbeddingSpec.DEFAULT_MODEL_ENDPOINT, typeSpec.modelEndpoint());
-    assertEquals(EmbeddingSpec.DEFAULT_TASK_TYPE, typeSpec.taskType());
-    assertEquals(EmbeddingSpec.NodeFilterType.ENTITY_TYPES, typeSpec.nodeFilterType());
-    assertEquals(List.of("description"), typeSpec.nodeTypes().get("Class"));
+    String unknownFilterJson =
+        """
+        {
+          "specs": [
+            {
+              "embedding_label": "type_embedding",
+              "model_name": "NodeEmbeddingModel",
+              "model_endpoint": "text-embedding-005",
+              "task_type": "RETRIEVAL_QUERY",
+              "node_types": {
+                "Class": ["description"]
+              },
+              "node_filter_type": "UNKNOWN_FILTER"
+            }
+          ]
+        }
+        """;
+
+    assertThrows(
+        IllegalArgumentException.class, () -> EmbeddingConfig.parseJson(unknownFilterJson));
   }
 
   @Test
   public void testLoad_fromPackagedResource() {
-    EmbeddingConfig config = EmbeddingConfig.load("default.json");
-    assertEquals(3, config.specs().size());
-    assertEquals("base_text_embedding", config.specs().get(0).embeddingLabel());
-    assertEquals("nl_stat_var_embedding", config.specs().get(1).embeddingLabel());
-    assertEquals("type_embedding", config.specs().get(2).embeddingLabel());
+    EmbeddingConfig baseDcConfig = EmbeddingConfig.load("embedding/base_dc.json");
+    assertEquals(3, baseDcConfig.specs().size());
+    assertEquals("base_text_embedding", baseDcConfig.specs().get(0).embeddingLabel());
+    assertEquals("nl_stat_var_embedding", baseDcConfig.specs().get(1).embeddingLabel());
+    assertEquals("type_embedding", baseDcConfig.specs().get(2).embeddingLabel());
+
+    EmbeddingConfig dcpConfig = EmbeddingConfig.load("embedding/dcp.json");
+    assertEquals(2, dcpConfig.specs().size());
+    assertEquals("base_text_embedding", dcpConfig.specs().get(0).embeddingLabel());
+    assertEquals("type_embedding", dcpConfig.specs().get(1).embeddingLabel());
   }
 
   @Test

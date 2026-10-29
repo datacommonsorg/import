@@ -41,8 +41,8 @@ public record EmbeddingConfig(List<EmbeddingSpec> specs) implements Serializable
   }
 
   /**
-   * Loads {@link EmbeddingConfig} from a packaged classpath resource (e.g., {@code default.json} in
-   * the bundled Dataflow JAR).
+   * Loads {@link EmbeddingConfig} from a packaged classpath resource (e.g., {@code
+   * embedding/base_dc.json} in the bundled Dataflow JAR).
    */
   public static EmbeddingConfig load(String configPath) {
     if (configPath == null || configPath.trim().isEmpty()) {
