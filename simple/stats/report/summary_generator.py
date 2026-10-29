@@ -25,6 +25,7 @@ collecting or writing the report are logged rather than raised.
 from util.filesystem import Dir
 from util.filesystem import File
 
+
 class SummaryGenerator:
   """Generates the ingestion report for a preprocessor run."""
 
