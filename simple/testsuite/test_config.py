@@ -292,6 +292,20 @@ INVALID_CONFIGS = [
              "ValueError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['entityType']", ())),
+    Case("columnsToResolve on observations entry is rejected",
+         given=b.obs_config(columnsToResolve=["entity"]),
+         expect=b.Fails(
+             "ValueError",
+             "'columnsToResolve' is only supported for 'importType':"
+             " 'entities', but entry 'case*.csv' has importType"
+             " 'observations'.", ())),
+    Case("referenceColumns on observations entry is rejected",
+         given=b.obs_config(referenceColumns=["entity"]),
+         expect=b.Fails(
+             "ValueError",
+             "'referenceColumns' is only supported for 'importType':"
+             " 'entities', but entry 'case*.csv' has importType"
+             " 'observations'.", ())),
     Case("unknown entity config key",
          given={
              **b.obs_config(),

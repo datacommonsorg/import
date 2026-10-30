@@ -144,7 +144,20 @@ class Config:
       _validate_dict_keys(entry, _ALLOWED_INPUT_FILE_KEYS,
                           f"'{_INPUT_FILES_FIELD}' entry for '{key}'")
       self._validate_format(key, entry)
+      self._validate_entity_columns(key, entry)
       self._input_files_config[key] = entry
+
+  def _validate_entity_columns(self, key: str, entry: dict) -> None:
+    """Rejects `columnsToResolve` and `referenceColumns` on non-entities entries."""
+    import_type = entry.get(_IMPORT_TYPE_FIELD, ImportType.OBSERVATIONS)
+    if import_type == ImportType.ENTITIES:
+      return
+    for col_field in (_ENTITY_COLUMNS, _REFERENCE_COLUMNS_FIELD):
+      if col_field in entry:
+        raise ValueError(
+            f"'{col_field}' is only supported for 'importType': "
+            f"'{ImportType.ENTITIES}', but entry '{key}' has importType "
+            f"'{import_type}'.")
 
   def _validate_format(self, key: str, entry: dict) -> None:
     """Rejects any `format` other than the one supported CSV layout.

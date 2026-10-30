@@ -204,6 +204,7 @@ class TestConfig(unittest.TestCase):
     config = Config({
         "inputFiles": [{
             "pattern": "foo.csv",
+            "importType": "entities",
             "columnsToResolve": ["foo", "bar"]
         }]
     })
@@ -213,6 +214,7 @@ class TestConfig(unittest.TestCase):
     config = Config({
         "inputFiles": [{
             "pattern": "foo.csv",
+            "importType": "entities",
             "referenceColumns": ["baz", "qux"]
         }]
     })
