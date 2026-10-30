@@ -27,13 +27,5 @@
       "name": "Crime Case",
       "description": "Crime Case description"
     }
-  },
-  "sources": {
-    "Test Source": {
-      "url": "http://source.com",
-      "provenances": {
-        "Test Provenance": "http://source.com/provenance"
-      }
-    }
   }
 }

@@ -36,8 +36,6 @@ _CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
 _CUSTOM_ENTITY_TYPE_ID_PREFIX = "c/n/"
 # Pattern to check if a string conforms to that of a valid DCID.
 _DCID_PATTERN = r"^(?:[A-Za-z0-9_/]+:)?[A-Za-z0-9_/]+$"
-# Key used in `Nodes.groups` for the default custom root group.
-_DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 
 _DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
                          "Custom Data Commons")
@@ -63,13 +61,11 @@ class Nodes:
   def __init__(self, config: Config) -> None:
     self.lock = threading.RLock()
     self.config = config
-    # Dictionary of SVGs from SVG path to SVG
-    self.groups: dict[str, StatVarGroup] = {}
     # Dictionary of SVGs from SVG id to SVG
-    self.ids_to_groups: dict[str, StatVarGroup] = {}
-    # dict from provenance name to Provenance
+    self.groups: dict[str, StatVarGroup] = {}
+    # dict from provenance ID (and name) to Provenance
     self.provenances: dict[str, Provenance] = {}
-    # dict from source name to Source
+    # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
     # dict from property column name to Property
     self.properties: dict[str, Property] = {}
@@ -78,7 +74,8 @@ class Nodes:
     self._used_provenance_ids = set()
     self._used_source_ids = set()
     self.has_custom_mcf_nodes = False
-    self._load_provenances_and_sources()
+    self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
+    self.provenances[_DEFAULT_PROVENANCE.id] = _DEFAULT_PROVENANCE
     # Used to generate property IDs
     self._property_generated_id_count = 0
     # Used to generate entity type IDs
@@ -90,74 +87,31 @@ class Nodes:
     if config.generate_hierarchy():
       self._default_custom_group()
 
-  def _load_provenances_and_sources(self):
-    # Load default source and provenance.
-    self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
-    self.provenances[_DEFAULT_PROVENANCE.id] = _DEFAULT_PROVENANCE
-    # Load from config
-    for prov_cfg in self.config.provenances.values():
-      source_cfg = self.config.provenance_sources.get(prov_cfg.name)
-      source_id = self._source_id(source_cfg)
-      self._provenance(prov_cfg, source_id)
-
-  def _provenance(self, prov_cfg: Provenance, source_id: str) -> Provenance:
-    provenance = Provenance(
-        id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}{len(self.provenances)}",
-        source_id=source_id,
-        name=prov_cfg.name,
-        url=prov_cfg.url)
-    self.provenances[provenance.name] = provenance
-
-    return provenance
-
-  def _source_id(self, source_cfg: Source | None) -> str:
-    if not source_cfg:
-      return _DEFAULT_SOURCE.id
-
-    source = self.sources.get(source_cfg.name)
-    if not source:
-      source = Source(id=f"{_CUSTOM_SOURCE_ID_PREFIX}{len(self.sources)}",
-                      name=source_cfg.name,
-                      url=source_cfg.url)
-      self.sources[source.name] = source
-
-    return source.id
-
   @thread_safe
-  def register_provenance(self,
-                          id: str,
-                          name: str = "",
-                          url: str = "",
-                          source_id: str = "",
-                          properties: dict[str, str] = None) -> Provenance:
+  def register_provenance(
+      self,
+      id: str,
+      name: str = "",
+      url: str = "",
+      source_id: str = "",
+      properties: dict[str, str] | None = None) -> Provenance:
     self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
 
     prov = self.provenances.get(clean_id)
     if not prov:
-      prov = Provenance(id=clean_id,
-                        source_id=clean_source_id,
-                        name=name or clean_id,
-                        url=url,
-                        properties=properties or {},
-                        provenance_id=clean_id)
+      prov = Provenance(id=clean_id, source_id="", name="")
       self.provenances[clean_id] = prov
-      if name:
-        self.provenances[name] = prov
-    else:
-      if name:
-        if not prov.name:
-          prov.name = name
-        self.provenances[name] = prov
-      if url and not prov.url:
-        prov.url = url
-      if clean_source_id and not prov.source_id:
-        prov.source_id = clean_source_id
-      if properties:
-        prov.properties.update(properties)
-      if not prov.provenance_id:
-        prov.provenance_id = clean_id
+    if name:
+      prov.name = prov.name or name
+      self.provenances[name] = prov
+    prov.name = prov.name or clean_id
+    prov.url = prov.url or url
+    prov.source_id = prov.source_id or clean_source_id
+    prov.provenance_id = prov.provenance_id or clean_id
+    if properties:
+      prov.properties.update(properties)
     return prov
 
   @thread_safe
@@ -165,32 +119,25 @@ class Nodes:
                       id: str,
                       name: str = "",
                       url: str = "",
-                      properties: dict[str, str] = None,
+                      properties: dict[str, str] | None = None,
                       provenance_id: str = "") -> Source:
     self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
 
     src = self.sources.get(clean_id)
     if not src:
-      src = Source(id=clean_id,
-                   name=name or clean_id,
-                   url=url,
-                   properties=properties or {},
-                   provenance_id=provenance_id or "")
+      src = Source(id=clean_id, name=name or clean_id, url=url)
       self.sources[clean_id] = src
-      if name:
-        self.sources[name] = src
-    else:
-      if name:
-        if not src.name:
-          src.name = name
-        self.sources[name] = src
-      if url and not src.url:
-        src.url = url
-      if properties:
-        src.properties.update(properties)
-      if provenance_id and not src.provenance_id:
-        src.provenance_id = provenance_id
+    if name:
+      if src.name == clean_id:
+        src.name = name
+      self.sources[name] = src
+    if url and not src.url:
+      src.url = url
+      src.domain = src.domain or Source(id="", name="", url=url).domain
+    if properties:
+      src.properties.update(properties)
+    src.provenance_id = src.provenance_id or provenance_id
     return src
 
   @thread_safe
@@ -235,47 +182,32 @@ class Nodes:
         self.provenance(input_file))
 
   def _property_id(self, property_column_name: str) -> str:
-    dcid = property_column_name
-    if re.fullmatch(_DCID_PATTERN, dcid):
-      return dcid
-    # Convert spaces and dashes to underscores and check if that
-    # is a valid DCID pattern
-    dcid = re.sub(r"[ -]", "_", dcid)
-    if re.fullmatch(_DCID_PATTERN, dcid):
+    dcid = _sanitize_dcid(property_column_name)
+    if dcid:
       return dcid
     self._property_generated_id_count += 1
     return f"{_CUSTOM_PROPERTY_ID_PREFIX}{self._property_generated_id_count}"
 
   def _entity_type_id(self, entity_type_name: str) -> str:
-    dcid = entity_type_name
-    if re.fullmatch(_DCID_PATTERN, dcid):
-      return dcid
-    # Convert spaces and dashes to underscores and check if that
-    # is a valid DCID pattern
-    dcid = re.sub(r"[ -]", "_", dcid)
-    if re.fullmatch(_DCID_PATTERN, dcid):
+    dcid = _sanitize_dcid(entity_type_name)
+    if dcid:
       return dcid
     self._entity_type_generated_id_count += 1
     return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._entity_type_generated_id_count}"
 
   def _ensure_root_group(self) -> StatVarGroup:
     if sc.ROOT_SVG_ID not in self.groups:
-      # Emit the global root StatVarGroup (dc/g/Root)
-      root_svg = StatVarGroup(sc.ROOT_SVG_ID, sc.ROOT_SVG_NAME, "")
-      self.groups[sc.ROOT_SVG_ID] = root_svg
-      self.ids_to_groups[root_svg.id] = root_svg
+      self.groups[sc.ROOT_SVG_ID] = StatVarGroup(sc.ROOT_SVG_ID,
+                                                 sc.ROOT_SVG_NAME, "")
     return self.groups[sc.ROOT_SVG_ID]
 
   def _default_custom_group(self) -> StatVarGroup:
     self._ensure_root_group()
-    if _DEFAULT_CUSTOM_GROUP_PATH not in self.groups:
-      # Compute id and name using config (falls back to schema constants).
-      root_id = sc.DEFAULT_CUSTOM_ROOT_SVG_ID
-      root_name = self.config.default_custom_root_svg_name()
-      svg = StatVarGroup(root_id, root_name, sc.ROOT_SVG_ID)
-      self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = svg
-      self.ids_to_groups[svg.id] = svg
-    return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
+    if sc.DEFAULT_CUSTOM_ROOT_SVG_ID not in self.groups:
+      self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = StatVarGroup(
+          sc.DEFAULT_CUSTOM_ROOT_SVG_ID, sc.DEFAULT_CUSTOM_ROOT_SVG_NAME,
+          sc.ROOT_SVG_ID)
+    return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
 
   @thread_safe
   def get_provenance_urls(self) -> dict[str, str]:
@@ -284,7 +216,7 @@ class Nodes:
       prov_id = strip_namespace(prov.id)
       prov_urls[prov_id] = prov.url
       prov_urls[prov.id] = prov.url
-      if hasattr(prov, 'name') and prov.name:
+      if prov.name:
         prov_urls[prov.name] = prov.url
     return prov_urls
 
@@ -339,6 +271,16 @@ class Nodes:
       for dir_name in _provenance_dirs_for_node(node):
         result[dir_name].extend(node.triples())
     return {k: _dedupe_triples(triples) for k, triples in result.items()}
+
+
+def _sanitize_dcid(raw: str) -> str | None:
+  """Returns `raw` (or `raw` with spaces/dashes replaced by `_`) if it is a valid DCID."""
+  if re.fullmatch(_DCID_PATTERN, raw):
+    return raw
+  candidate = re.sub(r"[ -]", "_", raw)
+  if re.fullmatch(_DCID_PATTERN, candidate):
+    return candidate
+  return None
 
 
 def _provenance_dir(raw_id: str) -> str:
