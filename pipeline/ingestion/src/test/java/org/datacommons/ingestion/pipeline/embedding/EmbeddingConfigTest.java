@@ -18,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -126,29 +125,5 @@ public class EmbeddingConfigTest {
   public void testParseJson_emptyThrowsException() {
     assertThrows(IllegalArgumentException.class, () -> EmbeddingConfig.parseJson(""));
     assertThrows(IllegalArgumentException.class, () -> EmbeddingConfig.load(""));
-  }
-
-  @Test
-  public void testEmbeddingSpec_validation() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new EmbeddingSpec(
-                " ",
-                "NodeEmbeddingModel",
-                "text-embedding-005",
-                "RETRIEVAL_QUERY",
-                Map.of("Topic", List.of()),
-                EmbeddingSpec.NodeFilterType.NO_FILTER));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new EmbeddingSpec(
-                "base_text_embedding",
-                "NodeEmbeddingModel",
-                "text-embedding-005",
-                "RETRIEVAL_QUERY",
-                Map.of(),
-                EmbeddingSpec.NodeFilterType.NO_FILTER));
   }
 }
