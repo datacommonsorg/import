@@ -113,7 +113,7 @@ def test_reference_columns_hold_one_reference_per_listed_value():
 
 
 def test_reference_columns_field_marks_reference_columns():
-  """referenceColumns is accepted as the clearer name for columnsToResolve."""
+  """ReferenceColumns is accepted as the clearer name for columnsToResolve."""
   result = b.run_csv(
       b.csv_file(["article1", "author1"], ["article2", "author1,author2"],
                  header=["article_id", "article_author"]),
