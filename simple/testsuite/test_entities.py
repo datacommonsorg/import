@@ -86,7 +86,7 @@ def test_entity_type_name_and_description_from_config():
 
 
 def test_reference_columns_hold_one_reference_per_listed_value():
-  """In entities imports, columnsToResolve marks reference columns."""
+  """In entities imports, columnsToResolve (or referenceColumns) marks reference columns."""
   result = b.run_csv(
       b.csv_file(["article1", "author1"], ["article2", "author1,author2"],
                  ["article3", "author2, author3"],
@@ -109,6 +109,27 @@ def test_reference_columns_hold_one_reference_per_listed_value():
                article_id="article3",
                article_author=[b.ref("author2"),
                                b.ref("author3")]),
+  ])
+
+
+def test_reference_columns_field_marks_reference_columns():
+  """referenceColumns is accepted as the clearer name for columnsToResolve."""
+  result = b.run_csv(
+      b.csv_file(["article1", "author1"], ["article2", "author1,author2"],
+                 header=["article_id", "article_author"]),
+      b.entities_config("Article",
+                        "article_id",
+                        referenceColumns=["article_author"]))
+  b.assert_records(result.of_type("Article"), [
+      b.entity("article1",
+               "Article",
+               article_id="article1",
+               article_author=b.ref("author1")),
+      b.entity("article2",
+               "Article",
+               article_id="article2",
+               article_author=[b.ref("author1"),
+                               b.ref("author2")]),
   ])
 
 

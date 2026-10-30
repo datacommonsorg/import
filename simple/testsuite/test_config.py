@@ -237,6 +237,74 @@ INVALID_CONFIGS = [
          expect=b.Fails(
              "ValueError", "Invalid entry in 'inputFiles': must specify"
              " 'pattern' or 'filename'.", ())),
+    Case("unknown top-level key",
+         given={
+             **b.obs_config(),
+             "unknownTopLevelKey": True,
+         },
+         expect=b.Fails(
+             "ValueError",
+             "Unknown key(s) in config.json: ['unknownTopLevelKey']", ())),
+    Case("legacy sources key is rejected",
+         given={
+             **b.obs_config(),
+             "sources": {},
+         },
+         expect=b.Fails("ValueError",
+                        "Unknown key(s) in config.json: ['sources']", ())),
+    Case("legacy variables key is rejected",
+         given={
+             **b.obs_config(),
+             "variables": {},
+         },
+         expect=b.Fails("ValueError",
+                        "Unknown key(s) in config.json: ['variables']", ())),
+    Case("legacy events key is rejected",
+         given={
+             **b.obs_config(),
+             "events": {},
+         },
+         expect=b.Fails("ValueError",
+                        "Unknown key(s) in config.json: ['events']", ())),
+    Case("legacy customIdNamespace key is rejected",
+         given={
+             **b.obs_config(),
+             "customIdNamespace": "custom",
+         },
+         expect=b.Fails("ValueError",
+                        "Unknown key(s) in config.json: ['customIdNamespace']",
+                        ())),
+    Case("unknown inputFiles key",
+         given=b.obs_config(unknownFileKey="val"),
+         expect=b.Fails(
+             "ValueError",
+             "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
+             " ['unknownFileKey']", ())),
+    Case("legacy importProxyEntities key is rejected",
+         given=b.obs_config(importProxyEntities=True),
+         expect=b.Fails(
+             "ValueError",
+             "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
+             " ['importProxyEntities']", ())),
+    Case("legacy entityType key is rejected",
+         given=b.obs_config(entityType="Country"),
+         expect=b.Fails(
+             "ValueError",
+             "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
+             " ['entityType']", ())),
+    Case("unknown entity config key",
+         given={
+             **b.obs_config(),
+             "entities": {
+                 "Author": {
+                     "name": "Author",
+                     "unknownEntityKey": "x",
+                 }
+             },
+         },
+         expect=b.Fails(
+             "ValueError",
+             "Unknown key(s) in 'entities.Author': ['unknownEntityKey']", ())),
     Case("unsupported format",
          given=b.obs_config(format="variablePerColumn"),
          expect=b.Fails(

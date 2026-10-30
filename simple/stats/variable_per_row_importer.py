@@ -251,14 +251,13 @@ class VariablePerRowImporter(Importer):
       for chunk_df in reader:
         if chunk_df.empty:
           continue
-        observations_df = (self.resolve_specified_columns(chunk_df).pipe(
-            self._apply_column_mappings).pipe(
-                _apply_property_defaults, obs_props).pipe(
-                    self._serialize_custom_dimensions,
-                    obs_props.properties).pipe(_format_numeric_values).pipe(
-                        filter_invalid_observation_values).pipe(
-                            self._ensure_entity_column).pipe(
-                                _strip_namespaces, provenance))
+        observations_df = (self._apply_column_mappings(chunk_df).pipe(
+            _apply_property_defaults, obs_props).pipe(
+                self._serialize_custom_dimensions,
+                obs_props.properties).pipe(_format_numeric_values).pipe(
+                    filter_invalid_observation_values).pipe(
+                        self._ensure_entity_column).pipe(
+                            _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.graph_writer.write_observations(observations_df, self.input_file)
 

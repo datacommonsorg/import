@@ -108,16 +108,16 @@ class TestConfig(unittest.TestCase):
     # (description, configured pattern, file path, expected per-file config)
     cases = [
         ("exact match", "foo.csv", "foo.csv", {
-            "x": "y"
+            "provenance": "y"
         }),
         ("subdir match", "foo.csv", "path/to/foo.csv", {
-            "x": "y"
+            "provenance": "y"
         }),
         ("subdir match with path", "path/to/*.csv", "path/to/foo.csv", {
-            "x": "y"
+            "provenance": "y"
         }),
         ("wildcard match", "foo*.csv", "foo1.csv", {
-            "x": "y"
+            "provenance": "y"
         }),
         ("different subdir", "path/to/*.csv", "foo.csv", {}),
         ("wrong subdir", "//to/*.csv", "path/to/foo.csv", {}),
@@ -127,7 +127,11 @@ class TestConfig(unittest.TestCase):
 
     for description, pattern, file_path, expected in cases:
       with self.subTest(description):
-        config = Config({"inputFiles": [{"pattern": pattern, "x": "y"}]})
+        config = Config(
+            {"inputFiles": [{
+                "pattern": pattern,
+                "provenance": "y"
+            }]})
         actual = config._per_file_config(self.make_file(file_path))
         # A matched entry also carries the pattern it was keyed on.
         actual = {k: v for k, v in actual.items() if k != "pattern"}
@@ -206,9 +210,31 @@ class TestConfig(unittest.TestCase):
     self.assertListEqual(config.entity_columns(self.make_file("foo.csv")),
                          ["foo", "bar"])
 
+    config = Config({
+        "inputFiles": [{
+            "pattern": "foo.csv",
+            "referenceColumns": ["baz", "qux"]
+        }]
+    })
+    self.assertListEqual(config.entity_columns(self.make_file("foo.csv")),
+                         ["baz", "qux"])
+
     config = Config({"inputFiles": [{"pattern": "foo.csv"}]})
     self.assertListEqual(config.entity_columns(self.make_file("foo.csv")), [],
                          "unspecified")
+
+  def test_unknown_keys_are_rejected(self):
+    with self.assertRaisesRegex(ValueError,
+                                "Unknown key\\(s\\) in config.json"):
+      Config({"unknownKey": True})
+
+    with self.assertRaisesRegex(
+        ValueError, "Unknown key\\(s\\) in 'inputFiles' entry for 'foo.csv'"):
+      Config({"inputFiles": [{"pattern": "foo.csv", "unknownKey": "val"}]})
+
+    with self.assertRaisesRegex(ValueError,
+                                "Unknown key\\(s\\) in 'entities.Author'"):
+      Config({"entities": {"Author": {"name": "Author", "unknownKey": "val"}}})
 
   def test_include_input_subdirs(self):
     config = Config({})

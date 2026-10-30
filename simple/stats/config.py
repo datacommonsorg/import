@@ -32,10 +32,72 @@ _VARIABLE_PER_ROW_FORMAT = "variablePerRow"
 _COLUMN_MAPPINGS_FIELD = "columnMappings"
 _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "columnsToResolve"
+_REFERENCE_COLUMNS_FIELD = "referenceColumns"
 _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _OBSERVATION_PROPERTIES = "observationProperties"
 _INCLUDE_INPUT_SUBDIRS_PROPERTY = "includeInputSubdirs"
+_IMPORT_NAME_FIELD = "importName"
+_PATTERN_FIELD = "pattern"
+_FILENAME_FIELD = "filename"
+
+_ALLOWED_TOP_LEVEL_KEYS = frozenset({
+    _INPUT_FILES_FIELD,
+    _DATA_DOWNLOAD_URL_FIELD,
+    _ENTITIES_FIELD,
+    _GROUP_STAT_VARS_BY_PROPERTY,
+    _INCLUDE_INPUT_SUBDIRS_PROPERTY,
+    _IMPORT_NAME_FIELD,
+    "_dir_import_names",
+})
+
+_ALLOWED_INPUT_FILE_KEYS = frozenset({
+    _PATTERN_FIELD,
+    _FILENAME_FIELD,
+    _IMPORT_TYPE_FIELD,
+    _PROVENANCE_FIELD,
+    _FORMAT_FIELD,
+    _COLUMN_MAPPINGS_FIELD,
+    _IGNORE_COLUMNS_FIELD,
+    _OBSERVATION_PROPERTIES,
+    _ROW_ENTITY_TYPE_FIELD,
+    _ID_COLUMN_FIELD,
+    _ENTITY_COLUMNS,
+    _REFERENCE_COLUMNS_FIELD,
+    "_import_name",
+})
+
+_ALLOWED_ENTITY_KEYS = frozenset({
+    _NAME_FIELD,
+    _DESCRIPTION_FIELD,
+})
+
+
+def _validate_dict_keys(data: dict, allowed_keys: frozenset[str],
+                        context: str) -> None:
+  """Raises ValueError if `data` contains any keys not in `allowed_keys`."""
+  unknown_keys = sorted(set(data.keys()) - allowed_keys)
+  if unknown_keys:
+    public_keys = sorted(k for k in allowed_keys if not k.startswith("_"))
+    raise ValueError(f"Unknown key(s) in {context}: {unknown_keys}. "
+                     f"Allowed keys are: {public_keys}")
+
+
+def _validate_entities_config(entities: object) -> None:
+  """Validates the top-level 'entities' block if present."""
+  if entities is None:
+    return
+  if not isinstance(entities, dict):
+    raise ValueError(
+        f"'{_ENTITIES_FIELD}' must be a JSON object mapping entity types to "
+        f"their configuration. Got: {type(entities).__name__}")
+  for entity_type_name, entity_cfg in entities.items():
+    if not isinstance(entity_cfg, dict):
+      raise ValueError(
+          f"Invalid configuration for entity '{entity_type_name}' in "
+          f"'{_ENTITIES_FIELD}': must be a JSON object. Got: {entity_cfg}")
+    _validate_dict_keys(entity_cfg, _ALLOWED_ENTITY_KEYS,
+                        f"'{_ENTITIES_FIELD}.{entity_type_name}'")
 
 
 class Config:
@@ -45,7 +107,12 @@ class Config:
     """
 
   def __init__(self, data: dict) -> None:
+    if not isinstance(data, dict):
+      raise ValueError(
+          f"config.json must be a JSON object. Got: {type(data).__name__}")
+    _validate_dict_keys(data, _ALLOWED_TOP_LEVEL_KEYS, "config.json")
     self.data = data
+    _validate_entities_config(self.data.get(_ENTITIES_FIELD))
     self._input_files_config: dict[str, dict] = {}
     input_files = self.data.get(_INPUT_FILES_FIELD, [])
 
@@ -69,11 +136,13 @@ class Config:
         raise ValueError(
             f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
         )
-      key = entry.get("pattern") or entry.get("filename")
+      key = entry.get(_PATTERN_FIELD) or entry.get(_FILENAME_FIELD)
       if not key:
         raise ValueError(
             f"Invalid entry in '{_INPUT_FILES_FIELD}': must specify 'pattern' or 'filename'. Got: {entry}"
         )
+      _validate_dict_keys(entry, _ALLOWED_INPUT_FILE_KEYS,
+                          f"'{_INPUT_FILES_FIELD}' entry for '{key}'")
       self._validate_format(key, entry)
       self._input_files_config[key] = entry
 
@@ -133,7 +202,8 @@ class Config:
     return self._per_file_config(input_file).get(_ROW_ENTITY_TYPE_FIELD, "")
 
   def entity_columns(self, input_file: File) -> list[str]:
-    return self._per_file_config(input_file).get(_ENTITY_COLUMNS, [])
+    cfg = self._per_file_config(input_file)
+    return cfg.get(_REFERENCE_COLUMNS_FIELD) or cfg.get(_ENTITY_COLUMNS, [])
 
   def observation_properties(self, input_file: File) -> dict[str, str]:
     return self._per_file_config(input_file).get(_OBSERVATION_PROPERTIES, {})

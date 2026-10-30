@@ -83,6 +83,42 @@ or a custom observation property you have defined in MCF.
 
 The list of column names to be ignored by the importer, if any.
 
+#### `importType`
+
+Optional. Either `"observations"` (the default) or `"entities"`.
+
+#### `observationProperties`
+
+Optional, for observations CSVs. A map of observation properties (such as
+`"unit"`, `"scalingFactor"`, `"measurementMethod"`, `"observationPeriod"`, or
+custom dimension properties) applied as defaults to every row in the file.
+
+#### `rowEntityType`
+
+Required when `importType` is `"entities"`. The type (class DCID) assigned to
+each row entity in the CSV.
+
+#### `idColumn`
+
+Optional, for `"entities"` imports. The column whose cell value provides each
+row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
+
+#### `referenceColumns` _(or `columnsToResolve`)_
+
+Optional, for `"entities"` imports. The list of columns whose cell values are
+entity DCID references (or comma-separated lists of entity DCIDs) rather than
+literal values.
+
+## `entities`
+
+Optional. Provides display `name` and `description` metadata for `Class` nodes
+created by `"entities"` imports, keyed by `rowEntityType`.
+
+## `includeInputSubdirs`
+
+If `true`, recursively scans subdirectories of the input directory for files
+matching `inputFiles` patterns. Default is `false`.
+
 ## `dataDownloadUrl`
 
 Examples:
