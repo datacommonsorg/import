@@ -11,37 +11,157 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Generates the ingestion report for a preprocessor run.
+"""Generates ingestion_report.json for a preprocessor run.
 
-This module holds all of the report's logic:
-  - Recording facts as the run progresses: input files, observations, nodes.
-  - Building the report models defined in model/summary.py and writing
-    ingestion_report.json once per run, on success and on failure.
-
-Report code must never change the outcome of a run, so errors while
-collecting or writing the report are logged rather than raised.
+Report code must never change the outcome of a run: errors are logged, not
+raised.
 """
 
+import logging
+
+from stats import constants
+from stats.data import FileValidationError
+from stats.report.model.summary import FileSummary
+from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import RunStatus
 from util.filesystem import Dir
 from util.filesystem import File
 
 
 class SummaryGenerator:
-  """Generates the ingestion report for a preprocessor run."""
+  """Collects facts during a preprocessor run and writes the ingestion report.
 
-  def __init__(self) -> None:
-    """Creates a generator for one preprocessor run. """
-    # TODO: Add record_run_start(start_time, folder_names) and counters for
-    # input files, observations, and nodes.
+  Runner calls, in order: set_execution_metadata(), record_input_file() per
+  matched file, add_file_summary() per imported file, set_provenance_data()
+  and populate_node_info() after worker results are merged, record_failure()
+  on failure, and write_to_json() at the end of the run.
 
-  def write_summary(self, output_dir: Dir) -> File | None:
-    """Writes the ingestion report as JSON into output_dir.
+  Worker processes can't update this object, so each returns a FileSummary
+  in ImportProcResult and Runner passes it to add_file_summary().
+
+  TODO: Drop ImportReporter's process/report.json once this report exists.
+  """
+
+  def __init__(self, workflow_execution_id: str | None = None) -> None:
+    """Creates a generator for one preprocessor run.
 
     Args:
-      output_dir: Directory where the report should be written.
+      workflow_execution_id: Ingestion workflow execution ID. Empty for
+        runs outside the workflow (local runs and tests).
+    """
+    self._workflow_execution_id = workflow_execution_id or ""
+    self._execution_metadata: dict | None = None
+    # Provenance metadata, keyed by provenance DCID.
+    self._provenance_data: dict[str, dict] = {}
+    # TODO: Add containers for input files, merged FileSummary counts per
+    # folder and provenance, node counts and errors.
+
+  def set_execution_metadata(self, start_time: str, folder_names: list[str],
+                             output_path: str) -> None:
+    """Sets run metadata known at the start of the run.
+
+    Status and end time are only known at the end, so they are passed to
+    write_to_json() instead.
+
+    Args:
+      start_time: ISO-8601 UTC time the run started.
+      folder_names: Import folders requested for the run.
+      output_path: Where the run's JSON-LD is written.
+    """
+    self._execution_metadata = {
+        "start_time": start_time,
+        "folder_names": list(folder_names),
+        "output_path": output_path,
+    }
+
+  def record_input_file(self, folder: str, provenance: str | None,
+                        file_type: str) -> None:
+    """Records one matched input file, before it is imported.
+
+    Args:
+      folder: Import folder the file belongs to.
+      provenance: Provenance configured for the file, if any.
+      file_type: Lowercase file extension, e.g. "csv" or "mcf".
+    """
+    # TODO: Count files by folder, type and provenance.
+
+  def set_provenance_data(self, provenance_id: str,
+                          source_id: str | None) -> None:
+    """Sets metadata for one provenance, once its source is known.
+
+    Args:
+      provenance_id: Provenance DCID.
+      source_id: DCID of the provenance's source, if known.
+    """
+    self._provenance_data[provenance_id] = {"source_id": source_id}
+
+  def add_file_summary(self, summary: FileSummary) -> None:
+    """Merges one file's counts, returned by the worker that imported it.
+
+    Args:
+      summary: Observations, date range and nodes written for one file.
+    """
+    # TODO: Add to per-folder and per-provenance totals: sum counts, keep the
+    # min and max date, and union node types.
+
+  def populate_node_info(self, folder: str, provenance: str,
+                         counts_by_type: dict[str, int]) -> None:
+    """Adds counts for nodes written by the parent process.
+
+    Nodes from user files are counted in the workers and arrive through
+    add_file_summary(). This covers nodes the parent writes after merging
+    worker results: generated provenance, source and StatVar nodes, and
+    StatVarGroups.
+
+    Args:
+      folder: Import folder the nodes belong to.
+      provenance: Provenance the nodes belong to.
+      counts_by_type: Number of nodes per typeOf value.
+    """
+    # TODO: Add to the node counts for this folder and provenance.
+
+  def record_failure(self, error: FileValidationError) -> None:
+    """Records a run-level error.
+
+    Args:
+      error: The error, in the same shape as the handshake's errors.
+    """
+    # TODO: Keep the error for the report.
+
+  def build_report(self, status: RunStatus, end_time: str) -> IngestionReport:
+    """Builds the report models from the recorded facts.
+
+    Args:
+      status: Outcome of the run.
+      end_time: ISO-8601 UTC time the run ended.
 
     Returns:
-      The written report file, or None if writing failed.
+      The ingestion report.
     """
-    # TODO: Build the report and write it as ingestion_report.json.
-    return None
+    raise NotImplementedError("TODO: Build the report from recorded facts.")
+
+  def write_to_json(self, status: RunStatus, end_time: str,
+                    report_dir: Dir) -> File | None:
+    """Builds the report and writes it as ingestion_report.json.
+
+    Never raises: the report must never change the outcome of a run.
+
+    Args:
+      status: Outcome of the run.
+      end_time: ISO-8601 UTC time the run ended.
+      report_dir: Where to write the report:
+        ingestion/internal/reports/<workflowExecutionId>/ in the instance's
+        artifacts bucket for workflow runs, and <output_dir>/reports/ for
+        runs outside the workflow. Runner decides the directory.
+
+    Returns:
+      The written report file, or None if building or writing it failed.
+    """
+    try:
+      report = self.build_report(status, end_time)
+      report_file = report_dir.open_file(constants.INGESTION_REPORT_FILE_NAME)
+      report_file.write(report.model_dump_json(indent=2))
+      return report_file
+    except Exception:  # The report must never fail the run.
+      logging.exception("Failed to write the ingestion report.")
+      return None
