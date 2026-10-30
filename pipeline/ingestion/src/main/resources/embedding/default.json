@@ -7,9 +7,11 @@
       "task_type": "RETRIEVAL_QUERY",
       "node_types": {
         "StatisticalVariable": [
+          "subject_id",
           "name"
         ],
         "Topic": [
+          "subject_id",
           "name"
         ]
       },
