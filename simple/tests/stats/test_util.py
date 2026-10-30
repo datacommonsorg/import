@@ -17,8 +17,7 @@ import os
 import unittest
 
 import pandas as pd
-from stats.data import Observation
-from stats.data import OBSERVATION_FIELD_NAMES
+from stats import constants
 from stats.data import Triple
 from stats.graph_writer import GraphWriter
 from util.filesystem import File
@@ -123,7 +122,7 @@ def write_observations_df(observations_df: pd.DataFrame, output_path: str):
   """
   observations_df.to_csv(output_path,
                          index=False,
-                         columns=OBSERVATION_FIELD_NAMES)
+                         columns=constants.OBSERVATION_COLUMNS)
 
 
 class FakeGzipTime:
@@ -167,7 +166,7 @@ class RecordingGraphWriter(GraphWriter):
   def observations_df(self) -> pd.DataFrame:
     """All inserted observations concatenated in insertion order."""
     if not self.observation_dfs:
-      return pd.DataFrame(columns=OBSERVATION_FIELD_NAMES)
+      return pd.DataFrame(columns=constants.OBSERVATION_COLUMNS)
     return pd.concat(self.observation_dfs, ignore_index=True)
 
   def commit(self):

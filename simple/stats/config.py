@@ -12,42 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-
-import fs.path as fspath
 from stats import constants
-from stats.data import AggregationConfig
 from stats.data import EntityType
-from stats.data import EventType
 from stats.data import ImportType
-from stats.data import Provenance
-from stats.data import Source
-from stats.data import StatVar
 from stats.data import strip_namespace
 from util.file_match import match
 from util.filesystem import File
 
 _INPUT_FILES_FIELD = "inputFiles"
 _IMPORT_TYPE_FIELD = "importType"
-_ENTITY_TYPE_FIELD = "entityType"
 _IGNORE_COLUMNS_FIELD = "ignoreColumns"
-_VARIABLES_FIELD = "variables"
 _NAME_FIELD = "name"
 _DESCRIPTION_FIELD = "description"
-_SEARCH_DESCRIPTIONS_FIELD = "searchDescriptions"
-# DEPRECATED: Use searchDescriptions instead.
-_NL_SENTENCES_FIELD = "nlSentences"
-_GROUP_FIELD = "group"
-_SOURCES_FIELD = "sources"
-_PROVENANCES_FIELD = "provenances"
-_URL_FIELD = "url"
 _PROVENANCE_FIELD = "provenance"
-_EVENT_TYPE_FIELD = "eventType"
 _ID_COLUMN_FIELD = "idColumn"
-_EVENTS_FIELD = "events"
-_COMPUTED_VARIABLES_FIELD = "computedVariables"
-_AGGREGATION_FIELD = "aggregation"
-_PROPERTIES_FIELD = "properties"
 _DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
 _FORMAT_FIELD = "format"
 # Default and only accepted variable import format
@@ -59,10 +37,6 @@ _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _OBSERVATION_PROPERTIES = "observationProperties"
 _INCLUDE_INPUT_SUBDIRS_PROPERTY = "includeInputSubdirs"
-_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD = "svHierarchyPropsBlocklist"
-_CUSTOM_SVG_PREFIX_FIELD = "customSvgPrefix"
-_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD = "defaultCustomRootStatVarGroupName"
-_CUSTOM_ID_NAMESPACE_FIELD = "customIdNamespace"
 
 
 class Config:
@@ -88,11 +62,6 @@ class Config:
     # e.g. "foo1.csv" -> "foo*.csv", "foo2.csv" -> "foo*.csv",
     # "path/to/foo.csv" -> "**/foo.csv, etc.
     self._config_key_by_full_path: dict[str, str] = {}
-    # dict from provenance name to Provenance
-    self.provenances: dict[str, Provenance] = {}
-    # dict from provenance name to Source
-    self.provenance_sources: dict[str, Source] = {}
-    self._parse_provenances_and_sources()
 
   def _parse_input_files_config(self, input_files: list) -> None:
     """Parses the list-of-objects format for inputFiles."""
@@ -144,38 +113,6 @@ class Config:
   def column_mappings(self, input_file: File) -> dict[str, str]:
     return self._per_file_config(input_file).get(_COLUMN_MAPPINGS_FIELD, {})
 
-  def computed_variables(self, input_file: File) -> list[str]:
-    return self._per_file_config(input_file).get(_COMPUTED_VARIABLES_FIELD, [])
-
-  def variable(self, variable_name: str) -> StatVar:
-    var_cfg = self.data.get(_VARIABLES_FIELD, {}).get(variable_name, {})
-    # Combine search descriptions and the deprecated NL sentences until the latter is removed.
-    search_descriptions = var_cfg.get(_SEARCH_DESCRIPTIONS_FIELD,
-                                      []) + var_cfg.get(_NL_SENTENCES_FIELD, [])
-    return StatVar(
-        "",
-        var_cfg.get(_NAME_FIELD, variable_name),
-        description=var_cfg.get(_DESCRIPTION_FIELD, ""),
-        search_descriptions=search_descriptions,
-        group_path=var_cfg.get(_GROUP_FIELD, ""),
-        properties=var_cfg.get(_PROPERTIES_FIELD, {}),
-    )
-
-  def aggregation(self, variable_name: str) -> AggregationConfig:
-    aggregation_cfg = self.data.get(_VARIABLES_FIELD, {}) \
-      .get(variable_name, {}) \
-      .get(_AGGREGATION_FIELD, {})
-    return AggregationConfig(**aggregation_cfg)
-
-  def event_type(self, input_file: File) -> str:
-    return self._per_file_config(input_file).get(_EVENT_TYPE_FIELD, "")
-
-  def event(self, event_type_name: str) -> EventType:
-    event_type_cfg = self.data.get(_EVENTS_FIELD, {}).get(event_type_name, {})
-    return EventType("",
-                     event_type_cfg.get(_NAME_FIELD, event_type_name),
-                     description=event_type_cfg.get(_DESCRIPTION_FIELD, ""))
-
   def entity(self, entity_type_name: str) -> EntityType:
     entity_type_cfg = self.data.get(_ENTITIES_FIELD,
                                     {}).get(entity_type_name, {})
@@ -185,9 +122,6 @@ class Config:
 
   def id_column(self, input_file: File) -> str:
     return self._per_file_config(input_file).get(_ID_COLUMN_FIELD, "")
-
-  def entity_type(self, input_file: File) -> str:
-    return self._per_file_config(input_file).get(_ENTITY_TYPE_FIELD, "")
 
   def ignore_columns(self, input_file: File) -> list[str]:
     return self._per_file_config(input_file).get(_IGNORE_COLUMNS_FIELD, [])
@@ -221,85 +155,6 @@ class Config:
       if special_file_name:
         special_files[special_file_type] = special_file_name
     return special_files
-
-  def sv_hierarchy_props_blocklist(self) -> set[str]:
-    """Returns the set of SV properties to exclude from hierarchy generation.
-    Behavior: Adds any provided properties to the built-in blocklist.
-    Defaults to sc.SV_HIERARCHY_PROPS_BLOCKLIST if not specified in config.
-    """
-    from stats import schema_constants as sc
-    cfg = self.data.get(_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD)
-    if cfg is None:
-      return sc.SV_HIERARCHY_PROPS_BLOCKLIST
-    if isinstance(cfg, list):
-      # Ensure all provided entries are strings.
-      if not all(isinstance(p, str) for p in cfg):
-        raise ValueError(
-            f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
-        )
-      return sc.SV_HIERARCHY_PROPS_BLOCKLIST | set(cfg)
-    raise ValueError(
-        f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
-    )
-
-  def custom_id_namespace(self) -> str:
-    """Returns the namespace token used in generated ids for SVs and manual groups.
-    Affects:
-    - Generated SV ids: '<namespace>/statvar_<n>'
-    - Generated manual group ids: '<namespace>/g/group_<n>'
-    """
-    from stats import nodes
-
-    default_ns = nodes._CUSTOM_GROUP_ID_PREFIX.rsplit("/")[0]
-    ns = self.data.get(_CUSTOM_ID_NAMESPACE_FIELD, default_ns)
-
-    if not ns:
-      raise ValueError(
-          f"If provided, {_CUSTOM_ID_NAMESPACE_FIELD} must be non-empty.")
-
-    # Validate token of alphanumerics and underscores only (no slashes), non-empty.
-    if not isinstance(ns, str) or not re.fullmatch(r"^[A-Za-z0-9_]+$", ns):
-      raise ValueError(
-          f"{_CUSTOM_ID_NAMESPACE_FIELD} must be made up entirely of letters, digits,"
-          f" or underscores, with no spaces, punctuation, or other symbols, and it must not be empty."
-      )
-    return ns
-
-  def custom_svg_prefix(self) -> str:
-    """Returns the prefix to use for generated custom SVG ids (e.g., 'c/g/').
-    Resolution order:
-    - If explicitly set via 'customSvgPrefix', return it.
-    - Else if 'customIdNamespace' is explicitly provided in config, derive as
-      f"{namespace}/g/" where namespace is the validated value of
-      customIdNamespace.
-    - Else fall back to the built-in default (e.g., 'c/g/').
-    """
-    from stats import schema_constants as sc
-    cfg = self.data.get(_CUSTOM_SVG_PREFIX_FIELD)
-    if cfg:
-      # Validate allowed chars [A-Za-z0-9_/], cannot start with '/', must end with '/'.
-      if not isinstance(cfg, str):
-        raise ValueError(
-            f"{_CUSTOM_SVG_PREFIX_FIELD} must be a string if provided.")
-      if cfg.startswith("/") or not cfg.endswith("/") or not re.fullmatch(
-          r"^[A-Za-z0-9_/]+$", cfg):
-        raise ValueError(
-            f"{_CUSTOM_SVG_PREFIX_FIELD} must be made up entirely of letters, digits, or "
-            f"underscores, with no spaces, punctuation, or other symbols. It cannot start "
-            f"with '/', must end with '/', and it must not be empty")
-      return cfg
-    # Only derive from customIdNamespace if the user explicitly provided it.
-    if _CUSTOM_ID_NAMESPACE_FIELD in self.data:
-      ns = self.custom_id_namespace()
-      return f"{ns}/g/"
-    # Otherwise use the built-in default.
-    return sc.CUSTOM_SVG_PREFIX
-
-  def default_custom_root_svg_name(self) -> str:
-    """Returns the display name of the default custom root StatVarGroup."""
-    from stats import schema_constants as sc
-    return self.data.get(_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD,
-                         sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""
@@ -343,18 +198,3 @@ class Config:
       if match(input_file, input_file_pattern):
         return input_file_pattern
     return None
-
-  def _parse_provenances_and_sources(self):
-    sources_cfg = self.data.get(_SOURCES_FIELD, {})
-    for source_name, source_cfg in sources_cfg.items():
-      source = Source(id="",
-                      name=source_name,
-                      url=source_cfg.get(_URL_FIELD, ""))
-      provenances = source_cfg.get(_PROVENANCES_FIELD, {})
-      for prov_name, prov_url in provenances.items():
-        provenance = Provenance(id="",
-                                source_id="",
-                                name=prov_name,
-                                url=prov_url)
-        self.provenances[prov_name] = provenance
-        self.provenance_sources[prov_name] = source

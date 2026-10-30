@@ -79,58 +79,13 @@ built-in default column names.
 required, along with at least one entity mapping: either `dcid:observationAbout`
 or a custom observation property you have defined in MCF.
 
-#### `entityType`
-
-Events imports only. All entities in the file are assumed to be of this type,
-and the importer resolves entity names to DCIDs of that type. Observations
-imports ignore it and take entity types from Base Data Commons.
-
 #### `ignoreColumns`
 
 The list of column names to be ignored by the importer, if any.
 
+## `dataDownloadUrl`
 
-## `variables`
-
-Events imports only. Provides display names and other metadata for the
-variables named in an events CSV.
-
-Variables for observations imports are declared in MCF, not here.
-
-### Variable parameters
-
-#### `name`
-
-The display name of the variable.
-If not specified, the column name will be used as the display name.
-
-#### `description`
-
-The long form description of the variable.
-
-The description is carried through to the graph and used downstream for search.
-
-#### `properties`
-
-The properties of this variable.
-
-These are DC property entities encoded as a dictionary.
-More information on the properties that can be associated with variables can be found [here](https://github.com/datacommonsorg/data/blob/master/docs/representing_statistics.md#statisticalvariable).
-
-#### `group`
-
-Variables can be arranged in groups.
-The group hierarchy can be specified using the `group` property.
-Use "/" as a separator to specify a multi-level hierarchy.
-
-#### `searchDescriptions` _(formerly `nlSentences`)_
-
-Extra phrasings to index the variable under for search.
-If not specified, the variable name is used.
-
-Note that `nlSentences` is deprecated and will be removed in the future.
-
-### Examples
+Examples:
 
 Web URLs _(coming soon)_:
 
@@ -167,29 +122,3 @@ of the variables in the dataset. Default is `false`.
 The importer does not build the hierarchy itself. It creates the custom root
 StatVarGroup and forwards the request to the ingestion pipeline as
 `generateStatVarGroups` in the handshake record.
-
-## Hierarchy and Group Customization
-
-These optional top-level fields customize how the StatVarGroup hierarchy is generated and labeled. All are optional; defaults match the built-in values.
-
-- `defaultCustomRootStatVarGroupName`: Display name for the custom root StatVarGroup. Default: `"Custom Variables"`.
-- `customIdNamespace`: Namespace token for generated ids for SVs and manual groups. Default: `"custom"`.
-  - Generated SV ids: `<namespace>/statvar_<n>` (e.g., `custom/statvar_1`).
-  - Manual group ids: `<namespace>/g/group_<n>` (e.g., `custom/g/group_1`).
-- `customSvgPrefix`: String prefix for generated custom StatVarGroup ids.
-  - If not set, and `customIdNamespace` is provided, it defaults to `<customIdNamespace>/g/`.
-  - Otherwise defaults to `"c/g/"`.
-  - Affects ids like `c/g/Person_Gender-Female`.
-- `svHierarchyPropsBlocklist`: Array of additional property dcids to exclude from hierarchy generation. These are added to the internal blocklist used by Data Commons.
-  - Example: `["DevelopmentFinanceRecipient", "DACCode", "CustomProperty"]`
-
-Example fragment:
-
-```json
-{
-  "groupStatVarsByProperty": true,
-  "defaultCustomRootStatVarGroupName": "ONE Data",
-  "customIdNamespace": "ONE"
-  "customSvgPrefix": "OD/g/",
-  "svHierarchyPropsBlocklist": ["DevelopmentFinanceRecipients", "DACCode"],
-}

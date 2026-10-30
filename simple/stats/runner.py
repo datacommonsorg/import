@@ -14,24 +14,19 @@
 
 import concurrent.futures
 from dataclasses import dataclass
-from datetime import datetime
-from datetime import timezone
 import json
 import logging
 import os
 import threading
 from typing import Optional
-import unittest.mock as mock_module
 
 import fs.path as fspath
 from stats import constants
 from stats.config import Config
 from stats.data import FileValidationError
 from stats.data import ImportType
-from stats.data import Triple
 from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
-from stats.events_importer import EventsImporter
 from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.jsonld_stream_writer import JsonLdStreamWriter
@@ -39,7 +34,6 @@ from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
-import stats.schema_constants as sc
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
@@ -85,14 +79,6 @@ def _create_importer_for_file(
           nodes=nodes,
       )
 
-    case ImportType.EVENTS:
-      return EventsImporter(
-          input_file=input_file,
-          graph_writer=graph_writer,
-          reporter=reporter,
-          nodes=nodes,
-      )
-
     case ImportType.ENTITIES:
       return EntitiesImporter(
           input_file=input_file,
@@ -112,13 +98,9 @@ class ImportProcResult:
   obs_collision_count: int
   file_collision_counts: dict
   file_sample_collisions: dict
-  resolved_entities: dict
-  event_types: dict
   entity_types: dict
-  variables: dict
   sources: dict
   provenances: dict
-  groups: dict
   properties: dict
   processed_imports: set
 
@@ -157,32 +139,49 @@ def _run_single_csv_import_proc(
     importer.do_import()
     graph_writer.commit_and_close()
 
-    resolved_entities = {
-        e.entity_dcid: (e.entity_type, getattr(e, "provenance_ids", set()))
-        for e in nodes.entities.values()
-    }
-    event_types = dict(nodes.event_types)
-    entity_types = dict(nodes.entity_types)
-    variables = dict(nodes.variables)
-    sources = dict(nodes.sources)
-    provenances = dict(nodes.provenances)
-    groups = dict(nodes.groups)
-    properties = dict(nodes.properties)
     return ImportProcResult(
         file_rel_path=file_rel_path,
         obs_collision_count=graph_writer.obs_collision_count,
         file_collision_counts=dict(graph_writer.file_collision_counts),
         file_sample_collisions=dict(graph_writer.file_sample_collisions),
-        resolved_entities=resolved_entities,
-        event_types=event_types,
-        entity_types=entity_types,
-        variables=variables,
-        sources=sources,
-        provenances=provenances,
-        groups=groups,
-        properties=properties,
+        entity_types=dict(nodes.entity_types),
+        sources=dict(nodes.sources),
+        provenances=dict(nodes.provenances),
+        properties=dict(nodes.properties),
         processed_imports=set(graph_writer._processed_imports),
     )
+
+
+def _read_config_dict(file: File) -> dict:
+  """Reads and parses a `config.json` file, validating its `inputFiles` list."""
+  try:
+    config_data = json.loads(file.read())
+  except json.JSONDecodeError as e:
+    logging.error("Failed to parse JSON from %s: %s", file.full_path(), e)
+    raise
+  if not isinstance(config_data, dict):
+    raise ValueError(f"Expected JSON object in {file.full_path()}, "
+                     f"got {type(config_data).__name__}")
+  input_files = config_data.get("inputFiles", [])
+  if not isinstance(input_files, list):
+    raise ValueError(
+        f"'inputFiles' in {file.full_path()} must be a list of objects, "
+        f"each with a 'pattern' and a 'provenance'. "
+        f"Got: {type(input_files).__name__}")
+  return config_data
+
+
+def _scope_input_file_entry(entry: object, rel_dir: str, import_name: str,
+                            config_path: str) -> dict:
+  """Prefixes `pattern`/`filename` with `rel_dir` and attaches `_import_name`."""
+  if not isinstance(entry, dict):
+    raise ValueError(f"Invalid entry in 'inputFiles' in {config_path}: "
+                     f"must be a JSON object. Got: {entry}")
+  scoped = dict(entry, _import_name=import_name)
+  for key_field in ("pattern", "filename"):
+    if key_field in scoped:
+      scoped[key_field] = fspath.join(rel_dir, scoped[key_field])
+  return scoped
 
 
 class Runner:
@@ -409,57 +408,18 @@ class Runner:
     merged_data = {
         "includeInputSubdirs": True,
         "inputFiles": [],
-        "variables": {},
-        "sources": {},
         "_dir_import_names": {}
     }
 
     for file in configs:
-      raw_config = file.read()
-      try:
-        config_data = json.loads(raw_config)
-      except json.JSONDecodeError as e:
-        logging.error("Failed to parse JSON from %s: %s", file.full_path(), e)
-        raise e
-
-      dir_path = fspath.dirname(file.path)
-      rel_dir = fspath.relativefrom(base_dir.path, dir_path)
-
-      logging.info("Merging config from import directory: %s", rel_dir)
-      merged_data["_dir_import_names"][rel_dir] = config_data.get(
-          "importName") or rel_dir
-
-      input_files = config_data.get("inputFiles", [])
-      if not isinstance(input_files, list):
-        raise ValueError(
-            f"'inputFiles' in {file.full_path()} must be a list of objects, "
-            f"each with a 'pattern' and a 'provenance'. "
-            f"Got: {type(input_files).__name__}")
-
-      # Patterns are relative to the config's own directory, so prefix them
-      # with that directory to make them resolvable from the merged base dir.
+      config_data = _read_config_dict(file)
+      rel_dir = fspath.relativefrom(base_dir.path, fspath.dirname(file.path))
       import_name = config_data.get("importName") or rel_dir
-      for entry in input_files:
-        if not isinstance(entry, dict):
-          raise ValueError(
-              f"Invalid entry in 'inputFiles' in {file.full_path()}: "
-              f"must be a JSON object. Got: {entry}")
-        new_entry = dict(entry)
-        for key_field in ["pattern", "filename"]:
-          if key_field in new_entry:
-            new_entry[key_field] = fspath.join(rel_dir, new_entry[key_field])
-        new_entry["_import_name"] = import_name
-        merged_data["inputFiles"].append(new_entry)
-
-      # Merge variables
-      variables = config_data.get("variables", {})
-      for k, v in variables.items():
-        merged_data["variables"][k] = v
-
-      # Merge sources
-      sources = config_data.get("sources", {})
-      for k, v in sources.items():
-        merged_data["sources"][k] = v
+      logging.info("Merging config from import directory: %s", rel_dir)
+      merged_data["_dir_import_names"][rel_dir] = import_name
+      merged_data["inputFiles"].extend(
+          _scope_input_file_entry(entry, rel_dir, import_name, file.full_path())
+          for entry in config_data.get("inputFiles", []))
 
     self.config = Config(data=merged_data)
 
@@ -684,59 +644,37 @@ class Runner:
               ) for file in all_files
           ]
           for future in concurrent.futures.as_completed(futures):
-            res = future.result()
-            self._log_file_progress("Imported file", res.file_rel_path)
-            if res.resolved_entities:
-              for dcid, val in res.resolved_entities.items():
-                if isinstance(val, tuple):
-                  t, p_ids = val
-                else:
-                  t, p_ids = val, set()
-                if isinstance(p_ids, set):
-                  for p_id in (p_ids or [""]):
-                    self.nodes.entity_with_type(dcid, t, provenance_id=p_id)
-                else:
-                  self.nodes.entity_with_type(dcid, t, provenance_id=p_ids)
-            if res.event_types:
-              self.nodes.event_types.update(res.event_types)
-            if res.entity_types:
-              self.nodes.entity_types.update(res.entity_types)
-            if res.variables:
-              self.nodes.variables.update(res.variables)
-            if res.sources:
-              for src in res.sources.values():
-                self.nodes.register_source(id=src.id,
-                                           name=src.name,
-                                           url=src.url,
-                                           provenance_id=getattr(
-                                               src, "provenance_id", ""))
-            if res.provenances:
-              for prov in res.provenances.values():
-                self.nodes.register_provenance(id=prov.id,
-                                               name=prov.name,
-                                               url=prov.url,
-                                               source_id=prov.source_id,
-                                               properties=prov.properties)
-            if res.groups:
-              self.nodes.groups.update(res.groups)
-              for svg in res.groups.values():
-                self.nodes.ids_to_groups[svg.id] = svg
-            if res.properties:
-              for prop_name, prop_obj in res.properties.items():
-                if prop_name not in self.nodes.properties:
-                  self.nodes.properties[prop_name] = prop_obj
-                else:
-                  self.nodes.properties[prop_name].provenance_ids.update(
-                      getattr(prop_obj, "provenance_ids", set()))
-            if res.processed_imports:
-              self.graph_writer._processed_imports.update(res.processed_imports)
-            if res.obs_collision_count and hasattr(self.graph_writer,
-                                                   "obs_collision_count"):
-              self.graph_writer.obs_collision_count += res.obs_collision_count
-              for f_name, count in res.file_collision_counts.items():
-                self.graph_writer.file_collision_counts[f_name] += count
-                self.graph_writer.file_sample_collisions[f_name].extend(
-                    res.file_sample_collisions.get(f_name, []))
+            self._merge_worker_result(future.result())
+
+  def _merge_worker_result(self, res: ImportProcResult) -> None:
+    """Merges a worker process's `ImportProcResult` into the coordinator."""
+    self._log_file_progress("Imported file", res.file_rel_path)
+    self.nodes.entity_types.update(res.entity_types)
+    for src in res.sources.values():
+      self.nodes.register_source(id=src.id,
+                                 name=src.name,
+                                 url=src.url,
+                                 provenance_id=src.provenance_id)
+    for prov in res.provenances.values():
+      self.nodes.register_provenance(id=prov.id,
+                                     name=prov.name,
+                                     url=prov.url,
+                                     source_id=prov.source_id,
+                                     properties=prov.properties)
+    for prop_name, prop_obj in res.properties.items():
+      if prop_name not in self.nodes.properties:
+        self.nodes.properties[prop_name] = prop_obj
+      else:
+        self.nodes.properties[prop_name].provenance_ids.update(
+            prop_obj.provenance_ids)
+    self.graph_writer._processed_imports.update(res.processed_imports)
+    if res.obs_collision_count and hasattr(self.graph_writer,
+                                           "obs_collision_count"):
+      self.graph_writer.obs_collision_count += res.obs_collision_count
+      for f_name, count in res.file_collision_counts.items():
+        self.graph_writer.file_collision_counts[f_name] += count
+        self.graph_writer.file_sample_collisions[f_name].extend(
+            res.file_sample_collisions.get(f_name, []))
 
   def _log_file_progress(self, file_prefix: str, file: File):
     """Increments file progress counter thread-safely and logs standard progress line."""
@@ -809,4 +747,4 @@ def _check_not_overlapping(input_store: Store, output_store: Store):
       fspath.isparent(input_path, output_path) or
       fspath.isparent(output_path, input_path)):
     raise ValueError(
-        f"Input path (${input_path}) overlaps with output dir ({output_path})")
+        f"Input path ({input_path}) overlaps with output dir ({output_path})")
