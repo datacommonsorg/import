@@ -762,4 +762,4 @@ def _check_not_overlapping(input_store: Store, output_store: Store):
       fspath.isparent(input_path, output_path) or
       fspath.isparent(output_path, input_path)):
     raise ValueError(
-        f"Input path (${input_path}) overlaps with output dir ({output_path})")
+        f"Input path ({input_path}) overlaps with output dir ({output_path})")

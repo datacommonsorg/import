@@ -158,8 +158,10 @@ class ObservationProperties:
 
   @classmethod
   def new(cls: Self,
-          all_properties: dict[str, str] = {},
-          default_obs_props: Self = None) -> Self:
+          all_properties: dict[str, str] | None = None,
+          default_obs_props: Self | None = None) -> Self:
+    if all_properties is None:
+      all_properties = {}
     if default_obs_props is None:
       default_obs_props = cls()
     unit = all_properties.get(sc.PREDICATE_UNIT, "") or default_obs_props.unit
@@ -199,10 +201,8 @@ class RowEntity:
   id: str
   row_entity_type: str
   provenance_id: str = ""
-  prop_object_values: dict[str, str] = field(
-      default_factory=lambda: defaultdict(dict))
-  prop_object_ids: dict[str, str | list[str]] = field(
-      default_factory=lambda: defaultdict(dict))
+  prop_object_values: dict[str, str] = field(default_factory=dict)
+  prop_object_ids: dict[str, str | list[str]] = field(default_factory=dict)
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
