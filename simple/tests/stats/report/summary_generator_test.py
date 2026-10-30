@@ -14,16 +14,26 @@
 """Tests for stats.report.summary_generator."""
 
 import unittest
+from unittest import mock
 
+from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
 
 
 class TestSummaryGenerator(unittest.TestCase):
   """Tests for SummaryGenerator."""
 
-  def test_init(self):
-    """A generator can be created."""
-    self.assertIsInstance(SummaryGenerator(), SummaryGenerator)
+  def test_write_to_json_never_raises(self):
+    """A failure while writing the report is logged, not raised."""
+    report_dir = mock.MagicMock()
+    report_dir.open_file.side_effect = OSError("disk full")
+
+    with self.assertLogs(level="ERROR"):
+      result = SummaryGenerator("wf-123").write_to_json(RunStatus.FAILURE,
+                                                        "2026-10-29T00:00:00Z",
+                                                        report_dir)
+
+    self.assertIsNone(result)
 
 
 if __name__ == "__main__":
