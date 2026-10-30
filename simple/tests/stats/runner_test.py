@@ -26,7 +26,6 @@ from stats.data import ValidationErrorType
 from stats.runner import create_store as real_create_store
 from stats.runner import Runner
 from tests.stats.test_util import is_write_mode
-from tests.stats.test_util import use_fake_gzip_time
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "runner")
@@ -89,10 +88,6 @@ def _test_runner(test: unittest.TestCase,
 
 
 class TestRunner(unittest.TestCase):
-
-  def __init__(self, methodName: str = "runTest") -> None:
-    super().__init__(methodName)
-    use_fake_gzip_time()
 
   def test_config_driven(self):
     """Config passed as a file, inputs pulled from its dataDownloadUrl."""

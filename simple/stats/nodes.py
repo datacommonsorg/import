@@ -14,11 +14,9 @@
 
 from collections import defaultdict
 from functools import wraps
-import logging
 import re
 import threading
 
-import pandas as pd
 from stats.config import Config
 from stats.data import EntityType
 from stats.data import Property
@@ -228,30 +226,6 @@ class Nodes:
     return (self.has_custom_mcf_nodes and
             provenance.id == _DEFAULT_PROVENANCE.id and
             _DEFAULT_PROVENANCE.id not in self._used_provenance_ids)
-
-  @thread_safe
-  def triples(self, triples_file: File | None = None) -> list[Triple]:
-    triples: list[Triple] = []
-    for source in self.sources.values():
-      if self._is_unused_default_source(source):
-        continue
-      triples.extend(source.triples())
-    for provenance in self.provenances.values():
-      if self._is_unused_default_provenance(provenance):
-        continue
-      triples.extend(provenance.triples())
-    for group in self.groups.values():
-      triples.extend(group.triples())
-    for entity_type in self.entity_types.values():
-      triples.extend(entity_type.triples())
-    for prop in self.properties.values():
-      triples.extend(prop.triples())
-
-    if triples_file:
-      logging.info("Writing %s triples to: %s", len(triples), triples_file)
-      triples_file.write(pd.DataFrame(triples).to_csv(index=False))
-
-    return triples
 
   @thread_safe
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:

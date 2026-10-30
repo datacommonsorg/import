@@ -49,7 +49,6 @@ _ARCHIVES_DIR_NAME = "archives"
 def _create_importer_for_file(
     config: Config,
     input_file: File,
-    process_dir: Dir,
     graph_writer: GraphWriter,
     reporter: FileImportReporter,
     nodes: Nodes,
@@ -134,8 +133,8 @@ def _run_single_csv_import_proc(
     report_file = process_store.open_file(f"report_{sanitized_path}.json")
     reporter = ImportReporter(report_file).get_file_reporter(input_store)
 
-    importer = _create_importer_for_file(config, input_store, process_store,
-                                         graph_writer, reporter, nodes)
+    importer = _create_importer_for_file(config, input_store, graph_writer,
+                                         reporter, nodes)
     importer.do_import()
     graph_writer.commit_and_close()
 
@@ -208,10 +207,6 @@ class Runner:
     # Input-only stores
     self.input_stores: list[Store] = []
 
-    # "Special" file handlers.
-    # i.e. if files of these types are present, they are handled in specific ways.
-    self.special_files: dict[str, File] = {}
-
     # Config file driven (input paths pulled from config)
     if config_file_path:
       self._read_config_from_file(config_file_path)
@@ -272,10 +267,6 @@ class Runner:
             config_file_path=constants.CONFIG_JSON_FILE_NAME,
             config_file_dir=input_store.as_dir(),
         )
-
-    # Get dict of special file type string to special file name.
-    # Example entry: verticalSpecsFile -> vertical_specs.json
-    self.special_file_names_by_type = self.config.special_files()
 
     # New option to traverse subdirs of input dir(s). Defaults to false.
     self.include_input_subdirs = self.config.include_input_subdirs()
@@ -489,16 +480,20 @@ class Runner:
     self._merge_configs(configs, base_dir)
     return configs
 
-  def _check_if_special_file(self, file: File) -> bool:
-    for file_type in self.special_file_names_by_type.keys():
-      if file_type in self.special_files:
-        # Already found this special file.
-        continue
-      file_name = self.special_file_names_by_type[file_type]
-      if match(file, file_name):
-        self.special_files[file_type] = file
-        return True
-    return False
+  def _is_active_import_file(self, file: File) -> bool:
+    """Returns True if `file` is not archived and belongs to an active import."""
+    if _ARCHIVES_DIR_NAME in file.path.split("/"):
+      return False
+    if not self.active_import_prefixes:
+      return True
+    return any(
+        file.path.startswith(prefix) for prefix in self.active_import_prefixes)
+
+  def _matches_config_pattern(self, file: File) -> bool:
+    """Returns True if `file` matches at least one `inputFiles` pattern."""
+    return any(
+        match(file, pattern)
+        for pattern in self.config._input_files_config.keys())
 
   def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
     """Discovers, filters, sorts, and returns matched CSV and MCF files."""
@@ -514,63 +509,51 @@ class Runner:
     mcf_files: list[File] = []
 
     for file in input_files:
-      if _ARCHIVES_DIR_NAME in file.path.split("/"):
+      if not self._is_active_import_file(file):
         continue
-      if self._check_if_special_file(file):
-        continue
-      if self.active_import_prefixes:
-        if not any(
-            file.path.startswith(prefix)
-            for prefix in self.active_import_prefixes):
-          continue
-
-      # Check if this file matches at least one pattern in config.json
-      matches_config = False
-      for pattern in self.config._input_files_config.keys():
-        if match(file, pattern):
-          matches_config = True
-          break
-
-      # Unified Selection: Only process files explicitly matched in config
-      if matches_config:
-        if match(file, "*.csv"):
-          csv_files.append(file)
-        elif match(file, "*.mcf"):
-          mcf_files.append(file)
-      else:
+      if not self._matches_config_pattern(file):
         logging.info(
             "Ignoring file '%s' as it does not match any pattern in config.json",
             file.path)
+        continue
+      if match(file, "*.csv"):
+        csv_files.append(file)
+      elif match(file, "*.mcf"):
+        mcf_files.append(file)
 
     # Sort alphabetically to guarantee consistent order
     csv_files.sort(key=lambda f: f.full_path())
     mcf_files.sort(key=lambda f: f.full_path())
     return csv_files, mcf_files
 
+  def _validate_single_file_headers(self,
+                                    file: File) -> list[FileValidationError]:
+    """Validates headers for a single CSV file and returns any errors found."""
+    try:
+      return self._create_importer(file).validate_headers()
+    except Exception as e:
+      return [
+          FileValidationError(
+              file=file.path,
+              error_type=ValidationErrorType.GENERIC_ERROR,
+              error_message=f"Failed to validate headers: {str(e)}")
+      ]
+
   def _validate_all_headers(self, csv_files: list[File]) -> None:
     """Validates all CSV headers upfront and raises ValueError if any validation fails."""
     if not csv_files:
       return
 
+    # Pre-populate the per-file config cache on the main thread before spawning
+    # worker threads so concurrent lookups do not race on mutating the cache dict.
+    for file in csv_files:
+      self.config._per_file_config(file)
+
     all_errors = []
-
-    def validate_single_file(file: File) -> list[FileValidationError]:
-      try:
-        importer = self._create_importer(file)
-        return importer.validate_headers()
-      except Exception as e:
-        return [
-            FileValidationError(
-                file=file.path,
-                error_type=ValidationErrorType.GENERIC_ERROR,
-                error_message=f"Failed to validate headers: {str(e)}")
-        ]
-
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=min(32,
                         len(csv_files) or 1)) as executor:
-      results = executor.map(validate_single_file, csv_files)
-      for errors in results:
+      for errors in executor.map(self._validate_single_file_headers, csv_files):
         all_errors.extend(errors)
 
     if all_errors:
@@ -582,6 +565,51 @@ class Runner:
           "CSV Header Validation Failed! The following errors were found:\n" +
           "\n".join(formatted_errors))
       raise ValueError(consolidated_msg)
+
+  def _run_threaded_imports(self, mcf_files: list[File],
+                            csv_files: list[File]) -> None:
+    """Runs MCF imports followed by CSV imports using a thread pool."""
+    # Import the MCF group to completion before starting the CSV group.
+    # MCF declares the provenance and source nodes that CSV importers then
+    # look up by name; if a CSV gets there first, Nodes.provenance()
+    # auto-creates a provenance with no source and the source link is lost.
+    # Files within each group still run concurrently.
+    for file_group in (mcf_files, csv_files):
+      if not file_group:
+        continue
+      for file in file_group:
+        self.config._per_file_config(file)
+      num_threads = min(32, len(file_group))
+      with concurrent.futures.ThreadPoolExecutor(
+          max_workers=num_threads) as executor:
+        futures = [
+            executor.submit(self._run_single_import, file)
+            for file in file_group
+        ]
+        for future in concurrent.futures.as_completed(futures):
+          future.result()
+
+  def _run_multiprocess_imports(self, all_files: list[File]) -> None:
+    """Runs all file imports across a process pool and merges worker results."""
+    num_processes = min(32, len(all_files))
+    config_json_str = json.dumps(self.config.data)
+    jsonld_dir_name = self.graph_writer.jsonld_dir.name()
+    with concurrent.futures.ProcessPoolExecutor(
+        max_workers=num_processes) as executor:
+      futures = [
+          executor.submit(
+              _run_single_csv_import_proc,
+              file.path,
+              file._store.root_path,
+              self.output_dir.full_path(),
+              self.process_dir.full_path(),
+              self.import_names,
+              config_json_str,
+              jsonld_dir_name,
+          ) for file in all_files
+      ]
+      for future in concurrent.futures.as_completed(futures):
+        self._merge_worker_result(future.result())
 
   def _run_all_data_imports(self):
     """Orchestrates file scanning, thread-pool configuration, and file ingestion."""
@@ -602,49 +630,14 @@ class Runner:
     self._counter_lock = threading.Lock()
 
     all_files = list(mcf_files) + list(csv_files)
-    if all_files:
-      logging.info("Importing %d files (%d MCF, %d CSV)...", len(all_files),
-                   len(mcf_files), len(csv_files))
-      if not self.use_multiprocessing:
-        # Import the MCF group to completion before starting the CSV group.
-        # MCF declares the provenance and source nodes that CSV importers then
-        # look up by name; if a CSV gets there first, Nodes.provenance()
-        # auto-creates a provenance with no source and the source link is lost.
-        # Files within each group still run concurrently.
-        #
-        # The multiprocessing branch below does not preserve this ordering.
-        for file_group in (mcf_files, csv_files):
-          if not file_group:
-            continue
-          num_threads = min(32, len(file_group))
-          with concurrent.futures.ThreadPoolExecutor(
-              max_workers=num_threads) as executor:
-            futures = [
-                executor.submit(self._run_single_import, file)
-                for file in file_group
-            ]
-            for future in concurrent.futures.as_completed(futures):
-              future.result()
-      else:
-        num_processes = min(32, len(all_files))
-        config_json_str = json.dumps(self.config.data)
-        jsonld_dir_name = self.graph_writer.jsonld_dir.name()
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=num_processes) as executor:
-          futures = [
-              executor.submit(
-                  _run_single_csv_import_proc,
-                  file.path,
-                  file._store.root_path,
-                  self.output_dir.full_path(),
-                  self.process_dir.full_path(),
-                  self.import_names,
-                  config_json_str,
-                  jsonld_dir_name,
-              ) for file in all_files
-          ]
-          for future in concurrent.futures.as_completed(futures):
-            self._merge_worker_result(future.result())
+    if not all_files:
+      return
+    logging.info("Importing %d files (%d MCF, %d CSV)...", len(all_files),
+                 len(mcf_files), len(csv_files))
+    if not self.use_multiprocessing:
+      self._run_threaded_imports(mcf_files, csv_files)
+    else:
+      self._run_multiprocess_imports(all_files)
 
   def _merge_worker_result(self, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` into the coordinator."""
@@ -693,7 +686,6 @@ class Runner:
     return _create_importer_for_file(
         self.config,
         input_file,
-        self.process_dir,
         self.graph_writer,
         reporter,
         self.nodes,

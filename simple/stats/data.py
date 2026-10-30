@@ -13,7 +13,6 @@
 # limitations under the License.
 """This file includes data model classes used across the simple importer."""
 
-from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
 from enum import StrEnum
@@ -23,7 +22,6 @@ from urllib.parse import urlparse
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
-from stats.util import has_namespace_prefix
 from stats.util import is_uri_or_namespace
 
 _PREDICATE_TYPE_OF = "typeOf"
@@ -35,14 +33,11 @@ _PREDICATE_SOURCE = "source"
 _PREDICATE_DOMAIN = "domain"
 _PREDICATE_INCLUDED_IN = "includedIn"
 
-STATISTICAL_VARIABLE = "StatisticalVariable"
 STAT_VAR_GROUP = "StatVarGroup"
 _SOURCE = "Source"
 _PROVENANCE = "Provenance"
 _PROPERTY = "Property"
 _CLASS = "Class"
-
-_MCF_PREDICATE_BLOCKLIST = set([_PREDICATE_INCLUDED_IN])
 
 _NAMESPACE_DELIMITER = ':'
 
@@ -53,10 +48,6 @@ class Triple:
   predicate: str
   object_id: str = ""
   object_value: str = ""
-
-  def normalized_tuple(self):
-    return (strip_namespace(self.subject_id), self.predicate,
-            strip_namespace(self.object_id), self.object_value)
 
 
 @dataclass
@@ -157,28 +148,18 @@ class ObservationProperties:
   properties: dict[str, str] = field(default_factory=dict)
 
   @classmethod
-  def new(cls: Self,
-          all_properties: dict[str, str] | None = None,
-          default_obs_props: Self | None = None) -> Self:
+  def new(cls: Self, all_properties: dict[str, str] | None = None) -> Self:
     if all_properties is None:
       all_properties = {}
-    if default_obs_props is None:
-      default_obs_props = cls()
-    unit = all_properties.get(sc.PREDICATE_UNIT, "") or default_obs_props.unit
-    scaling_factor = all_properties.get(sc.PREDICATE_SCALING_FACTOR,
-                                        "") or default_obs_props.scaling_factor
-    measurement_method = all_properties.get(
-        sc.PREDICATE_MEASUREMENT_METHOD,
-        "") or default_obs_props.measurement_method
-    observation_period = all_properties.get(
-        sc.PREDICATE_OBSERVATION_PERIOD,
-        "") or default_obs_props.observation_period
+    unit = all_properties.get(sc.PREDICATE_UNIT, "")
+    scaling_factor = all_properties.get(sc.PREDICATE_SCALING_FACTOR, "")
+    measurement_method = all_properties.get(sc.PREDICATE_MEASUREMENT_METHOD, "")
+    observation_period = all_properties.get(sc.PREDICATE_OBSERVATION_PERIOD, "")
     custom_properties = {
         p: v
         for p, v in all_properties.items()
         if p not in sc.STANDARD_OBSERVATION_PROPERTIES
     }
-    custom_properties = default_obs_props.properties | custom_properties
     return cls(unit, scaling_factor, measurement_method, observation_period,
                custom_properties)
 
@@ -261,7 +242,6 @@ class ValidationErrorType(StrEnum):
   UNMAPPED_COLUMNS = "UNMAPPED_COLUMNS"
   MISSING_REQUIRED_COLUMNS = "MISSING_REQUIRED_COLUMNS"
   INVALID_CONFIGURATION = "INVALID_CONFIGURATION"
-  UNRESOLVED_ENTITY = "UNRESOLVED_ENTITY"
   MISSING_SOURCE = "MISSING_SOURCE"
   MISSING_PROVENANCE = "MISSING_PROVENANCE"
   GENERIC_ERROR = "GENERIC_ERROR"
@@ -286,50 +266,6 @@ class FileValidationError:
 class ImportType(StrEnum):
   OBSERVATIONS = "observations"
   ENTITIES = "entities"
-
-
-@dataclass
-class McfNode:
-  id: str
-  node_type: str = ""
-  properties: dict[str, str] = field(default_factory=lambda: defaultdict(dict))
-
-  def add_triple(self, triple: Triple) -> Self:
-    if triple.predicate in _MCF_PREDICATE_BLOCKLIST:
-      return self
-
-    if triple.predicate == _PREDICATE_TYPE_OF:
-      self.node_type = triple.object_id
-
-    if triple.object_id:
-      self.properties[triple.predicate] = triple.object_id
-    elif triple.object_value:
-      self.properties[triple.predicate] = f'"{triple.object_value}"'
-
-    return self
-
-  def to_mcf(self) -> str:
-    parts: list[str] = []
-    if has_namespace_prefix(self.id):
-      parts.append(f"Node: {self.id}")
-    else:
-      parts.append(f"Node: dcid:{self.id}")
-    parts.extend([f"{p}: {v}" for p, v in self.properties.items()])
-    return "\n".join(parts)
-
-
-@dataclass
-class VerticalSpec:
-  population_type: str
-  measured_properties: set[str] = field(default_factory=set)
-  verticals: set[str] = field(default_factory=set)
-
-  def from_json(json: dict) -> Self:
-    return VerticalSpec(population_type=json.get("populationType",
-                                                 sc.DEFAULT_POPULATION_TYPE),
-                        measured_properties=set(
-                            json.get("measuredProperties", [])),
-                        verticals=set(json.get("verticals", [])))
 
 
 def strip_namespace(v: str) -> str:
@@ -383,18 +319,20 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
   converted = pd.to_numeric(df[constants.COLUMN_VALUE], errors='coerce')
   # Only perform expensive string operations on non-numeric candidates
   na_mask = converted.isna() & df[constants.COLUMN_VALUE].notna()
-  if na_mask.any():
-    val_series = df.loc[na_mask, constants.COLUMN_VALUE].astype(
-        str).str.strip().str.lower()
-    standard_nulls = {val.lower() for val in constants.STANDARD_NA_VALUES
-                     } | {"nan", ""}
-    invalid_mask = ~val_series.isin(standard_nulls)
-    if invalid_mask.any():
-      invalid_examples = df.loc[na_mask].loc[invalid_mask,
-                                             constants.COLUMN_VALUE].unique()
-      ex = ValueError(
-          f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
-          f"{list(invalid_examples)[:10]}. If these represent missing values, please configure "
-          f"them under 'naValues' in config.json.")
-      ex.file_path = file_path
-      raise ex
+  if not na_mask.any():
+    return
+  val_series = df.loc[na_mask, constants.COLUMN_VALUE].astype(
+      str).str.strip().str.lower()
+  standard_nulls = {val.lower() for val in constants.STANDARD_NA_VALUES
+                   } | {"nan", ""}
+  invalid_mask = ~val_series.isin(standard_nulls)
+  if not invalid_mask.any():
+    return
+  invalid_examples = df.loc[na_mask].loc[invalid_mask,
+                                         constants.COLUMN_VALUE].unique()
+  ex = ValueError(
+      f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
+      f"{list(invalid_examples)[:10]}. If these represent missing values, please configure "
+      f"them under 'naValues' in config.json.")
+  ex.file_path = file_path
+  raise ex

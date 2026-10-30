@@ -14,6 +14,7 @@
 
 import pandas as pd
 from stats import constants
+from stats.data import FileValidationError
 from stats.data import strip_namespace
 
 
@@ -23,8 +24,8 @@ class Importer:
   def do_import(self) -> None:
     pass
 
-  def validate_headers(self) -> list[dict]:
-    """Validates CSV headers and returns a list of error dicts (empty if valid)."""
+  def validate_headers(self) -> list[FileValidationError]:
+    """Validates CSV headers and returns a list of validation errors (empty if valid)."""
     return []
 
   def get_column_mappings(self) -> dict[str, str]:
@@ -37,9 +38,7 @@ class Importer:
     """Returns a mapping from physical CSV column names to stripped property DCIDs."""
     return {v: strip_namespace(k) for k, v in self.get_column_mappings().items()}
 
-  def resolve_specified_columns(self,
-                                df: pd.DataFrame,
-                                default_entity_type: str = "") -> pd.DataFrame:
+  def resolve_specified_columns(self, df: pd.DataFrame) -> pd.DataFrame:
     """Applies pre-resolved namespace prefixes (e.g. countryAlpha3Code -> country/) to specified columns."""
     if not hasattr(self, "config") or not hasattr(self, "input_file"):
       return df
@@ -51,12 +50,10 @@ class Importer:
       if col_name not in df.columns:
         continue
 
-      column = df[col_name]
-      lower_case_entity_name = col_name.lower()
-      if lower_case_entity_name in constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES:
-        prefix = constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES[
-            lower_case_entity_name]
-        df[col_name] = column.map(lambda x: f"{prefix}{x}" if pd.notna(x) and
-                                  not str(x).startswith(prefix) else x)
+      prefix = constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES.get(
+          col_name.lower())
+      if prefix is not None:
+        df[col_name] = df[col_name].map(lambda x: f"{prefix}{x}" if pd.notna(
+            x) and not str(x).startswith(prefix) else x)
 
     return df

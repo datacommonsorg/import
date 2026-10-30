@@ -42,9 +42,5 @@ class GraphWriter:
     """
     pass
 
-  def commit(self):
-    """Flushes everything written so far, leaving the writer open."""
-    pass
-
   def commit_and_close(self):
     pass

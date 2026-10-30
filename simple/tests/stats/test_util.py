@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gzip
 import os
 import unittest
 
@@ -111,7 +110,11 @@ def write_triples_list(triples: list[Triple], output_path: str):
   Triples are written in the normalized form a GraphWriter persists, i.e. with
   namespaces stripped from the subject and object ids.
   """
-  normalized = [Triple(*triple.normalized_tuple()) for triple in triples]
+  from stats.data import strip_namespace
+  normalized = [
+      Triple(strip_namespace(t.subject_id), t.predicate,
+             strip_namespace(t.object_id), t.object_value) for t in triples
+  ]
   pd.DataFrame(normalized).to_csv(output_path, index=False)
 
 
@@ -123,21 +126,6 @@ def write_observations_df(observations_df: pd.DataFrame, output_path: str):
   observations_df.to_csv(output_path,
                          index=False,
                          columns=constants.OBSERVATION_COLUMNS)
-
-
-class FakeGzipTime:
-
-  def __init__(self, timestamp=0) -> None:
-    self.timestamp = timestamp
-
-  def time(self):
-    return self.timestamp
-
-
-# GZIP encodes a timestamp in the gzipped content which makes test results inconsistent.
-# Use this method to make tests use fixed timestamps.
-def use_fake_gzip_time(timestamp=0):
-  gzip.time = FakeGzipTime(timestamp)
 
 
 class RecordingGraphWriter(GraphWriter):
