@@ -1,0 +1,41 @@
+{
+  "inputFiles": [
+    {
+      "pattern": "*.mcf",
+      "provenance": "dcid:KitchenProvenance"
+    },
+    {
+      "pattern": "observations.csv",
+      "provenance": "dcid:KitchenProvenance",
+      "ignoreColumns": [
+        "notes"
+      ],
+      "columnMappings": {
+        "dcid:observationAbout": "place",
+        "dcid:variableMeasured": "stat",
+        "dcid:observationDate": "year",
+        "dcid:value": "amount",
+        "dcid:unit": "unit"
+      }
+    },
+    {
+      "pattern": "trips.csv",
+      "provenance": "dcid:KitchenProvenance",
+      "columnMappings": {
+        "dcid:observationAbout": "origin",
+        "dcid:destination": "destination",
+        "dcid:variableMeasured": "variable",
+        "dcid:observationDate": "date",
+        "dcid:value": "value"
+      }
+    },
+    {
+      "pattern": "authors.csv",
+      "importType": "entities",
+      "rowEntityType": "Author",
+      "idColumn": "author_id",
+      "provenance": "dcid:KitchenProvenance"
+    }
+  ],
+  "groupStatVarsByProperty": true
+}

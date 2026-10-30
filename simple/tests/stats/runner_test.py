@@ -121,9 +121,6 @@ class TestRunner(unittest.TestCase):
   def test_entities(self):
     _test_runner(self, "entities")
 
-  def test_events(self):
-    _test_runner(self, "events")
-
   def test_empty_input(self):
     with self.assertRaises(FileNotFoundError):
       _test_runner(self, "empty")

@@ -1,0 +1,9 @@
+{
+  "importName": "population_import",
+  "inputFiles": [
+    {"pattern": "*.mcf", "provenance": "dcid:populationProvenance"},
+    {"pattern": "data.csv", "provenance": "dcid:populationProvenance",
+     "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable",
+                        "dcid:observationDate": "date", "dcid:value": "value"}}
+  ]
+}

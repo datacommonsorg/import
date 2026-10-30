@@ -1,0 +1,1 @@
+{"description": "A CSV column that is neither mapped nor ignored must fail header validation before anything is written, with a FAILURE handshake carrying a structured UNMAPPED_COLUMNS error."}

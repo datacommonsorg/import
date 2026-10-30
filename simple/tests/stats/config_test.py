@@ -15,13 +15,9 @@
 import unittest
 
 from stats.config import Config
-from stats.data import AggregationConfig
-from stats.data import AggregationMethod
 from stats.data import ImportType
 from stats.data import Provenance
 from stats.data import Source
-from stats.data import StatVar
-from stats.data import TimePeriod
 from util.filesystem import create_store
 from util.filesystem import File
 
@@ -29,12 +25,10 @@ CONFIG_DATA = {
     "inputFiles": [
         {
             "pattern": "a.csv",
-            "entityType": "Country",
             "provenance": "Provenance21 Name"
         },
         {
             "pattern": "b.csv",
-            "entityType": "",
             "ignoreColumns": ["ignore1", "ignore2"]
         },
         {
@@ -50,28 +44,6 @@ CONFIG_DATA = {
             "importType": "eVeNtS"
         },
     ],
-    "variables": {
-        "Variable 1": {
-            "group": "Parent Group/Child Group 1",
-            "aggregation": {
-                "period": "month",
-                "method": "count"
-            }
-        },
-        "Variable 2": {
-            "group": "Parent Group/Child Group 1",
-            "aggregation": {
-                "period": "INVALID",
-                "method": "count"
-            }
-        },
-        "var3": {
-            "name": "Var 3 Name",
-            "description": "Var 3 Description",
-            "searchDescriptions": ["Sentence 1", "Sentence 2"],
-            "group": "Parent Group/Child Group 2",
-        },
-    },
     "sources": {
         "Source1 Name": {
             "url": "http://source1.com",
@@ -139,38 +111,6 @@ class TestConfig(unittest.TestCase):
   def tearDown(self):
     self.store.close()
 
-  def test_variable(self):
-    config = Config(CONFIG_DATA)
-    self.assertEqual(
-        config.variable("Variable 1"),
-        StatVar("", "Variable 1", group_path="Parent Group/Child Group 1"),
-    )
-    self.assertEqual(
-        config.variable("Variable 2"),
-        StatVar("", "Variable 2", group_path="Parent Group/Child Group 1"),
-    )
-    self.assertEqual(
-        config.variable("var3"),
-        StatVar(
-            "",
-            "Var 3 Name",
-            description="Var 3 Description",
-            search_descriptions=["Sentence 1", "Sentence 2"],
-            group_path="Parent Group/Child Group 2",
-        ),
-    )
-    self.assertEqual(
-        config.variable("Variable with no config"),
-        StatVar("", "Variable with no config"),
-    )
-
-  def test_entity_type(self):
-    config = Config(CONFIG_DATA)
-    self.assertEqual(config.entity_type(self.make_file("a.csv")), "Country")
-    self.assertEqual(config.entity_type(self.make_file("b.csv")), "")
-    self.assertEqual(config.entity_type(self.make_file("not_in_config.csv")),
-                     "")
-
   def test_ignore_columns(self):
     config = Config(CONFIG_DATA)
     self.assertEqual(config.ignore_columns(self.make_file("a.csv")), [])
@@ -196,28 +136,13 @@ class TestConfig(unittest.TestCase):
                      ImportType.OBSERVATIONS, "default import type")
     self.assertEqual(config.import_type(self.make_file("observations.csv")),
                      ImportType.OBSERVATIONS, "observations import type")
-    self.assertEqual(config.import_type(self.make_file("events.csv")),
-                     ImportType.EVENTS, "events import type")
+    with self.assertRaisesRegex(ValueError, "Unsupported import type"):
+      config.import_type(self.make_file("events.csv"))
     with self.assertRaisesRegex(ValueError, "Unsupported import type"):
       config.import_type(self.make_file("invalid_import_type.csv"))
 
-  def test_aggregation(self):
-    config = Config(CONFIG_DATA)
-    self.assertEqual(
-        config.aggregation("Variable 1"),
-        AggregationConfig(TimePeriod.MONTH, AggregationMethod.COUNT),
-        "valid date config")
-    self.assertEqual(
-        config.aggregation("var3"),
-        AggregationConfig(TimePeriod.YEAR, AggregationMethod.COUNT),
-        "default date config")
-    with self.assertRaisesRegex(ValueError, "invalid period"):
-      config.aggregation("Variable 2")
-
   def test_empty_config(self):
     config = Config({})
-    self.assertEqual(config.variable("Variable 1"), StatVar("", "Variable 1"))
-    self.assertEqual(config.entity_type(self.make_file("a.csv")), "")
     self.assertEqual(config.ignore_columns(self.make_file("a.csv")), [])
     self.assertDictEqual(config.provenances, {})
     self.assertDictEqual(config.provenance_sources, {})

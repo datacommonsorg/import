@@ -1,4 +1,5 @@
 tests/
+testsuite/
 sample/
 **/*.md
 **/__pycache__/
