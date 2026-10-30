@@ -20,7 +20,14 @@ steps:
   - id: "format & test"
     name: "maven:3-openjdk-17"
     entrypoint: "mvn"
-    args: ["com.spotify.fmt:fmt-maven-plugin:check", "test"]
+    args:
+      - "-B"
+      - "-ntp"
+      - "-T"
+      - "1C"
+      - "-Dmaven.artifact.threads=32"
+      - "com.spotify.fmt:fmt-maven-plugin:check"
+      - "test"
     secretEnv:
       - DC_API_KEY
 
@@ -28,3 +35,7 @@ availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/dc-api-key/versions/latest
       env: DC_API_KEY
+
+options:
+  machineType: "E2_HIGHCPU_32"
+
