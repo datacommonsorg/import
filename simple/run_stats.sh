@@ -10,7 +10,6 @@ Options:
   -i <dir>        Input directory to process
   -o <dir>        Output folder for stats importer. Default: $OUTPUT_DIR
   -m <dcpbridge>  Mode of operation for simple importer. Default: $MODE
-  -k <api-key>    DataCommons API Key
   -j <jar>        DC Import java jar file.
                     Download latest from https://github.com/datacommonsorg/import/releases/
   -r <steps>      Steps to run. Can be one or more from:
@@ -51,7 +50,6 @@ function parse_options {
     case $1 in
       -i) shift; INPUT_DIR=$(readlink -f "$1");;
       -c) shift; CONFIG=$(readlink -f "$1");;
-      -k) shift; DC_API_KEY="$1";;
       -o) shift; OUTPUT_DIR="$1";;
       -m) shift; MODE="$1";;
       -j) shift; DC_IMPORT_JAR="$1";;

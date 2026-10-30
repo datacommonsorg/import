@@ -14,6 +14,7 @@
 
 import pandas as pd
 from stats import constants
+from stats.data import FileValidationError
 from stats.data import strip_namespace
 
 
@@ -23,8 +24,8 @@ class Importer:
   def do_import(self) -> None:
     pass
 
-  def validate_headers(self) -> list[dict]:
-    """Validates CSV headers and returns a list of error dicts (empty if valid)."""
+  def validate_headers(self) -> list[FileValidationError]:
+    """Validates CSV headers and returns a list of validation errors (empty if valid)."""
     return []
 
   def get_column_mappings(self) -> dict[str, str]:

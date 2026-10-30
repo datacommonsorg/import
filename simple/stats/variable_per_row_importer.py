@@ -110,7 +110,7 @@ class VariablePerRowImporter(Importer):
     try:
       errors = self.validate_headers()
       if errors:
-        raise ValueError("\n".join(errors))
+        raise ValueError("\n".join(e.error_message for e in errors))
       self._map_columns()
       self._write_observations()
       self.reporter.report_success()
@@ -171,7 +171,7 @@ class VariablePerRowImporter(Importer):
     errors = self._validate_mappings(self.column_mappings,
                                      self.custom_dimensions)
     if errors:
-      raise ValueError(errors[0]["errorMessage"])
+      raise ValueError(errors[0].error_message)
 
   def _parse_column_mappings(self) -> tuple[dict[str, str], list[str]]:
     config_mappings = self.get_column_mappings()
@@ -293,6 +293,7 @@ class VariablePerRowImporter(Importer):
 
 def _serialize_row_dimensions(row: dict[str, object],
                               static_props: dict[str, str]) -> str:
+  """Serializes a row's custom dimensions merged with `static_props` into JSON."""
   props = dict(static_props)
   for col, val in row.items():
     if pd.notna(val) and val != "":

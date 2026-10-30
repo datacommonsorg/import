@@ -29,6 +29,7 @@ from util.filesystem import File
 
 
 def _parse_object_ids(v_str: str) -> str | list[str]:
+  """Splits comma-separated entity references and strips namespace prefixes."""
   if "," in v_str:
     return [strip_namespace(x.strip()) for x in v_str.split(",")]
   return strip_namespace(v_str)
@@ -73,7 +74,7 @@ class EntitiesImporter(Importer):
     try:
       errors = self.validate_headers()
       if errors:
-        raise ValueError("\n".join(errors))
+        raise ValueError("\n".join(e.error_message for e in errors))
       self.provenance_id = self.nodes.provenance(self.input_file).id
       self._read_csv()
       self._drop_ignored_columns()
@@ -151,6 +152,7 @@ class EntitiesImporter(Importer):
   def _extract_row_properties(
       self,
       row: pd.Series) -> tuple[dict[str, str], dict[str, str | list[str]]]:
+    """Splits a CSV row into literal property values and entity reference IDs."""
     prop_object_values: dict[str, str] = {}
     prop_object_ids: dict[str, str | list[str]] = {}
     for k, v in row.items():

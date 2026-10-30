@@ -481,6 +481,7 @@ class Runner:
     return configs
 
   def _is_active_import_file(self, file: File) -> bool:
+    """Returns True if `file` is not archived and belongs to an active import."""
     if _ARCHIVES_DIR_NAME in file.path.split("/"):
       return False
     if not self.active_import_prefixes:
@@ -489,6 +490,7 @@ class Runner:
         file.path.startswith(prefix) for prefix in self.active_import_prefixes)
 
   def _matches_config_pattern(self, file: File) -> bool:
+    """Returns True if `file` matches at least one `inputFiles` pattern."""
     return any(
         match(file, pattern)
         for pattern in self.config._input_files_config.keys())
@@ -526,6 +528,7 @@ class Runner:
 
   def _validate_single_file_headers(self,
                                     file: File) -> list[FileValidationError]:
+    """Validates headers for a single CSV file and returns any errors found."""
     try:
       return self._create_importer(file).validate_headers()
     except Exception as e:
@@ -540,6 +543,11 @@ class Runner:
     """Validates all CSV headers upfront and raises ValueError if any validation fails."""
     if not csv_files:
       return
+
+    # Pre-populate the per-file config cache on the main thread before spawning
+    # worker threads so concurrent lookups do not race on mutating the cache dict.
+    for file in csv_files:
+      self.config._per_file_config(file)
 
     all_errors = []
     with concurrent.futures.ThreadPoolExecutor(
@@ -560,6 +568,7 @@ class Runner:
 
   def _run_threaded_imports(self, mcf_files: list[File],
                             csv_files: list[File]) -> None:
+    """Runs MCF imports followed by CSV imports using a thread pool."""
     # Import the MCF group to completion before starting the CSV group.
     # MCF declares the provenance and source nodes that CSV importers then
     # look up by name; if a CSV gets there first, Nodes.provenance()
@@ -568,6 +577,8 @@ class Runner:
     for file_group in (mcf_files, csv_files):
       if not file_group:
         continue
+      for file in file_group:
+        self.config._per_file_config(file)
       num_threads = min(32, len(file_group))
       with concurrent.futures.ThreadPoolExecutor(
           max_workers=num_threads) as executor:
@@ -579,6 +590,7 @@ class Runner:
           future.result()
 
   def _run_multiprocess_imports(self, all_files: list[File]) -> None:
+    """Runs all file imports across a process pool and merges worker results."""
     num_processes = min(32, len(all_files))
     config_json_str = json.dumps(self.config.data)
     jsonld_dir_name = self.graph_writer.jsonld_dir.name()

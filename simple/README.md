@@ -35,12 +35,6 @@ python3 -m stats.main \
 For config driven imports, the import files are specified using the
 [dataDownloadUrl](stats/config.md#dataDownloadUrl) field.
 
-## Input files
-
-The first 2 columns of input CSVs should be place names (or more generically
-_entity_ names) and observation periods respectively. Each subsequent column
-should be for each individual statvar.
-
 ## Output
 
 All output is written under `--output_dir`, which can be a local path or a
@@ -86,7 +80,7 @@ If `project-id` is omitted, it defaults to `datcom-ci` (`gcr.io/datcom-ci/dataco
 
 ### Local Docker Build & Run
 
-The container's `run.sh` entrypoint requires `DC_API_KEY`, `INPUT_DIR`, and `OUTPUT_DIR`, and writes results under `$OUTPUT_DIR/datacommons/`. From the repo root:
+The container's `run.sh` entrypoint requires `INPUT_DIR` and `OUTPUT_DIR`, and writes results under `$OUTPUT_DIR/datacommons/`. From the repo root:
 
 ```shell
 # 1. Build the image locally.
@@ -94,7 +88,6 @@ docker build -t datacommons-data:local simple/
 
 # 2a. Run it on a local data directory.
 docker run --rm \
-  -e DC_API_KEY="${DC_API_KEY}" \
   -e INPUT_DIR=/data/input \
   -e OUTPUT_DIR=/data/output \
   -v /path/to/local/data:/data \
@@ -103,7 +96,6 @@ docker run --rm \
 # 2b. Or run it on Google Cloud Storage (gs://) paths, mounting your
 #     Application Default Credentials file for access.
 docker run --rm \
-  -e DC_API_KEY="${DC_API_KEY}" \
   -e INPUT_DIR=gs://my-bucket/input \
   -e OUTPUT_DIR=gs://my-bucket/output \
   -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \

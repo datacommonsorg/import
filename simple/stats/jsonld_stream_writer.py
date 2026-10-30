@@ -93,12 +93,14 @@ def _parse_numeric(val):
 
 
 def _prefix_dcid(key: str) -> str:
+  """Ensures `key` has a `dcid:` prefix unless it is already a URI or prefixed."""
   if key.startswith(("dcid:", "http://", "https://")):
     return key
   return f"dcid:{key}"
 
 
 def _parse_props_json(props: str, entity: str, variable: str) -> dict:
+  """Parses a serialized observation properties JSON string into a dict."""
   if not props:
     return {}
   try:
@@ -111,7 +113,11 @@ def _parse_props_json(props: str, entity: str, variable: str) -> dict:
     return {}
 
 
-def _build_observation_node(row: tuple, prov_urls: dict[str, str]) -> dict:
+def _build_observation_node(
+    row: tuple,
+    prov_urls: Optional[dict[str, str]] = None,
+) -> dict:
+  """Builds a single `dcid:StatVarObservation` JSON-LD node dict from a row."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
   key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
   obs_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
@@ -191,6 +197,7 @@ def _write_observation_shard(chunk,
 
 
 def _append_unique_value(subject_dict: dict, key: str, val: object) -> None:
+  """Appends `val` to `subject_dict[key]`, deduplicating and promoting to a list."""
   if key not in subject_dict:
     subject_dict[key] = val
     return
@@ -290,42 +297,35 @@ class JsonLdStreamWriter(GraphWriter):
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
-  def track_observation_hash(self,
-                             obs_hash_or_chunk,
-                             entity: str = "",
-                             variable: str = "",
-                             date: str = "",
-                             provenance: str = "",
-                             file_name: str = "") -> None:
-    if isinstance(obs_hash_or_chunk, list):
-      chunk_items = obs_hash_or_chunk
-      file_key = os.path.basename(file_name) if file_name else "unknown"
-      with self.lock:
-        for obs_hash, ent, var, dt, prov in chunk_items:
-          hash_int = int(obs_hash[:16], 16)
-          if hash_int in self.obs_hash_set:
-            self.obs_collision_count += 1
-            self.file_collision_counts[file_key] += 1
-            sample_info = (
-                f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
-            )
-            if len(self.obs_sample_collisions) < 10:
-              self.obs_sample_collisions.append(sample_info)
-            if len(self.file_sample_collisions[file_key]) < 3:
-              self.file_sample_collisions[file_key].append(sample_info)
-              logging.warning(
-                  "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
-                  file_key, sample_info)
-            elif self.obs_collision_count % 1000 == 0:
-              logging.warning(
-                  "Detected %d observation @id collisions so far across processed datasets.",
-                  self.obs_collision_count)
-          else:
-            self.obs_hash_set.add(hash_int)
-    else:
-      self.track_observation_hash(
-          [(obs_hash_or_chunk, entity, variable, date, provenance)],
-          file_name=file_name)
+  def track_observation_hash(
+      self,
+      chunk_items: list[tuple[str, str, str, str, str]],
+      file_name: str = "",
+  ) -> None:
+    """Tracks observation hashes for a shard chunk and logs any collisions."""
+    file_key = os.path.basename(file_name) if file_name else "unknown"
+    with self.lock:
+      for obs_hash, ent, var, dt, prov in chunk_items:
+        hash_int = int(obs_hash[:16], 16)
+        if hash_int not in self.obs_hash_set:
+          self.obs_hash_set.add(hash_int)
+          continue
+        self.obs_collision_count += 1
+        self.file_collision_counts[file_key] += 1
+        sample_info = (
+            f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
+        )
+        if len(self.obs_sample_collisions) < 10:
+          self.obs_sample_collisions.append(sample_info)
+        if len(self.file_sample_collisions[file_key]) < 3:
+          self.file_sample_collisions[file_key].append(sample_info)
+          logging.warning(
+              "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
+              file_key, sample_info)
+        elif self.obs_collision_count % 1000 == 0:
+          logging.warning(
+              "Detected %d observation @id collisions so far across processed datasets.",
+              self.obs_collision_count)
 
   def _get_prov_urls(self) -> dict[str, str]:
     if hasattr(self, 'nodes') and self.nodes and hasattr(
@@ -541,6 +541,7 @@ class JsonLdStreamWriter(GraphWriter):
 
 def _upload_single_gcs_blob(temp_local_dir: str, rel_path: str,
                             blob_prefix: str, bucket, gcs_retry: Retry) -> None:
+  """Uploads a single local shard file (`rel_path`) to a GCS bucket."""
   local_file_path = os.path.join(temp_local_dir, rel_path)
   blob_key = f"{blob_prefix}/{rel_path}" if blob_prefix else rel_path
   bucket.blob(blob_key).upload_from_filename(local_file_path, retry=gcs_retry)
@@ -548,6 +549,7 @@ def _upload_single_gcs_blob(temp_local_dir: str, rel_path: str,
 
 def _copy_single_local_shard(temp_local_dir: str, rel_path: str,
                              target_store) -> None:
+  """Copies a single local shard file (`rel_path`) into `target_store`."""
   local_file_path = os.path.join(temp_local_dir, rel_path)
   with open(local_file_path, "r") as f:
     content = f.read()

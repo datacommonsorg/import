@@ -177,7 +177,7 @@ class Config:
     if for_exact_full_path:
       return for_exact_full_path
 
-    if input_file.full_path() not in self._config_key_by_full_path.keys():
+    if input_file.full_path() not in self._config_key_by_full_path:
       self._config_key_by_full_path[input_file.full_path(
       )] = self._find_first_matching_config_key(input_file)
 
