@@ -63,15 +63,17 @@ def _ensure_started() -> None:
                             0,
                             in_memory=True,
                             default_bucket=BUCKET)
-    api = _server._api  # pylint: disable=protected-access
-    # Daemon thread, so the emulator never keeps the test process alive.
-    api.daemon = True
-    _server.start()
     try:
+      api = _server._api  # pylint: disable=protected-access
+      _ = api.daemon  # Verify attribute exists before writing to it.
+      # Daemon thread, so the emulator never keeps the test process alive.
+      api.daemon = True
+      _server.start()
       port = api._httpd.server_address[1]  # pylint: disable=protected-access
-    except AttributeError as e:
-      raise RuntimeError("gcp-storage-emulator internals changed: can't read"
-                         " the port its HTTP server is bound to") from e
+    except (AttributeError, KeyError, IndexError) as e:
+      raise RuntimeError(
+          "gcp-storage-emulator internals changed: failed to access internal"
+          " server or api attributes") from e
     _host = f"http://127.0.0.1:{port}"
     # Set process-wide: google-cloud-storage reads these lazily (e.g. when a
     # client first opens its HTTP session), and forked workers inherit them.
