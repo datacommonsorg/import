@@ -63,9 +63,9 @@ class Nodes:
     self.config = config
     # Dictionary of SVGs from SVG id to SVG
     self.groups: dict[str, StatVarGroup] = {}
-    # dict from provenance name to Provenance
+    # dict from provenance ID (and name) to Provenance
     self.provenances: dict[str, Provenance] = {}
-    # dict from source name to Source
+    # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
     # dict from property column name to Property
     self.properties: dict[str, Property] = {}
@@ -88,12 +88,13 @@ class Nodes:
       self._default_custom_group()
 
   @thread_safe
-  def register_provenance(self,
-                          id: str,
-                          name: str = "",
-                          url: str = "",
-                          source_id: str = "",
-                          properties: dict[str, str] = None) -> Provenance:
+  def register_provenance(
+      self,
+      id: str,
+      name: str = "",
+      url: str = "",
+      source_id: str = "",
+      properties: dict[str, str] | None = None) -> Provenance:
     self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
@@ -118,7 +119,7 @@ class Nodes:
                       id: str,
                       name: str = "",
                       url: str = "",
-                      properties: dict[str, str] = None,
+                      properties: dict[str, str] | None = None,
                       provenance_id: str = "") -> Source:
     self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)

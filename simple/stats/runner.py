@@ -159,6 +159,9 @@ def _read_config_dict(file: File) -> dict:
   except json.JSONDecodeError as e:
     logging.error("Failed to parse JSON from %s: %s", file.full_path(), e)
     raise
+  if not isinstance(config_data, dict):
+    raise ValueError(f"Expected JSON object in {file.full_path()}, "
+                     f"got {type(config_data).__name__}")
   input_files = config_data.get("inputFiles", [])
   if not isinstance(input_files, list):
     raise ValueError(
