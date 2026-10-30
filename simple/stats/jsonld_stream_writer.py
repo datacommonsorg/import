@@ -195,7 +195,7 @@ def _write_observation_shard(chunk,
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
-# TODO(gmechali): When parallelizing node shard exports (MCF and Events CSV files),
+# TODO(gmechali): When parallelizing node shard exports (MCF and Entities CSV files),
 # include the sanitized file_name in the shard name (e.g., node-{sanitized_stem}-{shard_index:05d}.jsonld)
 # to prevent shard filename collisions across parallel workers, similar to observation shards.
 def _write_node_shard(args):
