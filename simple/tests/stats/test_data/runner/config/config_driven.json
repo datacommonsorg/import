@@ -12,10 +12,7 @@
         "dcid:observationAbout": "place",
         "dcid:observationDate": "year",
         "dcid:value": "value"
-      },
-      "columnsToResolve": [
-        "place"
-      ]
+      }
     },
     {
       "pattern": "wikidataids.csv",
@@ -26,10 +23,7 @@
         "dcid:observationAbout": "wikidataid",
         "dcid:observationDate": "year",
         "dcid:value": "value"
-      },
-      "columnsToResolve": [
-        "wikidataid"
-      ]
+      }
     },
     {
       "pattern": "variable_per_row.csv",

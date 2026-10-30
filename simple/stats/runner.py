@@ -152,7 +152,7 @@ def _run_single_csv_import_proc(
 
 
 def _read_config_dict(file: File) -> dict:
-  """Reads and parses a `config.json` file, validating its `inputFiles` list."""
+  """Reads and parses a `config.json` file, validating its structure and keys."""
   try:
     config_data = json.loads(file.read())
   except json.JSONDecodeError as e:
@@ -161,12 +161,7 @@ def _read_config_dict(file: File) -> dict:
   if not isinstance(config_data, dict):
     raise ValueError(f"Expected JSON object in {file.full_path()}, "
                      f"got {type(config_data).__name__}")
-  input_files = config_data.get("inputFiles", [])
-  if not isinstance(input_files, list):
-    raise ValueError(
-        f"'inputFiles' in {file.full_path()} must be a list of objects, "
-        f"each with a 'pattern' and a 'provenance'. "
-        f"Got: {type(input_files).__name__}")
+  Config(config_data)
   return config_data
 
 

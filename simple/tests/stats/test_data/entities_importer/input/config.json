@@ -13,6 +13,7 @@
     },
     {
       "pattern": "with_entity_columns.csv",
+      "importType": "entities",
       "rowEntityType": "CrimeCase",
       "idColumn": "CASE",
       "columnsToResolve": [

@@ -14,7 +14,6 @@
 
 import json
 import os
-from pathlib import Path
 import shutil
 import tempfile
 import unittest
@@ -163,7 +162,6 @@ class TestRunner(unittest.TestCase):
           "inputFiles": [{
               "pattern": "countries.csv",
               "importType": "observations",
-              "entityType": "Country",
               "provenance": "dcid:Provenance1",
               "columnMappings": {
                   "dcid:variableMeasured": "variable",
@@ -174,7 +172,6 @@ class TestRunner(unittest.TestCase):
           }, {
               "pattern": "wikidataids.csv",
               "importType": "observations",
-              "entityType": "Country",
               "provenance": "dcid:Provenance1",
               "columnMappings": {
                   "dcid:variableMeasured": "variable",
@@ -192,7 +189,6 @@ class TestRunner(unittest.TestCase):
                   "dcid:observationDate": "date",
                   "dcid:value": "value"
               },
-              "entityType": "Country",
               "provenance": "dcid:Provenance1"
           }, {
               "pattern": "author_entities.csv",
@@ -335,7 +331,6 @@ class TestRunner(unittest.TestCase):
     # Setup GCS mock
     mock_client_instance = mock_storage_client.return_value
     mock_bucket = mock_client_instance.bucket.return_value
-    mock_blob = mock_bucket.blob.return_value
 
     with tempfile.TemporaryDirectory() as temp_dir:
       input_dir = os.path.join(temp_dir, "input")
@@ -352,7 +347,6 @@ class TestRunner(unittest.TestCase):
           "inputFiles": [
               {
                   "pattern": "data.csv",
-                  "entityType": "Country",
                   "provenance": "dcid:oecd",
                   # Assume no format = variable per row
                   "columnMappings": {
@@ -394,7 +388,6 @@ class TestRunner(unittest.TestCase):
           "inputFiles": [
               {
                   "pattern": "data.csv",
-                  "entityType": "Country",
                   "provenance": "dcid:ilo",
                   # Assume no format = variable per row
                   "columnMappings": {
@@ -432,7 +425,7 @@ class TestRunner(unittest.TestCase):
 
       def mock_full_path(self, sub_path=""):
         if "jsonld" in self.path:
-          return f"gs://my-bucket/jsonld/run_timestamp"
+          return "gs://my-bucket/jsonld/run_timestamp"
         return original_full_path(self, sub_path)
 
       mock_store = mock.MagicMock()
@@ -530,7 +523,6 @@ class TestRunner(unittest.TestCase):
                 "pattern": "input.csv",
                 "importType": "observations",
                 "format": "variablePerRow",
-                "entityType": "Country",
                 "provenance": "dcid:provenance/FailTest",
                 "columnMappings": {
                     "dcid:observationAbout": "country_code",
