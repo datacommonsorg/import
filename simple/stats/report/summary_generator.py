@@ -11,15 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Generates the ingestion report for a preprocessor run.
+"""Generates ingestion_report.json for a preprocessor run.
 
-This module holds all of the report's logic:
-  - Recording facts as the run progresses: input files, observations, nodes.
-  - Building the report models defined in model/summary.py and writing
-    ingestion_report.json once per run, on success and on failure.
-
-Report code must never change the outcome of a run, so errors while
-collecting or writing the report are logged rather than raised.
+Report code must never change the outcome of a run: errors are logged, not
+raised.
 """
 
 import logging
@@ -32,48 +27,29 @@ from stats.report.model.summary import RunStatus
 from util.filesystem import Dir
 from util.filesystem import File
 
-# Workflow execution ID used outside the ingestion workflow (local runs and
-# tests), which have no WORKFLOW_EXECUTION_ID.
-LOCAL_WORKFLOW_EXECUTION_ID = "local"
-
 
 class SummaryGenerator:
   """Collects facts during a preprocessor run and writes the ingestion report.
 
-  Runner creates one instance at the start of run() and calls it as follows:
-    1. set_execution_metadata(): run metadata known at the start.
-    2. record_input_file(): each matched input file, before header validation,
-       so failed runs still report the files they found.
-    3. add_file_summary(): per-file counts from the import workers (below).
-    4. set_provenance_data() and populate_node_info(): provenance sources and
-       nodes the parent process writes, once worker results are merged.
-    5. record_failure(): run-level errors, if the run fails.
-    6. write_to_json(): once at the end of the run, on success and on failure.
+  Runner calls, in order: set_execution_metadata(), record_input_file() per
+  matched file, add_file_summary() per imported file, set_provenance_data()
+  and populate_node_info() after worker results are merged, record_failure()
+  on failure, and write_to_json() at the end of the run.
 
-  Counts from worker processes: in production, files are imported in separate
-  processes, which can't update this object. Each worker instead fills a
-  FileSummary (observations, date range, nodes by type) from what its
-  JsonLdStreamWriter writes, and returns it in ImportProcResult. Runner passes
-  each one to add_file_summary(), which merges it in. Merging gives the same
-  result whatever order the workers finish in. In thread mode, the shared
-  writer keeps one FileSummary per file and Runner passes them the same way.
+  Worker processes can't update this object, so each returns a FileSummary
+  in ImportProcResult and Runner passes it to add_file_summary().
 
-  TODO: This report replaces ImportReporter's process/report.json, which
-  records per-file status and is overwritten on every run. Drop report.json
-  once this report is written.
-
-  Method signatures are a first draft and may change as the logic lands.
+  TODO: Drop ImportReporter's process/report.json once this report exists.
   """
 
   def __init__(self, workflow_execution_id: str | None = None) -> None:
     """Creates a generator for one preprocessor run.
 
     Args:
-      workflow_execution_id: Ingestion workflow execution ID, which also keys
-        the report's destination. Defaults to LOCAL_WORKFLOW_EXECUTION_ID.
+      workflow_execution_id: Ingestion workflow execution ID. Empty for
+        runs outside the workflow (local runs and tests).
     """
-    self._workflow_execution_id = (workflow_execution_id or
-                                   LOCAL_WORKFLOW_EXECUTION_ID)
+    self._workflow_execution_id = workflow_execution_id or ""
     self._execution_metadata: dict | None = None
     # Provenance metadata, keyed by provenance DCID.
     self._provenance_data: dict[str, dict] = {}
@@ -175,8 +151,8 @@ class SummaryGenerator:
       end_time: ISO-8601 UTC time the run ended.
       report_dir: Where to write the report:
         ingestion/internal/reports/<workflowExecutionId>/ in the instance's
-        artifacts bucket for workflow runs, and <output_dir>/reports/local/
-        for local runs. Runner decides the directory.
+        artifacts bucket for workflow runs, and <output_dir>/reports/ for
+        runs outside the workflow. Runner decides the directory.
 
     Returns:
       The written report file, or None if building or writing it failed.
