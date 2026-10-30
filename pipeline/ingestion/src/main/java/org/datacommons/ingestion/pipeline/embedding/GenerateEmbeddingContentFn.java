@@ -32,26 +32,32 @@ import java.util.Set;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.GroupIntoBatches;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Values;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TypeDescriptor;
+import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.EdgeRecord;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
 
 /**
- * Generates {@link EmbeddingContent} payloads and FarmHash64 content keys from candidate {@link
- * NodeRecord} rows.
+ * Generates {@link EmbeddingContent} payloads and FarmHash64 content keys from batched candidate
+ * {@link NodeRecord} rows.
  *
  * <p>When predicates are configured in {@link EmbeddingSpec#nodeTypes()} (e.g., {@code
- * "description"} for {@code "Class"}), queries Spanner in batches for {@code Edge} and object
- * {@code Node.value} rows for the candidate {@code subject_id}s and aggregates them into the {@code
- * "properties"} JSON object.
+ * "description"} for {@code "Class"}), queries Spanner per batch for {@code Edge} and object {@code
+ * Node.value} rows for the candidate {@code subject_id}s and aggregates them into the JSON payload.
  */
-public class GenerateEmbeddingContentFn extends DoFn<NodeRecord, EmbeddingContent> {
+public class GenerateEmbeddingContentFn extends DoFn<Iterable<NodeRecord>, EmbeddingContent> {
   private static final Gson GSON = new Gson();
   private static final Set<String> NODE_TABLE_FIELDS =
       Set.of(NodeRecord.COL_SUBJECT_ID, NodeRecord.COL_NAME);
   public static final int PREDICATE_QUERY_BATCH_SIZE = 1000;
+  private static final int BATCH_SHARDS = 32;
 
   private final SpannerClient spannerClient;
   private final EmbeddingSpec spec;
@@ -59,7 +65,6 @@ public class GenerateEmbeddingContentFn extends DoFn<NodeRecord, EmbeddingConten
 
   private transient Spanner spanner;
   private transient DatabaseClient dbClient;
-  private transient List<NodeRecord> bufferedNodes;
 
   public GenerateEmbeddingContentFn(SpannerClient spannerClient, EmbeddingSpec spec) {
     this.spannerClient = spannerClient;
@@ -85,14 +90,33 @@ public class GenerateEmbeddingContentFn extends DoFn<NodeRecord, EmbeddingConten
       implements Serializable {}
 
   /**
-   * Step 3 of {@link EmbeddingPipeline}: resolves any configured predicate properties from Spanner
-   * and transforms {@code candidateNodes} into {@link EmbeddingContent} records for {@code spec}.
+   * Step 3 of {@link EmbeddingPipeline}: batches {@code candidateNodes} via {@link
+   * GroupIntoBatches}, resolves any configured predicate properties from Spanner, and transforms
+   * candidates into {@link EmbeddingContent} records for {@code spec}.
    */
   public static PCollection<EmbeddingContent> generateEmbeddingContent(
       PCollection<NodeRecord> candidateNodes, SpannerClient spannerClient, EmbeddingSpec spec) {
-    return candidateNodes.apply(
-        "GenerateEmbeddingContent_" + spec.embeddingLabel(),
-        ParDo.of(new GenerateEmbeddingContentFn(spannerClient, spec)));
+    String label = spec.embeddingLabel();
+    return candidateNodes
+        .apply(
+            "KeyCandidatesForBatching_" + label,
+            MapElements.into(
+                    TypeDescriptors.kvs(
+                        TypeDescriptors.integers(), TypeDescriptor.of(NodeRecord.class)))
+                .via(
+                    n ->
+                        KV.of(
+                            Math.floorMod(
+                                (n.subjectId() == null ? "" : n.subjectId()).hashCode(),
+                                BATCH_SHARDS),
+                            n)))
+        .apply(
+            "BatchCandidatesForContent_" + label,
+            GroupIntoBatches.ofSize(PREDICATE_QUERY_BATCH_SIZE))
+        .apply("ExtractCandidateBatches_" + label, Values.create())
+        .apply(
+            "GenerateEmbeddingContent_" + label,
+            ParDo.of(new GenerateEmbeddingContentFn(spannerClient, spec)));
   }
 
   @Setup
@@ -110,62 +134,40 @@ public class GenerateEmbeddingContentFn extends DoFn<NodeRecord, EmbeddingConten
     }
   }
 
-  @StartBundle
-  public void startBundle() {
-    this.bufferedNodes = new ArrayList<>();
-  }
-
   @ProcessElement
   public void processElement(
-      @Element NodeRecord candidate, OutputReceiver<EmbeddingContent> receiver) {
-    if (candidate == null
-        || candidate.subjectId() == null
-        || candidate.subjectId().trim().isEmpty()
-        || candidate.name() == null
-        || candidate.name().trim().isEmpty()) {
+      @Element Iterable<NodeRecord> candidates, OutputReceiver<EmbeddingContent> receiver) {
+    if (candidates == null) {
       return;
     }
 
-    if (getAllowedPredicatesForNode(candidate.types(), spec).isEmpty()) {
-      EmbeddingContent content = buildEmbeddingContent(candidate, Map.of(), spec);
-      if (content != null) {
+    List<NodeRecord> nodesWithPredicates = new ArrayList<>();
+    for (NodeRecord candidate : candidates) {
+      if (candidate == null
+          || candidate.subjectId() == null
+          || candidate.subjectId().trim().isEmpty()
+          || candidate.name() == null
+          || candidate.name().trim().isEmpty()) {
+        continue;
+      }
+
+      if (getAllowedPredicatesForNode(candidate.types(), spec).isEmpty()) {
+        EmbeddingContent content = buildEmbeddingContent(candidate, Map.of(), spec);
+        if (content != null) {
+          contentCounter.inc();
+          receiver.output(content);
+        }
+      } else {
+        nodesWithPredicates.add(candidate);
+      }
+    }
+
+    if (!nodesWithPredicates.isEmpty()) {
+      for (EmbeddingContent content : buildBatchContents(nodesWithPredicates)) {
         contentCounter.inc();
         receiver.output(content);
       }
-      return;
     }
-
-    bufferedNodes.add(candidate);
-    if (bufferedNodes.size() >= PREDICATE_QUERY_BATCH_SIZE) {
-      flushBufferedNodes(receiver);
-    }
-  }
-
-  @FinishBundle
-  public void finishBundle(FinishBundleContext context) {
-    if (bufferedNodes == null || bufferedNodes.isEmpty()) {
-      return;
-    }
-    List<EmbeddingContent> outputs = buildBatchContents(bufferedNodes);
-    for (EmbeddingContent content : outputs) {
-      contentCounter.inc();
-      context.output(
-          content,
-          org.apache.beam.sdk.transforms.windowing.BoundedWindow.TIMESTAMP_MIN_VALUE,
-          org.apache.beam.sdk.transforms.windowing.GlobalWindow.INSTANCE);
-    }
-    bufferedNodes.clear();
-  }
-
-  private void flushBufferedNodes(OutputReceiver<EmbeddingContent> receiver) {
-    if (bufferedNodes.isEmpty()) {
-      return;
-    }
-    for (EmbeddingContent content : buildBatchContents(bufferedNodes)) {
-      contentCounter.inc();
-      receiver.output(content);
-    }
-    bufferedNodes.clear();
   }
 
   private List<EmbeddingContent> buildBatchContents(List<NodeRecord> batchNodes) {

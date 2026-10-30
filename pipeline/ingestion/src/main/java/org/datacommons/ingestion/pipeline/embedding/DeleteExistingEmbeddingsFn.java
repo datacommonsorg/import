@@ -14,15 +14,12 @@
 
 package org.datacommons.ingestion.pipeline.embedding;
 
-import com.google.cloud.spanner.DatabaseClient;
-import com.google.cloud.spanner.Spanner;
-import com.google.cloud.spanner.SpannerException;
-import com.google.cloud.spanner.Statement;
-import com.google.common.collect.Lists;
-import java.util.ArrayList;
+import com.google.cloud.spanner.KeyRange;
+import com.google.cloud.spanner.KeySet;
+import com.google.cloud.spanner.Mutation;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
+import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -35,45 +32,51 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Deletes existing embeddings in Spanner for a target {@code embedding_label} and candidate {@code
- * subject_id}s in batches of {@link #DELETE_BATCH_SIZE} using Partitioned DML.
+ * Builds primary-key prefix delete {@link Mutation}s in batches of {@link #DELETE_BATCH_SIZE} for a
+ * target {@code embedding_label} and candidate {@code subject_id}s, and writes them to Spanner via
+ * {@link SpannerClient#writeMutations}.
  */
-public class DeleteExistingEmbeddingsFn extends DoFn<Iterable<String>, Void> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(DeleteExistingEmbeddingsFn.class);
+public class DeleteExistingEmbeddingsFn extends DoFn<Iterable<String>, Mutation> {
   public static final int DELETE_BATCH_SIZE = 1000;
   private static final int DELETE_SHARDS = 32;
 
-  private final SpannerClient spannerClient;
   private final String embeddingTable;
   private final String embeddingLabel;
-  private final Counter deletedRowsCounter;
-  private transient Spanner spanner;
-  private transient DatabaseClient dbClient;
+  private final Counter deletedNodesCounter;
 
-  public DeleteExistingEmbeddingsFn(
-      SpannerClient spannerClient, String embeddingTable, String embeddingLabel) {
-    this.spannerClient = spannerClient;
+  public DeleteExistingEmbeddingsFn(String embeddingTable, String embeddingLabel) {
     this.embeddingTable = embeddingTable;
     this.embeddingLabel = embeddingLabel;
-    this.deletedRowsCounter =
+    this.deletedNodesCounter =
         Metrics.counter(
-            DeleteExistingEmbeddingsFn.class, "embedding_deleted_rows:" + embeddingLabel);
+            DeleteExistingEmbeddingsFn.class, "embedding_deleted_nodes:" + embeddingLabel);
   }
 
   /**
-   * Step 2 of {@link EmbeddingPipeline}: batches candidate {@code subject_id}s and deletes their
-   * existing rows in {@code embeddingTable} for {@code embeddingLabel}, returning a completion
-   * signal {@link PCollection} for {@code Wait.on}.
+   * Step 2 of {@link EmbeddingPipeline}: batches candidate {@code subject_id}s, builds prefix
+   * delete {@link Mutation}s for {@code embeddingTable} and {@code embeddingLabel}, and writes them
+   * via {@link SpannerClient#writeMutations}, returning a completion signal {@link PCollection} for
+   * {@code Wait.on}.
    */
   public static PCollection<Void> deleteExistingEmbeddings(
       PCollection<NodeRecord> candidateNodes,
       SpannerClient spannerClient,
       String embeddingTable,
       String embeddingLabel) {
+    PCollection<Mutation> deleteMutations =
+        buildDeleteMutations(candidateNodes, embeddingTable, embeddingLabel);
+    SpannerWriteResult writeResult =
+        spannerClient.writeMutations(
+            candidateNodes.getPipeline(),
+            "WriteDeletedEmbeddings_" + embeddingLabel,
+            deleteMutations);
+    return writeResult.getOutput();
+  }
+
+  static PCollection<Mutation> buildDeleteMutations(
+      PCollection<NodeRecord> candidateNodes, String embeddingTable, String embeddingLabel) {
     return candidateNodes
         .apply(
             "KeyCandidateIdsForDelete_" + embeddingLabel,
@@ -88,28 +91,14 @@ public class DeleteExistingEmbeddingsFn extends DoFn<Iterable<String>, Void> {
             GroupIntoBatches.ofSize(DELETE_BATCH_SIZE))
         .apply("ExtractCandidateIdBatches_" + embeddingLabel, Values.create())
         .apply(
-            "DeleteExistingEmbeddings_" + embeddingLabel,
-            ParDo.of(
-                new DeleteExistingEmbeddingsFn(spannerClient, embeddingTable, embeddingLabel)));
-  }
-
-  @Setup
-  public void setup() {
-    this.spanner = spannerClient.createSpanner();
-    this.dbClient = spannerClient.getDatabaseClient(spanner);
-  }
-
-  @Teardown
-  public void teardown() {
-    if (spanner != null) {
-      spanner.close();
-    }
+            "BuildDeleteEmbeddingMutations_" + embeddingLabel,
+            ParDo.of(new DeleteExistingEmbeddingsFn(embeddingTable, embeddingLabel)));
   }
 
   @ProcessElement
-  public void processElement(@Element Iterable<String> subjectIds, OutputReceiver<Void> receiver) {
+  public void processElement(
+      @Element Iterable<String> subjectIds, OutputReceiver<Mutation> receiver) {
     if (subjectIds == null) {
-      receiver.output(null);
       return;
     }
 
@@ -121,45 +110,26 @@ public class DeleteExistingEmbeddingsFn extends DoFn<Iterable<String>, Void> {
     }
 
     if (uniqueIds.isEmpty()) {
-      receiver.output(null);
       return;
     }
 
-    String deleteSql = buildDeleteDml(embeddingTable);
-    long totalDeleted = 0L;
-    for (List<String> batch : Lists.partition(new ArrayList<>(uniqueIds), DELETE_BATCH_SIZE)) {
-      Statement stmt =
-          Statement.newBuilder(deleteSql)
-              .bind("embedding_label")
-              .to(embeddingLabel)
-              .bind("subject_ids")
-              .toStringArray(batch)
-              .build();
-      try {
-        long deleted = dbClient.executePartitionedUpdate(stmt);
-        totalDeleted += deleted;
-        deletedRowsCounter.inc(deleted);
-      } catch (SpannerException e) {
-        throw new IllegalStateException(
-            String.format(
-                "Failed to delete existing embeddings in '%s' for label '%s'",
-                embeddingTable, embeddingLabel),
-            e);
-      }
-    }
-
-    LOGGER.info(
-        "Deleted {} existing embedding rows in {} for {} nodes (label: '{}').",
-        totalDeleted,
-        embeddingTable,
-        uniqueIds.size(),
-        embeddingLabel);
-    receiver.output(null);
+    deletedNodesCounter.inc(uniqueIds.size());
+    receiver.output(buildDeleteMutation(embeddingTable, embeddingLabel, uniqueIds));
   }
 
-  public static String buildDeleteDml(String embeddingTable) {
-    return String.format(
-        "DELETE FROM %s WHERE embedding_label = @embedding_label AND subject_id IN UNNEST(@subject_ids)",
-        embeddingTable);
+  /**
+   * Builds a {@link Mutation#delete(String, KeySet)} targeting the composite primary key prefix
+   * {@code (subject_id, embedding_label)} for each subject ID in {@code subjectIds}.
+   */
+  public static Mutation buildDeleteMutation(
+      String embeddingTable, String embeddingLabel, Iterable<String> subjectIds) {
+    KeySet.Builder keySetBuilder = KeySet.newBuilder();
+    for (String id : subjectIds) {
+      if (id != null && !id.isEmpty()) {
+        keySetBuilder.addRange(
+            KeyRange.prefix(com.google.cloud.spanner.Key.of(id, embeddingLabel)));
+      }
+    }
+    return Mutation.delete(embeddingTable, keySetBuilder.build());
   }
 }
