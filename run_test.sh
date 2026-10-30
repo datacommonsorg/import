@@ -81,10 +81,13 @@ function py_test {
   ROOT_DIR=$(pwd)
 
   cd simple
-  pip3 install -r requirements.txt -q
+  pip3 install -r requirements_test.txt -q
 
   echo -e "#### Running stats tests"
   python3 -m pytest tests/ kg_util/ -s
+
+  echo -e "#### Running preprocessor test suite"
+  python3 -m pytest testsuite/ -n auto
 
   echo -e "#### Running ingestion helper tests"
   cd "${ROOT_DIR}/pipeline/workflow/ingestion-helper"
