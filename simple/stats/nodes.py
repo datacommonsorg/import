@@ -124,6 +124,54 @@ class Nodes:
     return src
 
   @thread_safe
+  def merge_metadata(self, provenances: dict[str, Provenance],
+                     sources: dict[str, Source]) -> None:
+    """Registers Provenance and Source nodes held by another `Nodes`.
+
+    Worker processes each build their own `Nodes`, so this is how metadata
+    crosses process boundaries in both directions: the coordinator's nodes
+    seed each worker, and the nodes a worker adds are merged back into the
+    coordinator. Each node goes through `register_source` or
+    `register_provenance`, so:
+    - `name`, `url`, `source_id` and a Source's `provenance_id` keep the first
+      non-empty value; a non-empty `name` is also (re)pointed at the node as a
+      lookup key.
+    - a Provenance's custom `properties` are updated, so the last value of each
+      wins. A Source's custom `properties` are not merged.
+    - `has_custom_mcf_nodes` is set, except by the built-in default provenance
+      and source: every `Nodes` already has them, so they are skipped.
+    Registering a node again (e.g. under both its id and name keys) changes
+    nothing.
+    """
+    for src in sources.values():
+      if src.id == _DEFAULT_SOURCE.id:
+        continue
+      self.register_source(id=src.id,
+                           name=src.name,
+                           url=src.url,
+                           provenance_id=src.provenance_id)
+    for prov in provenances.values():
+      if prov.id == _DEFAULT_PROVENANCE.id:
+        continue
+      self.register_provenance(id=prov.id,
+                               name=prov.name,
+                               url=prov.url,
+                               source_id=prov.source_id,
+                               properties=prov.properties)
+
+  @thread_safe
+  def used_metadata_ids(self) -> tuple[set[str], set[str]]:
+    """Returns copies of the provenance and source ids that imports used."""
+    return set(self._used_provenance_ids), set(self._used_source_ids)
+
+  @thread_safe
+  def mark_metadata_used(self, provenance_ids: set[str],
+                         source_ids: set[str]) -> None:
+    """Records provenance and source ids that imports in another `Nodes` used."""
+    self._used_provenance_ids.update(provenance_ids)
+    self._used_source_ids.update(source_ids)
+
+  @thread_safe
   def provenance(self, input_file: File) -> Provenance:
     prov_name = self.config.provenance_name(input_file)
     if not prov_name:

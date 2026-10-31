@@ -19,12 +19,15 @@ a source. Most tests here replace the shared provenance.mcf (see
 _provenance_mcf) to vary that.
 """
 
+import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
-from testsuite.lib.builders import known_bug
 
 _ONE_ROW = b.csv_file(b.obs_row())
+# Modes that must give the same result: threaded, and production
+# (multiprocessing), where each file is imported by its own worker process.
+_MODES = ("threaded", "production")
 
 
 def _provenance_mcf(with_source: bool = True,
@@ -110,14 +113,159 @@ def test_provenance_url_is_copied_onto_observations():
                    [b.obs(provenanceUrl="https://source.example.org/dataset")])
 
 
-@known_bug(reason="with use_multiprocessing=True (production), observations"
-           " lose dcid:provenanceUrl")
 def test_provenance_url_survives_the_production_path():
   result = b.run_csv(_ONE_ROW,
                      mode="production",
                      shared_files=_PROVENANCE_WITH_URL)
   b.assert_records(result.observations,
                    [b.obs(provenanceUrl="https://source.example.org/dataset")])
+
+
+# --- Production (multiprocessing) path ----------------------------------------
+#
+# In production mode each file is imported in its own worker process. MCF
+# workers finish first; CSV workers then start from the provenances and
+# sources the MCF files registered.
+
+# Several CSV workers, so that without the MCF stage finishing first, a CSV
+# worker's result would likely be merged before the MCF one.
+_NUM_CSVS = 8
+_MANY_CSVS = {
+    f"case{i}.csv": b.csv_file(b.obs_row(f"country/C{i}"))
+    for i in range(_NUM_CSVS)
+}
+
+
+def test_csv_workers_use_the_provenance_defined_in_mcf():
+  """
+  CSV workers find the MCF provenance instead of auto-creating their own.
+
+  Without that, the provenanceUrl assertion always fails. The record
+  assertions (nothing added to or removed from what the shared MCF writes)
+  catch an auto-created provenance replacing the MCF one, which depends on
+  merge order.
+  """
+  result = b.run(_MANY_CSVS,
+                 b.obs_config(b.OBS_MAPPINGS),
+                 mode="production",
+                 shared_files=_PROVENANCE_WITH_URL)
+  b.assert_records(result.of_type("Provenance"), [])
+  b.assert_records(result.of_type("Source"), [])
+  b.assert_records(result.removed, [])
+  b.assert_records(result.observations, [
+      b.obs(f"country/C{i}", provenanceUrl="https://source.example.org/dataset")
+      for i in range(_NUM_CSVS)
+  ])
+
+
+# --- Default provenance and source --------------------------------------------
+#
+# Files whose provenance is dcid:c/p/default use the built-in default
+# provenance and source. They are written only when some file uses them, or
+# when there are no MCF-defined metadata nodes at all.
+
+_DEFAULT_PROVENANCE = b.record("c/p/default",
+                               "Provenance",
+                               name="Custom Import",
+                               source=b.ref("c/s/default"),
+                               url="custom-import")
+_DEFAULT_SOURCE = b.record("c/s/default", "Source", name="Custom Data Commons")
+_DEFAULT_PROVENANCE_CSV = {
+    "pattern": "case*.csv",
+    "provenance": "dcid:c/p/default",
+    "columnMappings": b.OBS_MAPPINGS,
+}
+
+
+@pytest.mark.parametrize("mode", _MODES)
+def test_csv_only_run_writes_the_default_provenance_and_source(mode):
+  result = b.run({"case.csv": _ONE_ROW},
+                 {"inputFiles": [_DEFAULT_PROVENANCE_CSV]},
+                 mode=mode,
+                 shared_files={})
+  b.assert_records(result.of_type("Provenance"), [_DEFAULT_PROVENANCE])
+  b.assert_records(result.of_type("Source"), [_DEFAULT_SOURCE])
+
+
+@pytest.mark.parametrize("mode", _MODES)
+def test_default_provenance_used_next_to_mcf_metadata_is_written(mode):
+  result = b.run(
+      {"case.csv": _ONE_ROW},
+      {"inputFiles": [*b.MCF_CONFIG["inputFiles"], _DEFAULT_PROVENANCE_CSV]},
+      mode=mode)
+  b.assert_records(result.of_type("Provenance"), [_DEFAULT_PROVENANCE])
+  b.assert_records(result.of_type("Source"), [_DEFAULT_SOURCE])
+
+
+# --- Failed files -------------------------------------------------------------
+#
+# Every file of a stage runs even if others fail. Once the stage is done, the
+# run fails with one error that names every failed file, and an MCF failure
+# keeps the CSV stage from starting.
+
+_BAD_VALUE = ("ValueError: Invalid non-numeric value(s) found in observation"
+              " values of file")
+
+
+@pytest.mark.parametrize("mode", _MODES)
+def test_every_failed_csv_is_reported_together(mode):
+  result = b.run(
+      {
+          "case_a.csv": b.csv_file(b.obs_row("country/A")),
+          "case_bad1.csv": b.csv_file(b.obs_row("country/B", value="abc")),
+          "case_bad2.csv": b.csv_file(b.obs_row("country/C", value="xyz")),
+          "case_d.csv": b.csv_file(b.obs_row("country/D")),
+      },
+      b.obs_config(b.OBS_MAPPINGS),
+      mode=mode)
+  assert result.error["type"] == "FileImportsFailedError"
+  assert result.error["message"].startswith("2 files failed to import:\n"
+                                            f"  case_bad1.csv: {_BAD_VALUE}")
+  assert f"\n  case_bad2.csv: {_BAD_VALUE}" in result.error["message"]
+
+
+def test_files_after_a_failed_one_still_run():
+  """
+  A failure does not cancel the rest of its stage.
+
+  Production workers upload their output as they finish, so the good files'
+  observations show that they ran. (Leaving that output behind is a known
+  gap; see test_every_invalid_column_header_is_reported_at_once.)
+  """
+  result = b.run(
+      {
+          "case_a.csv": b.csv_file(b.obs_row("country/A")),
+          "case_bad.csv": b.csv_file(b.obs_row("country/B", value="abc")),
+          "case_c.csv": b.csv_file(b.obs_row("country/C")),
+      },
+      b.obs_config(b.OBS_MAPPINGS),
+      mode="production")
+  assert result.error["type"] == "ValueError"
+  observed = {
+      r["dcid:observationAbout"]["@id"]
+      for r in result.records
+      if r.get("@type") == "dcid:StatVarObservation"
+  }
+  assert observed == {"dcid:country/A", "dcid:country/C"}
+
+
+@pytest.mark.parametrize("mode", _MODES)
+def test_failed_mcf_files_are_reported_together_and_stop_the_csv_stage(mode):
+  result = b.run(
+      {
+          "bad1.mcf": "typeOf: dcs:Thing\nNode: dcid:T1\n",
+          "bad2.mcf": "typeOf: dcs:Thing\nNode: dcid:T2\n",
+          "case.csv": _ONE_ROW,
+      },
+      b.obs_config(b.OBS_MAPPINGS),
+      mode=mode)
+  assert result.error["type"] == "FileImportsFailedError"
+  assert result.error["message"].startswith(
+      "2 files failed to import:\n  bad1.mcf: AssertionError:")
+  assert "\n  bad2.mcf: AssertionError:" in result.error["message"]
+  assert not [
+      r for r in result.records if r.get("@type") == "dcid:StatVarObservation"
+  ]
 
 
 # --- Validation ---------------------------------------------------------------
