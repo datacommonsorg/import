@@ -300,14 +300,6 @@ def entity(dcid: str, row_type: str = "Author", **props: Any) -> dict:
   return record(dcid, row_type, includedIn=ref(PROVENANCE), **props)
 
 
-def class_node(name: str) -> dict:
-  """The Class node an entities import writes for its row type."""
-  return record(name,
-                "Class",
-                name=name,
-                includedIn=[ref(PROVENANCE), ref(SOURCE)])
-
-
 def property_node(name: str, dcid: str | None = None) -> dict:
   """The Property node written for a CSV column (dcid defaults to name)."""
   return record(dcid or name, "Property", name=name)

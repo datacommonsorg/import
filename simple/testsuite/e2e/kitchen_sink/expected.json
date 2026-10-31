@@ -31,14 +31,7 @@
           "dcid:Author": {
             "@id": "dcid:Author",
             "@type": "dcid:Class",
-            "dcid:includedIn": [
-              {
-                "@id": "dcid:KitchenProvenance"
-              },
-              {
-                "@id": "dcid:KitchenSource"
-              }
-            ],
+            "dcid:description": "A person who wrote an article",
             "dcid:name": "Author"
           },
           "dcid:Count_Person_Female": {
