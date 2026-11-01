@@ -1,0 +1,10 @@
+Node: dcid:KitchenSource
+typeOf: dcs:Source
+name: "Kitchen Source"
+url: "https://kitchen.example.org"
+
+Node: dcid:KitchenProvenance
+typeOf: dcs:Provenance
+name: "Kitchen Provenance"
+source: dcid:KitchenSource
+url: "https://kitchen.example.org/dataset"

@@ -21,3 +21,7 @@ steps:
       - -c
       - |
         ./run_test.sh -l -p
+
+options:
+  machineType: "E2_HIGHCPU_32"
+

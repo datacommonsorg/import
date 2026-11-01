@@ -26,7 +26,6 @@ from stats.reporter import ImportReporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import RecordingGraphWriter
-from tests.stats.test_util import use_fake_gzip_time
 from tests.stats.test_util import write_triples_list
 from util.filesystem import create_store
 
@@ -34,8 +33,6 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "entities_importer")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-use_fake_gzip_time()
 
 
 def _test_import(test: unittest.TestCase, test_name: str):
@@ -67,7 +64,13 @@ def _test_import(test: unittest.TestCase, test_name: str):
                      graph_writer=graph_writer,
                      reporter=reporter,
                      nodes=nodes).do_import()
-    graph_writer.write_triples(nodes.triples())
+    for node_group in (nodes.sources, nodes.provenances, nodes.groups,
+                       nodes.entity_types, nodes.properties):
+      for node in node_group.values():
+        if node in (nodes.sources.get("c/s/default"),
+                    nodes.provenances.get("c/p/default")):
+          continue
+        graph_writer.write_triples(node.triples())
     graph_writer.commit_and_close()
 
     write_triples_list(graph_writer.triples, output_triples_path)

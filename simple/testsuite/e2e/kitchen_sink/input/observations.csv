@@ -1,0 +1,8 @@
+place,stat,year,amount,unit,notes
+dcid:country/USA,Count_Person_Female,2020,168000000,,"census, final"
+dcid:country/USA,Count_Person_Female,2021,169000000,,
+dcid:country/FRA,Count_Person_Female,2020,34500000,,"multi
+line note"
+dcid:country/FRA,Median_Age_Person,2020,42.3,Year,
+dcid:country/USA,Median_Age_Person,2020,38.5,Year,
+kitchen/Region1,Count_Person_Female,2020,1200,,

@@ -1,0 +1,348 @@
+{
+  "error": null,
+  "handshake": {
+    "generateStatVarGroups": true,
+    "importList": [
+      {
+        "graphPath": "<output>/jsonld/<run>/KitchenProvenance/**/*.jsonld",
+        "importName": "KitchenProvenance"
+      }
+    ]
+  },
+  "records": {
+    "any_folder": [
+      {
+        "@id": "dcid:KitchenSource",
+        "@type": "dcid:Source",
+        "dcid:domain": "kitchen.example.org",
+        "dcid:name": "Kitchen Source",
+        "dcid:url": "https://kitchen.example.org"
+      },
+      {
+        "@id": "dcid:KitchenSource",
+        "@type": "dcid:Source",
+        "dcid:name": "Kitchen Source",
+        "dcid:url": "https://kitchen.example.org"
+      }
+    ],
+    "folders": {
+      "KitchenProvenance": {
+        "nodes": {
+          "dcid:Author": {
+            "@id": "dcid:Author",
+            "@type": "dcid:Class",
+            "dcid:includedIn": [
+              {
+                "@id": "dcid:KitchenProvenance"
+              },
+              {
+                "@id": "dcid:KitchenSource"
+              }
+            ],
+            "dcid:name": "Author"
+          },
+          "dcid:Count_Person_Female": {
+            "@id": "dcid:Count_Person_Female",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:gender": {
+              "@id": "dcid:Female"
+            },
+            "dcid:measuredProperty": {
+              "@id": "dcid:count"
+            },
+            "dcid:name": "Female population",
+            "dcid:populationType": {
+              "@id": "dcid:Person"
+            },
+            "dcid:statType": {
+              "@id": "dcid:measuredValue"
+            }
+          },
+          "dcid:KitchenProvenance": [
+            {
+              "@id": "dcid:KitchenProvenance",
+              "@type": "dcid:Provenance",
+              "dcid:name": "Kitchen Provenance",
+              "dcid:source": {
+                "@id": "dcid:KitchenSource"
+              },
+              "dcid:url": "https://kitchen.example.org/dataset"
+            },
+            {
+              "@id": "dcid:KitchenProvenance",
+              "@type": "dcid:Provenance",
+              "dcid:name": "Kitchen Provenance",
+              "dcid:source": {
+                "@id": "dcid:KitchenSource"
+              },
+              "dcid:url": "https://kitchen.example.org/dataset"
+            }
+          ],
+          "dcid:Median_Age_Person": {
+            "@id": "dcid:Median_Age_Person",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+              "@id": "dcid:age"
+            },
+            "dcid:name": "Median age",
+            "dcid:populationType": {
+              "@id": "dcid:Person"
+            },
+            "dcid:statType": {
+              "@id": "dcid:medianValue"
+            }
+          },
+          "dcid:author1": {
+            "@id": "dcid:author1",
+            "@type": "dcid:Author",
+            "dcid:author_country": "country/USA",
+            "dcid:author_id": "author1",
+            "dcid:author_name": "Jane Doe",
+            "dcid:includedIn": {
+              "@id": "dcid:KitchenProvenance"
+            }
+          },
+          "dcid:author2": {
+            "@id": "dcid:author2",
+            "@type": "dcid:Author",
+            "dcid:author_country": "country/CAN",
+            "dcid:author_id": "author2",
+            "dcid:author_name": "Joe Smith",
+            "dcid:includedIn": {
+              "@id": "dcid:KitchenProvenance"
+            }
+          },
+          "dcid:author_country": {
+            "@id": "dcid:author_country",
+            "@type": "dcid:Property",
+            "dcid:name": "author_country"
+          },
+          "dcid:author_id": {
+            "@id": "dcid:author_id",
+            "@type": "dcid:Property",
+            "dcid:name": "author_id"
+          },
+          "dcid:author_name": {
+            "@id": "dcid:author_name",
+            "@type": "dcid:Property",
+            "dcid:name": "author_name"
+          },
+          "dcid:c/g/Root": {
+            "@id": "dcid:c/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Custom Variables",
+            "dcid:specializationOf": {
+              "@id": "dcid:dc/g/Root"
+            }
+          },
+          "dcid:dc/g/Root": {
+            "@id": "dcid:dc/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Data Commons Variables"
+          },
+          "dcid:destination": {
+            "@id": "dcid:destination",
+            "@type": "dcid:Property",
+            "dcid:name": "destination"
+          },
+          "dcid:kitchen/Region1": {
+            "@id": "dcid:kitchen/Region1",
+            "@type": "dcid:AdministrativeArea",
+            "dcid:containedInPlace": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:name": "Region One, North"
+          }
+        },
+        "observations": {
+          "dcid:obs_18306a8ac534a683eb1fa397123f8fbc77e4be1a54c7c7ff6b2ea6b1aa21222e": {
+            "@id": "dcid:obs_18306a8ac534a683eb1fa397123f8fbc77e4be1a54c7c7ff6b2ea6b1aa21222e",
+            "@type": "dcid:StatVarObservation",
+            "dcid:destination": {
+              "@id": "dcid:country/FRA"
+            },
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:value": 10,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Trip",
+              "dcid:observationProperties": [
+                "dcid:observationAbout",
+                "dcid:destination"
+              ]
+            }
+          },
+          "dcid:obs_2dc3fb2fcbfbe9c0fbeba04247d6bfb9de4cda1edc515c711085993204b98a2a": {
+            "@id": "dcid:obs_2dc3fb2fcbfbe9c0fbeba04247d6bfb9de4cda1edc515c711085993204b98a2a",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:unit": {
+              "@id": "dcid:Year"
+            },
+            "dcid:value": 38.5,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Median_Age_Person",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          },
+          "dcid:obs_32246fb1e40e157785bd48a937578be0ec40b135a761c3837b95a53b8634e03f": {
+            "@id": "dcid:obs_32246fb1e40e157785bd48a937578be0ec40b135a761c3837b95a53b8634e03f",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2021,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:value": 169000000,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Person_Female",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          },
+          "dcid:obs_3488d1f468115643d7b9a12813222eb2b8f901feae4e073fb3da925f9256f444": {
+            "@id": "dcid:obs_3488d1f468115643d7b9a12813222eb2b8f901feae4e073fb3da925f9256f444",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:kitchen/Region1"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:value": 1200,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Person_Female",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          },
+          "dcid:obs_3df5033378eb8785fbf5075f57d3f1541704b6caa6bce6d0379278d618fc17bf": {
+            "@id": "dcid:obs_3df5033378eb8785fbf5075f57d3f1541704b6caa6bce6d0379278d618fc17bf",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/FRA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:unit": {
+              "@id": "dcid:Year"
+            },
+            "dcid:value": 42.3,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Median_Age_Person",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          },
+          "dcid:obs_67c52bc86d852d7490faed5a10828baed6bfd2d0e5b99eae2066e48c2440af3f": {
+            "@id": "dcid:obs_67c52bc86d852d7490faed5a10828baed6bfd2d0e5b99eae2066e48c2440af3f",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:value": 168000000,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Person_Female",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          },
+          "dcid:obs_71321524dfdc393d2ec53d740cb2dce27ce20557b85365afab0967863f0db0cd": {
+            "@id": "dcid:obs_71321524dfdc393d2ec53d740cb2dce27ce20557b85365afab0967863f0db0cd",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/FRA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:value": 34500000,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Person_Female",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          },
+          "dcid:obs_e3db16a4e39af8db99372286075642e3b2ee3c4c3e2ee46891322da43592a1de": {
+            "@id": "dcid:obs_e3db16a4e39af8db99372286075642e3b2ee3c4c3e2ee46891322da43592a1de",
+            "@type": "dcid:StatVarObservation",
+            "dcid:destination": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationAbout": {
+              "@id": "dcid:country/FRA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
+            "dcid:value": 7,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Trip",
+              "dcid:observationProperties": [
+                "dcid:observationAbout",
+                "dcid:destination"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "report": {
+    "importFiles": {
+      "<input>/authors.csv": {
+        "status": "SUCCESS"
+      },
+      "<input>/observations.csv": {
+        "status": "SUCCESS"
+      },
+      "<input>/provenance.mcf": {
+        "status": "SUCCESS"
+      },
+      "<input>/schema.mcf": {
+        "status": "SUCCESS"
+      },
+      "<input>/trips.csv": {
+        "status": "SUCCESS"
+      }
+    },
+    "status": "SUCCESS"
+  }
+}

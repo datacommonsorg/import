@@ -1,0 +1,9 @@
+{
+  "importName": "health_import",
+  "inputFiles": [
+    {"pattern": "*.mcf", "provenance": "dcid:healthProvenance"},
+    {"pattern": "data.csv", "provenance": "dcid:healthProvenance",
+     "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable",
+                        "dcid:observationDate": "date", "dcid:value": "value"}}
+  ]
+}

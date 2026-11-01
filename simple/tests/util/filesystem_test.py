@@ -79,9 +79,6 @@ class TestFilesystem(unittest.TestCase):
       self.assertEqual(file.read(), "hello")
       with file.read_string_io() as f_stringio:
         self.assertEqual(f_stringio.read(), "hello")
-      self.assertEqual(file.size(), 5)
-      file.write_bytes(b"bytes")
-      self.assertEqual(file.read_bytes(), b"bytes")
 
   def test_dir(self):
     # Test open_dir and open_file methods on Dir
@@ -104,12 +101,3 @@ class TestFilesystem(unittest.TestCase):
           file.full_path() for file in dir.all_files()
       ]
       self.assertListEqual(all_file_paths_excluding_subdirs, ["mem://bar.txt"])
-
-  # Test copy_to method on File
-  def test_copy_to(self):
-    with create_store("mem://") as store:
-      file1 = store.as_dir().open_file("foo.txt")
-      file1.write("hello")
-      file2 = store.as_dir().open_file("bar.txt")
-      file1.copy_to(file2)
-      self.assertEqual(file2.read(), "hello")

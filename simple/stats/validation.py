@@ -146,9 +146,9 @@ class MetadataValidator:
           for p in missing_sources
       ]
       ex = ValueError(
-          f"Metadata Validation Failed: Linked sources are missing for "
-          f"defined provenances:\n" + "\n".join(details) +
-          f"\nPlease specify a source property on these Provenance nodes.")
+          "Metadata Validation Failed: Linked sources are missing for "
+          "defined provenances:\n" + "\n".join(details) +
+          "\nPlease specify a source property on these Provenance nodes.")
       ex.error_type = ValidationErrorType.MISSING_SOURCE
       raise ex
 

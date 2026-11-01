@@ -10,7 +10,6 @@ Options:
   -i <dir>        Input directory to process
   -o <dir>        Output folder for stats importer. Default: $OUTPUT_DIR
   -m <dcpbridge>  Mode of operation for simple importer. Default: $MODE
-  -k <api-key>    DataCommons API Key
   -j <jar>        DC Import java jar file.
                     Download latest from https://github.com/datacommonsorg/import/releases/
   -r <steps>      Steps to run. Can be one or more from:
@@ -51,7 +50,6 @@ function parse_options {
     case $1 in
       -i) shift; INPUT_DIR=$(readlink -f "$1");;
       -c) shift; CONFIG=$(readlink -f "$1");;
-      -k) shift; DC_API_KEY="$1";;
       -o) shift; OUTPUT_DIR="$1";;
       -m) shift; MODE="$1";;
       -j) shift; DC_IMPORT_JAR="$1";;
@@ -140,13 +138,6 @@ function check_simple_import {
     echo_fatal "No input directory or config. Specify one of '-i' or '-c' command line options.
 $USAGE"
   fi
-
-  # Check for DC API key
-  if [[ "$DC_API_KEY" == "" ]]; then
-    echo_log "Warning: DC_API_KEY not set and may cause failures.
-Set a DataCommons API key with '-k' option.
-To get a key, please refer to https://docs.datacommons.org/api/rest/v2/getting_started#authentication"
-  fi
 }
 
 # Run the simple import on the specified config/input files.
@@ -154,9 +145,6 @@ To get a key, please refer to https://docs.datacommons.org/api/rest/v2/getting_s
 function simple_import {
   check_simple_import
   setup_python
-
-  # Export env variables for simple stats importer
-  export DC_API_KEY=${DC_API_KEY}
 
   # Build options for simple importer
   local importer_options=""

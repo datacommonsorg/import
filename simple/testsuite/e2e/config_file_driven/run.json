@@ -1,0 +1,4 @@
+{
+  "description": "Runner driven by a config file whose dataDownloadUrl points at the data directory. Only files matching an inputFiles pattern (glob countries_*.csv) are imported; other.csv is ignored.",
+  "config_file": "config.json"
+}

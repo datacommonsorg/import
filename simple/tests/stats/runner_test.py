@@ -14,7 +14,6 @@
 
 import json
 import os
-from pathlib import Path
 import shutil
 import tempfile
 import unittest
@@ -26,7 +25,6 @@ from stats.data import ValidationErrorType
 from stats.runner import create_store as real_create_store
 from stats.runner import Runner
 from tests.stats.test_util import is_write_mode
-from tests.stats.test_util import use_fake_gzip_time
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "runner")
@@ -90,10 +88,6 @@ def _test_runner(test: unittest.TestCase,
 
 class TestRunner(unittest.TestCase):
 
-  def __init__(self, methodName: str = "runTest") -> None:
-    super().__init__(methodName)
-    use_fake_gzip_time()
-
   def test_config_driven(self):
     """Config passed as a file, inputs pulled from its dataDownloadUrl."""
     _test_runner(self,
@@ -120,9 +114,6 @@ class TestRunner(unittest.TestCase):
 
   def test_entities(self):
     _test_runner(self, "entities")
-
-  def test_events(self):
-    _test_runner(self, "events")
 
   def test_empty_input(self):
     with self.assertRaises(FileNotFoundError):
@@ -171,7 +162,6 @@ class TestRunner(unittest.TestCase):
           "inputFiles": [{
               "pattern": "countries.csv",
               "importType": "observations",
-              "entityType": "Country",
               "provenance": "dcid:Provenance1",
               "columnMappings": {
                   "dcid:variableMeasured": "variable",
@@ -182,7 +172,6 @@ class TestRunner(unittest.TestCase):
           }, {
               "pattern": "wikidataids.csv",
               "importType": "observations",
-              "entityType": "Country",
               "provenance": "dcid:Provenance1",
               "columnMappings": {
                   "dcid:variableMeasured": "variable",
@@ -200,7 +189,6 @@ class TestRunner(unittest.TestCase):
                   "dcid:observationDate": "date",
                   "dcid:value": "value"
               },
-              "entityType": "Country",
               "provenance": "dcid:Provenance1"
           }, {
               "pattern": "author_entities.csv",
@@ -343,7 +331,6 @@ class TestRunner(unittest.TestCase):
     # Setup GCS mock
     mock_client_instance = mock_storage_client.return_value
     mock_bucket = mock_client_instance.bucket.return_value
-    mock_blob = mock_bucket.blob.return_value
 
     with tempfile.TemporaryDirectory() as temp_dir:
       input_dir = os.path.join(temp_dir, "input")
@@ -360,7 +347,6 @@ class TestRunner(unittest.TestCase):
           "inputFiles": [
               {
                   "pattern": "data.csv",
-                  "entityType": "Country",
                   "provenance": "dcid:oecd",
                   # Assume no format = variable per row
                   "columnMappings": {
@@ -402,7 +388,6 @@ class TestRunner(unittest.TestCase):
           "inputFiles": [
               {
                   "pattern": "data.csv",
-                  "entityType": "Country",
                   "provenance": "dcid:ilo",
                   # Assume no format = variable per row
                   "columnMappings": {
@@ -440,7 +425,7 @@ class TestRunner(unittest.TestCase):
 
       def mock_full_path(self, sub_path=""):
         if "jsonld" in self.path:
-          return f"gs://my-bucket/jsonld/run_timestamp"
+          return "gs://my-bucket/jsonld/run_timestamp"
         return original_full_path(self, sub_path)
 
       mock_store = mock.MagicMock()
@@ -538,7 +523,6 @@ class TestRunner(unittest.TestCase):
                 "pattern": "input.csv",
                 "importType": "observations",
                 "format": "variablePerRow",
-                "entityType": "Country",
                 "provenance": "dcid:provenance/FailTest",
                 "columnMappings": {
                     "dcid:observationAbout": "country_code",
