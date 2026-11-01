@@ -192,20 +192,19 @@ class AggregationDeleter:
             get_provenance_name(name, self.is_base_dc) for name in imports_to_delete
         ]
 
-        sql = (
-            "DELETE FROM KeyValueStore "
-            "WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)"
-        )
+        delete_queries = [
+            (
+                "KeyValueStore",
+                "DELETE FROM KeyValueStore "
+                "WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)",
+                " (ProvenanceSummary records)",
+            ),
+        ]
         params = {"provenances": provenance_names}
         param_types = {
             "provenances": spanner.param_types.Array(spanner.param_types.STRING)
         }
-
-        rows = self.spanner_database.execute_partitioned_dml(
-            sql, params=params, param_types=param_types
-        )
-        logging.info(f"Deleted {rows} ProvenanceSummary rows from KeyValueStore table.")
-        return rows
+        return self.delete_concurrent(delete_queries, params, param_types)
 
     def delete_stat_var_group_edges(self) -> int:
         """Deletes all generated StatVarGroup edges across all provenances in Spanner."""
