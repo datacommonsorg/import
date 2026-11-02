@@ -64,7 +64,10 @@ class EmbeddingGeneratorIntegrationTest(AggregationIntegrationTestBase):
                             "model_name": "NodeEmbeddingModel",
                             "model_endpoint": "text-embedding-005",
                             "task_type": "RETRIEVAL_DOCUMENT",
-                            "node_types": ["StatisticalVariable", "Topic"],
+                            "node_types": {
+                                "StatisticalVariable": ["description"],
+                                "Topic": ["description"]
+                            },
                             "node_filter_type": "NoFilter"
                         }
                     ]
