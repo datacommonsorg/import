@@ -126,6 +126,12 @@ def run_sides(trees: dict[str, CodeTree], spec: RunSpec, work_dir: str,
   }
 
 
+def _run_number(run_json_path: str) -> int:
+  """The N of <side>/run-N/run.json, so that run-10 sorts after run-9."""
+  run_dir_name = os.path.basename(os.path.dirname(run_json_path))
+  return int(run_dir_name.removeprefix("run-"))
+
+
 def load_side(output_dir: str, default_input_root: str | None) -> SideRuns:
   """Describes an existing output, reusing its run.json files if it has any.
 
@@ -142,7 +148,8 @@ def load_side(output_dir: str, default_input_root: str | None) -> SideRuns:
                     default_input_root, (), None)
   side_dir = os.path.dirname(run_dir)
   runs = []
-  for path in sorted(glob.glob(os.path.join(side_dir, "run-*", RUN_JSON))):
+  for path in sorted(glob.glob(os.path.join(side_dir, "run-*", RUN_JSON)),
+                     key=_run_number):
     with open(path) as f:
       runs.append(json.load(f))
   return SideRuns(f"{runs[0]['code']} (reused {output_dir})", output_dir,

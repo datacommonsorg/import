@@ -28,6 +28,7 @@ from tools.ab.categories import CATEGORIES_BY_NAME
 from tools.ab.categories import Kind
 from tools.ab.compare import compare_outputs
 from tools.ab.compare import SideOutput
+from tools.ab.shards import load_output_tree
 
 CONTEXT = {"dcid": "https://datacommons.org/browser/"}
 INPUT_ROOT = "/data/input"
@@ -323,3 +324,11 @@ def test_every_category_is_documented():
   with open(readme) as f:
     text = f.read()
   assert [c.name for c in CATEGORIES if f"`{c.name}`" not in text] == []
+
+
+def test_hidden_files_next_to_the_run_dir_are_ignored(tmp_path):
+  """Finder and similar tools drop files such as .DS_Store into output dirs."""
+  root = write_output(str(tmp_path / "out"), BASE_SHARDS)
+  open(os.path.join(root, "jsonld", ".DS_Store"), "w").close()
+  tree = load_output_tree(root)
+  assert tree.run_dir_name == "default_import_name_20260101_000000_000000"

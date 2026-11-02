@@ -14,6 +14,7 @@
 """Perf thresholds, run health findings and run measurement."""
 
 import dataclasses
+import json
 import os
 import sys
 
@@ -28,6 +29,8 @@ from tools.ab.report import EXIT_OK
 from tools.ab.report import EXIT_OUTPUT_DIFFERENT
 from tools.ab.report import EXIT_PERF_REGRESSION
 from tools.ab.report import Verdict
+from tools.ab.run import load_side
+from tools.ab.run import RUN_JSON
 from tools.ab.run import SideRuns
 
 THRESHOLDS = Thresholds(wall_pct=10, cpu_pct=10, rss_pct=10, min_seconds=30)
@@ -148,3 +151,20 @@ def test_run_measured_kills_on_timeout(tmp_path):
   assert metrics.timed_out
   assert metrics.exit_code < 0
   assert metrics.wall_seconds < 30
+
+
+def test_reused_runs_are_loaded_in_run_number_order(tmp_path):
+  """run-10 comes after run-9, not between run-1 and run-2."""
+  for number in range(1, 12):
+    run_dir = tmp_path / "candidate" / f"run-{number}"
+    os.makedirs(run_dir / "output")
+    metrics = dataclasses.replace(METRICS, wall_seconds=number)
+    with open(run_dir / RUN_JSON, "w") as f:
+      json.dump(
+          {
+              "code": "HEAD",
+              "input_dir": "/in",
+              "metrics": dataclasses.asdict(metrics)
+          }, f)
+  runs = load_side(str(tmp_path / "candidate" / "run-1" / "output"), None)
+  assert [m.wall_seconds for m in runs.metrics] == list(range(1, 12))

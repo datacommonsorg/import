@@ -57,7 +57,7 @@ def _rss_kb(pid: int) -> int:
   try:
     with open(f"/proc/{pid}/statm") as f:
       return int(f.read().split()[1]) * _PAGE_KB
-  except (FileNotFoundError, ProcessLookupError, IndexError):
+  except (OSError, IndexError):  # Gone, or /proc not readable here.
     return 0
 
 
@@ -67,7 +67,7 @@ def _children(pid: int) -> list[int]:
     for task in os.listdir(f"/proc/{pid}/task"):
       with open(f"/proc/{pid}/task/{task}/children") as f:
         children.extend(int(c) for c in f.read().split())
-  except (FileNotFoundError, ProcessLookupError):
+  except OSError:  # Gone, or /proc not readable here.
     pass
   return children
 
@@ -120,6 +120,10 @@ def run_measured(command: list[str], cwd: str, env: dict[str, str],
   On timeout the whole process group is killed with SIGKILL.
   """
   timed_out = threading.Event()
+  # Guards against killing a recycled PID: once wait4 has reaped the child, its
+  # PID (and process group id) may be reused, so kill() must become a no-op.
+  reap_lock = threading.Lock()
+  reaped = False
   with open(log_path, "wb") as log:
     start = time.monotonic()
     process = subprocess.Popen(command,
@@ -130,8 +134,11 @@ def run_measured(command: list[str], cwd: str, env: dict[str, str],
                                start_new_session=True)
 
     def kill() -> None:
-      timed_out.set()
-      os.killpg(process.pid, signal.SIGKILL)
+      with reap_lock:
+        if reaped:
+          return
+        timed_out.set()
+        os.killpg(process.pid, signal.SIGKILL)
 
     timer = threading.Timer(timeout_seconds, kill) if timeout_seconds else None
     if timer:
@@ -139,6 +146,8 @@ def run_measured(command: list[str], cwd: str, env: dict[str, str],
     sampler = _TreeRssSampler(process.pid)
     sampler.start()
     _, status, usage = os.wait4(process.pid, 0)
+    with reap_lock:
+      reaped = True
     wall = time.monotonic() - start
     sampler.stop()
     if timer:

@@ -65,10 +65,17 @@ class OutputTree:
     return {s.folder for s in self.shards}
 
 
+def _visible_entries(dir_path: str) -> list[str]:
+  """Sorted entries of dir_path, without hidden ones such as .DS_Store."""
+  if not os.path.isdir(dir_path):
+    return []
+  return sorted(e for e in os.listdir(dir_path) if not e.startswith("."))
+
+
 def load_output_tree(output_dir: str) -> OutputTree:
   """Lists the shards under output_dir/jsonld/<run dir>."""
   jsonld_dir = os.path.join(output_dir, "jsonld")
-  run_dirs = sorted(os.listdir(jsonld_dir)) if os.path.isdir(jsonld_dir) else []
+  run_dirs = _visible_entries(jsonld_dir)
   if not run_dirs:
     return OutputTree(output_dir, None, ())
   if len(run_dirs) > 1:
