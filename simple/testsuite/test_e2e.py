@@ -32,12 +32,8 @@ differs:
 
 Modes must not change the output.
 
-Records whose @type is listed in run.json "any_folder_types" (default:
-dcid:Source) are compared without regard to the import folder they land in:
-with several provenances a shared Source node is written to one of the
-folders, and which one is not specified. They are listed under
-"records.any_folder" in expected.json; everything else under
-"records.folders".
+Every record is pinned to its import folder: "records.folders" in
+expected.json is {folder: {kind: {@id: record}}}.
 
   pytest testsuite/test_e2e.py --update-expected -n 0   # rewrite expected.json
 """
@@ -137,7 +133,7 @@ def _read_expected(dataset: str) -> dict:
 def _write_expected(dataset: str) -> None:
   reference = _output(dataset, run.DEFAULT_MODE)
   expected = {
-      "records": _records_view(dataset, reference["records"]),
+      "records": _records_view(reference["records"]),
       "report": reference["report"],
       "handshake": reference["handshake"],
       "ingestion_report": reference["ingestion_report"],
@@ -147,29 +143,21 @@ def _write_expected(dataset: str) -> None:
     f.write(canonical.dumps(expected))
 
 
-_DEFAULT_ANY_FOLDER_TYPES = ["dcid:Source"]
-
-
-def _records_view(dataset: str, records: list) -> dict:
+def _records_view(records: list) -> dict:
   """
-  The expected.json view of records: {folder: {kind: {@id: record}}}.
+  The expected.json view of records.
 
-  A record written more than once is a list of its copies. Records of an
-  any_folder_types type are listed apart, without their folder.
+  {"folders": {folder: {kind: {@id: record}}}}; a record written more than
+  once is a list of its copies.
   """
-  any_types = set(
-      _spec(dataset).get("any_folder_types", _DEFAULT_ANY_FOLDER_TYPES))
-  anywhere = [rec for _, _, rec in records if rec.get("@type") in any_types]
-  folders = canonical.group_by_folder((folder, kind, rec)
-                                      for folder, kind, rec in records
-                                      if rec.get("@type") not in any_types)
+  folders = canonical.group_by_folder(records)
   for kinds in folders.values():
     for kind, by_id in kinds.items():
       kinds[kind] = {
           rid: copies[0] if len(copies) == 1 else sorted(copies, key=_dumps)
           for rid, copies in by_id.items()
       }
-  return {"folders": folders, "any_folder": sorted(anywhere, key=_dumps)}
+  return {"folders": folders}
 
 
 def _dumps(record: dict) -> str:
@@ -178,7 +166,7 @@ def _dumps(record: dict) -> str:
 
 def _actual(dataset: str, output: dict, aspect: str):
   if aspect == "records":
-    return _records_view(dataset, output["records"])
+    return _records_view(output["records"])
   return output[aspect]
 
 
