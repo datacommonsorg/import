@@ -46,6 +46,10 @@ import org.datacommons.ingestion.spanner.model.NodeRecord;
  * returned by {@link #ENTITY_TYPES_QUERY} unioned with {@link #PLACE_TYPE_ORDER}). Predicate and
  * edge properties are not processed here; they are resolved downstream in {@link
  * GenerateEmbeddingContentFn}.
+ *
+ * <p>TODO: We will add the check on last_update_timestamp to filter to nodes that are updated
+ * during data ingestion. This functionality will be implemented in a following PR. It will only work
+ * properly once data ingestion is also incremental.
  */
 public final class ReadCandidateNodesFn {
 
