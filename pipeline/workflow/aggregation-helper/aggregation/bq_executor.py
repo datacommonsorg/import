@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import logging
 import threading
 import time
@@ -82,7 +83,9 @@ class BigQueryExecutor:
             f"Submitting query (first 100 chars): {query.strip()[:100]}...")
 
         if labels:
-            job_config = job_config or bigquery.QueryJobConfig()
+            job_config = (
+                copy.deepcopy(job_config) if job_config else bigquery.QueryJobConfig()
+            )
             job_config.labels = {**(job_config.labels or {}), **labels}
 
         start_time = time.time()

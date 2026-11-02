@@ -251,7 +251,6 @@ class TestBigQueryExecutor(unittest.TestCase):
         executor.execute("SELECT 1", job_config=job_config, labels={"import": "x"})
 
         _, kwargs = mock_client_instance.query.call_args
-        self.assertIs(kwargs["job_config"], job_config)
         self.assertFalse(kwargs["job_config"].use_query_cache)
         self.assertEqual(
             kwargs["job_config"].labels, {"existing": "value", "import": "x"}
