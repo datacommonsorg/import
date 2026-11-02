@@ -19,7 +19,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .common import _escape_sql_literal, get_provenance_name
+from .common import _escape_sql_literal, build_bq_job_tags, get_provenance_name
 
 
 @dataclass
@@ -337,4 +337,9 @@ class ProvenanceSummaryGenerator:
         FROM facet_summaries
         GROUP BY variable_measured, provenance_dcid;
         """
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "prov_summary", import_names[0]
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
