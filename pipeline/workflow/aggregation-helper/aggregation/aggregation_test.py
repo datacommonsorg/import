@@ -18,6 +18,8 @@ import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
+from google.cloud import bigquery
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aggregation import BigQueryExecutor
@@ -32,11 +34,52 @@ from aggregation.embedding_generator import EmbeddingSpec
 from aggregation.common import (
     BASE_PROVENANCE_PREFIX,
     _escape_sql_literal,
+    build_bq_job_tags,
+    clean_bq_job_tag,
     get_provenance_prefix,
     get_provenance_name,
     get_generated_provenance_name,
     get_sql_generated_provenance_expr,
 )
+
+
+class TestBqJobTags(unittest.TestCase):
+    def test_clean_bq_job_tag_lowercases(self):
+        self.assertEqual(clean_bq_job_tag("UN_SDG"), "un_sdg")
+
+    def test_clean_bq_job_tag_replaces_invalid_characters(self):
+        self.assertEqual(clean_bq_job_tag("UN_SDG/v2.1"), "un_sdg_v2_1")
+        self.assertEqual(clean_bq_job_tag("a-b c"), "a_b_c")
+
+    def test_clean_bq_job_tag_collapses_underscores(self):
+        self.assertEqual(clean_bq_job_tag("UN SDG / v2"), "un_sdg_v2")
+        self.assertEqual(clean_bq_job_tag("UN__SDG"), "un_sdg")
+
+    def test_clean_bq_job_tag_truncates_to_63_characters(self):
+        self.assertEqual(clean_bq_job_tag("a" * 100), "a" * 63)
+
+    def test_build_bq_job_tags_single_import_dcp(self):
+        labels, job_id_prefix = build_bq_job_tags(False, "place_aggr", "UN_SDG")
+        self.assertEqual(
+            labels,
+            {"component": "dcp", "aggr_type": "place_aggr", "import": "un_sdg"},
+        )
+        self.assertEqual(job_id_prefix, "dcp_place_aggr_un_sdg_")
+
+    def test_build_bq_job_tags_base_dc(self):
+        labels, job_id_prefix = build_bq_job_tags(True, "linked_edges", "X")
+        self.assertEqual(labels["component"], "base_dc")
+        self.assertEqual(job_id_prefix, "base_dc_linked_edges_x_")
+
+    def test_build_bq_job_tags_global(self):
+        labels, job_id_prefix = build_bq_job_tags(True, "embedding", "global")
+        self.assertEqual(labels["import"], "global")
+        self.assertEqual(job_id_prefix, "base_dc_embedding_global_")
+
+    def test_build_bq_job_tags_cleans_aggr_type(self):
+        labels, job_id_prefix = build_bq_job_tags(True, "Place-Aggr", "global")
+        self.assertEqual(labels["aggr_type"], "place_aggr")
+        self.assertEqual(job_id_prefix, "base_dc_place_aggr_global_")
 
 
 class TestCommonUtils(unittest.TestCase):
@@ -145,7 +188,7 @@ class TestBigQueryExecutor(unittest.TestCase):
 
         job = executor.execute("SELECT 1")
 
-        mock_client_instance.query.assert_called_once_with("SELECT 1", job_config=None)
+        mock_client_instance.query.assert_called_once_with("SELECT 1", job_config=None, job_id_prefix=None)
         mock_job.result.assert_called_once()  # Should block in sequential
         self.assertEqual(job.job_id, "job_123")
 
@@ -167,9 +210,52 @@ class TestBigQueryExecutor(unittest.TestCase):
 
         job = executor.execute("SELECT 1")
 
-        mock_client_instance.query.assert_called_once_with("SELECT 1", job_config=None)
+        mock_client_instance.query.assert_called_once_with("SELECT 1", job_config=None, job_id_prefix=None)
         mock_job.result.assert_not_called()  # Should NOT block in async
         self.assertEqual(job.job_id, "job_123")
+
+    def test_execute_with_labels_and_job_id_prefix(self, mock_bq_client):
+        mock_client_instance = MagicMock()
+        mock_bq_client.return_value = mock_client_instance
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            run_sequential=False,
+        )
+        labels = {"component": "dcp", "aggr_type": "place_aggr", "import": "x"}
+
+        executor.execute(
+            "SELECT 1", labels=labels, job_id_prefix="dcp_place_aggr_x_"
+        )
+
+        _, kwargs = mock_client_instance.query.call_args
+        self.assertEqual(kwargs["job_config"].labels, labels)
+        self.assertEqual(kwargs["job_id_prefix"], "dcp_place_aggr_x_")
+
+    def test_execute_merges_labels_into_existing_job_config(self, mock_bq_client):
+        mock_client_instance = MagicMock()
+        mock_bq_client.return_value = mock_client_instance
+        executor = BigQueryExecutor(
+            connection_id="conn",
+            project_id="proj",
+            instance_id="inst",
+            database_id="db",
+            run_sequential=False,
+        )
+        job_config = bigquery.QueryJobConfig(
+            use_query_cache=False, labels={"existing": "value"}
+        )
+
+        executor.execute("SELECT 1", job_config=job_config, labels={"import": "x"})
+
+        _, kwargs = mock_client_instance.query.call_args
+        self.assertIs(kwargs["job_config"], job_config)
+        self.assertFalse(kwargs["job_config"].use_query_cache)
+        self.assertEqual(
+            kwargs["job_config"].labels, {"existing": "value", "import": "x"}
+        )
 
     def test_get_jobs_status_success(self, mock_bq_client):
         mock_client_instance = MagicMock()
@@ -348,6 +434,24 @@ class TestMaterializedEdgeGenerator(unittest.TestCase):
         )
         self.assertEqual(jobs, [mock_job])
 
+    def test_run_all_sets_global_job_labels_and_prefix(self):
+        generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        generator.run_all(MaterializedEdgeConfig(enable_topic_hierarchy_lists=True))
+
+        kwargs = self.mock_executor.execute.call_args.kwargs
+        self.assertEqual(
+            kwargs["labels"],
+            {
+                "component": "base_dc",
+                "aggr_type": "materialized_edges",
+                "import": "global",
+            },
+        )
+        self.assertEqual(
+            kwargs["job_id_prefix"], "base_dc_materialized_edges_global_"
+        )
+
     def test_run_all_disabled(self):
         generator = MaterializedEdgeGenerator(self.mock_executor, is_base_dc=True)
         jobs = generator.run_all(
@@ -431,6 +535,25 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         query = self.mock_executor.execute.call_args[0][0]
         self.assertIsInstance(query, str)
         self.assertTrue(len(query) > 0)
+
+    def test_aggregate_places_sets_job_labels_and_prefix(self):
+        generator = PlaceAggregationGenerator(self.mock_executor, is_base_dc=False)
+
+        generator.aggregate_places(
+            PlaceAggregationConfig(
+                import_names=["UN_SDG"],
+                source_type="County",
+                destination_type="State",
+                output_import_name="UN_SDG_AggState",
+            )
+        )
+
+        kwargs = self.mock_executor.execute.call_args.kwargs
+        self.assertEqual(
+            kwargs["labels"],
+            {"component": "dcp", "aggr_type": "place_aggr", "import": "un_sdg"},
+        )
+        self.assertEqual(kwargs["job_id_prefix"], "dcp_place_aggr_un_sdg_")
 
 
 class TestEmbeddingGenerator(unittest.TestCase):

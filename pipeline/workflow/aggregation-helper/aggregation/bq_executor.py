@@ -60,13 +60,17 @@ class BigQueryExecutor:
     def execute(
         self,
         query: str,
-        job_config: Optional[bigquery.QueryJobConfig] = None
+        job_config: Optional[bigquery.QueryJobConfig] = None,
+        labels: Optional[Dict[str, str]] = None,
+        job_id_prefix: Optional[str] = None,
     ) -> bigquery.job.QueryJob:
         """Submits a BigQuery query and returns the QueryJob.
 
         Args:
             query: The SQL query string to execute.
             job_config: Optional BigQuery QueryJobConfig.
+            labels: Optional BigQuery job labels, merged into job_config.
+            job_id_prefix: Optional prefix for the BigQuery job ID.
 
         Returns:
             The BigQuery QueryJob.
@@ -77,9 +81,15 @@ class BigQueryExecutor:
         logging.info(
             f"Submitting query (first 100 chars): {query.strip()[:100]}...")
 
+        if labels:
+            job_config = job_config or bigquery.QueryJobConfig()
+            job_config.labels = {**(job_config.labels or {}), **labels}
+
         start_time = time.time()
         try:
-            query_job = self.client.query(query, job_config=job_config)
+            query_job = self.client.query(
+                query, job_config=job_config, job_id_prefix=job_id_prefix
+            )
             logging.info(f"Query submitted. Job ID: {query_job.job_id}")
 
             # TODO: Remove sequential execution once DCP migrates to async.
