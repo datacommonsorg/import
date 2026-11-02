@@ -77,7 +77,8 @@ MCF_CONFIG = {
     }]
 }
 
-# The CSV header obs_row() fills, and how obs_config() maps it by default.
+# The CSV header obs_row() fills, and columnMappings for it to pass to
+# obs_config() as a convenience.
 OBS_HEADER = ["about", "variable", "date", "value"]
 OBS_MAPPINGS = {
     "dcid:observationAbout": "about",
@@ -87,14 +88,15 @@ OBS_MAPPINGS = {
 }
 
 
-def obs_config(mappings: dict[str, str] | None = None,
+def obs_config(mappings: dict[str, str],
                pattern: str = "case*.csv",
                **file_options: Any) -> dict:
   """
   Config importing *.mcf and variable-per-row CSVs matching pattern.
 
-  mappings defaults to OBS_MAPPINGS. file_options are added to the CSV's
-  inputFiles entry, e.g. obs_config(ignoreColumns=["notes"]).
+  mappings is the CSV's columnMappings, e.g. OBS_MAPPINGS. file_options are
+  added to the CSV's inputFiles entry, e.g.
+  obs_config(OBS_MAPPINGS, ignoreColumns=["notes"]).
   """
   return {
       "inputFiles": [
@@ -102,20 +104,34 @@ def obs_config(mappings: dict[str, str] | None = None,
           {
               "pattern": pattern,
               "provenance": f"dcid:{PROVENANCE}",
-              "columnMappings": mappings or OBS_MAPPINGS,
+              "columnMappings": mappings,
               **file_options,
           },
       ]
   }
 
 
+def same_name_mappings(*columns: str) -> dict[str, str]:
+  """columnMappings that map each column to the property of the same name."""
+  return {f"dcid:{column}": column for column in columns}
+
+
+# columnMappings for all three author columns, a convenience for
+# entities_config().
+AUTHOR_MAPPINGS = same_name_mappings("author_id", "author_name",
+                                     "author_country")
+
+
 def entities_config(row_type: str = "Author",
                     id_column: str | None = "author_id",
+                    *,
+                    mappings: dict[str, str],
                     **file_options: Any) -> dict:
   """
   Config importing *.mcf and case*.csv as entities of row_type.
 
-  Pass id_column=None for no idColumn. file_options are added to the CSV's
+  mappings is the CSV's columnMappings, e.g. AUTHOR_MAPPINGS. Pass
+  id_column=None for no idColumn. file_options are added to the CSV's
   inputFiles entry.
   """
   entry = {
@@ -123,11 +139,20 @@ def entities_config(row_type: str = "Author",
       "importType": "entities",
       "rowEntityType": row_type,
       "provenance": f"dcid:{PROVENANCE}",
+      "columnMappings": mappings,
       **file_options,
   }
   if id_column:
     entry["idColumn"] = id_column
   return {"inputFiles": [*MCF_CONFIG["inputFiles"], entry]}
+
+
+def without_column_mappings(config: dict) -> dict:
+  """A copy of config with columnMappings left out of every inputFiles entry."""
+  entries = [{
+      key: value for key, value in entry.items() if key != "columnMappings"
+  } for entry in config["inputFiles"]]
+  return {**config, "inputFiles": entries}
 
 
 # --- Known bugs and parametrized cases ----------------------------------------
@@ -195,6 +220,12 @@ def mcf(*blocks: str) -> str:
   return "\n".join(block.strip("\n") + "\n" for block in blocks)
 
 
+def property_mcf(*names: str) -> str:
+  """MCF defining a Property node, named after itself, for each of names."""
+  return mcf(*(mcf_node(f"dcid:{name}", typeOf="dcs:Property", name=f'"{name}"')
+               for name in names))
+
+
 def obs_row(about: str = "country/USA",
             variable: str = "Count_Person",
             date: str = "2020",
@@ -253,7 +284,7 @@ def record(dcid: str,
      "dcid:parent": {"@id": "dcid:P"}}
 
   A list of types becomes a list of "@type" values. Property names that are
-  not Python identifiers can be passed with **{"c/prop/1": ...}.
+  not Python identifiers can be passed with **{"undata:sourceLink": ...}.
   """
   out: dict[str, Any] = {"@id": f"dcid:{dcid}"}
   if isinstance(types, str):
@@ -300,9 +331,9 @@ def entity(dcid: str, row_type: str = "Author", **props: Any) -> dict:
   return record(dcid, row_type, includedIn=ref(PROVENANCE), **props)
 
 
-def property_node(name: str, dcid: str | None = None) -> dict:
-  """The Property node written for a CSV column (dcid defaults to name)."""
-  return record(dcid or name, "Property", name=name)
+def property_node(name: str) -> dict:
+  """The Property node that property_mcf(name) defines."""
+  return record(name, "Property", name=name)
 
 
 # --- Running ------------------------------------------------------------------
@@ -449,9 +480,13 @@ def run_csv(csv_text: str,
             config: dict | None = None,
             mode: str = "threaded",
             **run_kwargs: Any) -> Result:
-  """Runs csv_text as case.csv. config defaults to obs_config()."""
+  """
+  Runs csv_text as case.csv.
+
+  config defaults to obs_config(OBS_MAPPINGS), for a CSV with OBS_HEADER.
+  """
   if config is None:
-    config = obs_config()
+    config = obs_config(OBS_MAPPINGS)
   return run({"case.csv": csv_text}, config, mode, **run_kwargs)
 
 

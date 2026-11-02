@@ -72,12 +72,26 @@ e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank so
 
 #### `columnMappings`
 
-Required for CSV files. Maps the CSV's column headings to DCIDs. There are no
-built-in default column names.
+Required for every CSV file, for both `"observations"` and `"entities"` imports.
+Maps DCIDs to the CSV's column headings. There are no built-in default column
+names, and no column heading is used as a DCID on its own.
 
-`dcid:variableMeasured`, `dcid:observationDate` and `dcid:value` are always
-required, along with at least one entity mapping: either `dcid:observationAbout`
-or a custom observation property you have defined in MCF.
+Every column in the CSV must be either mapped in `columnMappings` or listed in
+`ignoreColumns`. The one exception is the `idColumn` of an `"entities"` import.
+Otherwise the import fails with one error that lists all the unmapped columns.
+A CSV whose entry has no `columnMappings` fails the import as well.
+Each property may be mapped from only one column. Keys that differ only by
+namespace name the same property, so mapping both `dcid:unit` and `unit` fails
+the import too.
+
+For `"observations"` imports, `dcid:variableMeasured`, `dcid:observationDate`
+and `dcid:value` are always required, along with one to three entity
+dimensions: `dcid:observationAbout` and/or custom observation properties you
+have defined in MCF.
+
+For `"entities"` imports, each mapped column's values are written under its
+mapped DCID. The `idColumn` does not need a mapping; it is only written as a
+property if it is mapped.
 
 #### `ignoreColumns`
 
@@ -112,6 +126,7 @@ description: "A person who wrote an article"
 
 Optional, for `"entities"` imports. The column whose cell value provides each
 row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
+Unlike other columns, it does not need a `columnMappings` entry.
 
 #### `referenceColumns` _(or `columnsToResolve`)_
 
