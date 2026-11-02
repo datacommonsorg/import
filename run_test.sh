@@ -61,17 +61,6 @@ function run_lint_test {
 
 # Run python tests
 function run_py_test {
-  export TEST_MODE=test
-  py_test
-}
-
-# Update goldens
-function update_goldens {
-  export TEST_MODE=write
-  py_test
-}
-
-function py_test {
   # Clear api key to catch any spurious API calls.
   export DC_API_KEY=
 
@@ -83,8 +72,8 @@ function py_test {
   cd simple
   pip3 install -r requirements_test.txt -q
 
-  echo -e "#### Running stats tests"
-  python3 -m pytest tests/ kg_util/ -s
+  echo -e "#### Running kg_util tests"
+  python3 -m pytest kg_util/ -s
 
   echo -e "#### Running preprocessor test suite"
   python3 -m pytest testsuite/ -n auto
@@ -112,7 +101,6 @@ function help {
   echo "Usage: $0 -afhlp"
   echo "-a              Run all tests"
   echo "-f              Fix lint"
-  echo "-g              Update goldens"
   echo "-h              This usage"
   echo "-l              Run lint test"
   echo "-p              Run python tests"
@@ -135,11 +123,6 @@ while [[ "$#" -gt 0 ]]; do
     -f)
         echo -e "### Fix lint errors"
         run_lint_fix
-        shift 1
-        ;;
-    -g)
-        echo -e "### Updating goldens"
-        update_goldens
         shift 1
         ;;
     -h)
