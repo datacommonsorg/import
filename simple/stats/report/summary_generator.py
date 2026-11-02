@@ -21,8 +21,11 @@ import logging
 
 from stats import constants
 from stats.data import FileValidationError
+from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileSummary
+from stats.report.model.summary import Folder
 from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from util.filesystem import Dir
 from util.filesystem import File
@@ -137,7 +140,22 @@ class SummaryGenerator:
     Returns:
       The ingestion report.
     """
-    raise NotImplementedError("TODO: Build the report from recorded facts.")
+    if self._execution_metadata is None:
+      raise ValueError("set_execution_metadata() was not called.")
+    metadata = self._execution_metadata
+    # TODO: Add file, provenance and node counts once they are recorded.
+    return IngestionReport(
+        run=ExecutionMetadata(
+            workflowExecutionId=self._workflow_execution_id,
+            mode=RunMode.INGEST,
+            status=status,
+            startTime=metadata["start_time"],
+            endTime=end_time,
+            folderNames=metadata["folder_names"],
+            outputPath=metadata["output_path"],
+        ),
+        folders=[Folder(folderName=name) for name in metadata["folder_names"]],
+    )
 
   def write_to_json(self, status: RunStatus, end_time: str,
                     report_dir: Dir) -> File | None:
@@ -148,10 +166,10 @@ class SummaryGenerator:
     Args:
       status: Outcome of the run.
       end_time: ISO-8601 UTC time the run ended.
-      report_dir: Where to write the report:
-        ingestion/internal/reports/<workflowExecutionId>/ in the instance's
-        artifacts bucket for workflow runs, and <output_dir>/reports/ for
-        runs outside the workflow. Runner decides the directory.
+      report_dir: Where to write the report. Runner passes
+        <output_dir>/ingestion/internal/reports/<workflowExecutionId>/, or
+        <output_dir>/ingestion/internal/reports/ for runs outside the
+        workflow.
 
     Returns:
       The written report file, or None if building or writing it failed.

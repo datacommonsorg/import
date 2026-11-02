@@ -216,6 +216,9 @@ def _read_output(paths: _Paths, error: dict | None) -> dict:
   handshake_text = fake_gcs.read_text(
       f"{paths.temp}/datacommons/ingestion_records/{WORKFLOW_ID}.json")
   report = _read_json(os.path.join(paths.local_out, "process", "report.json"))
+  ingestion_report = _read_json(
+      os.path.join(paths.local_out, "ingestion", "internal", "reports",
+                   WORKFLOW_ID, "ingestion_report.json"))
   tokens = {
       paths.input: "<input>",
       paths.output: "<output>",
@@ -229,6 +232,8 @@ def _read_output(paths: _Paths, error: dict | None) -> dict:
       "handshake":
           canonical.normalize_handshake(
               json.loads(handshake_text) if handshake_text else None, tokens),
+      "ingestion_report":
+          canonical.normalize_ingestion_report(ingestion_report, tokens),
       "error":
           None,
   }

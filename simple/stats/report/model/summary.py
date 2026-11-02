@@ -29,7 +29,14 @@ The report has three levels:
 from enum import Enum
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+
+
+class _ReportModel(BaseModel):
+  """Base for report models: unknown fields are an error, not dropped."""
+
+  model_config = ConfigDict(extra="forbid")
 
 
 class RunMode(str, Enum):
@@ -46,7 +53,7 @@ class RunStatus(str, Enum):
   FAILURE = "FAILURE"
 
 
-class ExecutionMetadata(BaseModel):
+class ExecutionMetadata(_ReportModel):
   """The `run` block: metadata for one preprocessor run."""
 
   workflowExecutionId: str = Field(
@@ -61,7 +68,7 @@ class ExecutionMetadata(BaseModel):
       default="", description="Path where the run's JSON-LD was written")
 
 
-class Provenance(BaseModel):
+class Provenance(_ReportModel):
   """One entry in `folders[].provenances[]`."""
 
   id: str = Field(description="Provenance DCID")
@@ -69,7 +76,7 @@ class Provenance(BaseModel):
   # node counts by type, and provenance-level errors.
 
 
-class Folder(BaseModel):
+class Folder(_ReportModel):
   """One entry in `folders[]`: summary of one imported folder."""
 
   folderName: str = Field(description="Name of the imported folder")
@@ -79,7 +86,7 @@ class Folder(BaseModel):
   # node counts by type, and configUri.
 
 
-class IngestionReport(BaseModel):
+class IngestionReport(_ReportModel):
   """Root of ingestion_report.json."""
 
   run: ExecutionMetadata = Field(
@@ -89,7 +96,7 @@ class IngestionReport(BaseModel):
   # TODO: Add error field in the ingestion report.
 
 
-class FileSummary(BaseModel):
+class FileSummary(_ReportModel):
   """Counts for one imported file, returned by the worker that imported it.
 
   Not part of the report itself: SummaryGenerator merges these into the

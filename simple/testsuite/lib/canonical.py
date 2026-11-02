@@ -100,6 +100,20 @@ def normalize_report(report: dict | None, path_tokens: dict[str, str]):
   return out
 
 
+def normalize_ingestion_report(report: dict | None, tokens: dict[str, str]):
+  """The ingestion report without its timestamps, which change every run."""
+  if report is None:
+    return None
+  run = {
+      k: v
+      for k, v in report.get("run", {}).items()
+      if k not in ("startTime", "endTime")
+  }
+  if "outputPath" in run:
+    run["outputPath"] = replace_paths(run["outputPath"], tokens)
+  return {**report, "run": run}
+
+
 def normalize_handshake(handshake: dict | None, path_tokens: dict[str, str]):
   if handshake is None:
     return None
