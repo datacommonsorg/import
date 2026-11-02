@@ -12,8 +12,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+from typing import Dict, Tuple
+
 BASE_PROVENANCE_PREFIX = "dc/base/"
 TOPIC_LIST_PROVENANCE = "generated/TopicHierarchyLists"
+
+
+def clean_bq_job_tag(value: str) -> str:
+    """Converts a value into a valid BigQuery label value / job ID part.
+
+    Lowercases the value, replaces any character other than a-z, 0-9 and '_'
+    with '_', collapses consecutive underscores and truncates to 63 characters.
+    E.g. 'UN_SDG/v2.1' -> 'un_sdg_v2_1'.
+    """
+    cleaned = re.sub(r"[^a-z0-9_]", "_", value.lower())
+    cleaned = re.sub(r"_+", "_", cleaned)
+    # BigQuery label values are limited to 63 characters.
+    return cleaned[:63]
+
+
+def build_bq_job_tags(
+    is_base_dc: bool, aggr_type: str, import_name: str
+) -> Tuple[Dict[str, str], str]:
+    """Builds BigQuery job labels and a job ID prefix for an aggregation job.
+
+    Args:
+        is_base_dc: Whether the job runs for Base DC (otherwise DCP).
+        aggr_type: Short aggregation type name, e.g. 'place_aggr'.
+        import_name: Import name for the job.
+
+    Returns:
+        A (labels, job_id_prefix) tuple, e.g.
+        ({'component': 'dcp', 'aggr_type': 'place_aggr', 'import': 'un_sdg'},
+         'dcp_place_aggr_un_sdg_').
+    """
+    component = "base_dc" if is_base_dc else "dcp"
+    aggr_type = clean_bq_job_tag(aggr_type)
+    import_name = clean_bq_job_tag(import_name)
+
+    labels = {
+        "component": component,
+        "aggr_type": aggr_type,
+        "import": import_name,
+    }
+    job_id_prefix = f"{component}_{aggr_type}_{import_name}_"
+    return labels, job_id_prefix
 
 
 def get_provenance_prefix(is_base_dc: bool) -> str:

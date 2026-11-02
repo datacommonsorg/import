@@ -19,7 +19,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .common import TOPIC_LIST_PROVENANCE, get_provenance_name
+from .common import TOPIC_LIST_PROVENANCE, build_bq_job_tags, get_provenance_name
 
 
 @dataclass
@@ -147,4 +147,9 @@ class MaterializedEdgeGenerator:
           provenance
         FROM `temp_aggregated_topic_lists`;
         """
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "materialized_edges", "global"
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )

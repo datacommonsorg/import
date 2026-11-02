@@ -19,7 +19,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .common import _escape_sql_literal
+from .common import _escape_sql_literal, build_bq_job_tags
 
 
 @dataclass
@@ -42,14 +42,22 @@ class NodePropertiesGenerator:
                 config: Optional[NodePropertiesConfig] = None) -> List[bigquery.job.QueryJob]:
         """Runs node properties aggregations (types and names) asynchronously and returns their jobs."""
         logging.info("Running Node Properties aggregation (types and names)...")
+        import_name = (
+            config.import_names[0] if config and config.import_names else "global"
+        )
         jobs = [
-            self.run_node_types(),
-            self.run_node_names(),
+            self.run_node_types(import_name),
+            self.run_node_names(import_name),
         ]
         return [job for job in jobs if job]
 
-    def run_node_types(self) -> Optional[bigquery.job.QueryJob]:
-        """Aggregates typeOf edges into Node types and exports to Spanner Node table."""
+    def run_node_types(
+            self,
+            import_name: str = "global") -> Optional[bigquery.job.QueryJob]:
+        """Aggregates typeOf edges into Node types and exports to Spanner Node table.
+
+        import_name is only used to label the BigQuery job.
+        """
         dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
         conn_id = _escape_sql_literal(self.executor.connection_id)
 
@@ -74,10 +82,20 @@ class NodePropertiesGenerator:
         SELECT * FROM types;
         """
         logging.info("Submitting Node Types aggregation BQ job...")
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "node_props", import_name
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
 
-    def run_node_names(self) -> Optional[bigquery.job.QueryJob]:
-        """Resolves name edges against literal nodes and exports to Spanner Node table."""
+    def run_node_names(
+            self,
+            import_name: str = "global") -> Optional[bigquery.job.QueryJob]:
+        """Resolves name edges against literal nodes and exports to Spanner Node table.
+
+        import_name is only used to label the BigQuery job.
+        """
         dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
         conn_id = _escape_sql_literal(self.executor.connection_id)
 
@@ -114,4 +132,9 @@ class NodePropertiesGenerator:
         SELECT * FROM name;
         """
         logging.info("Submitting Node Names aggregation BQ job...")
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "node_props", import_name
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
