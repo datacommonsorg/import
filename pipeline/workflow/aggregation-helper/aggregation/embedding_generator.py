@@ -28,6 +28,7 @@ from google.cloud import spanner
 from google.cloud import storage
 from pydantic import BaseModel
 from .bq_executor import BigQueryExecutor
+from .common import build_bq_job_tags
 
 
 @dataclass
@@ -351,4 +352,12 @@ class EmbeddingGenerator:
         SELECT * FROM embedding_staging;
         """
         logging.info(f"Submitting embedding generation job for {embedding_label}...")
-        return self.executor.execute(query, job_config=job_config)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "embedding", "global"
+        )
+        return self.executor.execute(
+            query,
+            job_config=job_config,
+            labels=labels,
+            job_id_prefix=job_id_prefix,
+        )

@@ -22,6 +22,7 @@ from .bq_executor import BigQueryExecutor
 from .common import (
     BASE_PROVENANCE_PREFIX,
     _escape_sql_literal,
+    build_bq_job_tags,
     get_sql_generated_provenance_expr,
 )
 
@@ -129,7 +130,12 @@ class LinkedEdgeGenerator:
         FROM
           NewEdges
         """
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "linked_edges", import_names[0]
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
 
     def run_linked_contained_in_place(
         self, import_names: List[str] = None
@@ -223,7 +229,12 @@ class LinkedEdgeGenerator:
         JOIN temp_base_type_of T
         ON N.subject_id = T.subject_id;
         """
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "linked_edges", import_names[0]
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
 
     def run_linked_member(
         self, import_names: List[str] = None
@@ -327,4 +338,9 @@ class LinkedEdgeGenerator:
         FROM
           NewEdges
         """
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "linked_edges", import_names[0]
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )

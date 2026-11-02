@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .common import _escape_sql_literal, get_provenance_name
+from .common import _escape_sql_literal, build_bq_job_tags, get_provenance_name
 
 
 @dataclass
@@ -54,7 +54,12 @@ class EntityAggregationGenerator:
                 f"Generating entity aggregation for types: {config.entity_types}"
             )
             query = self._generate_sql(config)
-            job = self.executor.execute(query)
+            labels, job_id_prefix = build_bq_job_tags(
+                self.is_base_dc, "entity_aggr", config.input_imports[0]
+            )
+            job = self.executor.execute(
+                query, labels=labels, job_id_prefix=job_id_prefix
+            )
             if job:
                 jobs.append(job)
         return jobs
