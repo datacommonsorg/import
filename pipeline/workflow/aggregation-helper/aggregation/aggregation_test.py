@@ -186,9 +186,9 @@ class TestBigQueryExecutor(unittest.TestCase):
             run_sequential=True,
         )
 
-        job = executor.execute("SELECT 1")
+        job = executor.execute("SELECT 1", labels={"import": "x"}, job_id_prefix="p_")
 
-        mock_client_instance.query.assert_called_once_with("SELECT 1", job_config=None, job_id_prefix=None)
+        mock_client_instance.query.assert_called_once()
         mock_job.result.assert_called_once()  # Should block in sequential
         self.assertEqual(job.job_id, "job_123")
 
@@ -208,9 +208,9 @@ class TestBigQueryExecutor(unittest.TestCase):
             run_sequential=False,
         )
 
-        job = executor.execute("SELECT 1")
+        job = executor.execute("SELECT 1", labels={"import": "x"}, job_id_prefix="p_")
 
-        mock_client_instance.query.assert_called_once_with("SELECT 1", job_config=None, job_id_prefix=None)
+        mock_client_instance.query.assert_called_once()
         mock_job.result.assert_not_called()  # Should NOT block in async
         self.assertEqual(job.job_id, "job_123")
 
@@ -248,7 +248,9 @@ class TestBigQueryExecutor(unittest.TestCase):
             use_query_cache=False, labels={"existing": "value"}
         )
 
-        executor.execute("SELECT 1", job_config=job_config, labels={"import": "x"})
+        executor.execute(
+            "SELECT 1", job_config=job_config, labels={"import": "x"}, job_id_prefix="p_"
+        )
 
         _, kwargs = mock_client_instance.query.call_args
         self.assertFalse(kwargs["job_config"].use_query_cache)

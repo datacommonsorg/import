@@ -61,17 +61,17 @@ class BigQueryExecutor:
     def execute(
         self,
         query: str,
+        labels: Dict[str, str],
+        job_id_prefix: str,
         job_config: Optional[bigquery.QueryJobConfig] = None,
-        labels: Optional[Dict[str, str]] = None,
-        job_id_prefix: Optional[str] = None,
     ) -> bigquery.job.QueryJob:
         """Submits a BigQuery query and returns the QueryJob.
 
         Args:
             query: The SQL query string to execute.
+            labels: BigQuery job labels, merged into a copy of job_config.
+            job_id_prefix: Prefix for the BigQuery job ID.
             job_config: Optional BigQuery QueryJobConfig.
-            labels: Optional BigQuery job labels, merged into job_config.
-            job_id_prefix: Optional prefix for the BigQuery job ID.
 
         Returns:
             The BigQuery QueryJob.
@@ -82,11 +82,10 @@ class BigQueryExecutor:
         logging.info(
             f"Submitting query (first 100 chars): {query.strip()[:100]}...")
 
-        if labels:
-            job_config = (
-                copy.deepcopy(job_config) if job_config else bigquery.QueryJobConfig()
-            )
-            job_config.labels = {**(job_config.labels or {}), **labels}
+        job_config = (
+            copy.deepcopy(job_config) if job_config else bigquery.QueryJobConfig()
+        )
+        job_config.labels = {**(job_config.labels or {}), **labels}
 
         start_time = time.time()
         try:
