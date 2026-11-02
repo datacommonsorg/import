@@ -50,6 +50,18 @@ def join_path(base: str, *args: str) -> str:
   return fspath.join(base, *args)
 
 
+def _fs_url(root_path: str) -> str:
+  """Returns the PyFilesystem URL to open `root_path` with.
+
+  GCS paths get strict=False in case the root_path is not initialized with an
+  empty blob: GCS has no real directories, so a directory that only exists as
+  the prefix of other blobs has no marker blob.
+  """
+  if root_path.startswith(_GCS_PATH_PREFIX):
+    return f"{root_path}?strict=False"
+  return root_path
+
+
 def create_store(path: str,
                  create_if_missing: bool = False,
                  treat_as_file: bool = False) -> "Store":
@@ -72,14 +84,10 @@ class Store:
 
     if not treat_as_file:
       try:
-        # If the path is a GCS path, set strict=False in case the root_path is not initialized with an empty blob.
+        self.fs = open_fs(_fs_url(self.root_path), create=create_if_missing)
         if self.root_path.startswith(_GCS_PATH_PREFIX):
-          self.fs = open_fs(f"{self.root_path}?strict=False",
-                            create=create_if_missing)
           # Fix GCS storage if needed.
           _fix_gcsfs_storage(self.fs)
-        else:
-          self.fs = open_fs(self.root_path, create=create_if_missing)
 
         self._wrapper: _StoreWrapper = Dir(self, path="/")
         self._isdir = True
@@ -97,9 +105,10 @@ class Store:
         root_prefix, root_suffix = path.split("://", 1)
         self.root_path = f"{root_prefix}://{fspath.dirname(root_suffix)}"
       else:
-        self.root_path = fspath.dirname(path)
+        # A bare file name has no dirname; open the working directory, not "/".
+        self.root_path = fspath.dirname(path) or "."
       file_name = fspath.basename(path)
-      self.fs = open_fs(fspath.forcedir(self.root_path),
+      self.fs = open_fs(_fs_url(fspath.forcedir(self.root_path)),
                         create=create_if_missing)
       self._wrapper: _StoreWrapper = File(self,
                                           path=file_name,
