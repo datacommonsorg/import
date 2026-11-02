@@ -14,6 +14,7 @@
 
 BASE_PROVENANCE_PREFIX = "dc/base/"
 TOPIC_LIST_PROVENANCE = "generated/TopicHierarchyLists"
+STAT_VAR_GROUP_PROVENANCE = "generated/StatVarGroups"
 
 
 def get_provenance_prefix(is_base_dc: bool) -> str:

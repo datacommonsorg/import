@@ -19,6 +19,8 @@ Covers:
   constrained variables, curated groups, and uncategorized variables).
 - DependentPropertyValue (DPV) matching and stripping.
 - Single-child SVG pruning (simple chain and DAG fan-out cases).
+- Shared provenance: auto-generated SVG edges are written once under the shared
+  generated/StatVarGroups provenance, even when SVs come from multiple imports.
 
 NOTE: This script is intended for local testing purposes only and is NOT
 currently part of the CI pipeline.
@@ -40,6 +42,8 @@ How to run:
 """
 
 import unittest
+from collections import defaultdict
+from google.cloud import spanner
 from aggregation.e2e_tests.base import (
     AggregationIntegrationTestBase,
     PROJECT_ID,
@@ -119,7 +123,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           - An uncategorized basic SV 'Count_Thing'.
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov_test = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
+        prov_svg = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
         prov_custom = 'dc/base/generated/TestCustomImport' if self.is_base_dc else 'generated/TestCustomImport'
         
         self._setup_mock_data(ns)
@@ -160,53 +164,53 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             edges = [(r[0], r[1], r[2], r[3]) for r in snapshot.execute_sql(edge_query)]
 
             # Verify unconstrained SV attached directly to the Student Root SVG
-            self.assertIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov_test), edges)
+            self.assertIn(('Count_Student', 'memberOf', f'{ns}g/Student', prov_svg), edges)
 
             # Verify unconstrained SV attached to ancestor SVGs
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov_test), edges)
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
-            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Student', prov_svg), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/TestVertical', prov_svg), edges)
+            self.assertIn(('Count_Student', 'linkedMemberOf', f'{ns}g/Root', prov_svg), edges)
             
             # Verify constrained SV attached to the constrained SVG
-            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'memberOf', f'{ns}g/Student_Gender-Female', prov_svg), edges)
 
             # Verify constrained SV attached to ancestor SVGs
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender-Female', prov_test), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov_test), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov_test), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
-            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender-Female', prov_svg), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student_Gender', prov_svg), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Student', prov_svg), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/TestVertical', prov_svg), edges)
+            self.assertIn(('Count_Student_Female', 'linkedMemberOf', f'{ns}g/Root', prov_svg), edges)
 
             # Verify basic populationType SV attached to SVG by mprop
             if self.is_base_dc:
-                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov_test), edges)
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/TestVertical', prov_svg), edges)
             else:
-                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/Person', prov_test), edges)
+                self.assertIn(('Count_Person', 'memberOf', f'{ns}g/Person', prov_svg), edges)
 
             # Verify basic populationType SV attached to ancestor SVGs
-            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov_test), edges)
-            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/TestVertical', prov_svg), edges)
+            self.assertIn(('Count_Person', 'linkedMemberOf', f'{ns}g/Root', prov_svg), edges)
 
             # Verify uncategorized basic populationType SV attached to Uncategorized_Variables SVG
             if self.is_base_dc:
-                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov_test), edges)
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Uncategorized_Variables', prov_svg), edges)
             else:
-                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Thing', prov_test), edges)
+                self.assertIn(('Count_Thing', 'memberOf', f'{ns}g/Thing', prov_svg), edges)
 
             # Verify uncategorized basic populationType SV attached to ancestor SVGs
             if self.is_base_dc:
-                self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized_Variables', prov_test), edges)
+                self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized_Variables', prov_svg), edges)
             else:
-                self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Thing', prov_test), edges)
-            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized', prov_test), edges)
-            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Root', prov_test), edges)
+                self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Thing', prov_svg), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Uncategorized', prov_svg), edges)
+            self.assertIn(('Count_Thing', 'linkedMemberOf', f'{ns}g/Root', prov_svg), edges)
             
             # Verify hierarchical specialization of generated SVGs
-            self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov_test), edges)
-            self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov_test), edges)
+            self.assertIn((f'{ns}g/Student_Gender-Female', 'specializationOf', f'{ns}g/Student_Gender', prov_svg), edges)
+            self.assertIn((f'{ns}g/Student_Gender', 'specializationOf', f'{ns}g/Student', prov_svg), edges)
 
             # Verify the root SVG attached to the Vertical declared in the Spec
-            self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov_test), edges)
+            self.assertIn((f'{ns}g/Student', 'specializationOf', f'{ns}g/TestVertical', prov_svg), edges)
 
             # Verify curated SV from TestCustomImport is processed with its scoped provenance
             self.assertIn(('Median_Age_Student', 'linkedMemberOf', f'{ns}g/TestCustomVertical', prov_custom), edges)
@@ -230,7 +234,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         Count_Student_Female gets memberOf Student (redirected).
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
+        prov = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
 
         self._setup_mock_data(ns)
 
@@ -330,7 +334,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           4. Remove all pruned SVG nodes and their edges
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
+        prov = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
 
         self._setup_dpv_mock_data(ns)
 
@@ -640,7 +644,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             SVGs generated under MilitaryService
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/generated/TestImport' if self.is_base_dc else 'generated/TestImport'
+        prov = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
 
         self._setup_dpv_mock_data(ns)
 
@@ -722,6 +726,140 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
                 f'{ns}g/Person_Age-Years15Onwards', prov), edges)
             self.assertNotIn(('Count_Military_Person', 'linkedMemberOf',
                 f'{ns}g/Person_IncomeStatus-WithIncome', prov), edges)
+
+    def _setup_multi_import_mock_data(self, ns):
+        """Seeds Student SVs from two imports that share the Student / Student_Gender SVGs.
+
+        Expected generated hierarchy:
+
+          TestVertical
+           └── Student
+                └── Student_Gender                     ← shared SVG (SVs from both imports)
+                     ├── Student_Gender-Female         ← Count_Student_Female (TestImport + TestImport2)
+                     └── Student_Gender-Male           ← Count_Student_Male (TestImport2 only)
+        """
+        # Vertical and population type nodes that the generated SVGs hang off.
+        self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
+        self.add_node('Student', 'Student', value='Student', types=['Class'])
+        # Spec that attaches Student SVGs under TestVertical, which sits under Root.
+        self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
+        self.add_edge('Spec_Student', 'populationType', 'Student', 'TestImport')
+        self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')
+        self.add_edge(f'{ns}g/TestVertical', 'specializationOf', f'{ns}g/Root', 'TestImport')
+
+        # Female Students (gender=Female), declared identically in both TestImport and TestImport2.
+        self.add_node('Count_Student_Female', 'Female Students', types=['StatisticalVariable'])
+        self.add_edge('Count_Student_Female', 'typeOf', 'StatisticalVariable', 'TestImport')
+        self.add_edge('Count_Student_Female', 'populationType', 'Student', 'TestImport')
+        self.add_edge('Count_Student_Female', 'constraintProperties', 'gender', 'TestImport')
+        self.add_edge('Count_Student_Female', 'gender', 'Female', 'TestImport')
+        self.add_edge('Count_Student_Female', 'typeOf', 'StatisticalVariable', 'TestImport2')
+        self.add_edge('Count_Student_Female', 'populationType', 'Student', 'TestImport2')
+        self.add_edge('Count_Student_Female', 'constraintProperties', 'gender', 'TestImport2')
+        self.add_edge('Count_Student_Female', 'gender', 'Female', 'TestImport2')
+
+        # Male Students (gender=Male), declared only in TestImport2.
+        self.add_node('Count_Student_Male', 'Male Students', types=['StatisticalVariable'])
+        self.add_edge('Count_Student_Male', 'typeOf', 'StatisticalVariable', 'TestImport2')
+        self.add_edge('Count_Student_Male', 'populationType', 'Student', 'TestImport2')
+        self.add_edge('Count_Student_Male', 'constraintProperties', 'gender', 'TestImport2')
+        self.add_edge('Count_Student_Male', 'gender', 'Male', 'TestImport2')
+
+        # Write all seeded nodes and edges to Spanner.
+        self.flush_to_spanner()
+
+    def _run_stat_var_groups(self):
+        calculations = [
+            {
+                "name": "StatVar Groups Generation",
+                "type": "STAT_VAR_GROUPS",
+                "stage": 1,
+                "input_imports": ["schema"]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=["schema"])
+        self.assertTrue(res.success)
+
+    def _get_edges_by_predicate(self, subject_id):
+        """Returns {predicate: sorted [(object_id, provenance)]} for one node, using a single query."""
+        edges = defaultdict(list)
+        with self.database.snapshot() as snapshot:
+            rows = snapshot.execute_sql(
+                "SELECT predicate, object_id, provenance FROM Edge WHERE subject_id = @subject_id",
+                params={'subject_id': subject_id},
+                param_types={'subject_id': spanner.param_types.STRING},
+            )
+            for predicate, object_id, provenance in rows:
+                edges[predicate].append((object_id, provenance))
+        return {predicate: sorted(values) for predicate, values in edges.items()}
+
+    def test_svs_from_multiple_imports_generate_single_shared_provenance_svg_edges(self):
+        """SVs from multiple imports produce one copy of each SVG edge, under the shared provenance.
+
+        Regression test for duplicated typeOf / name / specializationOf / memberOf edges, which
+        used to be written once per descendant SV's import provenance.
+        """
+        ns = 'dc/' if self.is_base_dc else 'c/'
+        prov_svg = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
+        self._setup_multi_import_mock_data(ns)
+
+        self._run_stat_var_groups()
+
+        # The shared SVG has exactly one copy of each structural edge.
+        shared_svg_edges = self._get_edges_by_predicate(f'{ns}g/Student_Gender')
+        self.assertEqual(shared_svg_edges.get('typeOf'), [('StatVarGroup', prov_svg)])
+        self.assertEqual(shared_svg_edges.get('specializationOf'), [(f'{ns}g/Student', prov_svg)])
+        # The name edge points to a hashed name node, so only its count and provenance are checked.
+        self.assertEqual(
+            len(shared_svg_edges.get('name', [])), 1,
+            f"Expected one name edge, got: {shared_svg_edges.get('name')}")
+        self.assertEqual(shared_svg_edges['name'][0][1], prov_svg)
+
+        # An SV declared in two imports gets a single memberOf edge.
+        female_sv_edges = self._get_edges_by_predicate('Count_Student_Female')
+        self.assertEqual(female_sv_edges.get('memberOf'), [(f'{ns}g/Student_Gender-Female', prov_svg)])
+
+        # No auto-generated SVG edge is tagged with an SV's import provenance.
+        with self.database.snapshot() as snapshot:
+            per_import_edges = list(snapshot.execute_sql(
+                "SELECT subject_id, predicate, object_id, provenance FROM Edge "
+                "WHERE provenance IN UNNEST(@provenances)",
+                params={'provenances': [
+                    'dc/base/generated/TestImport', 'dc/base/generated/TestImport2',
+                    'generated/TestImport', 'generated/TestImport2',
+                ]},
+                param_types={'provenances': spanner.param_types.Array(spanner.param_types.STRING)},
+            ))
+        self.assertEqual(per_import_edges, [])
+
+    def test_linked_edges_deletion_for_one_import_keeps_svg_edges(self):
+        """Deleting one import's generated linked edges does not remove SVG edges.
+
+        Covers both the shared SVG (Student_Gender) and the SVG / SV edges that come only from the
+        deleted import (Student_Gender-Male, Count_Student_Male).
+        """
+        ns = 'dc/' if self.is_base_dc else 'c/'
+        prov_svg = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
+        self._setup_multi_import_mock_data(ns)
+        self._run_stat_var_groups()
+
+        res = self.run_orchestrator(
+            calculations=[{"name": "Linked Edges", "type": "LINKED_EDGES", "stage": 1, "input_imports": ["*"]}],
+            active_imports=["TestImport2"],
+        )
+        self.assertTrue(res.success)
+
+        # The shared SVG keeps its edges.
+        shared_svg_edges = self._get_edges_by_predicate(f'{ns}g/Student_Gender')
+        self.assertEqual(shared_svg_edges.get('typeOf'), [('StatVarGroup', prov_svg)])
+        self.assertEqual(shared_svg_edges.get('specializationOf'), [(f'{ns}g/Student', prov_svg)])
+
+        # The SVG and SV edges that come only from TestImport2 are also kept.
+        male_svg_edges = self._get_edges_by_predicate(f'{ns}g/Student_Gender-Male')
+        self.assertEqual(male_svg_edges.get('typeOf'), [('StatVarGroup', prov_svg)])
+        self.assertEqual(male_svg_edges.get('specializationOf'), [(f'{ns}g/Student_Gender', prov_svg)])
+        male_sv_edges = self._get_edges_by_predicate('Count_Student_Male')
+        self.assertEqual(male_sv_edges.get('memberOf'), [(f'{ns}g/Student_Gender-Male', prov_svg)])
 
 
 class StatVarGroupGeneratorCustomDcTest(StatVarGroupGeneratorIntegrationTest):

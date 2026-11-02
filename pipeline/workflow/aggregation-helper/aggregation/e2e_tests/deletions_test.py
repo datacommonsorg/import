@@ -308,6 +308,8 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
         # Stale StatVarGroup edges under two different import provenances
         self.add_edge('Count_Person', 'memberOf', 'dc/g/OldGroupA', f'generated/ImportA_SVGDelTest')
         self.add_edge('dc/g/OldGroupA', 'specializationOf', 'dc/g/Root', f'generated/ImportB_SVGDelTest')
+        # Stale StatVarGroup edge under the shared StatVarGroups provenance
+        self.add_edge('dc/g/OldGroupShared', 'specializationOf', 'dc/g/Root', 'generated/StatVarGroups')
         # Existing linked relationship edge that should NOT be touched
         self.add_edge('geoId/06075', 'linkedContainedInPlace', 'geoId/06', f'generated/ImportA_SVGDelTest')
         self.flush_to_spanner()

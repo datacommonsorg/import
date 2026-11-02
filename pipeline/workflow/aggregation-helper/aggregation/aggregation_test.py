@@ -586,8 +586,33 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         self.assertIn("EffectiveParent", query)
         self.assertIn("HAVING COUNT(DISTINCT pc.child) <= 1", query)
         self.assertIn("generated_provenance_prefix", query)
-        self.assertIn("MIN(provenance) AS provenance", query)
         self.assertIn("DistinctTriples", query)
+
+    def _get_bigquery_param(self, name):
+        """Returns the value of a query parameter passed to BigQuery in the last execute() call (None if absent)."""
+        job_config = self.mock_executor.execute.call_args[1]["job_config"]
+        params = {p.name: p.value for p in job_config.query_parameters}
+        return params.get(name)
+
+    def test_run_stat_var_group_sends_shared_provenance_to_bigquery(self):
+        generator = StatVarGroupGenerator(self.mock_executor, is_base_dc=True)
+        self.mock_executor.execute.side_effect = [[], MagicMock()]
+
+        generator.run_stat_var_group()
+
+        self.assertEqual(
+            self._get_bigquery_param("generated_provenance"), "dc/base/generated/StatVarGroups"
+        )
+
+    def test_run_stat_var_group_sends_shared_provenance_to_bigquery_not_base_dc(self):
+        generator = StatVarGroupGenerator(self.mock_executor, is_base_dc=False)
+        self.mock_executor.execute.side_effect = [[], MagicMock()]
+
+        generator.run_stat_var_group()
+
+        self.assertEqual(
+            self._get_bigquery_param("generated_provenance"), "generated/StatVarGroups"
+        )
 
 
 class TestNodePropertiesGenerator(unittest.TestCase):
