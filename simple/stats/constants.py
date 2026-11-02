@@ -22,7 +22,10 @@ DEFAULT_FROZEN_TIME = "2023-01-01"
 
 CONFIG_JSON_FILE_NAME = "config.json"
 ALL_IMPORTS = "ALL_IMPORTS"
+# TODO(b/580998027): Deprecate report.json once ingestion_report.json is rolled out.
 REPORT_JSON_FILE_NAME = "report.json"
+# Per-run ingestion summary report, written by stats.report.summary_generator.
+INGESTION_REPORT_FILE_NAME = "ingestion_report.json"
 PROCESS_DIR_NAME = "process"
 
 # Standard NA/null value representations
