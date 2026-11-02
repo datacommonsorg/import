@@ -22,3 +22,8 @@ dcid: "kitchen/Region1"
 typeOf: dcs:AdministrativeArea
 name: "Region One, North"
 containedInPlace: dcid:country/USA
+
+Node: dcid:Author
+typeOf: dcs:Class
+name: "Author"
+description: "A person who wrote an article"
