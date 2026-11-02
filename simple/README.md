@@ -57,6 +57,19 @@ of the run.
 | `WORKFLOW_EXECUTION_ID` | *unset* | Set by the ingestion workflow. When set (and the output dir is on GCS), the run writes a handshake JSON file for the workflow. |
 | `TEMP_LOCATION` | *unset* | GCS path the workflow handshake file is written under. |
 
+## Checking a change for regressions
+
+Before merging a change that may affect the output or performance, compare
+it with `upstream/master` on a real dataset using the
+[A/B regression tool](tools/ab/README.md):
+
+```shell
+python3 -m tools.ab --input_dir=//path/to/input
+```
+
+It reports output differences (byte-level and semantic), wall and CPU time,
+peak memory and log health, and exits non-zero on regressions.
+
 ## Container Build & CI/CD (`datacommons-data`)
 
 This directory is packaged into the [gcr.io/datcom-ci/datacommons-data](https://console.cloud.google.com/artifacts/docker/datcom-ci/us/gcr.io/datacommons-data) container image using `simple/Dockerfile` and `simple/cloudbuild.yaml`.
