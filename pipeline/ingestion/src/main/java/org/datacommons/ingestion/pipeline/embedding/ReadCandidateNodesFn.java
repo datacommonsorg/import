@@ -48,8 +48,8 @@ import org.datacommons.ingestion.spanner.model.NodeRecord;
  * GenerateEmbeddingContentFn}.
  *
  * <p>TODO: We will add the check on last_update_timestamp to filter to nodes that are updated
- * during data ingestion. This functionality will be implemented in a following PR. It will only work
- * properly once data ingestion is also incremental.
+ * during data ingestion. This functionality will be implemented in a following PR. It will only
+ * work properly once data ingestion is also incremental.
  */
 public final class ReadCandidateNodesFn {
 
