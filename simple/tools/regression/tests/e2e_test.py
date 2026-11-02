@@ -18,9 +18,9 @@ import os
 import subprocess
 
 import pytest
-from tools.ab import ab
-from tools.ab import trees
-from tools.ab.report import EXIT_OK
+from tools.regression import cli
+from tools.regression import trees
+from tools.regression.report import EXIT_OK
 
 DATASET = os.path.join(os.path.dirname(__file__), "..", "..", "..", "testsuite",
                        "e2e", "kitchen_sink", "input")
@@ -40,8 +40,8 @@ def _report(work_dir) -> dict:
 
 def test_head_against_head_is_identical(tmp_path):
   repo = _repo_or_skip()
-  work_dir = tmp_path / "ab"
-  exit_code = ab.main([
+  work_dir = tmp_path / "regression"
+  exit_code = cli.main([
       f"--input_dir={DATASET}", "--baseline=HEAD", "--candidate=HEAD",
       f"--work_dir={work_dir}", "--keep_outputs"
   ])
@@ -60,7 +60,7 @@ def test_head_against_head_is_identical(tmp_path):
   # Reusing both outputs compares them again without running anything, and
   # keeps the metrics of the first invocation.
   rerun_dir = tmp_path / "rerun"
-  exit_code = ab.main([
+  exit_code = cli.main([
       f"--baseline_output={work_dir}/baseline/run-1/output",
       f"--candidate_output={work_dir}/candidate/run-1/output",
       f"--work_dir={rerun_dir}"

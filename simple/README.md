@@ -61,10 +61,10 @@ of the run.
 
 Before merging a change that may affect the output or performance, compare
 it with `upstream/master` on a real dataset using the
-[A/B regression tool](tools/ab/README.md):
+[regression check tool](tools/regression/README.md):
 
 ```shell
-python3 -m tools.ab --input_dir=//path/to/input
+python3 -m tools.regression --input_dir=//path/to/input
 ```
 
 It reports output differences (byte-level and semantic), wall and CPU time,

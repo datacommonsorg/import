@@ -29,9 +29,9 @@ import logging
 import os
 import shutil
 
-from tools.ab.measure import run_measured
-from tools.ab.measure import RunMetrics
-from tools.ab.trees import CodeTree
+from tools.regression.measure import run_measured
+from tools.regression.measure import RunMetrics
+from tools.regression.trees import CodeTree
 
 RUN_JSON = "run.json"
 _OUTPUT = "output"

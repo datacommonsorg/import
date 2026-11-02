@@ -1,4 +1,4 @@
-# Preprocessor A/B regression tool
+# Preprocessor regression check
 
 Runs the preprocessor (`stats.main`) on the same dataset at two versions of
 the code, a **baseline** git ref and a **candidate** (by default your working
@@ -24,7 +24,7 @@ covers small, crafted inputs. This tool covers real datasets of any size.
 
 ```bash
 cd simple
-python3 -m tools.ab --input_dir=/path/to/input
+python3 -m tools.regression --input_dir=/path/to/input
 ```
 
 This compares your working tree, including uncommitted changes, with
@@ -33,7 +33,7 @@ sides. The last lines printed are the verdict and the path of the report:
 
 ```
 Verdict: IDENTICAL; perf regressions: none; exit code 0
-Report: /tmp/preprocessor-ab-k2j3h4/report.md (and report.json)
+Report: /tmp/preprocessor-regression-k2j3h4/report.md (and report.json)
 ```
 
 Run it from the virtualenv you use for the preprocessor. Both sides run with
@@ -45,28 +45,28 @@ the refs is not picked up.
 ```bash
 # A local dataset with several imports. Arguments after "--" go to stats.main
 # on both sides.
-python3 -m tools.ab --input_dir=/data/un_input -- --imports=global,unodc,ohchr
+python3 -m tools.regression --input_dir=/data/un_input -- --imports=global,unodc,ohchr
 
 # A dataset on GCS, staged to local disk once (read-only rsync).
-python3 -m tools.ab --input_dir=gs://my-bucket/path/to/input \
+python3 -m tools.regression --input_dir=gs://my-bucket/path/to/input \
     --work_dir=/mnt/disk/ab1
 
 # Config-driven: no --input_dir. Paths in extra flags must be absolute or
 # gs://, because each side runs from its own checkout.
-python3 -m tools.ab -- --config_file=gs://my-bucket/path/config.json
+python3 -m tools.regression -- --config_file=gs://my-bucket/path/config.json
 
 # A custom baseline, or two refs, such as a branch against master.
-python3 -m tools.ab --input_dir=/data/in --baseline=origin/my-base
-python3 -m tools.ab --input_dir=/data/in --baseline=upstream/master \
+python3 -m tools.regression --input_dir=/data/in --baseline=origin/my-base
+python3 -m tools.regression --input_dir=/data/in --baseline=upstream/master \
     --candidate=origin/my-branch
 
 # Run the baseline once, keep its output, then iterate on the candidate.
-python3 -m tools.ab --input_dir=/data/in --work_dir=/mnt/disk/ab1 --keep_outputs
-python3 -m tools.ab --input_dir=/data/in --work_dir=/mnt/disk/ab2 \
+python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab1 --keep_outputs
+python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab2 \
     --baseline_output=/mnt/disk/ab1/baseline/run-1/output
 
 # Timing: three runs per side, reporting medians.
-python3 -m tools.ab --input_dir=/data/in --repeats=3
+python3 -m tools.regression --input_dir=/data/in --repeats=3
 ```
 
 `--baseline_output` and `--candidate_output` accept any output directory.
@@ -77,7 +77,7 @@ existing outputs without running anything. The outputs may come from
 different copies of the input: report paths are compared relative to each
 side's input root.
 
-Run `python3 -m tools.ab --help` for every flag.
+Run `python3 -m tools.regression --help` for every flag.
 
 ## How it works
 
@@ -256,5 +256,5 @@ python3 -m pytest tools/
 ```
 
 `compare_test.py` plants each kind of difference in a small output and
-checks that it is detected. `ab_e2e_test.py` runs the tool HEAD against HEAD
+checks that it is detected. `e2e_test.py` runs the tool HEAD against HEAD
 on the `kitchen_sink` testsuite dataset and expects IDENTICAL.

@@ -18,20 +18,20 @@ import json
 import os
 import sys
 
-from tools.ab.categories import Findings
-from tools.ab.measure import count_log_lines
-from tools.ab.measure import run_measured
-from tools.ab.measure import RunMetrics
-from tools.ab.perf import compare_health
-from tools.ab.perf import compare_perf
-from tools.ab.perf import Thresholds
-from tools.ab.report import EXIT_OK
-from tools.ab.report import EXIT_OUTPUT_DIFFERENT
-from tools.ab.report import EXIT_PERF_REGRESSION
-from tools.ab.report import Verdict
-from tools.ab.run import load_side
-from tools.ab.run import RUN_JSON
-from tools.ab.run import SideRuns
+from tools.regression.categories import Findings
+from tools.regression.measure import count_log_lines
+from tools.regression.measure import run_measured
+from tools.regression.measure import RunMetrics
+from tools.regression.perf import compare_health
+from tools.regression.perf import compare_perf
+from tools.regression.perf import Thresholds
+from tools.regression.report import EXIT_OK
+from tools.regression.report import EXIT_OUTPUT_DIFFERENT
+from tools.regression.report import EXIT_PERF_REGRESSION
+from tools.regression.report import Verdict
+from tools.regression.run import load_side
+from tools.regression.run import RUN_JSON
+from tools.regression.run import SideRuns
 
 THRESHOLDS = Thresholds(wall_pct=10, cpu_pct=10, rss_pct=10, min_seconds=30)
 METRICS = RunMetrics(exit_code=0,

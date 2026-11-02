@@ -22,9 +22,9 @@ import glob
 import os
 from typing import Any
 
-from tools.ab import volatile
-from tools.ab.canonical import load_json
-from tools.ab.categories import Findings
+from tools.regression import volatile
+from tools.regression.canonical import load_json
+from tools.regression.categories import Findings
 
 _IMPORT_FILES = "importFiles"
 _REPORT_FILE = "report.json"

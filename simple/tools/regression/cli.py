@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A/B regression check of the preprocessor: baseline ref vs. candidate code.
+"""Regression check of the preprocessor: baseline ref vs. candidate code.
 
 Runs stats.main of both sides on the same input with the same interpreter and
 flags, compares every output file and the run metrics, and writes report.md
 and report.json. See README.md.
 
   cd simple
-  python3 -m tools.ab --input_dir=/path/to/input [--baseline=upstream/master]
+  python3 -m tools.regression --input_dir=/path/to/input [--baseline=upstream/master]
       [-- <extra stats.main flags>]
 
 Exit codes: 0 identical and no perf regression, 3 output differs, 4 perf
@@ -33,19 +33,19 @@ import shutil
 import sys
 import tempfile
 
-from tools.ab import report as report_lib
-from tools.ab import trees
-from tools.ab.compare import compare_outputs
-from tools.ab.compare import SideOutput
-from tools.ab.inputs import GcsInput
-from tools.ab.inputs import resolve_input_dir
-from tools.ab.perf import compare_health
-from tools.ab.perf import compare_perf
-from tools.ab.perf import Thresholds
-from tools.ab.run import load_side
-from tools.ab.run import run_sides
-from tools.ab.run import RunSpec
-from tools.ab.run import SideRuns
+from tools.regression import report as report_lib
+from tools.regression import trees
+from tools.regression.compare import compare_outputs
+from tools.regression.compare import SideOutput
+from tools.regression.inputs import GcsInput
+from tools.regression.inputs import resolve_input_dir
+from tools.regression.perf import compare_health
+from tools.regression.perf import compare_perf
+from tools.regression.perf import Thresholds
+from tools.regression.run import load_side
+from tools.regression.run import run_sides
+from tools.regression.run import RunSpec
+from tools.regression.run import SideRuns
 
 BASELINE = "baseline"
 CANDIDATE = "candidate"
@@ -55,7 +55,7 @@ _EXTRA_FLAGS_SEPARATOR = "--"
 
 def _parser() -> argparse.ArgumentParser:
   p = argparse.ArgumentParser(
-      prog="python3 -m tools.ab",
+      prog="python3 -m tools.regression",
       description=__doc__,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   p.add_argument("--input_dir",
@@ -137,7 +137,7 @@ def _parse_args(argv: list[str]) -> tuple[argparse.Namespace, list[str]]:
 
 def _make_work_dir(work_dir: str | None) -> str:
   if not work_dir:
-    return tempfile.mkdtemp(prefix="preprocessor-ab-")
+    return tempfile.mkdtemp(prefix="preprocessor-regression-")
   work_dir = os.path.abspath(work_dir)
   if os.path.isdir(work_dir) and os.listdir(work_dir):
     raise ValueError(f"--work_dir {work_dir} is not empty")
@@ -194,7 +194,7 @@ def _cleanup(args: argparse.Namespace, sides: dict[str, SideRuns],
 
 def main(argv: list[str]) -> int:
   args, extra_flags = _parse_args(argv)
-  logging.basicConfig(level=logging.INFO, format="[ab] %(message)s")
+  logging.basicConfig(level=logging.INFO, format="[regression] %(message)s")
   work_dir = _make_work_dir(args.work_dir)
   stage_dir = os.path.abspath(args.stage_dir or os.path.join(work_dir, "input"))
   input_dir = resolve_input_dir(args.input_dir, GcsInput(args.gcs_input),

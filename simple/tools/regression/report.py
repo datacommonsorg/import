@@ -17,11 +17,11 @@ import dataclasses
 import json
 from typing import Any
 
-from tools.ab.categories import CATEGORIES
-from tools.ab.compare import Comparison
-from tools.ab.perf import MetricRow
-from tools.ab.perf import PerfResult
-from tools.ab.run import SideRuns
+from tools.regression.categories import CATEGORIES
+from tools.regression.compare import Comparison
+from tools.regression.perf import MetricRow
+from tools.regression.perf import PerfResult
+from tools.regression.run import SideRuns
 
 EXIT_OK = 0
 EXIT_OUTPUT_DIFFERENT = 3
@@ -139,7 +139,7 @@ def _header(report: Report) -> list[str]:
     perf = "no regression beyond the thresholds"
   info = report.run_info
   return [
-      "# Preprocessor A/B report",
+      "# Preprocessor regression report",
       "",
       f"## Verdict: {verdict.label}",
       "",

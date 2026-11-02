@@ -18,11 +18,11 @@ import dataclasses
 import tempfile
 from typing import Any
 
-from tools.ab import shards
-from tools.ab.categories import Findings
-from tools.ab.nodes import NodeComparer
-from tools.ab.observations import ObservationComparer
-from tools.ab.report_json import compare_reports
+from tools.regression import shards
+from tools.regression.categories import Findings
+from tools.regression.nodes import NodeComparer
+from tools.regression.observations import ObservationComparer
+from tools.regression.report_json import compare_reports
 
 
 @dataclasses.dataclass(frozen=True)

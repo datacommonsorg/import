@@ -78,7 +78,7 @@ function run_py_test {
   echo -e "#### Running preprocessor test suite"
   python3 -m pytest testsuite/ -n auto
 
-  echo -e "#### Running preprocessor A/B tool tests"
+  echo -e "#### Running preprocessor regression tool tests"
   python3 -m pytest tools/
 
   echo -e "#### Running ingestion helper tests"

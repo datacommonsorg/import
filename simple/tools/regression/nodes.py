@@ -26,14 +26,14 @@ import concurrent.futures
 import json
 from typing import Any
 
-from tools.ab.buckets import NUM_BUCKETS
-from tools.ab.buckets import SpillBuckets
-from tools.ab.canonical import canonical_json
-from tools.ab.canonical import digest64
-from tools.ab.canonical import load_json
-from tools.ab.categories import Findings
-from tools.ab.shards import NODE
-from tools.ab.shards import OutputTree
+from tools.regression.buckets import NUM_BUCKETS
+from tools.regression.buckets import SpillBuckets
+from tools.regression.canonical import canonical_json
+from tools.regression.canonical import digest64
+from tools.regression.canonical import load_json
+from tools.regression.categories import Findings
+from tools.regression.shards import NODE
+from tools.regression.shards import OutputTree
 
 # How many entries of each grouped statistic are kept in the report.
 _TOP_GROUPS = 30

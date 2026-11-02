@@ -21,9 +21,9 @@ recorded as difference categories.
 import dataclasses
 import statistics
 
-from tools.ab.categories import Findings
-from tools.ab.measure import RunMetrics
-from tools.ab.run import SideRuns
+from tools.regression.categories import Findings
+from tools.regression.measure import RunMetrics
+from tools.regression.run import SideRuns
 
 _KB_PER_MIB = 1024
 

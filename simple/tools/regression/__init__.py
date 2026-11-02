@@ -11,11 +11,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Entry point: python3 -m tools.ab (run from simple/)."""
-
-import sys
-
-from tools.ab.ab import main
-
-if __name__ == "__main__":
-  sys.exit(main(sys.argv[1:]))
+"""Regression check tool for the preprocessor (see README.md)."""

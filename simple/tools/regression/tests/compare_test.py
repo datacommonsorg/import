@@ -23,12 +23,12 @@ import os
 from typing import Any, Callable
 
 import pytest
-from tools.ab.categories import CATEGORIES
-from tools.ab.categories import CATEGORIES_BY_NAME
-from tools.ab.categories import Kind
-from tools.ab.compare import compare_outputs
-from tools.ab.compare import SideOutput
-from tools.ab.shards import load_output_tree
+from tools.regression.categories import CATEGORIES
+from tools.regression.categories import CATEGORIES_BY_NAME
+from tools.regression.categories import Kind
+from tools.regression.compare import compare_outputs
+from tools.regression.compare import SideOutput
+from tools.regression.shards import load_output_tree
 
 CONTEXT = {"dcid": "https://datacommons.org/browser/"}
 INPUT_ROOT = "/data/input"
