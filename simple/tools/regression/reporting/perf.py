@@ -21,9 +21,10 @@ recorded as difference categories.
 import dataclasses
 import statistics
 
-from tools.regression.categories import Findings
-from tools.regression.measure import RunMetrics
-from tools.regression.run import SideRuns
+from tools.regression.comparison.categories import Findings
+from tools.regression.comparison.categories import sides
+from tools.regression.execution.measure import RunMetrics
+from tools.regression.execution.run import SideRuns
 
 _KB_PER_MIB = 1024
 
@@ -112,36 +113,22 @@ def compare_perf(base: SideRuns, cand: SideRuns,
   return PerfResult(tuple(rows), (len(base.metrics), len(cand.metrics)), reason)
 
 
-def _status(metrics: RunMetrics) -> dict:
-  return {"exit_code": metrics.exit_code, "timed_out": metrics.timed_out}
-
-
 def compare_health(base: SideRuns, cand: SideRuns, findings: Findings) -> None:
   """Records exit status and log line changes of run 1 as findings."""
   if not base.metrics or not cand.metrics:
     return
   b, c = base.metrics[0], cand.metrics[0]
-  sample = {"baseline_log": base.log_path, "candidate_log": cand.log_path}
+  logs = {"baseline_log": base.log_path, "candidate_log": cand.log_path}
   if b.exit_code != c.exit_code or b.timed_out != c.timed_out:
-    findings.add("exit_status_changed",
-                 sample={
-                     "baseline": _status(b),
-                     "candidate": _status(c),
-                     **sample
-                 })
+    status = [
+        dict(exit_code=m.exit_code, timed_out=m.timed_out) for m in (b, c)
+    ]
+    findings.add("exit_status_changed", sample=dict(sides(*status), **logs))
   if c.error_lines > b.error_lines:
     findings.add("error_lines_increased",
                  c.error_lines - b.error_lines,
-                 sample={
-                     "baseline": b.error_lines,
-                     "candidate": c.error_lines,
-                     **sample
-                 })
+                 sample=dict(sides(b.error_lines, c.error_lines), **logs))
   if c.warning_lines != b.warning_lines:
     findings.add("warning_lines_changed",
                  abs(c.warning_lines - b.warning_lines),
-                 sample={
-                     "baseline": b.warning_lines,
-                     "candidate": c.warning_lines,
-                     **sample
-                 })
+                 sample=dict(sides(b.warning_lines, c.warning_lines), **logs))

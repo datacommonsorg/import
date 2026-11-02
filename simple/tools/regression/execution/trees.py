@@ -38,9 +38,6 @@ class CodeTree:
     suffix = " + uncommitted changes" if self.dirty else ""
     return f"{self.label} @ {self.commit[:_SHORT_SHA]}{suffix}"
 
-  def to_json(self) -> dict:
-    return dataclasses.asdict(self)
-
 
 def _git(repo: str, *args: str) -> str:
   return subprocess.run(["git", "-C", repo, *args],

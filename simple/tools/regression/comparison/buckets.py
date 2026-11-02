@@ -19,7 +19,11 @@ candidate, one bucket at a time. Memory is bounded by the write buffer plus
 two buckets, i.e. about 1/NUM_BUCKETS of the output.
 """
 
+import concurrent.futures
 import os
+
+from tools.regression.comparison.categories import Findings
+from tools.regression.comparison.shards import OutputTree
 
 NUM_BUCKETS = 256
 # Buffered bytes across all buckets before they are appended to disk.
@@ -60,3 +64,36 @@ class SpillBuckets:
       return b""
     with open(path, "rb") as f:
       return f.read()
+
+
+class BucketComparer:
+  """Base of the observation and node comparers.
+
+  compare() of a subclass calls _spill_and_compare(), which spills each side
+  with _spill_side() and then calls _compare_bucket() on bucket i of both
+  sides, for every i.
+  """
+
+  def __init__(self, findings: Findings, pool: concurrent.futures.Executor,
+               spill_dir: str) -> None:
+    self._findings = findings
+    self._pool = pool
+    self._spill_dir = spill_dir
+    # The canonical @context values of the shards of each side.
+    self.contexts: tuple[set[str], set[str]] = (set(), set())
+
+  def _spill_and_compare(self, baseline: OutputTree,
+                         candidate: OutputTree) -> None:
+    spills = [SpillBuckets(f"{self._spill_dir}/{side}") for side in range(2)]
+    for side, tree in enumerate((baseline, candidate)):
+      self._spill_side(side, tree, spills[side])
+      spills[side].flush()
+    for bucket in range(NUM_BUCKETS):
+      self._compare_bucket(spills[0].read(bucket), spills[1].read(bucket))
+
+  def _spill_side(self, side: int, tree: OutputTree,
+                  spill: SpillBuckets) -> None:
+    raise NotImplementedError
+
+  def _compare_bucket(self, baseline: bytes, candidate: bytes) -> None:
+    raise NotImplementedError

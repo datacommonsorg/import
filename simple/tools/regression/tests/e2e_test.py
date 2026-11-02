@@ -19,8 +19,8 @@ import subprocess
 
 import pytest
 from tools.regression import cli
-from tools.regression import trees
-from tools.regression.report import EXIT_OK
+from tools.regression.execution import trees
+from tools.regression.reporting.report import EXIT_OK
 
 DATASET = os.path.join(os.path.dirname(__file__), "..", "..", "..", "testsuite",
                        "e2e", "kitchen_sink", "input")

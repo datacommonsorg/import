@@ -29,9 +29,9 @@ import logging
 import os
 import shutil
 
-from tools.regression.measure import run_measured
-from tools.regression.measure import RunMetrics
-from tools.regression.trees import CodeTree
+from tools.regression.execution.measure import run_measured
+from tools.regression.execution.measure import RunMetrics
+from tools.regression.execution.trees import CodeTree
 
 RUN_JSON = "run.json"
 _OUTPUT = "output"
@@ -93,7 +93,7 @@ def run_once(tree: CodeTree, spec: RunSpec, run_dir: str) -> RunMetrics:
     json.dump(
         {
             "code": tree.describe(),
-            "tree": tree.to_json(),
+            "tree": dataclasses.asdict(tree),
             "command": command,
             "input_dir": spec.input_dir,
             "metrics": dataclasses.asdict(metrics),

@@ -22,9 +22,10 @@ import glob
 import os
 from typing import Any
 
-from tools.regression import volatile
-from tools.regression.canonical import load_json
-from tools.regression.categories import Findings
+from tools.regression.comparison import volatile
+from tools.regression.comparison.canonical import load_json
+from tools.regression.comparison.categories import Findings
+from tools.regression.comparison.categories import sides
 
 _IMPORT_FILES = "importFiles"
 _REPORT_FILE = "report.json"
@@ -62,12 +63,8 @@ def _diff_dicts(base: dict, cand: dict, category: str, label: str,
   for key in sorted(base.keys() | cand.keys()):
     if base.get(key) == cand.get(key):
       continue
-    findings.add(category,
-                 sample={
-                     label: key,
-                     "baseline": base.get(key),
-                     "candidate": cand.get(key)
-                 })
+    sample = {label: key, **sides(base.get(key), cand.get(key))}
+    findings.add(category, sample=sample)
 
 
 def compare_reports(baseline_dir: str, baseline_input: str | None,

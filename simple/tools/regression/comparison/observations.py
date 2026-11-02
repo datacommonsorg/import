@@ -28,27 +28,22 @@ import dataclasses
 from typing import Any
 
 import numpy as np
-from tools.regression.buckets import NUM_BUCKETS
-from tools.regression.buckets import SpillBuckets
-from tools.regression.canonical import canonical_json
-from tools.regression.canonical import digest64
-from tools.regression.canonical import digest128
-from tools.regression.canonical import load_json
-from tools.regression.categories import Findings
-from tools.regression.shards import OBSERVATION
-from tools.regression.shards import OutputTree
+from tools.regression.comparison import buckets
+from tools.regression.comparison.canonical import canonical_json
+from tools.regression.comparison.canonical import digest64
+from tools.regression.comparison.canonical import digest128
+from tools.regression.comparison.canonical import load_json
+from tools.regression.comparison.categories import Findings
+from tools.regression.comparison.categories import sides
+from tools.regression.comparison.shards import OBSERVATION
+from tools.regression.comparison.shards import OutputTree
 
 _VARIABLE = "dcid:variableMeasured"
 # With the variable's @id, these make up the semantic key. Any property not
 # listed in this module (e.g. a custom dimension) is part of the key too.
-_KEY_FIELDS = (
-    "dcid:observationAbout",
-    "dcid:observationDate",
-    "dcid:provenance",
-    "dcid:unit",
-    "dcid:measurementMethod",
-    "dcid:observationPeriod",
-)
+_KEY_FIELDS = ("dcid:observationAbout", "dcid:observationDate",
+               "dcid:provenance", "dcid:unit", "dcid:measurementMethod",
+               "dcid:observationPeriod")
 _VALUE_FIELDS = ("dcid:value", "dcid:scalingFactor")
 _PROPERTY_FIELDS = ("@id", "@type", _VARIABLE)
 _PROVENANCE_URL = "dcid:provenanceUrl"
@@ -153,25 +148,23 @@ def _compare_keyed(base: _KeyedRows, cand: _KeyedRows) -> dict[str, np.ndarray]:
                                   cand.keys,
                                   assume_unique=True,
                                   return_indices=True)
-  multiplicity = base.counts[ib] != cand.counts[ic]
-  same_count = ~multiplicity
-  value = (base.value[ib] != cand.value[ic]) & same_count
-  props = (base.props[ib] != cand.props[ic]) & same_count & ~value
+  same_count = base.counts[ib] == cand.counts[ic]
+
+  def differs(column: str) -> np.ndarray:
+    """Masks the common keys, written equally often, whose column differs."""
+    return (getattr(base, column)[ib] != getattr(cand, column)[ic]) & same_count
+
+  only_base = np.setdiff1d(base.keys, cand.keys, assume_unique=True)
+  only_cand = np.setdiff1d(cand.keys, base.keys, assume_unique=True)
+  value = differs("value")
   return {
-      "obs_only_baseline":
-          np.setdiff1d(base.keys, cand.keys, assume_unique=True),
-      "obs_only_candidate":
-          np.setdiff1d(cand.keys, base.keys, assume_unique=True),
-      "obs_multiplicity_changed":
-          common[multiplicity],
-      "obs_value_changed":
-          common[value],
-      "obs_properties_changed":
-          common[props],
-      "obs_provenance_url_changed":
-          common[(base.purl[ib] != cand.purl[ic]) & same_count],
-      "obs_folder_moved":
-          common[(base.folders[ib] != cand.folders[ic]) & same_count],
+      "obs_only_baseline": only_base,
+      "obs_only_candidate": only_cand,
+      "obs_multiplicity_changed": common[~same_count],
+      "obs_value_changed": common[value],
+      "obs_properties_changed": common[differs("props") & ~value],
+      "obs_provenance_url_changed": common[differs("purl")],
+      "obs_folder_moved": common[differs("folders")],
   }
 
 
@@ -182,58 +175,48 @@ class _SideTotals:
   duplicate_keys: int = 0
   with_provenance_url: int = 0
   per_folder: Counter = dataclasses.field(default_factory=Counter)
-  contexts: set = dataclasses.field(default_factory=set)
 
 
-class ObservationComparer:
+class ObservationComparer(buckets.BucketComparer):
   """Compares the observations of two outputs, recording into findings."""
 
   def __init__(self, findings: Findings, pool: concurrent.futures.Executor,
                spill_dir: str) -> None:
-    self._findings = findings
-    self._pool = pool
-    self._spill_dir = spill_dir
+    super().__init__(findings, pool, spill_dir)
+    self._folders: list[str] = []
     self._sample_keys: dict[str, list[Key]] = defaultdict(list)
-    self.totals = (_SideTotals(), _SideTotals())
-
-  @property
-  def contexts(self) -> tuple[set[str], set[str]]:
-    """The canonical @context values of the shards of each side."""
-    return self.totals[0].contexts, self.totals[1].contexts
+    self._totals = (_SideTotals(), _SideTotals())
 
   def compare(self, baseline: OutputTree,
               candidate: OutputTree) -> dict[str, Any]:
     """Runs the comparison and returns summary statistics."""
-    folders = sorted(baseline.folders | candidate.folders)
-    spills = [SpillBuckets(f"{self._spill_dir}/{side}") for side in range(2)]
-    for tree, spill, totals in zip((baseline, candidate), spills, self.totals):
-      self._spill_side(tree, folders, spill, totals)
-    for bucket in range(NUM_BUCKETS):
-      rows = [np.frombuffer(s.read(bucket), dtype=DIGEST_DTYPE) for s in spills]
-      self._compare_bucket(rows[0], rows[1])
+    self._folders = sorted(baseline.folders | candidate.folders)
+    self._spill_and_compare(baseline, candidate)
     self._add_samples(baseline, candidate)
-    return self._stats(folders)
+    return self._stats()
 
-  def _spill_side(self, tree: OutputTree, folders: list[str],
-                  spill: SpillBuckets, totals: _SideTotals) -> None:
-    index = {folder: i for i, folder in enumerate(folders)}
+  def _spill_side(self, side: int, tree: OutputTree,
+                  spill: buckets.SpillBuckets) -> None:
+    totals = self._totals[side]
+    index = {folder: i for i, folder in enumerate(self._folders)}
     tasks = [(s.path, index[s.folder]) for s in tree.of_kind(OBSERVATION)]
     for rows, context in self._pool.map(digest_shard,
                                         tasks,
                                         chunksize=_SHARDS_PER_TASK):
-      totals.contexts.add(context)
+      self.contexts[side].add(context)
       totals.observations += len(rows)
       totals.with_provenance_url += int((rows["purl"] != 0).sum())
-      per_folder = np.bincount(rows["folder"], minlength=len(folders))
+      per_folder = np.bincount(rows["folder"], minlength=len(self._folders))
       for i in np.flatnonzero(per_folder):
-        totals.per_folder[folders[i]] += int(per_folder[i])
+        totals.per_folder[self._folders[i]] += int(per_folder[i])
       _spill_rows(rows, spill)
-    spill.flush()
 
-  def _compare_bucket(self, baseline: np.ndarray,
-                      candidate: np.ndarray) -> None:
-    keyed = (_group_by_key(baseline), _group_by_key(candidate))
-    for totals, side in zip(self.totals, keyed):
+  def _compare_bucket(self, baseline: bytes, candidate: bytes) -> None:
+    keyed = [
+        _group_by_key(np.frombuffer(rows, dtype=DIGEST_DTYPE))
+        for rows in (baseline, candidate)
+    ]
+    for totals, side in zip(self._totals, keyed):
       totals.distinct_keys += len(side.keys)
       totals.duplicate_keys += int((side.counts > 1).sum())
     for category, keys in _compare_keyed(*keyed).items():
@@ -251,34 +234,29 @@ class ObservationComparer:
     ]
     for category, keys in self._sample_keys.items():
       for key in keys:
-        self._findings.add_sample(category, {
-            "baseline": found[0].get(key, []),
-            "candidate": found[1].get(key, [])
-        })
+        self._findings.add_sample(
+            category, sides(found[0].get(key, []), found[1].get(key, [])))
 
-  def _stats(self, folders: list[str]) -> dict[str, Any]:
-    base, cand = self.totals
-
-    def pair(field: str) -> list[int]:
-      return [getattr(base, field), getattr(cand, field)]
-
-    return {
-        "observations": pair("observations"),
-        "distinct_keys": pair("distinct_keys"),
-        "duplicate_keys": pair("duplicate_keys"),
-        "with_provenance_url": pair("with_provenance_url"),
-        "per_folder": {
-            f: [base.per_folder[f], cand.per_folder[f]] for f in folders
-        },
+  def _stats(self) -> dict[str, Any]:
+    base, cand = self._totals
+    stats = {
+        field:
+            [getattr(base, field), getattr(cand, field)]
+        for field in ("observations", "distinct_keys", "duplicate_keys",
+                      "with_provenance_url")
     }
+    stats["per_folder"] = {
+        f: [base.per_folder[f], cand.per_folder[f]] for f in self._folders
+    }
+    return stats
 
 
-def _spill_rows(rows: np.ndarray, spill: SpillBuckets) -> None:
+def _spill_rows(rows: np.ndarray, spill: buckets.SpillBuckets) -> None:
   """Appends each row to the bucket chosen by its key."""
-  buckets = (rows["key"]["hi"] % NUM_BUCKETS).astype(np.intp)
-  order = np.argsort(buckets, kind="stable")
-  rows, buckets = rows[order], buckets[order]
-  bounds = np.searchsorted(buckets, np.arange(NUM_BUCKETS + 1))
+  bucket_of = (rows["key"]["hi"] % buckets.NUM_BUCKETS).astype(np.intp)
+  order = np.argsort(bucket_of, kind="stable")
+  rows, bucket_of = rows[order], bucket_of[order]
+  bounds = np.searchsorted(bucket_of, np.arange(buckets.NUM_BUCKETS + 1))
   for bucket in np.flatnonzero(np.diff(bounds)):
     spill.append(int(bucket), rows[bounds[bucket]:bounds[bucket + 1]].tobytes())
 

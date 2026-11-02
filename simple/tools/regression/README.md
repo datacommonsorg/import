@@ -12,13 +12,10 @@ tree), and compares:
 It writes `report.md` and `report.json`, and exits non-zero when the output
 differs or performance regresses beyond the thresholds.
 
-## When to use it
-
 Run it before merging any preprocessor change that could affect its output
-or performance: refactors that should not change the output, and
-performance work. For a change that is supposed to change the output, it
-shows exactly what changed and where. The testsuite (`simple/testsuite/`)
-covers small, crafted inputs. This tool covers real datasets of any size.
+or performance. For a change that is meant to change the output, it shows
+exactly what changed. The testsuite (`simple/testsuite/`) covers small,
+crafted inputs; this tool covers real datasets of any size.
 
 ## Quick start
 
@@ -27,9 +24,9 @@ cd simple
 python3 -m tools.regression --input_dir=/path/to/input
 ```
 
-This compares your working tree, including uncommitted changes, with
-`upstream/master` on `/path/to/input`, using the current interpreter for both
-sides. The last lines printed are the verdict and the path of the report:
+This compares your working tree, uncommitted changes included, with
+`upstream/master` on `/path/to/input`. The last lines printed are the verdict
+and the path of the report:
 
 ```
 Verdict: IDENTICAL; perf regressions: none; exit code 0
@@ -43,7 +40,7 @@ the refs is not picked up.
 ## Examples
 
 ```bash
-# A local dataset with several imports. Arguments after "--" go to stats.main
+# Several imports of a local dataset. Arguments after "--" go to stats.main
 # on both sides.
 python3 -m tools.regression --input_dir=/data/un_input -- --imports=global,unodc,ohchr
 
@@ -55,8 +52,7 @@ python3 -m tools.regression --input_dir=gs://my-bucket/path/to/input \
 # gs://, because each side runs from its own checkout.
 python3 -m tools.regression -- --config_file=gs://my-bucket/path/config.json
 
-# A custom baseline, or two refs, such as a branch against master.
-python3 -m tools.regression --input_dir=/data/in --baseline=origin/my-base
+# Two refs, such as a branch against master.
 python3 -m tools.regression --input_dir=/data/in --baseline=upstream/master \
     --candidate=origin/my-branch
 
@@ -69,13 +65,12 @@ python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab2 \
 python3 -m tools.regression --input_dir=/data/in --repeats=3
 ```
 
-`--baseline_output` and `--candidate_output` accept any output directory.
-For a directory written by this tool (`<work_dir>/<side>/run-1/output`), the
-metrics of its runs are reused from the `run.json` files next to it. For any
-other directory, perf is not judged for that side. Passing both compares two
-existing outputs without running anything. The outputs may come from
-different copies of the input: report paths are compared relative to each
-side's input root.
+`--baseline_output` and `--candidate_output` accept any output directory. For
+one written by this tool (`<work_dir>/<side>/run-1/output`), the metrics are
+reused from the `run.json` files next to it; for any other, perf is not judged
+for that side. Passing both compares two outputs without running anything.
+Report paths are compared relative to each side's input root, so the outputs
+may come from different copies of the input.
 
 Run `python3 -m tools.regression --help` for every flag.
 
@@ -83,19 +78,17 @@ Run `python3 -m tools.regression --help` for every flag.
 
 1. A gs:// input is staged to `<work_dir>/input` (see
    [GCS inputs](#gcs-inputs)).
-2. Every ref is checked out into a temporary detached `git worktree`, which
-   is removed at the end, even on failure or Ctrl-C. Refs that resolve to the
-   same commit share one worktree. The working tree candidate runs in place.
+2. Each ref is checked out into a temporary detached `git worktree`, removed
+   at the end even on failure or Ctrl-C. Refs that resolve to the same commit
+   share one. The working tree candidate runs in place.
 3. Each side runs `python -m stats.main --input_dir=... --output_dir=...
-   <extra flags>` from its own `simple/` directory, in the default
-   multiprocess (production) mode. `PYTHONPATH`, `WORKFLOW_EXECUTION_ID` and
-   `TEMP_LOCATION` are removed from the environment, so neither side imports
-   the other's code or writes the ingestion workflow handshake. `TMPDIR`
-   points to the run directory. With `--repeats`, the sides alternate
-   (B1, A1, B2, A2, ...) to spread machine drift evenly.
-4. The outputs of run 1 are compared. Outputs of later repeats are deleted
+   <extra flags>` from its own `simple/`, in the default multiprocess
+   (production) mode, without `PYTHONPATH`, `WORKFLOW_EXECUTION_ID` and
+   `TEMP_LOCATION`, and with `TMPDIR` in the run directory. With `--repeats`,
+   the sides alternate (B1, A1, B2, A2, ...) to spread machine drift.
+4. The outputs of run 1 are compared; those of later repeats are deleted
    right away.
-5. The run outputs and the staged input are deleted unless you pass
+5. Run outputs and the staged input are deleted unless you pass
    `--keep_outputs`. Logs, `run.json` files and reports are kept:
 
 ```
@@ -103,53 +96,53 @@ Run `python3 -m tools.regression --help` for every flag.
 <work_dir>/<baseline|candidate>/run-<n>/{preprocessor.log, run.json, output/}
 ```
 
+The code is split into three packages under `tools/regression/`:
+`execution/` (code trees, input, measured runs), `comparison/` (the output
+diff and its categories) and `reporting/` (perf verdict, `report.md`,
+`report.json`). `cli.py` parses the flags and ties them together.
+
 ## Reading the report
 
-The report starts with the **verdict**. The output is IDENTICAL or DIFFERENT,
-followed by the performance status and the exit code. Next are both sides'
-code (ref, commit, and whether there are uncommitted changes), output
-directories and logs. Then come these sections:
+The report starts with the **verdict** (IDENTICAL or DIFFERENT, the
+performance status and the exit code), then each side's code, output
+directory and log, then:
 
-- **Performance:** the median of each metric per side, the delta, the
-  threshold and whether it regressed. Below the metrics are the exit status,
-  timeout, and ERROR and WARNING line counts of run 1.
+- **Performance:** each metric's median per side, the delta, the threshold
+  and whether it regressed, followed by run 1's exit status, timeout, and
+  ERROR and WARNING line counts.
 - **Differences:** every category with its count. **DIFF** marks a failing
-  category with differences. *info* marks an informational one.
-- **Output summary:** shard, observation and node counts per side. A `≠`
-  marks values that differ. It also lists observations per folder, node @ids
-  per @type, the most common node property changes and folder moves, for
-  the values that differ.
-- **Samples:** for each category with differences, the first `--samples`
-  examples as JSON. For observations, a sample shows every baseline and
-  candidate record with that key, along with its folder.
+  category with differences, *info* an informational one.
+- **Output summary:** shard, observation and node counts per side, with `≠`
+  on values that differ, then the differing observations per folder and node
+  @ids per @type, and the most common node property changes and folder moves.
+- **Samples:** the first `--samples` examples of each category with
+  differences, as JSON. An observation sample shows every baseline and
+  candidate record with that key, and its folder.
 
 ### How the comparison works
 
-- **Observations** are matched by a semantic key, regardless of the folder
-  or shard they are in. The key is `variableMeasured` @id,
-  `observationAbout`, `observationDate`, `provenance`, `unit`,
-  `measurementMethod`, `observationPeriod`, plus every other property not
-  listed below (for example a custom dimension such as `dcid:sex`). For
-  matched keys, the comparison checks the value (`value`, `scalingFactor`),
-  the other properties (`@id`, `@type`, the `variableMeasured` object with
-  its `observationProperties`), the `provenanceUrl`, the folder, and how many
-  times the key is written.
+- **Observations** are matched by a semantic key, regardless of folder or
+  shard: `variableMeasured` @id, `observationAbout`, `observationDate`,
+  `provenance`, `unit`, `measurementMethod`, `observationPeriod`, plus any
+  other property not listed here (for example a custom dimension such as
+  `dcid:sex`). For each key it checks the value (`value`, `scalingFactor`),
+  the other properties (`@id`, `@type`, the `variableMeasured` object), the
+  `provenanceUrl`, the folder, and how many times the key is written.
 - **Nodes** are matched by @id. All records of an @id, from any folder or
-  shard, are merged into one set of values per property before they are
-  compared. Splitting or duplicating a subject's records therefore does not
-  change its content.
-- **Reports:** `process/report.json` and the per-file `report_*.json` are
-  compared after the volatile fields are removed. Per-file reports are
-  matched by the input file they describe.
+  shard, are merged into one set of values per property first, so splitting
+  or duplicating a subject's records does not change its content.
+- **Reports:** `process/report.json` and the per-file `report_*.json`,
+  without volatile fields. Per-file reports are matched by the input file
+  they describe.
 - **Shards:** observation shards are matched by name. Node shards, whose
   names end in a random uid, are matched by content within their folder.
 
 ### Difference categories
 
-Failing categories change what ingestion loads: the set of observations and
-their values, a node's merged properties, the report, or the run's health.
-Informational categories change only how the same graph is laid out, or the
-warnings. `--strict` makes informational categories fail too.
+Failing categories change what ingestion loads: the observations and their
+values, a node's merged properties, the report, or the run's health.
+Informational ones change only the layout of the same graph, or the warnings.
+`--strict` makes informational categories fail too.
 
 | Category | Kind | Meaning |
 |---|---|---|
@@ -175,12 +168,10 @@ warnings. `--strict` makes informational categories fail too.
 | `node_folder_moved` | informational | A node @id is written to a different set of folders. For example, global triples such as `dc/g/Root` can land in any folder on master. |
 | `node_records_changed` | informational | A node @id is written as a different number of records, for example when a duplicate record is removed or a subject is split over shards. |
 
-### Volatile fields
-
-The comparison ignores only what is listed in [volatile.py](volatile.py):
-the report timestamps (`startTime`, `lastUpdate`), the timestamp suffix of
-the run directory, the random uid in node shard names (node shards are
-matched by content), and each side's input root in report paths.
+The comparison ignores only what is listed in
+[comparison/volatile.py](comparison/volatile.py): report timestamps
+(`startTime`, `lastUpdate`), the run directory's timestamp suffix, the random
+uid in node shard names, and each side's input root in report paths.
 
 ## Thresholds and exit codes
 
@@ -191,8 +182,8 @@ matched by content), and each side's input root in report paths.
 | `--max_rss_regression_pct` | 10 | Max RSS and peak process-tree RSS |
 | `--perf_min_seconds` | 30 | Perf is not judged when the baseline's median wall time is shorter than this, or when either side failed or has no metrics. |
 
-Thresholds compare the candidate's median with the baseline's median. With
-noisy machines, use `--repeats=3` or more.
+Thresholds compare the candidate's median with the baseline's. On noisy
+machines, use `--repeats=3` or more.
 
 | Exit code | Meaning |
 |---|---|
@@ -205,24 +196,20 @@ noisy machines, use `--repeats=3` or more.
 A preprocessor crash is a result, not a tool failure: it shows up as
 `exit_status_changed` plus the missing output.
 
-### What the metrics measure
-
-CPU time and max RSS come from `wait4()`, like `/usr/bin/time -v`. They cover
-the preprocessor and the pool workers it waits for. Max RSS is the largest
-single process. Peak RSS (process tree) is the largest sum over all
-processes, sampled from `/proc` every 0.5 s. Pages shared by forked workers
-are counted once per process, so it is an upper bound. It can also miss
-short spikes.
+CPU time and max RSS come from `wait4()`, like `/usr/bin/time -v`, and cover
+the preprocessor and its pool workers. Max RSS is the largest single process.
+Peak RSS (process tree) is the largest sum over all processes, sampled from
+`/proc` every 0.5 s: an upper bound, since pages shared by forked workers are
+counted once per process, that can miss short spikes.
 
 ## GCS inputs
 
 | `--gcs_input` | What happens | Use when |
 |---|---|---|
-| `stage` (default) | `gcloud storage rsync` copies the input to local disk once, read-only on GCS, and both sides read the copy. | You want stable timings that measure the preprocessor, not the network. Needs disk for the input, and the copy takes time up front. Pass `--stage_dir` to keep and reuse the copy: later runs only sync changes. |
+| `stage` (default) | `gcloud storage rsync` copies the input to local disk once, read-only on GCS, and both sides read the copy. | You want timings of the preprocessor, not the network. Needs disk, and the copy takes time up front. Pass `--stage_dir` to keep and reuse the copy: later runs only sync changes. |
 | `direct` | Both sides read gs:// directly, as the ingestion workflow does. | You are changing the GCS read path, or the input is too large to copy. Timings include network variance, so use `--repeats`. |
 
-Outputs are always written to local disk, not GCS, so upload time is not
-measured.
+Outputs are always written to local disk, so upload time is not measured.
 
 ## Resources
 
@@ -232,21 +219,20 @@ measured.
   input, 43.9M observations) write about 36 GB per side.
 - **/tmp is often a RAM-backed tmpfs.** The default work directory is under
   `$TMPDIR`. For large datasets, pass `--work_dir` on a real disk, or the
-  outputs will use RAM. `--keep_outputs` keeps them there.
+  outputs will use RAM.
 - **RAM:** the comparison spills digests to 256 hash buckets on disk and
-  holds only one bucket at a time. Each worker parses one shard at a time.
-  Lower `--compare_workers` if memory is tight.
-- **Hangs:** pass `--timeout_minutes` to kill a stuck run. It is reported
-  as `exit_status_changed`.
+  holds one bucket at a time; each worker parses one shard at a time. Lower
+  `--compare_workers` if memory is tight.
+- **Hangs:** `--timeout_minutes` kills a stuck run; it is reported as
+  `exit_status_changed`.
 
 ## Caveat: `--freeze_time`
 
-Do not pass `--freeze_time=True` (it is not passed by default).
-On `upstream/master` it hangs the default multiprocess mode: the main process
+Do not pass `--freeze_time=True` (it is not passed by default). On
+`upstream/master` it hangs the default multiprocess mode: the main process
 spins while every pool worker waits on a futex, probably because freezegun's
 frozen clock breaks the process pool's timeouts. The comparison already
-ignores report timestamps and the run directory's timestamp, so the flag is
-not needed.
+ignores report and run directory timestamps, so the flag is not needed.
 
 ## Tests
 
@@ -255,6 +241,6 @@ cd simple
 python3 -m pytest tools/
 ```
 
-`compare_test.py` plants each kind of difference in a small output and
-checks that it is detected. `e2e_test.py` runs the tool HEAD against HEAD
-on the `kitchen_sink` testsuite dataset and expects IDENTICAL.
+`tests/comparison/compare_test.py` plants each kind of difference in a small
+output and checks that it is detected. `tests/e2e_test.py` runs the tool HEAD
+against HEAD on the `kitchen_sink` testsuite dataset and expects IDENTICAL.

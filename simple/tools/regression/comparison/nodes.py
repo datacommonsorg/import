@@ -26,20 +26,22 @@ import concurrent.futures
 import json
 from typing import Any
 
-from tools.regression.buckets import NUM_BUCKETS
-from tools.regression.buckets import SpillBuckets
-from tools.regression.canonical import canonical_json
-from tools.regression.canonical import digest64
-from tools.regression.canonical import load_json
-from tools.regression.categories import Findings
-from tools.regression.shards import NODE
-from tools.regression.shards import OutputTree
+from tools.regression.comparison import buckets
+from tools.regression.comparison.canonical import canonical_json
+from tools.regression.comparison.canonical import digest64
+from tools.regression.comparison.canonical import load_json
+from tools.regression.comparison.categories import Findings
+from tools.regression.comparison.categories import sides
+from tools.regression.comparison.shards import NODE
+from tools.regression.comparison.shards import OutputTree
 
 # How many entries of each grouped statistic are kept in the report.
 _TOP_GROUPS = 30
 
 # A node entry is (shard path relative to the run dir, record).
 Entry = tuple[str, dict]
+# The canonical JSON values of each property of a node.
+PropertyValues = dict[str, set[str]]
 
 
 def spill_node_shard(
@@ -50,17 +52,22 @@ def spill_node_shard(
   lines = []
   for record in data.get("@graph", []):
     line = canonical_json([rel_path, record]) + "\n"
-    bucket = digest64(canonical_json(record.get("@id"))) % NUM_BUCKETS
+    bucket = digest64(canonical_json(record.get("@id"))) % buckets.NUM_BUCKETS
     lines.append((bucket, line.encode("utf-8")))
   return lines, canonical_json(data.get("@context"))
 
 
-def _read_bucket(spill: SpillBuckets, bucket: int) -> dict[str, list[Entry]]:
+def _by_id(spilled: bytes) -> dict[str, list[Entry]]:
+  """Groups the spilled JSON lines of one bucket by canonical @id."""
   by_id: dict[str, list[Entry]] = defaultdict(list)
-  for line in spill.read(bucket).splitlines():
+  for line in spilled.splitlines():
     rel_path, record = json.loads(line)
     by_id[canonical_json(record.get("@id"))].append((rel_path, record))
   return by_id
+
+
+def _as_list(value: Any) -> list:
+  return value if isinstance(value, list) else [value]
 
 
 def _folders(entries: list[Entry]) -> list[str]:
@@ -71,63 +78,51 @@ def _types(entries: list[Entry]) -> str:
   """Returns the merged @type values of a node, comma-separated."""
   types = set()
   for _, record in entries:
-    value = record.get("@type", [])
-    for item in value if isinstance(value, list) else [value]:
+    for item in _as_list(record.get("@type", [])):
       types.add(item if isinstance(item, str) else canonical_json(item))
   return ",".join(sorted(types))
 
 
-def _merge(entries: list[Entry]) -> dict[str, set[str]]:
+def _merge(entries: list[Entry]) -> PropertyValues:
   """Returns the union of the values of each property over all records."""
-  merged: dict[str, set[str]] = defaultdict(set)
+  merged: PropertyValues = defaultdict(set)
   for _, record in entries:
     for prop, value in record.items():
-      for item in value if isinstance(value, list) else [value]:
+      for item in _as_list(value):
         merged[prop].add(canonical_json(item))
   return merged
 
 
-class NodeComparer:
+class NodeComparer(buckets.BucketComparer):
   """Compares the nodes of two outputs, recording into findings."""
 
   def __init__(self, findings: Findings, pool: concurrent.futures.Executor,
                spill_dir: str) -> None:
-    self._findings = findings
-    self._pool = pool
-    self._spill_dir = spill_dir
+    super().__init__(findings, pool, spill_dir)
     self._records = [0, 0]
     self._ids = [0, 0]
     self._types = (Counter(), Counter())
     self._only_by_type = (Counter(), Counter())
     self._property_changes: Counter = Counter()
     self._folder_moves: Counter = Counter()
-    self.contexts: tuple[set[str], set[str]] = (set(), set())
 
   def compare(self, baseline: OutputTree,
               candidate: OutputTree) -> dict[str, Any]:
     """Runs the comparison and returns summary statistics."""
-    spills = [
-        self._spill_side(side, tree)
-        for side, tree in enumerate((baseline, candidate))
-    ]
-    for bucket in range(NUM_BUCKETS):
-      self._compare_bucket(_read_bucket(spills[0], bucket),
-                           _read_bucket(spills[1], bucket))
+    self._spill_and_compare(baseline, candidate)
     return self._stats()
 
-  def _spill_side(self, side: int, tree: OutputTree) -> SpillBuckets:
-    spill = SpillBuckets(f"{self._spill_dir}/{side}")
+  def _spill_side(self, side: int, tree: OutputTree,
+                  spill: buckets.SpillBuckets) -> None:
     tasks = [(s.path, s.rel_path) for s in tree.of_kind(NODE)]
     for lines, context in self._pool.map(spill_node_shard, tasks):
       self.contexts[side].add(context)
       self._records[side] += len(lines)
       for bucket, line in lines:
         spill.append(bucket, line)
-    spill.flush()
-    return spill
 
-  def _compare_bucket(self, base: dict[str, list[Entry]],
-                      cand: dict[str, list[Entry]]) -> None:
+  def _compare_bucket(self, baseline: bytes, candidate: bytes) -> None:
+    base, cand = _by_id(baseline), _by_id(candidate)
     for side, by_id in enumerate((base, cand)):
       self._ids[side] += len(by_id)
       self._types[side].update(_types(entries) for entries in by_id.values())
@@ -141,79 +136,57 @@ class NodeComparer:
   def _add_only(self, side: int, category: str, entries: list[Entry]) -> None:
     types = _types(entries)
     self._only_by_type[side][types] += 1
-    self._findings.add(category,
-                       sample={
-                           "types": types,
-                           "folders": _folders(entries),
-                           "record": entries[0][1]
-                       })
+    folders, record = _folders(entries), entries[0][1]
+    sample = {"types": types, "folders": folders, "record": record}
+    self._findings.add(category, sample=sample)
 
   def _compare_node(self, base: list[Entry], cand: list[Entry]) -> None:
-    node_id = base[0][1].get("@id")
-    types = _types(base + cand)
-    self._compare_properties(node_id, types, _merge(base), _merge(cand))
+    context = {"@id": base[0][1].get("@id"), "types": _types(base + cand)}
+    self._compare_properties(context, _merge(base), _merge(cand))
     folders = (_folders(base), _folders(cand))
     if folders[0] != folders[1]:
       self._folder_moves[(tuple(folders[0]), tuple(folders[1]))] += 1
       self._findings.add("node_folder_moved",
-                         sample={
-                             "@id": node_id,
-                             "types": types,
-                             "baseline": folders[0],
-                             "candidate": folders[1]
-                         })
+                         sample=dict(context, **sides(*folders)))
     if len(base) != len(cand):
+      records = [sorted(p for p, _ in entries) for entries in (base, cand)]
       self._findings.add("node_records_changed",
-                         sample={
-                             "@id": node_id,
-                             "types": types,
-                             "baseline": sorted(p for p, _ in base),
-                             "candidate": sorted(p for p, _ in cand)
-                         })
+                         sample=dict(context, **sides(*records)))
 
-  def _compare_properties(self, node_id: Any, types: str, base: dict[str,
-                                                                     set[str]],
-                          cand: dict[str, set[str]]) -> None:
+  def _compare_properties(self, context: dict[str, Any], base: PropertyValues,
+                          cand: PropertyValues) -> None:
     changed = sorted(
         p for p in base.keys() | cand.keys() if base.get(p) != cand.get(p))
     if not changed:
       return
     self._findings.add("node_properties_changed")
     for prop in changed:
-      self._property_changes[(types, prop)] += 1
-      self._findings.add_sample(
-          "node_properties_changed", {
-              "@id": node_id,
-              "types": types,
-              "property": prop,
-              "baseline": sorted(base.get(prop, ())),
-              "candidate": sorted(cand.get(prop, ()))
-          })
+      self._property_changes[(context["types"], prop)] += 1
+      values = [sorted(side.get(prop, ())) for side in (base, cand)]
+      self._findings.add_sample("node_properties_changed",
+                                dict(context, property=prop, **sides(*values)))
 
   def _stats(self) -> dict[str, Any]:
-    types = sorted(self._types[0].keys() | self._types[1].keys())
+    base_types, cand_types = self._types
+    base_only, cand_only = self._only_by_type
+    types = sorted(base_types.keys() | cand_types.keys())
+    top_properties = self._property_changes.most_common(_TOP_GROUPS)
+    top_moves = self._folder_moves.most_common(_TOP_GROUPS)
+    property_changes = [
+        dict(types=t, property=p, ids=n) for (t, p), n in top_properties
+    ]
+    folder_moves = [
+        dict(baseline=list(b), candidate=list(c), ids=n)
+        for (b, c), n in top_moves
+    ]
     return {
-        "records":
-            self._records,
-        "ids":
-            self._ids,
+        "records": self._records,
+        "ids": self._ids,
         "types": {
-            t: [self._types[0][t], self._types[1][t]] for t in types
+            t: [base_types[t], cand_types[t]] for t in types
         },
-        "only_baseline_by_type":
-            dict(self._only_by_type[0].most_common()),
-        "only_candidate_by_type":
-            dict(self._only_by_type[1].most_common()),
-        "property_changes": [{
-            "types": types,
-            "property": prop,
-            "ids": count
-        } for (types,
-               prop), count in self._property_changes.most_common(_TOP_GROUPS)],
-        "folder_moves": [{
-            "baseline": list(before),
-            "candidate": list(after),
-            "ids": count
-        } for (before,
-               after), count in self._folder_moves.most_common(_TOP_GROUPS)],
+        "only_baseline_by_type": dict(base_only.most_common()),
+        "only_candidate_by_type": dict(cand_only.most_common()),
+        "property_changes": property_changes,
+        "folder_moves": folder_moves,
     }

@@ -11,18 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Compares two preprocessor output directories."""
+"""Compares two preprocessor output directories: shards, reports, records."""
 
 import concurrent.futures
 import dataclasses
 import tempfile
 from typing import Any
 
-from tools.regression import shards
-from tools.regression.categories import Findings
-from tools.regression.nodes import NodeComparer
-from tools.regression.observations import ObservationComparer
-from tools.regression.report_json import compare_reports
+from tools.regression.comparison import shards
+from tools.regression.comparison.categories import Findings
+from tools.regression.comparison.categories import sides
+from tools.regression.comparison.nodes import NodeComparer
+from tools.regression.comparison.observations import ObservationComparer
+from tools.regression.comparison.report_json import compare_reports
 
 
 @dataclasses.dataclass(frozen=True)
@@ -47,9 +48,8 @@ def compare_outputs(baseline: SideOutput,
   Args:
     baseline: The baseline output.
     candidate: The candidate output.
-    scratch_dir: Where the spill buckets go, in a temporary subdirectory;
-      needs about 50 bytes per observation plus the size of the node shards,
-      per side.
+    scratch_dir: Where the spill buckets go, in a temporary subdirectory. They
+      need about 50 bytes per observation plus the node shard bytes, per side.
     workers: Processes used to parse shards (default: one per CPU).
     max_samples: Samples kept per difference category.
   """
@@ -59,23 +59,18 @@ def compare_outputs(baseline: SideOutput,
        tempfile.TemporaryDirectory(dir=scratch_dir, prefix="compare-") as spill:
     observations = ObservationComparer(findings, pool, f"{spill}/obs")
     nodes = NodeComparer(findings, pool, f"{spill}/nodes")
+    inventory = shards.compare_inventory(*trees, findings, pool)
+    reports = compare_reports(baseline.output_dir, baseline.input_root,
+                              candidate.output_dir, candidate.input_root,
+                              findings)
     stats = {
-        "inventory":
-            shards.compare_inventory(trees[0], trees[1], findings, pool),
-        "reports":
-            compare_reports(baseline.output_dir, baseline.input_root,
-                            candidate.output_dir, candidate.input_root,
-                            findings),
-        "observations":
-            observations.compare(trees[0], trees[1]),
-        "nodes":
-            nodes.compare(trees[0], trees[1]),
+        "inventory": inventory,
+        "reports": reports,
+        "observations": observations.compare(*trees),
+        "nodes": nodes.compare(*trees),
     }
   contexts = [o | n for o, n in zip(observations.contexts, nodes.contexts)]
   if contexts[0] != contexts[1]:
     findings.add("jsonld_context_changed",
-                 sample={
-                     "baseline": sorted(contexts[0]),
-                     "candidate": sorted(contexts[1])
-                 })
+                 sample=sides(sorted(contexts[0]), sorted(contexts[1])))
   return Comparison(findings, stats)

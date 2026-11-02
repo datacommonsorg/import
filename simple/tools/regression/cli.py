@@ -33,19 +33,13 @@ import shutil
 import sys
 import tempfile
 
-from tools.regression import report as report_lib
-from tools.regression import trees
-from tools.regression.compare import compare_outputs
-from tools.regression.compare import SideOutput
-from tools.regression.inputs import GcsInput
-from tools.regression.inputs import resolve_input_dir
-from tools.regression.perf import compare_health
-from tools.regression.perf import compare_perf
-from tools.regression.perf import Thresholds
-from tools.regression.run import load_side
-from tools.regression.run import run_sides
-from tools.regression.run import RunSpec
-from tools.regression.run import SideRuns
+from tools.regression.comparison import compare
+from tools.regression.execution import inputs
+from tools.regression.execution import run
+from tools.regression.execution import trees
+from tools.regression.reporting import markdown
+from tools.regression.reporting import perf
+from tools.regression.reporting import report as report_lib
 
 BASELINE = "baseline"
 CANDIDATE = "candidate"
@@ -86,8 +80,8 @@ def _parser() -> argparse.ArgumentParser:
                  help="Keep the run outputs (and staged input) after the "
                  "comparison.")
   p.add_argument("--gcs_input",
-                 choices=[m.value for m in GcsInput],
-                 default=GcsInput.STAGE.value,
+                 choices=[m.value for m in inputs.GcsInput],
+                 default=inputs.GcsInput.STAGE.value,
                  help="For a gs:// --input_dir: copy it locally once (stage) "
                  "or let both sides read GCS (direct).")
   p.add_argument("--stage_dir",
@@ -145,14 +139,14 @@ def _make_work_dir(work_dir: str | None) -> str:
   return work_dir
 
 
-def _run_or_reuse(args: argparse.Namespace, spec: RunSpec,
-                  work_dir: str) -> dict[str, SideRuns]:
+def _run_or_reuse(args: argparse.Namespace, spec: run.RunSpec,
+                  work_dir: str) -> dict[str, run.SideRuns]:
   """Runs the sides that are not reused and loads the ones that are."""
   reused = {BASELINE: args.baseline_output, CANDIDATE: args.candidate_output}
   refs = {BASELINE: args.baseline, CANDIDATE: args.candidate}
   to_run = [side for side in (BASELINE, CANDIDATE) if not reused[side]]
   repo = trees.repo_root()
-  ran: dict[str, SideRuns] = {}
+  ran: dict[str, run.SideRuns] = {}
   if to_run:
     checkout_refs = [refs[side] for side in to_run if refs[side]]
     with tempfile.TemporaryDirectory(dir=work_dir, prefix="trees-") as tmp, \
@@ -162,10 +156,9 @@ def _run_or_reuse(args: argparse.Namespace, spec: RunSpec,
               checked_out[refs[side]]
               if refs[side] else trees.working_tree(repo) for side in to_run
       }
-      ran = run_sides(code, spec, work_dir, args.repeats)
+      ran = run.run_sides(code, spec, work_dir, args.repeats)
   return {
-      side:
-          ran[side] if side in ran else load_side(reused[side], spec.input_dir)
+      side: ran.get(side) or run.load_side(reused[side], spec.input_dir)
       for side in (BASELINE, CANDIDATE)
   }
 
@@ -173,13 +166,13 @@ def _run_or_reuse(args: argparse.Namespace, spec: RunSpec,
 def _write_reports(report: report_lib.Report, work_dir: str) -> str:
   markdown_path = os.path.join(work_dir, "report.md")
   with open(markdown_path, "w") as f:
-    f.write(report_lib.to_markdown(report))
+    f.write(markdown.to_markdown(report))
   with open(os.path.join(work_dir, "report.json"), "w") as f:
     json.dump(report_lib.to_json(report), f, indent=1, default=str)
   return markdown_path
 
 
-def _cleanup(args: argparse.Namespace, sides: dict[str, SideRuns],
+def _cleanup(args: argparse.Namespace, sides: dict[str, run.SideRuns],
              work_dir: str, stage_dir: str) -> None:
   """Deletes the outputs this invocation wrote, and its staged input."""
   if args.keep_outputs:
@@ -192,49 +185,47 @@ def _cleanup(args: argparse.Namespace, sides: dict[str, SideRuns],
     shutil.rmtree(stage_dir, ignore_errors=True)
 
 
+def _thresholds(args: argparse.Namespace) -> perf.Thresholds:
+  return perf.Thresholds(wall_pct=args.max_wall_regression_pct,
+                         cpu_pct=args.max_cpu_regression_pct,
+                         rss_pct=args.max_rss_regression_pct,
+                         min_seconds=args.perf_min_seconds)
+
+
 def main(argv: list[str]) -> int:
   args, extra_flags = _parse_args(argv)
   logging.basicConfig(level=logging.INFO, format="[regression] %(message)s")
   work_dir = _make_work_dir(args.work_dir)
   stage_dir = os.path.abspath(args.stage_dir or os.path.join(work_dir, "input"))
-  input_dir = resolve_input_dir(args.input_dir, GcsInput(args.gcs_input),
-                                stage_dir)
-  spec = RunSpec(python=args.python,
-                 input_dir=input_dir,
-                 extra_flags=tuple(extra_flags),
-                 timeout_seconds=args.timeout_minutes * _SECONDS_PER_MINUTE or
-                 None)
+  gcs_input = inputs.GcsInput(args.gcs_input)
+  input_dir = inputs.resolve_input_dir(args.input_dir, gcs_input, stage_dir)
+  timeout_seconds = args.timeout_minutes * _SECONDS_PER_MINUTE or None
+  spec = run.RunSpec(args.python, input_dir, tuple(extra_flags),
+                     timeout_seconds)
   sides = _run_or_reuse(args, spec, work_dir)
   base, cand = sides[BASELINE], sides[CANDIDATE]
   logging.info("Comparing %s with %s", base.output_dir, cand.output_dir)
-  comparison = compare_outputs(SideOutput(base.output_dir, base.input_root),
-                               SideOutput(cand.output_dir, cand.input_root),
-                               scratch_dir=work_dir,
-                               workers=args.compare_workers,
-                               max_samples=args.samples)
-  compare_health(base, cand, comparison.findings)
-  perf = compare_perf(
-      base, cand,
-      Thresholds(wall_pct=args.max_wall_regression_pct,
-                 cpu_pct=args.max_cpu_regression_pct,
-                 rss_pct=args.max_rss_regression_pct,
-                 min_seconds=args.perf_min_seconds))
+  comparison = compare.compare_outputs(
+      compare.SideOutput(base.output_dir, base.input_root),
+      compare.SideOutput(cand.output_dir, cand.input_root),
+      scratch_dir=work_dir,
+      workers=args.compare_workers,
+      max_samples=args.samples)
+  perf.compare_health(base, cand, comparison.findings)
+  perf_result = perf.compare_perf(base, cand, _thresholds(args))
   verdict = report_lib.Verdict(comparison.findings.failing(args.strict),
-                               perf.regressions)
-  report = report_lib.Report(base,
-                             cand,
-                             run_info={
-                                 "input_dir": args.input_dir,
-                                 "resolved_input_dir": input_dir,
-                                 "extra_flags": extra_flags,
-                                 "python": args.python,
-                                 "repeats": args.repeats,
-                                 "strict": args.strict,
-                                 "work_dir": work_dir,
-                             },
-                             comparison=comparison,
-                             perf=perf,
-                             verdict=verdict)
+                               perf_result.regressions)
+  run_info = {
+      "input_dir": args.input_dir,
+      "resolved_input_dir": input_dir,
+      "extra_flags": extra_flags,
+      "python": args.python,
+      "repeats": args.repeats,
+      "strict": args.strict,
+      "work_dir": work_dir,
+  }
+  report = report_lib.Report(base, cand, run_info, comparison, perf_result,
+                             verdict)
   markdown_path = _write_reports(report, work_dir)
   _cleanup(args, sides, work_dir, stage_dir)
   print(report_lib.summary_line(report))

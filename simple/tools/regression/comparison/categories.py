@@ -103,6 +103,11 @@ CATEGORIES: tuple[Category, ...] = (
 CATEGORIES_BY_NAME: dict[str, Category] = {c.name: c for c in CATEGORIES}
 
 
+def sides(baseline: Any, candidate: Any) -> dict[str, Any]:
+  """Returns the baseline and candidate halves of a sample."""
+  return {"baseline": baseline, "candidate": candidate}
+
+
 @dataclasses.dataclass
 class Findings:
   """Per-category difference counts plus the first few samples of each."""
@@ -120,11 +125,8 @@ class Findings:
 
   def add_sample(self, name: str, sample: Any) -> None:
     """Keeps a sample of an already counted difference, up to max_samples."""
-    if self.wants_sample(name):
+    if len(self.samples[name]) < self.max_samples:
       self.samples[name].append(sample)
-
-  def wants_sample(self, name: str) -> bool:
-    return len(self.samples[name]) < self.max_samples
 
   def failing(self, strict: bool) -> dict[str, int]:
     """Returns the non-zero categories that make the verdict DIFFERENT."""
