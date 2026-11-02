@@ -1,25 +1,32 @@
 # Preprocessor test suite
 
-Tests for the `simple/` preprocessor that check **what it outputs**: the
-JSON-LD records, the `report.json` summary and the ingestion-workflow
-handshake. Every test runs the real `stats.runner.Runner` hermetically, with
-an in-process GCS emulator standing in for the network, so nothing inside the
-preprocessor is mocked.
+Tests for the `simple/` preprocessor. Most of them check **what it outputs**:
+the JSON-LD records, the `report.json` summary and the ingestion-workflow
+handshake. These run the real `stats.runner.Runner` hermetically, with an
+in-process GCS emulator standing in for the network, so nothing inside the
+preprocessor is mocked. Unit tests for self-contained helper modules live
+under `unit/`.
 
 ```bash
 cd simple
 python3 -m pytest testsuite/                               # everything, in parallel (-n auto is the default; -n 0 for serial)
 python3 -m pytest testsuite/test_observations.py -k about  # one table
 python3 -m pytest testsuite/test_e2e.py --modes=production # one execution mode
+python3 -m pytest testsuite/unit/                          # unit tests only
 python3 -m pytest testsuite/test_e2e.py --update-expected -n 0  # rewrite expected.json, then review the diff
 ```
 
-## Two kinds of tests
+## Three kinds of tests
 
 | Files | What they check | Expected output |
 |---|---|---|
 | Small tests, one file per input type or shared concern (below) | One small input in, exact records (or an exact error) out | Written in the test, with `lib/builders.py` |
 | `test_e2e.py` + `e2e/<dataset>/` | A realistic multi-file import, in every execution mode | `expected.json`, reviewed |
+| `unit/`, mirroring the module path (e.g. `unit/util/test_filesystem.py` for `util/filesystem.py`) | One self-contained module (filesystem, file matching, validation, report generation) called directly | Asserted in the test |
+
+Prefer an output-level test. Add a unit test only for a module that has
+behavior of its own that is awkward to reach through the runner, such as
+filesystem edge cases or a validator's rules.
 
 | Small test file | Covers |
 |---|---|
