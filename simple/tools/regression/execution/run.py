@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Runs the preprocessor of a code tree, measured, possibly several times.
+"""
+Runs the preprocessor of a code tree, measured, possibly several times.
 
 Each run gets its own directory:
 
@@ -44,6 +45,7 @@ _SCRUBBED_ENV = ("PYTHONPATH", "WORKFLOW_EXECUTION_ID", "TEMP_LOCATION")
 @dataclasses.dataclass(frozen=True)
 class RunSpec:
   """What both sides run: the same interpreter, input and flags."""
+
   python: str
   input_dir: str | None
   extra_flags: tuple[str, ...]
@@ -53,6 +55,7 @@ class RunSpec:
 @dataclasses.dataclass(frozen=True)
 class SideRuns:
   """The runs of one side. Metrics are empty for a reused raw output."""
+
   code: str  # Human-readable description of the code that ran.
   output_dir: str
   input_root: str | None
@@ -68,9 +71,13 @@ def preprocessor_command(spec: RunSpec, output_dir: str) -> list[str]:
 
 
 def _environment(tmp_dir: str) -> dict[str, str]:
+  """
+  The inherited environment, scrubbed, with TMPDIR set to tmp_dir.
+
+  The preprocessor stages shards under TMPDIR; keep them next to the run
+  rather than in /tmp, which is often a RAM-backed tmpfs.
+  """
   env = {k: v for k, v in os.environ.items() if k not in _SCRUBBED_ENV}
-  # The preprocessor stages shards under TMPDIR; keep them next to the run
-  # rather than in /tmp, which is often a RAM-backed tmpfs.
   env["TMPDIR"] = tmp_dir
   return env
 
@@ -133,7 +140,8 @@ def _run_number(run_json_path: str) -> int:
 
 
 def load_side(output_dir: str, default_input_root: str | None) -> SideRuns:
-  """Describes an existing output, reusing its run.json files if it has any.
+  """
+  Describes an existing output, reusing its run.json files if it has any.
 
   For an output written by this tool (<side>/run-1/output), the run.json of
   every run of that side provides the code description, input root and

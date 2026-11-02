@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Semantic, folder- and shard-independent comparison of observations.
+"""
+Semantic, folder- and shard-independent comparison of observations.
 
 Each observation is reduced to a fixed-size digest row: a 128-bit hash of its
 semantic key, plus 64-bit hashes of its value, of its other properties and of
@@ -82,10 +83,15 @@ def observation_key(record: dict) -> Key:
 
 
 def _digest_record(record: dict, folder: int) -> tuple:
+  """
+  Returns the digest row of one observation record.
+
+  The low bit of the provenance URL digest is forced on so that a present URL
+  never digests to 0.
+  """
   value = [record.get(field) for field in _VALUE_FIELDS]
   props = [record.get(field) for field in _PROPERTY_FIELDS]
   purl = record.get(_PROVENANCE_URL)
-  # The low bit is forced on so that a present URL never digests to 0.
   purl_digest = 0 if purl is None else digest64(canonical_json(purl)) | 1
   return (observation_key(record), folder, digest64(canonical_json(value)),
           digest64(canonical_json(props)), purl_digest)
@@ -114,6 +120,7 @@ def find_records(task: tuple[str, str, frozenset]) -> list[tuple[Key, dict]]:
 @dataclasses.dataclass(frozen=True)
 class _KeyedRows:
   """The rows of one bucket, one entry per distinct key."""
+
   keys: np.ndarray
   counts: np.ndarray
   value: np.ndarray
@@ -182,6 +189,7 @@ class ObservationComparer(buckets.BucketComparer):
 
   def __init__(self, findings: Findings, pool: concurrent.futures.Executor,
                spill_dir: str) -> None:
+    """Starts with nothing counted; see BucketComparer for the arguments."""
     super().__init__(findings, pool, spill_dir)
     self._folders: list[str] = []
     self._sample_keys: dict[str, list[Key]] = defaultdict(list)

@@ -15,7 +15,8 @@
 
 import json
 import os
-import subprocess
+import shutil
+import subprocess  # nosec B404: runs git with a fixed argv, no shell.
 
 import pytest
 from tools.regression import cli
@@ -39,6 +40,12 @@ def _report(work_dir) -> dict:
 
 
 def test_head_against_head_is_identical(tmp_path):
+  """
+  HEAD against HEAD is identical, and leaves no git worktree behind.
+
+  Reusing both outputs then compares them again without running anything, and
+  keeps the metrics of the first invocation.
+  """
   repo = _repo_or_skip()
   work_dir = tmp_path / "regression"
   exit_code = cli.main([
@@ -51,14 +58,13 @@ def test_head_against_head_is_identical(tmp_path):
   assert report["stats"]["observations"]["observations"][0] > 0
   assert [len(report[s]["runs"]) for s in ("baseline", "candidate")] == [1, 1]
   assert (work_dir / "report.md").exists()
-  worktrees = subprocess.run(["git", "-C", repo, "worktree", "list"],
-                             check=True,
-                             capture_output=True,
-                             text=True).stdout
+  worktrees = subprocess.run(  # nosec B603: fixed argv, no shell.
+      [shutil.which("git"), "-C", repo, "worktree", "list"],
+      check=True,
+      capture_output=True,
+      text=True).stdout
   assert str(work_dir) not in worktrees
 
-  # Reusing both outputs compares them again without running anything, and
-  # keeps the metrics of the first invocation.
   rerun_dir = tmp_path / "rerun"
   exit_code = cli.main([
       f"--baseline_output={work_dir}/baseline/run-1/output",

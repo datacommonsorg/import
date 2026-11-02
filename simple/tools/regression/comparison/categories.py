@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The difference categories the comparison reports, and their tallies.
+"""
+The difference categories the comparison reports, and their tallies.
 
 FAILING categories change what ingestion loads: the set of observations and
 their values, the merged properties of a node, the import report, or the
@@ -111,6 +112,7 @@ def sides(baseline: Any, candidate: Any) -> dict[str, Any]:
 @dataclasses.dataclass
 class Findings:
   """Per-category difference counts plus the first few samples of each."""
+
   max_samples: int
   counts: dict[str, int] = dataclasses.field(
       default_factory=lambda: {c.name: 0 for c in CATEGORIES})

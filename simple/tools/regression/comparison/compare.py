@@ -43,15 +43,13 @@ def compare_outputs(baseline: SideOutput,
                     scratch_dir: str,
                     workers: int | None = None,
                     max_samples: int = 5) -> Comparison:
-  """Compares every output file of two runs.
+  """
+  Compares every output file of two runs.
 
-  Args:
-    baseline: The baseline output.
-    candidate: The candidate output.
-    scratch_dir: Where the spill buckets go, in a temporary subdirectory. They
-      need about 50 bytes per observation plus the node shard bytes, per side.
-    workers: Processes used to parse shards (default: one per CPU).
-    max_samples: Samples kept per difference category.
+  The spill buckets go in a temporary subdirectory of scratch_dir; they need
+  about 50 bytes per observation plus the node shard bytes, per side. workers
+  is the number of processes that parse shards (default: one per CPU), and
+  max_samples the number of samples kept per difference category.
   """
   findings = Findings(max_samples)
   trees = [shards.load_output_tree(s.output_dir) for s in (baseline, candidate)]

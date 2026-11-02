@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Comparison of process/report.json and the per-file report_*.json files.
+"""
+Comparison of process/report.json and the per-file report_*.json files.
 
 Timestamps are dropped and input paths are made relative to each side's input
 root (see volatile.py). Per-file reports are compared by the input file they

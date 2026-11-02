@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Semantic comparison of node records, by @id.
+"""
+Semantic comparison of node records, by @id.
 
 All records of an @id, from any folder or shard, are merged into one set of
 values per property before comparing, so splitting a subject over several
@@ -98,6 +99,7 @@ class NodeComparer(buckets.BucketComparer):
 
   def __init__(self, findings: Findings, pool: concurrent.futures.Executor,
                spill_dir: str) -> None:
+    """Starts with no nodes counted; see BucketComparer for the arguments."""
     super().__init__(findings, pool, spill_dir)
     self._records = [0, 0]
     self._ids = [0, 0]

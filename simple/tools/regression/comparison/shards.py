@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Shard discovery and byte-level inventory of one preprocessor output.
+"""
+Shard discovery and byte-level inventory of one preprocessor output.
 
 An output directory holds `process/` and `jsonld/<run dir>/<folder>/*.jsonld`.
 Observation shard names are deterministic and are matched by name. Node shard
@@ -54,6 +55,7 @@ class Shard:
 @dataclasses.dataclass(frozen=True)
 class OutputTree:
   """The shards of one output directory."""
+
   root: str
   run_dir_name: str | None  # None if the run wrote no JSON-LD.
   shards: tuple[Shard, ...]

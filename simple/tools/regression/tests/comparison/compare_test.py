@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The comparator on small planted outputs: each difference is detected.
+"""
+The comparator on small planted outputs: each difference is detected.
 
 Every test writes a baseline output, plants one change in a copy of it, and
 checks which categories the comparison reports.

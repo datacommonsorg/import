@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Runs a command and measures its time, CPU, memory and log health.
+"""
+Runs a command and measures its time, CPU, memory and log health.
 
 CPU time and max RSS come from wait4(), like /usr/bin/time -v: they cover the
 process and every child it waited for (the multiprocessing pool workers).
@@ -25,7 +26,7 @@ import os
 import re
 import resource
 import signal
-import subprocess
+import subprocess  # nosec B404: runs the preprocessor argv, no shell.
 import threading
 import time
 
@@ -115,23 +116,25 @@ def count_log_lines(log_path: str) -> tuple[int, int]:
 
 def run_measured(command: list[str], cwd: str, env: dict[str, str],
                  log_path: str, timeout_seconds: float | None) -> RunMetrics:
-  """Runs command with stdout and stderr in log_path, and measures it.
+  """
+  Runs command with stdout and stderr in log_path, and measures it.
 
-  On timeout the whole process group is killed with SIGKILL.
+  On timeout the whole process group is killed with SIGKILL. reap_lock guards
+  against killing a recycled PID: once wait4 has reaped the child, its PID
+  (and process group id) may be reused, so kill() must become a no-op.
   """
   timed_out = threading.Event()
-  # Guards against killing a recycled PID: once wait4 has reaped the child, its
-  # PID (and process group id) may be reused, so kill() must become a no-op.
   reap_lock = threading.Lock()
   reaped = False
   with open(log_path, "wb") as log:
     start = time.monotonic()
-    process = subprocess.Popen(command,
-                               cwd=cwd,
-                               env=env,
-                               stdout=log,
-                               stderr=subprocess.STDOUT,
-                               start_new_session=True)
+    process = subprocess.Popen(  # nosec B603: caller-built argv, no shell.
+        command,
+        cwd=cwd,
+        env=env,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+        start_new_session=True)
 
     def kill() -> None:
       with reap_lock:
@@ -152,8 +155,8 @@ def run_measured(command: list[str], cwd: str, env: dict[str, str],
     sampler.stop()
     if timer:
       timer.cancel()
-  # wait4 reaped the child; tell Popen so that it does not wait again.
-  process.returncode = os.waitstatus_to_exitcode(status)
+    # wait4 reaped the child; tell Popen so that it does not wait again.
+    process.returncode = os.waitstatus_to_exitcode(status)
   errors, warnings = count_log_lines(log_path)
   return RunMetrics(exit_code=process.returncode,
                     timed_out=timed_out.is_set(),

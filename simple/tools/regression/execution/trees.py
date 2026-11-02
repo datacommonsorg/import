@@ -15,8 +15,10 @@
 
 import contextlib
 import dataclasses
+import functools
 import os
-import subprocess
+import shutil
+import subprocess  # nosec B404: runs git with a fixed argv, no shell.
 from typing import Iterator
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -39,11 +41,22 @@ class CodeTree:
     return f"{self.label} @ {self.commit[:_SHORT_SHA]}{suffix}"
 
 
+@functools.cache
+def _git_executable() -> str:
+  """Returns the absolute path of git."""
+  path = shutil.which("git")
+  if not path:
+    raise FileNotFoundError("git is not on PATH; the tool needs it to check "
+                            "out the code trees")
+  return path
+
+
 def _git(repo: str, *args: str) -> str:
-  return subprocess.run(["git", "-C", repo, *args],
-                        check=True,
-                        capture_output=True,
-                        text=True).stdout.strip()
+  return subprocess.run(  # nosec B603: fixed argv, no shell.
+      [_git_executable(), "-C", repo, *args],
+      check=True,
+      capture_output=True,
+      text=True).stdout.strip()
 
 
 def repo_root() -> str:
@@ -59,13 +72,11 @@ def working_tree(repo: str) -> CodeTree:
 @contextlib.contextmanager
 def checkouts(repo: str, refs: list[str],
               parent_dir: str) -> Iterator[dict[str, CodeTree]]:
-  """Checks out each ref into a temporary detached git worktree.
+  """
+  Checks out each ref into a temporary detached git worktree.
 
-  Refs that resolve to the same commit share one worktree. Every worktree is
-  removed on exit.
-
-  Yields:
-    The CodeTree of each ref, by ref.
+  Yields the CodeTree of each ref, by ref. Refs that resolve to the same
+  commit share one worktree. Every worktree is removed on exit.
   """
   commits = {ref: _git(repo, "rev-parse", f"{ref}^{{commit}}") for ref in refs}
   paths: dict[str, str] = {}

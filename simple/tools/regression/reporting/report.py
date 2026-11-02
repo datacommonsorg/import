@@ -47,6 +47,7 @@ class Verdict:
 @dataclasses.dataclass(frozen=True)
 class Report:
   """Everything a report shows."""
+
   baseline: SideRuns
   candidate: SideRuns
   run_info: dict[str, Any]  # Input, flags, repeats, work dir.

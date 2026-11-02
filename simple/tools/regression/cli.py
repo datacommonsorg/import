@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Regression check of the preprocessor: baseline ref vs. candidate code.
+"""
+Regression check of the preprocessor: baseline ref vs. candidate code.
 
 Runs stats.main of both sides on the same input with the same interpreter and
 flags, compares every output file and the run metrics, and writes report.md
@@ -47,14 +48,15 @@ _SECONDS_PER_MINUTE = 60
 _EXTRA_FLAGS_SEPARATOR = "--"
 
 
-def _parser() -> argparse.ArgumentParser:
-  p = argparse.ArgumentParser(
-      prog="python3 -m tools.regression",
-      description=__doc__,
-      formatter_class=argparse.RawDescriptionHelpFormatter)
+def _add_input_args(p: argparse.ArgumentParser) -> None:
+  """Adds the input directory flag."""
   p.add_argument("--input_dir",
                  help="Input directory, local or gs://. Omit for runs driven "
                  "by --config_file alone (pass that after --).")
+
+
+def _add_code_args(p: argparse.ArgumentParser) -> None:
+  """Adds the flags that pick the code, or the reused output, of each side."""
   p.add_argument("--baseline",
                  default="upstream/master",
                  help="Git ref of the baseline code (default: %(default)s).")
@@ -67,6 +69,10 @@ def _parser() -> argparse.ArgumentParser:
                  "earlier --keep_outputs run (its metrics are reused too).")
   p.add_argument("--candidate_output",
                  help="Reuse this candidate output dir instead of running it.")
+
+
+def _add_run_args(p: argparse.ArgumentParser) -> None:
+  """Adds the flags for running the sides: repeats, dirs, input staging."""
   p.add_argument("--repeats",
                  type=int,
                  default=1,
@@ -94,6 +100,10 @@ def _parser() -> argparse.ArgumentParser:
                  type=float,
                  default=0,
                  help="Kill a run after this long (0: no timeout).")
+
+
+def _add_comparison_args(p: argparse.ArgumentParser) -> None:
+  """Adds the flags that control the output comparison."""
   p.add_argument("--compare_workers",
                  type=int,
                  help="Processes that parse shards (default: one per CPU).")
@@ -105,6 +115,10 @@ def _parser() -> argparse.ArgumentParser:
                  action="store_true",
                  help="Fail on informational differences too (layout, bytes, "
                  "warnings).")
+
+
+def _add_threshold_args(p: argparse.ArgumentParser) -> None:
+  """Adds the perf regression thresholds."""
   p.add_argument("--max_wall_regression_pct", type=float, default=10)
   p.add_argument("--max_cpu_regression_pct", type=float, default=10)
   p.add_argument("--max_rss_regression_pct", type=float, default=10)
@@ -113,6 +127,18 @@ def _parser() -> argparse.ArgumentParser:
                  default=30,
                  help="Do not judge perf when the baseline runs shorter than "
                  "this; short runs are noise.")
+
+
+def _parser() -> argparse.ArgumentParser:
+  p = argparse.ArgumentParser(
+      prog="python3 -m tools.regression",
+      description=__doc__,
+      formatter_class=argparse.RawDescriptionHelpFormatter)
+  _add_input_args(p)
+  _add_code_args(p)
+  _add_run_args(p)
+  _add_comparison_args(p)
+  _add_threshold_args(p)
   return p
 
 

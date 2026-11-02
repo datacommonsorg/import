@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Hash-partitioned spill files, so a comparison never holds a whole side.
+"""
+Hash-partitioned spill files, so a comparison never holds a whole side.
 
 Records of both sides are appended to NUM_BUCKETS files by a hash of their
 key; bucket i of the baseline is then compared with bucket i of the
@@ -34,6 +35,7 @@ class SpillBuckets:
   """Buffers byte chunks per bucket and appends them to one file per bucket."""
 
   def __init__(self, directory: str) -> None:
+    """Creates directory, which holds one file per bucket, if needed."""
     os.makedirs(directory, exist_ok=True)
     self._directory = directory
     self._pending: list[list[bytes]] = [[] for _ in range(NUM_BUCKETS)]
@@ -67,7 +69,8 @@ class SpillBuckets:
 
 
 class BucketComparer:
-  """Base of the observation and node comparers.
+  """
+  Base of the observation and node comparers.
 
   compare() of a subclass calls _spill_and_compare(), which spills each side
   with _spill_side() and then calls _compare_bucket() on bucket i of both
@@ -76,6 +79,7 @@ class BucketComparer:
 
   def __init__(self, findings: Findings, pool: concurrent.futures.Executor,
                spill_dir: str) -> None:
+    """Records into findings, parses on pool and spills under spill_dir."""
     self._findings = findings
     self._pool = pool
     self._spill_dir = spill_dir

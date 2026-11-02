@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Compares the run metrics of the two sides: performance and run health.
+"""
+Compares the run metrics of the two sides: performance and run health.
 
 Performance metrics are medians over the repeats of a side. Run health (exit
 status and log lines) uses run 1, the run whose output is compared, and is
@@ -31,11 +32,16 @@ _KB_PER_MIB = 1024
 
 @dataclasses.dataclass(frozen=True)
 class Thresholds:
-  """Allowed slowdowns, in percent of the baseline median."""
+  """
+  Allowed slowdowns, in percent of the baseline median.
+
+  Runs shorter than min_seconds (baseline median wall time) are too noisy to
+  judge.
+  """
+
   wall_pct: float
   cpu_pct: float
   rss_pct: float
-  # Runs shorter than this (baseline median wall time) are too noisy to judge.
   min_seconds: float
 
 
@@ -59,8 +65,7 @@ class MetricRow:
 class PerfResult:
   rows: tuple[MetricRow, ...]
   repeats: tuple[int, int]
-  # Why the thresholds were not applied, or None if they were.
-  not_judged_reason: str | None
+  not_judged_reason: str | None  # Why thresholds were not applied, or None.
 
   @property
   def regressions(self) -> list[str]:
