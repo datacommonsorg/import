@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
+from dataclasses import replace
 
 from stats.config import Config
 from stats.data import Provenance
@@ -52,7 +53,7 @@ class Nodes:
       name: str = "",
       url: str = "",
       source_id: str = "",
-      properties: dict[str, str] | None = None) -> Provenance:
+      custom_triples: list[Triple] | None = None) -> Provenance:
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
 
@@ -67,16 +68,21 @@ class Nodes:
     prov.url = prov.url or url
     prov.source_id = prov.source_id or clean_source_id
     prov.provenance_id = prov.provenance_id or clean_id
-    if properties:
-      prov.properties.update(properties)
+    _extend_unique(prov.custom_triples, _about(clean_id, custom_triples))
     return prov
 
   def register_source(self,
                       id: str,
                       name: str = "",
                       url: str = "",
-                      properties: dict[str, str] | None = None,
-                      provenance_id: str = "") -> Source:
+                      custom_triples: list[Triple] | None = None,
+                      import_folder: str = "") -> Source:
+    """Registers a Source, or fills in the missing fields of a known one.
+
+    A Source is written to one import folder. When several imports define it,
+    that is the alphabetically first `import_folder`, so the choice does not
+    depend on registration order.
+    """
     clean_id = _clean_metadata_id(id)
 
     src = self.sources.get(clean_id)
@@ -90,30 +96,37 @@ class Nodes:
     if url and not src.url:
       src.url = url
       src.domain = src.domain or Source(id="", name="", url=url).domain
-    if properties:
-      src.properties.update(properties)
-    src.provenance_id = src.provenance_id or provenance_id
+    _extend_unique(src.custom_triples, _about(clean_id, custom_triples))
+    if import_folder:
+      src.provenance_id = min(src.provenance_id or import_folder, import_folder)
     return src
 
   def merge_metadata(self, provenances: dict[str, Provenance],
                      sources: dict[str, Source]) -> None:
     """Registers Provenance and Source nodes held by another `Nodes`.
 
-    Worker processes each build their own `Nodes`, so the coordinator merges
-    each worker's nodes back with this.
+    Worker processes each build their own `Nodes`, so this is how metadata
+    crosses process boundaries: the nodes a worker adds are merged back into
+    the coordinator. Each node goes through `register_source` or
+    `register_provenance`, so:
+    - `name`, `url` and `source_id` keep the first non-empty value; a
+      non-empty `name` is also (re)pointed at the node as a lookup key.
+    - a Source's `provenance_id` (its import folder) becomes the
+      alphabetically first of the folders that define it.
+    - `custom_triples`, of Sources and Provenances alike, are unioned.
     """
     for src in sources.values():
       self.register_source(id=src.id,
                            name=src.name,
                            url=src.url,
-                           properties=src.properties,
-                           provenance_id=src.provenance_id)
+                           custom_triples=src.custom_triples,
+                           import_folder=src.provenance_id)
     for prov in provenances.values():
       self.register_provenance(id=prov.id,
                                name=prov.name,
                                url=prov.url,
                                source_id=prov.source_id,
-                               properties=prov.properties)
+                               custom_triples=prov.custom_triples)
 
   def provenance_id(self, input_file: File) -> str:
     """Returns the id of the provenance that config names for `input_file`.
@@ -163,6 +176,22 @@ def _provenance_dir(raw_id: str) -> str:
   if not raw_id or raw_id == "_global":
     return "_global"
   return strip_namespace(raw_id)
+
+
+def _about(subject_id: str, triples: list[Triple] | None) -> list[Triple]:
+  """Returns `triples` with `subject_id` as their subject.
+
+  MCF files may spell a node's id differently (e.g. "dcid:X" or "X"), so the
+  custom triples of a node are stored under its one clean id.
+  """
+  return [replace(t, subject_id=subject_id) for t in triples or []]
+
+
+def _extend_unique(triples: list[Triple], new_triples: list[Triple]) -> None:
+  """Appends the `new_triples` that `triples` does not hold yet."""
+  for triple in new_triples:
+    if triple not in triples:
+      triples.append(triple)
 
 
 def _dedupe_triples(triples: list[Triple]) -> list[Triple]:

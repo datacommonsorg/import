@@ -14,34 +14,6 @@
     ]
   },
   "records": {
-    "any_folder": [
-      {
-        "@id": "dcid:healthSource",
-        "@type": "dcid:Source",
-        "dcid:domain": "health.example.org",
-        "dcid:name": "health source",
-        "dcid:url": "https://health.example.org"
-      },
-      {
-        "@id": "dcid:healthSource",
-        "@type": "dcid:Source",
-        "dcid:name": "health source",
-        "dcid:url": "https://health.example.org"
-      },
-      {
-        "@id": "dcid:populationSource",
-        "@type": "dcid:Source",
-        "dcid:domain": "population.example.org",
-        "dcid:name": "population source",
-        "dcid:url": "https://population.example.org"
-      },
-      {
-        "@id": "dcid:populationSource",
-        "@type": "dcid:Source",
-        "dcid:name": "population source",
-        "dcid:url": "https://population.example.org"
-      }
-    ],
     "folders": {
       "healthProvenance": {
         "nodes": {
@@ -50,26 +22,22 @@
             "@type": "dcid:StatVarGroup",
             "dcid:name": "Data Commons Variables"
           },
-          "dcid:healthProvenance": [
-            {
-              "@id": "dcid:healthProvenance",
-              "@type": "dcid:Provenance",
-              "dcid:name": "health provenance",
-              "dcid:source": {
-                "@id": "dcid:healthSource"
-              },
-              "dcid:url": "https://health.example.org/data"
+          "dcid:healthProvenance": {
+            "@id": "dcid:healthProvenance",
+            "@type": "dcid:Provenance",
+            "dcid:name": "health provenance",
+            "dcid:source": {
+              "@id": "dcid:healthSource"
             },
-            {
-              "@id": "dcid:healthProvenance",
-              "@type": "dcid:Provenance",
-              "dcid:name": "health provenance",
-              "dcid:source": {
-                "@id": "dcid:healthSource"
-              },
-              "dcid:url": "https://health.example.org/data"
-            }
-          ]
+            "dcid:url": "https://health.example.org/data"
+          },
+          "dcid:healthSource": {
+            "@id": "dcid:healthSource",
+            "@type": "dcid:Source",
+            "dcid:domain": "health.example.org",
+            "dcid:name": "health source",
+            "dcid:url": "https://health.example.org"
+          }
         },
         "observations": {
           "dcid:obs_4c08cc6f36688f794584504b5c2ac0b9b41f6cd5bf982093aefec61057071e4c": {
@@ -94,26 +62,22 @@
       },
       "populationProvenance": {
         "nodes": {
-          "dcid:populationProvenance": [
-            {
-              "@id": "dcid:populationProvenance",
-              "@type": "dcid:Provenance",
-              "dcid:name": "population provenance",
-              "dcid:source": {
-                "@id": "dcid:populationSource"
-              },
-              "dcid:url": "https://population.example.org/data"
+          "dcid:populationProvenance": {
+            "@id": "dcid:populationProvenance",
+            "@type": "dcid:Provenance",
+            "dcid:name": "population provenance",
+            "dcid:source": {
+              "@id": "dcid:populationSource"
             },
-            {
-              "@id": "dcid:populationProvenance",
-              "@type": "dcid:Provenance",
-              "dcid:name": "population provenance",
-              "dcid:source": {
-                "@id": "dcid:populationSource"
-              },
-              "dcid:url": "https://population.example.org/data"
-            }
-          ]
+            "dcid:url": "https://population.example.org/data"
+          },
+          "dcid:populationSource": {
+            "@id": "dcid:populationSource",
+            "@type": "dcid:Source",
+            "dcid:domain": "population.example.org",
+            "dcid:name": "population source",
+            "dcid:url": "https://population.example.org"
+          }
         },
         "observations": {
           "dcid:obs_50e22c4967771c563dabfb906ad12fa4b97ae02b4b7fc78b48dfce48b97ae80d": {

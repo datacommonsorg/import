@@ -26,6 +26,14 @@ from util.filesystem import File
 
 _ID = 'ID'
 _DCID = 'dcid'
+_TYPE_OF = 'typeOf'
+_PROVENANCE = 'Provenance'
+_SOURCE = 'Source'
+
+# Metadata node predicates that map onto Provenance / Source fields (matched
+# without namespace). Only a predicate's first value fills its field.
+_PROVENANCE_FIELDS = frozenset({'name', 'url', 'source'})
+_SOURCE_FIELDS = frozenset({'name', 'url'})
 
 # The max length of a node value.
 # We limit it to the max size of a mysql text field.
@@ -38,11 +46,8 @@ class McfImporter(Importer):
   The MCF nodes are parsed and inserted as triples via the GraphWriter.
     """
 
-  def __init__(self,
-               input_file: File,
-               graph_writer: GraphWriter,
-               reporter: FileImportReporter,
-               nodes: Nodes = None) -> None:
+  def __init__(self, input_file: File, graph_writer: GraphWriter,
+               reporter: FileImportReporter, nodes: Nodes) -> None:
     self.input_file = input_file
     self.graph_writer = graph_writer
     self.reporter = reporter
@@ -58,8 +63,8 @@ class McfImporter(Importer):
       for subject_id, predicate, value, _ in triples_list:
         if predicate == _DCID and value:
           local2dcid[subject_id] = value
-        elif predicate == "typeOf" and strip_namespace(value) in [
-            "Provenance", "Source"
+        elif predicate == _TYPE_OF and strip_namespace(value) in [
+            _PROVENANCE, _SOURCE
         ]:
           metadata_subject_ids.add(subject_id)
 
@@ -77,19 +82,22 @@ class McfImporter(Importer):
 
         triple = _to_triple(parser_triple, local2dcid)
 
+        # Metadata nodes are registered below and written once by Nodes, which
+        # also adds derived properties (e.g. a Source's domain).
         resolved_subject = local2dcid.get(subject_id, subject_id)
         if subject_id in metadata_subject_ids or resolved_subject in metadata_subject_ids:
           all_metadata_triples.append(triple)
+          continue
         node_triples.append(triple)
 
       self.graph_writer.write_triples(node_triples, self.input_file)
 
       # Register all collected metadata nodes at the end
       if all_metadata_triples:
-        prov_id = getattr(self, "provenance", "")
         _register_metadata_nodes(all_metadata_triples,
                                  self.nodes,
-                                 provenance_id=prov_id)
+                                 import_folder=self.nodes.config.import_name(
+                                     self.input_file))
 
       self.reporter.report_success()
     except Exception as e:
@@ -118,53 +126,78 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   return Triple(resolved_subject, predicate, object_value=value)
 
 
-def _register_metadata_nodes(triples: list[Triple],
-                             nodes: Nodes,
-                             provenance_id: str = "") -> None:
-  """Extracts and registers Provenance and Source nodes from parsed MCF triples.
+def _register_metadata_nodes(triples: list[Triple], nodes: Nodes,
+                             import_folder: str) -> None:
+  """Registers the Provenance and Source nodes defined by `triples` in `nodes`.
 
-  This helper is robust against:
-  - Namespaced predicates (e.g., 'dcs:url', 'schema:name', 'dcs:sourceLink').
+  Sources are attached to `import_folder`, the folder of the MCF file that
+  defines them. A node typed both Provenance and Source is registered as a
+  Provenance. Every triple that doesn't fill a field (see _split_fields) is
+  kept, as is, as one of the node's custom triples, so nothing is lost.
+
+  Field matching is robust against:
+  - Namespaced predicates (e.g., 'dcs:url', 'schema:name').
   - Namespaced typeOf values (e.g., 'dcs:Provenance', 'dcs:Source').
-  - String literal quote escaping.
+  - String literal quote escaping, in field values.
   """
-  if not nodes:
-    return
-
-  subject_properties = {}
-  for triple in triples:
-    sub_id = triple.subject_id
-    if sub_id not in subject_properties:
-      subject_properties[sub_id] = {}
-
-  # Strip namespace from predicate for robust matching
-    pred = strip_namespace(triple.predicate)
-
-    if pred == "typeOf":
-      subject_properties[sub_id]["typeOf"] = strip_namespace(triple.object_id or
-                                                             "")
-    elif pred == "url":
-      val = triple.object_value or triple.object_id or ""
-      subject_properties[sub_id]["url"] = _clean_literal(val)
-    elif pred == "name":
-      val = triple.object_value or triple.object_id or ""
-      subject_properties[sub_id]["name"] = _clean_literal(val)
-    elif pred == "source":
-      val = triple.object_id or triple.object_value or ""
-      subject_properties[sub_id]["source"] = _clean_literal(val)
-
-  for sub_id, props in subject_properties.items():
-    node_type = props.get("typeOf")
-    if node_type == "Provenance":
+  for sub_id, node_triples in _group_by_subject(triples).items():
+    node_types = _node_types(node_triples)
+    if _PROVENANCE in node_types:
+      fields, custom = _split_fields(node_triples, _PROVENANCE,
+                                     _PROVENANCE_FIELDS)
       nodes.register_provenance(id=sub_id,
-                                name=props.get("name", ""),
-                                url=props.get("url", ""),
-                                source_id=props.get("source", ""))
-    elif node_type == "Source":
+                                name=fields.get('name', ''),
+                                url=fields.get('url', ''),
+                                source_id=fields.get('source', ''),
+                                custom_triples=custom)
+    elif _SOURCE in node_types:
+      fields, custom = _split_fields(node_triples, _SOURCE, _SOURCE_FIELDS)
       nodes.register_source(id=sub_id,
-                            name=props.get("name", ""),
-                            url=props.get("url", ""),
-                            provenance_id=provenance_id)
+                            name=fields.get('name', ''),
+                            url=fields.get('url', ''),
+                            custom_triples=custom,
+                            import_folder=import_folder)
+
+
+def _group_by_subject(triples: list[Triple]) -> dict[str, list[Triple]]:
+  """Groups `triples` by subject, keeping first-seen subject order."""
+  by_subject: dict[str, list[Triple]] = {}
+  for triple in triples:
+    by_subject.setdefault(triple.subject_id, []).append(triple)
+  return by_subject
+
+
+def _node_types(node_triples: list[Triple]) -> set[str]:
+  """Returns the namespace-stripped typeOf values of a node."""
+  return {
+      strip_namespace(t.object_id or '')
+      for t in node_triples
+      if strip_namespace(t.predicate) == _TYPE_OF
+  }
+
+
+def _split_fields(
+    node_triples: list[Triple], node_type: str,
+    field_names: frozenset[str]) -> tuple[dict[str, str], list[Triple]]:
+  """Splits a node's triples into fields and custom triples.
+
+  Returns (fields, custom). `fields` maps each of `field_names` found (matched
+  without namespace) to the cleaned literal of its first value. `custom` holds
+  every other triple: other predicates, other types, and extra field values.
+  The `node_type` typeOf triple is dropped: the registered node writes it.
+  """
+  fields: dict[str, str] = {}
+  custom: list[Triple] = []
+  for triple in node_triples:
+    pred = strip_namespace(triple.predicate)
+    if pred == _TYPE_OF and strip_namespace(triple.object_id or
+                                            '') == node_type:
+      continue
+    if pred in field_names and pred not in fields:
+      fields[pred] = _clean_literal(triple.object_id or triple.object_value)
+      continue
+    custom.append(triple)
+  return fields, custom
 
 
 def _clean_literal(val: str) -> str:

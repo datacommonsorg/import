@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from stats.config import Config
+from stats.data import Triple
 from stats.nodes import Nodes
 
 
@@ -21,13 +22,21 @@ def test_merge_metadata_keeps_every_field():
   worker.register_source(id="dcid:MySource",
                          name="My Source",
                          url="https://example.com",
-                         properties={"license": "CC-BY"},
-                         provenance_id="MyProvenance")
+                         custom_triples=[
+                             Triple(subject_id="MySource",
+                                    predicate="license",
+                                    object_value="CC-BY")
+                         ],
+                         import_folder="MyProvenance")
   worker.register_provenance(id="dcid:MyProvenance",
                              name="My Provenance",
                              url="https://example.com/data",
                              source_id="dcid:MySource",
-                             properties={"isPartOf": "dcid:Other"})
+                             custom_triples=[
+                                 Triple(subject_id="MyProvenance",
+                                        predicate="isPartOf",
+                                        object_id="dcid:Other")
+                             ])
 
   coordinator = Nodes(Config({}))
   coordinator.merge_metadata(worker.provenances, worker.sources)
