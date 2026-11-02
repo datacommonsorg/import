@@ -103,14 +103,14 @@ class SummaryGenerator:
     # TODO: Add to per-folder and per-provenance totals: sum counts, keep the
     # min and max date, and union node types.
 
-  def populate_node_info(self, folder: str, provenance: [str],
+  def populate_node_info(self, folder: str, provenance: list[str],
                          counts_by_type: dict[str, int]) -> None:
     """Adds counts for nodes written by the parent process.
 
     Nodes from user files are counted in the workers and arrive through
-    add_file_summary(). This function covers nodes the parent writes after merging
-    worker results: generated provenance, source and StatVar nodes, and
-    StatVarGroups.
+    add_file_summary(). This function covers nodes the parent writes after
+    merging worker results: generated provenance, source and StatVarGroup
+    nodes. Counts are stored per file and per provenance.
 
     Args:
       folder: Import folder the nodes belong to.
