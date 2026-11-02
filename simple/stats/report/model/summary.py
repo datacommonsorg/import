@@ -87,3 +87,19 @@ class IngestionReport(BaseModel):
   folders: list[Folder] = Field(default_factory=list,
                                 description="One entry per import folder")
   # TODO: Add error field in the ingestion report.
+
+
+class FileSummary(BaseModel):
+  """Counts for one imported file, returned by the worker that imported it.
+
+  Not part of the report itself: SummaryGenerator merges these into the
+  folder and provenance totals.
+  """
+
+  filePath: str = Field(description="Input file path")
+  folder: str = Field(description="Import folder the file belongs to")
+  provenance: str | None = Field(
+      default=None, description="Provenance configured for the file")
+  observations: int = Field(default=0,
+                            description="StatVarObservation nodes written")
+  # TODO: Add minDate, maxDate and nodesByType.
