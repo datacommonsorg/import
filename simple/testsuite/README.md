@@ -90,7 +90,7 @@ def test_value(given, expect):
 | MCF input | `mcf_node(subject, typeOf=..., **props)`, `mcf(*blocks)` |
 | CSV input | `csv_file(*rows, header=..., quote_all=, line_end=, bom=)`, `obs_row(...)` |
 | Config | `obs_config(mappings, pattern=, **options)`, `entities_config(...)`, `MCF_CONFIG` |
-| Expected records | `record(dcid, type, **props)`, `ref(dcid)`, `obs(...)`, `entity(...)`, `class_node(...)`, `property_node(...)` |
+| Expected records | `record(dcid, type, **props)`, `ref(dcid)`, `obs(...)`, `entity(...)`, `property_node(...)` |
 | Running | `run(files, config, mode=, shared_files=)`, `run_mcf(...)`, `run_csv(...)`, `run_dir(...)` |
 | Checking | `assert_records(actual, expected)`, `assert_fails(result, type, message, handshake_error_types)` |
 
