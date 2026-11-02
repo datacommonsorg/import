@@ -29,7 +29,7 @@ from util.filesystem import File
 
 
 class SummaryGenerator:
-  """Collects facts during a preprocessor run and writes the ingestion report.
+  """Collects stats during a preprocessor run and writes the ingestion report.
 
   Runner calls, in order: set_execution_metadata(), record_input_file() per
   matched file, add_file_summary() per imported file, set_provenance_data()
@@ -37,9 +37,8 @@ class SummaryGenerator:
   on failure, and write_to_json() at the end of the run.
 
   Worker processes can't update this object, so each returns a FileSummary
-  in ImportProcResult and Runner passes it to add_file_summary().
+  to the parent and Runner passes it to add_file_summary().
 
-  TODO: Drop ImportReporter's process/report.json once this report exists.
   """
 
   def __init__(self, workflow_execution_id: str | None = None) -> None:
@@ -74,13 +73,13 @@ class SummaryGenerator:
         "output_path": output_path,
     }
 
-  def record_input_file(self, folder: str, provenance: str | None,
+  def record_input_file(self, folder: str, provenance: list[str],
                         file_type: str) -> None:
     """Records one matched input file, before it is imported.
 
     Args:
       folder: Import folder the file belongs to.
-      provenance: Provenance configured for the file, if any.
+      provenance: list of provenances configured for the file.
       file_type: Lowercase file extension, e.g. "csv" or "mcf".
     """
     # TODO: Count files by folder, type and provenance.
@@ -104,21 +103,21 @@ class SummaryGenerator:
     # TODO: Add to per-folder and per-provenance totals: sum counts, keep the
     # min and max date, and union node types.
 
-  def populate_node_info(self, folder: str, provenance: str,
+  def populate_node_info(self, folder: str, provenance: [str],
                          counts_by_type: dict[str, int]) -> None:
     """Adds counts for nodes written by the parent process.
 
     Nodes from user files are counted in the workers and arrive through
-    add_file_summary(). This covers nodes the parent writes after merging
+    add_file_summary(). This function covers nodes the parent writes after merging
     worker results: generated provenance, source and StatVar nodes, and
     StatVarGroups.
 
     Args:
       folder: Import folder the nodes belong to.
-      provenance: Provenance the nodes belong to.
+      provenance: list of provenances the nodes belong to.
       counts_by_type: Number of nodes per typeOf value.
     """
-    # TODO: Add to the node counts for this folder and provenance.
+    # TODO: Add to the node counts for each provenance in each folder.
 
   def record_failure(self, error: FileValidationError) -> None:
     """Records a run-level error.
