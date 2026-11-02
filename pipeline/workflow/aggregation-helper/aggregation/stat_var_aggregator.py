@@ -20,7 +20,7 @@ from typing import List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .common import _escape_sql_literal, get_provenance_name
+from .common import _escape_sql_literal, build_bq_job_tags, get_provenance_name
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -98,7 +98,12 @@ class StatVarAggregator:
 
         # 3. Combine into a single multi-statement SQL script (sequentially executed in a single job)
         combined_query = f"{ts_query}\n\n{obs_query}"
-        job = self.executor.execute(combined_query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "sv_aggr", import_names[0]
+        )
+        job = self.executor.execute(
+            combined_query, labels=labels, job_id_prefix=job_id_prefix
+        )
 
         return [job]
 

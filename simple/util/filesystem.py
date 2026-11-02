@@ -220,12 +220,6 @@ class File(_StoreWrapper):
     """Writes file contents from a string."""
     self.fs().writetext(self.path, content)
 
-  def read_bytes(self) -> bytes:
-    return self.fs().readbytes(self.path)
-
-  def write_bytes(self, content: bytes) -> None:
-    self.fs().writebytes(self.path, content)
-
   def read_string_io(self) -> io.StringIO:
     return io.StringIO(self.read())
 
@@ -241,14 +235,6 @@ class File(_StoreWrapper):
             "Transient error opening stream for %s (attempt %d/%d): %s. Retrying...",
             self.path, attempt + 1, max_retries, e)
         time.sleep(1)
-
-  def size(self) -> int:
-    """Returns the size of the file in bytes."""
-    return self.fs().getsize(self.path)
-
-  def copy_to(self, dest: "File"):
-    """Copies the contents of the file to the given destination file."""
-    dest.write_bytes(self.read_bytes())
 
 
 def _fix_gcsfs_storage(fs: GCSFS) -> None:

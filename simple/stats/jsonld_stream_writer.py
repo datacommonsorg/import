@@ -17,13 +17,10 @@ from collections import defaultdict
 import concurrent.futures
 from datetime import datetime
 from datetime import timezone
-import gc
 import hashlib
 import json
 import logging
-import multiprocessing
 import os
-import shutil
 import tempfile
 import threading
 from typing import Callable, Optional
@@ -36,14 +33,12 @@ from google.cloud import storage
 import pandas as pd
 import requests
 from stats import constants
-from stats.data import strip_namespace
 from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
 from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import create_store
-from util.filesystem import Dir
 from util.filesystem import File
 
 DCID_URL = "https://datacommons.org/browser/"
@@ -51,7 +46,6 @@ DCID_URL = "https://datacommons.org/browser/"
 # Configuration Constants
 _CHUNK_SIZE = 10000
 _UPLOAD_CONCURRENCY = 4
-_EXPORT_PROCESSES_MAX = 8
 
 _KNOWN_CUSTOM_PREFIXES = set()
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
@@ -98,6 +92,77 @@ def _parse_numeric(val):
     return str(val)
 
 
+def _prefix_dcid(key: str) -> str:
+  """Ensures `key` has a `dcid:` prefix unless it is already a URI or prefixed."""
+  if key.startswith(("dcid:", "http://", "https://")):
+    return key
+  return f"dcid:{key}"
+
+
+def _parse_props_json(props: str, entity: str, variable: str) -> dict:
+  """Parses a serialized observation properties JSON string into a dict."""
+  if not props:
+    return {}
+  try:
+    parsed = json.loads(props)
+    return parsed if isinstance(parsed, dict) else {}
+  except json.JSONDecodeError as e:
+    logging.warning(
+        "Failed to decode properties JSON for observation %s/%s: %s", entity,
+        variable, e)
+    return {}
+
+
+def _build_observation_node(
+    row: tuple,
+    prov_urls: Optional[dict[str, str]] = None,
+) -> dict:
+  """Builds a single `dcid:StatVarObservation` JSON-LD node dict from a row."""
+  entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
+  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
+  obs_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
+
+  var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
+  props_dict = _parse_props_json(props, entity, variable)
+  if props_dict and var_obj:
+    var_obj["dcid:observationProperties"] = [
+        _prefix_dcid(k) for k in props_dict.keys()
+    ]
+
+  obs_obj = {
+      "@id": f"dcid:obs_{obs_hash}",
+      "@type": "dcid:StatVarObservation",
+      "dcid:variableMeasured": var_obj,
+      "dcid:observationDate": _parse_numeric(date),
+      "dcid:value": _parse_numeric(value),
+  }
+  entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))
+  if entity_ref:
+    obs_obj["dcid:observationAbout"] = entity_ref
+  if provenance:
+    obs_obj["dcid:provenance"] = _uri_ref(
+        _rewrite_custom_ns_to_dcid(provenance))
+    if prov_urls and provenance in prov_urls and prov_urls[provenance]:
+      obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
+  if unit:
+    obs_obj["dcid:unit"] = _uri_ref(_rewrite_custom_ns_to_dcid(unit))
+  if scaling_factor:
+    obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
+  if mmethod:
+    obs_obj["dcid:measurementMethod"] = _uri_ref(
+        _rewrite_custom_ns_to_dcid(mmethod))
+  if period:
+    obs_obj["dcid:observationPeriod"] = period
+
+  for k, v in props_dict.items():
+    prop_key = _prefix_dcid(k)
+    if is_entity_reference(v):
+      obs_obj[prop_key] = _uri_ref(_rewrite_custom_ns_to_dcid(v))
+    else:
+      obs_obj[prop_key] = _parse_numeric(v)
+  return obs_obj
+
+
 def _write_observation_shard(chunk,
                              shard_index: Optional[int] = None,
                              jsonld_dir_path: Optional[str] = None,
@@ -105,84 +170,20 @@ def _write_observation_shard(chunk,
                              prov_urls: Optional[dict[str, str]] = None,
                              track_hash_fn: Optional[Callable] = None,
                              file_name: str = ""):
-
   graph_list = []
   chunk_hashes = []
-
   for row in chunk:
-    entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-
-    key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
-    obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    obs_obj = _build_observation_node(row, prov_urls)
     if track_hash_fn:
+      entity, variable, date, _, provenance, *_ = row
+      obs_hash = obs_obj["@id"].removeprefix("dcid:obs_")
       chunk_hashes.append((obs_hash, entity, variable, date, provenance))
-
-    var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
-    prop_keys = None
-    if props:
-      try:
-        props_dict = json.loads(props)
-        if isinstance(props_dict, dict):
-          prop_keys = [
-              f"dcid:{k}" if not k.startswith(
-                  ("dcid:", "http://", "https://")) else k
-              for k in props_dict.keys()
-          ]
-          if prop_keys and var_obj:
-            var_obj["dcid:observationProperties"] = prop_keys
-      except json.JSONDecodeError:
-        pass
-
-    obs_obj = {
-        "@id": f"dcid:obs_{obs_hash}",
-        "@type": "dcid:StatVarObservation",
-        "dcid:variableMeasured": var_obj,
-        "dcid:observationDate": _parse_numeric(date),
-        "dcid:value": _parse_numeric(value),
-    }
-
-    entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))
-    if entity_ref:
-      obs_obj["dcid:observationAbout"] = entity_ref
-
-    if provenance:
-      obs_obj["dcid:provenance"] = _uri_ref(
-          _rewrite_custom_ns_to_dcid(provenance))
-      if provenance in prov_urls and prov_urls[provenance]:
-        obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
-    if unit:
-      obs_obj["dcid:unit"] = _uri_ref(_rewrite_custom_ns_to_dcid(unit))
-    if scaling_factor:
-      obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
-    if mmethod:
-      obs_obj["dcid:measurementMethod"] = _uri_ref(
-          _rewrite_custom_ns_to_dcid(mmethod))
-    if period:
-      obs_obj["dcid:observationPeriod"] = period
-
-    if props:
-      try:
-        props_dict = json.loads(props)
-        if isinstance(props_dict, dict):
-          for k, v in props_dict.items():
-            prop_key = f"dcid:{k}" if not k.startswith(
-                "dcid:") and not k.startswith("http") else k
-            if is_entity_reference(v):
-              obs_obj[prop_key] = _uri_ref(_rewrite_custom_ns_to_dcid(v))
-            else:
-              obs_obj[prop_key] = _parse_numeric(v)
-      except json.JSONDecodeError as e:
-        logging.warning(
-            "Failed to decode properties JSON for observation %s/%s: %s",
-            entity, variable, e)
-
     graph_list.append(obs_obj)
 
   if track_hash_fn and chunk_hashes:
     track_hash_fn(chunk_hashes, file_name=file_name)
 
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
-
   if file_name:
     sanitized_stem = file_name.replace("/", "_").rsplit(".", 1)[0]
     shard_name = f"observation-{sanitized_stem}-{shard_index:05d}.jsonld"
@@ -193,6 +194,19 @@ def _write_observation_shard(chunk,
     output_dir.open_file(shard_name).write(
         json.dumps(compacted_jsonld, indent=4))
   logging.info(f"Saved JSON-LD shard to {shard_name}")
+
+
+def _append_unique_value(subject_dict: dict, key: str, val: object) -> None:
+  """Appends `val` to `subject_dict[key]`, deduplicating and promoting to a list."""
+  if key not in subject_dict:
+    subject_dict[key] = val
+    return
+  existing = subject_dict[key]
+  if isinstance(existing, list):
+    if val not in existing:
+      existing.append(val)
+  elif existing != val:
+    subject_dict[key] = [existing, val]
 
 
 # TODO(gmechali): When parallelizing node shard exports (MCF and Entities CSV files),
@@ -212,38 +226,13 @@ def _write_node_shard(args):
       }
 
     pred = _rewrite_custom_ns_to_dcid(row.predicate)
-    pred_key = pred if is_uri_or_namespace(pred) else f"dcid:{pred}"
-
-    if pred == "typeOf":
-      pred_key = "@type"
-
-    if row.object_id:
-      val = _uri_ref(_rewrite_custom_ns_to_dcid(row.object_id))
-    else:
-      val = _parse_numeric(row.object_value)
-
+    pred_key = "@type" if pred == "typeOf" else (
+        pred if is_uri_or_namespace(pred) else f"dcid:{pred}")
+    val = (_uri_ref(_rewrite_custom_ns_to_dcid(row.object_id))
+           if row.object_id else _parse_numeric(row.object_value))
     if pred_key == "@type":
-      val_str = val["@id"] if isinstance(val,
-                                         dict) and "@id" in val else str(val)
-      if "@type" in subjects[sub_id]:
-        existing = subjects[sub_id]["@type"]
-        if isinstance(existing, list):
-          if val_str not in existing:
-            existing.append(val_str)
-        elif existing != val_str:
-          subjects[sub_id]["@type"] = [existing, val_str]
-      else:
-        subjects[sub_id]["@type"] = val_str
-    else:
-      if pred_key in subjects[sub_id]:
-        existing = subjects[sub_id][pred_key]
-        if isinstance(existing, list):
-          if val not in existing:
-            existing.append(val)
-        elif existing != val:
-          subjects[sub_id][pred_key] = [existing, val]
-      else:
-        subjects[sub_id][pred_key] = val
+      val = val["@id"] if isinstance(val, dict) and "@id" in val else str(val)
+    _append_unique_value(subjects[sub_id], pred_key, val)
 
   # Sort by @id to match deterministic output order
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
@@ -308,42 +297,35 @@ class JsonLdStreamWriter(GraphWriter):
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
-  def track_observation_hash(self,
-                             obs_hash_or_chunk,
-                             entity: str = "",
-                             variable: str = "",
-                             date: str = "",
-                             provenance: str = "",
-                             file_name: str = "") -> None:
-    if isinstance(obs_hash_or_chunk, list):
-      chunk_items = obs_hash_or_chunk
-      file_key = os.path.basename(file_name) if file_name else "unknown"
-      with self.lock:
-        for obs_hash, ent, var, dt, prov in chunk_items:
-          hash_int = int(obs_hash[:16], 16)
-          if hash_int in self.obs_hash_set:
-            self.obs_collision_count += 1
-            self.file_collision_counts[file_key] += 1
-            sample_info = (
-                f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
-            )
-            if len(self.obs_sample_collisions) < 10:
-              self.obs_sample_collisions.append(sample_info)
-            if len(self.file_sample_collisions[file_key]) < 3:
-              self.file_sample_collisions[file_key].append(sample_info)
-              logging.warning(
-                  "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
-                  file_key, sample_info)
-            elif self.obs_collision_count % 1000 == 0:
-              logging.warning(
-                  "Detected %d observation @id collisions so far across processed datasets.",
-                  self.obs_collision_count)
-          else:
-            self.obs_hash_set.add(hash_int)
-    else:
-      self.track_observation_hash(
-          [(obs_hash_or_chunk, entity, variable, date, provenance)],
-          file_name=file_name)
+  def track_observation_hash(
+      self,
+      chunk_items: list[tuple[str, str, str, str, str]],
+      file_name: str = "",
+  ) -> None:
+    """Tracks observation hashes for a shard chunk and logs any collisions."""
+    file_key = os.path.basename(file_name) if file_name else "unknown"
+    with self.lock:
+      for obs_hash, ent, var, dt, prov in chunk_items:
+        hash_int = int(obs_hash[:16], 16)
+        if hash_int not in self.obs_hash_set:
+          self.obs_hash_set.add(hash_int)
+          continue
+        self.obs_collision_count += 1
+        self.file_collision_counts[file_key] += 1
+        sample_info = (
+            f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
+        )
+        if len(self.obs_sample_collisions) < 10:
+          self.obs_sample_collisions.append(sample_info)
+        if len(self.file_sample_collisions[file_key]) < 3:
+          self.file_sample_collisions[file_key].append(sample_info)
+          logging.warning(
+              "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
+              file_key, sample_info)
+        elif self.obs_collision_count % 1000 == 0:
+          logging.warning(
+              "Detected %d observation @id collisions so far across processed datasets.",
+              self.obs_collision_count)
 
   def _get_prov_urls(self) -> dict[str, str]:
     if hasattr(self, 'nodes') and self.nodes and hasattr(
@@ -435,9 +417,6 @@ class JsonLdStreamWriter(GraphWriter):
 
     self._init_import_export_dir(provenance_dir)
     self._write_triples_to_disk(triples, provenance_dir)
-
-  def commit(self):
-    pass
 
   def commit_and_close(self):
     global_triples = self._triples.pop("_global", [])
@@ -533,15 +512,13 @@ class JsonLdStreamWriter(GraphWriter):
                                        (TooManyRequests, GoogleAPICallError,
                                         requests.exceptions.RequestException)))
 
-    def _upload_single(rel_path: str):
-      local_file_path = os.path.join(temp_local_dir, rel_path)
-      blob_key = f"{blob_prefix}/{rel_path}" if blob_prefix else rel_path
-      blob = bucket.blob(blob_key)
-      blob.upload_from_filename(local_file_path, retry=gcs_retry)
-
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=_UPLOAD_CONCURRENCY) as executor:
-      list(executor.map(_upload_single, files))
+      list(
+          executor.map(
+              lambda rel_path: _upload_single_gcs_blob(
+                  temp_local_dir, rel_path, blob_prefix, bucket, gcs_retry),
+              files))
 
   def _upload_shards_local(self, temp_local_dir: str, files: list[str]):
     """Performs concurrent local file copy (for test environments)."""
@@ -554,12 +531,26 @@ class JsonLdStreamWriter(GraphWriter):
       except Exception:
         pass
 
-    def _copy_single(rel_path: str):
-      local_file_path = os.path.join(temp_local_dir, rel_path)
-      with open(local_file_path, "r") as f:
-        content = f.read()
-      target_store.open_file(rel_path).write(content)
-
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=_UPLOAD_CONCURRENCY) as executor:
-      list(executor.map(_copy_single, files))
+      list(
+          executor.map(
+              lambda rel_path: _copy_single_local_shard(
+                  temp_local_dir, rel_path, target_store), files))
+
+
+def _upload_single_gcs_blob(temp_local_dir: str, rel_path: str,
+                            blob_prefix: str, bucket, gcs_retry: Retry) -> None:
+  """Uploads a single local shard file (`rel_path`) to a GCS bucket."""
+  local_file_path = os.path.join(temp_local_dir, rel_path)
+  blob_key = f"{blob_prefix}/{rel_path}" if blob_prefix else rel_path
+  bucket.blob(blob_key).upload_from_filename(local_file_path, retry=gcs_retry)
+
+
+def _copy_single_local_shard(temp_local_dir: str, rel_path: str,
+                             target_store) -> None:
+  """Copies a single local shard file (`rel_path`) into `target_store`."""
+  local_file_path = os.path.join(temp_local_dir, rel_path)
+  with open(local_file_path, "r") as f:
+    content = f.read()
+  target_store.open_file(rel_path).write(content)

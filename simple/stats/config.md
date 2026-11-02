@@ -83,6 +83,42 @@ or a custom observation property you have defined in MCF.
 
 The list of column names to be ignored by the importer, if any.
 
+#### `importType`
+
+Optional. Either `"observations"` (the default) or `"entities"`.
+
+#### `observationProperties`
+
+Optional, for observations CSVs. A map of observation properties (such as
+`"unit"`, `"scalingFactor"`, `"measurementMethod"`, `"observationPeriod"`, or
+custom dimension properties) applied as defaults to every row in the file.
+
+#### `rowEntityType`
+
+Required when `importType` is `"entities"`. The type (class DCID) assigned to
+each row entity in the CSV.
+
+#### `idColumn`
+
+Optional, for `"entities"` imports. The column whose cell value provides each
+row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
+
+#### `referenceColumns` _(or `columnsToResolve`)_
+
+Optional, for `"entities"` imports. The list of columns whose cell values are
+entity DCID references (or comma-separated lists of entity DCIDs) rather than
+literal values.
+
+## `entities`
+
+Optional. Provides display `name` and `description` metadata for `Class` nodes
+created by `"entities"` imports, keyed by `rowEntityType`.
+
+## `includeInputSubdirs`
+
+If `true`, recursively scans subdirectories of the input directory for files
+matching `inputFiles` patterns. Default is `false`.
+
 ## `dataDownloadUrl`
 
 Examples:
@@ -122,29 +158,3 @@ of the variables in the dataset. Default is `false`.
 The importer does not build the hierarchy itself. It creates the custom root
 StatVarGroup and forwards the request to the ingestion pipeline as
 `generateStatVarGroups` in the handshake record.
-
-## Hierarchy and Group Customization
-
-These optional top-level fields customize how the StatVarGroup hierarchy is generated and labeled. All are optional; defaults match the built-in values.
-
-- `defaultCustomRootStatVarGroupName`: Display name for the custom root StatVarGroup. Default: `"Custom Variables"`.
-- `customIdNamespace`: Namespace token for generated ids for SVs and manual groups. Default: `"custom"`.
-  - Generated SV ids: `<namespace>/statvar_<n>` (e.g., `custom/statvar_1`).
-  - Manual group ids: `<namespace>/g/group_<n>` (e.g., `custom/g/group_1`).
-- `customSvgPrefix`: String prefix for generated custom StatVarGroup ids.
-  - If not set, and `customIdNamespace` is provided, it defaults to `<customIdNamespace>/g/`.
-  - Otherwise defaults to `"c/g/"`.
-  - Affects ids like `c/g/Person_Gender-Female`.
-- `svHierarchyPropsBlocklist`: Array of additional property dcids to exclude from hierarchy generation. These are added to the internal blocklist used by Data Commons.
-  - Example: `["DevelopmentFinanceRecipient", "DACCode", "CustomProperty"]`
-
-Example fragment:
-
-```json
-{
-  "groupStatVarsByProperty": true,
-  "defaultCustomRootStatVarGroupName": "ONE Data",
-  "customIdNamespace": "ONE"
-  "customSvgPrefix": "OD/g/",
-  "svHierarchyPropsBlocklist": ["DevelopmentFinanceRecipients", "DACCode"],
-}

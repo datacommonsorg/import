@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-
-from stats import constants
 from stats.data import EntityType
 from stats.data import ImportType
-from stats.data import Provenance
-from stats.data import Source
 from stats.data import strip_namespace
 from util.file_match import match
 from util.filesystem import File
@@ -28,9 +23,6 @@ _IMPORT_TYPE_FIELD = "importType"
 _IGNORE_COLUMNS_FIELD = "ignoreColumns"
 _NAME_FIELD = "name"
 _DESCRIPTION_FIELD = "description"
-_SOURCES_FIELD = "sources"
-_PROVENANCES_FIELD = "provenances"
-_URL_FIELD = "url"
 _PROVENANCE_FIELD = "provenance"
 _ID_COLUMN_FIELD = "idColumn"
 _DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
@@ -40,14 +32,72 @@ _VARIABLE_PER_ROW_FORMAT = "variablePerRow"
 _COLUMN_MAPPINGS_FIELD = "columnMappings"
 _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "columnsToResolve"
+_REFERENCE_COLUMNS_FIELD = "referenceColumns"
 _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _OBSERVATION_PROPERTIES = "observationProperties"
 _INCLUDE_INPUT_SUBDIRS_PROPERTY = "includeInputSubdirs"
-_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD = "svHierarchyPropsBlocklist"
-_CUSTOM_SVG_PREFIX_FIELD = "customSvgPrefix"
-_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD = "defaultCustomRootStatVarGroupName"
-_CUSTOM_ID_NAMESPACE_FIELD = "customIdNamespace"
+_IMPORT_NAME_FIELD = "importName"
+_PATTERN_FIELD = "pattern"
+_FILENAME_FIELD = "filename"
+
+_ALLOWED_TOP_LEVEL_KEYS = frozenset({
+    _INPUT_FILES_FIELD,
+    _DATA_DOWNLOAD_URL_FIELD,
+    _ENTITIES_FIELD,
+    _GROUP_STAT_VARS_BY_PROPERTY,
+    _INCLUDE_INPUT_SUBDIRS_PROPERTY,
+    _IMPORT_NAME_FIELD,
+    "_dir_import_names",
+})
+
+_ALLOWED_INPUT_FILE_KEYS = frozenset({
+    _PATTERN_FIELD,
+    _FILENAME_FIELD,
+    _IMPORT_TYPE_FIELD,
+    _PROVENANCE_FIELD,
+    _FORMAT_FIELD,
+    _COLUMN_MAPPINGS_FIELD,
+    _IGNORE_COLUMNS_FIELD,
+    _OBSERVATION_PROPERTIES,
+    _ROW_ENTITY_TYPE_FIELD,
+    _ID_COLUMN_FIELD,
+    _ENTITY_COLUMNS,
+    _REFERENCE_COLUMNS_FIELD,
+    "_import_name",
+})
+
+_ALLOWED_ENTITY_KEYS = frozenset({
+    _NAME_FIELD,
+    _DESCRIPTION_FIELD,
+})
+
+
+def _validate_dict_keys(data: dict, allowed_keys: frozenset[str],
+                        context: str) -> None:
+  """Raises ValueError if `data` contains any keys not in `allowed_keys`."""
+  unknown_keys = sorted(set(data.keys()) - allowed_keys)
+  if unknown_keys:
+    public_keys = sorted(k for k in allowed_keys if not k.startswith("_"))
+    raise ValueError(f"Unknown key(s) in {context}: {unknown_keys}. "
+                     f"Allowed keys are: {public_keys}")
+
+
+def _validate_entities_config(entities: object) -> None:
+  """Validates the top-level 'entities' block if present."""
+  if entities is None:
+    return
+  if not isinstance(entities, dict):
+    raise ValueError(
+        f"'{_ENTITIES_FIELD}' must be a JSON object mapping entity types to "
+        f"their configuration. Got: {type(entities).__name__}")
+  for entity_type_name, entity_cfg in entities.items():
+    if not isinstance(entity_cfg, dict):
+      raise ValueError(
+          f"Invalid configuration for entity '{entity_type_name}' in "
+          f"'{_ENTITIES_FIELD}': must be a JSON object. Got: {entity_cfg}")
+    _validate_dict_keys(entity_cfg, _ALLOWED_ENTITY_KEYS,
+                        f"'{_ENTITIES_FIELD}.{entity_type_name}'")
 
 
 class Config:
@@ -57,7 +107,12 @@ class Config:
     """
 
   def __init__(self, data: dict) -> None:
+    if not isinstance(data, dict):
+      raise ValueError(
+          f"config.json must be a JSON object. Got: {type(data).__name__}")
+    _validate_dict_keys(data, _ALLOWED_TOP_LEVEL_KEYS, "config.json")
     self.data = data
+    _validate_entities_config(self.data.get(_ENTITIES_FIELD))
     self._input_files_config: dict[str, dict] = {}
     input_files = self.data.get(_INPUT_FILES_FIELD, [])
 
@@ -73,11 +128,6 @@ class Config:
     # e.g. "foo1.csv" -> "foo*.csv", "foo2.csv" -> "foo*.csv",
     # "path/to/foo.csv" -> "**/foo.csv, etc.
     self._config_key_by_full_path: dict[str, str] = {}
-    # dict from provenance name to Provenance
-    self.provenances: dict[str, Provenance] = {}
-    # dict from provenance name to Source
-    self.provenance_sources: dict[str, Source] = {}
-    self._parse_provenances_and_sources()
 
   def _parse_input_files_config(self, input_files: list) -> None:
     """Parses the list-of-objects format for inputFiles."""
@@ -86,13 +136,28 @@ class Config:
         raise ValueError(
             f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
         )
-      key = entry.get("pattern") or entry.get("filename")
+      key = entry.get(_PATTERN_FIELD) or entry.get(_FILENAME_FIELD)
       if not key:
         raise ValueError(
             f"Invalid entry in '{_INPUT_FILES_FIELD}': must specify 'pattern' or 'filename'. Got: {entry}"
         )
+      _validate_dict_keys(entry, _ALLOWED_INPUT_FILE_KEYS,
+                          f"'{_INPUT_FILES_FIELD}' entry for '{key}'")
       self._validate_format(key, entry)
+      self._validate_entity_columns(key, entry)
       self._input_files_config[key] = entry
+
+  def _validate_entity_columns(self, key: str, entry: dict) -> None:
+    """Rejects `columnsToResolve` and `referenceColumns` on non-entities entries."""
+    import_type = entry.get(_IMPORT_TYPE_FIELD, ImportType.OBSERVATIONS)
+    if import_type == ImportType.ENTITIES:
+      return
+    for col_field in (_ENTITY_COLUMNS, _REFERENCE_COLUMNS_FIELD):
+      if col_field in entry:
+        raise ValueError(
+            f"'{col_field}' is only supported for 'importType': "
+            f"'{ImportType.ENTITIES}', but entry '{key}' has importType "
+            f"'{import_type}'.")
 
   def _validate_format(self, key: str, entry: dict) -> None:
     """Rejects any `format` other than the one supported CSV layout.
@@ -150,7 +215,8 @@ class Config:
     return self._per_file_config(input_file).get(_ROW_ENTITY_TYPE_FIELD, "")
 
   def entity_columns(self, input_file: File) -> list[str]:
-    return self._per_file_config(input_file).get(_ENTITY_COLUMNS, [])
+    cfg = self._per_file_config(input_file)
+    return cfg.get(_REFERENCE_COLUMNS_FIELD) or cfg.get(_ENTITY_COLUMNS, [])
 
   def observation_properties(self, input_file: File) -> dict[str, str]:
     return self._per_file_config(input_file).get(_OBSERVATION_PROPERTIES, {})
@@ -163,90 +229,6 @@ class Config:
 
   def include_input_subdirs(self) -> bool:
     return self.data.get(_INCLUDE_INPUT_SUBDIRS_PROPERTY) or False
-
-  def special_files(self) -> dict[str, str]:
-    special_files: dict[str, str] = {}
-    for special_file_type in constants.SPECIAL_FILE_TYPES:
-      special_file_name = self.data.get(special_file_type, "")
-      if special_file_name:
-        special_files[special_file_type] = special_file_name
-    return special_files
-
-  def sv_hierarchy_props_blocklist(self) -> set[str]:
-    """Returns the set of SV properties to exclude from hierarchy generation.
-    Behavior: Adds any provided properties to the built-in blocklist.
-    Defaults to sc.SV_HIERARCHY_PROPS_BLOCKLIST if not specified in config.
-    """
-    from stats import schema_constants as sc
-    cfg = self.data.get(_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD)
-    if cfg is None:
-      return sc.SV_HIERARCHY_PROPS_BLOCKLIST
-    if isinstance(cfg, list):
-      # Ensure all provided entries are strings.
-      if not all(isinstance(p, str) for p in cfg):
-        raise ValueError(
-            f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
-        )
-      return sc.SV_HIERARCHY_PROPS_BLOCKLIST | set(cfg)
-    raise ValueError(
-        f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
-    )
-
-  def custom_id_namespace(self) -> str:
-    """Returns the namespace token used in generated ids for SVs and manual groups.
-    Affects:
-    - Generated SV ids: '<namespace>/statvar_<n>'
-    - Generated manual group ids: '<namespace>/g/group_<n>'
-    """
-    ns = self.data.get(_CUSTOM_ID_NAMESPACE_FIELD, "custom")
-
-    if not ns:
-      raise ValueError(
-          f"If provided, {_CUSTOM_ID_NAMESPACE_FIELD} must be non-empty.")
-
-    # Validate token of alphanumerics and underscores only (no slashes), non-empty.
-    if not isinstance(ns, str) or not re.fullmatch(r"^[A-Za-z0-9_]+$", ns):
-      raise ValueError(
-          f"{_CUSTOM_ID_NAMESPACE_FIELD} must be made up entirely of letters, digits,"
-          f" or underscores, with no spaces, punctuation, or other symbols, and it must not be empty."
-      )
-    return ns
-
-  def custom_svg_prefix(self) -> str:
-    """Returns the prefix to use for generated custom SVG ids (e.g., 'c/g/').
-    Resolution order:
-    - If explicitly set via 'customSvgPrefix', return it.
-    - Else if 'customIdNamespace' is explicitly provided in config, derive as
-      f"{namespace}/g/" where namespace is the validated value of
-      customIdNamespace.
-    - Else fall back to the built-in default (e.g., 'c/g/').
-    """
-    from stats import schema_constants as sc
-    cfg = self.data.get(_CUSTOM_SVG_PREFIX_FIELD)
-    if cfg:
-      # Validate allowed chars [A-Za-z0-9_/], cannot start with '/', must end with '/'.
-      if not isinstance(cfg, str):
-        raise ValueError(
-            f"{_CUSTOM_SVG_PREFIX_FIELD} must be a string if provided.")
-      if cfg.startswith("/") or not cfg.endswith("/") or not re.fullmatch(
-          r"^[A-Za-z0-9_/]+$", cfg):
-        raise ValueError(
-            f"{_CUSTOM_SVG_PREFIX_FIELD} must be made up entirely of letters, digits, or "
-            f"underscores, with no spaces, punctuation, or other symbols. It cannot start "
-            f"with '/', must end with '/', and it must not be empty")
-      return cfg
-    # Only derive from customIdNamespace if the user explicitly provided it.
-    if _CUSTOM_ID_NAMESPACE_FIELD in self.data:
-      ns = self.custom_id_namespace()
-      return f"{ns}/g/"
-    # Otherwise use the built-in default.
-    return sc.CUSTOM_SVG_PREFIX
-
-  def default_custom_root_svg_name(self) -> str:
-    """Returns the display name of the default custom root StatVarGroup."""
-    from stats import schema_constants as sc
-    return self.data.get(_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD,
-                         sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""
@@ -278,7 +260,7 @@ class Config:
     if for_exact_full_path:
       return for_exact_full_path
 
-    if input_file.full_path() not in self._config_key_by_full_path.keys():
+    if input_file.full_path() not in self._config_key_by_full_path:
       self._config_key_by_full_path[input_file.full_path(
       )] = self._find_first_matching_config_key(input_file)
 
@@ -290,18 +272,3 @@ class Config:
       if match(input_file, input_file_pattern):
         return input_file_pattern
     return None
-
-  def _parse_provenances_and_sources(self):
-    sources_cfg = self.data.get(_SOURCES_FIELD, {})
-    for source_name, source_cfg in sources_cfg.items():
-      source = Source(id="",
-                      name=source_name,
-                      url=source_cfg.get(_URL_FIELD, ""))
-      provenances = source_cfg.get(_PROVENANCES_FIELD, {})
-      for prov_name, prov_url in provenances.items():
-        provenance = Provenance(id="",
-                                source_id="",
-                                name=prov_name,
-                                url=prov_url)
-        self.provenances[prov_name] = provenance
-        self.provenance_sources[prov_name] = source

@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .common import _escape_sql_literal, get_provenance_name
+from .common import _escape_sql_literal, build_bq_job_tags, get_provenance_name
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -187,7 +187,12 @@ class StatVarSeriesAggregator:
         )
 
         logging.info(f"Executing round aggregation query:\n{query}")
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "sv_series_aggr", input_imports[0]
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
 
     def _add_max_diff_fragments(self, ts_ctes: List[str], obs_ctes: List[str], output_provenance: str):
         """Adds SQL fragments for max_diff_across_measurement_methods."""
