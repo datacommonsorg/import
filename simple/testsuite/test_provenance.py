@@ -172,7 +172,7 @@ def test_provenance_linked_to_an_undefined_source_is_accepted():
 
 
 def test_provenance_declared_only_in_the_config_sources_block_fails():
-  """A provenance from the config's sources block does not count for MCF."""
+  """The legacy 'sources' config block is rejected; provenances live in MCF."""
   config = {
       "sources": {
           "Config Source": {
@@ -185,4 +185,7 @@ def test_provenance_declared_only_in_the_config_sources_block_fails():
       "inputFiles": [b.obs_config()["inputFiles"][-1]],
   }
   result = b.run_csv(_ONE_ROW, config, shared_files={})
-  b.assert_fails(result, "ValueError", _MISSING_SOURCES)
+  b.assert_fails(result,
+                 "ValueError",
+                 "Unknown key(s) in config.json: ['sources']",
+                 handshake_error_types=())

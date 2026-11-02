@@ -411,12 +411,41 @@ def run(files: dict[str, str],
   output = _run(_freeze({**shared_files, **files}), _freeze(config), mode)
   if output["error"]:
     return Result(output=output, added=[], removed=[])
-  shared_only = _record_counts(  # What the shared files write on their own.
-      _run(_freeze(shared_files), _freeze(MCF_CONFIG), mode))
+  shared_only = (
+      _record_counts(  # What the shared files write on their own.
+          _run(_freeze(shared_files), _freeze(MCF_CONFIG), mode))
+      if shared_files else collections.Counter())
   actual = _record_counts(output)
   return Result(output=output,
                 added=_records(actual - shared_only),
                 removed=_records(shared_only - actual))
+
+
+def run_dir(files: dict[str, str],
+            config: dict | None = None,
+            *,
+            mode: str = "threaded",
+            runner_kwargs: dict | None = None,
+            config_file: str | None = None) -> Result:
+  """
+  Runs the preprocessor on a raw directory layout without shared files.
+
+  Used for multi-import parent directories (runner_kwargs={"import_names": ...})
+  and --config_file runs where shared-provenance subtraction does not apply.
+  """
+  input_dir = runlib.write_input_dir(files, config, config_file=config_file)
+  try:
+    output = runlib.run_preprocessor(input_dir,
+                                     mode,
+                                     runner_kwargs=runner_kwargs,
+                                     config_file=config_file).output
+  finally:
+    shutil.rmtree(input_dir, ignore_errors=True)
+  if output["error"]:
+    return Result(output=output, added=[], removed=[])
+  return Result(output=output,
+                added=_records(_record_counts(output)),
+                removed=[])
 
 
 def run_mcf(*blocks: str, mode: str = "threaded") -> Result:

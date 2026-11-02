@@ -1,8 +1,0 @@
-Node: dcid:source/CustomSource
-typeOf: dcs:Source
-url: "https://customsource.org"
-
-Node: dcid:provenance/CustomImport
-typeOf: dcs:Provenance
-url: "https://customsource.org/custom_import"
-source: dcid:source/CustomSource
