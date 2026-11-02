@@ -19,7 +19,7 @@ from typing import Any, List, Optional
 from google.cloud import spanner
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal
+from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, build_bq_job_tags
 
 
 @dataclass
@@ -486,5 +486,10 @@ class SuperEnumAggregationGenerator:
         """
 
         logging.info("Submitting Super Enum aggregation BQ job...")
-        job = self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "super_enum_aggr", import_names[0]
+        )
+        job = self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
         return [job]
