@@ -35,7 +35,6 @@ _PREDICATE_INCLUDED_IN = "includedIn"
 STAT_VAR_GROUP = "StatVarGroup"
 _SOURCE = "Source"
 _PROVENANCE = "Provenance"
-_PROPERTY = "Property"
 
 _NAMESPACE_DELIMITER = ':'
 
@@ -160,19 +159,6 @@ class ObservationProperties:
     }
     return cls(unit, scaling_factor, measurement_method, observation_period,
                custom_properties)
-
-
-@dataclass
-class Property:
-  dcid: str
-  name: str
-  provenance_ids: set[str] = field(default_factory=set)
-
-  def triples(self) -> list[Triple]:
-    return [
-        Triple(self.dcid, _PREDICATE_TYPE_OF, object_id=_PROPERTY),
-        Triple(self.dcid, _PREDICATE_NAME, object_value=self.name),
-    ]
 
 
 @dataclass

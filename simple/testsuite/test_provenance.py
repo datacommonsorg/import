@@ -139,7 +139,7 @@ INVALID_PROVENANCES = [
              "ValueError", "Could not determine import name: missing"
              " 'provenance' configuration for file 'case.csv'.")),
     Case("provenance without a namespace prefix",
-         given=b.obs_config(provenance=b.PROVENANCE),
+         given=b.obs_config(b.OBS_MAPPINGS, provenance=b.PROVENANCE),
          expect=b.Fails(
              "ValueError", "The 'provenance' property must be a valid DCID or"
              f" URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL)."
@@ -147,7 +147,8 @@ INVALID_PROVENANCES = [
     # The message talks about missing *sources*, and the error type is
     # GENERIC_ERROR, although the validator has a MISSING_PROVENANCE type.
     Case("provenance that no MCF defines",
-         given=b.obs_config(provenance="dcid:UndefinedProvenance"),
+         given=b.obs_config(b.OBS_MAPPINGS,
+                            provenance="dcid:UndefinedProvenance"),
          expect=b.Fails("ValueError", _MISSING_SOURCES)),
 ]
 
@@ -182,7 +183,7 @@ def test_provenance_declared_only_in_the_config_sources_block_fails():
               },
           }
       },
-      "inputFiles": [b.obs_config()["inputFiles"][-1]],
+      "inputFiles": [b.obs_config(b.OBS_MAPPINGS)["inputFiles"][-1]],
   }
   result = b.run_csv(_ONE_ROW, config, shared_files={})
   b.assert_fails(result,

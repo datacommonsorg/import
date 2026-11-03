@@ -15,12 +15,13 @@
 Observations: variable-per-row CSV in, exact observation records out.
 
 Every test imports case*.csv under the shared test provenance with the
-columns about (observationAbout), variable, date, value (see obs_config() in
-lib/builders.py).
+columns about (observationAbout), variable, date, value, mapped by
+OBS_MAPPINGS unless it says otherwise (see lib/builders.py).
 Observation ids are content hashes, so these tests compare records without
 "@id"; the e2e expected.json files pin exact ids.
 """
 
+import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
@@ -247,14 +248,15 @@ OBSERVATION_PROPERTIES = [
 @cases(*OBSERVATION_PROPERTIES)
 def test_observation_property_from_config(given, expect):
   result = b.run_csv(b.csv_file(b.obs_row()),
-                     b.obs_config(observationProperties=given))
+                     b.obs_config(b.OBS_MAPPINGS, observationProperties=given))
   b.assert_records(result.observations, [b.obs(**expect)])
 
 
 def test_custom_observation_property_from_config_is_a_dimension():
   """Custom properties are also listed in observationProperties, first."""
-  result = b.run_csv(b.csv_file(b.obs_row()),
-                     b.obs_config(observationProperties={"sex": "Female"}))
+  result = b.run_csv(
+      b.csv_file(b.obs_row()),
+      b.obs_config(b.OBS_MAPPINGS, observationProperties={"sex": "Female"}))
   b.assert_records(result.observations, [b.obs(sex="Female")])
   assert result.dimensions("Count_Person") == ["sex", "observationAbout"]
 
@@ -356,20 +358,121 @@ def test_observation_properties_order():
   ]
 
 
-def test_ignored_column_is_dropped():
-  result = b.run_csv(
-      b.csv_file(b.obs_row() + ["anything"], header=b.OBS_HEADER + ["notes"]),
-      b.obs_config(ignoreColumns=["notes"]))
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_ignored_column_is_dropped(mode):
+  result = b.run_csv(b.csv_file(b.obs_row() + ["anything"],
+                                header=b.OBS_HEADER + ["notes"]),
+                     b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]),
+                     mode=mode)
   b.assert_records(result.observations, [b.obs()])
 
 
-def test_unmapped_column_fails_header_validation():
-  result = b.run_csv(
-      b.csv_file(b.obs_row() + ["anything"], header=b.OBS_HEADER + ["notes"]))
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_every_unmapped_column_is_reported_at_once(mode):
+  result = b.run_csv(b.csv_file(b.obs_row() + ["anything", "else"],
+                                header=b.OBS_HEADER + ["notes", "source"]),
+                     mode=mode)
   b.assert_fails(result,
                  "ValueError",
-                 "CSV Header Validation Failed!",
+                 "The CSV file 'case.csv' contains unmapped columns:"
+                 " ['notes', 'source']. Please map them in 'columnMappings'"
+                 " or list them in 'ignoreColumns'",
                  handshake_error_types=("UNMAPPED_COLUMNS",))
+
+
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_columns_mapped_to_the_same_property_fail(mode):
+  """dcid:unit and unit are one property, so unit_a and unit_b collide."""
+  result = b.run_csv(b.csv_file(b.obs_row() + ["USDollar", "Euro"],
+                                header=b.OBS_HEADER + ["unit_a", "unit_b"]),
+                     b.obs_config({
+                         **b.OBS_MAPPINGS,
+                         "dcid:unit": "unit_a",
+                         "unit": "unit_b",
+                     }),
+                     mode=mode)
+  b.assert_fails(result,
+                 "ValueError",
+                 "The CSV file 'case.csv' maps several columns to the same"
+                 " property: {'unit': ['unit_a', 'unit_b']}. Map each property"
+                 " from one column.",
+                 handshake_error_types=("INVALID_CONFIGURATION",))
+
+
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_column_mapped_to_several_properties_fails(mode):
+  """Properties are looked up by column, so a second mapping would be lost."""
+  result = b.run_csv(b.csv_file(b.obs_row()),
+                     b.obs_config({
+                         **b.OBS_MAPPINGS,
+                         "dcid:destination": "about",
+                     }),
+                     mode=mode)
+  b.assert_fails(result,
+                 "ValueError",
+                 "The CSV file 'case.csv' maps the same column to several"
+                 " properties: {'about': ['destination', 'observationAbout']}."
+                 " Map each column to one property.",
+                 handshake_error_types=("INVALID_CONFIGURATION",))
+
+
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_every_mapped_column_missing_from_the_csv_is_reported_at_once(mode):
+  result = b.run_csv(b.csv_file(b.obs_row()),
+                     b.obs_config({
+                         **b.OBS_MAPPINGS, "dcid:unit": "unit",
+                         "dcid:measurementMethod": "method"
+                     }),
+                     mode=mode)
+  b.assert_fails(result,
+                 "ValueError",
+                 "The following expected columns were not found in the CSV:"
+                 " ['method', 'unit']",
+                 handshake_error_types=("MISSING_REQUIRED_COLUMNS",))
+
+
+_MISSING_COLUMN_MAPPINGS = (
+    "Missing 'columnMappings' for CSV file 'case.csv' in config.json."
+    " 'columnMappings' is required for every CSV input file")
+
+
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_csv_without_column_mappings_fails(mode):
+  result = b.run_csv(b.csv_file(b.obs_row()),
+                     b.without_column_mappings(b.obs_config(b.OBS_MAPPINGS)),
+                     mode=mode)
+  b.assert_fails(result,
+                 "ValueError",
+                 _MISSING_COLUMN_MAPPINGS,
+                 handshake_error_types=("INVALID_CONFIGURATION",))
+
+
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_legacy_column_names_are_not_mapped_by_default(mode):
+  """The old entity/variable/date/value headers need columnMappings too."""
+  result = b.run_csv(b.csv_file(b.obs_row(),
+                                header=["entity", "variable", "date", "value"]),
+                     b.without_column_mappings(b.obs_config(b.OBS_MAPPINGS)),
+                     mode=mode)
+  b.assert_fails(result,
+                 "ValueError",
+                 _MISSING_COLUMN_MAPPINGS,
+                 handshake_error_types=("INVALID_CONFIGURATION",))
+
+
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_legacy_column_names_work_when_mapped_explicitly(mode):
+  """Only the default mapping is gone: mapped legacy headers still import."""
+  result = b.run_csv(b.csv_file(b.obs_row(),
+                                header=["entity", "variable", "date", "value"]),
+                     b.obs_config({
+                         "dcid:observationAbout": "entity",
+                         "dcid:variableMeasured": "variable",
+                         "dcid:observationDate": "date",
+                         "dcid:value": "value",
+                     }),
+                     mode=mode)
+  b.assert_records(result.observations, [b.obs()])
 
 
 def test_missing_required_mapping_fails():
