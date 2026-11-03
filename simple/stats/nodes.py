@@ -130,18 +130,11 @@ class Nodes:
 
     Worker processes each build their own `Nodes`, so this is how metadata
     crosses process boundaries in both directions: the coordinator's nodes
-    seed each worker, and the nodes a worker adds are merged back into the
-    coordinator. Each node goes through `register_source` or
-    `register_provenance`, so:
-    - `name`, `url`, `source_id` and a Source's `provenance_id` keep the first
-      non-empty value; a non-empty `name` is also (re)pointed at the node as a
-      lookup key.
-    - a Provenance's custom `properties` are updated, so the last value of each
-      wins. A Source's custom `properties` are not merged.
-    - `has_custom_mcf_nodes` is set, except by the built-in default provenance
-      and source: every `Nodes` already has them, so they are skipped.
-    Registering a node again (e.g. under both its id and name keys) changes
-    nothing.
+    seed each worker, and each worker's nodes are merged back into the
+    coordinator. Every node except the built-in default provenance and source
+    goes through `register_source` or `register_provenance`, which also sets
+    `has_custom_mcf_nodes`. The defaults are skipped because every `Nodes`
+    already has them.
     """
     for src in sources.values():
       if src.id == _DEFAULT_SOURCE.id:

@@ -20,13 +20,15 @@ import os
 import pickle
 import threading
 import traceback
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 import fs.path as fspath
 from stats import constants
 from stats.config import Config
 from stats.data import FileValidationError
 from stats.data import ImportType
+from stats.data import Provenance
+from stats.data import Source
 from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
@@ -92,16 +94,21 @@ def _create_importer_for_file(
 
 @dataclass
 class ImportProcResult:
+  """What a worker process sends back to the coordinator for one file.
+
+  `sources` and `provenances` are all of the worker's nodes, keyed as in
+  `Nodes`; the coordinator merges them with `Nodes.merge_metadata`. The
+  collision fields mirror the worker's `JsonLdStreamWriter` stats.
+  """
   file_rel_path: str
   obs_collision_count: int
-  file_collision_counts: dict
-  file_sample_collisions: dict
-  # Only the nodes the worker registered beyond its seed.
-  sources: dict
-  provenances: dict
-  used_provenance_ids: set
-  used_source_ids: set
-  processed_imports: set
+  file_collision_counts: dict[str, int]
+  file_sample_collisions: dict[str, list[str]]
+  sources: dict[str, Source]
+  provenances: dict[str, Provenance]
+  used_provenance_ids: set[str]
+  used_source_ids: set[str]
+  processed_imports: set[str]
 
 
 @dataclass(frozen=True)
@@ -109,7 +116,7 @@ class _WorkerArgs:
   """Arguments that are the same for every worker process in a run."""
   output_dir_path: str
   process_dir_path: str
-  import_names: dict
+  import_names: list[str] | None
   config_json_str: str
   jsonld_dir_name: str
 
@@ -118,7 +125,7 @@ class _WorkerArgs:
 class _FileFailure:
   """A file whose import raised, with the traceback text.
 
-  In production, `traceback` includes the worker process's traceback.
+  With multiprocessing, `traceback` includes the worker's remote traceback.
   """
   file_path: str
   error: Exception
@@ -135,9 +142,10 @@ class FileImportsFailedError(Exception):
     super().__init__(f"{len(failures)} files failed to import:\n{details}")
 
 
-def _finish_stage(files: list[File],
-                  futures: list[concurrent.futures.Future],
-                  merge: Callable[[Any], None] | None = None) -> None:
+def _finish_stage(
+    files: list[File],
+    futures: list[concurrent.futures.Future],
+    merge: Callable[[ImportProcResult], None] | None = None) -> None:
   """Waits for every file of a stage, then raises if any of them failed.
 
   Every file runs to completion even if others fail. Results are awaited in
@@ -145,7 +153,7 @@ def _finish_stage(files: list[File],
   deterministic. See `_raise_for_failures` for what is raised.
   """
   failures: list[_FileFailure] = []
-  for file, future in zip(files, futures):
+  for file, future in zip(files, futures, strict=True):
     try:
       result = future.result()
     except Exception as e:
@@ -174,21 +182,16 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
   raise FileImportsFailedError(failures)
 
 
-def _unseeded(nodes: dict, seed: dict) -> dict:
-  """Returns the entries of `nodes` whose keys are not in `seed`."""
-  return {key: node for key, node in nodes.items() if key not in seed}
-
-
 def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
                             args: _WorkerArgs,
                             metadata_seed: bytes) -> ImportProcResult:
-  """Imports one file in a worker process and returns what it added.
+  """Imports one file in a worker process and returns its results.
 
   `metadata_seed` holds the coordinator's Provenance and Source nodes as of
   the start of the stage (see `Runner._metadata_seed`). Seeding them lets a CSV
   worker find the provenance (and URL) that an MCF file in the same import
-  defines, instead of auto-creating one. Only the nodes the worker registered
-  beyond its seed are returned, along with the metadata ids it used.
+  defines, instead of auto-creating one. All of the worker's nodes are
+  returned, seeded ones included, along with the metadata ids it used.
   """
   with create_store(input_dir_path) as input_store_obj, \
        create_store(args.output_dir_path) as output_store_obj, \
@@ -223,8 +226,8 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
         obs_collision_count=graph_writer.obs_collision_count,
         file_collision_counts=dict(graph_writer.file_collision_counts),
         file_sample_collisions=dict(graph_writer.file_sample_collisions),
-        sources=_unseeded(nodes.sources, seed_sources),
-        provenances=_unseeded(nodes.provenances, seed_provenances),
+        sources=dict(nodes.sources),
+        provenances=dict(nodes.provenances),
         used_provenance_ids=used_provenance_ids,
         used_source_ids=used_source_ids,
         processed_imports=set(graph_writer._processed_imports),
