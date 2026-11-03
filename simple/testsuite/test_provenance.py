@@ -163,6 +163,10 @@ def test_csv_workers_use_the_provenance_defined_in_mcf():
 # Files whose provenance is dcid:c/p/default use the built-in default
 # provenance and source. They are written only when some file uses them, or
 # when there are no MCF-defined metadata nodes at all.
+#
+# TODO(gmechali): Delete this section in the follow-up PR that removes the
+# built-in default provenance and source (Provenance/Source nodes will come
+# only from MCF).
 
 _DEFAULT_PROVENANCE = b.record("c/p/default",
                                "Provenance",
