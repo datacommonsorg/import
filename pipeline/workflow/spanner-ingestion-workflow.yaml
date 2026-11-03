@@ -51,7 +51,7 @@ main:
           result: lock_status
         retry:
           predicate: ${http.default_retry_predicate}
-          max_retries: 250
+          max_retries: 500
           backoff:
             initial_delay: ${wait_period}
             max_delay: ${wait_period}
