@@ -23,3 +23,8 @@ util/src/main/java/org/datacommons/proto/
 !wizard/build/.empty
 util/bin
 **/bin
+
+# Coverage output (./run_test.sh -c)
+.coverage
+.coverage.*
+coverage.xml
