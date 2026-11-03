@@ -217,8 +217,8 @@ def _read_output(paths: _Paths, error: dict | None) -> dict:
       f"{paths.temp}/datacommons/ingestion_records/{WORKFLOW_ID}.json")
   report = _read_json(os.path.join(paths.local_out, "process", "report.json"))
   ingestion_report = _read_json(
-      os.path.join(paths.local_out, "ingestion", "internal", "reports",
-                   WORKFLOW_ID, "ingestion_report.json"))
+      os.path.join(paths.local_out, "preprocessor_reports", WORKFLOW_ID,
+                   "ingestion_report.json"))
   tokens = {
       paths.input: "<input>",
       paths.output: "<output>",
