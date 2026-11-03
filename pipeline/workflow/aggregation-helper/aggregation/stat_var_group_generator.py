@@ -28,7 +28,6 @@ class StatVarGroupGenerator:
                  is_base_dc: bool = True,
                  max_iterations: int = 50,
                  namespace: Optional[str] = None,
-                 generated_provenance: Optional[str] = None,
                  should_filter_basic_population_type: Optional[bool] = None,
                  should_prune_single_child_svgs: bool = False) -> None:
         """Initializes the StatVarGroupGenerator with executor and configuration parameters.
@@ -39,9 +38,6 @@ class StatVarGroupGenerator:
         is_base_dc: Whether this is running in the base Data Commons environment.
         max_iterations: Max loop iterations for SV generation.
         namespace: Namespace for generated DCIDs.
-        generated_provenance: Provenance for auto-generated StatVarGroup Edges. Defaults to the
-            shared 'dc/base/generated/StatVarGroups' (base DC) or 'generated/StatVarGroups' (custom DC).
-            Edges derived from curated memberOf edges keep the curating import's generated provenance.
         should_filter_basic_population_type = Filter basic population type SVGs.
         should_prune_single_child_svgs = Prune single-child SVGs from the generated hierarchy.
         
@@ -50,11 +46,9 @@ class StatVarGroupGenerator:
         self.max_iterations = max_iterations
         self.namespace = namespace if namespace is not None else ('dc/' if is_base_dc else 'c/')
         self.is_base_dc = is_base_dc
-        self.generated_provenance = (
-          generated_provenance
-          if generated_provenance is not None
-          else get_provenance_name(STAT_VAR_GROUP_PROVENANCE, is_base_dc)
-        )
+        # Shared provenance for auto-generated StatVarGroup Edges. Edges derived from curated
+        # memberOf edges keep the curating import's generated provenance.
+        self.generated_provenance = get_provenance_name(STAT_VAR_GROUP_PROVENANCE, is_base_dc)
         self.should_filter_basic_population_type = (
             should_filter_basic_population_type
             if should_filter_basic_population_type is not None

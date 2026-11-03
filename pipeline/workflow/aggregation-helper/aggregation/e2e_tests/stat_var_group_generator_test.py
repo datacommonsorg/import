@@ -20,7 +20,7 @@ Covers:
 - DependentPropertyValue (DPV) matching and stripping.
 - Single-child SVG pruning (simple chain and DAG fan-out cases).
 - Shared provenance: auto-generated SVG edges are written once under the shared
-  generated/StatVarGroups provenance, even when SVs come from multiple imports.
+  generated/StatVarGroupsByConstraint provenance, even when SVs come from multiple imports.
 
 NOTE: This script is intended for local testing purposes only and is NOT
 currently part of the CI pipeline.
@@ -123,7 +123,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           - An uncategorized basic SV 'Count_Thing'.
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov_svg = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
+        prov_svg = 'dc/base/generated/StatVarGroupsByConstraint' if self.is_base_dc else 'generated/StatVarGroupsByConstraint'
         prov_custom = 'dc/base/generated/TestCustomImport' if self.is_base_dc else 'generated/TestCustomImport'
         
         self._setup_mock_data(ns)
@@ -234,7 +234,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         Count_Student_Female gets memberOf Student (redirected).
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
+        prov = 'dc/base/generated/StatVarGroupsByConstraint' if self.is_base_dc else 'generated/StatVarGroupsByConstraint'
 
         self._setup_mock_data(ns)
 
@@ -334,7 +334,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
           4. Remove all pruned SVG nodes and their edges
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
+        prov = 'dc/base/generated/StatVarGroupsByConstraint' if self.is_base_dc else 'generated/StatVarGroupsByConstraint'
 
         self._setup_dpv_mock_data(ns)
 
@@ -644,7 +644,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
             SVGs generated under MilitaryService
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
+        prov = 'dc/base/generated/StatVarGroupsByConstraint' if self.is_base_dc else 'generated/StatVarGroupsByConstraint'
 
         self._setup_dpv_mock_data(ns)
 
@@ -800,7 +800,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         used to be written once per descendant SV's import provenance.
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov_svg = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
+        prov_svg = 'dc/base/generated/StatVarGroupsByConstraint' if self.is_base_dc else 'generated/StatVarGroupsByConstraint'
         self._setup_multi_import_mock_data(ns)
 
         self._run_stat_var_groups()
@@ -839,7 +839,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         deleted import (Student_Gender-Male, Count_Student_Male).
         """
         ns = 'dc/' if self.is_base_dc else 'c/'
-        prov_svg = 'dc/base/generated/StatVarGroups' if self.is_base_dc else 'generated/StatVarGroups'
+        prov_svg = 'dc/base/generated/StatVarGroupsByConstraint' if self.is_base_dc else 'generated/StatVarGroupsByConstraint'
         self._setup_multi_import_mock_data(ns)
         self._run_stat_var_groups()
 

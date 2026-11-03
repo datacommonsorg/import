@@ -725,7 +725,7 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         generator.run_stat_var_group()
 
         self.assertEqual(
-            self._get_bigquery_param("generated_provenance"), "dc/base/generated/StatVarGroups"
+            self._get_bigquery_param("generated_provenance"), "dc/base/generated/StatVarGroupsByConstraint"
         )
 
     def test_run_stat_var_group_sends_shared_provenance_to_bigquery_not_base_dc(self):
@@ -735,7 +735,7 @@ class TestStatVarGroupGenerator(unittest.TestCase):
         generator.run_stat_var_group()
 
         self.assertEqual(
-            self._get_bigquery_param("generated_provenance"), "generated/StatVarGroups"
+            self._get_bigquery_param("generated_provenance"), "generated/StatVarGroupsByConstraint"
         )
 
 
