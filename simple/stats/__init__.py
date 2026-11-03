@@ -11,3 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# TEMPORARY: exercises the coverage CI step on PR #827; removed before merge.
+_COVERAGE_CI_PROBE = True
