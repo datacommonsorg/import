@@ -55,6 +55,8 @@ public class SpannerClient implements Serializable {
   private static final int SPANNER_GROUPING_FACTOR = 3000;
   // Commit deadline for spanner writes. Use large value for bigger batches.
   private static final int SPANNER_COMMIT_DEADLINE_SECONDS = 120;
+  // Timeout for Partitioned DML deletes (e.g., TimeSeries/Edge cascade deletes).
+  private static final int PARTITIONED_DML_TIMEOUT_HOURS = 6;
 
   private final String gcpProjectId;
   private final String spannerInstanceId;
@@ -141,7 +143,11 @@ public class SpannerClient implements Serializable {
   }
 
   public Spanner createSpanner() {
-    SpannerOptions.Builder builder = SpannerOptions.newBuilder().setProjectId(gcpProjectId);
+    SpannerOptions.Builder builder =
+        SpannerOptions.newBuilder()
+            .setProjectId(gcpProjectId)
+            .setPartitionedDmlTimeoutDuration(
+                java.time.Duration.ofHours(PARTITIONED_DML_TIMEOUT_HOURS));
     if (emulatorHost != null && !emulatorHost.trim().isEmpty()) {
       builder.setEmulatorHost(emulatorHost.trim());
       builder.setCredentials(NoCredentials.getInstance());

@@ -17,6 +17,7 @@ from typing import Dict, Tuple
 
 BASE_PROVENANCE_PREFIX = "dc/base/"
 TOPIC_LIST_PROVENANCE = "generated/TopicHierarchyLists"
+STAT_VAR_GROUP_PROVENANCE = "generated/StatVarGroupsByConstraint"
 
 
 def clean_bq_job_tag(value: str) -> str:
