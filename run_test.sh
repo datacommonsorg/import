@@ -140,8 +140,12 @@ function fetch_coverage_base {
     return
   fi
   for depth in $COVERAGE_FETCH_DEPTHS; do
+    # HEAD may be a local commit the remote doesn't have; then fetch only
+    # the base branch and rely on the local history.
     git fetch -q --no-tags --depth="$depth" "$remote" "$refspec" \
-      "$(git rev-parse HEAD)" || return 1
+      "$(git rev-parse HEAD)" 2> /dev/null \
+      || git fetch -q --no-tags --depth="$depth" "$remote" "$refspec" \
+      || return 1
     git merge-base "origin/$branch" HEAD > /dev/null && return 0
   done
   echo "No merge-base of HEAD and $branch within $depth commits." >&2
@@ -183,11 +187,12 @@ function report_changed_lines {
   fi
   echo -e "#### Coverage of lines changed since $base"
   diff_report=$(mktemp)
-  if ! diff-cover simple/coverage.xml --compare-branch="$base" \
+  if diff-cover simple/coverage.xml --compare-branch="$base" \
     --format="markdown:$diff_report"; then
+    cat "$diff_report" >> "$summary"
+  else
     skip_changed_lines "$summary" "diff-cover failed against $base"
   fi
-  cat "$diff_report" >> "$summary"
   rm -f "$diff_report"
 }
 
@@ -230,8 +235,13 @@ function report_coverage {
   cat "$summary"
 }
 
-# Prints the line coverage, in percent, recorded in a Cobertura coverage.xml.
+# Prints the line coverage, in percent, recorded in a Cobertura coverage.xml,
+# or "n/a" if the file doesn't exist (e.g. the tests failed).
 function coverage_percent {
+  if [[ ! -f "$1" ]]; then
+    echo "n/a"
+    return
+  fi
   python3 -c "import sys, xml.etree.ElementTree as E; \
 print('%.1f%%' % (100 * float(E.parse(sys.argv[1]).getroot().get('line-rate'))))" "$1"
 }
