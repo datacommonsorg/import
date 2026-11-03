@@ -76,7 +76,11 @@ public class ReconcileNodeEmbeddingsFn extends DoFn<List<String>, Mutation> {
     try (ResultSet rs =
         dbClient
             .singleUse(TimestampBound.ofReadTimestamp(tPre))
-            .read(NODE_EMBEDDING_TABLE, toPrefixKeySet(batch), NodeEmbeddingRecord.READ_COLUMNS)) {
+            .read(
+                NODE_EMBEDDING_TABLE,
+                toPrefixKeySet(batch),
+                NodeEmbeddingRecord.READ_COLUMNS,
+                SpannerClient.LOW_PRIORITY)) {
       while (rs.next()) {
         Struct row = rs.getCurrentRowAsStruct();
         restoredEmbeddingsCounter.inc();
