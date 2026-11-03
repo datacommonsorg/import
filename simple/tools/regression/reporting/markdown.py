@@ -17,7 +17,7 @@ import json
 from typing import Any
 
 from tools.regression.comparison.categories import CATEGORIES
-from tools.regression.reporting.perf import MetricRow
+from tools.regression.comparison.metrics import MetricRow
 from tools.regression.reporting.report import Report
 
 _SAMPLE_CHARS = 1500

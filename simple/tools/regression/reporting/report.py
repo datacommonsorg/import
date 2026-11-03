@@ -18,8 +18,8 @@ from typing import Any
 
 from tools.regression.comparison.categories import CATEGORIES
 from tools.regression.comparison.compare import Comparison
+from tools.regression.comparison.metrics import PerfResult
 from tools.regression.execution.run import SideRuns
-from tools.regression.reporting.perf import PerfResult
 
 EXIT_OK = 0
 EXIT_OUTPUT_DIFFERENT = 3

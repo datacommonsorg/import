@@ -35,11 +35,11 @@ import sys
 import tempfile
 
 from tools.regression.comparison import compare
+from tools.regression.comparison import metrics
 from tools.regression.execution import inputs
 from tools.regression.execution import run
 from tools.regression.execution import trees
 from tools.regression.reporting import markdown
-from tools.regression.reporting import perf
 from tools.regression.reporting import report as report_lib
 
 BASELINE = "baseline"
@@ -211,11 +211,11 @@ def _cleanup(args: argparse.Namespace, sides: dict[str, run.SideRuns],
     shutil.rmtree(stage_dir, ignore_errors=True)
 
 
-def _thresholds(args: argparse.Namespace) -> perf.Thresholds:
-  return perf.Thresholds(wall_pct=args.max_wall_regression_pct,
-                         cpu_pct=args.max_cpu_regression_pct,
-                         rss_pct=args.max_rss_regression_pct,
-                         min_seconds=args.perf_min_seconds)
+def _thresholds(args: argparse.Namespace) -> metrics.Thresholds:
+  return metrics.Thresholds(wall_pct=args.max_wall_regression_pct,
+                            cpu_pct=args.max_cpu_regression_pct,
+                            rss_pct=args.max_rss_regression_pct,
+                            min_seconds=args.perf_min_seconds)
 
 
 def main(argv: list[str]) -> int:
@@ -237,8 +237,8 @@ def main(argv: list[str]) -> int:
       scratch_dir=work_dir,
       workers=args.compare_workers,
       max_samples=args.samples)
-  perf.compare_health(base, cand, comparison.findings)
-  perf_result = perf.compare_perf(base, cand, _thresholds(args))
+  metrics.compare_health(base, cand, comparison.findings)
+  perf_result = metrics.compare_perf(base, cand, _thresholds(args))
   verdict = report_lib.Verdict(comparison.findings.failing(args.strict),
                                perf_result.regressions)
   run_info = {

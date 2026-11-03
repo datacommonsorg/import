@@ -23,7 +23,7 @@ from tools.regression.comparison.categories import Findings
 from tools.regression.comparison.categories import sides
 from tools.regression.comparison.nodes import NodeComparer
 from tools.regression.comparison.observations import ObservationComparer
-from tools.regression.comparison.report_json import compare_reports
+from tools.regression.comparison.process_reports import compare_reports
 
 
 @dataclasses.dataclass(frozen=True)

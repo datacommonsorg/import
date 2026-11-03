@@ -11,20 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Perf thresholds, run health findings and the verdict."""
+"""Perf thresholds and run health findings."""
 
 import dataclasses
 
 from tools.regression.comparison.categories import Findings
+from tools.regression.comparison.metrics import compare_health
+from tools.regression.comparison.metrics import compare_perf
+from tools.regression.comparison.metrics import Thresholds
 from tools.regression.execution.measure import RunMetrics
 from tools.regression.execution.run import SideRuns
-from tools.regression.reporting.perf import compare_health
-from tools.regression.reporting.perf import compare_perf
-from tools.regression.reporting.perf import Thresholds
-from tools.regression.reporting.report import EXIT_OK
-from tools.regression.reporting.report import EXIT_OUTPUT_DIFFERENT
-from tools.regression.reporting.report import EXIT_PERF_REGRESSION
-from tools.regression.reporting.report import Verdict
 
 THRESHOLDS = Thresholds(wall_pct=10, cpu_pct=10, rss_pct=10, min_seconds=30)
 METRICS = RunMetrics(exit_code=0,
@@ -98,11 +94,3 @@ def test_fewer_errors_is_not_a_finding():
   noisy = dataclasses.replace(METRICS, error_lines=3)
   compare_health(side(noisy), side(METRICS), findings)
   assert not any(findings.counts.values())
-
-
-def test_verdict_exit_codes():
-  assert Verdict({}, []).exit_code == EXIT_OK
-  assert Verdict({}, ["Wall time"]).exit_code == EXIT_PERF_REGRESSION
-  assert Verdict({
-      "obs_value_changed": 1
-  }, ["Wall time"]).exit_code == EXIT_OUTPUT_DIFFERENT

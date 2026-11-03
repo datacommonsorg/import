@@ -98,8 +98,9 @@ Run `python3 -m tools.regression --help` for every flag.
 
 The code is split into three packages under `tools/regression/`:
 `execution/` (code trees, input, measured runs), `comparison/` (the output
-diff and its categories) and `reporting/` (perf verdict, `report.md`,
-`report.json`). `cli.py` parses the flags and ties them together.
+diff and its categories, and the perf and run health decisions in
+`metrics.py`) and `reporting/` (verdict, `report.md`, `report.json`).
+`cli.py` parses the flags and ties them together.
 
 ## Reading the report
 
@@ -242,5 +243,7 @@ python3 -m pytest tools/
 ```
 
 `tests/comparison/compare_test.py` plants each kind of difference in a small
-output and checks that it is detected. `tests/e2e_test.py` runs the tool HEAD
-against HEAD on the `kitchen_sink` testsuite dataset and expects IDENTICAL.
+output and checks that it is detected. `tests/comparison/metrics_test.py`
+checks the perf thresholds and run health findings. `tests/e2e_test.py` runs
+the tool HEAD against HEAD on the `kitchen_sink` testsuite dataset and expects
+IDENTICAL.
