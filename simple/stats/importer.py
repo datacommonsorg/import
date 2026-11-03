@@ -109,6 +109,36 @@ def duplicate_property_errors(
   ]
 
 
+def duplicate_column_errors(
+    file_path: str, mappings: dict[str, str]) -> list[FileValidationError]:
+  """
+  Checks that no column maps to more than one property.
+
+  The importers look properties up by column, so a column mapped twice keeps
+  only one of its properties. Reports every such column at once. `mappings`
+  is the file's `columnMappings`.
+  """
+  properties_by_column = collections.defaultdict(list)
+  for key, column in mappings.items():
+    properties_by_column[column].append(strip_namespace(key))
+  duplicates = {
+      column: sorted(properties)
+      for column, properties in sorted(properties_by_column.items())
+      if len(properties) > 1
+  }
+  if not duplicates:
+    return []
+  return [
+      FileValidationError(
+          file=file_path,
+          error_type=ValidationErrorType.INVALID_CONFIGURATION,
+          problem_columns=list(duplicates),
+          error_message=
+          f"The CSV file '{file_path}' maps the same column to several properties: {duplicates}. Map each column to one property."
+      )
+  ]
+
+
 class Importer:
   """The base class for all importers."""
 

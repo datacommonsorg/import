@@ -21,6 +21,7 @@ from stats.data import strip_namespace
 from stats.data import Triple
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
+from stats.importer import duplicate_column_errors
 from stats.importer import duplicate_property_errors
 from stats.importer import Importer
 from stats.importer import missing_column_mappings_error
@@ -88,10 +89,11 @@ class EntitiesImporter(Importer):
       raise e
 
   def validate_headers(self) -> list[FileValidationError]:
-    if not self.get_column_mappings():
+    mappings = self.get_column_mappings()
+    if not mappings:
       return [missing_column_mappings_error(self.input_file.path)]
-    duplicates = duplicate_property_errors(self.input_file.path,
-                                           self.get_column_mappings())
+    duplicates = (duplicate_property_errors(self.input_file.path, mappings) +
+                  duplicate_column_errors(self.input_file.path, mappings))
     if duplicates:
       return duplicates
     actual_columns = read_csv_columns(self.input_file)

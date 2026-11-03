@@ -400,6 +400,23 @@ def test_columns_mapped_to_the_same_property_fail(mode):
 
 
 @pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_column_mapped_to_several_properties_fails(mode):
+  """Properties are looked up by column, so a second mapping would be lost."""
+  result = b.run_csv(b.csv_file(b.obs_row()),
+                     b.obs_config({
+                         **b.OBS_MAPPINGS,
+                         "dcid:destination": "about",
+                     }),
+                     mode=mode)
+  b.assert_fails(result,
+                 "ValueError",
+                 "The CSV file 'case.csv' maps the same column to several"
+                 " properties: {'about': ['destination', 'observationAbout']}."
+                 " Map each column to one property.",
+                 handshake_error_types=("INVALID_CONFIGURATION",))
+
+
+@pytest.mark.parametrize("mode", ["threaded", "production"])
 def test_every_mapped_column_missing_from_the_csv_is_reported_at_once(mode):
   result = b.run_csv(b.csv_file(b.obs_row()),
                      b.obs_config({
