@@ -302,7 +302,8 @@ class Runner:
 
       # Report done.
       self.reporter.report_done()
-      self._write_ingestion_report(RunStatus.SUCCESS)
+      self.summary_generator.write_to_json(RunStatus.SUCCESS, _utc_now(),
+                                           self.output_dir)
 
       # Close all file storage.
       for store in self.all_stores:
@@ -324,7 +325,8 @@ class Runner:
                                 error_message=str(e))
         ]
 
-      self._write_ingestion_report(RunStatus.FAILURE)
+      self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now(),
+                                           self.output_dir)
 
       for store in self.all_stores:
         try:
@@ -339,25 +341,12 @@ class Runner:
       raise
 
   def _report_folder_names(self) -> list[str]:
-    """Returns the import folders this run imports, for the report."""
+    """Returns the individual import folders in the case of bulk reports"""
     if self.import_names == [constants.ALL_IMPORTS]:
       # The folders found under the input dir, e.g. "folderA/" -> "folderA".
       return sorted(
           prefix.rstrip("/") for prefix in self.active_import_prefixes or [])
     return list(self.import_names or [])
-
-  def _write_ingestion_report(self, status: RunStatus) -> None:
-    """Writes ingestion_report.json. Never raises: see SummaryGenerator."""
-    try:
-      report_dir = self.output_dir.open_dir(
-          constants.INGESTION_REPORTS_DIR_NAME)
-      workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
-      if workflow_id:
-        report_dir = report_dir.open_dir(workflow_id)
-    except Exception:  # The report must never fail the run.
-      logging.exception("Failed to open the ingestion report directory.")
-      return
-    self.summary_generator.write_to_json(status, _utc_now(), report_dir)
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
