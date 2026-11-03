@@ -7,6 +7,7 @@ from .bq_executor import BigQueryExecutor
 from .common import (
     STAT_VAR_GROUP_PROVENANCE,
     _escape_sql_literal,
+    build_bq_job_tags,
     get_provenance_name,
     get_provenance_prefix,
     get_sql_generated_provenance_expr,
@@ -78,6 +79,7 @@ class StatVarGroupGenerator:
         dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
         conn_id = _escape_sql_literal(self.executor.connection_id)
         no_cache_config = bigquery.QueryJobConfig(use_query_cache=False)
+        labels, job_id_prefix = build_bq_job_tags(self.is_base_dc, "svg", "global")
         prov_expr = get_sql_generated_provenance_expr(self.is_base_dc, "provenance")
         gen_prov_prefix = f"{get_provenance_prefix(self.is_base_dc)}generated/"
 
@@ -89,7 +91,12 @@ class StatVarGroupGenerator:
             SELECT DISTINCT object_id
             FROM EXTERNAL_QUERY("{conn_id}", "SELECT object_id FROM Edge WHERE predicate = 'constraintProperties'")
         """
-        prep_sv_job = self.executor.execute(prep_query, job_config=no_cache_config)
+        prep_sv_job = self.executor.execute(
+            prep_query,
+            job_config=no_cache_config,
+            labels=labels,
+            job_id_prefix=job_id_prefix,
+        )
         constraint_props = [row.object_id for row in prep_sv_job]
 
         # Combine base predicates with the dynamically discovered constraint properties
@@ -958,4 +965,9 @@ class StatVarGroupGenerator:
                 bigquery.ScalarQueryParameter("should_prune", "BOOL", self.should_prune_single_child_svgs),
             ]
         )
-        return self.executor.execute(query, job_config=job_config)
+        return self.executor.execute(
+            query,
+            job_config=job_config,
+            labels=labels,
+            job_id_prefix=job_id_prefix,
+        )

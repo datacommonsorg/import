@@ -1,8 +1,0 @@
-Node: dcid:sub1
-typeOf: StatisticalVariable
-pred1: "objval1"
-name: "name1"
-
-Node: dcid:sub2
-typeOf: StatisticalVariable
-name: "name2"

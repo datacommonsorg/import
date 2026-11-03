@@ -31,7 +31,6 @@ def test_rows_become_typed_nodes_keyed_by_the_id_column():
                  header=["author_id", "author_name", "author_country"]),
       b.entities_config())
   b.assert_records(result.nodes, [
-      b.class_node("Author"),
       b.property_node("author_id"),
       b.property_node("author_name"),
       b.property_node("author_country"),
@@ -52,7 +51,6 @@ def test_without_an_id_column_ids_are_generated():
                  header=["author_name", "author_country"]),
       b.entities_config(id_column=None))
   b.assert_records(result.nodes, [
-      b.class_node("Author"),
       b.property_node("author_name"),
       b.property_node("author_country"),
       b.entity("Author_0", author_name="Jane Doe",
@@ -62,26 +60,31 @@ def test_without_an_id_column_ids_are_generated():
   ])
 
 
-def test_entity_type_name_and_description_from_config():
-  config = {
-      **b.entities_config(),
-      "entities": {
-          "Author": {
-              "name": "Published Author",
-              "description": "A person who wrote an article",
-          }
-      },
-  }
+def test_no_class_node_is_written_for_the_row_type():
+  """Rows reference their type; the Class node itself must come from MCF."""
   result = b.run_csv(
       b.csv_file(["author1", "Jane Doe"], header=["author_id", "author_name"]),
-      config)
+      b.entities_config())
+  b.assert_records(result.of_type("Class"), [])
+
+
+def test_class_node_for_the_row_type_is_defined_in_mcf():
+  result = b.run(
+      {
+          "case.csv":
+              b.csv_file(["author1", "Jane Doe"],
+                         header=["author_id", "author_name"]),
+          "schema.mcf":
+              b.mcf_node("dcid:Author",
+                         typeOf="dcs:Class",
+                         name='"Published Author"',
+                         description='"A person who wrote an article"'),
+      }, b.entities_config())
   b.assert_records(result.of_type("Class"), [
       b.record("Author",
                "Class",
                name="Published Author",
-               description="A person who wrote an article",
-               includedIn=[b.ref(b.PROVENANCE),
-                           b.ref(b.SOURCE)]),
+               description="A person who wrote an article"),
   ])
 
 

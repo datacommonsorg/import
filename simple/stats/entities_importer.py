@@ -166,11 +166,6 @@ class EntitiesImporter(Importer):
     return prop_object_values, prop_object_ids
 
   def _write_row_entity_triples(self) -> None:
-    # Add entity type node - it will be written later.
-    # This is to avoid duplicate entity types in scenarios where entities of the same type
-    # are spread across files.
-    self.nodes.entity_type(self.row_entity_type, self.input_file)
-
     # All property columns would've been renamed to their dcids by now.
     # So use the id column's dcid as the id column name.
     id_column_name = ""

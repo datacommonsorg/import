@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 from google.cloud import bigquery
 
 from .bq_executor import BigQueryExecutor
-from .common import _escape_sql_literal, get_provenance_name
+from .common import _escape_sql_literal, build_bq_job_tags, get_provenance_name
 
 
 @dataclass
@@ -361,7 +361,12 @@ class StatVarCalculationGenerator:
         combined_query = "\n\n".join(sql_statements)
         logging.info(f"Executing combined StatVar Calculation query with {len(calculations)} steps...")
         
-        job = self.executor.execute(combined_query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "sv_calc", import_names[0]
+        )
+        job = self.executor.execute(
+            combined_query, labels=labels, job_id_prefix=job_id_prefix
+        )
         return [job]
 
     def _build_spanner_observation_filter(self, calculations: List[Dict]) -> str:
