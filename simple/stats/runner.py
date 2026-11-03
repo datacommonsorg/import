@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
 import concurrent.futures
 from dataclasses import dataclass
 import json
@@ -36,6 +37,7 @@ from stats.importer import Importer
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
+from stats.nodes import undefined_provenances_message
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from stats.validation import MetadataValidator
@@ -106,8 +108,6 @@ class ImportProcResult:
   file_sample_collisions: dict[str, list[str]]
   sources: dict[str, Source]
   provenances: dict[str, Provenance]
-  used_provenance_ids: set[str]
-  used_source_ids: set[str]
   processed_imports: set[str]
 
 
@@ -190,8 +190,7 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
   `metadata_seed` holds the coordinator's Provenance and Source nodes as of
   the start of the stage (see `Runner._metadata_seed`). Seeding them lets a CSV
   worker find the provenance (and URL) that an MCF file in the same import
-  defines, instead of auto-creating one. All of the worker's nodes are
-  returned, seeded ones included, along with the metadata ids it used.
+  defines. All of the worker's nodes are returned, seeded ones included.
   """
   with create_store(input_dir_path) as input_store_obj, \
        create_store(args.output_dir_path) as output_store_obj, \
@@ -220,7 +219,6 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
     importer.do_import()
     graph_writer.commit_and_close()
 
-    used_provenance_ids, used_source_ids = nodes.used_metadata_ids()
     return ImportProcResult(
         file_rel_path=file_rel_path,
         obs_collision_count=graph_writer.obs_collision_count,
@@ -228,8 +226,6 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
         file_sample_collisions=dict(graph_writer.file_sample_collisions),
         sources=dict(nodes.sources),
         provenances=dict(nodes.provenances),
-        used_provenance_ids=used_provenance_ids,
-        used_source_ids=used_source_ids,
         processed_imports=set(graph_writer._processed_imports),
     )
 
@@ -652,11 +648,11 @@ class Runner:
     """Runs MCF imports followed by CSV imports using a thread pool."""
     # Import the MCF group to completion before starting the CSV group.
     # MCF declares the provenance and source nodes that CSV importers then
-    # look up by name; if a CSV gets there first, Nodes.provenance()
-    # auto-creates a provenance with no source and the source link is lost.
-    # Files within each group still run concurrently.
-    for files in (mcf_files, csv_files):
-      self._run_thread_stage(files)
+    # look up by name; if a CSV got there first, it would not find its
+    # provenance. Files within each group still run concurrently.
+    self._run_thread_stage(mcf_files)
+    self._check_csv_provenances_defined(csv_files)
+    self._run_thread_stage(csv_files)
 
   def _run_thread_stage(self, files: list[File]) -> None:
     """Imports `files` on a thread pool; see `_finish_stage` for failures."""
@@ -690,8 +686,38 @@ class Runner:
     num_processes = min(_MAX_WORKERS, max(len(mcf_files), len(csv_files)))
     with concurrent.futures.ProcessPoolExecutor(
         max_workers=num_processes) as executor:
-      for files in (mcf_files, csv_files):
-        self._run_process_stage(executor, files, worker_args)
+      self._run_process_stage(executor, mcf_files, worker_args)
+      self._check_csv_provenances_defined(csv_files)
+      self._run_process_stage(executor, csv_files, worker_args)
+
+  def _check_csv_provenances_defined(self, csv_files: list[File]) -> None:
+    """Fails if MCF does not define the provenance of any of `csv_files`.
+
+    Runs once the MCF stage is done, so `self.nodes` holds every Provenance
+    that MCF defines, and before any CSV is imported. The error names every
+    undefined provenance with the files that reference it, and the handshake
+    gets one MISSING_PROVENANCE error per file.
+
+    Raises:
+      ValueError: If any provenance is undefined.
+    """
+    files_by_provenance: dict[str, list[str]] = defaultdict(list)
+    for file in csv_files:
+      prov_name = self.config.provenance_name(file)
+      # A file with no provenance in config fails on its own, with that error.
+      if prov_name and not self.nodes.find_provenance(prov_name):
+        files_by_provenance[prov_name].append(file.path)
+    if not files_by_provenance:
+      return
+    message = undefined_provenances_message(files_by_provenance)
+    self._failure_errors = [
+        FileValidationError(file=path,
+                            error_type=ValidationErrorType.MISSING_PROVENANCE,
+                            error_message=message)
+        for paths in files_by_provenance.values()
+        for path in paths
+    ]
+    raise ValueError(message)
 
   def _run_process_stage(self, executor: concurrent.futures.Executor,
                          files: list[File], worker_args: _WorkerArgs) -> None:
@@ -752,7 +778,6 @@ class Runner:
     """Merges a worker process's `ImportProcResult` into the coordinator."""
     self._log_file_progress("Imported file", res.file_rel_path)
     self.nodes.merge_metadata(res.provenances, res.sources)
-    self.nodes.mark_metadata_used(res.used_provenance_ids, res.used_source_ids)
     self._merge_worker_writer_state(res)
 
   def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
