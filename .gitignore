@@ -24,7 +24,8 @@ util/src/main/java/org/datacommons/proto/
 util/bin
 **/bin
 
-# Coverage output (./run_test.sh -c)
+# Coverage output (./run_test.sh -c, PY_TEST_COVERAGE)
 .coverage
 .coverage.*
 coverage.xml
+coverage_summary.md
