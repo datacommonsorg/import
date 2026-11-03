@@ -158,7 +158,7 @@ class SummaryGenerator:
     )
 
   def write_to_json(self, status: RunStatus, end_time: str,
-                    report_dir: Dir) -> File | None:
+                    output_dir: Dir) -> File | None:
     """Builds the report and writes it as ingestion_report.json.
 
     Never raises: the report must never change the outcome of a run.
@@ -166,16 +166,18 @@ class SummaryGenerator:
     Args:
       status: Outcome of the run.
       end_time: ISO-8601 UTC time the run ended.
-      report_dir: Where to write the report. Runner passes
-        <output_dir>/ingestion/internal/reports/<workflowExecutionId>/, or
-        <output_dir>/ingestion/internal/reports/ for runs outside the
-        workflow.
+      output_dir: The run's output dir. The report is written under
+        preprocessor_reports/<workflowExecutionId>/ in it, without the ID
+        folder for runs outside the workflow.
 
     Returns:
       The written report file, or None if building or writing it failed.
     """
     try:
       report = self.build_report(status, end_time)
+      report_dir = output_dir.open_dir(constants.INGESTION_REPORTS_DIR_NAME)
+      if self._workflow_execution_id:
+        report_dir = report_dir.open_dir(self._workflow_execution_id)
       report_file = report_dir.open_file(constants.INGESTION_REPORT_FILE_NAME)
       report_file.write(report.model_dump_json(indent=2))
       return report_file
