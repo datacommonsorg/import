@@ -82,7 +82,7 @@ Otherwise the import fails with one error that lists all the unmapped columns.
 A CSV whose entry has no `columnMappings` fails the import as well.
 Each property may be mapped from only one column. Keys that differ only by
 namespace name the same property, so mapping both `dcid:unit` and `unit` fails
-the import too.
+the import too. Likewise, each column may be mapped to only one property.
 
 For `"observations"` imports, `dcid:variableMeasured`, `dcid:observationDate`
 and `dcid:value` are always required, along with one to three entity

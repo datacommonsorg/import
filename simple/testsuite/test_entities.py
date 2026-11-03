@@ -276,6 +276,24 @@ def test_columns_mapped_to_the_same_property_fail(mode):
 
 
 @pytest.mark.parametrize("mode", _MODES)
+def test_column_mapped_to_several_properties_fails(mode):
+  """Properties are looked up by column, so a second mapping would be lost."""
+  result = b.run_csv(
+      b.csv_file(["author1", "Jane Doe"], header=["author_id", "author_name"]),
+      b.entities_config(mappings={
+          "dcid:name": "author_name",
+          "dcid:alternateName": "author_name",
+      }),
+      mode=mode)
+  b.assert_fails(result,
+                 "ValueError",
+                 "The CSV file 'case.csv' maps the same column to several"
+                 " properties: {'author_name': ['alternateName', 'name']}. Map"
+                 " each column to one property.",
+                 handshake_error_types=("INVALID_CONFIGURATION",))
+
+
+@pytest.mark.parametrize("mode", _MODES)
 def test_every_mapped_column_missing_from_the_csv_is_reported_at_once(mode):
   """A mapping for a column the CSV doesn't have is a config error too."""
   result = b.run_csv(
