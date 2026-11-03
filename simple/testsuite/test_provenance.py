@@ -103,8 +103,8 @@ def test_provenance_without_a_name_gets_its_id_as_name():
 
 # --- Provenance URL on observations -------------------------------------------
 
-_PROVENANCE_WITH_URL = _provenance_mcf(
-    url='"https://source.example.org/dataset"')
+_PROVENANCE_URL = "https://source.example.org/dataset"
+_PROVENANCE_WITH_URL = _provenance_mcf(url=f'"{_PROVENANCE_URL}"')
 
 
 def test_provenance_url_is_copied_onto_observations():
@@ -224,13 +224,35 @@ def test_every_failed_csv_is_reported_together(mode):
   assert f"\n  case_bad2.csv: {_BAD_VALUE}" in result.error["message"]
 
 
-def test_files_after_a_failed_one_still_run():
-  """
-  A failure does not cancel the rest of its stage.
+def _file_statuses(result: b.Result) -> dict[str, str]:
+  """The status of each file in report.json, by path."""
+  return {
+      path: entry["status"]
+      for path, entry in result.output["report"]["importFiles"].items()
+  }
 
-  Production workers upload their output as they finish, so the good files'
-  observations show that they ran. (Leaving that output behind is a known
-  gap; see test_every_invalid_column_header_is_reported_at_once.)
+
+def _provenance_url_by_place(result: b.Result) -> dict[str, str | None]:
+  """The provenanceUrl of every written observation, by observationAbout."""
+  return {
+      r["dcid:observationAbout"]["@id"]: r.get("dcid:provenanceUrl")
+      for r in result.records
+      if r.get("@type") == "dcid:StatVarObservation"
+  }
+
+
+@pytest.mark.parametrize("mode", _MODES)
+def test_files_after_a_failed_one_still_run(mode):
+  """
+  A failure does not cancel the rest of its stage, and the good files still
+  use the provenance defined in MCF.
+
+  Threaded runs write no JSON-LD once a file fails, so the report shows that
+  the good files succeeded. Production workers upload their output as they
+  finish (leaving it behind is a known gap), so the good files' observations
+  show that they ran, with the URL of the MCF provenance: the MCF stage
+  finished before their workers started. The production report does not show
+  file statuses; see _REPORT in test_e2e.py.
   """
   result = b.run(
       {
@@ -239,14 +261,24 @@ def test_files_after_a_failed_one_still_run():
           "case_c.csv": b.csv_file(b.obs_row("country/C")),
       },
       b.obs_config(b.OBS_MAPPINGS),
-      mode="production")
+      mode=mode,
+      shared_files=_PROVENANCE_WITH_URL)
   assert result.error["type"] == "ValueError"
-  observed = {
-      r["dcid:observationAbout"]["@id"]
-      for r in result.records
-      if r.get("@type") == "dcid:StatVarObservation"
+  assert result.error["message"].startswith(
+      "Invalid non-numeric value(s) found in observation values of file"
+      " 'case_bad.csv'")
+  if mode == "threaded":
+    assert _file_statuses(result) == {
+        "<input>/provenance.mcf": "SUCCESS",
+        "<input>/case_a.csv": "SUCCESS",
+        "<input>/case_bad.csv": "FAILURE",
+        "<input>/case_c.csv": "SUCCESS",
+    }
+    return
+  assert _provenance_url_by_place(result) == {
+      "dcid:country/A": _PROVENANCE_URL,
+      "dcid:country/C": _PROVENANCE_URL,
   }
-  assert observed == {"dcid:country/A", "dcid:country/C"}
 
 
 @pytest.mark.parametrize("mode", _MODES)
