@@ -25,18 +25,20 @@ class TestSummaryGenerator(unittest.TestCase):
 
   def test_write_to_json_never_raises(self):
     """A failure while writing the report is logged, not raised."""
-    report_dir = mock.MagicMock()
-    report_dir.open_file.side_effect = OSError("disk full")
+    output_dir = mock.MagicMock()
+    # Subdirectories resolve to the same mock, so open_file can be checked.
+    output_dir.open_dir.return_value = output_dir
+    output_dir.open_file.side_effect = OSError("disk full")
     generator = SummaryGenerator("wf-123")
 
     # Stub build_report so execution reaches the write, which then fails.
     with mock.patch.object(generator, "build_report"), \
          self.assertLogs(level="ERROR"):
       result = generator.write_to_json(RunStatus.FAILURE,
-                                       "2026-10-29T00:00:00Z", report_dir)
+                                       "2026-10-29T00:00:00Z", output_dir)
 
     self.assertIsNone(result)
-    report_dir.open_file.assert_called_once()
+    output_dir.open_file.assert_called_once()
 
 
 if __name__ == "__main__":
