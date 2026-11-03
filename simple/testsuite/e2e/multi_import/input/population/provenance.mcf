@@ -1,0 +1,10 @@
+Node: dcid:populationSource
+typeOf: dcs:Source
+name: "population source"
+url: "https://population.example.org"
+
+Node: dcid:populationProvenance
+typeOf: dcs:Provenance
+name: "population provenance"
+source: dcid:populationSource
+url: "https://population.example.org/data"

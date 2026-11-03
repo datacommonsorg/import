@@ -4,7 +4,14 @@ from typing import List, Optional
 
 from google.cloud import bigquery
 from .bq_executor import BigQueryExecutor
-from .common import BASE_PROVENANCE_PREFIX, _escape_sql_literal, get_provenance_name, get_provenance_prefix, get_sql_generated_provenance_expr
+from .common import (
+    STAT_VAR_GROUP_PROVENANCE,
+    _escape_sql_literal,
+    build_bq_job_tags,
+    get_provenance_name,
+    get_provenance_prefix,
+    get_sql_generated_provenance_expr,
+)
 
 
 @dataclass
@@ -21,7 +28,6 @@ class StatVarGroupGenerator:
                  is_base_dc: bool = True,
                  max_iterations: int = 50,
                  namespace: Optional[str] = None,
-                 generated_provenance: Optional[str] = None,
                  should_filter_basic_population_type: Optional[bool] = None,
                  should_prune_single_child_svgs: bool = False) -> None:
         """Initializes the StatVarGroupGenerator with executor and configuration parameters.
@@ -32,7 +38,6 @@ class StatVarGroupGenerator:
         is_base_dc: Whether this is running in the base Data Commons environment.
         max_iterations: Max loop iterations for SV generation.
         namespace: Namespace for generated DCIDs.
-        generated_provenance: Provenance for generated Edges.
         should_filter_basic_population_type = Filter basic population type SVGs.
         should_prune_single_child_svgs = Prune single-child SVGs from the generated hierarchy.
         
@@ -41,11 +46,9 @@ class StatVarGroupGenerator:
         self.max_iterations = max_iterations
         self.namespace = namespace if namespace is not None else ('dc/' if is_base_dc else 'c/')
         self.is_base_dc = is_base_dc
-        self.generated_provenance = (
-          generated_provenance
-          if generated_provenance is not None
-          else (f'{BASE_PROVENANCE_PREFIX}GeneratedGraphs' if is_base_dc else 'GeneratedGraphs')
-        )
+        # Shared provenance for auto-generated StatVarGroup Edges. Edges derived from curated
+        # memberOf edges keep the curating import's generated provenance.
+        self.generated_provenance = get_provenance_name(STAT_VAR_GROUP_PROVENANCE, is_base_dc)
         self.should_filter_basic_population_type = (
             should_filter_basic_population_type
             if should_filter_basic_population_type is not None
@@ -70,6 +73,7 @@ class StatVarGroupGenerator:
         dest_uri = _escape_sql_literal(self.executor.get_spanner_destination_uri())
         conn_id = _escape_sql_literal(self.executor.connection_id)
         no_cache_config = bigquery.QueryJobConfig(use_query_cache=False)
+        labels, job_id_prefix = build_bq_job_tags(self.is_base_dc, "svg", "global")
         prov_expr = get_sql_generated_provenance_expr(self.is_base_dc, "provenance")
         gen_prov_prefix = f"{get_provenance_prefix(self.is_base_dc)}generated/"
 
@@ -81,7 +85,12 @@ class StatVarGroupGenerator:
             SELECT DISTINCT object_id
             FROM EXTERNAL_QUERY("{conn_id}", "SELECT object_id FROM Edge WHERE predicate = 'constraintProperties'")
         """
-        prep_sv_job = self.executor.execute(prep_query, job_config=no_cache_config)
+        prep_sv_job = self.executor.execute(
+            prep_query,
+            job_config=no_cache_config,
+            labels=labels,
+            job_id_prefix=job_id_prefix,
+        )
         constraint_props = [row.object_id for row in prep_sv_job]
 
         # Combine base predicates with the dynamically discovered constraint properties
@@ -100,6 +109,7 @@ class StatVarGroupGenerator:
         DECLARE max_iterations INT64 DEFAULT @max_iterations; -- Maximum number of iterations to generate
         DECLARE namespace STRING DEFAULT @namespace; -- Namespace for generated DCIDs
         DECLARE generated_provenance_prefix STRING DEFAULT @generated_provenance_prefix; -- Prefix for generated Edges
+        DECLARE generated_provenance STRING DEFAULT @generated_provenance; -- Shared provenance for auto-generated StatVarGroup Edges
         DECLARE uncategorized_svg STRING DEFAULT CONCAT(namespace, 'g/Uncategorized'); -- DCID for uncategorized SVs/SVGs
         DECLARE uncategorized_sv_svg STRING DEFAULT CONCAT(namespace, 'g/Uncategorized_Variables'); -- DCID for uncategorized SVs
         DECLARE root_svg STRING DEFAULT CONCAT(namespace, 'g/Root'); -- DCID for root SVG
@@ -348,12 +358,13 @@ class StatVarGroupGenerator:
           FROM Ancestors
         );
 
-        -- Fetch all StatisticalVariable nodes and their canonical provenance.
+        -- Fetch all StatisticalVariable nodes.
+        -- NOTE: An SV may be declared in multiple imports. Auto-generated StatVarGroup edges do not
+        -- depend on which import declared the SV, so they all use the shared generated_provenance.
         CREATE OR REPLACE TEMP TABLE StatVar AS (
-          SELECT subject_id, MIN(provenance) AS provenance
+          SELECT DISTINCT subject_id
           FROM EXTERNAL_QUERY("{conn_id}", "SELECT subject_id, provenance FROM Edge WHERE predicate = 'typeOf' AND object_id = 'StatisticalVariable'")
           WHERE NOT STARTS_WITH(provenance, generated_provenance_prefix)
-          GROUP BY subject_id
         );
 
         -- Fetch relevant StatisticalVariable triples.
@@ -412,8 +423,7 @@ class StatVarGroupGenerator:
             IFNULL(SVP.sv_statVarProperties, []) AS sv_statVarProperties,
             IFNULL(SC.cprops, []) AS cprops,
             IFNULL(SP.sv_pvs, []) AS sv_pvs,
-            ARRAY_TO_STRING(IFNULL(SC.cprops, []), ',') AS cprops_key,
-            SV.provenance
+            ARRAY_TO_STRING(IFNULL(SC.cprops, []), ',') AS cprops_key
           FROM SVPopType PT
           JOIN StatVar SV ON SV.subject_id = PT.subject_id
           LEFT JOIN SVStatVarPropsAgg SVP ON SVP.subject_id = PT.subject_id
@@ -522,8 +532,7 @@ class StatVarGroupGenerator:
             ARRAY<STRING>[] AS constraintProperties,
             IFNULL(Constraints.aligned_cps, ARRAY<STRING>[]) AS newConstraintProperties,
             IFNULL(Constraints.pvs, ARRAY<STRING>[]) AS attributes,
-            0 AS iteration,
-            SVB.provenance
+            0 AS iteration
           FROM SVBaseData SVB
           LEFT JOIN UNNEST(SVB.sv_statVarProperties) AS statVarProperties
           LEFT JOIN Constraints ON Constraints.subject_id = SVB.subject_id
@@ -543,7 +552,7 @@ class StatVarGroupGenerator:
             AND (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
           )
           SELECT DISTINCT
-            SV.statvar AS subject_id, map.predicate, v AS object_id, {prov_expr} AS provenance 
+            SV.statvar AS subject_id, map.predicate, v AS object_id, generated_provenance AS provenance 
           FROM ZeroConstraintStatVars SV
           LEFT JOIN VerticalSpec VS 
             ON SV.populationType = VS.populationType 
@@ -570,7 +579,7 @@ class StatVarGroupGenerator:
           node1 STRING, node2 STRING, node2name STRING, node3 STRING, node3name STRING,
           statvar STRING, populationType STRING, statVarProperties STRING,
           constraintProperties ARRAY<STRING>, newConstraintProperties ARRAY<STRING>,
-          attributes ARRAY<STRING>, iteration INT64, provenance STRING
+          attributes ARRAY<STRING>, iteration INT64
         );
 
         INSERT INTO AllResults
@@ -613,8 +622,7 @@ class StatVarGroupGenerator:
               statvar, populationType, statVarProperties, newConstraintProperties AS constraintProperties,
               ARRAY(SELECT cp FROM UNNEST(newConstraintProperties) AS cp WITH OFFSET AS cp_idx WHERE cp_idx != target_idx) AS newConstraintProperties,
               ARRAY(SELECT a FROM UNNEST(attributes) AS a WITH OFFSET AS a_idx WHERE a_idx != target_idx) AS attributes,
-              iteration + 1 AS iteration,
-              provenance
+              iteration + 1 AS iteration
             FROM InitialData AS T, UNNEST(T.attributes) AS attr WITH OFFSET AS target_idx
             WHERE T.iteration = iteration_count - 1
               AND ARRAY_LENGTH(T.attributes) >= 1
@@ -645,14 +653,14 @@ class StatVarGroupGenerator:
         CREATE OR REPLACE TEMP TABLE SVGVerticalEdges AS (
           WITH TopLevelSVGs AS (
             -- Basic PopTypes: Attach the 1-constraint group (node2) to the vertical.
-            SELECT DISTINCT node2 AS svg_id, statvar, constraintProperties, populationType, provenance
+            SELECT DISTINCT node2 AS svg_id, statvar, constraintProperties, populationType
             FROM AllResults
             WHERE iteration > 0
               AND (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
               AND ARRAY_LENGTH(constraintProperties) = 1
             UNION ALL
             -- Non-basic PopTypes: Attach the 0-constraint group (node3) to the vertical.
-            SELECT DISTINCT node3 AS svg_id, statvar, ARRAY<STRING>[] AS constraintProperties, populationType, provenance
+            SELECT DISTINCT node3 AS svg_id, statvar, ARRAY<STRING>[] AS constraintProperties, populationType
             FROM AllResults
             WHERE node3 IS NOT NULL
               AND NOT (should_filter_basic_population_type AND IsBasicPopulationType(populationType))
@@ -660,7 +668,7 @@ class StatVarGroupGenerator:
           ),
           BaseJoined AS (
             SELECT
-              SVG.statvar, SVG.svg_id, {get_sql_generated_provenance_expr(self.is_base_dc, "SVG.provenance")} AS provenance,
+              SVG.statvar, SVG.svg_id, generated_provenance AS provenance,
               IF(IFNULL(ARRAY_LENGTH(VS.vertical), 0) = 0, ARRAY<STRING>[uncategorized_svg], VS.vertical) AS svg_targets,
               IF(IFNULL(ARRAY_LENGTH(VS.linkedVertical), 0) = 0, ARRAY<STRING>[root_svg, uncategorized_svg], VS.linkedVertical) AS statvar_targets
             FROM TopLevelSVGs SVG 
@@ -680,7 +688,7 @@ class StatVarGroupGenerator:
           -- Filter SVGs from Uncategorized if they're part of a different vertical.
           FilteredSVGEdges AS (
             SELECT subject_id, predicate, object_id, provenance 
-            FROM (SELECT *, COUNTIF(object_id != uncategorized_svg) OVER(PARTITION BY subject_id, predicate, provenance) AS categorized_count FROM RawSVGEdges)
+            FROM (SELECT *, COUNTIF(object_id != uncategorized_svg) OVER(PARTITION BY subject_id, predicate) AS categorized_count FROM RawSVGEdges)
             WHERE object_id != uncategorized_svg OR categorized_count = 0
           ),
           RawStatVarEdges AS (
@@ -692,7 +700,7 @@ class StatVarGroupGenerator:
             SELECT DISTINCT subject_id, predicate, object_id, provenance
             FROM RawStatVarEdges r
             WHERE object_id != uncategorized_svg OR EXISTS (
-                 SELECT 1 FROM FilteredSVGEdges f WHERE f.subject_id = r.parent_svg_id AND f.provenance = r.provenance AND f.object_id = uncategorized_svg
+                 SELECT 1 FROM FilteredSVGEdges f WHERE f.subject_id = r.parent_svg_id AND f.object_id = uncategorized_svg
                )
           )
           SELECT subject_id, predicate, object_id, provenance FROM FilteredSVGEdges
@@ -715,8 +723,10 @@ class StatVarGroupGenerator:
         );
 
         -- Generate Spanner Edge rows.
+        -- Auto-generated edges use the shared generated_provenance; CuratedLinkedEdges keep the
+        -- generated provenance of the import that declared the curated memberOf edge.
         CREATE OR REPLACE TEMP TABLE Edge AS (
-          SELECT DISTINCT edge_data.subject_id, edge_data.predicate, edge_data.object_id, {prov_expr} AS provenance
+          SELECT DISTINCT edge_data.subject_id, edge_data.predicate, edge_data.object_id, generated_provenance AS provenance
           FROM AllResults
           CROSS JOIN UNNEST([
             STRUCT(statvar AS subject_id, 'memberOf' AS predicate, node3 AS object_id, iteration = 0 AND node3 IS NOT NULL AS keep),
@@ -943,9 +953,15 @@ class StatVarGroupGenerator:
             query_parameters=[
                 bigquery.ScalarQueryParameter("namespace", "STRING", self.namespace),
                 bigquery.ScalarQueryParameter("generated_provenance_prefix", "STRING", gen_prov_prefix),
+                bigquery.ScalarQueryParameter("generated_provenance", "STRING", self.generated_provenance),
                 bigquery.ScalarQueryParameter("max_iterations", "INT64", self.max_iterations),
                 bigquery.ScalarQueryParameter("should_filter", "BOOL", self.should_filter_basic_population_type),
                 bigquery.ScalarQueryParameter("should_prune", "BOOL", self.should_prune_single_child_svgs),
             ]
         )
-        return self.executor.execute(query, job_config=job_config)
+        return self.executor.execute(
+            query,
+            job_config=job_config,
+            labels=labels,
+            job_id_prefix=job_id_prefix,
+        )

@@ -22,6 +22,7 @@ from .bq_executor import BigQueryExecutor
 from .common import (
     BASE_PROVENANCE_PREFIX,
     _escape_sql_literal,
+    build_bq_job_tags,
     get_sql_generated_provenance_expr,
 )
 
@@ -129,7 +130,12 @@ class LinkedEdgeGenerator:
         FROM
           NewEdges
         """
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "linked_edges", import_names[0]
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
 
     def run_linked_contained_in_place(
         self, import_names: List[str] = None
@@ -151,15 +157,21 @@ class LinkedEdgeGenerator:
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'containedInPlace'{provenance_filter}");
 
+        CREATE OR REPLACE TEMPORARY TABLE `temp_base_type_of` AS
+        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
+          '''SELECT DISTINCT subject_id, object_id FROM Edge
+          WHERE predicate = 'typeOf'
+          AND subject_id IN (
+            SELECT DISTINCT subject_id FROM Edge 
+            WHERE predicate = 'containedInPlace'{provenance_filter}
+          )''');  
+
         CREATE OR REPLACE TEMPORARY TABLE `temp_contained_in_place` AS
         SELECT subject_id, object_id, provenance
         FROM `temp_base_contained_in_place`;
 
-        EXPORT DATA
-          OPTIONS( uri="{dest}",
-            format='CLOUD_SPANNER',
-            spanner_options = '{{"table": "Edge", "priority": "LOW"}}' ) AS
-        with RECURSIVE Ancestors AS (
+        CREATE OR REPLACE TEMPORARY TABLE NewEdges AS
+        WITH RECURSIVE Ancestors AS (
           SELECT
             subject_id,
             object_id AS ancestor_place,
@@ -181,25 +193,48 @@ class LinkedEdgeGenerator:
             ON a.ancestor_place = t.subject_id
           WHERE
             a.level <= 10 -- Limit to 10 levels
-        ),
-        NewEdges AS (
-          SELECT DISTINCT
-            subject_id,
-            'linkedContainedInPlace' as predicate,
-            ancestor_place as object_id,
-            {prov_expr} as provenance
-          FROM
-            Ancestors
         )
+        SELECT DISTINCT
+          subject_id,
+          'linkedContainedInPlace' as predicate,
+          ancestor_place as object_id,
+          {prov_expr} as provenance
+        FROM
+          Ancestors;
+
+        EXPORT DATA
+          OPTIONS( uri="{dest}",
+            format='CLOUD_SPANNER',
+            spanner_options = '{{"table": "Edge", "priority": "LOW"}}' ) AS
         SELECT
           subject_id,
           predicate,
           object_id,
           provenance
         FROM
-          NewEdges
+          NewEdges;
+
+        EXPORT DATA
+          OPTIONS( uri="{dest}",
+            format='CLOUD_SPANNER',
+            spanner_options = '{{"table": "LinkedEdge", "priority": "LOW"}}' ) AS
+        SELECT
+          'containedInPlace' AS predicate,
+          N.object_id AS ancestor,
+          T.object_id AS child_type,
+          N.subject_id AS child,
+          N.provenance
+        FROM
+          NewEdges N
+        JOIN temp_base_type_of T
+        ON N.subject_id = T.subject_id;
         """
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "linked_edges", import_names[0]
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )
 
     def run_linked_member(
         self, import_names: List[str] = None
@@ -303,4 +338,9 @@ class LinkedEdgeGenerator:
         FROM
           NewEdges
         """
-        return self.executor.execute(query)
+        labels, job_id_prefix = build_bq_job_tags(
+            self.is_base_dc, "linked_edges", import_names[0]
+        )
+        return self.executor.execute(
+            query, labels=labels, job_id_prefix=job_id_prefix
+        )

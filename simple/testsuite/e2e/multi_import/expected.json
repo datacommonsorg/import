@@ -1,0 +1,179 @@
+{
+  "error": null,
+  "handshake": {
+    "generateStatVarGroups": false,
+    "importList": [
+      {
+        "graphPath": "<output>/jsonld/<run>/healthProvenance/**/*.jsonld",
+        "importName": "healthProvenance"
+      },
+      {
+        "graphPath": "<output>/jsonld/<run>/populationProvenance/**/*.jsonld",
+        "importName": "populationProvenance"
+      }
+    ]
+  },
+  "records": {
+    "any_folder": [
+      {
+        "@id": "dcid:dc/g/Root",
+        "@type": "dcid:StatVarGroup",
+        "dcid:name": "Data Commons Variables"
+      },
+      {
+        "@id": "dcid:healthSource",
+        "@type": "dcid:Source",
+        "dcid:domain": "health.example.org",
+        "dcid:name": "health source",
+        "dcid:url": "https://health.example.org"
+      },
+      {
+        "@id": "dcid:healthSource",
+        "@type": "dcid:Source",
+        "dcid:name": "health source",
+        "dcid:url": "https://health.example.org"
+      },
+      {
+        "@id": "dcid:populationSource",
+        "@type": "dcid:Source",
+        "dcid:domain": "population.example.org",
+        "dcid:name": "population source",
+        "dcid:url": "https://population.example.org"
+      },
+      {
+        "@id": "dcid:populationSource",
+        "@type": "dcid:Source",
+        "dcid:name": "population source",
+        "dcid:url": "https://population.example.org"
+      }
+    ],
+    "folders": {
+      "healthProvenance": {
+        "nodes": {
+          "dcid:healthProvenance": [
+            {
+              "@id": "dcid:healthProvenance",
+              "@type": "dcid:Provenance",
+              "dcid:name": "health provenance",
+              "dcid:source": {
+                "@id": "dcid:healthSource"
+              },
+              "dcid:url": "https://health.example.org/data"
+            },
+            {
+              "@id": "dcid:healthProvenance",
+              "@type": "dcid:Provenance",
+              "dcid:name": "health provenance",
+              "dcid:source": {
+                "@id": "dcid:healthSource"
+              },
+              "dcid:url": "https://health.example.org/data"
+            }
+          ]
+        },
+        "observations": {
+          "dcid:obs_4c08cc6f36688f794584504b5c2ac0b9b41f6cd5bf982093aefec61057071e4c": {
+            "@id": "dcid:obs_4c08cc6f36688f794584504b5c2ac0b9b41f6cd5bf982093aefec61057071e4c",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:healthProvenance"
+            },
+            "dcid:provenanceUrl": "https://health.example.org/data",
+            "dcid:value": 41.9,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Prevalence_Obesity",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          }
+        }
+      },
+      "populationProvenance": {
+        "nodes": {
+          "dcid:populationProvenance": [
+            {
+              "@id": "dcid:populationProvenance",
+              "@type": "dcid:Provenance",
+              "dcid:name": "population provenance",
+              "dcid:source": {
+                "@id": "dcid:populationSource"
+              },
+              "dcid:url": "https://population.example.org/data"
+            },
+            {
+              "@id": "dcid:populationProvenance",
+              "@type": "dcid:Provenance",
+              "dcid:name": "population provenance",
+              "dcid:source": {
+                "@id": "dcid:populationSource"
+              },
+              "dcid:url": "https://population.example.org/data"
+            }
+          ]
+        },
+        "observations": {
+          "dcid:obs_50e22c4967771c563dabfb906ad12fa4b97ae02b4b7fc78b48dfce48b97ae80d": {
+            "@id": "dcid:obs_50e22c4967771c563dabfb906ad12fa4b97ae02b4b7fc78b48dfce48b97ae80d",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/FRA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:populationProvenance"
+            },
+            "dcid:provenanceUrl": "https://population.example.org/data",
+            "dcid:value": 67000000,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Person",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          },
+          "dcid:obs_83cca822953db23d146dcf4db37acd60a73045ff759407779baef2d081f603cc": {
+            "@id": "dcid:obs_83cca822953db23d146dcf4db37acd60a73045ff759407779baef2d081f603cc",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:populationProvenance"
+            },
+            "dcid:provenanceUrl": "https://population.example.org/data",
+            "dcid:value": 331000000,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Person",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "report": {
+    "importFiles": {
+      "<input>/health/data.csv": {
+        "status": "SUCCESS"
+      },
+      "<input>/health/provenance.mcf": {
+        "status": "SUCCESS"
+      },
+      "<input>/population/data.csv": {
+        "status": "SUCCESS"
+      },
+      "<input>/population/provenance.mcf": {
+        "status": "SUCCESS"
+      }
+    },
+    "status": "SUCCESS"
+  }
+}

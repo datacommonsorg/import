@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import logging
 import threading
 import time
@@ -44,17 +45,14 @@ class BigQueryExecutor:
         self.bq_dataset_id = bq_dataset_id or "datacommons"
         # TODO: Remove run_sequential logic once DCP migrates to async execution.
         self.run_sequential = run_sequential
-        self._client: Optional[bigquery.Client] = None
-        self._client_lock = threading.Lock()
+        self._thread_local = threading.local()
 
     @property
     def client(self) -> bigquery.Client:
-        """Lazily initializes and returns the BigQuery client."""
-        if self._client is None:
-            with self._client_lock:
-                if self._client is None:
-                    self._client = bigquery.Client(project=self.project_id, location=self.location)
-        return self._client
+        """Lazily initializes and returns the BigQuery client (thread-safe)."""
+        if not hasattr(self._thread_local, "client"):
+            self._thread_local.client = bigquery.Client(project=self.project_id, location=self.location)
+        return self._thread_local.client
 
     def get_spanner_destination_uri(self) -> str:
         """Returns the Spanner destination URI for EXPORT DATA."""
@@ -63,12 +61,16 @@ class BigQueryExecutor:
     def execute(
         self,
         query: str,
-        job_config: Optional[bigquery.QueryJobConfig] = None
+        labels: Dict[str, str],
+        job_id_prefix: str,
+        job_config: Optional[bigquery.QueryJobConfig] = None,
     ) -> bigquery.job.QueryJob:
         """Submits a BigQuery query and returns the QueryJob.
 
         Args:
             query: The SQL query string to execute.
+            labels: BigQuery job labels, merged into a copy of job_config.
+            job_id_prefix: Prefix for the BigQuery job ID.
             job_config: Optional BigQuery QueryJobConfig.
 
         Returns:
@@ -80,9 +82,16 @@ class BigQueryExecutor:
         logging.info(
             f"Submitting query (first 100 chars): {query.strip()[:100]}...")
 
+        job_config = (
+            copy.deepcopy(job_config) if job_config else bigquery.QueryJobConfig()
+        )
+        job_config.labels = {**(job_config.labels or {}), **labels}
+
         start_time = time.time()
         try:
-            query_job = self.client.query(query, job_config=job_config)
+            query_job = self.client.query(
+                query, job_config=job_config, job_id_prefix=job_id_prefix
+            )
             logging.info(f"Query submitted. Job ID: {query_job.job_id}")
 
             # TODO: Remove sequential execution once DCP migrates to async.

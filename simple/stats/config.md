@@ -72,65 +72,76 @@ e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank so
 
 #### `columnMappings`
 
-Required for CSV files. Maps the CSV's column headings to DCIDs. There are no
-built-in default column names.
+Required for every CSV file, for both `"observations"` and `"entities"` imports.
+Maps DCIDs to the CSV's column headings. There are no built-in default column
+names, and no column heading is used as a DCID on its own.
 
-`dcid:variableMeasured`, `dcid:observationDate` and `dcid:value` are always
-required, along with at least one entity mapping: either `dcid:observationAbout`
-or a custom observation property you have defined in MCF.
+Every column in the CSV must be either mapped in `columnMappings` or listed in
+`ignoreColumns`. The one exception is the `idColumn` of an `"entities"` import.
+Otherwise the import fails with one error that lists all the unmapped columns.
+A CSV whose entry has no `columnMappings` fails the import as well.
+Each property may be mapped from only one column. Keys that differ only by
+namespace name the same property, so mapping both `dcid:unit` and `unit` fails
+the import too. Likewise, each column may be mapped to only one property.
 
-#### `entityType`
+For `"observations"` imports, `dcid:variableMeasured`, `dcid:observationDate`
+and `dcid:value` are always required, along with one to three entity
+dimensions: `dcid:observationAbout` and/or custom observation properties you
+have defined in MCF.
 
-Events imports only. All entities in the file are assumed to be of this type,
-and the importer resolves entity names to DCIDs of that type. Observations
-imports ignore it and take entity types from Base Data Commons.
+For `"entities"` imports, each mapped column's values are written under its
+mapped DCID. The `idColumn` does not need a mapping; it is only written as a
+property if it is mapped.
 
 #### `ignoreColumns`
 
 The list of column names to be ignored by the importer, if any.
 
+#### `importType`
 
-## `variables`
+Optional. Either `"observations"` (the default) or `"entities"`.
 
-Events imports only. Provides display names and other metadata for the
-variables named in an events CSV.
+#### `observationProperties`
 
-Variables for observations imports are declared in MCF, not here.
+Optional, for observations CSVs. A map of observation properties (such as
+`"unit"`, `"scalingFactor"`, `"measurementMethod"`, `"observationPeriod"`, or
+custom dimension properties) applied as defaults to every row in the file.
 
-### Variable parameters
+#### `rowEntityType`
 
-#### `name`
+Required when `importType` is `"entities"`. The type (class DCID) assigned to
+each row entity in the CSV. The importer only writes a `typeOf` reference to
+this type on each row; the `Class` node itself is not created. If the type is
+not already in the Data Commons schema, define it (with its `name` and
+`description`) in an MCF file matched by an `inputFiles` entry, for example:
 
-The display name of the variable.
-If not specified, the column name will be used as the display name.
+```
+Node: dcid:Author
+typeOf: dcs:Class
+name: "Author"
+description: "A person who wrote an article"
+```
 
-#### `description`
+#### `idColumn`
 
-The long form description of the variable.
+Optional, for `"entities"` imports. The column whose cell value provides each
+row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
+Unlike other columns, it does not need a `columnMappings` entry.
 
-The description is carried through to the graph and used downstream for search.
+#### `referenceColumns` _(or `columnsToResolve`)_
 
-#### `properties`
+Optional, for `"entities"` imports. The list of columns whose cell values are
+entity DCID references (or comma-separated lists of entity DCIDs) rather than
+literal values.
 
-The properties of this variable.
+## `includeInputSubdirs`
 
-These are DC property entities encoded as a dictionary.
-More information on the properties that can be associated with variables can be found [here](https://github.com/datacommonsorg/data/blob/master/docs/representing_statistics.md#statisticalvariable).
+If `true`, recursively scans subdirectories of the input directory for files
+matching `inputFiles` patterns. Default is `false`.
 
-#### `group`
+## `dataDownloadUrl`
 
-Variables can be arranged in groups.
-The group hierarchy can be specified using the `group` property.
-Use "/" as a separator to specify a multi-level hierarchy.
-
-#### `searchDescriptions` _(formerly `nlSentences`)_
-
-Extra phrasings to index the variable under for search.
-If not specified, the variable name is used.
-
-Note that `nlSentences` is deprecated and will be removed in the future.
-
-### Examples
+Examples:
 
 Web URLs _(coming soon)_:
 
@@ -167,29 +178,3 @@ of the variables in the dataset. Default is `false`.
 The importer does not build the hierarchy itself. It creates the custom root
 StatVarGroup and forwards the request to the ingestion pipeline as
 `generateStatVarGroups` in the handshake record.
-
-## Hierarchy and Group Customization
-
-These optional top-level fields customize how the StatVarGroup hierarchy is generated and labeled. All are optional; defaults match the built-in values.
-
-- `defaultCustomRootStatVarGroupName`: Display name for the custom root StatVarGroup. Default: `"Custom Variables"`.
-- `customIdNamespace`: Namespace token for generated ids for SVs and manual groups. Default: `"custom"`.
-  - Generated SV ids: `<namespace>/statvar_<n>` (e.g., `custom/statvar_1`).
-  - Manual group ids: `<namespace>/g/group_<n>` (e.g., `custom/g/group_1`).
-- `customSvgPrefix`: String prefix for generated custom StatVarGroup ids.
-  - If not set, and `customIdNamespace` is provided, it defaults to `<customIdNamespace>/g/`.
-  - Otherwise defaults to `"c/g/"`.
-  - Affects ids like `c/g/Person_Gender-Female`.
-- `svHierarchyPropsBlocklist`: Array of additional property dcids to exclude from hierarchy generation. These are added to the internal blocklist used by Data Commons.
-  - Example: `["DevelopmentFinanceRecipient", "DACCode", "CustomProperty"]`
-
-Example fragment:
-
-```json
-{
-  "groupStatVarsByProperty": true,
-  "defaultCustomRootStatVarGroupName": "ONE Data",
-  "customIdNamespace": "ONE"
-  "customSvgPrefix": "OD/g/",
-  "svHierarchyPropsBlocklist": ["DevelopmentFinanceRecipients", "DACCode"],
-}

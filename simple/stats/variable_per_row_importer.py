@@ -13,9 +13,7 @@
 # limitations under the License.
 
 import json
-import logging
 
-import numpy as np
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
@@ -26,20 +24,15 @@ from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
+from stats.importer import column_coverage_errors
+from stats.importer import duplicate_column_errors
+from stats.importer import duplicate_property_errors
 from stats.importer import Importer
+from stats.importer import missing_column_mappings_error
+from stats.importer import read_csv_columns
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
-from stats.util import has_namespace_prefix
 from util.filesystem import File
-
-# Columns for standard observation properties.
-# These are optional.
-_OBS_PROPERTY_COLUMNS = [
-    sc.PREDICATE_UNIT,
-    sc.PREDICATE_SCALING_FACTOR,
-    sc.PREDICATE_MEASUREMENT_METHOD,
-    sc.PREDICATE_OBSERVATION_PERIOD,
-]
 
 # Mapping from official DCID keys in config.json to internal importer columns.
 STANDARD_PROPERTY_MAPPING = {
@@ -116,15 +109,13 @@ class VariablePerRowImporter(Importer):
     self.config = nodes.config
     self.custom_dimensions = []
     self.column_mappings = {}
-    self.df = pd.DataFrame()
 
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
       errors = self.validate_headers()
       if errors:
-        raise ValueError("\n".join(errors))
-      self._read_csv()
+        raise ValueError("\n".join(e.error_message for e in errors))
       self._map_columns()
       self._write_observations()
       self.reporter.report_success()
@@ -132,78 +123,37 @@ class VariablePerRowImporter(Importer):
       self.reporter.report_failure(str(e))
       raise e
 
-  def _read_csv(self) -> None:
-    # Read only the header row to extract column names for validation
-    with self.input_file.open_stream() as stream:
-      self.df = pd.read_csv(stream, nrows=1)
-
   def validate_headers(self) -> list[FileValidationError]:
+    mappings = self.get_column_mappings()
+    if not mappings:
+      return [missing_column_mappings_error(self.input_file.path)]
+    duplicates = (duplicate_property_errors(self.input_file.path, mappings) +
+                  duplicate_column_errors(self.input_file.path, mappings))
+    if duplicates:
+      return duplicates
+
     column_mappings, custom_dimensions = self._parse_column_mappings()
     errors = self._validate_mappings(column_mappings, custom_dimensions)
 
     if errors:
       return errors
 
-    try:
-      with self.input_file.open_stream() as stream:
-        header_df = pd.read_csv(stream, nrows=0)
-      actual_column_names = set(header_df.columns)
-    except Exception as e:
-      return [
-          FileValidationError(
-              file=self.input_file.path,
-              error_type=ValidationErrorType.GENERIC_ERROR,
-              error_message=
-              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
-          )
-      ]
-
-    expected_column_names = set(column_mappings.values())
-    difference = expected_column_names - actual_column_names
-    if difference:
-      errors.append(
-          FileValidationError(
-              file=self.input_file.path,
-              error_type=ValidationErrorType.MISSING_REQUIRED_COLUMNS,
-              problem_columns=sorted(list(difference)),
-              error_message=
-              f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
-          ))
-
-    ignored_column_names = set(self.config.ignore_columns(self.input_file))
-    all_allowed_columns = expected_column_names | ignored_column_names
-    unmapped_columns = actual_column_names - all_allowed_columns
-    if unmapped_columns:
-      errors.append(
-          FileValidationError(
-              file=self.input_file.path,
-              error_type=ValidationErrorType.UNMAPPED_COLUMNS,
-              problem_columns=sorted(list(unmapped_columns)),
-              error_message=
-              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
-          ))
-
-    return errors
+    actual_columns = read_csv_columns(self.input_file)
+    if isinstance(actual_columns, FileValidationError):
+      return [actual_columns]
+    return column_coverage_errors(
+        self.input_file.path, actual_columns, set(column_mappings.values()),
+        set(self.config.ignore_columns(self.input_file)))
 
   def _map_columns(self):
     self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
     errors = self._validate_mappings(self.column_mappings,
                                      self.custom_dimensions)
     if errors:
-      raise ValueError(errors[0]["errorMessage"])
+      raise ValueError(errors[0].error_message)
 
   def _parse_column_mappings(self) -> tuple[dict[str, str], list[str]]:
     config_mappings = self.get_column_mappings()
-
-    if not config_mappings:
-      # TODO: Remove this default fallback and require explicit columnMappings in config.json.
-      config_mappings = {
-          "dcid:observationAbout": "entity",
-          "dcid:variableMeasured": "variable",
-          "dcid:observationDate": "date",
-          "dcid:value": "value",
-      }
-
     column_mappings = {}
     custom_dimensions = []
 
@@ -270,14 +220,13 @@ class VariablePerRowImporter(Importer):
       for chunk_df in reader:
         if chunk_df.empty:
           continue
-        observations_df = (self.resolve_specified_columns(chunk_df).pipe(
-            self._apply_column_mappings).pipe(
-                _apply_property_defaults, obs_props).pipe(
-                    self._serialize_custom_dimensions,
-                    obs_props.properties).pipe(_format_numeric_values).pipe(
-                        filter_invalid_observation_values).pipe(
-                            self._ensure_entity_column).pipe(
-                                _strip_namespaces, provenance))
+        observations_df = (self._apply_column_mappings(chunk_df).pipe(
+            _apply_property_defaults, obs_props).pipe(
+                self._serialize_custom_dimensions,
+                obs_props.properties).pipe(_format_numeric_values).pipe(
+                    filter_invalid_observation_values).pipe(
+                        self._ensure_entity_column).pipe(
+                            _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.graph_writer.write_observations(observations_df, self.input_file)
 
@@ -296,23 +245,25 @@ class VariablePerRowImporter(Importer):
       df[constants.COLUMN_PROPERTIES] = static_json
       return df
 
-    records = df[custom_cols].to_dict(orient="records")
-    serialized = []
-    for r in records:
-      d = dict(static_props)
-      for col, val in r.items():
-        if pd.notna(val) and val != "":
-          d[col] = strip_namespace(str(val))
-      serialized.append(json.dumps(d) if d else "")
-
+    serialized = [
+        _serialize_row_dimensions(row, static_props)
+        for row in df[custom_cols].to_dict(orient="records")
+    ]
     df[constants.COLUMN_PROPERTIES] = serialized
-
-    if custom_cols:
-      df = df.drop(columns=custom_cols)
-    return df
+    return df.drop(columns=custom_cols)
 
   def _ensure_entity_column(self, df: pd.DataFrame) -> pd.DataFrame:
     """Ensures the logical 'entity' column exists in the DataFrame, even if empty."""
     if constants.COLUMN_ENTITY not in df.columns:
       df[constants.COLUMN_ENTITY] = None
     return df
+
+
+def _serialize_row_dimensions(row: dict[str, object],
+                              static_props: dict[str, str]) -> str:
+  """Serializes a row's custom dimensions merged with `static_props` into JSON."""
+  props = dict(static_props)
+  for col, val in row.items():
+    if pd.notna(val) and val != "":
+      props[col] = strip_namespace(str(val))
+  return json.dumps(props) if props else ""

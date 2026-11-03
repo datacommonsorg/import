@@ -96,11 +96,57 @@ class AggregationDeleter:
             f"(library default: {library_default}s)."
         )
 
+    def delete_concurrent(
+        self,
+        delete_queries: List[tuple],
+        params: dict,
+        param_types: dict
+    ) -> int:
+        """Executes a list of partitioned DML delete queries from Spanner concurrently.
+        
+        Runs the provided deletions in parallel using a ThreadPoolExecutor.
+        
+        Args:
+            delete_queries: List of tuples containing (table_name, sql_query, extra_desc).
+            params: Dictionary of parameters for the queries.
+            param_types: Dictionary of parameter types for the queries.
+
+        Returns:
+            The total number of rows deleted across all executed queries.
+        """
+        total_rows = 0
+        def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
+            rows = self.spanner_database.execute_partitioned_dml(
+                sql,
+                params=params,
+                param_types=param_types,
+                request_options=get_low_priority_request_options(),
+            )
+            logging.info(f"Deleted {rows} rows from {table_name} table{extra_desc}.")
+            return rows
+
+        if not delete_queries:
+            return 0
+        try:
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=len(delete_queries)
+            ) as executor:
+                futures = [
+                    executor.submit(_execute_delete, table, sql, desc)
+                    for table, sql, desc in delete_queries
+                ]
+                for future in concurrent.futures.as_completed(futures):
+                    total_rows += future.result()  # Propagate any worker thread exceptions to main thread
+            return total_rows
+        except Exception as e:
+            logging.error(f"Failed to execute partitioned DML for deletions: {e}")
+            raise
+
     def delete_aggregated_data(self, imports_to_delete: List[str]) -> None:
         """Deletes aggregated data for the specified imports from Spanner concurrently.
 
         Uses Partitioned DML to execute deletions, which is safe for large volumes.
-        Runs deletions for Edge, TimeSeries, and KeyValueStore in parallel using ThreadPoolExecutor.
+        Runs deletions for Edge and TimeSeries in parallel using ThreadPoolExecutor.
 
         Args:
             imports_to_delete: List of import names (without dc/base/ prefix) to delete.
@@ -116,7 +162,6 @@ class AggregationDeleter:
             get_provenance_name(name, self.is_base_dc) for name in imports_to_delete
         ]
 
-        db = self.spanner_database
         params = {"provenances": provenance_names}
         param_types = {
             "provenances": spanner.param_types.Array(spanner.param_types.STRING)
@@ -129,36 +174,45 @@ class AggregationDeleter:
                 "DELETE FROM TimeSeries WHERE provenance IN UNNEST(@provenances)",
                 " (and cascaded Observations)",
             ),
-            (
-                "KeyValueStore",
-                "DELETE FROM KeyValueStore WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)",
-                "",
-            ),
         ]
 
-        def _execute_delete(table_name: str, sql: str, extra_desc: str) -> int:
-            rows = db.execute_partitioned_dml(
-                sql,
-                params=params,
-                param_types=param_types,
-                request_options=get_low_priority_request_options(),
-            )
-            logging.info(f"Deleted {rows} rows from {table_name} table{extra_desc}.")
-            return rows
+        self.delete_concurrent(delete_queries, params, param_types)
 
-        try:
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=len(delete_queries)
-            ) as executor:
-                futures = [
-                    executor.submit(_execute_delete, table, sql, desc)
-                    for table, sql, desc in delete_queries
-                ]
-                for future in concurrent.futures.as_completed(futures):
-                    future.result()  # Propagate any worker thread exceptions to main thread
-        except Exception as e:
-            logging.error(f"Failed to execute partitioned DML for deletions: {e}")
-            raise
+    def delete_provenance_summaries(self, imports_to_delete: List[str]) -> int:
+        """Deletes ProvenanceSummary records from KeyValueStore for the specified imports.
+
+        Uses Partitioned DML to execute deletions across the secondary index KeyValueStoreByProvenance.
+
+        Args:
+            imports_to_delete: List of import names to delete summaries for.
+
+        Returns:
+            Number of rows deleted.
+        """
+        if not imports_to_delete:
+            return 0
+
+        logging.info(
+            f"Deleting KeyValueStore ProvenanceSummary records for imports: {imports_to_delete}"
+        )
+
+        provenance_names = [
+            get_provenance_name(name, self.is_base_dc) for name in imports_to_delete
+        ]
+
+        delete_queries = [
+            (
+                "KeyValueStore",
+                "DELETE FROM KeyValueStore "
+                "WHERE type = 'ProvenanceSummary' AND provenance IN UNNEST(@provenances)",
+                " (ProvenanceSummary records)",
+            ),
+        ]
+        params = {"provenances": provenance_names}
+        param_types = {
+            "provenances": spanner.param_types.Array(spanner.param_types.STRING)
+        }
+        return self.delete_concurrent(delete_queries, params, param_types)
 
     def delete_stat_var_group_edges(self) -> int:
         """Deletes all generated StatVarGroup edges across all provenances in Spanner."""
@@ -187,21 +241,15 @@ class AggregationDeleter:
             get_provenance_name(f"generated/{name}", self.is_base_dc)
             for name in imports_to_delete
         ]
-        sql = "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)"
+        delete_queries = [
+            ("Edge", "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)", ""),
+            ("LinkedEdge", "DELETE FROM LinkedEdge WHERE provenance IN UNNEST(@provenances)", "")
+        ]
         params = {"provenances": provenance_names}
         param_types = {
             "provenances": spanner.param_types.Array(spanner.param_types.STRING)
         }
-        rows = self.spanner_database.execute_partitioned_dml(
-            sql,
-            params=params,
-            param_types=param_types,
-            request_options=get_low_priority_request_options(),
-        )
-        logging.info(
-            f"Deleted {rows} linked relationship edges for imports: {imports_to_delete}"
-        )
-        return rows
+        return self.delete_concurrent(delete_queries, params, param_types)
 
     def delete_topic_list_edges(self) -> int:
         """Deletes generated topic and peer group list edges and their literal nodes from Spanner."""
