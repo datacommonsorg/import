@@ -19,24 +19,40 @@ from typing import Any
 from tools.regression.comparison.categories import CATEGORIES
 from tools.regression.comparison.compare import Comparison
 from tools.regression.comparison.metrics import PerfResult
+from tools.regression.comparison.metrics import RunFailure
 from tools.regression.execution.run import SideRuns
 
 EXIT_OK = 0
 EXIT_OUTPUT_DIFFERENT = 3
 EXIT_PERF_REGRESSION = 4
+EXIT_RUN_FAILED = 5
 
 
 @dataclasses.dataclass(frozen=True)
 class Verdict:
+  """
+  The outcome of a comparison.
+
+  A failed run takes precedence over output differences, which take precedence
+  over perf regressions: when a side failed, its output is not a valid result.
+  """
+
   failing: dict[str, int]  # Category name -> count, for failing categories.
   perf_regressions: list[str]
+  run_failures: list[RunFailure]
 
   @property
-  def label(self) -> str:
+  def output_label(self) -> str:
     return "DIFFERENT" if self.failing else "IDENTICAL"
 
   @property
+  def label(self) -> str:
+    return "RUN FAILED" if self.run_failures else self.output_label
+
+  @property
   def exit_code(self) -> int:
+    if self.run_failures:
+      return EXIT_RUN_FAILED
     if self.failing:
       return EXIT_OUTPUT_DIFFERENT
     if self.perf_regressions:
@@ -73,7 +89,11 @@ def to_json(report: Report) -> dict[str, Any]:
   ]
   return {
       "verdict": {
-          "output": report.verdict.label,
+          "label": report.verdict.label,
+          "run_failures": [
+              dataclasses.asdict(f) for f in report.verdict.run_failures
+          ],
+          "output": report.verdict.output_label,
           "failing_categories": report.verdict.failing,
           "perf_regressions": report.verdict.perf_regressions,
           "exit_code": report.verdict.exit_code,
@@ -99,8 +119,13 @@ def to_json(report: Report) -> dict[str, Any]:
 
 def summary_line(report: Report) -> str:
   """A one-line summary for the console."""
-  failing = ", ".join(f"{k}={v:,}" for k, v in report.verdict.failing.items())
-  regressions = ", ".join(report.verdict.perf_regressions)
-  return (f"Verdict: {report.verdict.label}"
-          f"{' (' + failing + ')' if failing else ''}; perf regressions: "
-          f"{regressions or 'none'}; exit code {report.verdict.exit_code}")
+  verdict = report.verdict
+  failing = ", ".join(f"{k}={v:,}" for k, v in verdict.failing.items())
+  output = verdict.output_label + (f" ({failing})" if failing else "")
+  head = f"Verdict: {output}"
+  if verdict.run_failures:
+    failures = "; ".join(f.describe() for f in verdict.run_failures)
+    head = f"Verdict: {verdict.label} ({failures}); output: {output}"
+  regressions = ", ".join(verdict.perf_regressions)
+  return (f"{head}; perf regressions: {regressions or 'none'}; exit code "
+          f"{verdict.exit_code}")
