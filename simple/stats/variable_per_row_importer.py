@@ -24,7 +24,12 @@ from stats.data import strip_namespace
 from stats.data import strip_namespace_series
 from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
+from stats.importer import column_coverage_errors
+from stats.importer import duplicate_column_errors
+from stats.importer import duplicate_property_errors
 from stats.importer import Importer
+from stats.importer import missing_column_mappings_error
+from stats.importer import read_csv_columns
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from util.filesystem import File
@@ -119,52 +124,26 @@ class VariablePerRowImporter(Importer):
       raise e
 
   def validate_headers(self) -> list[FileValidationError]:
+    mappings = self.get_column_mappings()
+    if not mappings:
+      return [missing_column_mappings_error(self.input_file.path)]
+    duplicates = (duplicate_property_errors(self.input_file.path, mappings) +
+                  duplicate_column_errors(self.input_file.path, mappings))
+    if duplicates:
+      return duplicates
+
     column_mappings, custom_dimensions = self._parse_column_mappings()
     errors = self._validate_mappings(column_mappings, custom_dimensions)
 
     if errors:
       return errors
 
-    try:
-      with self.input_file.open_stream() as stream:
-        header_df = pd.read_csv(stream, nrows=0)
-      actual_column_names = set(header_df.columns)
-    except Exception as e:
-      return [
-          FileValidationError(
-              file=self.input_file.path,
-              error_type=ValidationErrorType.GENERIC_ERROR,
-              error_message=
-              f"Failed to read CSV headers for '{self.input_file.path}': {str(e)}"
-          )
-      ]
-
-    expected_column_names = set(column_mappings.values())
-    difference = expected_column_names - actual_column_names
-    if difference:
-      errors.append(
-          FileValidationError(
-              file=self.input_file.path,
-              error_type=ValidationErrorType.MISSING_REQUIRED_COLUMNS,
-              problem_columns=sorted(list(difference)),
-              error_message=
-              f"The following expected columns were not found in the CSV: {sorted(list(difference))}. Please check your 'columnMappings' and the CSV header."
-          ))
-
-    ignored_column_names = set(self.config.ignore_columns(self.input_file))
-    all_allowed_columns = expected_column_names | ignored_column_names
-    unmapped_columns = actual_column_names - all_allowed_columns
-    if unmapped_columns:
-      errors.append(
-          FileValidationError(
-              file=self.input_file.path,
-              error_type=ValidationErrorType.UNMAPPED_COLUMNS,
-              problem_columns=sorted(list(unmapped_columns)),
-              error_message=
-              f"The CSV file '{self.input_file.path}' contains unmapped columns: {sorted(list(unmapped_columns))}. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json."
-          ))
-
-    return errors
+    actual_columns = read_csv_columns(self.input_file)
+    if isinstance(actual_columns, FileValidationError):
+      return [actual_columns]
+    return column_coverage_errors(
+        self.input_file.path, actual_columns, set(column_mappings.values()),
+        set(self.config.ignore_columns(self.input_file)))
 
   def _map_columns(self):
     self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
@@ -175,16 +154,6 @@ class VariablePerRowImporter(Importer):
 
   def _parse_column_mappings(self) -> tuple[dict[str, str], list[str]]:
     config_mappings = self.get_column_mappings()
-
-    if not config_mappings:
-      # TODO: Remove this default fallback and require explicit columnMappings in config.json.
-      config_mappings = {
-          "dcid:observationAbout": "entity",
-          "dcid:variableMeasured": "variable",
-          "dcid:observationDate": "date",
-          "dcid:value": "value",
-      }
-
     column_mappings = {}
     custom_dimensions = []
 

@@ -66,11 +66,6 @@ def _create_importer_for_file(
   match import_type:
 
     case ImportType.OBSERVATIONS:
-      mappings = config.column_mappings(input_file)
-      if not mappings:
-        raise ValueError(
-            f"Missing column mappings for file '{input_file.path}' in config.json"
-        )
       return VariablePerRowImporter(
           input_file=input_file,
           graph_writer=graph_writer,
@@ -99,7 +94,6 @@ class ImportProcResult:
   file_sample_collisions: dict
   sources: dict
   provenances: dict
-  properties: dict
   processed_imports: set
 
 
@@ -144,7 +138,6 @@ def _run_single_csv_import_proc(
         file_sample_collisions=dict(graph_writer.file_sample_collisions),
         sources=dict(nodes.sources),
         provenances=dict(nodes.provenances),
-        properties=dict(nodes.properties),
         processed_imports=set(graph_writer._processed_imports),
     )
 
@@ -649,12 +642,6 @@ class Runner:
                                      url=prov.url,
                                      source_id=prov.source_id,
                                      properties=prov.properties)
-    for prop_name, prop_obj in res.properties.items():
-      if prop_name not in self.nodes.properties:
-        self.nodes.properties[prop_name] = prop_obj
-      else:
-        self.nodes.properties[prop_name].provenance_ids.update(
-            prop_obj.provenance_ids)
     self.graph_writer._processed_imports.update(res.processed_imports)
     if res.obs_collision_count and hasattr(self.graph_writer,
                                            "obs_collision_count"):
