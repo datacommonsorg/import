@@ -186,7 +186,8 @@ public class SpannerClient implements Serializable {
             .to(tableName)
             .build();
     try (Spanner spanner = createSpanner();
-        ResultSet resultSet = getDatabaseClient(spanner).singleUse().executeQuery(statement)) {
+        ResultSet resultSet =
+            getDatabaseClient(spanner).singleUse().executeQuery(statement, LOW_PRIORITY)) {
       return resultSet.next() && resultSet.getLong(0) > 0;
     }
   }
