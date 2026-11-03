@@ -26,7 +26,11 @@
 set -e
 
 MODE="$1"
+# Lower-case for comparisons without bash 4 "${MODE,,}" (macOS ships bash 3.2).
+MODE_LC="$(printf '%s' "$MODE" | tr '[:upper:]' '[:lower:]')"
 ENV="$2"
+# Lower-case for comparisons without bash 4 "${ENV,,}" (macOS ships bash 3.2).
+ENV_LC="$(printf '%s' "$ENV" | tr '[:upper:]' '[:lower:]')"
 WORKFLOW_ID="$3"
 
 usage() {
@@ -43,11 +47,11 @@ if [ -z "$MODE" ] || [ -z "$ENV" ]; then
   usage
 fi
 
-if [ "${MODE,,}" != "status" ] && [ -z "$WORKFLOW_ID" ]; then
+if [ "${MODE_LC}" != "status" ] && [ -z "$WORKFLOW_ID" ]; then
   usage
 fi
 
-case "${MODE,,}" in
+case "${MODE_LC}" in
   status)
     ENDPOINT="/database/lock/status"
     HTTP_METHOD="GET"
@@ -74,7 +78,7 @@ esac
 LOCATION="us-central1"
 PROJECT_NUMBER="965988403328"
 
-case "${ENV,,}" in
+case "${ENV_LC}" in
   staging)
     HELPER_SERVICE="ingestion-helper-service-staging"
     ;;
