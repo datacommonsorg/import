@@ -14,12 +14,9 @@
 
 from collections import defaultdict
 from functools import wraps
-import re
 import threading
 
 from stats.config import Config
-from stats.data import EntityType
-from stats.data import Property
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVarGroup
@@ -30,10 +27,6 @@ from util.filesystem import File
 
 _CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
 _CUSTOM_SOURCE_ID_PREFIX = "c/s/"
-_CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
-_CUSTOM_ENTITY_TYPE_ID_PREFIX = "c/n/"
-# Pattern to check if a string conforms to that of a valid DCID.
-_DCID_PATTERN = r"^(?:[A-Za-z0-9_/]+:)?[A-Za-z0-9_/]+$"
 
 _DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
                          "Custom Data Commons")
@@ -65,19 +58,11 @@ class Nodes:
     self.provenances: dict[str, Provenance] = {}
     # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
-    # dict from property column name to Property
-    self.properties: dict[str, Property] = {}
-    # dict from entity type name to EntityType
-    self.entity_types: dict[str, EntityType] = {}
     self._used_provenance_ids = set()
     self._used_source_ids = set()
     self.has_custom_mcf_nodes = False
     self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
     self.provenances[_DEFAULT_PROVENANCE.id] = _DEFAULT_PROVENANCE
-    # Used to generate property IDs
-    self._property_generated_id_count = 0
-    # Used to generate entity type IDs
-    self._entity_type_generated_id_count = 0
     # Always ensure the global root StatVarGroup (dc/g/Root) exists so manually
     # defined StatVarGroup hierarchies in MCF have a root Node in Spanner.
     self._ensure_root_group()
@@ -155,44 +140,6 @@ class Nodes:
       self._used_source_ids.add(prov.source_id)
     return prov
 
-  @thread_safe
-  def property(self,
-               property_column_name: str,
-               provenance_id: str = "") -> Property:
-    if not property_column_name in self.properties:
-      self.properties[property_column_name] = Property(
-          self._property_id(property_column_name), property_column_name)
-    if provenance_id:
-      self.properties[property_column_name].provenance_ids.add(provenance_id)
-
-    return self.properties[property_column_name]
-
-  @thread_safe
-  def entity_type(self, entity_type_name: str, input_file: File) -> EntityType:
-    if not entity_type_name in self.entity_types:
-      entity_type_cfg = self.config.entity(entity_type_name)
-      self.entity_types[entity_type_name] = EntityType(
-          self._entity_type_id(entity_type_name),
-          entity_type_cfg.name,
-          description=entity_type_cfg.description)
-
-    return self.entity_types[entity_type_name].add_provenance(
-        self.provenance(input_file))
-
-  def _property_id(self, property_column_name: str) -> str:
-    dcid = _sanitize_dcid(property_column_name)
-    if dcid:
-      return dcid
-    self._property_generated_id_count += 1
-    return f"{_CUSTOM_PROPERTY_ID_PREFIX}{self._property_generated_id_count}"
-
-  def _entity_type_id(self, entity_type_name: str) -> str:
-    dcid = _sanitize_dcid(entity_type_name)
-    if dcid:
-      return dcid
-    self._entity_type_generated_id_count += 1
-    return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._entity_type_generated_id_count}"
-
   def _ensure_root_group(self) -> StatVarGroup:
     if sc.ROOT_SVG_ID not in self.groups:
       self.groups[sc.ROOT_SVG_ID] = StatVarGroup(sc.ROOT_SVG_ID,
@@ -241,32 +188,13 @@ class Nodes:
       result[_provenance_dir(prov_id)].extend(provenance.triples())
     for group in self.groups.values():
       result["_global"].extend(group.triples())
-    for node in [*self.entity_types.values(), *self.properties.values()]:
-      for dir_name in _provenance_dirs_for_node(node):
-        result[dir_name].extend(node.triples())
     return {k: _dedupe_triples(triples) for k, triples in result.items()}
-
-
-def _sanitize_dcid(raw: str) -> str | None:
-  """Returns `raw` (or `raw` with spaces/dashes replaced by `_`) if it is a valid DCID."""
-  if re.fullmatch(_DCID_PATTERN, raw):
-    return raw
-  candidate = re.sub(r"[ -]", "_", raw)
-  if re.fullmatch(_DCID_PATTERN, candidate):
-    return candidate
-  return None
 
 
 def _provenance_dir(raw_id: str) -> str:
   if not raw_id or raw_id == "_global":
     return "_global"
   return strip_namespace(raw_id)
-
-
-def _provenance_dirs_for_node(node: EntityType | Property) -> set[str]:
-  if not node.provenance_ids:
-    return {"_global"}
-  return {strip_namespace(p) for p in node.provenance_ids}
 
 
 def _dedupe_triples(triples: list[Triple]) -> list[Triple]:

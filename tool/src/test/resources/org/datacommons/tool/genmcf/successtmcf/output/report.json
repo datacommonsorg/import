@@ -14,7 +14,6 @@
       "counters": {
         "CSV_EmptyDcidReferences": "2",
         "Existence_MissingReference_measurementMethod": "22",
-        "Existence_MissingReference_location": "1",
         "StrSplit_EmptyToken_typeOf": "1",
         "CSV_MalformedDCIDFailures": "1",
         "Existence_MissingReference_variableMeasured": "22",
@@ -84,14 +83,6 @@
     },
     "userMessage": "Malformed CSV value for dcid property; must be a text or reference :: value: '123', node: 'E:SVTest->E3'",
     "counterKey": "CSV_MalformedDCIDFailures"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "SuccessTmcf.csv",
-      "lineNumber": "14"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'latLong/-4300000_11600000', property: 'location', node: 'E:SVTest->E3'",
-    "counterKey": "Existence_MissingReference_location"
   }, {
     "level": "LEVEL_WARNING",
     "location": {

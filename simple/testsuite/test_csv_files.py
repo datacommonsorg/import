@@ -84,7 +84,7 @@ OBSERVATION_FORMATS = [
 
 @cases(*OBSERVATION_FORMATS)
 def test_observation_csv_format(given, expect):
-  result = b.run(given, b.obs_config(ignoreColumns=["notes"]))
+  result = b.run(given, b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]))
   b.assert_records(result.observations, expect)
 
 
@@ -154,5 +154,6 @@ ENTITY_FORMATS = [
 
 @cases(*ENTITY_FORMATS)
 def test_entity_csv_format(given, expect):
-  result = b.run(given, b.entities_config())
+  result = b.run(
+      given, b.entities_config(mappings=b.same_name_mappings(*_ENTITY_HEADER)))
   b.assert_records(result.of_type("Author"), expect)

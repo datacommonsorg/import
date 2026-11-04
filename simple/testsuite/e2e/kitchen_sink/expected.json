@@ -41,14 +41,7 @@
           "dcid:Author": {
             "@id": "dcid:Author",
             "@type": "dcid:Class",
-            "dcid:includedIn": [
-              {
-                "@id": "dcid:KitchenProvenance"
-              },
-              {
-                "@id": "dcid:KitchenSource"
-              }
-            ],
+            "dcid:description": "A person who wrote an article",
             "dcid:name": "Author"
           },
           "dcid:Count_Person_Female": {
@@ -125,16 +118,19 @@
           "dcid:author_country": {
             "@id": "dcid:author_country",
             "@type": "dcid:Property",
+            "dcid:description": "Country the author is from",
             "dcid:name": "author_country"
           },
           "dcid:author_id": {
             "@id": "dcid:author_id",
             "@type": "dcid:Property",
+            "dcid:description": "Identifier of the author",
             "dcid:name": "author_id"
           },
           "dcid:author_name": {
             "@id": "dcid:author_name",
             "@type": "dcid:Property",
+            "dcid:description": "Full name of the author",
             "dcid:name": "author_name"
           },
           "dcid:c/g/Root": {

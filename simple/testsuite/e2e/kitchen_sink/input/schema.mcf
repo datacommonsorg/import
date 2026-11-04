@@ -17,8 +17,28 @@ Node: dcid:destination
 typeOf: dcs:Property
 name: "destination"
 
+Node: dcid:author_id
+typeOf: dcs:Property
+name: "author_id"
+description: "Identifier of the author"
+
+Node: dcid:author_name
+typeOf: dcs:Property
+name: "author_name"
+description: "Full name of the author"
+
+Node: dcid:author_country
+typeOf: dcs:Property
+name: "author_country"
+description: "Country the author is from"
+
 Node: L1
 dcid: "kitchen/Region1"
 typeOf: dcs:AdministrativeArea
 name: "Region One, North"
 containedInPlace: dcid:country/USA
+
+Node: dcid:Author
+typeOf: dcs:Class
+name: "Author"
+description: "A person who wrote an article"

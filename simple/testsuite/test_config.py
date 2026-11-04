@@ -80,7 +80,7 @@ PATTERNS = [
 def test_input_files_pattern_matching(given, expect):
   result = b.run(_PATTERN_FILES, {
       "includeInputSubdirs": True,
-      **b.obs_config(pattern=given),
+      **b.obs_config(b.OBS_MAPPINGS, pattern=given),
   })
   b.assert_records(result.observations,
                    [b.obs(about, value=val) for about, val in expect])
@@ -88,7 +88,7 @@ def test_input_files_pattern_matching(given, expect):
 
 def _import_subdir(name: str, csv_text: str) -> dict[str, str]:
   return {
-      f"{name}/config.json": json.dumps(b.obs_config()),
+      f"{name}/config.json": json.dumps(b.obs_config(b.OBS_MAPPINGS)),
       f"{name}/provenance.mcf": b.PROVENANCE_MCF,
       f"{name}/case.csv": csv_text,
   }
@@ -98,7 +98,7 @@ def test_files_in_subdirectories_are_skipped_by_default():
   result = b.run({
       "case.csv": _USA,
       "nested/case_deeper.csv": _FRA
-  }, b.obs_config())
+  }, b.obs_config(b.OBS_MAPPINGS))
   b.assert_records(result.observations, [b.obs("country/USA", value=1)])
 
 
@@ -108,7 +108,7 @@ def test_include_input_subdirs_picks_up_nested_files():
       "nested/case_deeper.csv": _FRA
   }, {
       "includeInputSubdirs": True,
-      **b.obs_config(pattern="**/case*.csv")
+      **b.obs_config(b.OBS_MAPPINGS, pattern="**/case*.csv")
   })
   b.assert_records(
       result.observations,
@@ -125,7 +125,8 @@ def test_first_matching_input_files_entry_wins():
   place_mappings = {**b.OBS_MAPPINGS, "dcid:observationAbout": "place"}
   place_header = ["place", "variable", "date", "value"]
   config = b.obs_config(place_mappings, pattern="countries_*.csv")
-  config["inputFiles"].append(b.obs_config(pattern="*.csv")["inputFiles"][-1])
+  config["inputFiles"].append(
+      b.obs_config(b.OBS_MAPPINGS, pattern="*.csv")["inputFiles"][-1])
   result = b.run(
       {
           "countries_a.csv":
@@ -208,7 +209,9 @@ GROUP_STAT_VARS = [
 
 @cases(*GROUP_STAT_VARS)
 def test_group_stat_vars_by_property(given, expect):
-  result = b.run_csv(_USA, {**b.obs_config(), "groupStatVarsByProperty": given})
+  result = b.run_csv(_USA, {
+      **b.obs_config(b.OBS_MAPPINGS), "groupStatVarsByProperty": given
+  })
   b.assert_records(result.of_type("StatVarGroup"),
                    [_CUSTOM_ROOT_GROUP] if expect else [])
   assert result.output["handshake"]["generateStatVarGroups"] is expect
@@ -221,6 +224,14 @@ def test_stat_var_groups_are_not_requested_by_default():
 
 
 # --- Invalid configs ----------------------------------------------------------
+
+_ENTITIES_BLOCK_REMOVED = (
+    "The top-level 'entities' block in config.json is no longer supported.")
+_ENTITIES_BLOCK_MCF_HINT = (
+    "Define each entity type that is not already in the Data Commons schema"
+    " as a Class node in an MCF file instead, e.g.:\n"
+    "  Node: dcid:Author\n"
+    "  typeOf: dcs:Class")
 
 INVALID_CONFIGS = [
     Case(
@@ -242,7 +253,7 @@ INVALID_CONFIGS = [
              " 'pattern' or 'filename'.", ())),
     Case("unknown top-level key",
          given={
-             **b.obs_config(),
+             **b.obs_config(b.OBS_MAPPINGS),
              "unknownTopLevelKey": True,
          },
          expect=b.Fails(
@@ -250,92 +261,100 @@ INVALID_CONFIGS = [
              "Unknown key(s) in config.json: ['unknownTopLevelKey']", ())),
     Case("legacy sources key is rejected",
          given={
-             **b.obs_config(),
+             **b.obs_config(b.OBS_MAPPINGS),
              "sources": {},
          },
          expect=b.Fails("ValueError",
                         "Unknown key(s) in config.json: ['sources']", ())),
     Case("legacy variables key is rejected",
          given={
-             **b.obs_config(),
+             **b.obs_config(b.OBS_MAPPINGS),
              "variables": {},
          },
          expect=b.Fails("ValueError",
                         "Unknown key(s) in config.json: ['variables']", ())),
     Case("legacy events key is rejected",
          given={
-             **b.obs_config(),
+             **b.obs_config(b.OBS_MAPPINGS),
              "events": {},
          },
          expect=b.Fails("ValueError",
                         "Unknown key(s) in config.json: ['events']", ())),
     Case("legacy customIdNamespace key is rejected",
          given={
-             **b.obs_config(),
+             **b.obs_config(b.OBS_MAPPINGS),
              "customIdNamespace": "custom",
          },
          expect=b.Fails("ValueError",
                         "Unknown key(s) in config.json: ['customIdNamespace']",
                         ())),
     Case("unknown inputFiles key",
-         given=b.obs_config(unknownFileKey="val"),
+         given=b.obs_config(b.OBS_MAPPINGS, unknownFileKey="val"),
          expect=b.Fails(
              "ValueError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['unknownFileKey']", ())),
     Case("legacy importProxyEntities key is rejected",
-         given=b.obs_config(importProxyEntities=True),
+         given=b.obs_config(b.OBS_MAPPINGS, importProxyEntities=True),
          expect=b.Fails(
              "ValueError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['importProxyEntities']", ())),
     Case("legacy entityType key is rejected",
-         given=b.obs_config(entityType="Country"),
+         given=b.obs_config(b.OBS_MAPPINGS, entityType="Country"),
          expect=b.Fails(
              "ValueError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['entityType']", ())),
     Case("columnsToResolve on observations entry is rejected",
-         given=b.obs_config(columnsToResolve=["entity"]),
+         given=b.obs_config(b.OBS_MAPPINGS, columnsToResolve=["entity"]),
          expect=b.Fails(
              "ValueError",
              "'columnsToResolve' is only supported for 'importType':"
              " 'entities', but entry 'case*.csv' has importType"
              " 'observations'.", ())),
     Case("referenceColumns on observations entry is rejected",
-         given=b.obs_config(referenceColumns=["entity"]),
+         given=b.obs_config(b.OBS_MAPPINGS, referenceColumns=["entity"]),
          expect=b.Fails(
              "ValueError",
              "'referenceColumns' is only supported for 'importType':"
              " 'entities', but entry 'case*.csv' has importType"
              " 'observations'.", ())),
-    Case("unknown entity config key",
+    Case("removed entities block is rejected with a pointer to MCF",
          given={
-             **b.obs_config(),
+             **b.entities_config(mappings=b.AUTHOR_MAPPINGS),
              "entities": {
                  "Author": {
                      "name": "Author",
-                     "unknownEntityKey": "x",
-                 }
+                     "description": "A person who wrote an article",
+                 },
+                 "Book": {},
              },
          },
          expect=b.Fails(
-             "ValueError",
-             "Unknown key(s) in 'entities.Author': ['unknownEntityKey']", ())),
+             "ValueError", "The top-level 'entities' block in config.json is"
+             " no longer supported. Found entries for: ['Author', 'Book']. " +
+             _ENTITIES_BLOCK_MCF_HINT, ())),
+    Case("empty entities block is rejected too",
+         given={
+             **b.obs_config(b.OBS_MAPPINGS),
+             "entities": {},
+         },
+         expect=b.Fails("ValueError", _ENTITIES_BLOCK_REMOVED, ())),
     Case("unsupported format",
-         given=b.obs_config(format="variablePerColumn"),
+         given=b.obs_config(b.OBS_MAPPINGS, format="variablePerColumn"),
          expect=b.Fails(
              "ValueError", "Unsupported format 'variablePerColumn' for"
              " 'case*.csv'. The only supported format is 'variablePerRow'",
              ())),
     Case("unsupported importType",
-         given=b.obs_config(importType="Observations"),
+         given=b.obs_config(b.OBS_MAPPINGS, importType="Observations"),
          expect=b.Fails("ValueError", "CSV Header Validation Failed!")),
     Case("events importType is not supported",
-         given=b.obs_config(importType="events"),
+         given=b.obs_config(b.OBS_MAPPINGS, importType="events"),
          expect=b.Fails("ValueError", "Unsupported import type: events")),
     Case("double wildcard in filename pattern",
-         given=b.obs_config(pattern="**.csv"),
+         given=b.obs_config(b.OBS_MAPPINGS, pattern="**.csv"),
          expect=b.Fails(
              "ValueError",
              "Adjacent double wildcards in the name portion of a pattern are"
@@ -347,6 +366,44 @@ INVALID_CONFIGS = [
 def test_invalid_config(given, expect):
   result = b.run_csv(_USA, given)
   b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
+
+
+def test_entities_block_in_an_import_subdirectory_config_is_rejected():
+  """Multi-import runs validate each subdirectory's config.json the same way."""
+  files = {
+      **_import_subdir("oecd", _USA),
+      **_import_subdir("ilo", _FRA),
+      "ilo/config.json":
+          json.dumps({
+              **b.obs_config(b.OBS_MAPPINGS), "entities": {
+                  "Author": {
+                      "name": "Author"
+                  }
+              }
+          }),
+  }
+  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd", "ilo"]})
+  b.assert_fails(result,
+                 "ValueError",
+                 f"<input>/ilo/config.json: {_ENTITIES_BLOCK_REMOVED}",
+                 handshake_error_types=())
+
+
+def test_csv_without_column_mappings_in_an_import_subdirectory_is_rejected():
+  """Multi-import runs require columnMappings in each subdirectory's config."""
+  files = {
+      **_import_subdir("oecd", _USA),
+      **_import_subdir("ilo", _FRA),
+      "ilo/config.json":
+          json.dumps(b.without_column_mappings(b.obs_config(b.OBS_MAPPINGS))),
+  }
+  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd", "ilo"]})
+  b.assert_fails(result,
+                 "ValueError",
+                 "Missing 'columnMappings' for CSV file 'ilo/case.csv' in"
+                 " config.json. 'columnMappings' is required for every CSV"
+                 " input file",
+                 handshake_error_types=("INVALID_CONFIGURATION",))
 
 
 def test_missing_config_json_fails():

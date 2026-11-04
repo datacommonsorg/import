@@ -32,7 +32,7 @@ filesystem edge cases or a validator's rules.
 |---|---|
 | `test_mcf_nodes.py` | MCF files: values, subjects and types, file structure, parse errors, limits |
 | `test_observations.py` | Observation CSVs: observationAbout / variable / date / value cells, columns, observationProperties, dimensions, ids, header errors |
-| `test_entities.py` | Entities CSVs: rows, ids, reference columns, values, property ids |
+| `test_entities.py` | Entities CSVs: rows, ids, reference columns, values, column mappings, header errors |
 | `test_csv_files.py` | CSV formatting (quoting, CRLF, BOM, column and row order, split files), for every CSV import type |
 | `test_provenance.py` | Provenances and sources: registered nodes, provenance URL on observations, validation |
 | `test_config.py` | config.json: which files are imported, top-level flags, invalid configs |
@@ -87,10 +87,10 @@ def test_value(given, expect):
 
 | To build | Use |
 |---|---|
-| MCF input | `mcf_node(subject, typeOf=..., **props)`, `mcf(*blocks)` |
+| MCF input | `mcf_node(subject, typeOf=..., **props)`, `mcf(*blocks)`, `property_mcf(*names)` |
 | CSV input | `csv_file(*rows, header=..., quote_all=, line_end=, bom=)`, `obs_row(...)` |
-| Config | `obs_config(mappings, pattern=, **options)`, `entities_config(...)`, `MCF_CONFIG` |
-| Expected records | `record(dcid, type, **props)`, `ref(dcid)`, `obs(...)`, `entity(...)`, `class_node(...)`, `property_node(...)` |
+| Config | `obs_config(mappings, pattern=, **options)`, `entities_config(row_type, id_column, mappings=, **options)` (mappings is required), `same_name_mappings(*columns)`, `OBS_MAPPINGS`, `AUTHOR_MAPPINGS`, `without_column_mappings(config)`, `MCF_CONFIG` |
+| Expected records | `record(dcid, type, **props)`, `ref(dcid)`, `obs(...)`, `entity(...)`, `property_node(name)` |
 | Running | `run(files, config, mode=, shared_files=)`, `run_mcf(...)`, `run_csv(...)`, `run_dir(...)` |
 | Checking | `assert_records(actual, expected)`, `assert_fails(result, type, message, handshake_error_types)` |
 
