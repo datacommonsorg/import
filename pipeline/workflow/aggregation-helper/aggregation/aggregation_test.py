@@ -379,6 +379,38 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.assertIn("relevantVariable", query)
         self.assertIn("linkedMember", query)
 
+    def test_run_linked_contained_in_place_seeds_scoped_traversal_global(self):
+        """Seeds are scoped to the import; the recursion walks the whole hierarchy."""
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_linked_contained_in_place(import_names=["FARS_CrashNodes"])
+        self.assertEqual(job, mock_job)
+
+        query = self.mock_executor.execute.call_args[0][0]
+        # Seed edges and typeOf lookup stay scoped to the import's provenance.
+        self.assertIn(
+            "SELECT subject_id, predicate, object_id, provenance FROM Edge "
+            "WHERE predicate = 'containedInPlace' AND provenance IN ('dc/base/FARS_CrashNodes')",
+            query,
+        )
+        # Traversal edges are pulled for every provenance and de-duplicated.
+        self.assertIn(
+            "SELECT DISTINCT subject_id, object_id FROM EXTERNAL_QUERY(\"test-conn\",\n"
+            "          \"SELECT subject_id, object_id FROM Edge WHERE predicate = 'containedInPlace'\");",
+            query,
+        )
+        # The recursive step joins the global hierarchy, not the seed table.
+        self.assertIn("temp_hierarchy_contained_in_place AS t", query)
+        self.assertNotIn("temp_contained_in_place AS t", query)
+        # Generated rows keep the seed's provenance.
+        self.assertIn("'dc/base/generated/'", query)
+        # Both exports still happen.
+        self.assertIn('spanner_options = \'{"table": "Edge", "priority": "LOW"}\'', query)
+        self.assertIn('spanner_options = \'{"table": "LinkedEdge", "priority": "LOW"}\'', query)
+
 
 class TestMaterializedEdgeGenerator(unittest.TestCase):
     def setUp(self):

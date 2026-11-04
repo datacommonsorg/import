@@ -113,6 +113,72 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(tuple(linked_edge_results[2]), ('country/USA', 'State', 'geoId/06', expected_provenance))
             self.assertEqual(tuple(linked_edge_results[3]), ('geoId/06', 'County', 'geoId/06075', expected_provenance))
 
+    def test_linked_contained_in_place_traverses_other_provenances(self):
+        """An import that only owns the first containment hop still reaches every ancestor.
+
+        Place owns:   geoId/06075 (County) -> geoId/06 (State) -> country/USA (Country)
+        FARS owns:    crash/1 (VehicleCrashIncident) -> geoId/06075
+        Running LINKED_EDGES for FARS alone must emit crash/1 -> {06075, 06, USA} under
+        FARS' generated provenance, and must not emit or delete anything for Place.
+        """
+        place_import = 'Place'
+        fars_import = 'FARS_CrashNodes_Test'
+
+        self.add_node('geoId/06075', 'San Francisco County', types=['County'])
+        self.add_node('geoId/06', 'California', types=['State'])
+        self.add_node('country/USA', 'United States', types=['Country'])
+        self.add_node('crash/1', 'Crash 1', types=['VehicleCrashIncident'])
+
+        self.add_edge('geoId/06075', 'containedInPlace', 'geoId/06', place_import)
+        self.add_edge('geoId/06', 'containedInPlace', 'country/USA', place_import)
+        self.add_edge('crash/1', 'containedInPlace', 'geoId/06075', fars_import)
+        self.add_edge('geoId/06075', 'typeOf', 'County', place_import)
+        self.add_edge('geoId/06', 'typeOf', 'State', place_import)
+        self.add_edge('crash/1', 'typeOf', 'VehicleCrashIncident', fars_import)
+        # Pre-existing Place rows that a FARS-only run must leave alone.
+        place_generated = get_provenance_name(f'generated/{place_import}', self.is_base_dc)
+        self.add_edge('geoId/06075', 'linkedContainedInPlace', 'country/USA', f'generated/{place_import}')
+
+        self.flush_to_spanner()
+
+        calculations = [
+            {
+                "name": "Linked Edges ContainedInPlace",
+                "type": "LINKED_EDGES",
+                "stage": 1,
+                "input_imports": [place_import, fars_import]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[fars_import])
+        self.assertTrue(res.success)
+
+        with self.database.snapshot(multi_use=True) as snapshot:
+            fars_generated = get_provenance_name(f'generated/{fars_import}', self.is_base_dc)
+            edge_results = list(snapshot.execute_sql("""
+                SELECT subject_id, object_id, provenance
+                FROM Edge
+                WHERE predicate = 'linkedContainedInPlace'
+                ORDER BY provenance, subject_id, object_id
+            """))
+            self.assertEqual([tuple(r) for r in edge_results], [
+                ('crash/1', 'country/USA', fars_generated),
+                ('crash/1', 'geoId/06', fars_generated),
+                ('crash/1', 'geoId/06075', fars_generated),
+                ('geoId/06075', 'country/USA', place_generated),
+            ])
+
+            linked_edge_results = list(snapshot.execute_sql("""
+                SELECT ancestor, child_type, child, provenance
+                FROM LinkedEdge
+                WHERE predicate = 'containedInPlace'
+                ORDER BY ancestor, child_type, child, provenance
+            """))
+            self.assertEqual([tuple(r) for r in linked_edge_results], [
+                ('country/USA', 'VehicleCrashIncident', 'crash/1', fars_generated),
+                ('geoId/06', 'VehicleCrashIncident', 'crash/1', fars_generated),
+                ('geoId/06075', 'VehicleCrashIncident', 'crash/1', fars_generated),
+            ])
+
 
     def test_linked_member_of(self):
         """Tests run_linked_member_of.
