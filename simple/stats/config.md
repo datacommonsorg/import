@@ -86,10 +86,9 @@ url: "https://source1.example.org/dataset"
 source: dcid:Source1
 ```
 
-There is no built-in default provenance or source; `dcid:c/p/default` must be
-defined like any other. If a CSV's provenance is not defined in MCF, the import
-fails before any CSV is imported, with one error that lists every undefined
-provenance and the files that use it.
+If a CSV's provenance is not defined in MCF, the import fails before any CSV is
+imported, with one error that lists every undefined provenance and the files
+that use it.
 
 #### `columnMappings`
 
