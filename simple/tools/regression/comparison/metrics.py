@@ -16,7 +16,9 @@ Compares the run metrics of the two sides: performance and run health.
 
 Performance metrics are medians over the repeats of a side. Run health (exit
 status and log lines) uses run 1, the run whose output is compared, and is
-recorded as difference categories.
+recorded as difference categories. Run failures (a non-zero exit or a timeout)
+are checked in every repeat, since any failed run makes the comparison
+untrustworthy.
 """
 
 import dataclasses
@@ -70,6 +72,21 @@ class PerfResult:
   @property
   def regressions(self) -> list[str]:
     return [row.name for row in self.rows if row.regressed]
+
+
+@dataclasses.dataclass(frozen=True)
+class RunFailure:
+  """A run of one side that exited non-zero or timed out."""
+
+  side: str  # "baseline" or "candidate".
+  run: int  # 1-based repeat number.
+  exit_code: int
+  timed_out: bool
+  log_path: str | None
+
+  def describe(self) -> str:
+    status = "timed out" if self.timed_out else f"exit code {self.exit_code}"
+    return f"{self.side} run {self.run}: {status}, log {self.log_path}"
 
 
 # (name, unit, RunMetrics accessor, Thresholds field or None).
@@ -137,3 +154,21 @@ def compare_health(base: SideRuns, cand: SideRuns, findings: Findings) -> None:
     findings.add("warning_lines_changed",
                  abs(c.warning_lines - b.warning_lines),
                  sample=dict(sides(b.warning_lines, c.warning_lines), **logs))
+
+
+def _side_failures(name: str, side: SideRuns) -> list[RunFailure]:
+  return [
+      RunFailure(name, run, m.exit_code, m.timed_out, side.run_log_path(run))
+      for run, m in enumerate(side.metrics, start=1)
+      if m.exit_code or m.timed_out
+  ]
+
+
+def run_failures(base: SideRuns, cand: SideRuns) -> list[RunFailure]:
+  """
+  Returns every run of either side that exited non-zero or timed out.
+
+  A reused output without run.json has no metrics, hence no runs that can
+  fail.
+  """
+  return _side_failures("baseline", base) + _side_failures("candidate", cand)
