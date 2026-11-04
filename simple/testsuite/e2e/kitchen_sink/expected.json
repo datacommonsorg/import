@@ -9,6 +9,16 @@
       }
     ]
   },
+  "ingestion_report": {
+    "folders": [],
+    "run": {
+      "folderNames": [],
+      "mode": "INGEST",
+      "outputPath": "<output>/preprocessor_reports/testsuite-run",
+      "status": "SUCCESS",
+      "workflowExecutionId": "testsuite-run"
+    }
+  },
   "records": {
     "any_folder": [
       {
