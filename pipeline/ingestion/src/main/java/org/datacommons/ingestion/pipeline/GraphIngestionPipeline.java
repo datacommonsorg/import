@@ -12,6 +12,7 @@ import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.Reshuffle;
 import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
@@ -372,8 +373,14 @@ public class GraphIngestionPipeline {
       boolean isBaseDc,
       Counter obsCounter,
       Counter timeSeriesCounter) {
+    // TFRecord files are not splittable, so each file is read by a single worker. Reshuffle to
+    // break fusion and distribute downstream processing and Spanner writes across workers.
+    // Random distribution is safe: each record is one complete, unique time series (key and all
+    // its observations) and nothing downstream groups records, so each Spanner row is written by
+    // exactly one worker.
     PCollection<McfOptimizedGraph> optGraph =
-        PipelineUtils.readOptimizedMcfGraph(importName, graphPath, pipeline);
+        PipelineUtils.readOptimizedMcfGraph(importName, graphPath, pipeline)
+            .apply("ReshuffleTfRecords-" + importName, Reshuffle.viaRandomKey());
     PCollection<TimeSeries> uniqueSeries =
         GraphReader.extractSeriesFromOptimized(optGraph, importName, isBaseDc, timeSeriesCounter);
     PCollection<Observation> obsDataPoints =
