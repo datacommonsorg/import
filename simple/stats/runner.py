@@ -294,7 +294,7 @@ class Runner:
     self.summary_generator.set_execution_metadata(
         start_time=_utc_now(),
         folder_names=self._report_folder_names(),
-        output_path=self.output_dir.full_path())
+        output_dir=self.output_dir)
     try:
       self._run_imports_and_export_jsonld()
 
@@ -302,8 +302,7 @@ class Runner:
 
       # Report done.
       self.reporter.report_done()
-      self.summary_generator.write_to_json(RunStatus.SUCCESS, _utc_now(),
-                                           self.output_dir)
+      self.summary_generator.write_to_json(RunStatus.SUCCESS, _utc_now())
 
       # Close all file storage.
       for store in self.all_stores:
@@ -325,8 +324,7 @@ class Runner:
                                 error_message=str(e))
         ]
 
-      self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now(),
-                                           self.output_dir)
+      self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now())
 
       for store in self.all_stores:
         try:

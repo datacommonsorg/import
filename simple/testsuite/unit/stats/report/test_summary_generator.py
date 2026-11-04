@@ -24,18 +24,20 @@ from stats.report.model.summary import IngestionReport
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
+from util.filesystem import create_store
+from util.filesystem import Dir
 
 _START = "2026-10-29T00:00:00Z"
 _END = "2026-10-29T00:05:00Z"
 
 
 def _generator(workflow_execution_id: str | None,
-               output_path: str = "gs://bucket/output") -> SummaryGenerator:
+               output_dir: Dir) -> SummaryGenerator:
   """A generator with execution metadata for two folders."""
   generator = SummaryGenerator(workflow_execution_id)
   generator.set_execution_metadata(start_time=_START,
                                    folder_names=["oecd", "ilo"],
-                                   output_path=output_path)
+                                   output_dir=output_dir)
   return generator
 
 
@@ -44,20 +46,25 @@ class TestSummaryGenerator(unittest.TestCase):
 
   def test_write_to_json_never_raises(self):
     """A failure while writing the report is logged, not raised."""
-    generator = _generator("wf-123")
+    output_dir = mock.MagicMock()
+    output_dir.full_path.return_value = "/out/preprocessor_reports/wf-123"
+    # Subdirectories resolve to the same mock, so open_file can be checked.
+    output_dir.open_dir.return_value = output_dir
+    output_dir.open_file.side_effect = OSError("disk full")
+    generator = _generator("wf-123", output_dir)
 
-    # Make opening the report's storage fail.
-    with mock.patch("stats.report.summary_generator.create_store",
-                    side_effect=OSError("disk full")) as create_store, \
-         self.assertLogs(level="ERROR"):
+    with self.assertLogs(level="ERROR"):
       result = generator.write_to_json(RunStatus.FAILURE, _END)
 
     self.assertIsNone(result)
-    create_store.assert_called_once()
+    output_dir.open_file.assert_called_once()
 
   def test_build_report_fills_run_metadata(self):
     """The recorded metadata becomes the run block and one entry per folder."""
-    report = _generator("wf-123").build_report(RunStatus.SUCCESS, _END)
+    with tempfile.TemporaryDirectory() as tmp, \
+         create_store(tmp) as store:
+      report = _generator("wf-123",
+                          store.as_dir()).build_report(RunStatus.SUCCESS, _END)
 
     self.assertEqual(
         report,
@@ -68,20 +75,20 @@ class TestSummaryGenerator(unittest.TestCase):
                                   startTime=_START,
                                   endTime=_END,
                                   folderNames=["oecd", "ilo"],
-                                  outputPath=("gs://bucket/output/"
-                                              "preprocessor_reports/wf-123/"
-                                              "ingestion_report.json")),
+                                  outputPath=os.path.join(
+                                      tmp, "preprocessor_reports", "wf-123")),
             folders=[Folder(folderName="oecd"),
                      Folder(folderName="ilo")]))
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""
-    with tempfile.TemporaryDirectory() as output_dir:
-      _generator(None, output_dir).write_to_json(RunStatus.SUCCESS, _END)
+    with tempfile.TemporaryDirectory() as tmp, \
+         create_store(tmp) as store:
+      _generator(None, store.as_dir()).write_to_json(RunStatus.SUCCESS, _END)
 
       self.assertTrue(
           os.path.exists(
-              os.path.join(output_dir, "preprocessor_reports",
+              os.path.join(tmp, "preprocessor_reports",
                            "ingestion_report.json")))
 
 
