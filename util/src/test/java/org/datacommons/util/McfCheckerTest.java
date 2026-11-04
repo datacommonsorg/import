@@ -14,6 +14,8 @@
 
 package org.datacommons.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -593,6 +595,32 @@ public class McfCheckerTest {
             + "race: dcs:Jupiterian Saturnarian\n"
             + "statType: dcs:measuredValue\n";
     assertTrue(failure(mcf, "Sanity_InvalidChars_race", "invalid-chars: ' '", null, true));
+  }
+
+  @Test
+  public void checkGraphWithManyNodes() throws IOException, InterruptedException {
+    // Every node in a multi-node graph (e.g., a row of a wide TMCF) must be checked: failures on
+    // the first and last nodes are both reported, and the remaining valid nodes do not fail.
+    int numNodes = 500;
+    StringBuilder mcf = new StringBuilder();
+    for (int i = 0; i < numNodes; i++) {
+      mcf.append("Node: N").append(i).append("\n");
+      if (i != 0 && i != numNodes - 1) {
+        mcf.append("typeOf: schema:State\n");
+      }
+      mcf.append("name: \"Node ").append(i).append("\"\n\n");
+    }
+    Debug.Log.Builder log = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
+    Mcf.McfGraph graph = McfParser.parseInstanceMcfString(mcf.toString(), false, lw);
+    assertEquals(numNodes, graph.getNodesCount());
+
+    assertFalse(McfChecker.check(graph, null, null, lw));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Sanity_MissingOrEmpty_typeOf", 2));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "Sanity_MissingOrEmpty_typeOf", "node: 'N0'"));
+    assertTrue(
+        TestUtil.checkLog(
+            lw.getLog(), "Sanity_MissingOrEmpty_typeOf", "node: 'N" + (numNodes - 1) + "'"));
   }
 
   private static boolean failure(
