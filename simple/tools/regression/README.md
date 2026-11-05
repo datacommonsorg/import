@@ -9,8 +9,8 @@ tree), and compares:
 - wall time, CPU time (user and sys) and peak memory (max RSS);
 - the exit status and the number of ERROR and WARNING log lines.
 
-It writes `report.md` and `report.json`, and exits non-zero when the output
-differs or performance regresses beyond the thresholds.
+It writes `report.md` and `report.json`, and exits non-zero when a run fails,
+the output differs or performance regresses beyond the thresholds.
 
 Run it before merging any preprocessor change that could affect its output
 or performance. For a change that is meant to change the output, it shows
@@ -104,9 +104,9 @@ diff and its categories, and the perf and run health decisions in
 
 ## Reading the report
 
-The report starts with the **verdict** (IDENTICAL or DIFFERENT, the
-performance status and the exit code), then each side's code, output
-directory and log, then:
+The report starts with the **verdict** (RUN FAILED, DIFFERENT or IDENTICAL,
+the output comparison, the performance status and the exit code), then each
+side's code, output directory and log, then:
 
 - **Performance:** each metric's median per side, the delta, the threshold
   and whether it regressed, followed by run 1's exit status, timeout, and
@@ -186,16 +186,26 @@ uid in node shard names, and each side's input root in report paths.
 Thresholds compare the candidate's median with the baseline's. On noisy
 machines, use `--repeats=3` or more.
 
-| Exit code | Meaning |
-|---|---|
-| 0 | Output identical and no perf regression |
-| 3 | Output differs (failing categories, or any category with `--strict`) |
-| 4 | Output identical, but perf regressed beyond a threshold |
-| 2 | Usage error |
-| 1 | The tool itself failed (e.g. a bad ref) |
+| Exit code | Verdict | Meaning |
+|---|---|---|
+| 0 | IDENTICAL | Output identical and no perf regression |
+| 5 | RUN FAILED | A run of either side exited non-zero or timed out |
+| 3 | DIFFERENT | Output differs (failing categories, or any category with `--strict`) |
+| 4 | IDENTICAL | Output identical, but perf regressed beyond a threshold |
+| 2 | | Usage error |
+| 1 | | The tool itself failed (e.g. a bad ref) |
 
-A preprocessor crash is a result, not a tool failure: it shows up as
-`exit_status_changed` plus the missing output.
+RUN FAILED takes precedence over DIFFERENT and perf regressions: a failed
+run's output is not a valid result, even when both sides fail the same way
+and their (empty) outputs compare equal. Every repeat is checked, not just
+run 1. The summary line and report name each failed run with its side, exit
+code or timeout, and log; the output comparison is still reported for
+context. A reused output without `run.json` has no exit status, so it never
+counts as a failed run.
+
+A preprocessor crash is a result, not a tool failure: it shows up as RUN
+FAILED, plus `exit_status_changed` and the missing output when only one side
+crashed.
 
 CPU time and max RSS come from `wait4()`, like `/usr/bin/time -v`, and cover
 the preprocessor and its pool workers. Max RSS is the largest single process.
@@ -224,8 +234,8 @@ Outputs are always written to local disk, so upload time is not measured.
 - **RAM:** the comparison spills digests to 256 hash buckets on disk and
   holds one bucket at a time; each worker parses one shard at a time. Lower
   `--compare_workers` if memory is tight.
-- **Hangs:** `--timeout_minutes` kills a stuck run; it is reported as
-  `exit_status_changed`.
+- **Hangs:** `--timeout_minutes` kills a stuck run; it is reported as RUN
+  FAILED (and `exit_status_changed` when only one side timed out).
 
 ## Caveat: `--freeze_time`
 
@@ -244,6 +254,7 @@ python3 -m pytest tools/
 
 `tests/comparison/compare_test.py` plants each kind of difference in a small
 output and checks that it is detected. `tests/comparison/metrics_test.py`
-checks the perf thresholds and run health findings. `tests/e2e_test.py` runs
-the tool HEAD against HEAD on the `kitchen_sink` testsuite dataset and expects
-IDENTICAL.
+checks the perf thresholds, run health findings and failed runs.
+`tests/e2e_test.py` runs the tool HEAD against HEAD on the `kitchen_sink`
+testsuite dataset and expects IDENTICAL, and on an empty input, where both
+sides fail, and expects RUN FAILED.
