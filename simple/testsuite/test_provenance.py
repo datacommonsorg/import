@@ -247,8 +247,8 @@ def test_files_after_a_failed_one_still_run(mode):
   Threaded runs write no JSON-LD once a file fails, so the report shows that
   the good files succeeded. Production workers upload their output as they
   finish (leaving it behind is a known gap), so the good files' observations
-  show that they ran. The production report does not show
-  file statuses; see _REPORT in test_e2e.py.
+  show that they ran. The production report does not show file statuses; see
+  _REPORT in test_e2e.py.
   """
   result = b.run(
       {
