@@ -22,6 +22,7 @@ import pytest
 from tools.regression import cli
 from tools.regression.execution import trees
 from tools.regression.reporting.report import EXIT_OK
+from tools.regression.reporting.report import EXIT_RUN_FAILED
 
 DATASET = os.path.join(os.path.dirname(__file__), "..", "..", "..", "testsuite",
                        "e2e", "kitchen_sink", "input")
@@ -75,3 +76,28 @@ def test_head_against_head_is_identical(tmp_path):
   assert exit_code == EXIT_OK
   assert rerun["stats"] == report["stats"]
   assert rerun["baseline"]["runs"] == report["baseline"]["runs"]
+
+
+def test_both_sides_failing_is_run_failed(tmp_path, capsys):
+  """
+  An input dir without config.json makes stats.main exit non-zero on both
+  sides. Both outputs are then equally empty, which must not read as
+  IDENTICAL.
+  """
+  _repo_or_skip()
+  input_dir = tmp_path / "empty_input"
+  input_dir.mkdir()
+  work_dir = tmp_path / "regression"
+  exit_code = cli.main([
+      f"--input_dir={input_dir}", "--baseline=HEAD", "--candidate=HEAD",
+      f"--work_dir={work_dir}"
+  ])
+  report = _report(work_dir)
+  assert exit_code == EXIT_RUN_FAILED
+  assert report["verdict"]["label"] == "RUN FAILED"
+  assert [f["side"] for f in report["verdict"]["run_failures"]
+         ] == ["baseline", "candidate"]
+  summary = capsys.readouterr().out
+  assert "Verdict: RUN FAILED (baseline run 1: exit code" in summary
+  assert str(work_dir / "candidate" / "run-1" / "preprocessor.log") in summary
+  assert "## Verdict: RUN FAILED" in (work_dir / "report.md").read_text()
