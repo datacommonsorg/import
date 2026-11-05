@@ -177,7 +177,7 @@ You need multiple CSVs to take advantage of concurrent processing.
 
 **TIP:** In case your generated CSV is very large, you can use [the split_csv tool](https://github.com/datacommonsorg/data/tree/master/tools#csv-splitter) to shard it into multiple files.
 
-Defaults to `1`.
+Defaults to `0`, which uses one thread per CSV file, up to the number of available processors (at most 16).
 
 ### `-o`, `--output-dir=<outputDir>`
 
