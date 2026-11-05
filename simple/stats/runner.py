@@ -46,7 +46,8 @@ from util.filesystem import join_path
 from util.filesystem import Store
 
 _ARCHIVES_DIR_NAME = "archives"
-# Upper bound on the threads or worker processes that import files.
+# Upper bound on the worker processes that import files, and on the threads
+# that validate CSV headers.
 _MAX_WORKERS = 32
 
 
@@ -650,7 +651,7 @@ class Runner:
       _finish_imports(files, futures, merge=self._merge_worker_result)
 
   def _run_all_data_imports(self):
-    """Orchestrates file scanning, thread-pool configuration, and file ingestion."""
+    """Finds the input files, validates CSV headers, and imports every file."""
     csv_files, mcf_files = self._find_and_filter_input_files()
 
     logging.info("Found %d CSV files to import", len(csv_files))
@@ -691,11 +692,11 @@ class Runner:
       self.graph_writer.file_sample_collisions[f_name].extend(
           res.file_sample_collisions.get(f_name, []))
 
-  def _log_file_progress(self, file_prefix: str, file: File):
+  def _log_file_progress(self, file_prefix: str, file_path: str):
     """Increments file progress counter and logs standard progress line."""
     self._completed_files_count += 1
     logging.info("[%d/%d] %s: %s", self._completed_files_count,
-                 self._total_files_count, file_prefix, file)
+                 self._total_files_count, file_prefix, file_path)
 
   def _create_importer(self, input_file: File) -> Importer:
     reporter = self.reporter.get_file_reporter(input_file)

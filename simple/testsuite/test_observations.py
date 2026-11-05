@@ -23,7 +23,6 @@ Observation ids are content hashes, so these tests compare records without
 
 import logging
 
-import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
@@ -504,7 +503,6 @@ def test_legacy_column_names_work_when_mapped_explicitly():
           "dcid:observationDate": "date",
           "dcid:value": "value",
       }))
-  b.assert_records(result.observations, [b.obs()])
   b.assert_records(result.observations, [b.obs()])
 
 

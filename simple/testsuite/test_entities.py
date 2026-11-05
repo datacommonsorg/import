@@ -19,7 +19,6 @@ Author keyed by author_id, unless it says otherwise, mapping exactly its CSV's
 columns (see entities_config() in lib/builders.py).
 """
 
-import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
@@ -322,12 +321,6 @@ def test_property_node_for_a_column_is_defined_in_mcf():
       },
       b.entities_config(
           mappings=b.same_name_mappings("author_id", "author_name")))
-  b.assert_records(result.of_type("Property"), [
-      b.record("author_name",
-               "Property",
-               name="Author name",
-               description="Full name of the author"),
-  ])
   b.assert_records(result.of_type("Property"), [
       b.record("author_name",
                "Property",

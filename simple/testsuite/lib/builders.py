@@ -417,7 +417,7 @@ class Result:
 
 def run(files: dict[str, str],
         config: dict | None,
-        mode: str = "disk_input",
+        mode: str = runlib.DEFAULT_MODE,
         shared_files: dict[str, str] | None = None) -> Result:
   """
   Runs the preprocessor on files plus the shared files.
@@ -447,7 +447,7 @@ def run(files: dict[str, str],
 def run_dir(files: dict[str, str],
             config: dict | None = None,
             *,
-            mode: str = "disk_input",
+            mode: str = runlib.DEFAULT_MODE,
             runner_kwargs: dict | None = None,
             config_file: str | None = None) -> Result:
   """
@@ -471,14 +471,14 @@ def run_dir(files: dict[str, str],
                 removed=[])
 
 
-def run_mcf(*blocks: str, mode: str = "disk_input") -> Result:
+def run_mcf(*blocks: str, mode: str = runlib.DEFAULT_MODE) -> Result:
   """Runs MCF blocks as one nodes.mcf file under MCF_CONFIG."""
   return run({"nodes.mcf": mcf(*blocks)}, MCF_CONFIG, mode)
 
 
 def run_csv(csv_text: str,
             config: dict | None = None,
-            mode: str = "disk_input",
+            mode: str = runlib.DEFAULT_MODE,
             **run_kwargs: Any) -> Result:
   """
   Runs csv_text as case.csv.

@@ -130,14 +130,30 @@ def _expected_path(dataset: str) -> str:
   return os.path.join(E2E_DIR, dataset, "expected.json")
 
 
+def _read_expected(dataset: str) -> dict:
+  with open(_expected_path(dataset), encoding="utf-8") as f:
+    return json.load(f)
+
+
 def _write_expected(dataset: str) -> None:
-  reference = _output(dataset, "gcs_input")
+  """
+  Rewrites expected.json from a run in the default mode.
+
+  expected.json holds the correct output, so an aspect that is a known issue
+  in the default mode keeps its current expected value.
+  """
+  reference = _output(dataset, run.DEFAULT_MODE)
   expected = {
       "records": _records_view(dataset, reference["records"]),
       "report": reference["report"],
       "handshake": reference["handshake"],
       "error": reference["error"],
   }
+  if os.path.exists(_expected_path(dataset)):
+    current = _read_expected(dataset)
+    for aspect in ASPECTS:
+      if _known_issue(dataset, run.DEFAULT_MODE, aspect):
+        expected[aspect] = current[aspect]
   with open(_expected_path(dataset), "w", encoding="utf-8") as f:
     f.write(canonical.dumps(expected))
 
@@ -184,13 +200,12 @@ def _actual(dataset: str, output: dict, aspect: str):
 
 
 def test_e2e(dataset: str, mode: str, aspect: str, update_expected: bool):
-  if update_expected and mode == "gcs_input" and aspect == ASPECTS[0]:
+  if update_expected and mode == run.DEFAULT_MODE and aspect == ASPECTS[0]:
     _write_expected(dataset)
   if not os.path.exists(_expected_path(dataset)):
     pytest.fail(f"{_expected_path(dataset)} is missing; generate it with"
                 " --update-expected -n 0 and review it")
-  with open(_expected_path(dataset), encoding="utf-8") as f:
-    expected = json.load(f)[aspect]
+  expected = _read_expected(dataset)[aspect]
   output = _output(dataset, mode)
   actual = _actual(dataset, output, aspect)
   if output["error"] and aspect != "error" and "_traceback" in output and (

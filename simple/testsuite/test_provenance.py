@@ -19,7 +19,6 @@ a source. Most tests here replace the shared provenance.mcf (see
 _provenance_mcf) to vary that.
 """
 
-import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases

@@ -83,6 +83,7 @@ MODES = {
     ]
 }
 ALL_MODES = tuple(MODES)
+DEFAULT_MODE = "disk_input"
 
 # Set to keep each run's work directory (raw output) for debugging.
 _KEEP_WORK_DIRS_ENV = "TESTSUITE_KEEP_WORK_DIRS"
@@ -94,7 +95,7 @@ class RunResult:
 
 
 def run_preprocessor(input_dir: str,
-                     mode: Mode | str = "disk_input",
+                     mode: Mode | str = DEFAULT_MODE,
                      runner_kwargs: dict | None = None,
                      config_file: str | None = None) -> RunResult:
   """
