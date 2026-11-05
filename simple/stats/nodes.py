@@ -126,21 +126,13 @@ class Nodes:
                                source_id=prov.source_id,
                                properties=prov.properties)
 
-  @thread_safe
-  def find_provenance(self, prov_name: str) -> Provenance | None:
-    """Returns the registered provenance named or identified by `prov_name`.
-
-    `prov_name` is a config `provenance` value, such as `dcid:MyProvenance`.
-    """
-    return (self.provenances.get(prov_name) or
-            self.provenances.get(_clean_metadata_id(prov_name)))
-
   def provenance_id(self, input_file: File) -> str:
     """Returns the id of the provenance that config names for `input_file`.
 
-    The id comes from config alone, without looking up a Provenance node: MCF
-    files define those, possibly in another worker process, and the runner
-    checks that MCF defines every provenance that a CSV uses.
+    The id comes from config alone, without registering or looking up a
+    Provenance node: MCF files define those, possibly in another worker
+    process, and `MetadataValidator` checks at the end of the run that every
+    referenced provenance is defined.
 
     Raises:
       ValueError: If config names no provenance.
@@ -177,24 +169,6 @@ class Nodes:
     for group in self.groups.values():
       result["_global"].extend(group.triples())
     return {k: _dedupe_triples(triples) for k, triples in result.items()}
-
-
-def undefined_provenances_message(
-    files_by_provenance: dict[str, list[str]]) -> str:
-  """The error for provenances that config references but MCF doesn't define.
-
-  Args:
-    files_by_provenance: Each undefined provenance, as written in config, mapped
-      to the paths of the files that reference it.
-  """
-  lines = [
-      f"  - '{prov_name}', used by {', '.join(paths)}"
-      for prov_name, paths in sorted(files_by_provenance.items())
-  ]
-  return ("Provenances referenced in config.json are not defined in any MCF"
-          " file:\n" + "\n".join(lines) +
-          "\nDefine each one as a Provenance node, with a 'source' linking to"
-          " a Source node, in an MCF file matched by 'inputFiles'.")
 
 
 def _provenance_dir(raw_id: str) -> str:

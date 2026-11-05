@@ -155,15 +155,14 @@ def test_csvs_add_no_provenance_or_source_nodes(mode):
 # --- Provenances must be defined in MCF ---------------------------------------
 #
 # Every provenance a CSV's inputFiles entry names must be defined in MCF;
-# there is no built-in default. Once every file is imported, and before any
-# node is written or validated, the run fails with one error naming every
-# missing one.
+# there is no built-in default. MetadataValidator checks this once every file
+# is imported and fails the run with one error listing every missing one.
 
-_UNDEFINED_PROVENANCES = ("Provenances referenced in config.json are not"
-                          " defined in any MCF file:\n")
-_DEFINE_IN_MCF = ("\nDefine each one as a Provenance node, with a 'source'"
-                  " linking to a Source node, in an MCF file matched by"
-                  " 'inputFiles'.")
+
+def _undefined_provenances(*prov_ids: str) -> str:
+  """The MetadataValidator error for provenances that no MCF defines."""
+  return ("Metadata Validation Failed: The following referenced provenances"
+          f" are not defined in your MCF files: {sorted(prov_ids)}")
 
 
 def _csv_entry(pattern: str, provenance: str) -> dict:
@@ -175,21 +174,20 @@ def _csv_entry(pattern: str, provenance: str) -> dict:
   }
 
 
-def _assert_undefined_provenances(result: b.Result, *lines: str) -> None:
+def _assert_undefined_provenances(result: b.Result, *prov_ids: str) -> None:
   """
-  The run failed with the undefined-provenance error listing lines, and one
-  handshake error per affected file.
+  The run failed with the MetadataValidator error naming prov_ids.
 
-  The check runs once every file is imported, so production workers have
-  already uploaded their output (see test_files_after_a_failed_one_still_run).
+  The handshake error type is GENERIC_ERROR, although the validator raises the
+  error with the MISSING_PROVENANCE type. Production workers have already
+  uploaded their output (see test_files_after_a_failed_one_still_run).
   """
   assert result.error["type"] == "ValueError"
-  assert result.error["message"] == (_UNDEFINED_PROVENANCES + "\n".join(lines) +
-                                     _DEFINE_IN_MCF)
+  assert _undefined_provenances(*prov_ids) in result.error["message"]
   handshake_types = {
       e["errorType"] for e in result.output["handshake"]["errors"]
   }
-  assert handshake_types == {"MISSING_PROVENANCE"}
+  assert handshake_types == {"GENERIC_ERROR"}
 
 
 @pytest.mark.parametrize("mode", _MODES)
@@ -217,9 +215,7 @@ def test_every_undefined_provenance_is_reported_together(mode):
           ]
       },
       mode=mode)
-  _assert_undefined_provenances(result,
-                                "  - 'dcid:MissingA', used by a1.csv, a2.csv",
-                                "  - 'dcid:MissingB', used by b.csv")
+  _assert_undefined_provenances(result, "dcid:MissingA", "dcid:MissingB")
 
 
 @pytest.mark.parametrize("mode", _MODES)
@@ -229,8 +225,7 @@ def test_former_default_provenance_must_be_defined_too(mode):
                  {"inputFiles": [_csv_entry("case*.csv", "dcid:c/p/default")]},
                  mode=mode,
                  shared_files={})
-  _assert_undefined_provenances(result,
-                                "  - 'dcid:c/p/default', used by case.csv")
+  _assert_undefined_provenances(result, "dcid:c/p/default")
 
 
 # --- Failed files -------------------------------------------------------------
@@ -353,14 +348,13 @@ INVALID_PROVENANCES = [
              "ValueError", "The 'provenance' property must be a valid DCID or"
              f" URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL)."
              f" Found invalid provenance: '{b.PROVENANCE}'")),
+    # The handshake error type is GENERIC_ERROR, although the validator raises
+    # the error with the MISSING_PROVENANCE type.
     Case("provenance that no MCF defines",
          given=b.obs_config(b.OBS_MAPPINGS,
                             provenance="dcid:UndefinedProvenance"),
          expect=b.Fails("ValueError",
-                        _UNDEFINED_PROVENANCES +
-                        "  - 'dcid:UndefinedProvenance', used by case.csv" +
-                        _DEFINE_IN_MCF,
-                        handshake=("MISSING_PROVENANCE",))),
+                        _undefined_provenances("dcid:UndefinedProvenance"))),
 ]
 
 

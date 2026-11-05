@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import defaultdict
 import concurrent.futures
 from dataclasses import dataclass
 import json
@@ -36,7 +35,6 @@ from stats.importer import Importer
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
-from stats.nodes import undefined_provenances_message
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from stats.validation import MetadataValidator
@@ -697,35 +695,6 @@ class Runner:
       self._run_threaded_imports(files)
     else:
       self._run_multiprocess_imports(files)
-    self._check_csv_provenances_defined(csv_files)
-
-  def _check_csv_provenances_defined(self, csv_files: list[File]) -> None:
-    """Fails if MCF does not define the provenance of any of `csv_files`.
-
-    Runs once every file is imported, so `self.nodes` holds every Provenance
-    that MCF defines, and before any node is written or validated. The error
-    names every undefined provenance with the files that reference it, and the
-    handshake gets one MISSING_PROVENANCE error per file.
-
-    Raises:
-      ValueError: If any provenance is undefined.
-    """
-    files_by_provenance: dict[str, list[str]] = defaultdict(list)
-    for file in csv_files:
-      prov_name = self.config.provenance_name(file)
-      if not self.nodes.find_provenance(prov_name):
-        files_by_provenance[prov_name].append(file.path)
-    if not files_by_provenance:
-      return
-    message = undefined_provenances_message(files_by_provenance)
-    self._failure_errors = [
-        FileValidationError(file=path,
-                            error_type=ValidationErrorType.MISSING_PROVENANCE,
-                            error_message=message)
-        for paths in files_by_provenance.values()
-        for path in paths
-    ]
-    raise ValueError(message)
 
   def _merge_worker_result(self, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` into the coordinator."""
