@@ -80,8 +80,7 @@ MODES = {
         Mode("tiny_chunks", patches=_tiny_chunks),
     ]
 }
-MODES["threaded"] = MODES["local"]  # Backwards compatibility alias
-ALL_MODES = ("local", "production", "tiny_chunks")
+ALL_MODES = tuple(MODES)
 
 # Set to keep each run's work directory (raw output) for debugging.
 _KEEP_WORK_DIRS_ENV = "TESTSUITE_KEEP_WORK_DIRS"

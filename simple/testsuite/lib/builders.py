@@ -428,20 +428,17 @@ def run(files: dict[str, str],
   the shared files produce on their own (under MCF_CONFIG, in the same mode)
   are left out of Result.added, so tests only list what their own input and
   config add. Shared records the run no longer writes are in Result.removed.
+  This holds for failed runs too: files import in parallel, so the shared
+  files' records may be written even when another file fails.
   """
   if shared_files is None:
     shared_files = {"provenance.mcf": PROVENANCE_MCF}
   output = _run(_freeze({**shared_files, **files}), _freeze(config), mode)
-  if output["error"]:
-    return Result(output=output, added=[], removed=[])
   shared_only = (
       _record_counts(  # What the shared files write on their own.
           _run(_freeze(shared_files), _freeze(MCF_CONFIG), mode))
       if shared_files else collections.Counter())
-  actual = _record_counts(output)
-  return Result(output=output,
-                added=_records(actual - shared_only),
-                removed=_records(shared_only - actual))
+  return _result(output, shared_only)
 
 
 def run_dir(files: dict[str, str],
@@ -464,11 +461,15 @@ def run_dir(files: dict[str, str],
                                      config_file=config_file).output
   finally:
     shutil.rmtree(input_dir, ignore_errors=True)
-  if output["error"]:
-    return Result(output=output, added=[], removed=[])
+  return _result(output, collections.Counter())
+
+
+def _result(output: dict, baseline: collections.Counter) -> Result:
+  """The Result of output, with records counted against baseline's."""
+  actual = _record_counts(output)
   return Result(output=output,
-                added=_records(_record_counts(output)),
-                removed=[])
+                added=_records(actual - baseline),
+                removed=_records(baseline - actual))
 
 
 def run_mcf(*blocks: str, mode: str = "local") -> Result:
@@ -558,7 +559,10 @@ def assert_fails(
     message: str,
     handshake_error_types: tuple[str, ...] = ("GENERIC_ERROR",)
 ) -> None:
-  """The run failed with this error, reported it, and wrote no JSON-LD."""
+  """
+  The run failed with this error, reported it, and wrote no JSON-LD of its
+  own (records the shared files write on their own are allowed; see run()).
+  """
   error = result.error
   if error is None:
     pytest.fail("expected the run to fail, but it succeeded", pytrace=False)

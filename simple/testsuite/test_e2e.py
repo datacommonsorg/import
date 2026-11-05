@@ -60,7 +60,8 @@ ASPECTS = ("records", "report", "handshake", "error")
 # Known bugs, as xfails. Strict ones fail with XPASS once fixed, so the entry
 # must then be removed. Non-strict ones are for nondeterministic bugs.
 # Keys: (dataset, mode, aspect); "*" matches any value.
-_REPORT = "with use_multiprocessing, report.json leaves every file NOT_STARTED"
+_REPORT = ("report.json leaves every file NOT_STARTED: workers report to their"
+           " own files, never merged into it (b/580998027)")
 _SPLIT_NODE = ("node shards are cut without keeping a subject's triples"
                " together, so a node is split across shards")
 _GCS_CONFIG = (

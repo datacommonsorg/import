@@ -138,10 +138,8 @@ class FileImportsFailedError(Exception):
     super().__init__(f"{len(failures)} files failed to import:\n{details}")
 
 
-def _finish_imports(
-    files: list[File],
-    futures: list[concurrent.futures.Future],
-    merge: Callable[[ImportProcResult], None] | None = None) -> None:
+def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
+                    merge: Callable[[ImportProcResult], None]) -> None:
   """Waits for every file, then raises if any of them failed.
 
   Every file runs to completion even if others fail. Results are awaited in
@@ -156,8 +154,7 @@ def _finish_imports(
       failures.append(
           _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
       continue
-    if merge:
-      merge(result)
+    merge(result)
   _raise_for_failures(failures)
 
 
@@ -618,8 +615,7 @@ class Runner:
 
     all_errors = []
     with concurrent.futures.ThreadPoolExecutor(
-        max_workers=min(32,
-                        len(csv_files) or 1)) as executor:
+        max_workers=min(_MAX_WORKERS, len(csv_files))) as executor:
       for errors in executor.map(self._validate_single_file_headers, csv_files):
         all_errors.extend(errors)
 
