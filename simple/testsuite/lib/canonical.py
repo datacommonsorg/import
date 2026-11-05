@@ -24,6 +24,7 @@ report and handshake.
     {
       "records": [("<import folder>", "nodes" | "observations", {record}), ...],
       "report": {...},     # process/report.json, times and paths removed
+      "ingestion_report": {...},  # process/ingestion_report.json, times and paths removed
       "handshake": {...},  # ingestion-workflow record, or null
       "error": {...}       # exception raised by Runner.run(), or null
     }
