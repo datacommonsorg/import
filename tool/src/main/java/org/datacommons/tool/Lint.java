@@ -62,13 +62,17 @@ class Lint implements Callable<Integer> {
     args.doCoordinatesResolution = parent.doCoordinatesResolution;
     args.doStatChecks = parent.doStatChecks;
     args.samplePlaces = parent.samplePlaces;
-    args.numThreads = parent.numThreads;
     if (args.samplePlaces != null && !args.doStatChecks) {
       logger.warn(
           "Sample places entered without stat checks being enabled. Sample places will be unused.");
     }
     args.verbose = parent.verbose;
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
+    args.numThreads =
+        Args.resolveNumThreads(
+            parent.numThreads,
+            args.fileGroup.getCsvs().size(),
+            Runtime.getRuntime().availableProcessors());
     args.outputDir = parent.outputDir.toPath();
     args.generateSummaryReport = parent.generateSummaryReport;
     args.generateOptimizedGraph = parent.generateOptimizedGraph;
