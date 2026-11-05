@@ -31,6 +31,15 @@ class Args {
   public boolean checkMeasurementResult = false;
   public boolean includeRuntimeMetadata = true;
 
+  // Returns the number of threads to use for processing CSVs. A positive requested value is used
+  // as is. Otherwise, uses one thread per CSV file, up to the number of available processors.
+  static int resolveNumThreads(int requested, int numCsvFiles, int availableProcessors) {
+    if (requested > 0) {
+      return requested;
+    }
+    return Math.max(1, Math.min(numCsvFiles, availableProcessors));
+  }
+
   public String toString() {
     StringBuilder argStr = new StringBuilder();
     if (outputFiles != null) {
