@@ -58,8 +58,6 @@ class Nodes:
     self.provenances: dict[str, Provenance] = {}
     # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
-    self._used_provenance_ids = set()
-    self._used_source_ids = set()
     self.has_custom_mcf_nodes = False
     self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
     self.provenances[_DEFAULT_PROVENANCE.id] = _DEFAULT_PROVENANCE
@@ -128,13 +126,11 @@ class Nodes:
                      sources: dict[str, Source]) -> None:
     """Registers Provenance and Source nodes held by another `Nodes`.
 
-    Worker processes each build their own `Nodes`, so this is how metadata
-    crosses process boundaries in both directions: the coordinator's nodes
-    seed each worker, and each worker's nodes are merged back into the
-    coordinator. Every node except the built-in default provenance and source
-    goes through `register_source` or `register_provenance`, which also sets
-    `has_custom_mcf_nodes`. The defaults are skipped because every `Nodes`
-    already has them.
+    Worker processes each build their own `Nodes`, so the coordinator merges
+    each worker's nodes back with this. Every node except the built-in default
+    provenance and source goes through `register_source` or
+    `register_provenance`, which also sets `has_custom_mcf_nodes`. The
+    defaults are skipped because every `Nodes` already has them.
     """
     for src in sources.values():
       if src.id == _DEFAULT_SOURCE.id:
@@ -152,34 +148,20 @@ class Nodes:
                                source_id=prov.source_id,
                                properties=prov.properties)
 
-  @thread_safe
-  def used_metadata_ids(self) -> tuple[set[str], set[str]]:
-    """Returns copies of the provenance and source ids that imports used."""
-    return set(self._used_provenance_ids), set(self._used_source_ids)
+  def provenance_id(self, input_file: File) -> str:
+    """Returns the id of the provenance that config names for `input_file`.
 
-  @thread_safe
-  def mark_metadata_used(self, provenance_ids: set[str],
-                         source_ids: set[str]) -> None:
-    """Records provenance and source ids that imports in another `Nodes` used."""
-    self._used_provenance_ids.update(provenance_ids)
-    self._used_source_ids.update(source_ids)
-
-  @thread_safe
-  def provenance(self, input_file: File) -> Provenance:
+    The id comes from config alone, without registering or looking up a
+    Provenance node: MCF files define those, possibly in another worker
+    process, and `MetadataValidator` checks at the end of the run that every
+    referenced provenance is defined.
+    """
     prov_name = self.config.provenance_name(input_file)
     if not prov_name:
       raise ValueError(
           f"A provenance is absolutely required for file '{input_file.path}'. "
           f"Please specify the 'provenance' property in your config.json.")
-
-    prov = self.provenances.get(prov_name)
-    if not prov:
-      prov = self.register_provenance(prov_name)
-
-    self._used_provenance_ids.add(prov.id)
-    if prov.source_id:
-      self._used_source_ids.add(prov.source_id)
-    return prov
+    return _clean_metadata_id(prov_name)
 
   def _ensure_root_group(self) -> StatVarGroup:
     if sc.ROOT_SVG_ID not in self.groups:
@@ -195,24 +177,34 @@ class Nodes:
           sc.ROOT_SVG_ID)
     return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
 
-  def _is_unused_default_source(self, source: Source) -> bool:
-    return (self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and
-            _DEFAULT_SOURCE.id not in self._used_source_ids)
+  def _skips_defaults(self) -> bool:
+    """Whether to leave out the built-in default provenance and source.
 
-  def _is_unused_default_provenance(self, provenance: Provenance) -> bool:
+    They are left out once MCF defines metadata nodes, unless an `inputFiles`
+    entry names the default provenance. Deciding from config rather than from
+    the imports that ran gives the same answer whether files are imported in
+    threads or in worker processes.
+    """
     return (self.has_custom_mcf_nodes and
-            provenance.id == _DEFAULT_PROVENANCE.id and
-            _DEFAULT_PROVENANCE.id not in self._used_provenance_ids)
+            _DEFAULT_PROVENANCE.id not in self._configured_provenance_ids())
+
+  def _configured_provenance_ids(self) -> set[str]:
+    """The ids of the provenances that `inputFiles` entries name."""
+    return {
+        _clean_metadata_id(entry.get("provenance", ""))
+        for entry in self.config.data.get("inputFiles", [])
+    }
 
   @thread_safe
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
     result: dict[str, list[Triple]] = defaultdict(list)
+    skips_defaults = self._skips_defaults()
     for source in self.sources.values():
-      if self._is_unused_default_source(source):
+      if skips_defaults and source.id == _DEFAULT_SOURCE.id:
         continue
       result[_provenance_dir(source.provenance_id)].extend(source.triples())
     for provenance in self.provenances.values():
-      if self._is_unused_default_provenance(provenance):
+      if skips_defaults and provenance.id == _DEFAULT_PROVENANCE.id:
         continue
       prov_id = provenance.provenance_id or provenance.id
       result[_provenance_dir(prov_id)].extend(provenance.triples())
