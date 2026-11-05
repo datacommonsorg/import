@@ -1,0 +1,27 @@
+# Coverage config for the preprocessor, used by `./run_test.sh -c`.
+#
+# The testsuite runs the preprocessor in "production" mode, which imports
+# files in a ProcessPoolExecutor. `concurrency = multiprocessing` makes
+# coverage start in each worker process, and `parallel = True` makes every
+# process write its own .coverage.* file, which pytest-cov combines at the end.
+[run]
+source =
+    stats
+    util
+    kg_util
+    tools
+omit =
+    */tests/*
+    *_test.py
+    *_pb2.py
+concurrency =
+    multiprocessing
+    thread
+parallel = True
+# Workers that are terminated (e.g. pool shutdown) still save their data.
+sigterm = True
+
+[report]
+skip_empty = True
+show_missing = False
+precision = 1

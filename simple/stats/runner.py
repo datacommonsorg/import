@@ -18,7 +18,6 @@ from dataclasses import dataclass
 import json
 import logging
 import os
-import pickle
 import threading
 import traceback
 from typing import Callable, Optional
@@ -50,7 +49,7 @@ from util.filesystem import join_path
 from util.filesystem import Store
 
 _ARCHIVES_DIR_NAME = "archives"
-# Upper bound on the threads or worker processes that import one stage.
+# Upper bound on the threads or worker processes that import files.
 _MAX_WORKERS = 32
 
 
@@ -133,7 +132,7 @@ class _FileFailure:
 
 
 class FileImportsFailedError(Exception):
-  """Raised once a stage is done if several of its files failed to import."""
+  """Raised once every file has run if several of them failed to import."""
 
   def __init__(self, failures: list[_FileFailure]) -> None:
     self.failures = failures
@@ -142,11 +141,11 @@ class FileImportsFailedError(Exception):
     super().__init__(f"{len(failures)} files failed to import:\n{details}")
 
 
-def _finish_stage(
+def _finish_imports(
     files: list[File],
     futures: list[concurrent.futures.Future],
     merge: Callable[[ImportProcResult], None] | None = None) -> None:
-  """Waits for every file of a stage, then raises if any of them failed.
+  """Waits for every file, then raises if any of them failed.
 
   Every file runs to completion even if others fail. Results are awaited in
   submission order, so passing each successful one to `merge` is
@@ -183,14 +182,12 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
 
 
 def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
-                            args: _WorkerArgs,
-                            metadata_seed: bytes) -> ImportProcResult:
+                            args: _WorkerArgs) -> ImportProcResult:
   """Imports one file in a worker process and returns its results.
 
-  `metadata_seed` holds the coordinator's Provenance and Source nodes as of
-  the start of the stage (see `Runner._metadata_seed`). Seeding them lets a CSV
-  worker find the provenance (and URL) that an MCF file in the same import
-  defines. All of the worker's nodes are returned, seeded ones included.
+  The worker starts from an empty `Nodes`: a CSV needs only its provenance id,
+  which comes from config. The Provenance and Source nodes that an MCF file
+  defines are returned for the coordinator to merge.
   """
   with create_store(input_dir_path) as input_store_obj, \
        create_store(args.output_dir_path) as output_store_obj, \
@@ -202,8 +199,6 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
 
     config = Config(json.loads(args.config_json_str))
     nodes = Nodes(config=config)
-    seed_provenances, seed_sources = pickle.loads(metadata_seed)
-    nodes.merge_metadata(seed_provenances, seed_sources)
     graph_writer = JsonLdStreamWriter(output_store,
                                       args.import_names,
                                       nodes,
@@ -643,21 +638,8 @@ class Runner:
           "\n".join(formatted_errors))
       raise ValueError(consolidated_msg)
 
-  def _run_threaded_imports(self, mcf_files: list[File],
-                            csv_files: list[File]) -> None:
-    """Runs MCF imports followed by CSV imports using a thread pool."""
-    # Import the MCF group to completion before starting the CSV group.
-    # MCF declares the provenance and source nodes that CSV importers then
-    # look up by name; if a CSV got there first, it would not find its
-    # provenance. Files within each group still run concurrently.
-    self._run_thread_stage(mcf_files)
-    self._check_csv_provenances_defined(csv_files)
-    self._run_thread_stage(csv_files)
-
-  def _run_thread_stage(self, files: list[File]) -> None:
-    """Imports `files` on a thread pool; see `_finish_stage` for failures."""
-    if not files:
-      return
+  def _run_threaded_imports(self, files: list[File]) -> None:
+    """Imports `files` on a thread pool; see `_finish_imports` for failures."""
     for file in files:
       self.config._per_file_config(file)
     with concurrent.futures.ThreadPoolExecutor(
@@ -665,16 +647,12 @@ class Runner:
       futures = [
           executor.submit(self._run_single_import, file) for file in files
       ]
-      _finish_stage(files, futures)
+      _finish_imports(files, futures)
 
-  def _run_multiprocess_imports(self, mcf_files: list[File],
-                                csv_files: list[File]) -> None:
-    """Runs MCF imports followed by CSV imports across a process pool.
+  def _run_multiprocess_imports(self, files: list[File]) -> None:
+    """Imports `files` in worker processes and merges each result.
 
-    The stages are ordered as in `_run_threaded_imports`: the MCF stage is
-    imported and merged into `self.nodes` before the CSV stage starts, so CSV
-    workers are seeded with the Provenance and Source nodes the MCF files
-    define.
+    See `_finish_imports` for the merge order and for failures.
     """
     worker_args = _WorkerArgs(
         output_dir_path=self.output_dir.full_path(),
@@ -683,69 +661,13 @@ class Runner:
         config_json_str=json.dumps(self.config.data),
         jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
     )
-    num_processes = min(_MAX_WORKERS, max(len(mcf_files), len(csv_files)))
     with concurrent.futures.ProcessPoolExecutor(
-        max_workers=num_processes) as executor:
-      self._run_process_stage(executor, mcf_files, worker_args)
-      self._check_csv_provenances_defined(csv_files)
-      self._run_process_stage(executor, csv_files, worker_args)
-
-  def _check_csv_provenances_defined(self, csv_files: list[File]) -> None:
-    """Fails if MCF does not define the provenance of any of `csv_files`.
-
-    Runs once the MCF stage is done, so `self.nodes` holds every Provenance
-    that MCF defines, and before any CSV is imported. The error names every
-    undefined provenance with the files that reference it, and the handshake
-    gets one MISSING_PROVENANCE error per file.
-
-    Raises:
-      ValueError: If any provenance is undefined.
-    """
-    files_by_provenance: dict[str, list[str]] = defaultdict(list)
-    for file in csv_files:
-      prov_name = self.config.provenance_name(file)
-      # A file with no provenance in config fails on its own, with that error.
-      if prov_name and not self.nodes.find_provenance(prov_name):
-        files_by_provenance[prov_name].append(file.path)
-    if not files_by_provenance:
-      return
-    message = undefined_provenances_message(files_by_provenance)
-    self._failure_errors = [
-        FileValidationError(file=path,
-                            error_type=ValidationErrorType.MISSING_PROVENANCE,
-                            error_message=message)
-        for paths in files_by_provenance.values()
-        for path in paths
-    ]
-    raise ValueError(message)
-
-  def _run_process_stage(self, executor: concurrent.futures.Executor,
-                         files: list[File], worker_args: _WorkerArgs) -> None:
-    """Imports `files` in worker processes and merges each result.
-
-    See `_finish_stage` for the merge order and for failures.
-    """
-    if not files:
-      return
-    metadata_seed = self._metadata_seed()
-    futures = [
-        executor.submit(_run_single_import_proc, file.path,
-                        file._store.root_path, worker_args, metadata_seed)
-        for file in files
-    ]
-    _finish_stage(files, futures, merge=self._merge_worker_result)
-
-  def _metadata_seed(self) -> bytes:
-    """Snapshots the coordinator's Provenance and Source nodes for one stage.
-
-    The snapshot must be pickled here, under the `Nodes` lock: the executor
-    pickles `submit()` arguments lazily, on its queue feeder thread, while
-    this thread is already merging finished workers' results into these same
-    dicts. Passing the live dicts could hand workers a torn snapshot or fail
-    with "dictionary changed size during iteration".
-    """
-    with self.nodes.lock:
-      return pickle.dumps((self.nodes.provenances, self.nodes.sources))
+        max_workers=min(_MAX_WORKERS, len(files))) as executor:
+      futures = [
+          executor.submit(_run_single_import_proc, file.path,
+                          file._store.root_path, worker_args) for file in files
+      ]
+      _finish_imports(files, futures, merge=self._merge_worker_result)
 
   def _run_all_data_imports(self):
     """Orchestrates file scanning, thread-pool configuration, and file ingestion."""
@@ -769,10 +691,41 @@ class Runner:
       return
     logging.info("Importing %d files (%d MCF, %d CSV)...",
                  self._total_files_count, len(mcf_files), len(csv_files))
+    # MCF and CSV files are imported together: a CSV needs nothing from MCF.
+    files = mcf_files + csv_files
     if not self.use_multiprocessing:
-      self._run_threaded_imports(mcf_files, csv_files)
+      self._run_threaded_imports(files)
     else:
-      self._run_multiprocess_imports(mcf_files, csv_files)
+      self._run_multiprocess_imports(files)
+    self._check_csv_provenances_defined(csv_files)
+
+  def _check_csv_provenances_defined(self, csv_files: list[File]) -> None:
+    """Fails if MCF does not define the provenance of any of `csv_files`.
+
+    Runs once every file is imported, so `self.nodes` holds every Provenance
+    that MCF defines, and before any node is written or validated. The error
+    names every undefined provenance with the files that reference it, and the
+    handshake gets one MISSING_PROVENANCE error per file.
+
+    Raises:
+      ValueError: If any provenance is undefined.
+    """
+    files_by_provenance: dict[str, list[str]] = defaultdict(list)
+    for file in csv_files:
+      prov_name = self.config.provenance_name(file)
+      if not self.nodes.find_provenance(prov_name):
+        files_by_provenance[prov_name].append(file.path)
+    if not files_by_provenance:
+      return
+    message = undefined_provenances_message(files_by_provenance)
+    self._failure_errors = [
+        FileValidationError(file=path,
+                            error_type=ValidationErrorType.MISSING_PROVENANCE,
+                            error_message=message)
+        for paths in files_by_provenance.values()
+        for path in paths
+    ]
+    raise ValueError(message)
 
   def _merge_worker_result(self, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` into the coordinator."""

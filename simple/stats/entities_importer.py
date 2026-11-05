@@ -79,7 +79,7 @@ class EntitiesImporter(Importer):
       errors = self.validate_headers()
       if errors:
         raise ValueError("\n".join(e.error_message for e in errors))
-      self.provenance_id = self.nodes.provenance(self.input_file).id
+      self.provenance_id = self.nodes.provenance_id(self.input_file)
       self._read_csv()
       self._drop_ignored_columns()
       self._write_row_entity_triples()

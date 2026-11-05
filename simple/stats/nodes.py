@@ -111,10 +111,8 @@ class Nodes:
                      sources: dict[str, Source]) -> None:
     """Registers Provenance and Source nodes held by another `Nodes`.
 
-    Worker processes each build their own `Nodes`, so this is how metadata
-    crosses process boundaries in both directions: the coordinator's nodes
-    seed each worker, and each worker's nodes are merged back into the
-    coordinator.
+    Worker processes each build their own `Nodes`, so the coordinator merges
+    each worker's nodes back with this.
     """
     for src in sources.values():
       self.register_source(id=src.id,
@@ -137,24 +135,22 @@ class Nodes:
     return (self.provenances.get(prov_name) or
             self.provenances.get(_clean_metadata_id(prov_name)))
 
-  @thread_safe
-  def provenance(self, input_file: File) -> Provenance:
-    """Returns the provenance that config names for `input_file`.
+  def provenance_id(self, input_file: File) -> str:
+    """Returns the id of the provenance that config names for `input_file`.
+
+    The id comes from config alone, without looking up a Provenance node: MCF
+    files define those, possibly in another worker process, and the runner
+    checks that MCF defines every provenance that a CSV uses.
 
     Raises:
-      ValueError: If config names no provenance, or MCF does not define it.
+      ValueError: If config names no provenance.
     """
     prov_name = self.config.provenance_name(input_file)
     if not prov_name:
       raise ValueError(
           f"A provenance is absolutely required for file '{input_file.path}'. "
           f"Please specify the 'provenance' property in your config.json.")
-
-    prov = self.find_provenance(prov_name)
-    if not prov:
-      raise ValueError(
-          undefined_provenances_message({prov_name: [input_file.path]}))
-    return prov
+    return _clean_metadata_id(prov_name)
 
   def _ensure_root_group(self) -> StatVarGroup:
     if sc.ROOT_SVG_ID not in self.groups:
@@ -169,17 +165,6 @@ class Nodes:
           sc.DEFAULT_CUSTOM_ROOT_SVG_ID, sc.DEFAULT_CUSTOM_ROOT_SVG_NAME,
           sc.ROOT_SVG_ID)
     return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
-
-  @thread_safe
-  def get_provenance_urls(self) -> dict[str, str]:
-    prov_urls = {}
-    for prov in self.provenances.values():
-      prov_id = strip_namespace(prov.id)
-      prov_urls[prov_id] = prov.url
-      prov_urls[prov.id] = prov.url
-      if prov.name:
-        prov_urls[prov.name] = prov.url
-    return prov_urls
 
   @thread_safe
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:

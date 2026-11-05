@@ -164,7 +164,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 10,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Trip",
@@ -184,7 +183,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:unit": {
               "@id": "dcid:Year"
             },
@@ -206,7 +204,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 169000000,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person_Female",
@@ -225,7 +222,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 1200,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person_Female",
@@ -244,7 +240,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:unit": {
               "@id": "dcid:Year"
             },
@@ -266,7 +261,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 168000000,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person_Female",
@@ -285,7 +279,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 34500000,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person_Female",
@@ -307,7 +300,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 7,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Trip",

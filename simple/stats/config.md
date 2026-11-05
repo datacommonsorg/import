@@ -86,8 +86,8 @@ url: "https://source1.example.org/dataset"
 source: dcid:Source1
 ```
 
-If a CSV's provenance is not defined in MCF, the import fails before any CSV is
-imported, with one error that lists every undefined provenance and the files
+If a CSV's provenance is not defined in MCF, the import fails once every file
+is imported, with one error that lists every undefined provenance and the files
 that use it.
 
 #### `columnMappings`

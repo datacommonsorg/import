@@ -136,9 +136,11 @@ public class McfChecker {
   // Returns true if there was no sanity error found.
   private boolean check() throws IOException, InterruptedException {
     boolean foundFailure = false;
-    for (String nodeId : graph.getNodesMap().keySet()) {
+    // Reading nodes directly avoids copying the whole graph for every node.
+    for (Map.Entry<String, Mcf.McfGraph.PropertyValues> entry : graph.getNodesMap().entrySet()) {
       nodeFailure = false;
-      Mcf.McfGraph.PropertyValues node = graph.toBuilder().getNodesOrThrow(nodeId);
+      String nodeId = entry.getKey();
+      Mcf.McfGraph.PropertyValues node = entry.getValue();
       checkNode(nodeId, node);
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
         checkTemplateNode(nodeId, node);
