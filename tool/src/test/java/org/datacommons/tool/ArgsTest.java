@@ -27,13 +27,24 @@ public class ArgsTest {
   }
 
   @Test
+  public void resolveNumThreads_explicitValueIsNotCapped() {
+    assertEquals(32, Args.resolveNumThreads(32, 42, 64));
+  }
+
+  @Test
   public void resolveNumThreads_defaultUsesOneThreadPerCsv() {
-    assertEquals(16, Args.resolveNumThreads(0, 16, 32));
+    assertEquals(12, Args.resolveNumThreads(0, 12, 32));
   }
 
   @Test
   public void resolveNumThreads_defaultIsCappedByAvailableProcessors() {
-    assertEquals(32, Args.resolveNumThreads(0, 42, 32));
+    assertEquals(8, Args.resolveNumThreads(0, 42, 8));
+  }
+
+  @Test
+  public void resolveNumThreads_defaultIsCappedByMaxDefaultNumThreads() {
+    assertEquals(16, Args.resolveNumThreads(0, 42, 64));
+    assertEquals(16, Args.resolveNumThreads(0, 16, 32));
   }
 
   @Test

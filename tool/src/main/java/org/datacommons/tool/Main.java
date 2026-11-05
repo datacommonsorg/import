@@ -132,7 +132,7 @@ public class Main {
           "Specifies the number of concurrent threads used for processing CSVs. "
               + "You need multiple CSVs to take advantage of concurrent processing. "
               + "Defaults to 0, which uses one thread per CSV file, up to the number of "
-              + "available processors.")
+              + "available processors (at most 16).")
   public int numThreads;
 
   @CommandLine.Option(
