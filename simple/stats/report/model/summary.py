@@ -52,9 +52,11 @@ class ExecutionMetadata(BaseModel):
   workflowExecutionId: str = Field(
       description="Ingestion workflow execution ID")
   mode: RunMode = Field(description="How the preprocessor was run")
-  status: RunStatus = Field(description="Outcome of the preprocessor run")
+  status: RunStatus | None = Field(
+      default=None, description="Outcome of the preprocessor run")
   startTime: str = Field(description="ISO-8601 UTC time the run started")
-  endTime: str = Field(description="ISO-8601 UTC time the run ended")
+  endTime: str = Field(default="",
+                       description="ISO-8601 UTC time the run ended")
   folderNames: list[str] = Field(
       default_factory=list, description="Import folders requested for the run")
   outputPath: str = Field(default="",

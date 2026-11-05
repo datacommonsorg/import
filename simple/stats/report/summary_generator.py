@@ -53,7 +53,11 @@ class SummaryGenerator:
         runs outside the workflow (local runs and tests).
     """
     self._workflow_execution_id = workflow_execution_id or ""
-    self._execution_metadata: dict | None = None
+    # The report's run block, created by set_execution_metadata() and
+    # completed by build_report().
+    self._execution_metadata: ExecutionMetadata | None = None
+    # Where the report is written. Not part of the report itself.
+    self._output_dir: Dir | None = None
     # Provenance metadata, keyed by provenance DCID.
     self._provenance_data: dict[str, dict] = {}
     # TODO: Add containers for input files, merged FileSummary counts per
@@ -69,14 +73,16 @@ class SummaryGenerator:
     Args:
       start_time: ISO-8601 UTC time the run started.
       folder_names: Import folders requested for the run.
-      output_dir: The run's output dir. The report is written under it, in
-        preprocessor_reports/<workflowExecutionId>/.
+      output_dir: The run's output directory containing the JSON-LD shards
+        and summary report.
     """
-    self._execution_metadata = {
-        "start_time": start_time,
-        "folder_names": list(folder_names),
-        "output_dir": output_dir,
-    }
+    self._execution_metadata = ExecutionMetadata(
+        workflowExecutionId=self._workflow_execution_id,
+        mode=RunMode.INGEST,
+        startTime=start_time,
+        folderNames=list(folder_names),
+    )
+    self._output_dir = output_dir
 
   def record_input_file(self, folder: str, provenance: list[str],
                         file_type: str) -> None:
@@ -145,21 +151,15 @@ class SummaryGenerator:
     if self._execution_metadata is None:
       raise ValueError("set_execution_metadata() was not called.")
     metadata = self._execution_metadata
+    metadata.status = status
+    metadata.endTime = end_time
     # Folder the report is written to, e.g.
     # gs://<bucket>/.../datacommons/preprocessor_reports/<workflowExecutionId>.
-    output_path = metadata["output_dir"].full_path(self._report_dir_name())
+    metadata.outputPath = self._output_dir.full_path(self._report_dir_name())
     # TODO: Add file, provenance and node counts once they are recorded.
     return IngestionReport(
-        run=ExecutionMetadata(
-            workflowExecutionId=self._workflow_execution_id,
-            mode=RunMode.INGEST,
-            status=status,
-            startTime=metadata["start_time"],
-            endTime=end_time,
-            folderNames=metadata["folder_names"],
-            outputPath=output_path,
-        ),
-        folders=[Folder(folderName=name) for name in metadata["folder_names"]],
+        run=metadata,
+        folders=[Folder(folderName=name) for name in metadata.folderNames],
     )
 
   def _report_dir_name(self) -> str:
@@ -189,8 +189,7 @@ class SummaryGenerator:
     """
     try:
       report = self.build_report(status, end_time)
-      report_dir = self._execution_metadata["output_dir"].open_dir(
-          self._report_dir_name())
+      report_dir = self._output_dir.open_dir(self._report_dir_name())
       report_file = report_dir.open_file(constants.INGESTION_REPORT_FILE_NAME)
       report_file.write(report.model_dump_json(indent=2))
       return report_file
