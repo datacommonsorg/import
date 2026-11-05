@@ -118,6 +118,7 @@ class Nodes:
       self.register_source(id=src.id,
                            name=src.name,
                            url=src.url,
+                           properties=src.properties,
                            provenance_id=src.provenance_id)
     for prov in provenances.values():
       self.register_provenance(id=prov.id,
