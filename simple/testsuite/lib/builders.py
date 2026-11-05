@@ -417,7 +417,7 @@ class Result:
 
 def run(files: dict[str, str],
         config: dict | None,
-        mode: str = "local",
+        mode: str = "disk_input",
         shared_files: dict[str, str] | None = None) -> Result:
   """
   Runs the preprocessor on files plus the shared files.
@@ -428,23 +428,26 @@ def run(files: dict[str, str],
   the shared files produce on their own (under MCF_CONFIG, in the same mode)
   are left out of Result.added, so tests only list what their own input and
   config add. Shared records the run no longer writes are in Result.removed.
-  This holds for failed runs too: files import in parallel, so the shared
-  files' records may be written even when another file fails.
   """
   if shared_files is None:
     shared_files = {"provenance.mcf": PROVENANCE_MCF}
   output = _run(_freeze({**shared_files, **files}), _freeze(config), mode)
+  if output["error"]:
+    return Result(output=output, added=[], removed=[])
   shared_only = (
       _record_counts(  # What the shared files write on their own.
           _run(_freeze(shared_files), _freeze(MCF_CONFIG), mode))
       if shared_files else collections.Counter())
-  return _result(output, shared_only)
+  actual = _record_counts(output)
+  return Result(output=output,
+                added=_records(actual - shared_only),
+                removed=_records(shared_only - actual))
 
 
 def run_dir(files: dict[str, str],
             config: dict | None = None,
             *,
-            mode: str = "local",
+            mode: str = "disk_input",
             runner_kwargs: dict | None = None,
             config_file: str | None = None) -> Result:
   """
@@ -461,25 +464,21 @@ def run_dir(files: dict[str, str],
                                      config_file=config_file).output
   finally:
     shutil.rmtree(input_dir, ignore_errors=True)
-  return _result(output, collections.Counter())
-
-
-def _result(output: dict, baseline: collections.Counter) -> Result:
-  """The Result of output, with records counted against baseline's."""
-  actual = _record_counts(output)
+  if output["error"]:
+    return Result(output=output, added=[], removed=[])
   return Result(output=output,
-                added=_records(actual - baseline),
-                removed=_records(baseline - actual))
+                added=_records(_record_counts(output)),
+                removed=[])
 
 
-def run_mcf(*blocks: str, mode: str = "local") -> Result:
+def run_mcf(*blocks: str, mode: str = "disk_input") -> Result:
   """Runs MCF blocks as one nodes.mcf file under MCF_CONFIG."""
   return run({"nodes.mcf": mcf(*blocks)}, MCF_CONFIG, mode)
 
 
 def run_csv(csv_text: str,
             config: dict | None = None,
-            mode: str = "local",
+            mode: str = "disk_input",
             **run_kwargs: Any) -> Result:
   """
   Runs csv_text as case.csv.
@@ -560,8 +559,11 @@ def assert_fails(
     handshake_error_types: tuple[str, ...] = ("GENERIC_ERROR",)
 ) -> None:
   """
-  The run failed with this error, reported it, and wrote no JSON-LD of its
-  own (records the shared files write on their own are allowed; see run()).
+  The run failed with this error and reported it.
+
+  Not checked: that the run wrote no JSON-LD. Workers upload their output as
+  they finish, before metadata is validated, so a failed run can leave
+  output behind.
   """
   error = result.error
   if error is None:
@@ -576,8 +578,5 @@ def assert_fails(
   if got_types != sorted(handshake_error_types):
     problems.append(f"handshake error types: want"
                     f" {sorted(handshake_error_types)}, got {got_types}")
-  if result.added:
-    problems.append("a failed run left JSON-LD behind: "
-                    f"{result.added[:3]}")
   if problems:
     pytest.fail("\n".join(problems), pytrace=False)

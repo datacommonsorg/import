@@ -11,7 +11,7 @@ under `unit/`.
 cd simple
 python3 -m pytest testsuite/                               # everything, in parallel (-n auto is the default; -n 0 for serial)
 python3 -m pytest testsuite/test_observations.py -k about  # one table
-python3 -m pytest testsuite/test_e2e.py --modes=production # one execution mode
+python3 -m pytest testsuite/test_e2e.py --modes=gcs_input # one execution mode
 python3 -m pytest testsuite/unit/                          # unit tests only
 python3 -m pytest testsuite/test_e2e.py --update-expected -n 0  # rewrite expected.json, then review the diff
 ```
@@ -42,8 +42,8 @@ For a refactor or performance PR, `test_e2e.py` passing with every
 
 Execution modes (`lib/run.py`):
 
-- `local`: input on local disk. Used by every small test.
-- `production`: input on (fake) GCS, as the ingestion workflow runs it.
+- `disk_input`: input on local disk. Used by every small test.
+- `gcs_input`: input on (fake) GCS, as the ingestion workflow runs it.
 - `tiny_chunks`: with chunk and shard sizes shrunk so that every boundary is
   crossed even by tiny inputs.
 

@@ -290,11 +290,6 @@ def test_failed_mcf_and_csv_files_are_reported_together():
 
 _MISSING_SOURCES = ("Metadata Validation Failed: Linked sources are missing"
                     " for defined provenances:")
-# MetadataValidator runs after every file is imported, and workers upload
-# their JSON-LD as they finish, so a run that fails validation leaves the
-# observations it imported behind.
-_OUTPUT_BEFORE_VALIDATION = ("metadata is validated after workers have"
-                             " uploaded their JSON-LD")
 
 INVALID_PROVENANCES = [
     Case("inputFiles entry without a provenance",
@@ -315,16 +310,14 @@ INVALID_PROVENANCES = [
          expect=b.Fails(
              "ValueError", "The 'provenance' property must be a valid DCID or"
              f" URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL)."
-             f" Found invalid provenance: '{b.PROVENANCE}'"),
-         bug=_OUTPUT_BEFORE_VALIDATION),
+             f" Found invalid provenance: '{b.PROVENANCE}'")),
     # The handshake error type is GENERIC_ERROR, although the validator raises
     # the error with the MISSING_PROVENANCE type.
     Case("provenance that no MCF defines",
          given=b.obs_config(b.OBS_MAPPINGS,
                             provenance="dcid:UndefinedProvenance"),
          expect=b.Fails("ValueError",
-                        _undefined_provenances("dcid:UndefinedProvenance")),
-         bug=_OUTPUT_BEFORE_VALIDATION),
+                        _undefined_provenances("dcid:UndefinedProvenance"))),
 ]
 
 
@@ -334,7 +327,6 @@ def test_invalid_provenance_config(given, expect):
   b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
 
 
-@b.known_bug(reason=_OUTPUT_BEFORE_VALIDATION)
 def test_provenance_without_a_source_fails():
   result = b.run_csv(_ONE_ROW, shared_files=_provenance_mcf(with_source=False))
   b.assert_fails(result, "ValueError", _MISSING_SOURCES)

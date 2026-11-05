@@ -28,7 +28,7 @@ Every dataset runs in every execution mode (lib/run.py), and each aspect of
 the output is its own test, so a failure names the dataset, the mode and what
 differs:
 
-  test_e2e[kitchen_sink-production-records]
+  test_e2e[kitchen_sink-gcs_input-records]
 
 Modes must not change the output.
 
@@ -75,7 +75,7 @@ KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {
     ("multi_import", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("kitchen_sink", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("config_file_driven", "tiny_chunks", "records"): (_SPLIT_NODE, True),
-    ("config_file_driven", "production", "*"): (_GCS_CONFIG, True),
+    ("config_file_driven", "gcs_input", "*"): (_GCS_CONFIG, True),
 }
 
 
@@ -131,7 +131,7 @@ def _expected_path(dataset: str) -> str:
 
 
 def _write_expected(dataset: str) -> None:
-  reference = _output(dataset, "production")
+  reference = _output(dataset, "gcs_input")
   expected = {
       "records": _records_view(dataset, reference["records"]),
       "report": reference["report"],
@@ -184,7 +184,7 @@ def _actual(dataset: str, output: dict, aspect: str):
 
 
 def test_e2e(dataset: str, mode: str, aspect: str, update_expected: bool):
-  if update_expected and mode == "production" and aspect == ASPECTS[0]:
+  if update_expected and mode == "gcs_input" and aspect == ASPECTS[0]:
     _write_expected(dataset)
   if not os.path.exists(_expected_path(dataset)):
     pytest.fail(f"{_expected_path(dataset)} is missing; generate it with"

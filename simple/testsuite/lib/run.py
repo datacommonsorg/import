@@ -19,12 +19,14 @@ directory (config.json plus data files), runs Runner in the requested mode
 and returns the canonical output (see canonical.py). Runner always writes to
 a fake GCS, as in the ingestion workflow; the output is read back from there.
 
-Modes change *how* the preprocessor runs, never *what* it must produce:
+Modes change *how* the preprocessor runs, never *what* it must produce. Every
+mode imports files in worker processes, as in production:
 
-  local         input on local disk. The default.
-  production    input on (fake) GCS: how the ingestion workflow runs it.
-  tiny_chunks   with shard and CSV chunk sizes shrunk to 1-2 so that every
-                chunk/shard boundary is crossed even by tiny inputs.
+  disk_input    input on local disk. The default.
+  gcs_input     input on (fake) GCS: how the ingestion workflow runs it.
+  tiny_chunks   input on local disk, with shard and CSV chunk sizes shrunk to
+                1-2 so that every chunk/shard boundary is crossed even by tiny
+                inputs.
 """
 
 import contextlib
@@ -75,8 +77,8 @@ class Mode:
 
 MODES = {
     m.name: m for m in [
-        Mode("local"),
-        Mode("production", gcs_input=True),
+        Mode("disk_input"),
+        Mode("gcs_input", gcs_input=True),
         Mode("tiny_chunks", patches=_tiny_chunks),
     ]
 }
@@ -92,7 +94,7 @@ class RunResult:
 
 
 def run_preprocessor(input_dir: str,
-                     mode: Mode | str = "local",
+                     mode: Mode | str = "disk_input",
                      runner_kwargs: dict | None = None,
                      config_file: str | None = None) -> RunResult:
   """
@@ -123,7 +125,7 @@ class _Paths:
 
   local_out: str  # Local copy of the output, downloaded after the run.
   gcs_root: str  # This run's prefix on the fake GCS.
-  input: str  # What Runner reads: local, or on GCS in production mode.
+  input: str  # What Runner reads: local, or on GCS in gcs_input mode.
 
   @property
   def output(self) -> str:
