@@ -18,6 +18,8 @@ import dataclasses
 from tools.regression.comparison.categories import Findings
 from tools.regression.comparison.metrics import compare_health
 from tools.regression.comparison.metrics import compare_perf
+from tools.regression.comparison.metrics import run_failures
+from tools.regression.comparison.metrics import RunFailure
 from tools.regression.comparison.metrics import Thresholds
 from tools.regression.execution.measure import RunMetrics
 from tools.regression.execution.run import SideRuns
@@ -35,7 +37,7 @@ METRICS = RunMetrics(exit_code=0,
 
 
 def side(*metrics: RunMetrics) -> SideRuns:
-  return SideRuns("code", "/out", None, metrics, "/log")
+  return SideRuns("code", "/out", None, metrics, "/side/run-1/preprocessor.log")
 
 
 def test_perf_regression_beyond_threshold():
@@ -94,3 +96,34 @@ def test_fewer_errors_is_not_a_finding():
   noisy = dataclasses.replace(METRICS, error_lines=3)
   compare_health(side(noisy), side(METRICS), findings)
   assert not any(findings.counts.values())
+
+
+def test_successful_runs_are_not_failures():
+  assert run_failures(side(METRICS), side(METRICS, METRICS)) == []
+
+
+def test_both_sides_failing_are_both_failures():
+  crashed = dataclasses.replace(METRICS, exit_code=1)
+  assert run_failures(side(crashed), side(crashed)) == [
+      RunFailure("baseline", 1, 1, False, "/side/run-1/preprocessor.log"),
+      RunFailure("candidate", 1, 1, False, "/side/run-1/preprocessor.log"),
+  ]
+
+
+def test_failure_in_a_later_repeat_is_a_failure():
+  crashed = dataclasses.replace(METRICS, exit_code=1)
+  assert run_failures(side(METRICS), side(METRICS, crashed)) == [
+      RunFailure("candidate", 2, 1, False, "/side/run-2/preprocessor.log"),
+  ]
+
+
+def test_timeout_is_a_failure():
+  killed = dataclasses.replace(METRICS, exit_code=-9, timed_out=True)
+  failures = run_failures(side(killed), side(METRICS))
+  assert [(f.side, f.timed_out) for f in failures] == [("baseline", True)]
+  assert "timed out" in failures[0].describe()
+
+
+def test_reused_output_without_metrics_is_not_a_failure():
+  reused = SideRuns("code", "/out", None, (), None)
+  assert run_failures(reused, reused) == []

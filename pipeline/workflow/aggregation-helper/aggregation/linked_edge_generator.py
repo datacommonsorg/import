@@ -140,7 +140,17 @@ class LinkedEdgeGenerator:
     def run_linked_contained_in_place(
         self, import_names: List[str] = None
     ) -> Optional[bigquery.job.QueryJob]:
-        """Expands place containment hierarchies."""
+        """Expands place containment hierarchies.
+
+        The closure is seeded from the imports' own containedInPlace edges (those
+        decide which subjects get linked edges and which generated provenance the
+        rows carry) but is traversed over every containedInPlace edge in the
+        database, regardless of provenance. Entities that other imports place
+        into the graph (e.g. a VehicleCrashIncident contained in a County) only
+        own their first hop; the County -> State -> Country -> ... hops come from
+        the Place import. Restricting the traversal to the import's provenance
+        would stop the closure after that first hop.
+        """
         if not import_names:
             return None
 
@@ -152,10 +162,17 @@ class LinkedEdgeGenerator:
         prov_expr = get_sql_generated_provenance_expr(self.is_base_dc, "provenance")
 
         query = f"""  # nosec
-        -- Pull base edges needed for containedInPlace aggregation
+        -- Seed edges: the imports' own containedInPlace edges.
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_contained_in_place` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'containedInPlace'{provenance_filter}");
+
+        -- Traversal edges: the full containedInPlace hierarchy across all provenances.
+        -- The same (subject, object) pair can exist under several provenances; DISTINCT keeps
+        -- the recursion from multiplying paths.
+        CREATE OR REPLACE TEMPORARY TABLE `temp_hierarchy_contained_in_place` AS
+        SELECT DISTINCT subject_id, object_id FROM EXTERNAL_QUERY("{self.executor.connection_id}",
+          "SELECT subject_id, object_id FROM Edge WHERE predicate = 'containedInPlace'");
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_type_of` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
@@ -172,6 +189,7 @@ class LinkedEdgeGenerator:
 
         CREATE OR REPLACE TEMPORARY TABLE NewEdges AS
         WITH RECURSIVE Ancestors AS (
+          -- Base case: the imports' own edges, carrying their provenance.
           SELECT
             subject_id,
             object_id AS ancestor_place,
@@ -181,6 +199,7 @@ class LinkedEdgeGenerator:
             temp_contained_in_place
           UNION ALL
 
+          -- Recursive case: climb through the whole hierarchy, keeping the seed's provenance.
           SELECT
             a.subject_id,
             t.object_id AS ancestor_place,
@@ -189,7 +208,7 @@ class LinkedEdgeGenerator:
           FROM
             Ancestors AS a
           JOIN
-            temp_contained_in_place AS t
+            temp_hierarchy_contained_in_place AS t
             ON a.ancestor_place = t.subject_id
           WHERE
             a.level <= 10 -- Limit to 10 levels

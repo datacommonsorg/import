@@ -60,7 +60,14 @@ class SideRuns:
   output_dir: str
   input_root: str | None
   metrics: tuple[RunMetrics, ...]
-  log_path: str | None
+  log_path: str | None  # The log of run 1.
+
+  def run_log_path(self, run_number: int) -> str | None:
+    """The log of run `run_number` (1-based), next to the log of run 1."""
+    if not self.log_path:
+      return None
+    side_dir = os.path.dirname(os.path.dirname(self.log_path))
+    return os.path.join(side_dir, f"run-{run_number}", _LOG)
 
 
 def preprocessor_command(spec: RunSpec, output_dir: str) -> list[str]:

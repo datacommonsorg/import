@@ -195,17 +195,6 @@ class Nodes:
           sc.ROOT_SVG_ID)
     return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
 
-  @thread_safe
-  def get_provenance_urls(self) -> dict[str, str]:
-    prov_urls = {}
-    for prov in self.provenances.values():
-      prov_id = strip_namespace(prov.id)
-      prov_urls[prov_id] = prov.url
-      prov_urls[prov.id] = prov.url
-      if prov.name:
-        prov_urls[prov.name] = prov.url
-    return prov_urls
-
   def _is_unused_default_source(self, source: Source) -> bool:
     return (self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and
             _DEFAULT_SOURCE.id not in self._used_source_ids)

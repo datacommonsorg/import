@@ -101,24 +101,22 @@ def test_provenance_without_a_name_gets_its_id_as_name():
   ])
 
 
-# --- Provenance URL on observations -------------------------------------------
+# --- Provenance URL -----------------------------------------------------------
 
 _PROVENANCE_URL = "https://source.example.org/dataset"
 _PROVENANCE_WITH_URL = _provenance_mcf(url=f'"{_PROVENANCE_URL}"')
 
 
-def test_provenance_url_is_copied_onto_observations():
-  result = b.run_csv(_ONE_ROW, shared_files=_PROVENANCE_WITH_URL)
-  b.assert_records(result.observations,
-                   [b.obs(provenanceUrl="https://source.example.org/dataset")])
-
-
-def test_provenance_url_survives_the_production_path():
-  result = b.run_csv(_ONE_ROW,
-                     mode="production",
-                     shared_files=_PROVENANCE_WITH_URL)
-  b.assert_records(result.observations,
-                   [b.obs(provenanceUrl="https://source.example.org/dataset")])
+@pytest.mark.parametrize("mode", ("threaded", "production"))
+def test_provenance_url_stays_on_the_provenance_node(mode):
+  """Observations reference their provenance; only that node has its url."""
+  result = b.run_csv(_ONE_ROW, mode=mode, shared_files=_PROVENANCE_WITH_URL)
+  b.assert_records(result.observations, [b.obs()])
+  provenance_nodes = [
+      r for r in result.records if r["@id"] == f"dcid:{b.PROVENANCE}"
+  ]
+  assert provenance_nodes
+  assert all(r.get("dcid:url") == _PROVENANCE_URL for r in provenance_nodes)
 
 
 # --- Production (multiprocessing) path ----------------------------------------
@@ -140,10 +138,9 @@ def test_csv_workers_use_the_provenance_defined_in_mcf():
   """
   CSV workers find the MCF provenance instead of auto-creating their own.
 
-  Without that, the provenanceUrl assertion always fails. The record
-  assertions (nothing added to or removed from what the shared MCF writes)
-  catch an auto-created provenance replacing the MCF one, which depends on
-  merge order.
+  The record assertions (nothing added to or removed from what the shared MCF
+  writes) catch an auto-created provenance replacing the MCF one, which
+  depends on merge order.
   """
   result = b.run(_MANY_CSVS,
                  b.obs_config(b.OBS_MAPPINGS),
@@ -153,8 +150,7 @@ def test_csv_workers_use_the_provenance_defined_in_mcf():
   b.assert_records(result.of_type("Source"), [])
   b.assert_records(result.removed, [])
   b.assert_records(result.observations, [
-      b.obs(f"country/C{i}", provenanceUrl="https://source.example.org/dataset")
-      for i in range(_NUM_CSVS)
+      b.obs(f"country/C{i}") for i in range(_NUM_CSVS)
   ])
 
 
@@ -236,10 +232,10 @@ def _file_statuses(result: b.Result) -> dict[str, str]:
   }
 
 
-def _provenance_url_by_place(result: b.Result) -> dict[str, str | None]:
-  """The provenanceUrl of every written observation, by observationAbout."""
+def _observed_places(result: b.Result) -> set[str]:
+  """The observationAbout of every written observation."""
   return {
-      r["dcid:observationAbout"]["@id"]: r.get("dcid:provenanceUrl")
+      r["dcid:observationAbout"]["@id"]
       for r in result.records
       if r.get("@type") == "dcid:StatVarObservation"
   }
@@ -254,8 +250,7 @@ def test_files_after_a_failed_one_still_run(mode):
   Threaded runs write no JSON-LD once a file fails, so the report shows that
   the good files succeeded. Production workers upload their output as they
   finish (leaving it behind is a known gap), so the good files' observations
-  show that they ran, with the URL of the MCF provenance: the MCF stage
-  finished before their workers started. The production report does not show
+  show that they ran. The production report does not show
   file statuses; see _REPORT in test_e2e.py.
   """
   result = b.run(
@@ -279,10 +274,7 @@ def test_files_after_a_failed_one_still_run(mode):
         "<input>/case_c.csv": "SUCCESS",
     }
     return
-  assert _provenance_url_by_place(result) == {
-      "dcid:country/A": _PROVENANCE_URL,
-      "dcid:country/C": _PROVENANCE_URL,
-  }
+  assert _observed_places(result) == {"dcid:country/A", "dcid:country/C"}
 
 
 @pytest.mark.parametrize("mode", _MODES)

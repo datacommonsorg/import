@@ -22,8 +22,9 @@ and report.json. See README.md.
   python3 -m tools.regression --input_dir=/path/to/input [--baseline=upstream/master]
       [-- <extra stats.main flags>]
 
-Exit codes: 0 identical and no perf regression, 3 output differs, 4 perf
-regression only, 1 tool error, 2 usage error.
+Exit codes: 0 identical and no perf regression, 5 a run of either side
+failed (non-zero exit or timeout), 3 output differs, 4 perf regression only,
+1 tool error, 2 usage error.
 """
 
 import argparse
@@ -240,7 +241,8 @@ def main(argv: list[str]) -> int:
   metrics.compare_health(base, cand, comparison.findings)
   perf_result = metrics.compare_perf(base, cand, _thresholds(args))
   verdict = report_lib.Verdict(comparison.findings.failing(args.strict),
-                               perf_result.regressions)
+                               perf_result.regressions,
+                               metrics.run_failures(base, cand))
   run_info = {
       "input_dir": args.input_dir,
       "resolved_input_dir": input_dir,
