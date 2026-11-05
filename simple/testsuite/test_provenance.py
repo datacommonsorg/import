@@ -19,10 +19,10 @@ a source. Most tests here replace the shared provenance.mcf (see
 _provenance_mcf) to vary that.
 """
 
+import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
-from testsuite.lib.builders import known_bug
 
 _ONE_ROW = b.csv_file(b.obs_row())
 
@@ -98,26 +98,22 @@ def test_provenance_without_a_name_gets_its_id_as_name():
   ])
 
 
-# --- Provenance URL on observations -------------------------------------------
+# --- Provenance URL -----------------------------------------------------------
 
-_PROVENANCE_WITH_URL = _provenance_mcf(
-    url='"https://source.example.org/dataset"')
-
-
-def test_provenance_url_is_copied_onto_observations():
-  result = b.run_csv(_ONE_ROW, shared_files=_PROVENANCE_WITH_URL)
-  b.assert_records(result.observations,
-                   [b.obs(provenanceUrl="https://source.example.org/dataset")])
+_PROVENANCE_URL = "https://source.example.org/dataset"
+_PROVENANCE_WITH_URL = _provenance_mcf(url=f'"{_PROVENANCE_URL}"')
 
 
-@known_bug(reason="with use_multiprocessing=True (production), observations"
-           " lose dcid:provenanceUrl")
-def test_provenance_url_survives_the_production_path():
-  result = b.run_csv(_ONE_ROW,
-                     mode="production",
-                     shared_files=_PROVENANCE_WITH_URL)
-  b.assert_records(result.observations,
-                   [b.obs(provenanceUrl="https://source.example.org/dataset")])
+@pytest.mark.parametrize("mode", ("threaded", "production"))
+def test_provenance_url_stays_on_the_provenance_node(mode):
+  """Observations reference their provenance; only that node has its url."""
+  result = b.run_csv(_ONE_ROW, mode=mode, shared_files=_PROVENANCE_WITH_URL)
+  b.assert_records(result.observations, [b.obs()])
+  provenance_nodes = [
+      r for r in result.records if r["@id"] == f"dcid:{b.PROVENANCE}"
+  ]
+  assert provenance_nodes
+  assert all(r.get("dcid:url") == _PROVENANCE_URL for r in provenance_nodes)
 
 
 # --- Validation ---------------------------------------------------------------
