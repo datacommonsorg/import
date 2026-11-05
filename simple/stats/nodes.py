@@ -25,16 +25,6 @@ from stats.data import Triple
 import stats.schema_constants as sc
 from util.filesystem import File
 
-_CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
-_CUSTOM_SOURCE_ID_PREFIX = "c/s/"
-
-_DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
-                         "Custom Data Commons")
-_DEFAULT_PROVENANCE = Provenance(id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}default",
-                                 source_id=_DEFAULT_SOURCE.id,
-                                 name="Custom Import",
-                                 url="custom-import")
-
 
 def thread_safe(func):
   """Decorator to make a method thread-safe using the object's reentrant lock."""
@@ -58,9 +48,6 @@ class Nodes:
     self.provenances: dict[str, Provenance] = {}
     # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
-    self.has_custom_mcf_nodes = False
-    self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
-    self.provenances[_DEFAULT_PROVENANCE.id] = _DEFAULT_PROVENANCE
     # Always ensure the global root StatVarGroup (dc/g/Root) exists so manually
     # defined StatVarGroup hierarchies in MCF have a root Node in Spanner.
     self._ensure_root_group()
@@ -76,7 +63,6 @@ class Nodes:
       url: str = "",
       source_id: str = "",
       properties: dict[str, str] | None = None) -> Provenance:
-    self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
 
@@ -102,7 +88,6 @@ class Nodes:
                       url: str = "",
                       properties: dict[str, str] | None = None,
                       provenance_id: str = "") -> Source:
-    self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
 
     src = self.sources.get(clean_id)
@@ -127,21 +112,15 @@ class Nodes:
     """Registers Provenance and Source nodes held by another `Nodes`.
 
     Worker processes each build their own `Nodes`, so the coordinator merges
-    each worker's nodes back with this. Every node except the built-in default
-    provenance and source goes through `register_source` or
-    `register_provenance`, which also sets `has_custom_mcf_nodes`. The
-    defaults are skipped because every `Nodes` already has them.
+    each worker's nodes back with this.
     """
     for src in sources.values():
-      if src.id == _DEFAULT_SOURCE.id:
-        continue
       self.register_source(id=src.id,
                            name=src.name,
                            url=src.url,
+                           properties=src.properties,
                            provenance_id=src.provenance_id)
     for prov in provenances.values():
-      if prov.id == _DEFAULT_PROVENANCE.id:
-        continue
       self.register_provenance(id=prov.id,
                                name=prov.name,
                                url=prov.url,
@@ -155,6 +134,9 @@ class Nodes:
     Provenance node: MCF files define those, possibly in another worker
     process, and `MetadataValidator` checks at the end of the run that every
     referenced provenance is defined.
+
+    Raises:
+      ValueError: If config names no provenance.
     """
     prov_name = self.config.provenance_name(input_file)
     if not prov_name:
@@ -177,35 +159,12 @@ class Nodes:
           sc.ROOT_SVG_ID)
     return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
 
-  def _skips_defaults(self) -> bool:
-    """Whether to leave out the built-in default provenance and source.
-
-    They are left out once MCF defines metadata nodes, unless an `inputFiles`
-    entry names the default provenance. Deciding from config rather than from
-    the imports that ran gives the same answer whether files are imported in
-    threads or in worker processes.
-    """
-    return (self.has_custom_mcf_nodes and
-            _DEFAULT_PROVENANCE.id not in self._configured_provenance_ids())
-
-  def _configured_provenance_ids(self) -> set[str]:
-    """The ids of the provenances that `inputFiles` entries name."""
-    return {
-        _clean_metadata_id(entry.get("provenance", ""))
-        for entry in self.config.data.get("inputFiles", [])
-    }
-
   @thread_safe
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
     result: dict[str, list[Triple]] = defaultdict(list)
-    skips_defaults = self._skips_defaults()
     for source in self.sources.values():
-      if skips_defaults and source.id == _DEFAULT_SOURCE.id:
-        continue
       result[_provenance_dir(source.provenance_id)].extend(source.triples())
     for provenance in self.provenances.values():
-      if skips_defaults and provenance.id == _DEFAULT_PROVENANCE.id:
-        continue
       prov_id = provenance.provenance_id or provenance.id
       result[_provenance_dir(prov_id)].extend(provenance.triples())
     for group in self.groups.values():

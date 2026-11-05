@@ -152,48 +152,80 @@ def test_csvs_add_no_provenance_or_source_nodes(mode):
                    [b.obs(f"country/C{i}") for i in range(_NUM_CSVS)])
 
 
-# --- Default provenance and source --------------------------------------------
+# --- Provenances must be defined in MCF ---------------------------------------
 #
-# Files whose provenance is dcid:c/p/default use the built-in default
-# provenance and source. They are written only when an inputFiles entry names
-# the default provenance, or when there are no MCF-defined metadata nodes at
-# all.
-#
-# TODO(gmechali): Delete this section in the follow-up PR that removes the
-# built-in default provenance and source (Provenance/Source nodes will come
-# only from MCF).
+# Every provenance a CSV's inputFiles entry names must be defined in MCF;
+# there is no built-in default. MetadataValidator checks this once every file
+# is imported and fails the run with one error listing every missing one.
 
-_DEFAULT_PROVENANCE = b.record("c/p/default",
-                               "Provenance",
-                               name="Custom Import",
-                               source=b.ref("c/s/default"),
-                               url="custom-import")
-_DEFAULT_SOURCE = b.record("c/s/default", "Source", name="Custom Data Commons")
-_DEFAULT_PROVENANCE_CSV = {
-    "pattern": "case*.csv",
-    "provenance": "dcid:c/p/default",
-    "columnMappings": b.OBS_MAPPINGS,
-}
+
+def _undefined_provenances(*prov_ids: str) -> str:
+  """The MetadataValidator error for provenances that no MCF defines."""
+  return ("Metadata Validation Failed: The following referenced provenances"
+          f" are not defined in your MCF files: {sorted(prov_ids)}")
+
+
+def _csv_entry(pattern: str, provenance: str) -> dict:
+  """An observations CSV inputFiles entry for files with OBS_HEADER."""
+  return {
+      "pattern": pattern,
+      "provenance": provenance,
+      "columnMappings": b.OBS_MAPPINGS
+  }
+
+
+def _assert_undefined_provenances(result: b.Result, *prov_ids: str) -> None:
+  """
+  The run failed with the MetadataValidator error naming prov_ids.
+
+  The handshake error type is GENERIC_ERROR, although the validator raises the
+  error with the MISSING_PROVENANCE type. Production workers have already
+  uploaded their output (see test_files_after_a_failed_one_still_run).
+  """
+  assert result.error["type"] == "ValueError"
+  assert _undefined_provenances(*prov_ids) in result.error["message"]
+  handshake_types = {
+      e["errorType"] for e in result.output["handshake"]["errors"]
+  }
+  assert handshake_types == {"GENERIC_ERROR"}
 
 
 @pytest.mark.parametrize("mode", _MODES)
-def test_csv_only_run_writes_the_default_provenance_and_source(mode):
+def test_provenance_defined_in_mcf_is_used(mode):
+  result = b.run_csv(_ONE_ROW, mode=mode)
+  assert result.error is None, result.error
+  b.assert_records(result.observations, [b.obs()])
+  b.assert_records(result.removed, [])
+
+
+@pytest.mark.parametrize("mode", _MODES)
+def test_every_undefined_provenance_is_reported_together(mode):
+  result = b.run(
+      {
+          "ok.csv": _ONE_ROW,
+          "a1.csv": _ONE_ROW,
+          "a2.csv": _ONE_ROW,
+          "b.csv": _ONE_ROW,
+      }, {
+          "inputFiles": [
+              *b.MCF_CONFIG["inputFiles"],
+              _csv_entry("ok.csv", f"dcid:{b.PROVENANCE}"),
+              _csv_entry("a*.csv", "dcid:MissingA"),
+              _csv_entry("b.csv", "dcid:MissingB"),
+          ]
+      },
+      mode=mode)
+  _assert_undefined_provenances(result, "dcid:MissingA", "dcid:MissingB")
+
+
+@pytest.mark.parametrize("mode", _MODES)
+def test_former_default_provenance_must_be_defined_too(mode):
+  """dcid:c/p/default was built in; now it is like any other provenance."""
   result = b.run({"case.csv": _ONE_ROW},
-                 {"inputFiles": [_DEFAULT_PROVENANCE_CSV]},
+                 {"inputFiles": [_csv_entry("case*.csv", "dcid:c/p/default")]},
                  mode=mode,
                  shared_files={})
-  b.assert_records(result.of_type("Provenance"), [_DEFAULT_PROVENANCE])
-  b.assert_records(result.of_type("Source"), [_DEFAULT_SOURCE])
-
-
-@pytest.mark.parametrize("mode", _MODES)
-def test_default_provenance_used_next_to_mcf_metadata_is_written(mode):
-  result = b.run(
-      {"case.csv": _ONE_ROW},
-      {"inputFiles": [*b.MCF_CONFIG["inputFiles"], _DEFAULT_PROVENANCE_CSV]},
-      mode=mode)
-  b.assert_records(result.of_type("Provenance"), [_DEFAULT_PROVENANCE])
-  b.assert_records(result.of_type("Source"), [_DEFAULT_SOURCE])
+  _assert_undefined_provenances(result, "dcid:c/p/default")
 
 
 # --- Failed files -------------------------------------------------------------
@@ -307,8 +339,9 @@ INVALID_PROVENANCES = [
              ]
          },
          expect=b.Fails(
-             "ValueError", "Could not determine import name: missing"
-             " 'provenance' configuration for file 'case.csv'.")),
+             "ValueError", "A provenance is absolutely required for file"
+             " 'case.csv'. Please specify the 'provenance' property in your"
+             " config.json.")),
     Case("provenance without a namespace prefix",
          given=b.obs_config(b.OBS_MAPPINGS, provenance=b.PROVENANCE),
          expect=b.Fails(
@@ -320,10 +353,8 @@ INVALID_PROVENANCES = [
     Case("provenance that no MCF defines",
          given=b.obs_config(b.OBS_MAPPINGS,
                             provenance="dcid:UndefinedProvenance"),
-         expect=b.Fails(
-             "ValueError", "Metadata Validation Failed: The following"
-             " referenced provenances are not defined in your MCF files:"
-             " ['dcid:UndefinedProvenance']")),
+         expect=b.Fails("ValueError",
+                        _undefined_provenances("dcid:UndefinedProvenance"))),
 ]
 
 

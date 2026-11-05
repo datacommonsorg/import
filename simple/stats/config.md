@@ -64,11 +64,31 @@ to. Patterns are relative to the directory containing the `config.json`.
 #### `provenance`
 
 Required, for CSV and MCF files alike. The provenance DCID for this input file,
-for example `dcid:Provenance1`. It must include a namespace prefix, and the
-provenance node itself must be defined in one of the MCF files, with a `source`.
+for example `dcid:Provenance1`. It must include a namespace prefix.
 
 Provenances typically map to a dataset from a source.
 e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank source.
+
+The Provenance node and its Source must be defined in an MCF file matched by an
+`inputFiles` entry, like Class and Property nodes. The Provenance links to its
+Source with `source`:
+
+```
+Node: dcid:Source1
+typeOf: dcs:Source
+name: "Source 1"
+url: "https://source1.example.org"
+
+Node: dcid:Provenance1
+typeOf: dcs:Provenance
+name: "Provenance 1"
+url: "https://source1.example.org/dataset"
+source: dcid:Source1
+```
+
+If a CSV's provenance is not defined in MCF, the import fails once every file
+is imported, with one error that lists every undefined provenance and the files
+that use it.
 
 #### `columnMappings`
 
