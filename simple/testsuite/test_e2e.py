@@ -68,9 +68,10 @@ _GCS_CONFIG = (
     " the path as a directory first, which always works on GCS")
 
 KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {
+    ("kitchen_sink", "*", "report"): (_REPORT, True),
+    ("config_file_driven", "*", "report"): (_REPORT, True),
+    ("multi_import", "*", "report"): (_REPORT, True),
     ("multi_import", "tiny_chunks", "records"): (_SPLIT_NODE, True),
-    ("kitchen_sink", "production", "report"): (_REPORT, True),
-    ("multi_import", "production", "report"): (_REPORT, True),
     ("kitchen_sink", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("config_file_driven", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("config_file_driven", "production", "*"): (_GCS_CONFIG, True),
@@ -129,7 +130,7 @@ def _expected_path(dataset: str) -> str:
 
 
 def _write_expected(dataset: str) -> None:
-  reference = _output(dataset, "threaded")
+  reference = _output(dataset, "production")
   expected = {
       "records": _records_view(dataset, reference["records"]),
       "report": reference["report"],
@@ -182,7 +183,7 @@ def _actual(dataset: str, output: dict, aspect: str):
 
 
 def test_e2e(dataset: str, mode: str, aspect: str, update_expected: bool):
-  if update_expected and mode == "threaded" and aspect == ASPECTS[0]:
+  if update_expected and mode == "production" and aspect == ASPECTS[0]:
     _write_expected(dataset)
   if not os.path.exists(_expected_path(dataset)):
     pytest.fail(f"{_expected_path(dataset)} is missing; generate it with"

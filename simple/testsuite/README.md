@@ -42,11 +42,10 @@ For a refactor or performance PR, `test_e2e.py` passing with every
 
 Execution modes (`lib/run.py`):
 
-- `threaded`: local disk input, no multiprocessing. Fast; used by every small test.
-- `production`: multiprocessing, with input and output on (fake) GCS, as the
-  ingestion workflow runs it.
-- `tiny_chunks`: threaded, with chunk and shard sizes shrunk so that every
-  boundary is crossed even by tiny inputs.
+- `local`: input on local disk. Used by every small test.
+- `production`: input on (fake) GCS, as the ingestion workflow runs it.
+- `tiny_chunks`: with chunk and shard sizes shrunk so that every boundary is
+  crossed even by tiny inputs.
 
 ## Writing a test
 

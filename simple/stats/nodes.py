@@ -13,8 +13,6 @@
 # limitations under the License.
 
 from collections import defaultdict
-from functools import wraps
-import threading
 
 from stats.config import Config
 from stats.data import Provenance
@@ -26,21 +24,9 @@ import stats.schema_constants as sc
 from util.filesystem import File
 
 
-def thread_safe(func):
-  """Decorator to make a method thread-safe using the object's reentrant lock."""
-
-  @wraps(func)
-  def wrapper(self, *args, **kwargs):
-    with self.lock:
-      return func(self, *args, **kwargs)
-
-  return wrapper
-
-
 class Nodes:
 
   def __init__(self, config: Config) -> None:
-    self.lock = threading.RLock()
     self.config = config
     # Dictionary of SVGs from SVG id to SVG
     self.groups: dict[str, StatVarGroup] = {}
@@ -55,7 +41,6 @@ class Nodes:
     if config.generate_hierarchy():
       self._default_custom_group()
 
-  @thread_safe
   def register_provenance(
       self,
       id: str,
@@ -81,7 +66,6 @@ class Nodes:
       prov.properties.update(properties)
     return prov
 
-  @thread_safe
   def register_source(self,
                       id: str,
                       name: str = "",
@@ -106,7 +90,6 @@ class Nodes:
     src.provenance_id = src.provenance_id or provenance_id
     return src
 
-  @thread_safe
   def merge_metadata(self, provenances: dict[str, Provenance],
                      sources: dict[str, Source]) -> None:
     """Registers Provenance and Source nodes held by another `Nodes`.
@@ -159,7 +142,6 @@ class Nodes:
           sc.ROOT_SVG_ID)
     return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
 
-  @thread_safe
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
     result: dict[str, list[Triple]] = defaultdict(list)
     for source in self.sources.values():

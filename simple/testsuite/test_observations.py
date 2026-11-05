@@ -196,15 +196,14 @@ def test_rows_with_different_keys_get_different_ids():
 _COLLISION_SUMMARY = "Observation @ID Collision Summary:"
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_collisions_of_every_file_are_summarized(mode, caplog):
+def test_collisions_of_every_file_are_summarized(caplog):
   """
   The end-of-run summary counts the collisions of every file.
 
-  In production each worker finds its own file's collisions, and the
-  coordinator merges them before logging the summary. A worker logs only its
-  own file, so a total over two files shows that the counts were merged.
-  b.run_dir, unlike b.run, does not cache runs, so the run always logs.
+  Each worker finds its own file's collisions, and the coordinator merges them
+  before logging the summary. A worker logs only its own file, so a total over
+  two files shows that the counts were merged. b.run_dir, unlike b.run, does not
+  cache runs, so the run always logs.
   """
   files = {
       "provenance.mcf":
@@ -217,7 +216,7 @@ def test_collisions_of_every_file_are_summarized(mode, caplog):
                      b.obs_row("country/Y", value="2")),
   }
   with caplog.at_level(logging.WARNING):
-    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS), mode=mode)
+    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
   assert result.error is None, result.error
   summaries = [
       r.getMessage()
@@ -403,20 +402,17 @@ def test_observation_properties_order():
   ]
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_ignored_column_is_dropped(mode):
-  result = b.run_csv(b.csv_file(b.obs_row() + ["anything"],
-                                header=b.OBS_HEADER + ["notes"]),
-                     b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]),
-                     mode=mode)
+def test_ignored_column_is_dropped():
+  result = b.run_csv(
+      b.csv_file(b.obs_row() + ["anything"], header=b.OBS_HEADER + ["notes"]),
+      b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]))
   b.assert_records(result.observations, [b.obs()])
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_every_unmapped_column_is_reported_at_once(mode):
-  result = b.run_csv(b.csv_file(b.obs_row() + ["anything", "else"],
-                                header=b.OBS_HEADER + ["notes", "source"]),
-                     mode=mode)
+def test_every_unmapped_column_is_reported_at_once():
+  result = b.run_csv(
+      b.csv_file(b.obs_row() + ["anything", "else"],
+                 header=b.OBS_HEADER + ["notes", "source"]))
   b.assert_fails(result,
                  "ValueError",
                  "The CSV file 'case.csv' contains unmapped columns:"
@@ -425,17 +421,16 @@ def test_every_unmapped_column_is_reported_at_once(mode):
                  handshake_error_types=("UNMAPPED_COLUMNS",))
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_columns_mapped_to_the_same_property_fail(mode):
+def test_columns_mapped_to_the_same_property_fail():
   """dcid:unit and unit are one property, so unit_a and unit_b collide."""
-  result = b.run_csv(b.csv_file(b.obs_row() + ["USDollar", "Euro"],
-                                header=b.OBS_HEADER + ["unit_a", "unit_b"]),
-                     b.obs_config({
-                         **b.OBS_MAPPINGS,
-                         "dcid:unit": "unit_a",
-                         "unit": "unit_b",
-                     }),
-                     mode=mode)
+  result = b.run_csv(
+      b.csv_file(b.obs_row() + ["USDollar", "Euro"],
+                 header=b.OBS_HEADER + ["unit_a", "unit_b"]),
+      b.obs_config({
+          **b.OBS_MAPPINGS,
+          "dcid:unit": "unit_a",
+          "unit": "unit_b",
+      }))
   b.assert_fails(result,
                  "ValueError",
                  "The CSV file 'case.csv' maps several columns to the same"
@@ -444,15 +439,14 @@ def test_columns_mapped_to_the_same_property_fail(mode):
                  handshake_error_types=("INVALID_CONFIGURATION",))
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_column_mapped_to_several_properties_fails(mode):
+def test_column_mapped_to_several_properties_fails():
   """Properties are looked up by column, so a second mapping would be lost."""
-  result = b.run_csv(b.csv_file(b.obs_row()),
-                     b.obs_config({
-                         **b.OBS_MAPPINGS,
-                         "dcid:destination": "about",
-                     }),
-                     mode=mode)
+  result = b.run_csv(
+      b.csv_file(b.obs_row()),
+      b.obs_config({
+          **b.OBS_MAPPINGS,
+          "dcid:destination": "about",
+      }))
   b.assert_fails(result,
                  "ValueError",
                  "The CSV file 'case.csv' maps the same column to several"
@@ -461,14 +455,13 @@ def test_column_mapped_to_several_properties_fails(mode):
                  handshake_error_types=("INVALID_CONFIGURATION",))
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_every_mapped_column_missing_from_the_csv_is_reported_at_once(mode):
-  result = b.run_csv(b.csv_file(b.obs_row()),
-                     b.obs_config({
-                         **b.OBS_MAPPINGS, "dcid:unit": "unit",
-                         "dcid:measurementMethod": "method"
-                     }),
-                     mode=mode)
+def test_every_mapped_column_missing_from_the_csv_is_reported_at_once():
+  result = b.run_csv(
+      b.csv_file(b.obs_row()),
+      b.obs_config({
+          **b.OBS_MAPPINGS, "dcid:unit": "unit",
+          "dcid:measurementMethod": "method"
+      }))
   b.assert_fails(result,
                  "ValueError",
                  "The following expected columns were not found in the CSV:"
@@ -481,42 +474,37 @@ _MISSING_COLUMN_MAPPINGS = (
     " 'columnMappings' is required for every CSV input file")
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_csv_without_column_mappings_fails(mode):
+def test_csv_without_column_mappings_fails():
   result = b.run_csv(b.csv_file(b.obs_row()),
-                     b.without_column_mappings(b.obs_config(b.OBS_MAPPINGS)),
-                     mode=mode)
+                     b.without_column_mappings(b.obs_config(b.OBS_MAPPINGS)))
   b.assert_fails(result,
                  "ValueError",
                  _MISSING_COLUMN_MAPPINGS,
                  handshake_error_types=("INVALID_CONFIGURATION",))
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_legacy_column_names_are_not_mapped_by_default(mode):
+def test_legacy_column_names_are_not_mapped_by_default():
   """The old entity/variable/date/value headers need columnMappings too."""
-  result = b.run_csv(b.csv_file(b.obs_row(),
-                                header=["entity", "variable", "date", "value"]),
-                     b.without_column_mappings(b.obs_config(b.OBS_MAPPINGS)),
-                     mode=mode)
+  result = b.run_csv(
+      b.csv_file(b.obs_row(), header=["entity", "variable", "date", "value"]),
+      b.without_column_mappings(b.obs_config(b.OBS_MAPPINGS)))
   b.assert_fails(result,
                  "ValueError",
                  _MISSING_COLUMN_MAPPINGS,
                  handshake_error_types=("INVALID_CONFIGURATION",))
 
 
-@pytest.mark.parametrize("mode", ["threaded", "production"])
-def test_legacy_column_names_work_when_mapped_explicitly(mode):
+def test_legacy_column_names_work_when_mapped_explicitly():
   """Only the default mapping is gone: mapped legacy headers still import."""
-  result = b.run_csv(b.csv_file(b.obs_row(),
-                                header=["entity", "variable", "date", "value"]),
-                     b.obs_config({
-                         "dcid:observationAbout": "entity",
-                         "dcid:variableMeasured": "variable",
-                         "dcid:observationDate": "date",
-                         "dcid:value": "value",
-                     }),
-                     mode=mode)
+  result = b.run_csv(
+      b.csv_file(b.obs_row(), header=["entity", "variable", "date", "value"]),
+      b.obs_config({
+          "dcid:observationAbout": "entity",
+          "dcid:variableMeasured": "variable",
+          "dcid:observationDate": "date",
+          "dcid:value": "value",
+      }))
+  b.assert_records(result.observations, [b.obs()])
   b.assert_records(result.observations, [b.obs()])
 
 

@@ -17,7 +17,6 @@ from dataclasses import dataclass
 import json
 import logging
 import os
-import threading
 import traceback
 from typing import Callable, Optional
 
@@ -262,14 +261,12 @@ class Runner:
       input_dir_path: str,
       output_dir_path: str,
       import_names: Optional[list[str]] = None,
-      use_multiprocessing: bool = True,
   ) -> None:
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
 
     self.import_names = import_names
-    self.use_multiprocessing = use_multiprocessing
     self.active_import_prefixes = None
 
     # File systems, both input and output. Must be closed when run finishes.
@@ -636,17 +633,6 @@ class Runner:
           "\n".join(formatted_errors))
       raise ValueError(consolidated_msg)
 
-  def _run_threaded_imports(self, files: list[File]) -> None:
-    """Imports `files` on a thread pool; see `_finish_imports` for failures."""
-    for file in files:
-      self.config._per_file_config(file)
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=min(_MAX_WORKERS, len(files))) as executor:
-      futures = [
-          executor.submit(self._run_single_import, file) for file in files
-      ]
-      _finish_imports(files, futures)
-
   def _run_multiprocess_imports(self, files: list[File]) -> None:
     """Imports `files` in worker processes and merges each result.
 
@@ -683,7 +669,6 @@ class Runner:
 
     self._completed_files_count = 0
     self._total_files_count = len(csv_files) + len(mcf_files)
-    self._counter_lock = threading.Lock()
 
     if not self._total_files_count:
       return
@@ -691,10 +676,7 @@ class Runner:
                  self._total_files_count, len(mcf_files), len(csv_files))
     # MCF and CSV files are imported together: a CSV needs nothing from MCF.
     files = mcf_files + csv_files
-    if not self.use_multiprocessing:
-      self._run_threaded_imports(files)
-    else:
-      self._run_multiprocess_imports(files)
+    self._run_multiprocess_imports(files)
 
   def _merge_worker_result(self, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` into the coordinator."""
@@ -714,16 +696,10 @@ class Runner:
           res.file_sample_collisions.get(f_name, []))
 
   def _log_file_progress(self, file_prefix: str, file: File):
-    """Increments file progress counter thread-safely and logs standard progress line."""
-    with self._counter_lock:
-      self._completed_files_count += 1
-      current_count = self._completed_files_count
-    logging.info("[%d/%d] %s: %s", current_count, self._total_files_count,
-                 file_prefix, file)
-
-  def _run_single_import(self, input_file: File):
-    self._log_file_progress("Importing CSV file", input_file)
-    self._create_importer(input_file).do_import()
+    """Increments file progress counter and logs standard progress line."""
+    self._completed_files_count += 1
+    logging.info("[%d/%d] %s: %s", self._completed_files_count,
+                 self._total_files_count, file_prefix, file)
 
   def _create_importer(self, input_file: File) -> Importer:
     reporter = self.reporter.get_file_reporter(input_file)
