@@ -20,13 +20,16 @@ import json
 import logging
 import os
 import threading
-from typing import Optional
+import traceback
+from typing import Callable, Optional
 
 import fs.path as fspath
 from stats import constants
 from stats.config import Config
 from stats.data import FileValidationError
 from stats.data import ImportType
+from stats.data import Provenance
+from stats.data import Source
 from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
@@ -48,6 +51,8 @@ from util.filesystem import join_path
 from util.filesystem import Store
 
 _ARCHIVES_DIR_NAME = "archives"
+# Upper bound on the threads or worker processes that import files.
+_MAX_WORKERS = 32
 
 
 def _create_importer_for_file(
@@ -92,38 +97,114 @@ def _create_importer_for_file(
 
 @dataclass
 class ImportProcResult:
+  """What a worker process sends back to the coordinator for one file.
+
+  `sources` and `provenances` are all of the worker's nodes, keyed as in
+  `Nodes`; the coordinator merges them with `Nodes.merge_metadata`. The
+  collision fields mirror the worker's `JsonLdStreamWriter` stats.
+  """
   file_rel_path: str
   obs_collision_count: int
-  file_collision_counts: dict
-  file_sample_collisions: dict
-  sources: dict
-  provenances: dict
-  processed_imports: set
+  file_collision_counts: dict[str, int]
+  file_sample_collisions: dict[str, list[str]]
+  sources: dict[str, Source]
+  provenances: dict[str, Provenance]
+  processed_imports: set[str]
 
 
-def _run_single_csv_import_proc(
-    file_rel_path: str,
-    input_dir_path: str,
-    output_dir_path: str,
-    process_dir_path: str,
-    import_names: dict,
-    config_json_str: str,
-    jsonld_dir_name: str,
-) -> ImportProcResult:
+@dataclass(frozen=True)
+class _WorkerArgs:
+  """Arguments that are the same for every worker process in a run."""
+  output_dir_path: str
+  process_dir_path: str
+  import_names: list[str] | None
+  config_json_str: str
+  jsonld_dir_name: str
+
+
+@dataclass
+class _FileFailure:
+  """A file whose import raised, with the traceback text.
+
+  With multiprocessing, `traceback` includes the worker's remote traceback.
+  """
+  file_path: str
+  error: Exception
+  traceback: str
+
+
+class FileImportsFailedError(Exception):
+  """Raised once every file has run if several of them failed to import."""
+
+  def __init__(self, failures: list[_FileFailure]) -> None:
+    self.failures = failures
+    details = "\n".join(f"  {f.file_path}: {type(f.error).__name__}: {f.error}"
+                        for f in failures)
+    super().__init__(f"{len(failures)} files failed to import:\n{details}")
+
+
+def _finish_imports(
+    files: list[File],
+    futures: list[concurrent.futures.Future],
+    merge: Callable[[ImportProcResult], None] | None = None) -> None:
+  """Waits for every file, then raises if any of them failed.
+
+  Every file runs to completion even if others fail. Results are awaited in
+  submission order, so passing each successful one to `merge` is
+  deterministic. See `_raise_for_failures` for what is raised.
+  """
+  failures: list[_FileFailure] = []
+  for file, future in zip(files, futures, strict=True):
+    try:
+      result = future.result()
+    except Exception as e:
+      failures.append(
+          _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
+      continue
+    if merge:
+      merge(result)
+  _raise_for_failures(failures)
+
+
+def _raise_for_failures(failures: list[_FileFailure]) -> None:
+  """Logs each failure's traceback, then raises.
+
+  A single failure is re-raised as is, so its type and message reach the
+  report and handshake unchanged. Several are raised together as one
+  `FileImportsFailedError` that names every failed file.
+  """
+  if not failures:
+    return
+  for failure in failures:
+    logging.error("Failed to import %s:\n%s", failure.file_path,
+                  failure.traceback)
+  if len(failures) == 1:
+    raise failures[0].error
+  raise FileImportsFailedError(failures)
+
+
+def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
+                            args: _WorkerArgs) -> ImportProcResult:
+  """Imports one file in a worker process and returns its results.
+
+  The worker starts from an empty `Nodes`: a CSV needs only its provenance id,
+  which comes from config. The Provenance and Source nodes that an MCF file
+  defines are returned for the coordinator to merge.
+  """
   with create_store(input_dir_path) as input_store_obj, \
-       create_store(output_dir_path) as output_store_obj, \
-       create_store(process_dir_path) as process_store_obj:
+       create_store(args.output_dir_path) as output_store_obj, \
+       create_store(args.process_dir_path) as process_store_obj:
     input_dir = input_store_obj.as_dir()
     output_store = output_store_obj.as_dir()
     process_store = process_store_obj.as_dir()
     input_store = input_dir.open_file(file_rel_path)
 
-    config = Config(json.loads(config_json_str))
+    config = Config(json.loads(args.config_json_str))
     nodes = Nodes(config=config)
     graph_writer = JsonLdStreamWriter(output_store,
-                                      import_names,
+                                      args.import_names,
                                       nodes,
-                                      jsonld_dir_name=jsonld_dir_name)
+                                      jsonld_dir_name=args.jsonld_dir_name)
 
     sanitized_path = input_store.full_path().replace("://",
                                                      "_").replace("/", "_")
@@ -577,50 +658,36 @@ class Runner:
           "\n".join(formatted_errors))
       raise ValueError(consolidated_msg)
 
-  def _run_threaded_imports(self, mcf_files: list[File],
-                            csv_files: list[File]) -> None:
-    """Runs MCF imports followed by CSV imports using a thread pool."""
-    # Import the MCF group to completion before starting the CSV group.
-    # MCF declares the provenance and source nodes that CSV importers then
-    # look up by name; if a CSV gets there first, Nodes.provenance()
-    # auto-creates a provenance with no source and the source link is lost.
-    # Files within each group still run concurrently.
-    for file_group in (mcf_files, csv_files):
-      if not file_group:
-        continue
-      for file in file_group:
-        self.config._per_file_config(file)
-      num_threads = min(32, len(file_group))
-      with concurrent.futures.ThreadPoolExecutor(
-          max_workers=num_threads) as executor:
-        futures = [
-            executor.submit(self._run_single_import, file)
-            for file in file_group
-        ]
-        for future in concurrent.futures.as_completed(futures):
-          future.result()
-
-  def _run_multiprocess_imports(self, all_files: list[File]) -> None:
-    """Runs all file imports across a process pool and merges worker results."""
-    num_processes = min(32, len(all_files))
-    config_json_str = json.dumps(self.config.data)
-    jsonld_dir_name = self.graph_writer.jsonld_dir.name()
-    with concurrent.futures.ProcessPoolExecutor(
-        max_workers=num_processes) as executor:
+  def _run_threaded_imports(self, files: list[File]) -> None:
+    """Imports `files` on a thread pool; see `_finish_imports` for failures."""
+    for file in files:
+      self.config._per_file_config(file)
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(_MAX_WORKERS, len(files))) as executor:
       futures = [
-          executor.submit(
-              _run_single_csv_import_proc,
-              file.path,
-              file._store.root_path,
-              self.output_dir.full_path(),
-              self.process_dir.full_path(),
-              self.import_names,
-              config_json_str,
-              jsonld_dir_name,
-          ) for file in all_files
+          executor.submit(self._run_single_import, file) for file in files
       ]
-      for future in concurrent.futures.as_completed(futures):
-        self._merge_worker_result(future.result())
+      _finish_imports(files, futures)
+
+  def _run_multiprocess_imports(self, files: list[File]) -> None:
+    """Imports `files` in worker processes and merges each result.
+
+    See `_finish_imports` for the merge order and for failures.
+    """
+    worker_args = _WorkerArgs(
+        output_dir_path=self.output_dir.full_path(),
+        process_dir_path=self.process_dir.full_path(),
+        import_names=self.import_names,
+        config_json_str=json.dumps(self.config.data),
+        jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
+    )
+    with concurrent.futures.ProcessPoolExecutor(
+        max_workers=min(_MAX_WORKERS, len(files))) as executor:
+      futures = [
+          executor.submit(_run_single_import_proc, file.path,
+                          file._store.root_path, worker_args) for file in files
+      ]
+      _finish_imports(files, futures, merge=self._merge_worker_result)
 
   def _run_all_data_imports(self):
     """Orchestrates file scanning, thread-pool configuration, and file ingestion."""
@@ -640,38 +707,33 @@ class Runner:
     self._total_files_count = len(csv_files) + len(mcf_files)
     self._counter_lock = threading.Lock()
 
-    all_files = list(mcf_files) + list(csv_files)
-    if not all_files:
+    if not self._total_files_count:
       return
-    logging.info("Importing %d files (%d MCF, %d CSV)...", len(all_files),
-                 len(mcf_files), len(csv_files))
+    logging.info("Importing %d files (%d MCF, %d CSV)...",
+                 self._total_files_count, len(mcf_files), len(csv_files))
+    # MCF and CSV files are imported together: a CSV needs nothing from MCF.
+    files = mcf_files + csv_files
     if not self.use_multiprocessing:
-      self._run_threaded_imports(mcf_files, csv_files)
+      self._run_threaded_imports(files)
     else:
-      self._run_multiprocess_imports(all_files)
+      self._run_multiprocess_imports(files)
 
   def _merge_worker_result(self, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` into the coordinator."""
     self._log_file_progress("Imported file", res.file_rel_path)
-    for src in res.sources.values():
-      self.nodes.register_source(id=src.id,
-                                 name=src.name,
-                                 url=src.url,
-                                 provenance_id=src.provenance_id)
-    for prov in res.provenances.values():
-      self.nodes.register_provenance(id=prov.id,
-                                     name=prov.name,
-                                     url=prov.url,
-                                     source_id=prov.source_id,
-                                     properties=prov.properties)
+    self.nodes.merge_metadata(res.provenances, res.sources)
+    self._merge_worker_writer_state(res)
+
+  def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
+    """Merges a worker's processed imports and collision stats into the writer."""
     self.graph_writer._processed_imports.update(res.processed_imports)
-    if res.obs_collision_count and hasattr(self.graph_writer,
-                                           "obs_collision_count"):
-      self.graph_writer.obs_collision_count += res.obs_collision_count
-      for f_name, count in res.file_collision_counts.items():
-        self.graph_writer.file_collision_counts[f_name] += count
-        self.graph_writer.file_sample_collisions[f_name].extend(
-            res.file_sample_collisions.get(f_name, []))
+    if not res.obs_collision_count:
+      return
+    self.graph_writer.obs_collision_count += res.obs_collision_count
+    for f_name, count in res.file_collision_counts.items():
+      self.graph_writer.file_collision_counts[f_name] += count
+      self.graph_writer.file_sample_collisions[f_name].extend(
+          res.file_sample_collisions.get(f_name, []))
 
   def _log_file_progress(self, file_prefix: str, file: File):
     """Increments file progress counter thread-safely and logs standard progress line."""

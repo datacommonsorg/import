@@ -75,7 +75,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 1,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
@@ -94,7 +93,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 2,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",

@@ -144,21 +144,20 @@ def test_first_matching_input_files_entry_wins():
        b.obs("country/FRA", value=2)])
 
 
-def test_empty_config_imports_only_the_default_provenance():
+def test_empty_config_writes_no_provenance_or_source():
   """
   With an input directory, an empty config.json is accepted.
 
-  No file matches, so only the default provenance and source are written.
+  No file matches, so no metadata is imported, and there is no built-in
+  provenance or source to write instead.
   """
   result = b.run({}, {})
-  b.assert_records(result.added, [
-      b.record("c/p/default",
-               "Provenance",
-               name="Custom Import",
-               source=b.ref("c/s/default"),
-               url="custom-import"),
-      b.record("c/s/default", "Source", name="Custom Data Commons"),
-  ])
+  assert result.error is None, result.error
+  b.assert_records(result.added, [])
+  b.assert_records([
+      r for r in result.records
+      if r.get("@type") in ("dcid:Provenance", "dcid:Source")
+  ], [])
 
 
 def test_single_import_name_runs_only_that_subdirectory():
