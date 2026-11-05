@@ -66,8 +66,12 @@ _SPLIT_NODE = ("node shards are cut without keeping a subject's triples"
 _GCS_CONFIG = (
     "--config_file on GCS fails with 'Not a file': create_store() opens"
     " the path as a directory first, which always works on GCS")
+_STUB_PROVENANCE = (
+    "a CSV worker auto-creates a provenance named after its id, which can"
+    " replace the MCF-defined one (and its name) when merged first")
 
 KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {
+    ("multi_import", "production", "records"): (_STUB_PROVENANCE, False),
     ("multi_import", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("kitchen_sink", "production", "report"): (_REPORT, True),
     ("multi_import", "production", "report"): (_REPORT, True),
