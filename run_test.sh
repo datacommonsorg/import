@@ -79,6 +79,7 @@ function run_py_test {
 
   cd simple
   pip3 install -r requirements_test.txt -q
+  pip3 install --no-deps -r requirements_nodeps.txt -q
 
   # With PY_TEST_COVERAGE set, the preprocessor tests also record coverage.
   local cov=() cov_append=()
@@ -270,6 +271,7 @@ function run_coverage {
   python3 -m venv .env
   source .env/bin/activate
   pip3 install -r simple/requirements_test.txt -q
+  pip3 install --no-deps -r simple/requirements_nodeps.txt -q
   pip3 install $COVERAGE_TOOLS -q
 
   local root base merge_base

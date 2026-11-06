@@ -1,3 +1,4 @@
 -r requirements.txt
 gcp-storage-emulator==2026.7.19
+pytest==9.2.0
 pytest-xdist==3.8.0
