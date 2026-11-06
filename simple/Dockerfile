@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # #### Python runtime. ####
-FROM python:3.11.14-slim AS runner
+FROM python:3.11.18-slim AS runner
 
 ARG ENV
 ENV ENV=${ENV}
@@ -26,18 +26,16 @@ RUN apt-get update && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy simple importer requirements.
-COPY requirements.txt ./import/simple/requirements.txt
+COPY requirements.txt requirements_nodeps.txt ./import/simple/
 
 ARG PIP_DISABLE_PIP_VERSION_CHECK=1
 ARG PIP_NO_CACHE_DIR=1
+ARG PIP_ROOT_USER_ACTION=ignore
 
-# Create a virtual env, add it to path, upgrade core packaging tools, and install all requirements.
-RUN python -m venv /workspace/venv
-ENV PATH="/workspace/venv/bin:$PATH"
-RUN pip3 install --no-cache-dir --upgrade pip "setuptools<70" wheel
-
-# Install simple importer requirements.
-RUN pip3 install -r ./import/simple/requirements.txt
+RUN pip3 uninstall -y setuptools wheel \
+    && pip3 install -r ./import/simple/requirements.txt \
+    && pip3 install --no-deps -r ./import/simple/requirements_nodeps.txt \
+    && rm -rf /usr/local/lib/python3.11/ensurepip/_bundled
 
 # Copy only the packages the preprocessor runs (stats.main imports stats, util
 # and kg_util). New directories under simple/ stay out of the image unless they
@@ -45,15 +43,13 @@ RUN pip3 install -r ./import/simple/requirements.txt
 COPY stats/ ./import/simple/stats/
 COPY util/ ./import/simple/util/
 COPY kg_util/ ./import/simple/kg_util/
+COPY pkg_resources.py ./import/simple/
 
 # Copy executable script.
 COPY run.sh .
 
 # Make script executable.
 RUN chmod +x run.sh
-
-# Activate the virtual env.
-ENV PATH="/workspace/venv/bin:$PATH"
 
 # Set the entrypoint to force bash execution
 ENTRYPOINT ["/bin/bash", "./run.sh"]
