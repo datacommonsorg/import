@@ -80,7 +80,11 @@ public class ReconcileNodesFn extends DoFn<List<String>, Mutation> {
     try (ResultSet rs =
         dbClient
             .singleUse(TimestampBound.ofReadTimestamp(tPre))
-            .read(SpannerRollbackPipeline.TABLE_NODE, toKeySet(batch), NodeRecord.READ_COLUMNS)) {
+            .read(
+                SpannerRollbackPipeline.TABLE_NODE,
+                toKeySet(batch),
+                NodeRecord.READ_COLUMNS,
+                SpannerClient.LOW_PRIORITY)) {
       while (rs.next()) {
         Struct row = rs.getCurrentRowAsStruct();
         String id = row.getString(NodeRecord.COL_SUBJECT_ID);
