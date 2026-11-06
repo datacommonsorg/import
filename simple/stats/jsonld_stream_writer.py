@@ -260,16 +260,17 @@ def _node_record(node_id: str, triples: list[Triple]) -> dict:
   return record
 
 
-# TODO(gmechali): When parallelizing node shard exports (MCF and Entities CSV files),
-# include the sanitized file_name in the shard name (e.g., node-{sanitized_stem}-{shard_index:05d}.jsonld)
-# to prevent shard filename collisions across parallel workers, similar to observation shards.
-def _write_node_shard(args):
-  chunk, shard_index, jsonld_dir_path, ns_map = args
+def _write_node_shard(chunk: list[_Node], shard_index: int,
+                      jsonld_dir_path: str, ns_map: dict) -> None:
+  """Writes the nodes of `chunk` as one node shard in `jsonld_dir_path`.
+
+  Worker processes number their shards independently, so the shard name also
+  carries a random id to stay unique across workers.
+  """
   # Nodes come in @id order (see _group_by_node), so the output is deterministic.
   graph_list = [_node_record(node_id, triples) for node_id, triples in chunk]
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
-  # TODO(gmechali): When parallelizing node shard exports, include file_name in shard_name
   unique_id = uuid.uuid4().hex[:12]
   shard_name = f"node-{shard_index:05d}-{unique_id}.jsonld"
   with create_store(jsonld_dir_path) as store:
@@ -412,8 +413,8 @@ class JsonLdStreamWriter(GraphWriter):
     first_shard_index = self.node_shard_index
     self.node_shard_index += len(chunks)
     for offset, chunk in enumerate(chunks):
-      _write_node_shard(
-          (chunk, first_shard_index + offset, import_temp_dir, self.ns_map))
+      _write_node_shard(chunk, first_shard_index + offset, import_temp_dir,
+                        self.ns_map)
 
   def write_triples(self,
                     triples: list[Triple],
