@@ -19,7 +19,7 @@ set -e
 
 ENV="$(echo "$1" | xargs)"
 # Lower-case for comparisons without bash 4 "${ENV,,}" (macOS ships bash 3.2).
-ENV_LC="$(printf '%s' "$ENV" | tr '[:upper:]' '[:lower:]')"
+ENV_LC="$(printf '%s' "$ENV" | LC_ALL=C tr '[:upper:]' '[:lower:]')"
 IMPORT_NAME="$(echo "$2" | xargs)"
 LATEST_VERSION="$(echo "$3" | xargs)"
 DRY_RUN=false
