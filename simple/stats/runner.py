@@ -14,6 +14,8 @@
 
 import concurrent.futures
 from dataclasses import dataclass
+from datetime import datetime
+from datetime import timezone
 import json
 import logging
 import os
@@ -35,6 +37,8 @@ from stats.importer import Importer
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
+from stats.report.model.summary import RunStatus
+from stats.report.summary_generator import SummaryGenerator
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from stats.validation import MetadataValidator
@@ -358,7 +362,14 @@ class Runner:
     self.graph_writer = None
     self.trigger_workflow_info = None
 
+    self.summary_generator = SummaryGenerator(
+        os.getenv("WORKFLOW_EXECUTION_ID"))
+
   def run(self):
+    self.summary_generator.set_execution_metadata(
+        start_time=_utc_now(),
+        folder_names=self._report_folder_names(),
+        output_dir=self.output_dir)
     try:
       self._run_imports_and_export_jsonld()
 
@@ -366,6 +377,7 @@ class Runner:
 
       # Report done.
       self.reporter.report_done()
+      self.summary_generator.write_to_json(RunStatus.SUCCESS, _utc_now())
 
       # Close all file storage.
       for store in self.all_stores:
@@ -387,6 +399,8 @@ class Runner:
                                 error_message=str(e))
         ]
 
+      self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now())
+
       for store in self.all_stores:
         try:
           store.close()
@@ -398,6 +412,14 @@ class Runner:
           "Preprocessor execution failed! Diagnostic error details were written to the GCS handshake path."
       )
       raise
+
+  def _report_folder_names(self) -> list[str]:
+    """Returns the individual import folders in the case of bulk reports"""
+    if self.import_names == [constants.ALL_IMPORTS]:
+      # The folders found under the input dir, e.g. "folderA/" -> "folderA".
+      return sorted(
+          prefix.rstrip("/") for prefix in self.active_import_prefixes or [])
+    return list(self.import_names or [])
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
@@ -772,6 +794,11 @@ class Runner:
       logging.info(
           "Not running under ingestion workflow or output is local. Skipping handshake info."
       )
+
+
+def _utc_now() -> str:
+  """Returns the current UTC time in ISO-8601, e.g. 2026-11-02T18:45:00Z."""
+  return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _check_not_overlapping(input_store: Store, output_store: Store):
