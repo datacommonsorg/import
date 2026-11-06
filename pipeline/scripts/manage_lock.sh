@@ -27,10 +27,10 @@ set -e
 
 MODE="$1"
 # Lower-case for comparisons without bash 4 "${MODE,,}" (macOS ships bash 3.2).
-MODE_LC="$(printf '%s' "$MODE" | tr '[:upper:]' '[:lower:]')"
+MODE_LC="$(printf '%s' "$MODE" | LC_ALL=C tr '[:upper:]' '[:lower:]')"
 ENV="$2"
 # Lower-case for comparisons without bash 4 "${ENV,,}" (macOS ships bash 3.2).
-ENV_LC="$(printf '%s' "$ENV" | tr '[:upper:]' '[:lower:]')"
+ENV_LC="$(printf '%s' "$ENV" | LC_ALL=C tr '[:upper:]' '[:lower:]')"
 WORKFLOW_ID="$3"
 
 usage() {
