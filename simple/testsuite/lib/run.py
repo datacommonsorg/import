@@ -71,7 +71,6 @@ def _tiny_chunks() -> Iterator[None]:
 class Mode:
   name: str
   gcs_input: bool = False  # Runner reads its input from GCS, not local disk.
-  env: dict = dataclasses.field(default_factory=dict)
   patches: Callable[[], contextlib.AbstractContextManager] = _no_patches
 
 
@@ -189,7 +188,6 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
       "WORKFLOW_EXECUTION_ID": WORKFLOW_ID,
       "TEMP_LOCATION": paths.temp,
       **fake_gcs.env(),
-      **mode.env,
   }
   with mock.patch.dict(os.environ, env), \
        mock.patch("stats.jsonld_stream_writer._KNOWN_CUSTOM_PREFIXES", set()), \

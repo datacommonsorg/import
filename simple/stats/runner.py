@@ -122,7 +122,7 @@ class _WorkerArgs:
 class _FileFailure:
   """A file whose import raised, with the traceback text.
 
-  With multiprocessing, `traceback` includes the worker's remote traceback.
+  `traceback` includes the worker process's remote traceback.
   """
   file_path: str
   error: Exception
@@ -611,6 +611,8 @@ class Runner:
 
     # Pre-populate the per-file config cache on the main thread before spawning
     # worker threads so concurrent lookups do not race on mutating the cache dict.
+    # The threads only build importers and read headers: they write nothing to
+    # Nodes or the graph writer, which are not thread-safe.
     for file in csv_files:
       self.config._per_file_config(file)
 
@@ -677,7 +679,7 @@ class Runner:
 
   def _merge_worker_result(self, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` into the coordinator."""
-    self._log_file_progress("Imported file", res.file_rel_path)
+    self._log_file_progress(res.file_rel_path)
     self.nodes.merge_metadata(res.provenances, res.sources)
     self._merge_worker_writer_state(res)
 
@@ -692,11 +694,11 @@ class Runner:
       self.graph_writer.file_sample_collisions[f_name].extend(
           res.file_sample_collisions.get(f_name, []))
 
-  def _log_file_progress(self, file_prefix: str, file_path: str):
-    """Increments file progress counter and logs standard progress line."""
+  def _log_file_progress(self, file_path: str):
+    """Counts `file_path` as imported and logs the run's progress."""
     self._completed_files_count += 1
-    logging.info("[%d/%d] %s: %s", self._completed_files_count,
-                 self._total_files_count, file_prefix, file_path)
+    logging.info("[%d/%d] Imported file: %s", self._completed_files_count,
+                 self._total_files_count, file_path)
 
   def _create_importer(self, input_file: File) -> Importer:
     reporter = self.reporter.get_file_reporter(input_file)

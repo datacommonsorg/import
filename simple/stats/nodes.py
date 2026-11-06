@@ -25,6 +25,11 @@ from util.filesystem import File
 
 
 class Nodes:
+  """Provenance, Source and StatVarGroup nodes of a run.
+
+  Not thread-safe: the coordinator and each worker process have their own;
+  workers' nodes are merged into the coordinator's with `merge_metadata`.
+  """
 
   def __init__(self, config: Config) -> None:
     self.config = config

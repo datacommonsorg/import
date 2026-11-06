@@ -242,7 +242,10 @@ def _write_node_shard(args):
 
 
 class JsonLdStreamWriter(GraphWriter):
-  """A GraphWriter implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
+  """A GraphWriter implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk.
+
+  Not thread-safe: the coordinator and each worker process have their own.
+  """
 
   def __init__(self,
                output_dir,
