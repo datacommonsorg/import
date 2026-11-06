@@ -14,227 +14,89 @@
 
 package org.datacommons.ingestion.pipeline.embedding;
 
-import com.google.cloud.spanner.Statement;
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Value;
+import java.util.Collections;
 import java.util.List;
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.transforms.Create;
+import java.util.Map;
+import java.util.Set;
 import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.Filter;
-import org.apache.beam.sdk.transforms.Flatten;
-import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.WithKeys;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
-import org.apache.beam.sdk.values.TupleTag;
-import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.sdk.values.TypeDescriptors;
-import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
-import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
 
 /**
- * Reads and filters candidate {@link NodeRecord}s for a single {@link EmbeddingSpec}.
+ * Extracts and filters candidate {@link NodeRecord}s for a single {@link EmbeddingSpec} from the
+ * {@code Node} {@link Mutation}s aggregated across all imports.
  *
- * <p>Filters {@code Node} rows by configured {@code node_types}, and when {@link
- * NodeFilterType#ENTITY_TYPES} is specified, filters candidates to valid entity types (types
- * returned by {@link #ENTITY_TYPES_QUERY} unioned with {@link #PLACE_TYPE_ORDER}). Predicate and
- * edge properties are not processed here; they are resolved downstream in {@link
- * GenerateEmbeddingContentFn}.
- *
- * <p>TODO: We will add the check on last_update_timestamp to filter to nodes that are updated
- * during data ingestion. This functionality will be implemented in a following PR. It will only
- * work properly once data ingestion is also incremental.
+ * <p>Filters imported {@code Node} mutations by non-empty {@code name} and configured {@code
+ * node_types}, and deduplicates candidates by {@code subject_id}. Predicate and edge properties are
+ * not processed here; they are resolved downstream in {@link GenerateEmbeddingContentFn}.
  */
 public final class ReadCandidateNodesFn {
-
-  /**
-   * Standard Data Commons place types always included in {@link NodeFilterType#ENTITY_TYPES} even
-   * if no observations currently reference them in {@code TimeSeries}.
-   */
-  public static final List<String> PLACE_TYPE_ORDER =
-      List.of(
-          "Continent",
-          "Ocean",
-          "Country",
-          "State",
-          "AdministrativeArea1",
-          "EurostatNUTS1",
-          "EurostatNUTS2",
-          "AdministrativeArea2",
-          "EurostatNUTS3",
-          "AdministrativeArea3",
-          "AdministrativeArea4",
-          "AdministrativeArea5",
-          "County",
-          "City",
-          "Town",
-          "Village",
-          "Neighborhood",
-          "Borough",
-          "CensusZipCodeTabulationArea",
-          "ZipCode",
-          "CensusCountyDivision",
-          "CensusTract",
-          "CensusBlockGroup",
-          "CongressionalDistrict",
-          "SchoolDistrict",
-          "ElementarySchoolDistrict",
-          "SecondarySchoolDistrict",
-          "StateComponent",
-          "Place");
-
-  /**
-   * Spanner SQL query that finds all {@code Class} types that have at least one entity present in
-   * {@code TimeSeries}.
-   */
-  static final String ENTITY_TYPES_QUERY =
-      """
-      WITH all_type_table AS (
-          SELECT DISTINCT
-              subject_id AS t
-          FROM
-              Edge@{FORCE_INDEX=InEdge}
-          WHERE
-              object_id = 'Class'
-              AND predicate = 'typeOf'
-      )
-      SELECT
-          c.t
-      FROM
-          all_type_table c
-      INNER JOIN@{JOIN_METHOD=APPLY_JOIN}
-          UNNEST(
-              ARRAY(
-                  SELECT
-                      1
-                  FROM
-                      Edge@{FORCE_INDEX=InEdge} e
-                  INNER JOIN@{JOIN_METHOD=APPLY_JOIN}
-                      TimeSeries@{FORCE_INDEX=TimeSeriesByEntity1} ts
-                      ON e.subject_id = ts.entity1
-                  WHERE
-                      e.object_id = c.t
-                      AND e.predicate = 'typeOf'
-                  LIMIT 1
-              )
-          )
-      ORDER BY
-          c.t""";
 
   private ReadCandidateNodesFn() {}
 
   /**
-   * Step 1 of {@link EmbeddingPipeline}: reads candidate {@link NodeRecord}s (filtered by {@code
-   * node_types} from config) and, when {@link NodeFilterType#ENTITY_TYPES} is set, filters them
-   * against valid entity types from Spanner and {@link #PLACE_TYPE_ORDER}.
+   * Step 1 of {@link EmbeddingPipeline}: extracts candidate {@link NodeRecord}s from the aggregated
+   * import {@code nodeMutations} filtered by non-empty {@code name} and {@code
+   * spec.getNodeTypeNames()}, deduplicated by {@code subject_id}.
    */
   public static PCollection<NodeRecord> readCandidateNodes(
-      Pipeline pipeline, SpannerClient spannerClient, EmbeddingSpec spec) {
-    PCollection<NodeRecord> candidateNodes = readNodes(pipeline, spannerClient, spec);
-    if (spec.nodeFilterType() == NodeFilterType.ENTITY_TYPES) {
-      return filterByEntityTypes(candidateNodes, spannerClient, spec.embeddingLabel());
-    }
-    return candidateNodes;
-  }
-
-  /** Reads {@code Node} rows from Spanner filtered by {@code spec.getNodeTypeNames()}. */
-  private static PCollection<NodeRecord> readNodes(
-      Pipeline pipeline, SpannerClient spannerClient, EmbeddingSpec spec) {
+      PCollection<Mutation> nodeMutations, EmbeddingSpec spec) {
     String specId = spec.embeddingLabel();
-    String cols = String.join(", ", NodeRecord.READ_COLUMNS);
-    String sql =
-        spannerClient.formatPartitionQuery(
-            "SELECT %s FROM %s WHERE %s IS NOT NULL AND %s != ''"
-                + " AND EXISTS (SELECT 1 FROM UNNEST(%s) AS t WHERE t IN UNNEST(@node_types))",
-            cols,
-            spannerClient.getNodeTableName(),
-            NodeRecord.COL_NAME,
-            NodeRecord.COL_NAME,
-            NodeRecord.COL_TYPES);
-    Statement stmt =
-        Statement.newBuilder(sql).bind("node_types").toStringArray(spec.getNodeTypeNames()).build();
+    Set<String> targetNodeTypes = Set.copyOf(spec.getNodeTypeNames());
 
-    return pipeline
-        .apply("ReadNodes_" + specId, spannerClient.getReadTransform().withQuery(stmt))
+    return nodeMutations
         .apply(
-            "ParseNodes_" + specId,
-            MapElements.into(TypeDescriptor.of(NodeRecord.class)).via(NodeRecord::from));
-  }
-
-  /**
-   * Reads valid {@code Class} entity types from Spanner via {@link #ENTITY_TYPES_QUERY}, unions
-   * them with {@link #PLACE_TYPE_ORDER}, and filters {@code candidateNodes} to keep only valid
-   * entity types.
-   */
-  public static PCollection<NodeRecord> filterByEntityTypes(
-      PCollection<NodeRecord> candidateNodes, SpannerClient spannerClient, String specId) {
-    PCollection<String> entityTypes =
-        candidateNodes
-            .getPipeline()
-            .apply(
-                "ReadEntityTypes_" + specId,
-                spannerClient
-                    .getReadTransform()
-                    .withBatching(false)
-                    .withQuery(Statement.of(ENTITY_TYPES_QUERY)))
-            .apply(
-                "ExtractEntityTypeDcid_" + specId,
-                MapElements.into(TypeDescriptors.strings()).via(struct -> struct.getString("t")));
-
-    return filterByEntityTypes(candidateNodes, entityTypes, specId);
-  }
-
-  /**
-   * Unions {@code entityTypes} with {@link #PLACE_TYPE_ORDER} and joins with {@code candidateNodes}
-   * on {@code subject_id} to keep only valid entity types.
-   */
-  static PCollection<NodeRecord> filterByEntityTypes(
-      PCollection<NodeRecord> candidateNodes, PCollection<String> entityTypes, String specId) {
-    PCollection<KV<String, NodeRecord>> keyedCandidates =
-        candidateNodes.apply(
-            "KeyCandidatesBySubjectId_" + specId,
-            WithKeys.of(NodeRecord::subjectId).withKeyType(TypeDescriptors.strings()));
-
-    PCollection<String> placeTypes =
-        candidateNodes
-            .getPipeline()
-            .apply("CreatePlaceTypes_" + specId, Create.of(PLACE_TYPE_ORDER));
-
-    PCollection<KV<String, Boolean>> validEntityTypes =
-        PCollectionList.of(entityTypes)
-            .and(placeTypes)
-            .apply("FlattenValidEntityTypes_" + specId, Flatten.pCollections())
-            .apply("FilterNonEmptyEntityTypes_" + specId, Filter.by(t -> t != null && !t.isEmpty()))
-            .apply("DistinctValidEntityTypes_" + specId, Distinct.create())
-            .apply(
-                "KeyValidEntityTypes_" + specId,
-                MapElements.into(
-                        TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.booleans()))
-                    .via(type -> KV.of(type, Boolean.TRUE)));
-
-    final TupleTag<NodeRecord> candidateNodeTag = new TupleTag<>();
-    final TupleTag<Boolean> validTypeTag = new TupleTag<>();
-
-    return KeyedPCollectionTuple.of(candidateNodeTag, keyedCandidates)
-        .and(validTypeTag, validEntityTypes)
-        .apply("JoinCandidatesWithEntityTypes_" + specId, CoGroupByKey.create())
-        .apply(
-            "KeepValidEntityTypeCandidates_" + specId,
+            "FilterAndParseCandidateNodes_" + specId,
             ParDo.of(
-                new DoFn<KV<String, CoGbkResult>, NodeRecord>() {
+                new DoFn<Mutation, NodeRecord>() {
                   @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    CoGbkResult res = c.element().getValue();
-                    if (res.getAll(validTypeTag).iterator().hasNext()) {
-                      res.getAll(candidateNodeTag).forEach(c::output);
+                  public void processElement(
+                      @Element Mutation mutation, OutputReceiver<NodeRecord> receiver) {
+                    NodeRecord candidate = extractCandidateNode(mutation, targetNodeTypes);
+                    if (candidate != null) {
+                      receiver.output(candidate);
                     }
                   }
-                }));
+                }))
+        .apply(
+            "DeduplicateCandidateNodes_" + specId,
+            Distinct.<NodeRecord, String>withRepresentativeValueFn(NodeRecord::subjectId)
+                .withRepresentativeType(TypeDescriptors.strings()));
+  }
+
+  /**
+   * Parses a {@code Node} {@link Mutation} into a {@link NodeRecord} if it has a non-empty {@code
+   * name} and at least one type in {@code targetNodeTypes}; otherwise returns {@code null}.
+   */
+  static NodeRecord extractCandidateNode(Mutation mutation, Set<String> targetNodeTypes) {
+    Map<String, Value> map = mutation.asMap();
+    Value nameVal = map.get(NodeRecord.COL_NAME);
+    Value typesVal = map.get(NodeRecord.COL_TYPES);
+    if (nameVal == null
+        || nameVal.isNull()
+        || nameVal.getString().trim().isEmpty()
+        || typesVal == null
+        || typesVal.isNull()) {
+      return null;
+    }
+
+    List<String> types = typesVal.getStringArray();
+    if (Collections.disjoint(types, targetNodeTypes)) {
+      return null;
+    }
+
+    Value valueVal = map.get(NodeRecord.COL_VALUE);
+    Value bytesVal = map.get(NodeRecord.COL_BYTES);
+    return new NodeRecord(
+        map.get(NodeRecord.COL_SUBJECT_ID).getString(),
+        (valueVal == null || valueVal.isNull()) ? null : valueVal.getString(),
+        (bytesVal == null || bytesVal.isNull()) ? null : bytesVal.getBytes(),
+        nameVal.getString(),
+        types);
   }
 }

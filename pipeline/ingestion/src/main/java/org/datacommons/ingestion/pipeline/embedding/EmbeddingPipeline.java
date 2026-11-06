@@ -14,9 +14,9 @@
 
 package org.datacommons.ingestion.pipeline.embedding;
 
+import com.google.cloud.spanner.Mutation;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.spanner.SpannerClient;
@@ -29,8 +29,8 @@ import org.datacommons.ingestion.spanner.model.NodeRecord;
  * stages:
  *
  * <ol>
- *   <li><b>Read Candidate Nodes</b>: Reads and filters candidate {@link NodeRecord}s from Spanner
- *       by {@code node_types} and optional {@code ENTITY_TYPES} ({@link
+ *   <li><b>Read Candidate Nodes</b>: Extracts and filters candidate {@link NodeRecord}s from the
+ *       imported {@code Node} {@link Mutation}s by {@code node_types} ({@link
  *       ReadCandidateNodesFn#readCandidateNodes}).
  *   <li><b>Delete Existing Embeddings</b>: Deletes existing rows in {@code NodeEmbedding} for the
  *       candidate {@code subject_id}s and {@code embedding_label} ({@link
@@ -56,14 +56,14 @@ public final class EmbeddingPipeline {
    *     PCollection}
    */
   public static Map<String, PCollection<EmbeddingContent>> build(
-      Pipeline pipeline,
+      PCollection<Mutation> nodeMutations,
       SpannerClient spannerClient,
       String embeddingTable,
       EmbeddingConfig config) {
     Map<String, PCollection<EmbeddingContent>> contentByLabel = new LinkedHashMap<>();
     for (EmbeddingSpec spec : config.specs()) {
       contentByLabel.put(
-          spec.embeddingLabel(), buildForSpec(pipeline, spannerClient, embeddingTable, spec));
+          spec.embeddingLabel(), buildForSpec(nodeMutations, spannerClient, embeddingTable, spec));
     }
     return contentByLabel;
   }
@@ -79,12 +79,15 @@ public final class EmbeddingPipeline {
    * is to write generated embeddings to {@code embeddingTable} and return {@code void}.
    */
   public static PCollection<EmbeddingContent> buildForSpec(
-      Pipeline pipeline, SpannerClient spannerClient, String embeddingTable, EmbeddingSpec spec) {
+      PCollection<Mutation> nodeMutations,
+      SpannerClient spannerClient,
+      String embeddingTable,
+      EmbeddingSpec spec) {
     String label = spec.embeddingLabel();
 
-    // 1. Read candidate nodes from Spanner
+    // 1. Extract candidate nodes from imported node mutations
     PCollection<NodeRecord> candidateNodes =
-        ReadCandidateNodesFn.readCandidateNodes(pipeline, spannerClient, spec);
+        ReadCandidateNodesFn.readCandidateNodes(nodeMutations, spec);
 
     // 2. Delete existing embeddings for candidate nodes
     PCollection<Void> deleteDone =

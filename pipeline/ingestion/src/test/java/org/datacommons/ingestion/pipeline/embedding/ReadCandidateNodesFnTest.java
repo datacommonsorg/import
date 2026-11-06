@@ -14,13 +14,19 @@
 
 package org.datacommons.ingestion.pipeline.embedding;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Value;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,61 +40,98 @@ public class ReadCandidateNodesFnTest {
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
   @Test
-  public void testFilterByEntityTypes_withPlaceTypeOrder() {
-    // Candidate Class nodes:
-    // 1. "Farm": returned by the entity_type Spanner query
-    // 2. "Country": included via PLACE_TYPE_ORDER even if not returned by entity_type query
-    // 3. "UnusedClass": neither in entityTypes nor in PLACE_TYPE_ORDER -> filtered out
-    NodeRecord farmClassNode = new NodeRecord("Farm", "", null, "Farm", List.of("Class"));
-    NodeRecord countryClassNode = new NodeRecord("Country", "", null, "Country", List.of("Class"));
-    NodeRecord unusedClassNode =
-        new NodeRecord("UnusedClass", "", null, "Unused Class", List.of("Class"));
+  public void testReadCandidateNodes_filtersAndDeduplicatesMutations() {
+    EmbeddingSpec spec =
+        new EmbeddingSpec(
+            "base_text_embedding",
+            "NodeEmbeddingModel",
+            "text-embedding-005",
+            "RETRIEVAL_QUERY",
+            Map.of(
+                "StatisticalVariable", List.of("subject_id", "name"),
+                "Topic", List.of("subject_id", "name")),
+            NodeFilterType.NO_FILTER);
 
-    PCollection<NodeRecord> candidateNodes =
-        pipeline.apply("CreateNodes", Create.of(farmClassNode, countryClassNode, unusedClassNode));
-    PCollection<String> entityTypes = pipeline.apply("CreateEntityTypes", Create.of("Farm"));
+    NodeRecord statVarNode =
+        new NodeRecord(
+            "Count_Person",
+            "Count_Person",
+            null,
+            "Total Population",
+            List.of("StatisticalVariable"));
+    NodeRecord topicNode =
+        new NodeRecord("dc/topic/Health", "dc/topic/Health", null, "Health", List.of("Topic"));
+    NodeRecord nonMatchingTypeNode =
+        new NodeRecord("country/USA", "country/USA", null, "United States", List.of("Country"));
+    NodeRecord emptyNameNode =
+        new NodeRecord(
+            "Count_EmptyName", "Count_EmptyName", null, "", List.of("StatisticalVariable"));
+    Mutation provisionalMutation =
+        Mutation.newInsertOrUpdateBuilder("Node")
+            .set(NodeRecord.COL_SUBJECT_ID)
+            .to("Provisional_1")
+            .set(NodeRecord.COL_LAST_UPDATE_TIMESTAMP)
+            .to(Value.COMMIT_TIMESTAMP)
+            .build();
 
-    PCollection<NodeRecord> filtered =
-        ReadCandidateNodesFn.filterByEntityTypes(candidateNodes, entityTypes, "type_embedding");
+    PCollection<Mutation> nodeMutations =
+        pipeline.apply(
+            "CreateNodeMutations",
+            Create.of(
+                statVarNode.toMutation("Node"),
+                statVarNode.toMutation("Node"), // duplicate across imports
+                topicNode.toMutation("Node"),
+                nonMatchingTypeNode.toMutation("Node"),
+                emptyNameNode.toMutation("Node"),
+                provisionalMutation));
 
-    PAssert.that(filtered).containsInAnyOrder(farmClassNode, countryClassNode);
+    PCollection<NodeRecord> candidates =
+        ReadCandidateNodesFn.readCandidateNodes(nodeMutations, spec);
+
+    PAssert.that(candidates).containsInAnyOrder(statVarNode, topicNode);
     pipeline.run();
   }
 
   @Test
-  public void testFilterByEntityTypes_deduplicatesAndIgnoresEmptyTypes() {
-    NodeRecord farmClassNode = new NodeRecord("Farm", "", null, "Farm", List.of("Class"));
-    NodeRecord countryClassNode = new NodeRecord("Country", "", null, "Country", List.of("Class"));
+  public void testExtractCandidateNode_handlesValidAndInvalidMutations() {
+    Set<String> targetTypes = Set.of("StatisticalVariable", "Topic", "Class");
 
-    PCollection<NodeRecord> candidateNodes =
-        pipeline.apply("CreateNodes", Create.of(farmClassNode, countryClassNode));
-    // Contains duplicate "Farm", "Country" (which overlaps PLACE_TYPE_ORDER), and empty string ""
-    PCollection<String> entityTypes =
-        pipeline.apply("CreateEntityTypes", Create.of("Farm", "Farm", "Country", ""));
+    NodeRecord validNode =
+        new NodeRecord(
+            "Count_Person",
+            "Count_Person",
+            null,
+            "Total Population",
+            List.of("StatisticalVariable"));
+    assertEquals(
+        validNode,
+        ReadCandidateNodesFn.extractCandidateNode(validNode.toMutation("Node"), targetTypes));
 
-    PCollection<NodeRecord> filtered =
-        ReadCandidateNodesFn.filterByEntityTypes(candidateNodes, entityTypes, "type_embedding");
+    NodeRecord classNode = new NodeRecord("Farm", "Farm", null, "Farm", List.of("Class"));
+    assertEquals(
+        classNode,
+        ReadCandidateNodesFn.extractCandidateNode(classNode.toMutation("Node"), targetTypes));
 
-    PAssert.that(filtered).containsInAnyOrder(farmClassNode, countryClassNode);
-    pipeline.run();
-  }
+    // Non-matching type returns null
+    NodeRecord placeNode =
+        new NodeRecord("country/USA", "country/USA", null, "United States", List.of("Country"));
+    assertNull(
+        ReadCandidateNodesFn.extractCandidateNode(placeNode.toMutation("Node"), targetTypes));
 
-  @Test
-  public void testEntityTypesQueryContainsExpectedClauses() {
-    String query = ReadCandidateNodesFn.ENTITY_TYPES_QUERY;
-    assertTrue(query.contains("WITH all_type_table AS"));
-    assertTrue(query.contains("Edge@{FORCE_INDEX=InEdge}"));
-    assertTrue(query.contains("TimeSeries@{FORCE_INDEX=TimeSeriesByEntity1}"));
-    assertTrue(query.contains("ORDER BY"));
-  }
+    // Empty name returns null
+    NodeRecord emptyNameNode =
+        new NodeRecord("Count_Empty", "Count_Empty", null, "   ", List.of("StatisticalVariable"));
+    assertNull(
+        ReadCandidateNodesFn.extractCandidateNode(emptyNameNode.toMutation("Node"), targetTypes));
 
-  @Test
-  public void testPlaceTypeOrderContainsCorePlaceTypes() {
-    assertTrue(ReadCandidateNodesFn.PLACE_TYPE_ORDER.contains("Continent"));
-    assertTrue(ReadCandidateNodesFn.PLACE_TYPE_ORDER.contains("Country"));
-    assertTrue(ReadCandidateNodesFn.PLACE_TYPE_ORDER.contains("State"));
-    assertTrue(ReadCandidateNodesFn.PLACE_TYPE_ORDER.contains("County"));
-    assertTrue(ReadCandidateNodesFn.PLACE_TYPE_ORDER.contains("City"));
-    assertTrue(ReadCandidateNodesFn.PLACE_TYPE_ORDER.contains("Place"));
+    // Provisional node mutation (missing name and types) returns null
+    Mutation provisionalMutation =
+        Mutation.newInsertOrUpdateBuilder("Node")
+            .set(NodeRecord.COL_SUBJECT_ID)
+            .to("Provisional_1")
+            .set(NodeRecord.COL_LAST_UPDATE_TIMESTAMP)
+            .to(Value.COMMIT_TIMESTAMP)
+            .build();
+    assertNull(ReadCandidateNodesFn.extractCandidateNode(provisionalMutation, targetTypes));
   }
 }
