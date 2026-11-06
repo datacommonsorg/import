@@ -1,0 +1,8 @@
+# Install with `pip install --no-deps -r requirements_nodeps.txt`, after
+# requirements.txt. Their other dependencies are pinned in requirements.txt.
+#
+# fs and fs-gcsfs are unmaintained. Their declared dependencies would otherwise
+# pull in an outdated urllib3 (fs-gcsfs pins urllib3~=1.25) and setuptools (fs
+# requires it for pkg_resources, which simple/pkg_resources.py now provides).
+fs==2.4.16
+fs-gcsfs==1.5.1
