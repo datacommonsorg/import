@@ -60,18 +60,22 @@ ASPECTS = ("records", "report", "handshake", "error")
 # Known bugs, as xfails. Strict ones fail with XPASS once fixed, so the entry
 # must then be removed. Non-strict ones are for nondeterministic bugs.
 # Keys: (dataset, mode, aspect); "*" matches any value.
-_REPORT = ("report.json leaves every file NOT_STARTED: workers report to their"
-           " own files, never merged into it (b/580998027)")
 _SPLIT_NODE = ("node shards are cut without keeping a subject's triples"
                " together, so a node is split across shards")
 _GCS_CONFIG = (
     "--config_file on GCS fails with 'Not a file': create_store() opens"
     " the path as a directory first, which always works on GCS")
 
+# Known bugs that every mode shares are written into expected.json instead, so
+# the rest of the aspect is still checked (see "Known bugs" in README.md). The
+# fix updates expected.json.
+GOLDEN_BUGS = {
+    "report.json leaves every file NOT_STARTED: workers report to their own"
+    " files, never merged into it":
+        "b/580998027",
+}
+
 KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {
-    ("kitchen_sink", "*", "report"): (_REPORT, True),
-    ("config_file_driven", "*", "report"): (_REPORT, True),
-    ("multi_import", "*", "report"): (_REPORT, True),
     ("multi_import", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("kitchen_sink", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("config_file_driven", "tiny_chunks", "records"): (_SPLIT_NODE, True),
@@ -136,12 +140,6 @@ def _read_expected(dataset: str) -> dict:
 
 
 def _write_expected(dataset: str) -> None:
-  """
-  Rewrites expected.json from a run in the default mode.
-
-  expected.json holds the correct output, so an aspect that is a known issue
-  in the default mode keeps its current expected value.
-  """
   reference = _output(dataset, run.DEFAULT_MODE)
   expected = {
       "records": _records_view(dataset, reference["records"]),
@@ -149,11 +147,6 @@ def _write_expected(dataset: str) -> None:
       "handshake": reference["handshake"],
       "error": reference["error"],
   }
-  if os.path.exists(_expected_path(dataset)):
-    current = _read_expected(dataset)
-    for aspect in ASPECTS:
-      if _known_issue(dataset, run.DEFAULT_MODE, aspect):
-        expected[aspect] = current[aspect]
   with open(_expected_path(dataset), "w", encoding="utf-8") as f:
     f.write(canonical.dumps(expected))
 

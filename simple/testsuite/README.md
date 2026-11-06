@@ -99,3 +99,8 @@ Known bugs are strict xfails, never wrong expectations: `bug="..."` on a
 `Case`, `@known_bug(reason=...)` on a test, or an entry in `KNOWN_ISSUES` in
 `test_e2e.py`. When a fix lands, the test XPASSes and fails until the marker
 is removed.
+
+One exception: an e2e bug that every mode shares is written into
+`expected.json` instead, because an xfail would stop checking that whole
+aspect. Each one is listed in `GOLDEN_BUGS` in `test_e2e.py`; its fix updates
+`expected.json`.

@@ -98,13 +98,13 @@
   "report": {
     "importFiles": {
       "<input>/data/countries_a.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/data/countries_b.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/data/provenance.mcf": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       }
     },
     "status": "SUCCESS"

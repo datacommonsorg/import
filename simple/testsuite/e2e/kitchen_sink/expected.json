@@ -316,19 +316,19 @@
   "report": {
     "importFiles": {
       "<input>/authors.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/observations.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/provenance.mcf": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/schema.mcf": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/trips.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       }
     },
     "status": "SUCCESS"
