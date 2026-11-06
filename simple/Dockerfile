@@ -51,5 +51,30 @@ COPY run.sh .
 # Make script executable.
 RUN chmod +x run.sh
 
+# TODO(b/576288517): Switch the runtime image to distroless, which doesn't ship
+# these packages, and replace run.sh with a Python entrypoint (distroless has no
+# shell). Then this purge step can go.
+#
+# Remove Debian packages from the base image that the preprocessor never uses;
+# they account for most of the image's unfixable vulnerabilities. --force-all is
+# needed because Debian marks some of them essential. perl-base goes last since
+# the other packages' removal scripts use it. The import at the end fails the
+# build if anything the preprocessor needs was removed.
+RUN dpkg --purge --force-all \
+        apt libapt-pkg7.0 \
+        bsdutils libblkid1 liblastlog2-2 libmount1 libsmartcols1 libuuid1 login mount util-linux \
+        diffutils \
+        libacl1 \
+        libattr1 \
+        libbz2-1.0 \
+        libncursesw6 ncurses-base ncurses-bin \
+        libpam-modules libpam-modules-bin libpam-runtime libpam0g \
+        libsqlite3-0 \
+        libsystemd0 libudev1 \
+        login.defs passwd \
+        tar \
+    && dpkg --purge --force-all perl-base \
+    && PYTHONPATH=/workspace/import/simple python3 -c "import stats.main, stats.runner"
+
 # Set the entrypoint to force bash execution
 ENTRYPOINT ["/bin/bash", "./run.sh"]
