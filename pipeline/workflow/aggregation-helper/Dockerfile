@@ -14,8 +14,16 @@
 
 FROM python:3.12-slim
 
-# Copy uv binary
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Copy uv binary (pinned for reproducible builds)
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
+
+# Apply the latest Debian security patches to the base image
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
+# Remove the base image's system pip and the bundled ensurepip wheels.
+# Dependencies are installed with uv, so pip is not needed at runtime.
+RUN python -m pip uninstall -y pip && \
+    rm -rf /usr/local/lib/python3.12/ensurepip/_bundled
 
 # Allow statements and log messages to immediately appear in the logs
 ENV PYTHONUNBUFFERED=True
@@ -26,13 +34,13 @@ WORKDIR /app
 COPY pyproject.toml uv.lock __init__.py ./
 
 # Install production dependencies (without the project itself)
-RUN uv sync --no-dev --no-install-project
+RUN uv sync --locked --no-dev --no-install-project
 
 # Copy local code to the container image
 COPY . .
 
 # Install the project itself
-RUN uv sync --no-dev
+RUN uv sync --locked --no-dev
 
 # Place the virtual environment's bin directory on the PATH
 ENV PATH="/app/.venv/bin:$PATH"
