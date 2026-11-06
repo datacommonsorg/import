@@ -182,6 +182,9 @@ def test_selected_import_names_run_only_those_subdirectories():
       result.observations,
       [b.obs("country/USA", value=1),
        b.obs("country/FRA", value=2)])
+  assert result.output["ingestion_report"]["run"]["folderNames"] == [
+      "oecd", "ilo"
+  ]
 
 
 # --- StatVar groups -----------------------------------------------------------
