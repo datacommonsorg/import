@@ -57,15 +57,6 @@ DATASETS = sorted(
     for p in glob.glob(os.path.join(E2E_DIR, "*", "run.json")))
 ASPECTS = ("records", "report", "handshake", "error")
 
-# Known bugs, as xfails. Strict ones fail with XPASS once fixed, so the entry
-# must then be removed. Non-strict ones are for nondeterministic bugs.
-# Keys: (dataset, mode, aspect); "*" matches any value.
-_SPLIT_NODE = ("node shards are cut without keeping a subject's triples"
-               " together, so a node is split across shards")
-_GCS_CONFIG = (
-    "--config_file on GCS fails with 'Not a file': create_store() opens"
-    " the path as a directory first, which always works on GCS")
-
 # Known bugs that every mode shares are written into expected.json instead, so
 # the rest of the aspect is still checked (see "Known bugs" in README.md). The
 # fix updates expected.json.
@@ -75,12 +66,10 @@ GOLDEN_BUGS = {
         "b/580998027",
 }
 
-KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {
-    ("multi_import", "tiny_chunks", "records"): (_SPLIT_NODE, True),
-    ("kitchen_sink", "tiny_chunks", "records"): (_SPLIT_NODE, True),
-    ("config_file_driven", "tiny_chunks", "records"): (_SPLIT_NODE, True),
-    ("config_file_driven", "gcs_input", "*"): (_GCS_CONFIG, True),
-}
+# Known bugs, as xfails. Strict ones fail with XPASS once fixed, so the entry
+# must then be removed. Non-strict ones are for nondeterministic bugs.
+# Keys: (dataset, mode, aspect); "*" matches any value.
+KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {}
 
 
 def _known_issue(dataset: str, mode: str, aspect: str):
@@ -163,16 +152,9 @@ def _records_view(dataset: str, records: list) -> dict:
   """
   any_types = set(
       _spec(dataset).get("any_folder_types", _DEFAULT_ANY_FOLDER_TYPES))
-  folders, anywhere = {}, []
-  for folder, kind, rec in records:
-    kinds = folders.setdefault(folder, {
-        canonical.NODES: {},
-        canonical.OBSERVATIONS: {}
-    })
-    if rec.get("@type") in any_types:
-      anywhere.append(rec)
-    else:
-      kinds[kind].setdefault(rec.get("@id"), []).append(rec)
+  anywhere = [rec for _, _, rec in records if rec.get("@type") in any_types]
+  folders = canonical.group_by_folder(
+      r for r in records if r[2].get("@type") not in any_types)
   for kinds in folders.values():
     for kind, by_id in kinds.items():
       kinds[kind] = {

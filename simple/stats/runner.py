@@ -448,7 +448,7 @@ class Runner:
       raw_config = config_file_dir.open_file(config_file_path,
                                              create_if_missing=False).read()
     else:
-      with create_store(config_file_path) as config_store:
+      with create_store(config_file_path, treat_as_file=True) as config_store:
         raw_config = config_store.as_file().read()
 
     config_data = json.loads(raw_config) if raw_config else {}
@@ -732,13 +732,9 @@ class Runner:
 
     # Populate trigger workflow info if running under ingestion workflow and output is GCS
     output_path = self.graph_writer.jsonld_dir.full_path()
-    import_name = self.graph_writer.import_name
     if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      processed_imports = sorted(list(self.graph_writer._processed_imports))
-      if not processed_imports:
-        processed_imports = [import_name]
       import_list = []
-      for imp in processed_imports:
+      for imp in self.graph_writer.import_folders():
         sanitized_imp = imp.replace("/", "_")
         gcs_pattern = f"{output_path.rstrip('/')}/{sanitized_imp}/**/*.jsonld"
         import_list.append({"importName": imp, "graphPath": gcs_pattern})

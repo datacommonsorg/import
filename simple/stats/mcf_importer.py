@@ -63,10 +63,11 @@ class McfImporter(Importer):
         ]:
           metadata_subject_ids.add(subject_id)
 
-      # Pass 2: Map and stream triples to the graph writer in chunks
+      # Pass 2: Map triples and write them in one call, so that the graph
+      # writer can keep each node's triples in a single shard.
       logging.info("Streaming MCF triple parsing and writes for %s...",
                    self.input_file.full_path())
-      chunk = []
+      node_triples = []
       all_metadata_triples = []
 
       for parser_triple in triples_list:
@@ -79,16 +80,9 @@ class McfImporter(Importer):
         resolved_subject = local2dcid.get(subject_id, subject_id)
         if subject_id in metadata_subject_ids or resolved_subject in metadata_subject_ids:
           all_metadata_triples.append(triple)
+        node_triples.append(triple)
 
-        # Only flush at subject boundaries to prevent splitting a subject's triples
-        if chunk and triple.subject_id != chunk[-1].subject_id and len(
-            chunk) >= 10000:
-          self.graph_writer.write_triples(chunk, self.input_file)
-          chunk = []
-        chunk.append(triple)
-
-      if chunk:
-        self.graph_writer.write_triples(chunk, self.input_file)
+      self.graph_writer.write_triples(node_triples, self.input_file)
 
       # Register all collected metadata nodes at the end
       if all_metadata_triples:

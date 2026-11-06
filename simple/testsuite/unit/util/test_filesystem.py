@@ -69,6 +69,19 @@ class TestFilesystem(unittest.TestCase):
         self.assertTrue(store.isdir())
         self.assertEqual(store.as_dir().full_path(), str(temp_dir))
 
+  def test_relative_file_path_is_read_from_the_working_directory(self):
+    """A bare file name (e.g. --config_file=config.json) resolves to the cwd."""
+    previous_cwd = os.getcwd()
+    with tempfile.TemporaryDirectory() as temp_dir:
+      with open(os.path.join(temp_dir, "config.json"), "w") as f:
+        f.write('{"inputFiles": []}')
+      os.chdir(temp_dir)
+      try:
+        with create_store("config.json", treat_as_file=True) as store:
+          self.assertEqual(store.as_file().read(), '{"inputFiles": []}')
+      finally:
+        os.chdir(previous_cwd)
+
   # Test read and write methods on File
   def test_file(self):
     with create_store("mem://dir/foo.txt",

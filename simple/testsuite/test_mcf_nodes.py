@@ -256,6 +256,27 @@ def test_one_node_in_two_blocks_is_merged():
                    [b.record("T", "Thing", name="First", description="Second")])
 
 
+_OTHER_NODES = [f"Other{i}" for i in range(3)]
+
+
+def test_a_node_in_distant_blocks_is_never_split_across_shards():
+  """
+  With shards of about one triple (tiny_chunks), T's two blocks are several
+  shards apart in file order, yet T is still written as one whole node.
+  """
+  result = b.run_mcf(b.mcf_node("dcid:T", name='"First"'),
+                     *[
+                         b.mcf_node(f"dcid:{other}", name=f'"{other}"')
+                         for other in _OTHER_NODES
+                     ],
+                     b.mcf_node("dcid:T", typeOf=None, description='"Second"'),
+                     mode="tiny_chunks")
+  b.assert_records(result.added, [
+      b.record("T", "Thing", name="First", description="Second"),
+      *[b.record(other, "Thing", name=other) for other in _OTHER_NODES],
+  ])
+
+
 def test_comments_and_blank_lines_are_ignored():
   result = b.run_mcf("// A comment\n# Another comment\n\nNode: dcid:T\n\n"
                      "typeOf: dcs:Thing\n")
