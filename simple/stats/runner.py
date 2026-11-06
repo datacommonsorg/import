@@ -50,9 +50,30 @@ from util.filesystem import join_path
 from util.filesystem import Store
 
 _ARCHIVES_DIR_NAME = "archives"
-# Upper bound on the worker processes that import files, and on the threads
-# that validate CSV headers.
-_MAX_WORKERS = 32
+# Upper bound on the threads that validate CSV headers. Header validation reads
+# only the first rows of each file and spends its time waiting on storage (often
+# GCS), so it is bounded independently of the CPU count; 32 matches the requests
+# connection pool size set in main.py.
+_MAX_HEADER_VALIDATION_THREADS = 32
+
+
+def default_max_workers() -> int:
+  """Returns the default number of worker processes that import files.
+
+  Each worker is a separate process that holds its own copy of the parsed data
+  for the file it imports, so running more workers than there are CPUs to run
+  them adds memory without adding throughput. The default is therefore the
+  number of CPUs this process may run on.
+
+  `os.sched_getaffinity` is preferred over `os.cpu_count` because it honors the
+  CPU affinity mask and cpusets (e.g. a container or Cloud Batch task pinned to
+  a subset of the host's CPUs), whereas `os.cpu_count` reports every CPU on the
+  host. It is not available on every platform (e.g. macOS), hence the fallback.
+  """
+  try:
+    return len(os.sched_getaffinity(0))
+  except AttributeError:
+    return os.cpu_count() or 1
 
 
 def _create_importer_for_file(
@@ -263,7 +284,21 @@ class Runner:
       input_dir_path: str,
       output_dir_path: str,
       import_names: Optional[list[str]] = None,
+      max_workers: Optional[int] = None,
   ) -> None:
+    """Sets up the input and output stores and reads the config.
+
+    Args:
+      max_workers: The maximum number of worker processes that import files
+        concurrently. Defaults to `default_max_workers()`. Lower it to reduce
+        peak memory, since each worker holds the data of the file it imports.
+    """
+    if max_workers is None:
+      max_workers = default_max_workers()
+    if max_workers < 1:
+      raise ValueError(f"max_workers must be at least 1, got {max_workers}")
+    self.max_workers = max_workers
+
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
@@ -639,8 +674,8 @@ class Runner:
       self.config._per_file_config(file)
 
     all_errors = []
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=min(_MAX_WORKERS, len(csv_files))) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(
+        _MAX_HEADER_VALIDATION_THREADS, len(csv_files))) as executor:
       for errors in executor.map(self._validate_single_file_headers, csv_files):
         all_errors.extend(errors)
 
@@ -666,8 +701,11 @@ class Runner:
         config_json_str=json.dumps(self.config.data),
         jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
     )
+    num_workers = min(self.max_workers, len(files))
+    logging.info("Importing %d files with %d worker processes", len(files),
+                 num_workers)
     with concurrent.futures.ProcessPoolExecutor(
-        max_workers=min(_MAX_WORKERS, len(files))) as executor:
+        max_workers=num_workers) as executor:
       futures = [
           executor.submit(_run_single_import_proc, file.path,
                           file._store.root_path, worker_args) for file in files
