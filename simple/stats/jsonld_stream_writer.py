@@ -124,11 +124,14 @@ def _parse_props_json(props: str, entity: str, variable: str) -> dict:
 def _build_observation_node(row: tuple) -> dict:
   """Builds a single `dcid:StatVarObservation` JSON-LD node dict from a row."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
+  props_dict = _parse_props_json(props, entity, variable)
+  # Sorted, so that the @id does not depend on the order the config declares
+  # the properties in. observationProperties keeps the declared order.
+  id_props = json.dumps(props_dict, sort_keys=True) if props_dict else props
+  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{id_props}"
   obs_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
 
   var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
-  props_dict = _parse_props_json(props, entity, variable)
   if props_dict and var_obj:
     var_obj["dcid:observationProperties"] = [
         _prefix_dcid(k) for k in props_dict.keys()

@@ -192,6 +192,32 @@ def test_rows_with_different_keys_get_different_ids():
   assert len(_ids(result)) == 2
 
 
+def test_dimension_order_in_the_config_does_not_change_the_id():
+  """Two files declare the same entity dimensions in opposite orders."""
+  header = b.OBS_HEADER + ["origin", "dest"]
+  row = b.obs_row() + ["country/FRA", "country/DEU"]
+  origin = {"dcid:origin": "origin"}
+  dest = {"dcid:destination": "dest"}
+  config = b.obs_config({**b.OBS_MAPPINGS, **origin, **dest}, pattern="a.csv")
+  config["inputFiles"].append({
+      **config["inputFiles"][-1],
+      "pattern": "b.csv",
+      "columnMappings": {
+          **b.OBS_MAPPINGS,
+          **dest,
+          **origin
+      },
+  })
+  result = b.run(
+      {
+          "a.csv": b.csv_file(row, header=header),
+          "b.csv": b.csv_file(row, header=header),
+      }, config)
+  assert result.error is None, result.error
+  assert len(result.observations) == 2
+  assert len(_ids(result)) == 1
+
+
 _COLLISION_SUMMARY = "Observation @ID Collision Summary:"
 
 
