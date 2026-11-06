@@ -157,7 +157,7 @@ def _dumps(record: dict) -> str:
   return json.dumps(record, sort_keys=True)
 
 
-def _actual(dataset: str, output: dict, aspect: str):
+def _actual(output: dict, aspect: str):
   if aspect == "records":
     return _records_view(output["records"])
   return output[aspect]
@@ -171,7 +171,7 @@ def test_e2e(dataset: str, mode: str, aspect: str, update_expected: bool):
                 " --update-expected -n 0 and review it")
   expected = _read_expected(dataset)[aspect]
   output = _output(dataset, mode)
-  actual = _actual(dataset, output, aspect)
+  actual = _actual(output, aspect)
   if output["error"] and aspect != "error" and "_traceback" in output and (
       not expected_error(dataset)):
     pytest.fail(f"run failed:\n{output['_traceback']}", pytrace=False)

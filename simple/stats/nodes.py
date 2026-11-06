@@ -98,7 +98,7 @@ class Nodes:
       src.domain = src.domain or Source(id="", name="", url=url).domain
     _extend_unique(src.custom_triples, _about(clean_id, custom_triples))
     if import_folder:
-      src.provenance_id = min(src.provenance_id or import_folder, import_folder)
+      src.import_folder = min(src.import_folder or import_folder, import_folder)
     return src
 
   def merge_metadata(self, provenances: dict[str, Provenance],
@@ -111,7 +111,7 @@ class Nodes:
     `register_provenance`, so:
     - `name`, `url` and `source_id` keep the first non-empty value; a
       non-empty `name` is also (re)pointed at the node as a lookup key.
-    - a Source's `provenance_id` (its import folder) becomes the
+    - a Source's `import_folder` becomes the
       alphabetically first of the folders that define it.
     - `custom_triples`, of Sources and Provenances alike, are unioned.
     """
@@ -120,7 +120,7 @@ class Nodes:
                            name=src.name,
                            url=src.url,
                            custom_triples=src.custom_triples,
-                           import_folder=src.provenance_id)
+                           import_folder=src.import_folder)
     for prov in provenances.values():
       self.register_provenance(id=prov.id,
                                name=prov.name,
@@ -163,7 +163,7 @@ class Nodes:
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
     result: dict[str, list[Triple]] = defaultdict(list)
     for source in self.sources.values():
-      result[_provenance_dir(source.provenance_id)].extend(source.triples())
+      result[_provenance_dir(source.import_folder)].extend(source.triples())
     for provenance in self.provenances.values():
       prov_id = provenance.provenance_id or provenance.id
       result[_provenance_dir(prov_id)].extend(provenance.triples())
