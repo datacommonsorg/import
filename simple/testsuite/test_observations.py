@@ -195,6 +195,17 @@ def test_rows_with_different_keys_get_different_ids():
 _COLLISION_SUMMARY = "Observation @ID Collision Summary:"
 
 
+def _collision_summary(caplog) -> list[str]:
+  """Returns the lines of the run's one collision summary."""
+  summaries = [
+      r.getMessage()
+      for r in caplog.records
+      if r.getMessage().startswith(_COLLISION_SUMMARY)
+  ]
+  assert len(summaries) == 1, summaries
+  return summaries[0].splitlines()
+
+
 def test_collisions_of_every_file_are_summarized(caplog):
   """
   The end-of-run summary counts the collisions of every file.
@@ -217,13 +228,7 @@ def test_collisions_of_every_file_are_summarized(caplog):
   with caplog.at_level(logging.WARNING):
     result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
   assert result.error is None, result.error
-  summaries = [
-      r.getMessage()
-      for r in caplog.records
-      if r.getMessage().startswith(_COLLISION_SUMMARY)
-  ]
-  assert len(summaries) == 1, summaries
-  header, *details = summaries[0].splitlines()
+  header, *details = _collision_summary(caplog)
   assert header == (f"{_COLLISION_SUMMARY} Total of 2 observation @id"
                     " collisions detected across 2 file(s):")
   assert sorted(line for line in details if line.startswith("  File ")) == [
@@ -232,6 +237,31 @@ def test_collisions_of_every_file_are_summarized(caplog):
   ]
   samples = [line for line in details if line.startswith("    - @id=")]
   assert len(samples) == 2, details
+
+
+def test_collisions_across_files_are_summarized(caplog):
+  """
+  Two files that produce the same observation id collide.
+
+  Each file is imported by its own worker, which only sees its own file, so the
+  coordinator finds the collision. It is counted for the later file (in import
+  order), and the sample names the earlier one.
+  """
+  row = b.obs_row("country/X", value="1")
+  files = {
+      "provenance.mcf": b.PROVENANCE_MCF,
+      "case_x.csv": b.csv_file(row),
+      "case_y.csv": b.csv_file(row, b.obs_row("country/Y", value="1")),
+  }
+  with caplog.at_level(logging.WARNING):
+    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
+  assert result.error is None, result.error
+  header, file_line, sample = _collision_summary(caplog)
+  assert header == (f"{_COLLISION_SUMMARY} Total of 1 observation @id"
+                    " collisions detected across 1 file(s):")
+  assert file_line == "  File 'case_y.csv': 1 collision(s)"
+  assert sample.startswith("    - @id='dcid:obs_"), sample
+  assert sample.endswith(" also produced by 'case_x.csv'"), sample
 
 
 @known_bug(reason="the observation id is hashed before trimming whitespace, so"

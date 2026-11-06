@@ -91,6 +91,15 @@ def _parse_numeric(val):
     return str(val)
 
 
+# Collision samples kept per file for the end-of-run summary.
+MAX_SAMPLES_PER_FILE = 3
+
+
+def collision_file_key(file_name: str) -> str:
+  """Returns the key under which collisions of `file_name` are summarized."""
+  return os.path.basename(file_name) if file_name else "unknown"
+
+
 def _prefix_dcid(key: str) -> str:
   """Ensures `key` has a `dcid:` prefix unless it is already a URI or prefixed."""
   if key.startswith(("dcid:", "http://", "https://")):
@@ -297,8 +306,12 @@ class JsonLdStreamWriter(GraphWriter):
       chunk_items: list[tuple[str, str, str, str, str]],
       file_name: str = "",
   ) -> None:
-    """Tracks observation hashes for a shard chunk and logs any collisions."""
-    file_key = os.path.basename(file_name) if file_name else "unknown"
+    """Tracks observation hashes for a shard chunk and logs any collisions.
+
+    Only collisions with observations that this writer saw are found: a worker
+    sees one file. See `stats.obs_id_collisions` for collisions between files.
+    """
+    file_key = collision_file_key(file_name)
     for obs_hash, ent, var, dt, prov in chunk_items:
       hash_int = int(obs_hash[:16], 16)
       if hash_int not in self.obs_hash_set:
@@ -311,7 +324,7 @@ class JsonLdStreamWriter(GraphWriter):
       )
       if len(self.obs_sample_collisions) < 10:
         self.obs_sample_collisions.append(sample_info)
-      if len(self.file_sample_collisions[file_key]) < 3:
+      if len(self.file_sample_collisions[file_key]) < MAX_SAMPLES_PER_FILE:
         self.file_sample_collisions[file_key].append(sample_info)
         logging.warning(
             "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
@@ -320,6 +333,21 @@ class JsonLdStreamWriter(GraphWriter):
         logging.warning(
             "Detected %d observation @id collisions so far across processed datasets.",
             self.obs_collision_count)
+
+  def merge_collisions(self, file_counts: dict[str, int],
+                       file_samples: dict[str, list[str]]) -> None:
+    """Adds collisions found elsewhere to this writer's end-of-run summary.
+
+    Args:
+      file_counts: collision count per file key (see `collision_file_key`).
+      file_samples: sample descriptions per file key.
+    """
+    for f_name, count in file_counts.items():
+      self.obs_collision_count += count
+      self.file_collision_counts[f_name] += count
+      samples = self.file_sample_collisions[f_name]
+      samples.extend(
+          file_samples.get(f_name, [])[:MAX_SAMPLES_PER_FILE - len(samples)])
 
   def _write_observations_df_to_disk(self,
                                      df: pd.DataFrame,
