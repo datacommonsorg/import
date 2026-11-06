@@ -60,7 +60,6 @@ ASPECTS = ("records", "report", "handshake", "error")
 # Known bugs, as xfails. Strict ones fail with XPASS once fixed, so the entry
 # must then be removed. Non-strict ones are for nondeterministic bugs.
 # Keys: (dataset, mode, aspect); "*" matches any value.
-_PROV_URL = "use_multiprocessing drops dcid:provenanceUrl from observations"
 _REPORT = "with use_multiprocessing, report.json leaves every file NOT_STARTED"
 _SPLIT_NODE = ("node shards are cut without keeping a subject's triples"
                " together, so a node is split across shards")
@@ -69,10 +68,6 @@ _GCS_CONFIG = (
     " the path as a directory first, which always works on GCS")
 
 KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {
-    ("kitchen_sink", "production", "records"): (_PROV_URL, True),
-    ("multi_import", "production", "records"):
-        (_PROV_URL + "; a CSV worker's auto-created provenance (named after"
-         " its id) can also replace the MCF one", True),
     ("multi_import", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("kitchen_sink", "production", "report"): (_REPORT, True),
     ("multi_import", "production", "report"): (_REPORT, True),

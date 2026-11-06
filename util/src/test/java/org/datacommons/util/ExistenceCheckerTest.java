@@ -24,6 +24,13 @@ public class ExistenceCheckerTest {
           + "typeOf: schema:Property\n"
           + "name: \"latitude\"\n"
           + "rangeIncludes: schema:Place\n";
+  private static final String NONEXISTING_EVENT = "{\"data\":{\"droughtEvent1\":{}}}";
+  private static final String EVENT_WITH_COMPLEX_VALUES =
+      "Node: dcid:droughtEvent1\n"
+          + "typeOf: dcs:DroughtEvent\n"
+          + "area: [SquareKilometer 84360.51958]\n"
+          + "startLocation: [LatLong 1 -51]\n"
+          + "ageRange: [Years 10 20]\n";
 
   @Test
   public void testNode() throws IOException, InterruptedException {
@@ -120,6 +127,43 @@ public class ExistenceCheckerTest {
         "latitude", "rangeIncludes", "Place", newLogCb(lw, SUB_KEY, "latitude"));
     verify(mockHttp, times(2)).send(any(), any());
     assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 2));
+  }
+
+  @Test
+  public void testComplexValueNodes() throws IOException, InterruptedException {
+    var mockHttp = Mockito.mock(HttpClient.class);
+    var mockResp = Mockito.mock(HttpResponse.class);
+    when(mockResp.statusCode()).thenReturn(200);
+    when(mockResp.body()).thenReturn(NONEXISTING_EVENT);
+    when(mockHttp.send(any(), any())).thenReturn(mockResp);
+
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    ExistenceChecker.DC_CALL_BATCH_LIMIT = 1;
+
+    var checker = new ExistenceChecker(mockHttp, false, lw);
+
+    // Expand the complex values into nodes, the same way the tool does for every CSV row.
+    Mcf.McfGraph graph =
+        McfMutator.mutate(
+            TestUtil.graphFromMcf(EVENT_WITH_COMPLEX_VALUES).toBuilder(),
+            lw,
+            /* isBaseDc= */ true,
+            /* generateFallbacks= */ false);
+    checker.addComplexValueNodes(graph);
+
+    // References to the generated Quantity, GeoCoordinates and QuantityRange nodes are local
+    // hits. No RPCs and no missing references.
+    checker.submitNodeCheck("SquareKilometer84360.51958", newLogCb(lw, VREF_KEY, "area"));
+    checker.submitNodeCheck("latLong/100000_-5100000", newLogCb(lw, VREF_KEY, "startLocation"));
+    checker.submitNodeCheck("Years10To20", newLogCb(lw, VREF_KEY, "ageRange"));
+    verify(mockHttp, never()).send(any(), any());
+    assertFalse(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 1));
+
+    // Other nodes in the graph are not registered, so they are still checked against the KG.
+    checker.submitNodeCheck("droughtEvent1", newLogCb(lw, VREF_KEY, "droughtEvent1"));
+    verify(mockHttp, times(1)).send(any(), any());
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 1));
   }
 
   @Test

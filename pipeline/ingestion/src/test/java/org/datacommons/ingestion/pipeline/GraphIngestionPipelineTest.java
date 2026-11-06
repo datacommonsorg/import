@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.pipeline;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -14,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.Compression;
+import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -23,6 +26,8 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.proto.Mcf.McfOptimizedGraph;
+import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -217,6 +222,82 @@ public class GraphIngestionPipelineTest implements Serializable {
     assertTrue(
         "Should NOT find constraintProperties when transformation is skipped",
         !foundConstraintProperties);
+  }
+
+  @Test
+  public void testBuildPipelineWithTfRecordInput() throws Exception {
+    // 1. Setup Test Data (gzipped TFRecord file with two series and three observations)
+    McfOptimizedGraph usa =
+        createOptimizedGraph(
+            "count_person",
+            "country/USA",
+            createStatVarObs("2020", 1.0),
+            createStatVarObs("2021", 2.0));
+    McfOptimizedGraph india =
+        createOptimizedGraph("count_person", "country/India", createStatVarObs("2020", 3.0));
+    // TFRecordIO appends the ".gz" compression suffix to the output file.
+    String tfRecordPrefix = tmpFolder.getRoot().getPath() + "/graph.tfrecord";
+    Pipeline writePipeline = Pipeline.create();
+    writePipeline
+        .apply(Create.of(usa.toByteArray(), india.toByteArray()))
+        .apply(
+            TFRecordIO.write()
+                .to(tfRecordPrefix)
+                .withCompression(Compression.GZIP)
+                .withoutSharding());
+    writePipeline.run().waitUntilFinish();
+
+    // 2. Setup Options
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    String importListJson =
+        String.format("[{\"importName\": \"testImport\", \"graphPath\": \"%s*\"}]", tfRecordPrefix);
+    options.setImportList(importListJson);
+    options.setProjectId("test-project");
+    options.setSpannerInstanceId("test-instance");
+    options.setSpannerDatabaseId("test-database");
+
+    // 3. Setup Mock SpannerClient
+    PCollection<Void> emptySignal =
+        pipeline.apply("CreateEmptySignal_TfRecord", Create.empty(TypeDescriptor.of(Void.class)));
+    SpannerWriteResult mockWriteResult =
+        mock(SpannerWriteResult.class, withSettings().serializable());
+    PCollection<Void> mockWriteOutput =
+        pipeline.apply("CreateWriteSignal_TfRecord", Create.empty(TypeDescriptor.of(Void.class)));
+    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
+    SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
+
+    // 4. Build and Run Pipeline
+    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    pipeline.run().waitUntilFinish();
+
+    // 5. Assertions: one TimeSeries mutation per record, one Observation mutation per obs.
+    long timeSeriesCount =
+        capturedMutations.stream().filter(m -> m.getTable().equals("TimeSeries")).count();
+    long observationCount =
+        capturedMutations.stream().filter(m -> m.getTable().equals("Observation")).count();
+    assertEquals(2, timeSeriesCount);
+    assertEquals(3, observationCount);
+  }
+
+  private static McfOptimizedGraph createOptimizedGraph(
+      String statVar, String location, McfStatVarObsSeries.StatVarObs... observations) {
+    return McfOptimizedGraph.newBuilder()
+        .setSvObsSeries(
+            McfStatVarObsSeries.newBuilder()
+                .setKey(
+                    McfStatVarObsSeries.Key.newBuilder()
+                        .setVariableMeasured(statVar)
+                        .setObservationAbout(location))
+                .addAllSvObsList(List.of(observations)))
+        .build();
+  }
+
+  private static McfStatVarObsSeries.StatVarObs createStatVarObs(String date, double value) {
+    return McfStatVarObsSeries.StatVarObs.newBuilder()
+        .setDate(date)
+        .setNumber(value)
+        .setDcid("dc/o/" + date + "_" + value)
+        .build();
   }
 
   @Test

@@ -25,16 +25,6 @@ from stats.data import Triple
 import stats.schema_constants as sc
 from util.filesystem import File
 
-_CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
-_CUSTOM_SOURCE_ID_PREFIX = "c/s/"
-
-_DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
-                         "Custom Data Commons")
-_DEFAULT_PROVENANCE = Provenance(id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}default",
-                                 source_id=_DEFAULT_SOURCE.id,
-                                 name="Custom Import",
-                                 url="custom-import")
-
 
 def thread_safe(func):
   """Decorator to make a method thread-safe using the object's reentrant lock."""
@@ -58,11 +48,6 @@ class Nodes:
     self.provenances: dict[str, Provenance] = {}
     # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
-    self._used_provenance_ids = set()
-    self._used_source_ids = set()
-    self.has_custom_mcf_nodes = False
-    self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
-    self.provenances[_DEFAULT_PROVENANCE.id] = _DEFAULT_PROVENANCE
     # Always ensure the global root StatVarGroup (dc/g/Root) exists so manually
     # defined StatVarGroup hierarchies in MCF have a root Node in Spanner.
     self._ensure_root_group()
@@ -78,7 +63,6 @@ class Nodes:
       url: str = "",
       source_id: str = "",
       properties: dict[str, str] | None = None) -> Provenance:
-    self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
 
@@ -104,7 +88,6 @@ class Nodes:
                       url: str = "",
                       properties: dict[str, str] | None = None,
                       provenance_id: str = "") -> Source:
-    self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
 
     src = self.sources.get(clean_id)
@@ -124,21 +107,43 @@ class Nodes:
     return src
 
   @thread_safe
-  def provenance(self, input_file: File) -> Provenance:
+  def merge_metadata(self, provenances: dict[str, Provenance],
+                     sources: dict[str, Source]) -> None:
+    """Registers Provenance and Source nodes held by another `Nodes`.
+
+    Worker processes each build their own `Nodes`, so the coordinator merges
+    each worker's nodes back with this.
+    """
+    for src in sources.values():
+      self.register_source(id=src.id,
+                           name=src.name,
+                           url=src.url,
+                           properties=src.properties,
+                           provenance_id=src.provenance_id)
+    for prov in provenances.values():
+      self.register_provenance(id=prov.id,
+                               name=prov.name,
+                               url=prov.url,
+                               source_id=prov.source_id,
+                               properties=prov.properties)
+
+  def provenance_id(self, input_file: File) -> str:
+    """Returns the id of the provenance that config names for `input_file`.
+
+    The id comes from config alone, without registering or looking up a
+    Provenance node: MCF files define those, possibly in another worker
+    process, and `MetadataValidator` checks at the end of the run that every
+    referenced provenance is defined.
+
+    Raises:
+      ValueError: If config names no provenance.
+    """
     prov_name = self.config.provenance_name(input_file)
     if not prov_name:
       raise ValueError(
           f"A provenance is absolutely required for file '{input_file.path}'. "
           f"Please specify the 'provenance' property in your config.json.")
-
-    prov = self.provenances.get(prov_name)
-    if not prov:
-      prov = self.register_provenance(prov_name)
-
-    self._used_provenance_ids.add(prov.id)
-    if prov.source_id:
-      self._used_source_ids.add(prov.source_id)
-    return prov
+    return _clean_metadata_id(prov_name)
 
   def _ensure_root_group(self) -> StatVarGroup:
     if sc.ROOT_SVG_ID not in self.groups:
@@ -155,35 +160,11 @@ class Nodes:
     return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
 
   @thread_safe
-  def get_provenance_urls(self) -> dict[str, str]:
-    prov_urls = {}
-    for prov in self.provenances.values():
-      prov_id = strip_namespace(prov.id)
-      prov_urls[prov_id] = prov.url
-      prov_urls[prov.id] = prov.url
-      if prov.name:
-        prov_urls[prov.name] = prov.url
-    return prov_urls
-
-  def _is_unused_default_source(self, source: Source) -> bool:
-    return (self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and
-            _DEFAULT_SOURCE.id not in self._used_source_ids)
-
-  def _is_unused_default_provenance(self, provenance: Provenance) -> bool:
-    return (self.has_custom_mcf_nodes and
-            provenance.id == _DEFAULT_PROVENANCE.id and
-            _DEFAULT_PROVENANCE.id not in self._used_provenance_ids)
-
-  @thread_safe
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
     result: dict[str, list[Triple]] = defaultdict(list)
     for source in self.sources.values():
-      if self._is_unused_default_source(source):
-        continue
       result[_provenance_dir(source.provenance_id)].extend(source.triples())
     for provenance in self.provenances.values():
-      if self._is_unused_default_provenance(provenance):
-        continue
       prov_id = provenance.provenance_id or provenance.id
       result[_provenance_dir(prov_id)].extend(provenance.triples())
     for group in self.groups.values():

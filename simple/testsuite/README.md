@@ -34,7 +34,7 @@ filesystem edge cases or a validator's rules.
 | `test_observations.py` | Observation CSVs: observationAbout / variable / date / value cells, columns, observationProperties, dimensions, ids, header errors |
 | `test_entities.py` | Entities CSVs: rows, ids, reference columns, values, column mappings, header errors |
 | `test_csv_files.py` | CSV formatting (quoting, CRLF, BOM, column and row order, split files), for every CSV import type |
-| `test_provenance.py` | Provenances and sources: registered nodes, provenance URL on observations, validation |
+| `test_provenance.py` | Provenances and sources: registered nodes, provenance URL on the provenance node, validation |
 | `test_config.py` | config.json: which files are imported, top-level flags, invalid configs |
 
 For a refactor or performance PR, `test_e2e.py` passing with every

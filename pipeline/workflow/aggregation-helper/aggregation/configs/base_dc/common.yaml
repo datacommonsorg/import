@@ -4,12 +4,17 @@
 
 calculations:
   # Generates linkedContainedInPlace, linkedMemberOf, etc.
+  # Every import that contributes containedInPlace edges must be listed here: the
+  # LinkedEdge table (and the linkedContainedInPlace rows in Edge) only ever hold
+  # rows for imports that went through this step.
   - name: "Global: ContainedInPlace & MemberOf Graph Linked Edges"
     type: LINKED_EDGES
     stage: 0
     input_imports:
       - "Schema"
       - "Place"
+      - "FARS_CrashNodes"
+      - "CycloneNOAA_Entities"
 
   # Generates summary statistics in the KeyValueStore table
   - name: "Global: KeyValueStore Provenance & Lineage Summary"
