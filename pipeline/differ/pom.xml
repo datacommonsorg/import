@@ -97,6 +97,17 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
+                                <filter>
+                                    <artifact>org.apache.beam:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/maven/com.google.*/**</exclude>
+                                        <exclude>META-INF/maven/commons-*/**</exclude>
+                                        <exclude>META-INF/maven/org.apache.commons/**</exclude>
+                                        <exclude>META-INF/maven/org.apache.httpcomponents/**</exclude>
+                                        <exclude>META-INF/maven/org.codehaus.mojo/**</exclude>
+                                        <exclude>META-INF/maven/org.antlr/**</exclude>
+                                    </excludes>
+                                </filter>
                             </filters>
                         </configuration>
                     </execution>
