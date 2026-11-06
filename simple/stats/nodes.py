@@ -54,6 +54,11 @@ class Nodes:
       url: str = "",
       source_id: str = "",
       custom_triples: list[Triple] | None = None) -> Provenance:
+    """Registers a Provenance, or fills in the missing fields of a known one.
+
+    `name`, `url` and `source_id` keep their first non-empty value; custom
+    triples are unioned.
+    """
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
 
@@ -98,29 +103,22 @@ class Nodes:
       src.domain = src.domain or Source(id="", name="", url=url).domain
     _extend_unique(src.custom_triples, _about(clean_id, custom_triples))
     if import_folder:
-      src.provenance_id = min(src.provenance_id or import_folder, import_folder)
+      src.import_folder = min(src.import_folder or import_folder, import_folder)
     return src
 
   def merge_metadata(self, provenances: dict[str, Provenance],
                      sources: dict[str, Source]) -> None:
     """Registers Provenance and Source nodes held by another `Nodes`.
 
-    Worker processes each build their own `Nodes`, so this is how metadata
-    crosses process boundaries: the nodes a worker adds are merged back into
-    the coordinator. Each node goes through `register_source` or
-    `register_provenance`, so:
-    - `name`, `url` and `source_id` keep the first non-empty value; a
-      non-empty `name` is also (re)pointed at the node as a lookup key.
-    - a Source's `provenance_id` (its import folder) becomes the
-      alphabetically first of the folders that define it.
-    - `custom_triples`, of Sources and Provenances alike, are unioned.
+    Worker processes each build their own `Nodes`; the coordinator merges them
+    back with this. Merging follows `register_source` / `register_provenance`.
     """
     for src in sources.values():
       self.register_source(id=src.id,
                            name=src.name,
                            url=src.url,
                            custom_triples=src.custom_triples,
-                           import_folder=src.provenance_id)
+                           import_folder=src.import_folder)
     for prov in provenances.values():
       self.register_provenance(id=prov.id,
                                name=prov.name,
@@ -163,7 +161,7 @@ class Nodes:
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
     result: dict[str, list[Triple]] = defaultdict(list)
     for source in self.sources.values():
-      result[_provenance_dir(source.provenance_id)].extend(source.triples())
+      result[_provenance_dir(source.import_folder)].extend(source.triples())
     for provenance in self.provenances.values():
       prov_id = provenance.provenance_id or provenance.id
       result[_provenance_dir(prov_id)].extend(provenance.triples())

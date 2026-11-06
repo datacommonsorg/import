@@ -100,10 +100,9 @@ class McfImporter(Importer):
 
       # Register all collected metadata nodes at the end
       if all_metadata_triples:
-        _register_metadata_nodes(all_metadata_triples,
-                                 self.nodes,
-                                 import_folder=self.nodes.config.import_name(
-                                     self.input_file))
+        import_folder = self.nodes.config.import_name(self.input_file)
+        _register_metadata_nodes(all_metadata_triples, self.nodes,
+                                 import_folder)
 
       self.reporter.report_success()
     except Exception as e:
@@ -196,8 +195,8 @@ def _split_fields(
   custom: list[Triple] = []
   for triple in node_triples:
     pred = strip_namespace(triple.predicate)
-    if pred == _TYPE_OF and strip_namespace(triple.object_id or
-                                            '') == node_type:
+    obj = strip_namespace(triple.object_id or '')
+    if pred == _TYPE_OF and obj == node_type:
       continue
     if pred in field_names and pred not in fields:
       fields[pred] = _clean_literal(triple.object_id or triple.object_value)

@@ -99,7 +99,7 @@ class Source:
   custom_triples: list[Triple] = field(default_factory=list)
   # The import folder the Source is written to (import folders are named
   # after provenances, see Config.import_name), or "" for the global folder.
-  provenance_id: str = ""
+  import_folder: str = ""
 
   def __post_init__(self):
     self.domain = urlparse(self.url).netloc
