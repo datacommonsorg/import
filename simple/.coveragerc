@@ -1,7 +1,7 @@
 # Coverage config for the preprocessor, used by `./run_test.sh -c`.
 #
-# The testsuite runs the preprocessor in "production" mode, which imports
-# files in a ProcessPoolExecutor. `concurrency = multiprocessing` makes
+# The preprocessor imports files in a ProcessPoolExecutor (and validates CSV
+# headers and uploads shards on threads). `concurrency = multiprocessing` makes
 # coverage start in each worker process, and `parallel = True` makes every
 # process write its own .coverage.* file, which pytest-cov combines at the end.
 [run]

@@ -28,7 +28,7 @@ Every dataset runs in every execution mode (lib/run.py), and each aspect of
 the output is its own test, so a failure names the dataset, the mode and what
 differs:
 
-  test_e2e[kitchen_sink-production-records]
+  test_e2e[kitchen_sink-gcs_input-records]
 
 Modes must not change the output.
 
@@ -60,20 +60,26 @@ ASPECTS = ("records", "report", "handshake", "ingestion_report", "error")
 # Known bugs, as xfails. Strict ones fail with XPASS once fixed, so the entry
 # must then be removed. Non-strict ones are for nondeterministic bugs.
 # Keys: (dataset, mode, aspect); "*" matches any value.
-_REPORT = "with use_multiprocessing, report.json leaves every file NOT_STARTED"
 _SPLIT_NODE = ("node shards are cut without keeping a subject's triples"
                " together, so a node is split across shards")
 _GCS_CONFIG = (
     "--config_file on GCS fails with 'Not a file': create_store() opens"
     " the path as a directory first, which always works on GCS")
 
+# Known bugs that every mode shares are written into expected.json instead, so
+# the rest of the aspect is still checked (see "Known bugs" in README.md). The
+# fix updates expected.json.
+GOLDEN_BUGS = {
+    "report.json leaves every file NOT_STARTED: workers report to their own"
+    " files, never merged into it":
+        "b/580998027",
+}
+
 KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {
     ("multi_import", "tiny_chunks", "records"): (_SPLIT_NODE, True),
-    ("kitchen_sink", "production", "report"): (_REPORT, True),
-    ("multi_import", "production", "report"): (_REPORT, True),
     ("kitchen_sink", "tiny_chunks", "records"): (_SPLIT_NODE, True),
     ("config_file_driven", "tiny_chunks", "records"): (_SPLIT_NODE, True),
-    ("config_file_driven", "production", "*"): (_GCS_CONFIG, True),
+    ("config_file_driven", "gcs_input", "*"): (_GCS_CONFIG, True),
 }
 
 
@@ -128,8 +134,13 @@ def _expected_path(dataset: str) -> str:
   return os.path.join(E2E_DIR, dataset, "expected.json")
 
 
+def _read_expected(dataset: str) -> dict:
+  with open(_expected_path(dataset), encoding="utf-8") as f:
+    return json.load(f)
+
+
 def _write_expected(dataset: str) -> None:
-  reference = _output(dataset, "threaded")
+  reference = _output(dataset, run.DEFAULT_MODE)
   expected = {
       "records": _records_view(dataset, reference["records"]),
       "report": reference["report"],
@@ -183,13 +194,12 @@ def _actual(dataset: str, output: dict, aspect: str):
 
 
 def test_e2e(dataset: str, mode: str, aspect: str, update_expected: bool):
-  if update_expected and mode == "threaded" and aspect == ASPECTS[0]:
+  if update_expected and mode == run.DEFAULT_MODE and aspect == ASPECTS[0]:
     _write_expected(dataset)
   if not os.path.exists(_expected_path(dataset)):
     pytest.fail(f"{_expected_path(dataset)} is missing; generate it with"
                 " --update-expected -n 0 and review it")
-  with open(_expected_path(dataset), encoding="utf-8") as f:
-    expected = json.load(f)[aspect]
+  expected = _read_expected(dataset)[aspect]
   output = _output(dataset, mode)
   actual = _actual(dataset, output, aspect)
   if output["error"] and aspect != "error" and "_traceback" in output and (
