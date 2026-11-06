@@ -14,12 +14,9 @@
 
 from collections import defaultdict
 from functools import wraps
-import re
 import threading
 
 from stats.config import Config
-from stats.data import EntityType
-from stats.data import Property
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVarGroup
@@ -27,20 +24,6 @@ from stats.data import strip_namespace
 from stats.data import Triple
 import stats.schema_constants as sc
 from util.filesystem import File
-
-_CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
-_CUSTOM_SOURCE_ID_PREFIX = "c/s/"
-_CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
-_CUSTOM_ENTITY_TYPE_ID_PREFIX = "c/n/"
-# Pattern to check if a string conforms to that of a valid DCID.
-_DCID_PATTERN = r"^(?:[A-Za-z0-9_/]+:)?[A-Za-z0-9_/]+$"
-
-_DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
-                         "Custom Data Commons")
-_DEFAULT_PROVENANCE = Provenance(id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}default",
-                                 source_id=_DEFAULT_SOURCE.id,
-                                 name="Custom Import",
-                                 url="custom-import")
 
 
 def thread_safe(func):
@@ -65,19 +48,6 @@ class Nodes:
     self.provenances: dict[str, Provenance] = {}
     # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
-    # dict from property column name to Property
-    self.properties: dict[str, Property] = {}
-    # dict from entity type name to EntityType
-    self.entity_types: dict[str, EntityType] = {}
-    self._used_provenance_ids = set()
-    self._used_source_ids = set()
-    self.has_custom_mcf_nodes = False
-    self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
-    self.provenances[_DEFAULT_PROVENANCE.id] = _DEFAULT_PROVENANCE
-    # Used to generate property IDs
-    self._property_generated_id_count = 0
-    # Used to generate entity type IDs
-    self._entity_type_generated_id_count = 0
     # Always ensure the global root StatVarGroup (dc/g/Root) exists so manually
     # defined StatVarGroup hierarchies in MCF have a root Node in Spanner.
     self._ensure_root_group()
@@ -93,7 +63,6 @@ class Nodes:
       url: str = "",
       source_id: str = "",
       properties: dict[str, str] | None = None) -> Provenance:
-    self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
 
@@ -119,7 +88,6 @@ class Nodes:
                       url: str = "",
                       properties: dict[str, str] | None = None,
                       provenance_id: str = "") -> Source:
-    self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
 
     src = self.sources.get(clean_id)
@@ -139,59 +107,43 @@ class Nodes:
     return src
 
   @thread_safe
-  def provenance(self, input_file: File) -> Provenance:
+  def merge_metadata(self, provenances: dict[str, Provenance],
+                     sources: dict[str, Source]) -> None:
+    """Registers Provenance and Source nodes held by another `Nodes`.
+
+    Worker processes each build their own `Nodes`, so the coordinator merges
+    each worker's nodes back with this.
+    """
+    for src in sources.values():
+      self.register_source(id=src.id,
+                           name=src.name,
+                           url=src.url,
+                           properties=src.properties,
+                           provenance_id=src.provenance_id)
+    for prov in provenances.values():
+      self.register_provenance(id=prov.id,
+                               name=prov.name,
+                               url=prov.url,
+                               source_id=prov.source_id,
+                               properties=prov.properties)
+
+  def provenance_id(self, input_file: File) -> str:
+    """Returns the id of the provenance that config names for `input_file`.
+
+    The id comes from config alone, without registering or looking up a
+    Provenance node: MCF files define those, possibly in another worker
+    process, and `MetadataValidator` checks at the end of the run that every
+    referenced provenance is defined.
+
+    Raises:
+      ValueError: If config names no provenance.
+    """
     prov_name = self.config.provenance_name(input_file)
     if not prov_name:
       raise ValueError(
           f"A provenance is absolutely required for file '{input_file.path}'. "
           f"Please specify the 'provenance' property in your config.json.")
-
-    prov = self.provenances.get(prov_name)
-    if not prov:
-      prov = self.register_provenance(prov_name)
-
-    self._used_provenance_ids.add(prov.id)
-    if prov.source_id:
-      self._used_source_ids.add(prov.source_id)
-    return prov
-
-  @thread_safe
-  def property(self,
-               property_column_name: str,
-               provenance_id: str = "") -> Property:
-    if not property_column_name in self.properties:
-      self.properties[property_column_name] = Property(
-          self._property_id(property_column_name), property_column_name)
-    if provenance_id:
-      self.properties[property_column_name].provenance_ids.add(provenance_id)
-
-    return self.properties[property_column_name]
-
-  @thread_safe
-  def entity_type(self, entity_type_name: str, input_file: File) -> EntityType:
-    if not entity_type_name in self.entity_types:
-      entity_type_cfg = self.config.entity(entity_type_name)
-      self.entity_types[entity_type_name] = EntityType(
-          self._entity_type_id(entity_type_name),
-          entity_type_cfg.name,
-          description=entity_type_cfg.description)
-
-    return self.entity_types[entity_type_name].add_provenance(
-        self.provenance(input_file))
-
-  def _property_id(self, property_column_name: str) -> str:
-    dcid = _sanitize_dcid(property_column_name)
-    if dcid:
-      return dcid
-    self._property_generated_id_count += 1
-    return f"{_CUSTOM_PROPERTY_ID_PREFIX}{self._property_generated_id_count}"
-
-  def _entity_type_id(self, entity_type_name: str) -> str:
-    dcid = _sanitize_dcid(entity_type_name)
-    if dcid:
-      return dcid
-    self._entity_type_generated_id_count += 1
-    return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._entity_type_generated_id_count}"
+    return _clean_metadata_id(prov_name)
 
   def _ensure_root_group(self) -> StatVarGroup:
     if sc.ROOT_SVG_ID not in self.groups:
@@ -208,65 +160,22 @@ class Nodes:
     return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
 
   @thread_safe
-  def get_provenance_urls(self) -> dict[str, str]:
-    prov_urls = {}
-    for prov in self.provenances.values():
-      prov_id = strip_namespace(prov.id)
-      prov_urls[prov_id] = prov.url
-      prov_urls[prov.id] = prov.url
-      if prov.name:
-        prov_urls[prov.name] = prov.url
-    return prov_urls
-
-  def _is_unused_default_source(self, source: Source) -> bool:
-    return (self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and
-            _DEFAULT_SOURCE.id not in self._used_source_ids)
-
-  def _is_unused_default_provenance(self, provenance: Provenance) -> bool:
-    return (self.has_custom_mcf_nodes and
-            provenance.id == _DEFAULT_PROVENANCE.id and
-            _DEFAULT_PROVENANCE.id not in self._used_provenance_ids)
-
-  @thread_safe
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
     result: dict[str, list[Triple]] = defaultdict(list)
     for source in self.sources.values():
-      if self._is_unused_default_source(source):
-        continue
       result[_provenance_dir(source.provenance_id)].extend(source.triples())
     for provenance in self.provenances.values():
-      if self._is_unused_default_provenance(provenance):
-        continue
       prov_id = provenance.provenance_id or provenance.id
       result[_provenance_dir(prov_id)].extend(provenance.triples())
     for group in self.groups.values():
       result["_global"].extend(group.triples())
-    for node in [*self.entity_types.values(), *self.properties.values()]:
-      for dir_name in _provenance_dirs_for_node(node):
-        result[dir_name].extend(node.triples())
     return {k: _dedupe_triples(triples) for k, triples in result.items()}
-
-
-def _sanitize_dcid(raw: str) -> str | None:
-  """Returns `raw` (or `raw` with spaces/dashes replaced by `_`) if it is a valid DCID."""
-  if re.fullmatch(_DCID_PATTERN, raw):
-    return raw
-  candidate = re.sub(r"[ -]", "_", raw)
-  if re.fullmatch(_DCID_PATTERN, candidate):
-    return candidate
-  return None
 
 
 def _provenance_dir(raw_id: str) -> str:
   if not raw_id or raw_id == "_global":
     return "_global"
   return strip_namespace(raw_id)
-
-
-def _provenance_dirs_for_node(node: EntityType | Property) -> set[str]:
-  if not node.provenance_ids:
-    return {"_global"}
-  return {strip_namespace(p) for p in node.provenance_ids}
 
 
 def _dedupe_triples(triples: list[Triple]) -> list[Triple]:

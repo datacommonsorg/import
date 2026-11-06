@@ -34,7 +34,12 @@
       "importType": "entities",
       "rowEntityType": "Author",
       "idColumn": "author_id",
-      "provenance": "dcid:KitchenProvenance"
+      "provenance": "dcid:KitchenProvenance",
+      "columnMappings": {
+        "dcid:author_id": "author_id",
+        "dcid:author_name": "author_name",
+        "dcid:author_country": "author_country"
+      }
     }
   ],
   "groupStatVarsByProperty": true

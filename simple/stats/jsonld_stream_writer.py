@@ -113,10 +113,7 @@ def _parse_props_json(props: str, entity: str, variable: str) -> dict:
     return {}
 
 
-def _build_observation_node(
-    row: tuple,
-    prov_urls: Optional[dict[str, str]] = None,
-) -> dict:
+def _build_observation_node(row: tuple) -> dict:
   """Builds a single `dcid:StatVarObservation` JSON-LD node dict from a row."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
   key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
@@ -142,8 +139,6 @@ def _build_observation_node(
   if provenance:
     obs_obj["dcid:provenance"] = _uri_ref(
         _rewrite_custom_ns_to_dcid(provenance))
-    if prov_urls and provenance in prov_urls and prov_urls[provenance]:
-      obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
   if unit:
     obs_obj["dcid:unit"] = _uri_ref(_rewrite_custom_ns_to_dcid(unit))
   if scaling_factor:
@@ -167,13 +162,12 @@ def _write_observation_shard(chunk,
                              shard_index: Optional[int] = None,
                              jsonld_dir_path: Optional[str] = None,
                              ns_map: Optional[dict[str, str]] = None,
-                             prov_urls: Optional[dict[str, str]] = None,
                              track_hash_fn: Optional[Callable] = None,
                              file_name: str = ""):
   graph_list = []
   chunk_hashes = []
   for row in chunk:
-    obs_obj = _build_observation_node(row, prov_urls)
+    obs_obj = _build_observation_node(row)
     if track_hash_fn:
       entity, variable, date, _, provenance, *_ = row
       obs_hash = obs_obj["@id"].removeprefix("dcid:obs_")
@@ -327,19 +321,12 @@ class JsonLdStreamWriter(GraphWriter):
               "Detected %d observation @id collisions so far across processed datasets.",
               self.obs_collision_count)
 
-  def _get_prov_urls(self) -> dict[str, str]:
-    if hasattr(self, 'nodes') and self.nodes and hasattr(
-        self.nodes, 'get_provenance_urls'):
-      return self.nodes.get_provenance_urls()
-    return {}
-
   def _write_observations_df_to_disk(self,
                                      df: pd.DataFrame,
                                      import_name: str,
                                      file_name: str = ""):
     dir_name = import_name.replace("/", "_")
     import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
-    prov_urls = self._get_prov_urls()
     n = len(df)
     for i in range(0, n, _CHUNK_SIZE):
       chunk_df = df.iloc[i:i + _CHUNK_SIZE]
@@ -351,7 +338,6 @@ class JsonLdStreamWriter(GraphWriter):
                                shard_index,
                                import_temp_dir,
                                self.ns_map,
-                               prov_urls,
                                track_hash_fn=self.track_observation_hash,
                                file_name=file_name)
 

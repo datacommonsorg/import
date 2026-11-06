@@ -39,8 +39,12 @@ RUN pip3 install --no-cache-dir --upgrade pip "setuptools<70" wheel
 # Install simple importer requirements.
 RUN pip3 install -r ./import/simple/requirements.txt
 
-# Copy simple importer.
-COPY . ./import/simple/
+# Copy only the packages the preprocessor runs (stats.main imports stats, util
+# and kg_util). New directories under simple/ stay out of the image unless they
+# are added here.
+COPY stats/ ./import/simple/stats/
+COPY util/ ./import/simple/util/
+COPY kg_util/ ./import/simple/kg_util/
 
 # Copy executable script.
 COPY run.sh .

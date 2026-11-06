@@ -9,6 +9,16 @@
       }
     ]
   },
+  "ingestion_report": {
+    "folders": [],
+    "run": {
+      "folderNames": [],
+      "mode": "INGEST",
+      "outputPath": "<output>/preprocessor_reports/testsuite-run",
+      "status": "SUCCESS",
+      "workflowExecutionId": "testsuite-run"
+    }
+  },
   "records": {
     "any_folder": [
       {
@@ -65,7 +75,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 1,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
@@ -84,7 +93,6 @@
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:provenanceUrl": "https://kitchen.example.org/dataset",
             "dcid:value": 2,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",

@@ -13,6 +13,26 @@
       }
     ]
   },
+  "ingestion_report": {
+    "folders": [
+      {
+        "folderName": "health"
+      },
+      {
+        "folderName": "population"
+      }
+    ],
+    "run": {
+      "folderNames": [
+        "health",
+        "population"
+      ],
+      "mode": "INGEST",
+      "outputPath": "<output>/preprocessor_reports/testsuite-run",
+      "status": "SUCCESS",
+      "workflowExecutionId": "testsuite-run"
+    }
+  },
   "records": {
     "any_folder": [
       {
@@ -82,7 +102,6 @@
             "dcid:provenance": {
               "@id": "dcid:healthProvenance"
             },
-            "dcid:provenanceUrl": "https://health.example.org/data",
             "dcid:value": 41.9,
             "dcid:variableMeasured": {
               "@id": "dcid:Prevalence_Obesity",
@@ -127,7 +146,6 @@
             "dcid:provenance": {
               "@id": "dcid:populationProvenance"
             },
-            "dcid:provenanceUrl": "https://population.example.org/data",
             "dcid:value": 67000000,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
@@ -146,7 +164,6 @@
             "dcid:provenance": {
               "@id": "dcid:populationProvenance"
             },
-            "dcid:provenanceUrl": "https://population.example.org/data",
             "dcid:value": 331000000,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",

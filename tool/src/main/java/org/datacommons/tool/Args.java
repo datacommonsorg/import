@@ -31,6 +31,20 @@ class Args {
   public boolean checkMeasurementResult = false;
   public boolean includeRuntimeMetadata = true;
 
+  // Upper bound on the default number of threads (when -n is not set).
+  static final int MAX_DEFAULT_NUM_THREADS = 16;
+
+  // Returns the number of threads to use for processing CSVs. A positive requested value is used
+  // as is. Otherwise, uses one thread per CSV file, up to the number of available processors and
+  // MAX_DEFAULT_NUM_THREADS.
+  static int resolveNumThreads(int requested, int numCsvFiles, int availableProcessors) {
+    if (requested > 0) {
+      return requested;
+    }
+    int numThreads = Math.min(numCsvFiles, Math.min(availableProcessors, MAX_DEFAULT_NUM_THREADS));
+    return Math.max(1, numThreads);
+  }
+
   public String toString() {
     StringBuilder argStr = new StringBuilder();
     if (outputFiles != null) {

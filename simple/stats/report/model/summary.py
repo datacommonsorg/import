@@ -52,13 +52,15 @@ class ExecutionMetadata(BaseModel):
   workflowExecutionId: str = Field(
       description="Ingestion workflow execution ID")
   mode: RunMode = Field(description="How the preprocessor was run")
-  status: RunStatus = Field(description="Outcome of the preprocessor run")
+  status: RunStatus | None = Field(
+      default=None, description="Outcome of the preprocessor run")
   startTime: str = Field(description="ISO-8601 UTC time the run started")
-  endTime: str = Field(description="ISO-8601 UTC time the run ended")
+  endTime: str = Field(default="",
+                       description="ISO-8601 UTC time the run ended")
   folderNames: list[str] = Field(
       default_factory=list, description="Import folders requested for the run")
-  outputPath: str = Field(
-      default="", description="Path where the run's JSON-LD was written")
+  outputPath: str = Field(default="",
+                          description="Folder this report is written to")
 
 
 class Provenance(BaseModel):
@@ -73,8 +75,8 @@ class Folder(BaseModel):
   """One entry in `folders[]`: summary of one imported folder."""
 
   folderName: str = Field(description="Name of the imported folder")
-  provenances: list[Provenance] = Field(
-      default_factory=list, description="Provenances in this folder")
+  # TODO: Add provenances (list[Provenance]) once they are recorded, so the
+  # report doesn't show an empty list that looks like "no provenances".
   # TODO: Add provenance_count, observation_count, file counts by type,
   # node counts by type, and configUri.
 
@@ -87,3 +89,19 @@ class IngestionReport(BaseModel):
   folders: list[Folder] = Field(default_factory=list,
                                 description="One entry per import folder")
   # TODO: Add error field in the ingestion report.
+
+
+class FileSummary(BaseModel):
+  """Counts for one imported file, returned by the worker that imported it.
+
+  Not part of the report itself: SummaryGenerator merges these into the
+  folder and provenance totals.
+  """
+
+  filePath: str = Field(description="Input file path")
+  folder: str = Field(description="Import folder the file belongs to")
+  provenance: str | None = Field(
+      default=None, description="Provenance configured for the file")
+  observations: int = Field(default=0,
+                            description="StatVarObservation nodes written")
+  # TODO: Add minDate, maxDate and nodesByType.

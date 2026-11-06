@@ -64,20 +64,54 @@ to. Patterns are relative to the directory containing the `config.json`.
 #### `provenance`
 
 Required, for CSV and MCF files alike. The provenance DCID for this input file,
-for example `dcid:Provenance1`. It must include a namespace prefix, and the
-provenance node itself must be defined in one of the MCF files, with a `source`.
+for example `dcid:Provenance1`. It must include a namespace prefix.
 
 Provenances typically map to a dataset from a source.
 e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank source.
 
+The Provenance node and its Source must be defined in an MCF file matched by an
+`inputFiles` entry, like Class and Property nodes. The Provenance links to its
+Source with `source`:
+
+```
+Node: dcid:Source1
+typeOf: dcs:Source
+name: "Source 1"
+url: "https://source1.example.org"
+
+Node: dcid:Provenance1
+typeOf: dcs:Provenance
+name: "Provenance 1"
+url: "https://source1.example.org/dataset"
+source: dcid:Source1
+```
+
+If a CSV's provenance is not defined in MCF, the import fails once every file
+is imported, with one error that lists every undefined provenance and the files
+that use it.
+
 #### `columnMappings`
 
-Required for CSV files. Maps the CSV's column headings to DCIDs. There are no
-built-in default column names.
+Required for every CSV file, for both `"observations"` and `"entities"` imports.
+Maps DCIDs to the CSV's column headings. There are no built-in default column
+names, and no column heading is used as a DCID on its own.
 
-`dcid:variableMeasured`, `dcid:observationDate` and `dcid:value` are always
-required, along with at least one entity mapping: either `dcid:observationAbout`
-or a custom observation property you have defined in MCF.
+Every column in the CSV must be either mapped in `columnMappings` or listed in
+`ignoreColumns`. The one exception is the `idColumn` of an `"entities"` import.
+Otherwise the import fails with one error that lists all the unmapped columns.
+A CSV whose entry has no `columnMappings` fails the import as well.
+Each property may be mapped from only one column. Keys that differ only by
+namespace name the same property, so mapping both `dcid:unit` and `unit` fails
+the import too. Likewise, each column may be mapped to only one property.
+
+For `"observations"` imports, `dcid:variableMeasured`, `dcid:observationDate`
+and `dcid:value` are always required, along with one to three entity
+dimensions: `dcid:observationAbout` and/or custom observation properties you
+have defined in MCF.
+
+For `"entities"` imports, each mapped column's values are written under its
+mapped DCID. The `idColumn` does not need a mapping; it is only written as a
+property if it is mapped.
 
 #### `ignoreColumns`
 
@@ -96,23 +130,29 @@ custom dimension properties) applied as defaults to every row in the file.
 #### `rowEntityType`
 
 Required when `importType` is `"entities"`. The type (class DCID) assigned to
-each row entity in the CSV.
+each row entity in the CSV. The importer only writes a `typeOf` reference to
+this type on each row; the `Class` node itself is not created. If the type is
+not already in the Data Commons schema, define it (with its `name` and
+`description`) in an MCF file matched by an `inputFiles` entry, for example:
+
+```
+Node: dcid:Author
+typeOf: dcs:Class
+name: "Author"
+description: "A person who wrote an article"
+```
 
 #### `idColumn`
 
 Optional, for `"entities"` imports. The column whose cell value provides each
 row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
+Unlike other columns, it does not need a `columnMappings` entry.
 
 #### `referenceColumns` _(or `columnsToResolve`)_
 
 Optional, for `"entities"` imports. The list of columns whose cell values are
 entity DCID references (or comma-separated lists of entity DCIDs) rather than
 literal values.
-
-## `entities`
-
-Optional. Provides display `name` and `description` metadata for `Class` nodes
-created by `"entities"` imports, keyed by `rowEntityType`.
 
 ## `includeInputSubdirs`
 

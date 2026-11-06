@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from stats.data import EntityType
 from stats.data import ImportType
 from stats.data import strip_namespace
 from util.file_match import match
@@ -21,8 +20,6 @@ from util.filesystem import File
 _INPUT_FILES_FIELD = "inputFiles"
 _IMPORT_TYPE_FIELD = "importType"
 _IGNORE_COLUMNS_FIELD = "ignoreColumns"
-_NAME_FIELD = "name"
-_DESCRIPTION_FIELD = "description"
 _PROVENANCE_FIELD = "provenance"
 _ID_COLUMN_FIELD = "idColumn"
 _DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
@@ -33,7 +30,9 @@ _COLUMN_MAPPINGS_FIELD = "columnMappings"
 _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "columnsToResolve"
 _REFERENCE_COLUMNS_FIELD = "referenceColumns"
-_ENTITIES_FIELD = "entities"
+# Removed top-level block that used to define Class node metadata. Rejected
+# with a pointer to MCF rather than the generic unknown-key error.
+_REMOVED_ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _OBSERVATION_PROPERTIES = "observationProperties"
 _INCLUDE_INPUT_SUBDIRS_PROPERTY = "includeInputSubdirs"
@@ -44,7 +43,6 @@ _FILENAME_FIELD = "filename"
 _ALLOWED_TOP_LEVEL_KEYS = frozenset({
     _INPUT_FILES_FIELD,
     _DATA_DOWNLOAD_URL_FIELD,
-    _ENTITIES_FIELD,
     _GROUP_STAT_VARS_BY_PROPERTY,
     _INCLUDE_INPUT_SUBDIRS_PROPERTY,
     _IMPORT_NAME_FIELD,
@@ -67,11 +65,6 @@ _ALLOWED_INPUT_FILE_KEYS = frozenset({
     "_import_name",
 })
 
-_ALLOWED_ENTITY_KEYS = frozenset({
-    _NAME_FIELD,
-    _DESCRIPTION_FIELD,
-})
-
 
 def _validate_dict_keys(data: dict, allowed_keys: frozenset[str],
                         context: str) -> None:
@@ -83,21 +76,27 @@ def _validate_dict_keys(data: dict, allowed_keys: frozenset[str],
                      f"Allowed keys are: {public_keys}")
 
 
-def _validate_entities_config(entities: object) -> None:
-  """Validates the top-level 'entities' block if present."""
-  if entities is None:
+def _reject_entities_block(data: dict) -> None:
+  """Raises ValueError if `data` has the removed top-level `entities` block.
+
+  Class nodes for entity types used to be defined in config.json. They must now
+  be defined in an MCF file like any other schema node.
+  """
+  # TODO(gmechali): Delete this migration error after a few releases; the
+  # generic unknown-key validation will then reject the block.
+  if _REMOVED_ENTITIES_FIELD not in data:
     return
-  if not isinstance(entities, dict):
-    raise ValueError(
-        f"'{_ENTITIES_FIELD}' must be a JSON object mapping entity types to "
-        f"their configuration. Got: {type(entities).__name__}")
-  for entity_type_name, entity_cfg in entities.items():
-    if not isinstance(entity_cfg, dict):
-      raise ValueError(
-          f"Invalid configuration for entity '{entity_type_name}' in "
-          f"'{_ENTITIES_FIELD}': must be a JSON object. Got: {entity_cfg}")
-    _validate_dict_keys(entity_cfg, _ALLOWED_ENTITY_KEYS,
-                        f"'{_ENTITIES_FIELD}.{entity_type_name}'")
+  entities = data[_REMOVED_ENTITIES_FIELD]
+  found = (f" Found entries for: {sorted(entities)}."
+           if isinstance(entities, dict) and entities else "")
+  raise ValueError(
+      f"The top-level '{_REMOVED_ENTITIES_FIELD}' block in config.json is no "
+      f"longer supported.{found} Define each entity type that is not already in "
+      "the Data Commons schema as a Class node in an MCF file instead, e.g.:\n"
+      "  Node: dcid:Author\n"
+      "  typeOf: dcs:Class\n"
+      '  name: "Author"\n'
+      '  description: "A person who wrote an article"')
 
 
 class Config:
@@ -110,9 +109,9 @@ class Config:
     if not isinstance(data, dict):
       raise ValueError(
           f"config.json must be a JSON object. Got: {type(data).__name__}")
+    _reject_entities_block(data)
     _validate_dict_keys(data, _ALLOWED_TOP_LEVEL_KEYS, "config.json")
     self.data = data
-    _validate_entities_config(self.data.get(_ENTITIES_FIELD))
     self._input_files_config: dict[str, dict] = {}
     input_files = self.data.get(_INPUT_FILES_FIELD, [])
 
@@ -194,13 +193,6 @@ class Config:
   def column_mappings(self, input_file: File) -> dict[str, str]:
     return self._per_file_config(input_file).get(_COLUMN_MAPPINGS_FIELD, {})
 
-  def entity(self, entity_type_name: str) -> EntityType:
-    entity_type_cfg = self.data.get(_ENTITIES_FIELD,
-                                    {}).get(entity_type_name, {})
-    return EntityType("",
-                      entity_type_cfg.get(_NAME_FIELD, entity_type_name),
-                      description=entity_type_cfg.get(_DESCRIPTION_FIELD, ""))
-
   def id_column(self, input_file: File) -> str:
     return self._per_file_config(input_file).get(_ID_COLUMN_FIELD, "")
 
@@ -208,8 +200,7 @@ class Config:
     return self._per_file_config(input_file).get(_IGNORE_COLUMNS_FIELD, [])
 
   def provenance_name(self, input_file: File) -> str:
-    return self._per_file_config(input_file).get(_PROVENANCE_FIELD,
-                                                 input_file.path)
+    return self._per_file_config(input_file).get(_PROVENANCE_FIELD, "")
 
   def row_entity_type(self, input_file: File) -> str:
     return self._per_file_config(input_file).get(_ROW_ENTITY_TYPE_FIELD, "")

@@ -17,10 +17,22 @@ steps:
   - id: py_test
     name: python:3.11.3
     entrypoint: /bin/sh
+    # PY_TEST_COVERAGE makes -p also log coverage of simple/ and of the lines
+    # the PR changes, vs the PR's base branch. The report never fails the step.
+    # TODO: upload simple/coverage.xml to Codacy once a Codacy project token is
+    # in Secret Manager; see "CI integration" in the coverage design doc.
+    env:
+      - PY_TEST_COVERAGE=1
+      - COVERAGE_BASE_BRANCH=$_BASE_BRANCH
+      - COVERAGE_REMOTE=https://github.com/$REPO_FULL_NAME
     args:
       - -c
       - |
         ./run_test.sh -l -p
+
+# Set by pull request triggers; the default is for manual builds.
+substitutions:
+  _BASE_BRANCH: master
 
 options:
   machineType: "E2_HIGHCPU_32"
