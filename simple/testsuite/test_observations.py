@@ -21,6 +21,8 @@ Observation ids are content hashes, so these tests compare records without
 "@id"; the e2e expected.json files pin exact ids.
 """
 
+import logging
+
 import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
@@ -189,6 +191,49 @@ def test_rows_with_the_same_key_keep_both_values_under_one_id():
 def test_rows_with_different_keys_get_different_ids():
   result = b.run_csv(b.csv_file(b.obs_row(date="2020"), b.obs_row(date="2021")))
   assert len(_ids(result)) == 2
+
+
+_COLLISION_SUMMARY = "Observation @ID Collision Summary:"
+
+
+@pytest.mark.parametrize("mode", ["threaded", "production"])
+def test_collisions_of_every_file_are_summarized(mode, caplog):
+  """
+  The end-of-run summary counts the collisions of every file.
+
+  In production each worker finds its own file's collisions, and the
+  coordinator merges them before logging the summary. A worker logs only its
+  own file, so a total over two files shows that the counts were merged.
+  b.run_dir, unlike b.run, does not cache runs, so the run always logs.
+  """
+  files = {
+      "provenance.mcf":
+          b.PROVENANCE_MCF,
+      "case_x.csv":
+          b.csv_file(b.obs_row("country/X", value="1"),
+                     b.obs_row("country/X", value="2")),
+      "case_y.csv":
+          b.csv_file(b.obs_row("country/Y", value="1"),
+                     b.obs_row("country/Y", value="2")),
+  }
+  with caplog.at_level(logging.WARNING):
+    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS), mode=mode)
+  assert result.error is None, result.error
+  summaries = [
+      r.getMessage()
+      for r in caplog.records
+      if r.getMessage().startswith(_COLLISION_SUMMARY)
+  ]
+  assert len(summaries) == 1, summaries
+  header, *details = summaries[0].splitlines()
+  assert header == (f"{_COLLISION_SUMMARY} Total of 2 observation @id"
+                    " collisions detected across 2 file(s):")
+  assert sorted(line for line in details if line.startswith("  File ")) == [
+      "  File 'case_x.csv': 1 collision(s)",
+      "  File 'case_y.csv': 1 collision(s)",
+  ]
+  samples = [line for line in details if line.startswith("    - @id=")]
+  assert len(samples) == 2, details
 
 
 @known_bug(reason="the observation id is hashed before trimming whitespace, so"

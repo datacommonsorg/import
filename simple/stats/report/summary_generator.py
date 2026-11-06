@@ -21,11 +21,15 @@ import logging
 
 from stats import constants
 from stats.data import FileValidationError
+from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileSummary
+from stats.report.model.summary import Folder
 from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from util.filesystem import Dir
 from util.filesystem import File
+from util.filesystem import join_path
 
 
 class SummaryGenerator:
@@ -49,14 +53,18 @@ class SummaryGenerator:
         runs outside the workflow (local runs and tests).
     """
     self._workflow_execution_id = workflow_execution_id or ""
-    self._execution_metadata: dict | None = None
+    # The report's run block, created by set_execution_metadata() and
+    # completed by build_report().
+    self._execution_metadata: ExecutionMetadata | None = None
+    # Where the report is written. Not part of the report itself.
+    self._output_dir: Dir | None = None
     # Provenance metadata, keyed by provenance DCID.
     self._provenance_data: dict[str, dict] = {}
     # TODO: Add containers for input files, merged FileSummary counts per
     # folder and provenance, node counts and errors.
 
   def set_execution_metadata(self, start_time: str, folder_names: list[str],
-                             output_path: str) -> None:
+                             output_dir: Dir) -> None:
     """Sets run metadata known at the start of the run.
 
     Status and end time are only known at the end, so they are passed to
@@ -65,13 +73,16 @@ class SummaryGenerator:
     Args:
       start_time: ISO-8601 UTC time the run started.
       folder_names: Import folders requested for the run.
-      output_path: Where the run's JSON-LD is written.
+      output_dir: The run's output directory containing the JSON-LD shards
+        and summary report.
     """
-    self._execution_metadata = {
-        "start_time": start_time,
-        "folder_names": list(folder_names),
-        "output_path": output_path,
-    }
+    self._execution_metadata = ExecutionMetadata(
+        workflowExecutionId=self._workflow_execution_id,
+        mode=RunMode.INGEST,
+        startTime=start_time,
+        folderNames=list(folder_names),
+    )
+    self._output_dir = output_dir
 
   def record_input_file(self, folder: str, provenance: list[str],
                         file_type: str) -> None:
@@ -137,27 +148,48 @@ class SummaryGenerator:
     Returns:
       The ingestion report.
     """
-    raise NotImplementedError("TODO: Build the report from recorded facts.")
+    if self._execution_metadata is None:
+      raise ValueError("set_execution_metadata() was not called.")
+    metadata = self._execution_metadata
+    metadata.status = status
+    metadata.endTime = end_time
+    # Folder the report is written to, e.g.
+    # gs://<bucket>/.../datacommons/preprocessor_reports/<workflowExecutionId>.
+    metadata.outputPath = self._output_dir.full_path(self._report_dir_name())
+    # TODO: Add file, provenance and node counts once they are recorded.
+    return IngestionReport(
+        run=metadata,
+        folders=[Folder(folderName=name) for name in metadata.folderNames],
+    )
 
-  def write_to_json(self, status: RunStatus, end_time: str,
-                    report_dir: Dir) -> File | None:
+  def _report_dir_name(self) -> str:
+    """Returns the report folder, relative to the output dir.
+
+    preprocessor_reports/<workflowExecutionId>, or preprocessor_reports for
+    runs outside the workflow.
+    """
+    if self._workflow_execution_id:
+      return join_path(constants.INGESTION_REPORTS_DIR_NAME,
+                       self._workflow_execution_id)
+    return constants.INGESTION_REPORTS_DIR_NAME
+
+  def write_to_json(self, status: RunStatus, end_time: str) -> File | None:
     """Builds the report and writes it as ingestion_report.json.
 
+    The report is written under the output dir passed to
+    set_execution_metadata(), in preprocessor_reports/<workflowExecutionId>/.
     Never raises: the report must never change the outcome of a run.
 
     Args:
       status: Outcome of the run.
       end_time: ISO-8601 UTC time the run ended.
-      report_dir: Where to write the report:
-        ingestion/internal/reports/<workflowExecutionId>/ in the instance's
-        artifacts bucket for workflow runs, and <output_dir>/reports/ for
-        runs outside the workflow. Runner decides the directory.
 
     Returns:
       The written report file, or None if building or writing it failed.
     """
     try:
       report = self.build_report(status, end_time)
+      report_dir = self._output_dir.open_dir(self._report_dir_name())
       report_file = report_dir.open_file(constants.INGESTION_REPORT_FILE_NAME)
       report_file.write(report.model_dump_json(indent=2))
       return report_file

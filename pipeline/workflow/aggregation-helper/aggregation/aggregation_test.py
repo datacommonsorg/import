@@ -16,9 +16,13 @@ import os
 import sys
 import unittest
 from unittest.mock import MagicMock
+from unittest.mock import create_autospec
 from unittest.mock import patch
 
 from google.cloud import bigquery
+from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1.database import Database
+from google.cloud.spanner_v1.snapshot import Snapshot
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -36,6 +40,7 @@ from aggregation.common import (
     _escape_sql_literal,
     build_bq_job_tags,
     clean_bq_job_tag,
+    get_low_priority_request_options,
     get_provenance_prefix,
     get_provenance_name,
     get_generated_provenance_name,
@@ -91,6 +96,13 @@ class TestCommonUtils(unittest.TestCase):
 
     def test_base_provenance_prefix(self):
         self.assertEqual(BASE_PROVENANCE_PREFIX, "dc/base/")
+
+    def test_get_low_priority_request_options(self):
+        first = get_low_priority_request_options()
+        second = get_low_priority_request_options()
+        self.assertEqual(first.priority, RequestOptions.Priority.PRIORITY_LOW)
+        # The SDK mutates the instance it is given, so instances must not be shared.
+        self.assertIsNot(first, second)
 
     def test_get_provenance_prefix(self):
         self.assertEqual(get_provenance_prefix(is_base_dc=True), "dc/base/")
@@ -379,6 +391,38 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.assertIn("relevantVariable", query)
         self.assertIn("linkedMember", query)
 
+    def test_run_linked_contained_in_place_seeds_scoped_traversal_global(self):
+        """Seeds are scoped to the import; the recursion walks the whole hierarchy."""
+        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.run_linked_contained_in_place(import_names=["FARS_CrashNodes"])
+        self.assertEqual(job, mock_job)
+
+        query = self.mock_executor.execute.call_args[0][0]
+        # Seed edges and typeOf lookup stay scoped to the import's provenance.
+        self.assertIn(
+            "SELECT subject_id, predicate, object_id, provenance FROM Edge "
+            "WHERE predicate = 'containedInPlace' AND provenance IN ('dc/base/FARS_CrashNodes')",
+            query,
+        )
+        # Traversal edges are pulled for every provenance and de-duplicated.
+        self.assertIn(
+            "SELECT DISTINCT subject_id, object_id FROM EXTERNAL_QUERY(\"test-conn\",\n"
+            "          \"SELECT subject_id, object_id FROM Edge WHERE predicate = 'containedInPlace'\");",
+            query,
+        )
+        # The recursive step joins the global hierarchy, not the seed table.
+        self.assertIn("temp_hierarchy_contained_in_place AS t", query)
+        self.assertNotIn("temp_contained_in_place AS t", query)
+        # Generated rows keep the seed's provenance.
+        self.assertIn("'dc/base/generated/'", query)
+        # Both exports still happen.
+        self.assertIn('spanner_options = \'{"table": "Edge", "priority": "LOW"}\'', query)
+        self.assertIn('spanner_options = \'{"table": "LinkedEdge", "priority": "LOW"}\'', query)
+
 
 class TestMaterializedEdgeGenerator(unittest.TestCase):
     def setUp(self):
@@ -652,10 +696,14 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.assertIn("sentence1", sentences)
         self.assertIn("sentence2", sentences)
 
-    @patch.object(EmbeddingGenerator, "spanner_database")
+    @patch.object(
+        EmbeddingGenerator,
+        "spanner_database",
+        new_callable=lambda: create_autospec(Database, instance=True),
+    )
     def test_delete_existing_embeddings(self, mock_db):
         generator = EmbeddingGenerator(self.mock_executor, is_base_dc=True)
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_snapshot.execute_sql.side_effect = [
             [(None,)],  # IngestionLock query
@@ -675,7 +723,17 @@ class TestEmbeddingGenerator(unittest.TestCase):
             spec, embedding_table="NodeEmbedding"
         )
         self.assertEqual(deleted, 2)
+        self.assertEqual(mock_snapshot.execute_sql.call_count, 2)
+        for sql_call in mock_snapshot.execute_sql.call_args_list:
+            self.assertEqual(
+                sql_call[1]["request_options"].priority,
+                RequestOptions.Priority.PRIORITY_LOW,
+            )
         mock_db.execute_partitioned_dml.assert_called_once()
+        self.assertEqual(
+            mock_db.execute_partitioned_dml.call_args[1]["request_options"].priority,
+            RequestOptions.Priority.PRIORITY_LOW,
+        )
 
 
 class TestStatVarGroupGenerator(unittest.TestCase):

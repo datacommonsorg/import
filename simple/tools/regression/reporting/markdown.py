@@ -18,6 +18,7 @@ from typing import Any
 
 from tools.regression.comparison.categories import CATEGORIES
 from tools.regression.comparison.metrics import MetricRow
+from tools.regression.comparison.metrics import RunFailure
 from tools.regression.reporting.report import Report
 
 _SAMPLE_CHARS = 1500
@@ -74,10 +75,19 @@ def _perf_row(row: MetricRow) -> list[Cell]:
   ]
 
 
+def _failed_runs(failures: list[RunFailure]) -> list[str]:
+  """The failed runs line, or nothing when every run succeeded."""
+  if not failures:
+    return []
+  return ["- **Failed runs:** " + "; ".join(f.describe() for f in failures)]
+
+
 def _header(report: Report) -> list[str]:
   verdict = report.verdict
-  output = "IDENTICAL" if not verdict.failing else ("DIFFERENT: " + ", ".join(
-      f"`{name}` ({count:,})" for name, count in verdict.failing.items()))
+  output = verdict.output_label
+  if verdict.failing:
+    output += ": " + ", ".join(
+        f"`{name}` ({count:,})" for name, count in verdict.failing.items())
   if report.perf.not_judged_reason:
     perf = f"not judged ({report.perf.not_judged_reason})"
   elif verdict.perf_regressions:
@@ -89,6 +99,7 @@ def _header(report: Report) -> list[str]:
   return [
       "# Preprocessor regression report",
       *_heading(f"Verdict: {verdict.label}"),
+      *_failed_runs(verdict.run_failures),
       f"- **Output:** {output}",
       f"- **Performance:** {perf}",
       f"- **Exit code:** {verdict.exit_code}",

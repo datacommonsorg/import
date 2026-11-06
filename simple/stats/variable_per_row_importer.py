@@ -207,7 +207,7 @@ class VariablePerRowImporter(Importer):
     return errors
 
   def _write_observations(self) -> None:
-    provenance = self.nodes.provenance(self.input_file).id
+    provenance = self.nodes.provenance_id(self.input_file)
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
