@@ -179,16 +179,16 @@
   "report": {
     "importFiles": {
       "<input>/health/data.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/health/provenance.mcf": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/population/data.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/population/provenance.mcf": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       }
     },
     "status": "SUCCESS"

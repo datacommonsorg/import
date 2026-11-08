@@ -22,7 +22,6 @@ import json
 import logging
 import os
 import tempfile
-import threading
 from typing import Callable, Optional
 import uuid
 
@@ -243,7 +242,10 @@ def _write_node_shard(args):
 
 
 class JsonLdStreamWriter(GraphWriter):
-  """A GraphWriter implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
+  """A GraphWriter implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk.
+
+  Not thread-safe: the coordinator and each worker process have their own.
+  """
 
   def __init__(self,
                output_dir,
@@ -279,7 +281,6 @@ class JsonLdStreamWriter(GraphWriter):
     self.obs_shard_index = 0
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
-    self.lock = threading.Lock()
     self._temp_dir_obj = tempfile.TemporaryDirectory()
     self.temp_local_dir = self._temp_dir_obj.name
     self._triples = defaultdict(list)
@@ -298,28 +299,27 @@ class JsonLdStreamWriter(GraphWriter):
   ) -> None:
     """Tracks observation hashes for a shard chunk and logs any collisions."""
     file_key = os.path.basename(file_name) if file_name else "unknown"
-    with self.lock:
-      for obs_hash, ent, var, dt, prov in chunk_items:
-        hash_int = int(obs_hash[:16], 16)
-        if hash_int not in self.obs_hash_set:
-          self.obs_hash_set.add(hash_int)
-          continue
-        self.obs_collision_count += 1
-        self.file_collision_counts[file_key] += 1
-        sample_info = (
-            f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
-        )
-        if len(self.obs_sample_collisions) < 10:
-          self.obs_sample_collisions.append(sample_info)
-        if len(self.file_sample_collisions[file_key]) < 3:
-          self.file_sample_collisions[file_key].append(sample_info)
-          logging.warning(
-              "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
-              file_key, sample_info)
-        elif self.obs_collision_count % 1000 == 0:
-          logging.warning(
-              "Detected %d observation @id collisions so far across processed datasets.",
-              self.obs_collision_count)
+    for obs_hash, ent, var, dt, prov in chunk_items:
+      hash_int = int(obs_hash[:16], 16)
+      if hash_int not in self.obs_hash_set:
+        self.obs_hash_set.add(hash_int)
+        continue
+      self.obs_collision_count += 1
+      self.file_collision_counts[file_key] += 1
+      sample_info = (
+          f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
+      )
+      if len(self.obs_sample_collisions) < 10:
+        self.obs_sample_collisions.append(sample_info)
+      if len(self.file_sample_collisions[file_key]) < 3:
+        self.file_sample_collisions[file_key].append(sample_info)
+        logging.warning(
+            "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
+            file_key, sample_info)
+      elif self.obs_collision_count % 1000 == 0:
+        logging.warning(
+            "Detected %d observation @id collisions so far across processed datasets.",
+            self.obs_collision_count)
 
   def _write_observations_df_to_disk(self,
                                      df: pd.DataFrame,
@@ -331,9 +331,8 @@ class JsonLdStreamWriter(GraphWriter):
     for i in range(0, n, _CHUNK_SIZE):
       chunk_df = df.iloc[i:i + _CHUNK_SIZE]
       chunk_records = chunk_df.to_records(index=False).tolist()
-      with self.lock:
-        shard_index = self.obs_shard_index
-        self.obs_shard_index += 1
+      shard_index = self.obs_shard_index
+      self.obs_shard_index += 1
       _write_observation_shard(chunk_records,
                                shard_index,
                                import_temp_dir,
@@ -357,34 +356,32 @@ class JsonLdStreamWriter(GraphWriter):
     dir_name = import_name.replace("/", "_")
     import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
     os.makedirs(import_temp_dir, exist_ok=True)
-    with self.lock:
-      self._processed_imports.add(import_name)
-      if import_name not in self._node_streaming_started:
-        logging.info("Streaming node/observation export for %s...", import_name)
-        self._node_streaming_started.add(import_name)
+    self._processed_imports.add(import_name)
+    if import_name not in self._node_streaming_started:
+      logging.info("Streaming node/observation export for %s...", import_name)
+      self._node_streaming_started.add(import_name)
 
   def _write_triples_to_disk(self, triples: list[Triple], import_name: str):
     dir_name = import_name.replace("/", "_")
     import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
-    with self.lock:
-      i = 0
-      n = len(triples)
-      while i < n:
-        chunk = []
-        end = min(i + _CHUNK_SIZE, n)
-        chunk.extend(triples[i:end])
-        i = end
+    i = 0
+    n = len(triples)
+    while i < n:
+      chunk = []
+      end = min(i + _CHUNK_SIZE, n)
+      chunk.extend(triples[i:end])
+      i = end
 
-        # Expand boundary to keep subject together
-        if i < n:
-          boundary_subject = chunk[-1].subject_id
-          while i < n and triples[i].subject_id == boundary_subject:
-            chunk.append(triples[i])
-            i += 1
+      # Expand boundary to keep subject together
+      if i < n:
+        boundary_subject = chunk[-1].subject_id
+        while i < n and triples[i].subject_id == boundary_subject:
+          chunk.append(triples[i])
+          i += 1
 
-        _write_node_shard(
-            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-        self.node_shard_index += 1
+      _write_node_shard(
+          (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+      self.node_shard_index += 1
 
   def write_triples(self,
                     triples: list[Triple],
@@ -397,8 +394,7 @@ class JsonLdStreamWriter(GraphWriter):
       provenance_dir = self.config.import_name(input_file)
 
     if not provenance_dir:
-      with self.lock:
-        self._triples["_global"].extend(triples)
+      self._triples["_global"].extend(triples)
       return
 
     self._init_import_export_dir(provenance_dir)
