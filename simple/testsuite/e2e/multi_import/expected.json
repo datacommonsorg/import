@@ -13,6 +13,26 @@
       }
     ]
   },
+  "ingestion_report": {
+    "folders": [
+      {
+        "folderName": "health"
+      },
+      {
+        "folderName": "population"
+      }
+    ],
+    "run": {
+      "folderNames": [
+        "health",
+        "population"
+      ],
+      "mode": "INGEST",
+      "outputPath": "<output>/preprocessor_reports/testsuite-run",
+      "status": "SUCCESS",
+      "workflowExecutionId": "testsuite-run"
+    }
+  },
   "records": {
     "any_folder": [
       {

@@ -15,25 +15,6 @@
     <version>${revision}</version>
     <name>Data Commons - Ingestion Pipeline</name>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.google.cloud</groupId>
-                <artifactId>libraries-bom-protobuf3</artifactId>
-                <version>26.74.0</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.beam</groupId>
-                <artifactId>beam-sdks-java-google-cloud-platform-bom</artifactId>
-                <version>${beam.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
         <dependency>
             <artifactId>data</artifactId>
@@ -74,7 +55,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>33.4.8-jre</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -166,6 +146,17 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.beam:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/maven/com.google.*/**</exclude>
+                                        <exclude>META-INF/maven/commons-*/**</exclude>
+                                        <exclude>META-INF/maven/org.apache.commons/**</exclude>
+                                        <exclude>META-INF/maven/org.apache.httpcomponents/**</exclude>
+                                        <exclude>META-INF/maven/org.codehaus.mojo/**</exclude>
+                                        <exclude>META-INF/maven/org.antlr/**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

@@ -52,13 +52,15 @@ class ExecutionMetadata(BaseModel):
   workflowExecutionId: str = Field(
       description="Ingestion workflow execution ID")
   mode: RunMode = Field(description="How the preprocessor was run")
-  status: RunStatus = Field(description="Outcome of the preprocessor run")
+  status: RunStatus | None = Field(
+      default=None, description="Outcome of the preprocessor run")
   startTime: str = Field(description="ISO-8601 UTC time the run started")
-  endTime: str = Field(description="ISO-8601 UTC time the run ended")
+  endTime: str = Field(default="",
+                       description="ISO-8601 UTC time the run ended")
   folderNames: list[str] = Field(
       default_factory=list, description="Import folders requested for the run")
-  outputPath: str = Field(
-      default="", description="Path where the run's JSON-LD was written")
+  outputPath: str = Field(default="",
+                          description="Folder this report is written to")
 
 
 class Provenance(BaseModel):
@@ -73,8 +75,8 @@ class Folder(BaseModel):
   """One entry in `folders[]`: summary of one imported folder."""
 
   folderName: str = Field(description="Name of the imported folder")
-  provenances: list[Provenance] = Field(
-      default_factory=list, description="Provenances in this folder")
+  # TODO: Add provenances (list[Provenance]) once they are recorded, so the
+  # report doesn't show an empty list that looks like "no provenances".
   # TODO: Add provenance_count, observation_count, file counts by type,
   # node counts by type, and configUri.
 
