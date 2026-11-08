@@ -32,10 +32,10 @@ ARG PIP_DISABLE_PIP_VERSION_CHECK=1
 ARG PIP_NO_CACHE_DIR=1
 ARG PIP_ROOT_USER_ACTION=ignore
 
-RUN pip3 uninstall -y setuptools wheel \
-    && pip3 install -r ./import/simple/requirements.txt \
+RUN pip3 install -r ./import/simple/requirements.txt \
     && pip3 install --no-deps -r ./import/simple/requirements_nodeps.txt \
-    && rm -rf /usr/local/lib/python3.11/ensurepip/_bundled
+    && pip3 uninstall -y pip setuptools wheel \
+    && rm -rf /usr/local/lib/python3.*/ensurepip/_bundled
 
 # Copy only the packages the preprocessor runs (stats.main imports stats, util
 # and kg_util). New directories under simple/ stay out of the image unless they
