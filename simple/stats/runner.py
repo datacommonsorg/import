@@ -76,6 +76,11 @@ def default_max_workers() -> int:
     return os.cpu_count() or 1
 
 
+def num_import_workers(max_workers: int, num_files: int) -> int:
+  """Returns how many worker processes to start: never more than the files."""
+  return min(max_workers, num_files)
+
+
 def _create_importer_for_file(
     config: Config,
     input_file: File,
@@ -701,7 +706,7 @@ class Runner:
         config_json_str=json.dumps(self.config.data),
         jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
     )
-    num_workers = min(self.max_workers, len(files))
+    num_workers = num_import_workers(self.max_workers, len(files))
     logging.info("Importing %d files with %d worker processes", len(files),
                  num_workers)
     with concurrent.futures.ProcessPoolExecutor(
