@@ -110,87 +110,55 @@ def test_provenance_without_a_name_gets_its_id_as_name():
   ])
 
 
-_METADATA_WITH_CUSTOM_PROPERTIES = (
+_METADATA_WITH_EXTRA_TRIPLES = (
     b.mcf_node("dcid:OtherSource3",
-               typeOf="dcs:Source",
-               name='"Other Source"',
-               description='"A source"',
-               established="1990"),
-    b.mcf_node("dcid:OtherProvenance3",
-               typeOf="dcs:Provenance",
-               name='"Other Provenance"',
-               source="dcid:OtherSource3",
-               sourceLink='"https://other.example.com/link"',
-               isPartOf="dcid:CollectionA, dcid:CollectionB",
-               license="undata:Other"),
-)
-
-
-def test_custom_properties_of_metadata_nodes_are_kept():
-  result = b.run_mcf(*_METADATA_WITH_CUSTOM_PROPERTIES)
-  b.assert_records(result.added, [
-      b.record("OtherSource3",
-               "Source",
-               name="Other Source",
-               description="A source",
-               established=1990),
-      b.record("OtherProvenance3",
-               "Provenance",
-               name="Other Provenance",
-               source=b.ref("OtherSource3"),
-               sourceLink="https://other.example.com/link",
-               isPartOf=[b.ref("CollectionA"),
-                         b.ref("CollectionB")],
-               license="undata:Other"),
-  ])
-
-
-_METADATA_WITH_MORE_TYPES_AND_VALUES = (
-    b.mcf_node("dcid:MultiSource",
                typeOf="dcs:Source, dcs:Organization",
                name='"Source A", "Source B"',
-               url='"https://a.example.org", "https://b.example.org"'),
-    b.mcf_node("dcid:MultiProvenance",
+               url='"https://a.example.org", "https://b.example.org"',
+               established="1990"),
+    b.mcf_node("dcid:OtherProvenance3",
                typeOf="dcs:Provenance, dcs:Dataset",
-               name='"Provenance A", "Provenance B"',
-               source="dcid:MultiSource"),
+               name='"Other Provenance"',
+               source="dcid:OtherSource3",
+               isPartOf="dcid:CollectionA, dcid:CollectionB"),
     b.mcf_node("dcid:SourceAndProvenance",
                typeOf="dcs:Source, dcs:Provenance",
                name='"Both"',
-               source="dcid:MultiSource"),
+               source="dcid:OtherSource3"),
 )
 
 
-def test_other_types_and_extra_values_of_metadata_nodes_are_kept():
-  """The first value of name, url and source fills the node's field."""
-  result = b.run_mcf(*_METADATA_WITH_MORE_TYPES_AND_VALUES)
+def test_every_mcf_triple_of_a_metadata_node_is_kept():
+  """Other types, extra values and other properties are written as given.
+
+  The first value of name, url and source fills the registered node's field
+  (here, the domain comes from the first url).
+  """
+  result = b.run_mcf(*_METADATA_WITH_EXTRA_TRIPLES)
   b.assert_records(result.added, [
-      b.record("MultiSource", ["Organization", "Source"],
+      b.record("OtherSource3", ["Organization", "Source"],
                name=["Source A", "Source B"],
                url=["https://a.example.org", "https://b.example.org"],
-               domain="a.example.org"),
-      b.record("MultiProvenance", ["Dataset", "Provenance"],
-               name=["Provenance A", "Provenance B"],
-               source=b.ref("MultiSource")),
+               domain="a.example.org",
+               established=1990),
+      b.record("OtherProvenance3", ["Dataset", "Provenance"],
+               name="Other Provenance",
+               source=b.ref("OtherSource3"),
+               isPartOf=[b.ref("CollectionA"),
+                         b.ref("CollectionB")]),
       b.record("SourceAndProvenance", ["Provenance", "Source"],
                name="Both",
-               source=b.ref("MultiSource")),
+               source=b.ref("OtherSource3")),
   ])
 
 
 # --- Import folders -----------------------------------------------------------
 #
-# A Source is written to the folder of the MCF file that defines it. A Source
-# defined by several imports is written once, to the alphabetically first of
-# their folders. Beta comes first below so that processing order would favour
-# it.
+# A Source is written to the folder of the MCF file that defines it (pinned by
+# the multi_import e2e golden). A Source defined by several imports is written
+# once, to the alphabetically first of their folders. Beta comes first below so
+# that processing order would favour it.
 
-_TWO_SOURCES = {
-    **b.import_subdir("beta", provenance="BetaProvenance", source="BetaSource"),
-    **b.import_subdir("alpha",
-                      provenance="AlphaProvenance",
-                      source="AlphaSource"),
-}
 _ONE_SHARED_SOURCE = {
     **b.import_subdir("beta",
                       provenance="BetaProvenance",
@@ -199,18 +167,11 @@ _ONE_SHARED_SOURCE = {
                       provenance="AlphaProvenance",
                       source="SharedSource"),
 }
-_ALL_IMPORTS = {"import_names": ["ALL_IMPORTS"]}
-
-
-def test_sources_are_written_to_the_folder_of_their_mcf_file():
-  result = b.run_dir(_TWO_SOURCES, runner_kwargs=_ALL_IMPORTS)
-  assert result.error is None, result.error
-  assert result.folders_of("dcid:AlphaSource") == ["AlphaProvenance"]
-  assert result.folders_of("dcid:BetaSource") == ["BetaProvenance"]
 
 
 def test_a_source_of_several_imports_is_written_once_to_the_first_folder():
-  result = b.run_dir(_ONE_SHARED_SOURCE, runner_kwargs=_ALL_IMPORTS)
+  result = b.run_dir(_ONE_SHARED_SOURCE,
+                     runner_kwargs={"import_names": ["ALL_IMPORTS"]})
   assert result.error is None, result.error
   assert result.folders_of("dcid:SharedSource") == ["AlphaProvenance"]
 
