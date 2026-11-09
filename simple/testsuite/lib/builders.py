@@ -259,6 +259,45 @@ def csv_file(*rows: list[str],
   return ("\ufeff" if bom else "") + out.getvalue()
 
 
+def import_subdir(name: str,
+                  csv_text: str | None = None,
+                  *,
+                  provenance: str = PROVENANCE,
+                  source: str = SOURCE) -> dict[str, str]:
+  """
+  The files of import subdirectory name, for run_dir().
+
+  Its config.json imports *.mcf and case*.csv under provenance, and its
+  provenance.mcf defines provenance and source (with a url derived from
+  source). csv_text defaults to one obs_row().
+  """
+  provenance_ref = f"dcid:{provenance}"
+  config = {
+      "inputFiles": [
+          {
+              "pattern": "*.mcf",
+              "provenance": provenance_ref
+          },
+          {
+              "pattern": "case*.csv",
+              "provenance": provenance_ref,
+              "columnMappings": OBS_MAPPINGS
+          },
+      ]
+  }
+  provenance_mcf = mcf(
+      mcf_node(f"dcid:{source}",
+               typeOf="dcs:Source",
+               url=f'"https://{source.lower()}.example.org"'),
+      mcf_node(provenance_ref, typeOf="dcs:Provenance",
+               source=f"dcid:{source}"))
+  return {
+      f"{name}/config.json": json.dumps(config),
+      f"{name}/provenance.mcf": provenance_mcf,
+      f"{name}/case.csv": csv_text or csv_file(obs_row()),
+  }
+
+
 # --- Expectation builders -----------------------------------------------------
 
 
@@ -413,6 +452,11 @@ class Result:
   def records(self) -> list[dict]:
     """Every record the run wrote, shared or not."""
     return _records(_record_counts(self.output))
+
+  def folders_of(self, record_id: str) -> list[str]:
+    """The import folder of every copy of a record, e.g. "dcid:X", sorted."""
+    return sorted(folder for folder, _, record in self.output["records"]
+                  if record.get("@id") == record_id)
 
 
 def run(files: dict[str, str],

@@ -797,13 +797,9 @@ class Runner:
 
     # Populate trigger workflow info if running under ingestion workflow and output is GCS
     output_path = self.graph_writer.jsonld_dir.full_path()
-    import_name = self.graph_writer.import_name
     if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      processed_imports = sorted(list(self.graph_writer._processed_imports))
-      if not processed_imports:
-        processed_imports = [import_name]
       import_list = []
-      for imp in processed_imports:
+      for imp in self.graph_writer.import_folders():
         sanitized_imp = imp.replace("/", "_")
         gcs_pattern = f"{output_path.rstrip('/')}/{sanitized_imp}/**/*.jsonld"
         import_list.append({"importName": imp, "graphPath": gcs_pattern})

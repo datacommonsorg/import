@@ -400,22 +400,31 @@ class JsonLdStreamWriter(GraphWriter):
     self._init_import_export_dir(provenance_dir)
     self._write_triples_to_disk(triples, provenance_dir)
 
+  def import_folders(self) -> list[str]:
+    """Returns the sorted imports whose folders this writer writes.
+
+    These are the processed imports plus the import that global triples go to
+    (see _global_triples_import), which is written at commit_and_close.
+    """
+    return sorted(self._processed_imports | {self._global_triples_import()})
+
+  def _global_triples_import(self) -> str:
+    """Returns the import whose folder global triples are written to.
+
+    The run's own import name if it has a folder (or no import has one), else
+    the alphabetically first processed import, so that the choice does not
+    depend on processing order.
+    """
+    if not self._processed_imports or self.import_name in self._processed_imports:
+      return self.import_name
+    return min(self._processed_imports)
+
   def commit_and_close(self):
     global_triples = self._triples.pop("_global", [])
-    if not self._processed_imports:
-      self._processed_imports.add(self.import_name)
-
     if global_triples:
-      target_import = self.import_name if self.import_name in self._processed_imports else next(
-          iter(self._processed_imports))
-      dir_name = target_import.replace("/", "_")
-      import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
-      os.makedirs(import_temp_dir, exist_ok=True)
-      for i in range(0, len(global_triples), _CHUNK_SIZE):
-        chunk = global_triples[i:i + _CHUNK_SIZE]
-        _write_node_shard(
-            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-        self.node_shard_index += 1
+      target_import = self._global_triples_import()
+      self._init_import_export_dir(target_import)
+      self._write_triples_to_disk(global_triples, target_import)
 
     has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
         self.temp_local_dir) else False

@@ -38,7 +38,7 @@ import glob
 import json
 import os
 import re
-from typing import Any
+from typing import Any, Iterable
 
 OBSERVATIONS = "observations"
 NODES = "nodes"
@@ -80,6 +80,21 @@ def load_jsonld(jsonld_root: str) -> list[tuple[str, str, dict]]:
       records += [(folder, kind, canonical_record(r))
                   for r in json.load(f).get("@graph", [])]
   return records
+
+
+def group_by_folder(
+    records: Iterable[tuple[str, str, dict]]
+) -> dict[str, dict[str, dict[str, list[dict]]]]:
+  """
+  {import folder: {kind: {@id: [copies]}}} of load_jsonld records.
+
+  Every folder lists both kinds, even if one has no records.
+  """
+  folders = {}
+  for folder, kind, rec in records:
+    kinds = folders.setdefault(folder, {NODES: {}, OBSERVATIONS: {}})
+    kinds[kind].setdefault(rec.get("@id"), []).append(rec)
+  return folders
 
 
 def normalize_report(report: dict | None, path_tokens: dict[str, str]):
