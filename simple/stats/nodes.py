@@ -102,8 +102,9 @@ class Nodes:
       src.url = url
       src.domain = src.domain or Source(id="", name="", url=url).domain
     _extend_unique(src.custom_triples, _about(clean_id, custom_triples))
-    if import_folder:
-      src.import_folder = min(src.import_folder or import_folder, import_folder)
+    if import_folder and (not src.import_folder or
+                          import_folder < src.import_folder):
+      src.import_folder = import_folder
     return src
 
   def merge_metadata(self, provenances: dict[str, Provenance],

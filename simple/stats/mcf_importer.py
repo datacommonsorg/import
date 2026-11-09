@@ -67,6 +67,9 @@ class McfImporter(Importer):
             _PROVENANCE, _SOURCE
         ]:
           metadata_subject_ids.add(subject_id)
+      # Compared by dcid, since blocks of one node may spell its id differently
+      # (e.g. "Node: l:src" with "dcid: X", and "Node: dcid:X").
+      metadata_ids = {local2dcid.get(s, s) for s in metadata_subject_ids}
 
       # Pass 2: Map and stream triples to the graph writer in chunks
       logging.info("Streaming MCF triple parsing and writes for %s...",
@@ -75,16 +78,14 @@ class McfImporter(Importer):
       all_metadata_triples = []
 
       for parser_triple in triples_list:
-        subject_id, predicate, value, value_type = parser_triple
-        if predicate == _DCID:
+        if parser_triple[1] == _DCID:
           continue
 
         triple = _to_triple(parser_triple, local2dcid)
 
         # Metadata nodes are registered below and written once by Nodes, which
         # also adds derived properties (e.g. a Source's domain).
-        resolved_subject = local2dcid.get(subject_id, subject_id)
-        if subject_id in metadata_subject_ids or resolved_subject in metadata_subject_ids:
+        if triple.subject_id in metadata_ids:
           all_metadata_triples.append(triple)
           continue
 

@@ -89,6 +89,21 @@ def test_a_domain_given_in_mcf_replaces_the_derived_one():
   ])
 
 
+def test_a_source_split_across_differently_spelled_blocks_is_written_once():
+  result = b.run_mcf(
+      b.mcf_node("l:src", typeOf="dcs:Source", dcid='"OtherSource"'),
+      b.mcf_node("dcid:OtherSource",
+                 typeOf=None,
+                 url='"https://data.example.com/path"'))
+  b.assert_records(result.added, [
+      b.record("OtherSource",
+               "Source",
+               name="OtherSource",
+               url="https://data.example.com/path",
+               domain="data.example.com")
+  ])
+
+
 def test_provenance_without_a_name_gets_its_id_as_name():
   result = b.run_mcf(
       b.mcf_node("dcid:OtherSource2",
