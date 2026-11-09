@@ -51,7 +51,7 @@ COPY run.sh .
 # Make script executable.
 RUN chmod +x run.sh
 
-# TODO(b/576288517): Switch the runtime image to distroless, which doesn't ship
+# TODO(b/583773160): Switch the runtime image to distroless, which doesn't ship
 # these packages, and replace run.sh with a Python entrypoint (distroless has no
 # shell).
 # Remove unused Debian packages from the base image, they bring in vulnerabilities.
