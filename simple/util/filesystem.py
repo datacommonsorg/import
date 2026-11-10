@@ -52,20 +52,27 @@ def join_path(base: str, *args: str) -> str:
 
 def create_store(path: str,
                  create_if_missing: bool = False,
-                 treat_as_file: bool = False) -> "Store":
+                 treat_as_file: bool = False,
+                 mark_gcs_dirs: bool = True) -> "Store":
   """Initializes a file store from a path or URL.
 
   IMPORTANT: Call close() on the returned store when finished with it.
   To automatically close, use the store as a context manager,
   e.g. `with create_store(path) as store:`
+
+  Args:
+    mark_gcs_dirs: For a GCS directory, lists everything under it and writes
+      the directory markers that are missing (see `_fix_gcsfs_storage`). Set
+      to False to skip that when the directory was already opened with it.
   """
-  return Store(path, create_if_missing, treat_as_file)
+  return Store(path, create_if_missing, treat_as_file, mark_gcs_dirs)
 
 
 class Store:
   """File storage location. May be local or remote, directory or file."""
 
-  def __init__(self, path: str, create_if_missing: bool, treat_as_file: bool):
+  def __init__(self, path: str, create_if_missing: bool, treat_as_file: bool,
+               mark_gcs_dirs: bool):
     # Path of the associated PyFilesystem FS.
     # For single-file stores, this is updated below to be the parent directory of the file.
     self.root_path = path
@@ -76,8 +83,8 @@ class Store:
         if self.root_path.startswith(_GCS_PATH_PREFIX):
           self.fs = open_fs(f"{self.root_path}?strict=False",
                             create=create_if_missing)
-          # Fix GCS storage if needed.
-          _fix_gcsfs_storage(self.fs)
+          if mark_gcs_dirs:
+            _fix_gcsfs_storage(self.fs)
         else:
           self.fs = open_fs(self.root_path, create=create_if_missing)
 

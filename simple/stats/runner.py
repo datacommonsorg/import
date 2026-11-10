@@ -211,6 +211,16 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
   raise FileImportsFailedError(failures)
 
 
+def _open_worker_store(path: str) -> Store:
+  """Opens, in a worker process, a directory that the coordinator opened.
+
+  The coordinator's stores already wrote the GCS directory markers that the
+  worker needs. Marking again for every file sends the same marker objects
+  many concurrent writes, which GCS rejects with 429 errors.
+  """
+  return create_store(path, mark_gcs_dirs=False)
+
+
 def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
                             args: _WorkerArgs,
                             obs_ids_path: str) -> ImportProcResult:
@@ -221,9 +231,9 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
   defines are returned for the coordinator to merge. The file's observation
   ids, if any, are saved to `obs_ids_path` (see `stats.obs_id_collisions`).
   """
-  with create_store(input_dir_path) as input_store_obj, \
-       create_store(args.output_dir_path) as output_store_obj, \
-       create_store(args.process_dir_path) as process_store_obj:
+  with _open_worker_store(input_dir_path) as input_store_obj, \
+       _open_worker_store(args.output_dir_path) as output_store_obj, \
+       _open_worker_store(args.process_dir_path) as process_store_obj:
     input_dir = input_store_obj.as_dir()
     output_store = output_store_obj.as_dir()
     process_store = process_store_obj.as_dir()
