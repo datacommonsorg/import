@@ -27,11 +27,15 @@ mode imports files in worker processes, as in production:
   tiny_chunks   input on local disk, with shard and CSV chunk sizes shrunk to
                 1-2 so that every chunk/shard boundary is crossed even by tiny
                 inputs.
+
+Patches are applied in the test process; worker processes inherit them only if
+forked, so runs fail unless the start method is fork.
 """
 
 import contextlib
 import dataclasses
 import json
+import multiprocessing
 import os
 import shutil
 import tempfile
@@ -176,6 +180,22 @@ def _replace_input_token_in_config_file(staged: str, config_file: str | None,
     f.write(text)
 
 
+def _check_workers_inherit_patches() -> None:
+  """
+  Raises unless Runner's worker processes will inherit this process's patches.
+
+  Workers started by spawn or forkserver (the default on macOS, and on Linux
+  from Python 3.14) import the unpatched modules, so modes such as tiny_chunks
+  would silently test nothing.
+  """
+  method = multiprocessing.get_start_method()
+  if method != "fork":
+    raise RuntimeError(
+        f"The testsuite needs the 'fork' multiprocessing start method, so that"
+        f" worker processes inherit its patches; the start method is"
+        f" '{method}'. See testsuite/README.md.")
+
+
 def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
                 config_file: str | None) -> dict | None:
   """
@@ -184,6 +204,7 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
   The writer caches custom namespace prefixes in a module global; every run
   starts from a clean slate so runs cannot influence each other.
   """
+  _check_workers_inherit_patches()
   env = {
       "WORKFLOW_EXECUTION_ID": WORKFLOW_ID,
       "TEMP_LOCATION": paths.temp,
