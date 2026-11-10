@@ -82,7 +82,7 @@ public class SpannerPartitionedDeleteFn extends DoFn<List<String>, Void> {
     String dml = buildDml(tableName, columnName, additionalPredicate);
     Statement statement = Statement.newBuilder(dml).bind(columnName).toStringArray(values).build();
     try {
-      long rowCount = dbClient.executePartitionedUpdate(statement);
+      long rowCount = dbClient.executePartitionedUpdate(statement, SpannerClient.LOW_PRIORITY);
       deletedRowsCounter.inc(rowCount);
       LOGGER.info("Deleted {} rows from {} for {} IN {}", rowCount, tableName, columnName, values);
       receiver.output(null);

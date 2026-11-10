@@ -11,7 +11,7 @@ under `unit/`.
 cd simple
 python3 -m pytest testsuite/                               # everything, in parallel (-n auto is the default; -n 0 for serial)
 python3 -m pytest testsuite/test_observations.py -k about  # one table
-python3 -m pytest testsuite/test_e2e.py --modes=production # one execution mode
+python3 -m pytest testsuite/test_e2e.py --modes=gcs_input # one execution mode
 python3 -m pytest testsuite/unit/                          # unit tests only
 python3 -m pytest testsuite/test_e2e.py --update-expected -n 0  # rewrite expected.json, then review the diff
 ```
@@ -42,11 +42,14 @@ For a refactor or performance PR, `test_e2e.py` passing with every
 
 Execution modes (`lib/run.py`):
 
-- `threaded`: local disk input, no multiprocessing. Fast; used by every small test.
-- `production`: multiprocessing, with input and output on (fake) GCS, as the
-  ingestion workflow runs it.
-- `tiny_chunks`: threaded, with chunk and shard sizes shrunk so that every
-  boundary is crossed even by tiny inputs.
+- `disk_input`: input on local disk. Used by every small test.
+- `gcs_input`: input on (fake) GCS, as the ingestion workflow runs it.
+- `tiny_chunks`: with chunk and shard sizes shrunk so that every boundary is
+  crossed even by tiny inputs.
+
+Modes patch the preprocessor in the test process, and worker processes see
+those patches only if forked. Runs therefore fail unless the multiprocessing
+start method is `fork` (the Linux default up to Python 3.13; not macOS).
 
 ## Writing a test
 
@@ -100,3 +103,8 @@ Known bugs are strict xfails, never wrong expectations: `bug="..."` on a
 `Case`, `@known_bug(reason=...)` on a test, or an entry in `KNOWN_ISSUES` in
 `test_e2e.py`. When a fix lands, the test XPASSes and fails until the marker
 is removed.
+
+One exception: an e2e bug that every mode shares is written into
+`expected.json` instead, because an xfail would stop checking that whole
+aspect. Each one is listed in `GOLDEN_BUGS` in `test_e2e.py`; its fix updates
+`expected.json`.

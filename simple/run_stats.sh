@@ -72,6 +72,7 @@ function setup_python {
   then
     echo_log "Installing Python requirements from $SIMPLE_DIR/requirements.txt"
     pip3 install -r $SIMPLE_DIR/requirements.txt >> $LOG 2>&1
+    pip3 install --no-deps -r $SIMPLE_DIR/requirements_nodeps.txt >> $LOG 2>&1
     PYTHON_REQUIREMENTS_INSTALLED=true
   fi
 }

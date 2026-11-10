@@ -19,7 +19,6 @@ Author keyed by author_id, unless it says otherwise, mapping exactly its CSV's
 columns (see entities_config() in lib/builders.py).
 """
 
-import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
@@ -173,10 +172,6 @@ def test_value(given, expect):
                    [b.entity("author1", author_id="author1", value=expect)])
 
 
-# Modes whose entities output must match: threaded, and production
-# (multiprocessing), where each file is imported by its own worker process.
-_MODES = ("threaded", "production")
-
 # A column's values are written under the property it is mapped to, whatever
 # its header.
 PREDICATES = [
@@ -188,52 +183,45 @@ PREDICATES = [
 
 
 @cases(*PREDICATES)
-@pytest.mark.parametrize("mode", _MODES)
-def test_column_is_written_under_its_mapped_property(given, expect, mode):
-  result = b.run_csv(b.csv_file(["author1", "x"], header=["author_id", given]),
-                     b.entities_config(mappings={
-                         "dcid:author_id": "author_id",
-                         f"dcid:{expect}": given,
-                     }),
-                     mode=mode)
+def test_column_is_written_under_its_mapped_property(given, expect):
+  result = b.run_csv(
+      b.csv_file(["author1", "x"], header=["author_id", given]),
+      b.entities_config(mappings={
+          "dcid:author_id": "author_id",
+          f"dcid:{expect}": given,
+      }))
   b.assert_records(result.of_type("Author"),
                    [b.entity("author1", author_id="author1", **{expect: "x"})])
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_id_column_does_not_need_a_mapping(mode):
+def test_id_column_does_not_need_a_mapping():
   """An unmapped id column only supplies the dcids; it is not a property."""
-  result = b.run_csv(b.csv_file(["author1", "Jane Doe"],
-                                header=["author id", "author_name"]),
-                     b.entities_config(
-                         id_column="author id",
-                         mappings=b.same_name_mappings("author_name")),
-                     mode=mode)
+  result = b.run_csv(
+      b.csv_file(["author1", "Jane Doe"], header=["author id", "author_name"]),
+      b.entities_config(id_column="author id",
+                        mappings=b.same_name_mappings("author_name")))
   b.assert_records(result.of_type("Author"),
                    [b.entity("author1", author_name="Jane Doe")])
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_ignored_column_does_not_need_a_mapping(mode):
-  result = b.run_csv(b.csv_file(["author1", "Jane Doe", "anything"],
-                                header=["author_id", "author_name", "notes"]),
-                     b.entities_config(mappings=b.same_name_mappings(
-                         "author_id", "author_name"),
-                                       ignoreColumns=["notes"]),
-                     mode=mode)
+def test_ignored_column_does_not_need_a_mapping():
+  result = b.run_csv(
+      b.csv_file(["author1", "Jane Doe", "anything"],
+                 header=["author_id", "author_name", "notes"]),
+      b.entities_config(mappings=b.same_name_mappings("author_id",
+                                                      "author_name"),
+                        ignoreColumns=["notes"]))
   b.assert_records(
       result.of_type("Author"),
       [b.entity("author1", author_id="author1", author_name="Jane Doe")])
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_csv_without_column_mappings_fails(mode):
+def test_csv_without_column_mappings_fails():
   result = b.run_csv(
       b.csv_file(["author1", "Jane Doe"], header=["author_id", "author_name"]),
       b.without_column_mappings(
           b.entities_config(
-              mappings=b.same_name_mappings("author_id", "author_name"))),
-      mode=mode)
+              mappings=b.same_name_mappings("author_id", "author_name"))))
   b.assert_fails(result,
                  "ValueError",
                  "Missing 'columnMappings' for CSV file 'case.csv' in"
@@ -242,13 +230,11 @@ def test_csv_without_column_mappings_fails(mode):
                  handshake_error_types=("INVALID_CONFIGURATION",))
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_every_unmapped_column_is_reported_at_once(mode):
+def test_every_unmapped_column_is_reported_at_once():
   result = b.run_csv(
       b.csv_file(["author1", "Jane Doe", "x", "y"],
                  header=["author_id", "author_name", "Catégorie", "h-index"]),
-      b.entities_config(mappings=b.same_name_mappings("author_name")),
-      mode=mode)
+      b.entities_config(mappings=b.same_name_mappings("author_name")))
   b.assert_fails(result,
                  "ValueError",
                  "The CSV file 'case.csv' contains unmapped columns:"
@@ -257,16 +243,14 @@ def test_every_unmapped_column_is_reported_at_once(mode):
                  handshake_error_types=("UNMAPPED_COLUMNS",))
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_columns_mapped_to_the_same_property_fail(mode):
+def test_columns_mapped_to_the_same_property_fail():
   """dcid:author_name and author_name are one property, so a and b collide."""
-  result = b.run_csv(b.csv_file(["author1", "Jane", "Doe"],
-                                header=["author_id", "a", "b"]),
-                     b.entities_config(mappings={
-                         "dcid:author_name": "a",
-                         "author_name": "b",
-                     }),
-                     mode=mode)
+  result = b.run_csv(
+      b.csv_file(["author1", "Jane", "Doe"], header=["author_id", "a", "b"]),
+      b.entities_config(mappings={
+          "dcid:author_name": "a",
+          "author_name": "b",
+      }))
   b.assert_fails(result,
                  "ValueError",
                  "The CSV file 'case.csv' maps several columns to the same"
@@ -275,16 +259,14 @@ def test_columns_mapped_to_the_same_property_fail(mode):
                  handshake_error_types=("INVALID_CONFIGURATION",))
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_column_mapped_to_several_properties_fails(mode):
+def test_column_mapped_to_several_properties_fails():
   """Properties are looked up by column, so a second mapping would be lost."""
   result = b.run_csv(
       b.csv_file(["author1", "Jane Doe"], header=["author_id", "author_name"]),
       b.entities_config(mappings={
           "dcid:name": "author_name",
           "dcid:alternateName": "author_name",
-      }),
-      mode=mode)
+      }))
   b.assert_fails(result,
                  "ValueError",
                  "The CSV file 'case.csv' maps the same column to several"
@@ -293,14 +275,12 @@ def test_column_mapped_to_several_properties_fails(mode):
                  handshake_error_types=("INVALID_CONFIGURATION",))
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_every_mapped_column_missing_from_the_csv_is_reported_at_once(mode):
+def test_every_mapped_column_missing_from_the_csv_is_reported_at_once():
   """A mapping for a column the CSV doesn't have is a config error too."""
   result = b.run_csv(
       b.csv_file(["author1"], header=["author_id"]),
       b.entities_config(
-          mappings=b.same_name_mappings("author_name", "author_country")),
-      mode=mode)
+          mappings=b.same_name_mappings("author_name", "author_country")))
   b.assert_fails(result,
                  "ValueError",
                  "The following expected columns were not found in the CSV:"
@@ -308,12 +288,10 @@ def test_every_mapped_column_missing_from_the_csv_is_reported_at_once(mode):
                  handshake_error_types=("MISSING_REQUIRED_COLUMNS",))
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_id_column_missing_from_the_csv_fails(mode):
+def test_id_column_missing_from_the_csv_fails():
   result = b.run_csv(
       b.csv_file(["Jane Doe"], header=["author_name"]),
-      b.entities_config(mappings=b.same_name_mappings("author_name")),
-      mode=mode)
+      b.entities_config(mappings=b.same_name_mappings("author_name")))
   b.assert_fails(result,
                  "ValueError",
                  "The following expected columns were not found in the CSV:"
@@ -321,18 +299,15 @@ def test_id_column_missing_from_the_csv_fails(mode):
                  handshake_error_types=("MISSING_REQUIRED_COLUMNS",))
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_no_property_nodes_are_written_for_columns(mode):
+def test_no_property_nodes_are_written_for_columns():
   result = b.run_csv(
       b.csv_file(["author1", "Jane Doe"], header=["author_id", "author_name"]),
       b.entities_config(
-          mappings=b.same_name_mappings("author_id", "author_name")),
-      mode=mode)
+          mappings=b.same_name_mappings("author_id", "author_name")))
   b.assert_records(result.of_type("Property"), [])
 
 
-@pytest.mark.parametrize("mode", _MODES)
-def test_property_node_for_a_column_is_defined_in_mcf(mode):
+def test_property_node_for_a_column_is_defined_in_mcf():
   result = b.run(
       {
           "case.csv":
@@ -345,8 +320,7 @@ def test_property_node_for_a_column_is_defined_in_mcf(mode):
                          description='"Full name of the author"'),
       },
       b.entities_config(
-          mappings=b.same_name_mappings("author_id", "author_name")),
-      mode=mode)
+          mappings=b.same_name_mappings("author_id", "author_name")))
   b.assert_records(result.of_type("Property"), [
       b.record("author_name",
                "Property",

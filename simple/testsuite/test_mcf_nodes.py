@@ -133,8 +133,8 @@ def test_type(given, expect):
 # One case per node shape: given is the node's MCF properties (typeOf included),
 # expect is the record's types and properties. Every property must pass
 # through, and nothing else may be added. To pin a new shape, add a case.
-# Source and Provenance nodes are special (they are also registered and written
-# a second time); they are covered in test_provenance.py.
+# Source and Provenance nodes are special (they are registered, and written by
+# the node registry); they are covered in test_provenance.py.
 
 NODES = [
     Case("statistical variable",

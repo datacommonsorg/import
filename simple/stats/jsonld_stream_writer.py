@@ -22,7 +22,6 @@ import json
 import logging
 import os
 import tempfile
-import threading
 from typing import Callable, Optional
 import uuid
 
@@ -92,6 +91,19 @@ def _parse_numeric(val):
     return str(val)
 
 
+# Collision samples kept per file for the end-of-run summary.
+MAX_SAMPLES_PER_FILE = 3
+
+
+def collision_file_key(file_path: str) -> str:
+  """Returns the key under which collisions of `file_path` are summarized.
+
+  The path relative to the input directory, so that files with the same name in
+  different import folders are told apart.
+  """
+  return file_path or "unknown"
+
+
 def _prefix_dcid(key: str) -> str:
   """Ensures `key` has a `dcid:` prefix unless it is already a URI or prefixed."""
   if key.startswith(("dcid:", "http://", "https://")):
@@ -116,11 +128,14 @@ def _parse_props_json(props: str, entity: str, variable: str) -> dict:
 def _build_observation_node(row: tuple) -> dict:
   """Builds a single `dcid:StatVarObservation` JSON-LD node dict from a row."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
+  props_dict = _parse_props_json(props, entity, variable)
+  # Sorted, so that the @id does not depend on the order the config declares
+  # the properties in. observationProperties keeps the declared order.
+  id_props = json.dumps(props_dict, sort_keys=True) if props_dict else props
+  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{id_props}"
   obs_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
 
   var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
-  props_dict = _parse_props_json(props, entity, variable)
   if props_dict and var_obj:
     var_obj["dcid:observationProperties"] = [
         _prefix_dcid(k) for k in props_dict.keys()
@@ -243,7 +258,10 @@ def _write_node_shard(args):
 
 
 class JsonLdStreamWriter(GraphWriter):
-  """A GraphWriter implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
+  """A GraphWriter implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk.
+
+  Not thread-safe: the coordinator and each worker process have their own.
+  """
 
   def __init__(self,
                output_dir,
@@ -279,7 +297,6 @@ class JsonLdStreamWriter(GraphWriter):
     self.obs_shard_index = 0
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
-    self.lock = threading.Lock()
     self._temp_dir_obj = tempfile.TemporaryDirectory()
     self.temp_local_dir = self._temp_dir_obj.name
     self._triples = defaultdict(list)
@@ -287,7 +304,6 @@ class JsonLdStreamWriter(GraphWriter):
     self._node_streaming_started = set()
     self.obs_hash_set: set[int] = set()
     self.obs_collision_count: int = 0
-    self.obs_sample_collisions: list[str] = []
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
@@ -296,30 +312,47 @@ class JsonLdStreamWriter(GraphWriter):
       chunk_items: list[tuple[str, str, str, str, str]],
       file_name: str = "",
   ) -> None:
-    """Tracks observation hashes for a shard chunk and logs any collisions."""
-    file_key = os.path.basename(file_name) if file_name else "unknown"
-    with self.lock:
-      for obs_hash, ent, var, dt, prov in chunk_items:
-        hash_int = int(obs_hash[:16], 16)
-        if hash_int not in self.obs_hash_set:
-          self.obs_hash_set.add(hash_int)
-          continue
-        self.obs_collision_count += 1
-        self.file_collision_counts[file_key] += 1
-        sample_info = (
-            f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
-        )
-        if len(self.obs_sample_collisions) < 10:
-          self.obs_sample_collisions.append(sample_info)
-        if len(self.file_sample_collisions[file_key]) < 3:
-          self.file_sample_collisions[file_key].append(sample_info)
-          logging.warning(
-              "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
-              file_key, sample_info)
-        elif self.obs_collision_count % 1000 == 0:
-          logging.warning(
-              "Detected %d observation @id collisions so far across processed datasets.",
-              self.obs_collision_count)
+    """Tracks observation hashes for a shard chunk and logs any collisions.
+
+    Only collisions with observations that this writer saw are found: a worker
+    sees one file. See `stats.obs_id_collisions` for collisions between files.
+    """
+    file_key = collision_file_key(file_name)
+    for obs_hash, ent, var, dt, prov in chunk_items:
+      hash_int = int(obs_hash[:16], 16)
+      if hash_int not in self.obs_hash_set:
+        self.obs_hash_set.add(hash_int)
+        continue
+      self.obs_collision_count += 1
+      self.file_collision_counts[file_key] += 1
+      sample_info = (
+          f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
+      )
+      if len(self.file_sample_collisions[file_key]) < MAX_SAMPLES_PER_FILE:
+        self.file_sample_collisions[file_key].append(sample_info)
+        logging.warning(
+            "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
+            file_key, sample_info)
+      elif self.obs_collision_count % 1000 == 0:
+        logging.warning(
+            "Detected %d observation @id collisions so far across processed datasets.",
+            self.obs_collision_count)
+
+  def merge_collisions(self, file_counts: dict[str, int],
+                       file_samples: dict[str, list[str]]) -> None:
+    """Adds collisions found elsewhere to this writer's end-of-run summary.
+
+    Args:
+      file_counts: collision count per file key (see `collision_file_key`).
+      file_samples: sample descriptions per file key.
+    """
+    for f_name, count in file_counts.items():
+      self.obs_collision_count += count
+      self.file_collision_counts[f_name] += count
+      samples = self.file_sample_collisions[f_name]
+      samples.extend(
+          file_samples.get(f_name,
+                           [])[:max(0, MAX_SAMPLES_PER_FILE - len(samples))])
 
   def _write_observations_df_to_disk(self,
                                      df: pd.DataFrame,
@@ -331,9 +364,8 @@ class JsonLdStreamWriter(GraphWriter):
     for i in range(0, n, _CHUNK_SIZE):
       chunk_df = df.iloc[i:i + _CHUNK_SIZE]
       chunk_records = chunk_df.to_records(index=False).tolist()
-      with self.lock:
-        shard_index = self.obs_shard_index
-        self.obs_shard_index += 1
+      shard_index = self.obs_shard_index
+      self.obs_shard_index += 1
       _write_observation_shard(chunk_records,
                                shard_index,
                                import_temp_dir,
@@ -357,34 +389,32 @@ class JsonLdStreamWriter(GraphWriter):
     dir_name = import_name.replace("/", "_")
     import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
     os.makedirs(import_temp_dir, exist_ok=True)
-    with self.lock:
-      self._processed_imports.add(import_name)
-      if import_name not in self._node_streaming_started:
-        logging.info("Streaming node/observation export for %s...", import_name)
-        self._node_streaming_started.add(import_name)
+    self._processed_imports.add(import_name)
+    if import_name not in self._node_streaming_started:
+      logging.info("Streaming node/observation export for %s...", import_name)
+      self._node_streaming_started.add(import_name)
 
   def _write_triples_to_disk(self, triples: list[Triple], import_name: str):
     dir_name = import_name.replace("/", "_")
     import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
-    with self.lock:
-      i = 0
-      n = len(triples)
-      while i < n:
-        chunk = []
-        end = min(i + _CHUNK_SIZE, n)
-        chunk.extend(triples[i:end])
-        i = end
+    i = 0
+    n = len(triples)
+    while i < n:
+      chunk = []
+      end = min(i + _CHUNK_SIZE, n)
+      chunk.extend(triples[i:end])
+      i = end
 
-        # Expand boundary to keep subject together
-        if i < n:
-          boundary_subject = chunk[-1].subject_id
-          while i < n and triples[i].subject_id == boundary_subject:
-            chunk.append(triples[i])
-            i += 1
+      # Expand boundary to keep subject together
+      if i < n:
+        boundary_subject = chunk[-1].subject_id
+        while i < n and triples[i].subject_id == boundary_subject:
+          chunk.append(triples[i])
+          i += 1
 
-        _write_node_shard(
-            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-        self.node_shard_index += 1
+      _write_node_shard(
+          (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+      self.node_shard_index += 1
 
   def write_triples(self,
                     triples: list[Triple],
@@ -397,29 +427,37 @@ class JsonLdStreamWriter(GraphWriter):
       provenance_dir = self.config.import_name(input_file)
 
     if not provenance_dir:
-      with self.lock:
-        self._triples["_global"].extend(triples)
+      self._triples["_global"].extend(triples)
       return
 
     self._init_import_export_dir(provenance_dir)
     self._write_triples_to_disk(triples, provenance_dir)
 
+  def import_folders(self) -> list[str]:
+    """Returns the sorted imports whose folders this writer writes.
+
+    These are the processed imports plus the import that global triples go to
+    (see _global_triples_import), which is written at commit_and_close.
+    """
+    return sorted(self._processed_imports | {self._global_triples_import()})
+
+  def _global_triples_import(self) -> str:
+    """Returns the import whose folder global triples are written to.
+
+    The run's own import name if it has a folder (or no import has one), else
+    the alphabetically first processed import, so that the choice does not
+    depend on processing order.
+    """
+    if not self._processed_imports or self.import_name in self._processed_imports:
+      return self.import_name
+    return min(self._processed_imports)
+
   def commit_and_close(self):
     global_triples = self._triples.pop("_global", [])
-    if not self._processed_imports:
-      self._processed_imports.add(self.import_name)
-
     if global_triples:
-      target_import = self.import_name if self.import_name in self._processed_imports else next(
-          iter(self._processed_imports))
-      dir_name = target_import.replace("/", "_")
-      import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
-      os.makedirs(import_temp_dir, exist_ok=True)
-      for i in range(0, len(global_triples), _CHUNK_SIZE):
-        chunk = global_triples[i:i + _CHUNK_SIZE]
-        _write_node_shard(
-            (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
-        self.node_shard_index += 1
+      target_import = self._global_triples_import()
+      self._init_import_export_dir(target_import)
+      self._write_triples_to_disk(global_triples, target_import)
 
     has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
         self.temp_local_dir) else False

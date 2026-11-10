@@ -82,8 +82,7 @@ Run `python3 -m tools.regression --help` for every flag.
    at the end even on failure or Ctrl-C. Refs that resolve to the same commit
    share one. The working tree candidate runs in place.
 3. Each side runs `python -m stats.main --input_dir=... --output_dir=...
-   <extra flags>` from its own `simple/`, in the default multiprocess
-   (production) mode, without `PYTHONPATH`, `WORKFLOW_EXECUTION_ID` and
+   <extra flags>` from its own `simple/`, without `PYTHONPATH`, `WORKFLOW_EXECUTION_ID` and
    `TEMP_LOCATION`, and with `TMPDIR` in the run directory. With `--repeats`,
    the sides alternate (B1, A1, B2, A2, ...) to spread machine drift.
 4. The outputs of run 1 are compared; those of later repeats are deleted
@@ -240,7 +239,7 @@ Outputs are always written to local disk, so upload time is not measured.
 ## Caveat: `--freeze_time`
 
 Do not pass `--freeze_time=True` (it is not passed by default). On
-`upstream/master` it hangs the default multiprocess mode: the main process
+`upstream/master` it hangs the preprocessor: the main process
 spins while every pool worker waits on a futex, probably because freezegun's
 frozen clock breaks the process pool's timeouts. The comparison already
 ignores report and run directory timestamps, so the flag is not needed.

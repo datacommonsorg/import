@@ -18,6 +18,8 @@
 set -e
 
 ENV="$(echo "$1" | xargs)"
+# Lower-case for comparisons without bash 4 "${ENV,,}" (macOS ships bash 3.2).
+ENV_LC="$(printf '%s' "$ENV" | LC_ALL=C tr '[:upper:]' '[:lower:]')"
 IMPORT_NAME="$(echo "$2" | xargs)"
 LATEST_VERSION="$(echo "$3" | xargs)"
 DRY_RUN=false
@@ -39,7 +41,7 @@ fi
 LOCATION="us-central1"
 PROJECT_NUMBER="965988403328"
 
-case "${ENV,,}" in
+case "${ENV_LC}" in
   staging)
     HELPER_SERVICE="ingestion-helper-service-staging"
     ;;

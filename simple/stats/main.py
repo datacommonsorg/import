@@ -48,6 +48,15 @@ flags.DEFINE_string(
     constants.DEFAULT_FROZEN_TIME,
     "If freeze_time is True, the time that the run is frozen at.",
 )
+flags.DEFINE_integer(
+    "max_workers",
+    None,
+    "The maximum number of worker processes that import files concurrently. "
+    "Defaults to the number of CPUs available to this process (respecting "
+    "CPU affinity and cpusets). Lower it to reduce peak memory, since each "
+    "worker holds the data of the file it is importing.",
+    lower_bound=1,
+)
 
 # If running with time frozen, the packages to be ignored.
 # i.e. packages where time should not be frozen if it leads to errant behavior.
@@ -90,6 +99,7 @@ def _run():
       input_dir_path=FLAGS.input_dir,
       output_dir_path=FLAGS.output_dir,
       import_names=FLAGS.imports,
+      max_workers=FLAGS.max_workers,
   ).run()
   logging.info("Runner finished successfully.")
 
