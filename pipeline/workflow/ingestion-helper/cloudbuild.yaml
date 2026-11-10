@@ -26,7 +26,7 @@
 
 steps:
   # Run unit tests
-  - name: 'ghcr.io/astral-sh/uv:python3.12-bookworm-slim'
+  - name: 'ghcr.io/astral-sh/uv:0.13.7-python3.13-trixie-slim'
     entrypoint: 'uv'
     args: ['run', 'pytest']
 
