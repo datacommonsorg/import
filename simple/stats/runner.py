@@ -51,6 +51,7 @@ from util.file_match import match
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
+from util.filesystem import is_gcs_path
 from util.filesystem import join_path
 from util.filesystem import Store
 
@@ -60,15 +61,20 @@ _ARCHIVES_DIR_NAME = "archives"
 # GCS), so it is bounded independently of the CPU count; 32 matches the requests
 # connection pool size set in main.py.
 _MAX_HEADER_VALIDATION_THREADS = 32
+# Default worker processes per CPU, and their maximum, for runs that read or
+# write GCS (see default_max_workers).
+_GCS_WORKERS_PER_CPU = 2
+_MAX_GCS_WORKERS = 32
 
 
-def default_max_workers() -> int:
+def default_max_workers(uses_gcs: bool) -> int:
   """Returns the default number of worker processes that import files.
 
   Each worker is a separate process that holds its own copy of the parsed data
-  for the file it imports, so running more workers than there are CPUs to run
-  them adds memory without adding throughput. The default is therefore the
-  number of CPUs this process may run on.
+  for the file it imports, so for local runs the default is the number of CPUs
+  this process may run on: more workers add memory without adding throughput.
+  Workers of a run that reads or writes GCS (`uses_gcs`) also wait on it, so
+  that default is `_GCS_WORKERS_PER_CPU` per CPU, at most `_MAX_GCS_WORKERS`.
 
   `os.sched_getaffinity` is preferred over `os.cpu_count` because it honors the
   CPU affinity mask and cpusets (e.g. a container or Cloud Batch task pinned to
@@ -76,9 +82,12 @@ def default_max_workers() -> int:
   host. It is not available on every platform (e.g. macOS), hence the fallback.
   """
   try:
-    return len(os.sched_getaffinity(0))
+    cpus = len(os.sched_getaffinity(0))
   except AttributeError:
-    return os.cpu_count() or 1
+    cpus = os.cpu_count() or 1
+  if not uses_gcs:
+    return cpus
+  return min(_GCS_WORKERS_PER_CPU * cpus, _MAX_GCS_WORKERS)
 
 
 def num_import_workers(max_workers: int, num_files: int) -> int:
@@ -322,11 +331,8 @@ class Runner:
         concurrently. Defaults to `default_max_workers()`. Lower it to reduce
         peak memory, since each worker holds the data of the file it imports.
     """
-    if max_workers is None:
-      max_workers = default_max_workers()
-    if max_workers < 1:
+    if max_workers is not None and max_workers < 1:
       raise ValueError(f"max_workers must be at least 1, got {max_workers}")
-    self.max_workers = max_workers
 
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
@@ -354,6 +360,9 @@ class Runner:
     self.reporter = ImportReporter(
         report_file=self.process_dir.open_file(constants.REPORT_JSON_FILE_NAME))
 
+    # If None, _load_config() sets the default, which depends on whether any
+    # input or output store is on GCS.
+    self.max_workers: int | None = max_workers
     # Set by _load_config().
     self.config: Config | None = None
     self.nodes: Nodes | None = None
@@ -430,6 +439,9 @@ class Runner:
         _check_not_overlapping(input_store, self.output_store)
 
     self.nodes = Nodes(self.config)
+    if self.max_workers is None:
+      self.max_workers = default_max_workers(uses_gcs=any(
+          is_gcs_path(store.root_path) for store in self.all_stores))
 
   def _start_summary(self, start_time: str) -> None:
     self.summary_generator.set_execution_metadata(

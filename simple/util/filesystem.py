@@ -80,13 +80,18 @@ def gcs_client() -> storage.Client:
   return client
 
 
+def is_gcs_path(path: str) -> bool:
+  """Whether `path` is on Google Cloud Storage (a gs:// URL)."""
+  return path.startswith(_GCS_PATH_PREFIX)
+
+
 def _open_fs(url: str, create: bool, strict: bool = True):
   """Opens a PyFilesystem FS like `open_fs`; gs:// URLs use `gcs_client()`.
 
   For gs:// URLs, `strict=False` skips checking that the root directory's
   marker exists (see `_fix_gcsfs_storage`).
   """
-  if not url.startswith(_GCS_PATH_PREFIX):
+  if not is_gcs_path(url):
     return open_fs(url, create=create)
   # Split the URL as fs-gcsfs's own opener does.
   bucket_name, *path_parts = fspath.iteratepath(

@@ -14,27 +14,69 @@
 """Worker processes: pool sizing and what they write to GCS."""
 
 import os
+import shutil
 
 from google.cloud import storage
 from google.cloud.storage import Blob
 import pytest
 from stats import runner
 from testsuite.lib import builders as b
+from testsuite.lib import fake_gcs
+from testsuite.lib import run as runlib
+
+
+def _set_cpus(monkeypatch, affinity: set[int] | None, cpu_count: int) -> None:
+  """Fakes the CPUs available to this process (affinity None: unsupported)."""
+  if affinity is None:
+    monkeypatch.delattr(os, "sched_getaffinity", raising=False)
+  else:
+    monkeypatch.setattr(os,
+                        "sched_getaffinity",
+                        lambda pid: affinity,
+                        raising=False)
+  monkeypatch.setattr(os, "cpu_count", lambda: cpu_count)
 
 
 def test_default_max_workers_uses_cpu_affinity(monkeypatch):
-  monkeypatch.setattr(os,
-                      "sched_getaffinity",
-                      lambda pid: {0, 3, 5},
-                      raising=False)
-  monkeypatch.setattr(os, "cpu_count", lambda: 64)
-  assert runner.default_max_workers() == 3
+  _set_cpus(monkeypatch, affinity={0, 3, 5}, cpu_count=64)
+  assert runner.default_max_workers(uses_gcs=False) == 3
 
 
 def test_default_max_workers_falls_back_to_cpu_count(monkeypatch):
-  monkeypatch.delattr(os, "sched_getaffinity", raising=False)
-  monkeypatch.setattr(os, "cpu_count", lambda: 6)
-  assert runner.default_max_workers() == 6
+  _set_cpus(monkeypatch, affinity=None, cpu_count=6)
+  assert runner.default_max_workers(uses_gcs=False) == 6
+
+
+@pytest.mark.parametrize("cpus, expected", [(1, 2), (6, 12), (16, 32),
+                                            (64, 32)])
+def test_default_max_workers_on_gcs_is_two_per_cpu_up_to_32(
+    monkeypatch, cpus, expected):
+  _set_cpus(monkeypatch, affinity=set(range(cpus)), cpu_count=128)
+  assert runner.default_max_workers(uses_gcs=True) == expected
+
+
+@pytest.mark.parametrize("input_on_gcs, output_on_gcs, expected",
+                         [(False, False, 3), (False, True, 6),
+                          (True, False, 6)])
+def test_runner_defaults_workers_by_where_it_reads_and_writes(
+    tmp_path, monkeypatch, input_on_gcs, output_on_gcs, expected):
+  _set_cpus(monkeypatch, affinity={0, 1, 2}, cpu_count=64)
+  for name, value in fake_gcs.env().items():
+    monkeypatch.setenv(name, value)
+  local_input_dir = runlib.write_input_dir({}, b.obs_config(b.OBS_MAPPINGS))
+  input_dir = local_input_dir
+  if input_on_gcs:
+    input_dir = fake_gcs.new_prefix()
+    fake_gcs.upload_dir(local_input_dir, input_dir)
+  output_dir = (fake_gcs.new_prefix() if output_on_gcs else str(tmp_path))
+  try:
+    r = runner.Runner(config_file_path=None,
+                      input_dir_path=input_dir,
+                      output_dir_path=output_dir)
+    r._load_config()  # Opens the input stores.
+    assert r.max_workers == expected
+  finally:
+    shutil.rmtree(local_input_dir, ignore_errors=True)
 
 
 def test_num_import_workers_never_exceeds_the_files():

@@ -52,8 +52,9 @@ flags.DEFINE_integer(
     "max_workers",
     None,
     "The maximum number of worker processes that import files concurrently. "
-    "Defaults to the number of CPUs available to this process (respecting "
-    "CPU affinity and cpusets). Lower it to reduce peak memory, since each "
+    "Defaults to the number of CPUs available to this process, or twice that "
+    "(at most 32) when the input or output is on GCS; see "
+    "runner.default_max_workers. Lower it to reduce peak memory, since each "
     "worker holds the data of the file it is importing.",
     lower_bound=1,
 )
