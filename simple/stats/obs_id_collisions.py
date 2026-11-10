@@ -76,6 +76,9 @@ def find_cross_file_collisions(
   An id that k files produce is k - 1 collisions, one for each file but the
   first. With the collisions that each worker counts within its file, the
   total is the number of observations minus the number of distinct ids.
+
+  Example: if a.csv, b.csv and c.csv all produce id X, b.csv gets one
+  collision with a.csv, and c.csv one with b.csv.
   """
   arrays = [np.load(path, mmap_mode="r") for _, path in files]
   num_buckets = max(1, -(-sum(len(a) for a in arrays) // _BUCKET_SIZE))
