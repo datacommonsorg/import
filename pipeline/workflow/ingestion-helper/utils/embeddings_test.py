@@ -15,28 +15,40 @@
 import json
 from collections import OrderedDict
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, create_autospec, patch
 from datetime import datetime
+from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.param_types import STRING, Array
+from google.cloud.spanner_v1.snapshot import Snapshot
+from google.cloud.spanner_v1.transaction import Transaction
 
 from utils.embeddings import EmbeddingUtils
+
+_PRIORITY_LOW = RequestOptions.Priority.PRIORITY_LOW
+
 
 class TestEmbeddingUtils(unittest.TestCase):
 
     def setUp(self):
         self.mock_spanner = MagicMock()
-        self.mock_database = MagicMock()
+        # Autospec so calls that don't exist on the real Spanner API fail here.
+        self.mock_database = create_autospec(Database, instance=True)
         self.mock_spanner.database = self.mock_database
         self.utils = EmbeddingUtils(self.mock_spanner)
 
     def test_get_latest_lock_timestamp(self):
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
         expected_timestamp = datetime(2026, 4, 20, 12, 0, 0)
         mock_snapshot.execute_sql.return_value = [(expected_timestamp,)]
 
         timestamp = self.utils._get_latest_lock_timestamp()
         self.assertEqual(timestamp, expected_timestamp)
+        self.assertEqual(
+            mock_snapshot.execute_sql.call_args.kwargs["request_options"].priority,
+            _PRIORITY_LOW,
+        )
 
     def test_get_node_filter_condition_no_filter(self):
         params = {}
@@ -66,7 +78,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             self.utils._get_node_filter_condition("InvalidFilter", params, param_types)
 
     def test_get_updated_nodes(self):
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
 
         class MockField:
@@ -95,6 +107,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.assertIn("SELECT subject_id, name, types FROM Node", query)
         self.assertIn("TRUE", query)
         self.assertEqual(kwargs["params"], {"node_types": ["Topic"]})
+        self.assertEqual(kwargs["request_options"].priority, _PRIORITY_LOW)
 
         self.assertEqual(len(nodes), 1)
         self.assertEqual(nodes[0]["subject_id"], "dc/1")
@@ -102,7 +115,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.assertEqual(nodes[0]["types"], ["Topic"])
 
     def test_get_updated_nodes_with_timestamp(self):
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
 
         class MockField:
@@ -138,7 +151,7 @@ class TestEmbeddingUtils(unittest.TestCase):
 
     @patch('utils.embeddings._extract_nl_stat_var')
     def test_get_updated_nodes_with_nl_filter(self, mock_extract):
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_extract.return_value = [
             {"dcid": "dc/1", "sentence": "Node 1"},
@@ -215,10 +228,10 @@ class TestEmbeddingUtils(unittest.TestCase):
             ("dc/8", json.dumps({"title": "dc/8", "text": {"description": "Node 8"}}), ["Topic"])
         ]
 
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
 
-        def mock_execute_sql(sql, params=None, param_types=None, timeout=None):
+        def mock_execute_sql(sql, params=None, param_types=None, timeout=None, request_options=None):
             results = []
             for node in params["nodes"]:
                 results.append((
@@ -232,8 +245,8 @@ class TestEmbeddingUtils(unittest.TestCase):
         mock_snapshot.execute_sql.side_effect = mock_execute_sql
 
         transactions = []
-        def side_effect(func):
-            mock_transaction = MagicMock()
+        def side_effect(func, **_kwargs):
+            mock_transaction = create_autospec(Transaction, instance=True)
             
             def mock_execute_update(*args, **kwargs):
                 params = kwargs.get("params", {})
@@ -257,6 +270,13 @@ class TestEmbeddingUtils(unittest.TestCase):
         )
         self.assertEqual(affected_rows, 8)
         self.assertEqual(self.mock_database.run_in_transaction.call_count, 4)
+
+        # ML.PREDICT reads and write commits run at PRIORITY_LOW
+        self.assertEqual(mock_snapshot.execute_sql.call_count, 4)
+        for c in mock_snapshot.execute_sql.call_args_list:
+            self.assertEqual(c.kwargs["request_options"].priority, _PRIORITY_LOW)
+        for c in self.mock_database.run_in_transaction.call_args_list:
+            self.assertEqual(c.kwargs["commit_request_options"].priority, _PRIORITY_LOW)
         
         # Verify execute_update calls
         self.assertEqual(len(transactions), 4)
@@ -264,6 +284,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             tx.execute_update.assert_called_once()
             args, kwargs = tx.execute_update.call_args
             self.assertIn("INSERT OR UPDATE INTO NodeEmbedding", args[0])
+            self.assertEqual(kwargs["request_options"].priority, _PRIORITY_LOW)
             
             # Verify batch content
             rows = kwargs["params"]["rows"]
@@ -276,8 +297,8 @@ class TestEmbeddingUtils(unittest.TestCase):
         subject_ids = ["dc/1", "dc/2", "dc/3"]
         transactions = []
 
-        def side_effect(func):
-            mock_transaction = MagicMock()
+        def side_effect(func, **_kwargs):
+            mock_transaction = create_autospec(Transaction, instance=True)
 
             def mock_execute_update(*args, **kwargs):
                 params = kwargs.get("params", {})
@@ -299,11 +320,14 @@ class TestEmbeddingUtils(unittest.TestCase):
         )
         self.assertEqual(deleted, 3)
         self.assertEqual(self.mock_database.run_in_transaction.call_count, 2)
+        for c in self.mock_database.run_in_transaction.call_args_list:
+            self.assertEqual(c.kwargs["commit_request_options"].priority, _PRIORITY_LOW)
         self.assertEqual(len(transactions), 2)
         for tx in transactions:
             tx.execute_update.assert_called_once()
-            args, _ = tx.execute_update.call_args
+            args, kwargs = tx.execute_update.call_args
             self.assertIn("DELETE FROM NodeEmbedding", args[0])
+            self.assertEqual(kwargs["request_options"].priority, _PRIORITY_LOW)
 
     @patch('utils.embeddings.config')
     def test_ingest_embeddings_content_change(self, mock_config):
@@ -316,7 +340,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         mock_config.EMBEDDING_SPECS = [mock_spec]
         mock_config.TIMEOUT = 3600
 
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
 
         class MockField:
@@ -348,13 +372,15 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         executed_sqls = []
         executed_params = []
+        executed_priorities = []
 
-        def side_effect(func):
-            mock_transaction = MagicMock()
+        def side_effect(func, **_kwargs):
+            mock_transaction = create_autospec(Transaction, instance=True)
 
-            def mock_execute_update(sql, params=None, param_types=None, timeout=None):
+            def mock_execute_update(sql, params=None, param_types=None, timeout=None, request_options=None):
                 executed_sqls.append(sql)
                 executed_params.append(params)
+                executed_priorities.append(request_options.priority)
                 return 1
 
             mock_transaction.execute_update.side_effect = mock_execute_update
@@ -366,6 +392,16 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         self.assertEqual(affected_rows, 1)
         self.assertEqual(len(executed_sqls), 2)
+
+        # Every Spanner request in the embedding flow runs at PRIORITY_LOW:
+        # lock read, 2 node scans, ML.PREDICT, DELETE/INSERT DML, and commits.
+        self.assertEqual(mock_snapshot.execute_sql.call_count, 4)
+        for c in mock_snapshot.execute_sql.call_args_list:
+            self.assertEqual(c.kwargs["request_options"].priority, _PRIORITY_LOW)
+        self.assertEqual(executed_priorities, [_PRIORITY_LOW, _PRIORITY_LOW])
+        self.assertEqual(self.mock_database.run_in_transaction.call_count, 2)
+        for c in self.mock_database.run_in_transaction.call_args_list:
+            self.assertEqual(c.kwargs["commit_request_options"].priority, _PRIORITY_LOW)
 
         # 1. First transaction: DELETE old content for dc/statvar1 under base_text_embedding
         self.assertIn("DELETE FROM NodeEmbedding", executed_sqls[0])
@@ -400,7 +436,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         mock_config.EMBEDDING_SPECS = [mock_spec]
         mock_config.TIMEOUT = 3600
 
-        mock_snapshot = MagicMock()
+        mock_snapshot = create_autospec(Snapshot, instance=True)
         self.mock_database.snapshot.return_value.__enter__.return_value = mock_snapshot
 
         class MockField:
@@ -434,10 +470,10 @@ class TestEmbeddingUtils(unittest.TestCase):
         executed_sqls = []
         executed_params = []
 
-        def side_effect(func):
-            mock_transaction = MagicMock()
+        def side_effect(func, **_kwargs):
+            mock_transaction = create_autospec(Transaction, instance=True)
 
-            def mock_execute_update(sql, params=None, param_types=None, timeout=None):
+            def mock_execute_update(sql, params=None, param_types=None, timeout=None, request_options=None):
                 executed_sqls.append(sql)
                 executed_params.append(params)
                 return 1

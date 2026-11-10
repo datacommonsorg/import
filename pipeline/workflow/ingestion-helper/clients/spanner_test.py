@@ -20,7 +20,13 @@ import os
 # Add the current directory to path so we can import spanner_client
 sys.path.append(os.path.dirname(__file__))
 from google.cloud import spanner
-from clients.spanner import SpannerClient, IngestionState, IngestionStage
+from google.cloud.spanner_v1 import RequestOptions
+from clients.spanner import (
+    IngestionStage,
+    IngestionState,
+    SpannerClient,
+    get_low_priority_request_options,
+)
 
 class TestSpannerClient(unittest.TestCase):
 
@@ -362,6 +368,16 @@ class TestSpannerClient(unittest.TestCase):
 
         client = SpannerClient("project", "instance", "database")
         self.assertIsNone(client.get_import_version_record("imp1"))
+
+
+class TestGetLowPriorityRequestOptions(unittest.TestCase):
+
+    def test_returns_fresh_low_priority_instance(self):
+        first = get_low_priority_request_options()
+        second = get_low_priority_request_options()
+        self.assertEqual(first.priority, RequestOptions.Priority.PRIORITY_LOW)
+        # The SDK mutates the instance it is given, so instances must not be shared.
+        self.assertIsNot(first, second)
 
 
 if __name__ == '__main__':

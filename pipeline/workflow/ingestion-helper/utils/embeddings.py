@@ -23,7 +23,7 @@ import time
 from datetime import datetime
 import pandas as pd
 from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON, FLOAT64
-from clients.spanner import SpannerClient
+from clients.spanner import SpannerClient, get_low_priority_request_options
 import config
 
 
@@ -60,7 +60,10 @@ class EmbeddingUtils:
         time_lock_sql = "SELECT MAX(AcquiredTimestamp) FROM IngestionLock"
         try:
             with self.spanner.database.snapshot() as snapshot:
-                results = snapshot.execute_sql(time_lock_sql)
+                results = snapshot.execute_sql(
+                    time_lock_sql,
+                    request_options=get_low_priority_request_options(),
+                )
                 for row in results:
                     return row[0]
         except Exception as e:
@@ -119,7 +122,13 @@ class EmbeddingUtils:
 
         try:
             with self.spanner.database.snapshot() as snapshot:
-                results = snapshot.execute_sql(updated_node_sql, params=params, param_types=param_types, timeout=timeout)
+                results = snapshot.execute_sql(
+                    updated_node_sql,
+                    params=params,
+                    param_types=param_types,
+                    timeout=timeout,
+                    request_options=get_low_priority_request_options(),
+                )
                 fields = None
                 for row in results:
                     if fields is None:
@@ -212,10 +221,19 @@ class EmbeddingUtils:
             }
 
             def _execute_dml(transaction):
-                return transaction.execute_update(delete_sql, params=params, param_types=param_types, timeout=timeout)
+                return transaction.execute_update(
+                    delete_sql,
+                    params=params,
+                    param_types=param_types,
+                    timeout=timeout,
+                    request_options=get_low_priority_request_options(),
+                )
 
             try:
-                row_count = self.spanner.database.run_in_transaction(_execute_dml)
+                row_count = self.spanner.database.run_in_transaction(
+                    _execute_dml,
+                    commit_request_options=get_low_priority_request_options(),
+                )
                 total_deleted += row_count
             except Exception as e:
                 logging.error(f"Error deleting existing embeddings for batch: {e}")
@@ -295,7 +313,13 @@ class EmbeddingUtils:
             try:
                 logging.info(f"Invoking remote ML.PREDICT for batch of {len(batch)} nodes...")
                 with self.spanner.database.snapshot() as snapshot:
-                    results = snapshot.execute_sql(predict_sql, params=params, param_types=param_types, timeout=timeout)
+                    results = snapshot.execute_sql(
+                        predict_sql,
+                        params=params,
+                        param_types=param_types,
+                        timeout=timeout,
+                        request_options=get_low_priority_request_options(),
+                    )
                     for row in results:
                         # Row structure: subject_id, embedding_content, embeddings, node_types
                         content = row[1]
@@ -326,11 +350,20 @@ class EmbeddingUtils:
             }
 
             def _execute_dml(transaction):
-                return transaction.execute_update(insert_sql, params=write_params, param_types=write_param_types, timeout=timeout)
+                return transaction.execute_update(
+                    insert_sql,
+                    params=write_params,
+                    param_types=write_param_types,
+                    timeout=timeout,
+                    request_options=get_low_priority_request_options(),
+                )
 
             try:
                 logging.info(f"Writing {len(predictions)} embeddings to Spanner in a transaction...")
-                row_count = self.spanner.database.run_in_transaction(_execute_dml)
+                row_count = self.spanner.database.run_in_transaction(
+                    _execute_dml,
+                    commit_request_options=get_low_priority_request_options(),
+                )
                 total_rows_affected += row_count
                 logging.info(f"Successfully committed batch. Affected total {total_rows_affected} rows.")
                 time.sleep(0.5)
