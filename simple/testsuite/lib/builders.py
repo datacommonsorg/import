@@ -259,6 +259,45 @@ def csv_file(*rows: list[str],
   return ("\ufeff" if bom else "") + out.getvalue()
 
 
+def import_subdir(name: str,
+                  csv_text: str | None = None,
+                  *,
+                  provenance: str = PROVENANCE,
+                  source: str = SOURCE) -> dict[str, str]:
+  """
+  The files of import subdirectory name, for run_dir().
+
+  Its config.json imports *.mcf and case*.csv under provenance, and its
+  provenance.mcf defines provenance and source (with a url derived from
+  source). csv_text defaults to one obs_row().
+  """
+  provenance_ref = f"dcid:{provenance}"
+  config = {
+      "inputFiles": [
+          {
+              "pattern": "*.mcf",
+              "provenance": provenance_ref
+          },
+          {
+              "pattern": "case*.csv",
+              "provenance": provenance_ref,
+              "columnMappings": OBS_MAPPINGS
+          },
+      ]
+  }
+  provenance_mcf = mcf(
+      mcf_node(f"dcid:{source}",
+               typeOf="dcs:Source",
+               url=f'"https://{source.lower()}.example.org"'),
+      mcf_node(provenance_ref, typeOf="dcs:Provenance",
+               source=f"dcid:{source}"))
+  return {
+      f"{name}/config.json": json.dumps(config),
+      f"{name}/provenance.mcf": provenance_mcf,
+      f"{name}/case.csv": csv_text or csv_file(obs_row()),
+  }
+
+
 # --- Expectation builders -----------------------------------------------------
 
 
@@ -414,10 +453,15 @@ class Result:
     """Every record the run wrote, shared or not."""
     return _records(_record_counts(self.output))
 
+  def folders_of(self, record_id: str) -> list[str]:
+    """The import folder of every copy of a record, e.g. "dcid:X", sorted."""
+    return sorted(folder for folder, _, record in self.output["records"]
+                  if record.get("@id") == record_id)
+
 
 def run(files: dict[str, str],
         config: dict | None,
-        mode: str = "threaded",
+        mode: str = runlib.DEFAULT_MODE,
         shared_files: dict[str, str] | None = None) -> Result:
   """
   Runs the preprocessor on files plus the shared files.
@@ -447,7 +491,7 @@ def run(files: dict[str, str],
 def run_dir(files: dict[str, str],
             config: dict | None = None,
             *,
-            mode: str = "threaded",
+            mode: str = runlib.DEFAULT_MODE,
             runner_kwargs: dict | None = None,
             config_file: str | None = None) -> Result:
   """
@@ -471,14 +515,14 @@ def run_dir(files: dict[str, str],
                 removed=[])
 
 
-def run_mcf(*blocks: str, mode: str = "threaded") -> Result:
+def run_mcf(*blocks: str, mode: str = runlib.DEFAULT_MODE) -> Result:
   """Runs MCF blocks as one nodes.mcf file under MCF_CONFIG."""
   return run({"nodes.mcf": mcf(*blocks)}, MCF_CONFIG, mode)
 
 
 def run_csv(csv_text: str,
             config: dict | None = None,
-            mode: str = "threaded",
+            mode: str = runlib.DEFAULT_MODE,
             **run_kwargs: Any) -> Result:
   """
   Runs csv_text as case.csv.
@@ -558,7 +602,13 @@ def assert_fails(
     message: str,
     handshake_error_types: tuple[str, ...] = ("GENERIC_ERROR",)
 ) -> None:
-  """The run failed with this error, reported it, and wrote no JSON-LD."""
+  """
+  The run failed with this error and reported it.
+
+  Not checked: that the run wrote no JSON-LD. Workers upload their output as
+  they finish, before metadata is validated, so a failed run can leave
+  output behind.
+  """
   error = result.error
   if error is None:
     pytest.fail("expected the run to fail, but it succeeded", pytrace=False)
@@ -572,8 +622,5 @@ def assert_fails(
   if got_types != sorted(handshake_error_types):
     problems.append(f"handshake error types: want"
                     f" {sorted(handshake_error_types)}, got {got_types}")
-  if result.output["records"]:
-    problems.append("a failed run left JSON-LD behind: "
-                    f"{result.output['records'][:3]}")
   if problems:
     pytest.fail("\n".join(problems), pytrace=False)

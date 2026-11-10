@@ -35,7 +35,7 @@ steps:
       - -c
       - |
         set -e
-        DOCKER_BUILDKIT=1 docker build -f Dockerfile \
+        DOCKER_BUILDKIT=1 docker build --pull -f Dockerfile \
           --cache-from gcr.io/datcom-ci/datacommons-data:latest \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           --tag gcr.io/${_PROJECT_ID}/datacommons-data:${_TAG} \

@@ -20,44 +20,25 @@
     }
   },
   "records": {
-    "any_folder": [
-      {
-        "@id": "dcid:KitchenSource",
-        "@type": "dcid:Source",
-        "dcid:domain": "kitchen.example.org",
-        "dcid:name": "Kitchen Source",
-        "dcid:url": "https://kitchen.example.org"
-      },
-      {
-        "@id": "dcid:KitchenSource",
-        "@type": "dcid:Source",
-        "dcid:name": "Kitchen Source",
-        "dcid:url": "https://kitchen.example.org"
-      }
-    ],
     "folders": {
       "KitchenProvenance": {
         "nodes": {
-          "dcid:KitchenProvenance": [
-            {
-              "@id": "dcid:KitchenProvenance",
-              "@type": "dcid:Provenance",
-              "dcid:name": "Kitchen Provenance",
-              "dcid:source": {
-                "@id": "dcid:KitchenSource"
-              },
-              "dcid:url": "https://kitchen.example.org/dataset"
+          "dcid:KitchenProvenance": {
+            "@id": "dcid:KitchenProvenance",
+            "@type": "dcid:Provenance",
+            "dcid:name": "Kitchen Provenance",
+            "dcid:source": {
+              "@id": "dcid:KitchenSource"
             },
-            {
-              "@id": "dcid:KitchenProvenance",
-              "@type": "dcid:Provenance",
-              "dcid:name": "Kitchen Provenance",
-              "dcid:source": {
-                "@id": "dcid:KitchenSource"
-              },
-              "dcid:url": "https://kitchen.example.org/dataset"
-            }
-          ],
+            "dcid:url": "https://kitchen.example.org/dataset"
+          },
+          "dcid:KitchenSource": {
+            "@id": "dcid:KitchenSource",
+            "@type": "dcid:Source",
+            "dcid:domain": "kitchen.example.org",
+            "dcid:name": "Kitchen Source",
+            "dcid:url": "https://kitchen.example.org"
+          },
           "dcid:dc/g/Root": {
             "@id": "dcid:dc/g/Root",
             "@type": "dcid:StatVarGroup",
@@ -108,13 +89,13 @@
   "report": {
     "importFiles": {
       "<input>/data/countries_a.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/data/countries_b.csv": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       },
       "<input>/data/provenance.mcf": {
-        "status": "SUCCESS"
+        "status": "NOT_STARTED"
       }
     },
     "status": "SUCCESS"

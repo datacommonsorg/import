@@ -19,13 +19,14 @@ directory (config.json plus data files), runs Runner in the requested mode
 and returns the canonical output (see canonical.py). Runner always writes to
 a fake GCS, as in the ingestion workflow; the output is read back from there.
 
-Modes change *how* the preprocessor runs, never *what* it must produce:
+Modes change *how* the preprocessor runs, never *what* it must produce. Every
+mode imports files in worker processes, as in production:
 
-  threaded      use_multiprocessing=False, input on local disk. The default.
-  production    use_multiprocessing=True, input on (fake) GCS too: how the
-                ingestion workflow runs it.
-  tiny_chunks   threaded, with shard and CSV chunk sizes shrunk to 1-2 so that
-                every chunk/shard boundary is crossed even by tiny inputs.
+  disk_input    input on local disk. The default.
+  gcs_input     input on (fake) GCS: how the ingestion workflow runs it.
+  tiny_chunks   input on local disk, with shard and CSV chunk sizes shrunk to
+                1-2 so that every chunk/shard boundary is crossed even by tiny
+                inputs.
 """
 
 import contextlib
@@ -69,20 +70,19 @@ def _tiny_chunks() -> Iterator[None]:
 @dataclasses.dataclass(frozen=True)
 class Mode:
   name: str
-  use_multiprocessing: bool = False
   gcs_input: bool = False  # Runner reads its input from GCS, not local disk.
-  env: dict = dataclasses.field(default_factory=dict)
   patches: Callable[[], contextlib.AbstractContextManager] = _no_patches
 
 
 MODES = {
     m.name: m for m in [
-        Mode("threaded"),
-        Mode("production", use_multiprocessing=True, gcs_input=True),
+        Mode("disk_input"),
+        Mode("gcs_input", gcs_input=True),
         Mode("tiny_chunks", patches=_tiny_chunks),
     ]
 }
 ALL_MODES = tuple(MODES)
+DEFAULT_MODE = "disk_input"
 
 # Set to keep each run's work directory (raw output) for debugging.
 _KEEP_WORK_DIRS_ENV = "TESTSUITE_KEEP_WORK_DIRS"
@@ -94,7 +94,7 @@ class RunResult:
 
 
 def run_preprocessor(input_dir: str,
-                     mode: Mode | str = "threaded",
+                     mode: Mode | str = DEFAULT_MODE,
                      runner_kwargs: dict | None = None,
                      config_file: str | None = None) -> RunResult:
   """
@@ -125,7 +125,7 @@ class _Paths:
 
   local_out: str  # Local copy of the output, downloaded after the run.
   gcs_root: str  # This run's prefix on the fake GCS.
-  input: str  # What Runner reads: local, or on GCS in production mode.
+  input: str  # What Runner reads: local, or on GCS in gcs_input mode.
 
   @property
   def output(self) -> str:
@@ -188,7 +188,6 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
       "WORKFLOW_EXECUTION_ID": WORKFLOW_ID,
       "TEMP_LOCATION": paths.temp,
       **fake_gcs.env(),
-      **mode.env,
   }
   with mock.patch.dict(os.environ, env), \
        mock.patch("stats.jsonld_stream_writer._KNOWN_CUSTOM_PREFIXES", set()), \
@@ -199,7 +198,6 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
                                if config_file else None),
              input_dir_path=None if config_file else paths.input,
              output_dir_path=paths.output,
-             use_multiprocessing=mode.use_multiprocessing,
              **(runner_kwargs or {})).run()
     except Exception as e:  # pylint: disable=broad-except
       return {
