@@ -95,9 +95,13 @@ def _parse_numeric(val):
 MAX_SAMPLES_PER_FILE = 3
 
 
-def collision_file_key(file_name: str) -> str:
-  """Returns the key under which collisions of `file_name` are summarized."""
-  return os.path.basename(file_name) if file_name else "unknown"
+def collision_file_key(file_path: str) -> str:
+  """Returns the key under which collisions of `file_path` are summarized.
+
+  The path relative to the input directory, so that files with the same name in
+  different import folders are told apart.
+  """
+  return file_path or "unknown"
 
 
 def _prefix_dcid(key: str) -> str:
@@ -300,7 +304,6 @@ class JsonLdStreamWriter(GraphWriter):
     self._node_streaming_started = set()
     self.obs_hash_set: set[int] = set()
     self.obs_collision_count: int = 0
-    self.obs_sample_collisions: list[str] = []
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
@@ -325,8 +328,6 @@ class JsonLdStreamWriter(GraphWriter):
       sample_info = (
           f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
       )
-      if len(self.obs_sample_collisions) < 10:
-        self.obs_sample_collisions.append(sample_info)
       if len(self.file_sample_collisions[file_key]) < MAX_SAMPLES_PER_FILE:
         self.file_sample_collisions[file_key].append(sample_info)
         logging.warning(
@@ -350,7 +351,8 @@ class JsonLdStreamWriter(GraphWriter):
       self.file_collision_counts[f_name] += count
       samples = self.file_sample_collisions[f_name]
       samples.extend(
-          file_samples.get(f_name, [])[:MAX_SAMPLES_PER_FILE - len(samples)])
+          file_samples.get(f_name,
+                           [])[:max(0, MAX_SAMPLES_PER_FILE - len(samples))])
 
   def _write_observations_df_to_disk(self,
                                      df: pd.DataFrame,

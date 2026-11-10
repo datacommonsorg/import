@@ -290,6 +290,22 @@ def test_collisions_across_files_are_summarized(caplog):
   assert sample.endswith(" also produced by 'case_x.csv'"), sample
 
 
+def test_files_with_the_same_name_in_two_imports_are_summarized_apart(caplog):
+  duplicate_rows = b.csv_file(b.obs_row(value="1"), b.obs_row(value="2"))
+  files = {
+      **b.import_subdir("alpha", duplicate_rows, provenance="AlphaProvenance"),
+      **b.import_subdir("beta", duplicate_rows, provenance="BetaProvenance"),
+  }
+  with caplog.at_level(logging.WARNING):
+    result = b.run_dir(files, runner_kwargs={"import_names": ["ALL_IMPORTS"]})
+  assert result.error is None, result.error
+  _, *details = _collision_summary(caplog)
+  assert sorted(line for line in details if line.startswith("  File ")) == [
+      "  File 'alpha/case.csv': 1 collision(s)",
+      "  File 'beta/case.csv': 1 collision(s)",
+  ]
+
+
 @known_bug(reason="the observation id is hashed before trimming whitespace, so"
            " 'country/USA ' and 'country/USA' get different ids")
 def test_surrounding_whitespace_does_not_change_observation_id():

@@ -30,7 +30,6 @@ temporaries) however many observations the import has. Ids are hashes, so
 splitting the id space evenly splits the ids evenly.
 """
 
-from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
 from typing import Collection
@@ -99,7 +98,7 @@ def find_cross_file_collisions(
       count = int(np.count_nonzero(mine))
       result.file_counts[key] = result.file_counts.get(key, 0) + count
       samples = result.file_samples.setdefault(key, [])
-      needed = MAX_SAMPLES_PER_FILE - len(samples)
+      needed = max(0, MAX_SAMPLES_PER_FILE - len(samples))
       for obs_id, prev in zip(ids[mine][:needed].tolist(),
                               prev_owners[mine][:needed].tolist()):
         samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
