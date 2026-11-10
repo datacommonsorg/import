@@ -347,11 +347,19 @@ class Runner:
     # Set by _load_config().
     self.config: Config | None = None
     self.nodes: Nodes | None = None
+    # Set while importing.
     self.graph_writer = None
     self.trigger_workflow_info = None
 
     self.summary_generator = SummaryGenerator(
         os.getenv("WORKFLOW_EXECUTION_ID"))
+
+  def _open_input_store(self, path: str) -> Store:
+    """Opens an input store, to be closed with the others when the run ends."""
+    input_store = create_store(path)
+    self.all_stores.append(input_store)
+    self.input_stores.append(input_store)
+    return input_store
 
   def _load_config(self) -> None:
     """Reads and validates the config, and opens the input stores."""
@@ -363,9 +371,7 @@ class Runner:
       if not input_urls:
         raise invalid_configuration("Data Download URLs not found in config.")
       for input_url in input_urls:
-        input_store = create_store(input_url)
-        self.all_stores.append(input_store)
-        self.input_stores.append(input_store)
+        self._open_input_store(input_url)
 
     # Input dir driven (config file found in input dir)
     else:
@@ -376,9 +382,7 @@ class Runner:
       if imports == [constants.ALL_IMPORTS]:
         logging.info("Running bulk load for all imports under: %s",
                      effective_input_dir)
-        input_store = create_store(effective_input_dir)
-        self.all_stores.append(input_store)
-        self.input_stores.append(input_store)
+        input_store = self._open_input_store(effective_input_dir)
         configs = self._read_configs_from_subdirs(input_store.as_dir())
         self.active_import_prefixes = set(
             f"{fspath.dirname(c.path)}/" for c in configs)
@@ -386,9 +390,7 @@ class Runner:
       # Case B: Combined Load for specific imports (len > 1)
       elif len(imports) > 1:
         logging.info("Running combined load for specific imports: %s", imports)
-        input_store = create_store(effective_input_dir)
-        self.all_stores.append(input_store)
-        self.input_stores.append(input_store)
+        input_store = self._open_input_store(effective_input_dir)
         configs = self._read_configs_from_list(input_store.as_dir(), imports)
         self.active_import_prefixes = set(
             f"{fspath.dirname(c.path)}/" for c in configs)
@@ -397,9 +399,7 @@ class Runner:
       elif imports:
         effective_input_dir = join_path(self.input_dir_path, imports[0])
         logging.info("Using import specific directory: %s", effective_input_dir)
-        input_store = create_store(effective_input_dir)
-        self.all_stores.append(input_store)
-        self.input_stores.append(input_store)
+        input_store = self._open_input_store(effective_input_dir)
         self._read_config_from_file(
             config_file_path=constants.CONFIG_JSON_FILE_NAME,
             config_file_dir=input_store.as_dir(),
@@ -407,9 +407,7 @@ class Runner:
 
       # Case D: Default action (config at root)
       else:
-        input_store = create_store(effective_input_dir)
-        self.all_stores.append(input_store)
-        self.input_stores.append(input_store)
+        input_store = self._open_input_store(effective_input_dir)
         self._read_config_from_file(
             config_file_path=constants.CONFIG_JSON_FILE_NAME,
             config_file_dir=input_store.as_dir(),
