@@ -28,6 +28,7 @@ from stats import constants
 from stats.config import Config
 from stats.data import FileValidationError
 from stats.data import ImportType
+from stats.data import invalid_configuration
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import ValidationErrorType
@@ -259,19 +260,25 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
 
 def _read_config_dict(file: File) -> dict:
   """Reads and parses a `config.json` file, validating its structure and keys."""
-  try:
-    config_data = json.loads(file.read())
-  except json.JSONDecodeError as e:
-    logging.error("Failed to parse JSON from %s: %s", file.full_path(), e)
-    raise
+  config_data = _parse_config_json(file.read(), file.full_path())
   if not isinstance(config_data, dict):
-    raise ValueError(f"Expected JSON object in {file.full_path()}, "
-                     f"got {type(config_data).__name__}")
+    raise invalid_configuration(f"Expected JSON object in {file.full_path()}, "
+                                f"got {type(config_data).__name__}")
   try:
     Config(config_data)
   except ValueError as e:
-    raise ValueError(f"{file.full_path()}: {e}") from e
+    raise invalid_configuration(f"{file.full_path()}: {e}") from e
   return config_data
+
+
+def _parse_config_json(text: str, path: str) -> object:
+  """Parses config.json text; a JSON error is reported as INVALID_CONFIGURATION."""
+  try:
+    return json.loads(text)
+  except json.JSONDecodeError as e:
+    logging.error("Failed to parse JSON from %s: %s", path, e)
+    e.error_type = ValidationErrorType.INVALID_CONFIGURATION
+    raise
 
 
 def _scope_input_file_entry(entry: object, rel_dir: str, import_name: str,
@@ -298,7 +305,7 @@ class Runner:
       import_names: Optional[list[str]] = None,
       max_workers: Optional[int] = None,
   ) -> None:
-    """Sets up the input and output stores and reads the config.
+    """Sets up the output store; run() reads the config and input stores.
 
     Args:
       max_workers: The maximum number of worker processes that import files
@@ -315,6 +322,8 @@ class Runner:
             input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
 
+    self.config_file_path = config_file_path
+    self.input_dir_path = input_dir_path
     self.import_names = import_names
     self.active_import_prefixes = None
 
@@ -323,13 +332,36 @@ class Runner:
     # Input-only stores
     self.input_stores: list[Store] = []
 
+    # Output directories. Set up before the config is read so that a bad
+    # config is reported like any other failure.
+    output_store = create_store(output_dir_path, create_if_missing=True)
+    self.output_store = output_store
+    self.all_stores.append(output_store)
+    self.output_dir = output_store.as_dir()
+    self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
+
+    # Reporter.
+    self.reporter = ImportReporter(
+        report_file=self.process_dir.open_file(constants.REPORT_JSON_FILE_NAME))
+
+    # Set by _load_config().
+    self.config: Config | None = None
+    self.nodes: Nodes | None = None
+    self.graph_writer = None
+    self.trigger_workflow_info = None
+
+    self.summary_generator = SummaryGenerator(
+        os.getenv("WORKFLOW_EXECUTION_ID"))
+
+  def _load_config(self) -> None:
+    """Reads and validates the config, and opens the input stores."""
     # Config file driven (input paths pulled from config)
-    if config_file_path:
-      self._read_config_from_file(config_file_path)
+    if self.config_file_path:
+      self._read_config_from_file(self.config_file_path)
 
       input_urls = self.config.data_download_urls()
       if not input_urls:
-        raise ValueError("Data Download URLs not found in config.")
+        raise invalid_configuration("Data Download URLs not found in config.")
       for input_url in input_urls:
         input_store = create_store(input_url)
         self.all_stores.append(input_store)
@@ -337,9 +369,8 @@ class Runner:
 
     # Input dir driven (config file found in input dir)
     else:
-      effective_input_dir = input_dir_path
+      effective_input_dir = self.input_dir_path
       imports = self.import_names or []
-      self.active_import_prefixes = None
 
       # Case A: Bulk Load (ALL_IMPORTS)
       if imports == [constants.ALL_IMPORTS]:
@@ -364,7 +395,7 @@ class Runner:
 
       # Case C: Single Import
       elif imports:
-        effective_input_dir = join_path(input_dir_path, imports[0])
+        effective_input_dir = join_path(self.input_dir_path, imports[0])
         logging.info("Using import specific directory: %s", effective_input_dir)
         input_store = create_store(effective_input_dir)
         self.all_stores.append(input_store)
@@ -386,33 +417,26 @@ class Runner:
 
     # New option to traverse subdirs of input dir(s). Defaults to false.
     self.include_input_subdirs = self.config.include_input_subdirs()
-
-    # Output directories
-    output_store = create_store(output_dir_path, create_if_missing=True)
     if self.include_input_subdirs:
       for input_store in self.input_stores:
-        _check_not_overlapping(input_store, output_store)
-    self.all_stores.append(output_store)
-    self.output_dir = output_store.as_dir()
-    self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
-
-    # Reporter.
-    self.reporter = ImportReporter(
-        report_file=self.process_dir.open_file(constants.REPORT_JSON_FILE_NAME))
+        _check_not_overlapping(input_store, self.output_store)
 
     self.nodes = Nodes(self.config)
-    self.graph_writer = None
-    self.trigger_workflow_info = None
 
-    self.summary_generator = SummaryGenerator(
-        os.getenv("WORKFLOW_EXECUTION_ID"))
-
-  def run(self):
+  def _start_summary(self, start_time: str) -> None:
     self.summary_generator.set_execution_metadata(
-        start_time=_utc_now(),
+        start_time=start_time,
         folder_names=self._report_folder_names(),
         output_dir=self.output_dir)
+
+  def run(self):
+    start_time = _utc_now()
+    summary_started = False
     try:
+      self._load_config()
+      self._start_summary(start_time)
+      summary_started = True
+
       self._run_imports_and_export_jsonld()
 
       self.graph_writer.commit_and_close()
@@ -434,13 +458,17 @@ class Runner:
       self.reporter.report_failure(error=str(e))
 
       if not hasattr(self, "_failure_errors"):
-        file_path = getattr(e, "file_path", "")
         self._failure_errors = [
-            FileValidationError(file=file_path,
-                                error_type=ValidationErrorType.GENERIC_ERROR,
+            FileValidationError(file=getattr(e, "file_path", ""),
+                                error_type=getattr(
+                                    e, "error_type",
+                                    ValidationErrorType.GENERIC_ERROR),
                                 error_message=str(e))
         ]
 
+      # The config failed to load: the summary starts with the folders known.
+      if not summary_started:
+        self._start_summary(start_time)
       self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now())
 
       for store in self.all_stores:
@@ -520,7 +548,8 @@ class Runner:
       with create_store(config_file_path) as config_store:
         raw_config = config_store.as_file().read()
 
-    config_data = json.loads(raw_config) if raw_config else {}
+    config_data = (_parse_config_json(raw_config, config_file_path)
+                   if raw_config else {})
     self.config = Config(data=config_data)
 
   def _merge_configs(self, configs: list, base_dir: Dir):

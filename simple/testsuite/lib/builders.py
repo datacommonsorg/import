@@ -576,9 +576,7 @@ class Fails:
   """
   How a run is expected to fail, for a Case's expect (see assert_fails).
 
-  handshake is empty when the error is raised while Runner is being
-  constructed, before run(): then no FAILURE handshake is written and the
-  ingestion workflow gets no structured error.
+  handshake lists the error types of the FAILURE handshake.
   """
 
   error_type: str
