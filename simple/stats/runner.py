@@ -19,6 +19,7 @@ from datetime import timezone
 import json
 import logging
 import os
+import tempfile
 import traceback
 from typing import Callable, Optional
 
@@ -33,9 +34,12 @@ from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
 from stats.importer import Importer
+from stats.jsonld_stream_writer import collision_file_key
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
+from stats.obs_id_collisions import find_cross_file_collisions
+from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
 from stats.reporter import FileImportReporter
@@ -50,9 +54,35 @@ from util.filesystem import join_path
 from util.filesystem import Store
 
 _ARCHIVES_DIR_NAME = "archives"
-# Upper bound on the worker processes that import files, and on the threads
-# that validate CSV headers.
-_MAX_WORKERS = 32
+# Upper bound on the threads that validate CSV headers. Header validation reads
+# only the first rows of each file and spends its time waiting on storage (often
+# GCS), so it is bounded independently of the CPU count; 32 matches the requests
+# connection pool size set in main.py.
+_MAX_HEADER_VALIDATION_THREADS = 32
+
+
+def default_max_workers() -> int:
+  """Returns the default number of worker processes that import files.
+
+  Each worker is a separate process that holds its own copy of the parsed data
+  for the file it imports, so running more workers than there are CPUs to run
+  them adds memory without adding throughput. The default is therefore the
+  number of CPUs this process may run on.
+
+  `os.sched_getaffinity` is preferred over `os.cpu_count` because it honors the
+  CPU affinity mask and cpusets (e.g. a container or Cloud Batch task pinned to
+  a subset of the host's CPUs), whereas `os.cpu_count` reports every CPU on the
+  host. It is not available on every platform (e.g. macOS), hence the fallback.
+  """
+  try:
+    return len(os.sched_getaffinity(0))
+  except AttributeError:
+    return os.cpu_count() or 1
+
+
+def num_import_workers(max_workers: int, num_files: int) -> int:
+  """Returns how many worker processes to start: never more than the files."""
+  return min(max_workers, num_files)
 
 
 def _create_importer_for_file(
@@ -101,10 +131,10 @@ class ImportProcResult:
 
   `sources` and `provenances` are all of the worker's nodes, keyed as in
   `Nodes`; the coordinator merges them with `Nodes.merge_metadata`. The
-  collision fields mirror the worker's `JsonLdStreamWriter` stats.
+  collision fields mirror the worker's `JsonLdStreamWriter` stats, which cover
+  collisions within the file only.
   """
   file_rel_path: str
-  obs_collision_count: int
   file_collision_counts: dict[str, int]
   file_sample_collisions: dict[str, list[str]]
   sources: dict[str, Source]
@@ -181,12 +211,14 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
 
 
 def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
-                            args: _WorkerArgs) -> ImportProcResult:
+                            args: _WorkerArgs,
+                            obs_ids_path: str) -> ImportProcResult:
   """Imports one file in a worker process and returns its results.
 
   The worker starts from an empty `Nodes`: a CSV needs only its provenance id,
   which comes from config. The Provenance and Source nodes that an MCF file
-  defines are returned for the coordinator to merge.
+  defines are returned for the coordinator to merge. The file's observation
+  ids, if any, are saved to `obs_ids_path` (see `stats.obs_id_collisions`).
   """
   with create_store(input_dir_path) as input_store_obj, \
        create_store(args.output_dir_path) as output_store_obj, \
@@ -212,10 +244,11 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
                                          reporter, nodes)
     importer.do_import()
     graph_writer.commit_and_close()
+    if graph_writer.obs_hash_set:
+      save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
 
     return ImportProcResult(
         file_rel_path=file_rel_path,
-        obs_collision_count=graph_writer.obs_collision_count,
         file_collision_counts=dict(graph_writer.file_collision_counts),
         file_sample_collisions=dict(graph_writer.file_sample_collisions),
         sources=dict(nodes.sources),
@@ -263,7 +296,21 @@ class Runner:
       input_dir_path: str,
       output_dir_path: str,
       import_names: Optional[list[str]] = None,
+      max_workers: Optional[int] = None,
   ) -> None:
+    """Sets up the input and output stores and reads the config.
+
+    Args:
+      max_workers: The maximum number of worker processes that import files
+        concurrently. Defaults to `default_max_workers()`. Lower it to reduce
+        peak memory, since each worker holds the data of the file it imports.
+    """
+    if max_workers is None:
+      max_workers = default_max_workers()
+    if max_workers < 1:
+      raise ValueError(f"max_workers must be at least 1, got {max_workers}")
+    self.max_workers = max_workers
+
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
@@ -639,8 +686,8 @@ class Runner:
       self.config._per_file_config(file)
 
     all_errors = []
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=min(_MAX_WORKERS, len(csv_files))) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(
+        _MAX_HEADER_VALIDATION_THREADS, len(csv_files))) as executor:
       for errors in executor.map(self._validate_single_file_headers, csv_files):
         all_errors.extend(errors)
 
@@ -657,7 +704,8 @@ class Runner:
   def _run_multiprocess_imports(self, files: list[File]) -> None:
     """Imports `files` in worker processes and merges each result.
 
-    See `_finish_imports` for the merge order and for failures.
+    See `_finish_imports` for the merge order and for failures. Once every
+    file is merged, looks for observation ids that several files produced.
     """
     worker_args = _WorkerArgs(
         output_dir_path=self.output_dir.full_path(),
@@ -666,13 +714,43 @@ class Runner:
         config_json_str=json.dumps(self.config.data),
         jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
     )
-    with concurrent.futures.ProcessPoolExecutor(
-        max_workers=min(_MAX_WORKERS, len(files))) as executor:
-      futures = [
-          executor.submit(_run_single_import_proc, file.path,
-                          file._store.root_path, worker_args) for file in files
+    num_workers = num_import_workers(self.max_workers, len(files))
+    logging.info("Importing %d files with %d worker processes", len(files),
+                 num_workers)
+    # Workers run on this machine, so they can save ids to a local directory.
+    with tempfile.TemporaryDirectory(prefix="obs-ids-") as obs_ids_dir:
+      obs_ids_paths = [
+          os.path.join(obs_ids_dir, f"{i:06d}.npy") for i in range(len(files))
       ]
-      _finish_imports(files, futures, merge=self._merge_worker_result)
+      with concurrent.futures.ProcessPoolExecutor(
+          max_workers=num_workers) as executor:
+        futures = [
+            executor.submit(_run_single_import_proc, file.path,
+                            file._store.root_path, worker_args, ids_path)
+            for file, ids_path in zip(files, obs_ids_paths)
+        ]
+        _finish_imports(files, futures, merge=self._merge_worker_result)
+      # Workers save ids only for files with observations.
+      self._merge_cross_file_collisions([
+          (collision_file_key(file.path), ids_path)
+          for file, ids_path in zip(files, obs_ids_paths)
+          if os.path.exists(ids_path)
+      ])
+
+  def _merge_cross_file_collisions(
+      self, obs_ids_files: list[tuple[str, str]]) -> None:
+    """Adds the collisions between `obs_ids_files` to the writer's summary."""
+    if len(obs_ids_files) < 2:
+      return
+    logging.info("Checking observation ids of %d files for collisions...",
+                 len(obs_ids_files))
+    collisions = find_cross_file_collisions(obs_ids_files)
+    if collisions.count:
+      logging.warning(
+          "Found %d observation @id collisions between files: different files"
+          " produce identical observation ids.", collisions.count)
+    self.graph_writer.merge_collisions(collisions.file_counts,
+                                       collisions.file_samples)
 
   def _run_all_data_imports(self):
     """Finds the input files, validates CSV headers, and imports every file."""
@@ -708,13 +786,8 @@ class Runner:
   def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
     """Merges a worker's processed imports and collision stats into the writer."""
     self.graph_writer._processed_imports.update(res.processed_imports)
-    if not res.obs_collision_count:
-      return
-    self.graph_writer.obs_collision_count += res.obs_collision_count
-    for f_name, count in res.file_collision_counts.items():
-      self.graph_writer.file_collision_counts[f_name] += count
-      self.graph_writer.file_sample_collisions[f_name].extend(
-          res.file_sample_collisions.get(f_name, []))
+    self.graph_writer.merge_collisions(res.file_collision_counts,
+                                       res.file_sample_collisions)
 
   def _log_file_progress(self, file_path: str):
     """Counts `file_path` as imported and logs the run's progress."""
@@ -754,13 +827,9 @@ class Runner:
 
     # Populate trigger workflow info if running under ingestion workflow and output is GCS
     output_path = self.graph_writer.jsonld_dir.full_path()
-    import_name = self.graph_writer.import_name
     if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      processed_imports = sorted(list(self.graph_writer._processed_imports))
-      if not processed_imports:
-        processed_imports = [import_name]
       import_list = []
-      for imp in processed_imports:
+      for imp in self.graph_writer.import_folders():
         sanitized_imp = imp.replace("/", "_")
         gcs_pattern = f"{output_path.rstrip('/')}/{sanitized_imp}/**/*.jsonld"
         import_list.append({"importName": imp, "graphPath": gcs_pattern})

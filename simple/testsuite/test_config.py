@@ -86,14 +86,6 @@ def test_input_files_pattern_matching(given, expect):
                    [b.obs(about, value=val) for about, val in expect])
 
 
-def _import_subdir(name: str, csv_text: str) -> dict[str, str]:
-  return {
-      f"{name}/config.json": json.dumps(b.obs_config(b.OBS_MAPPINGS)),
-      f"{name}/provenance.mcf": b.PROVENANCE_MCF,
-      f"{name}/case.csv": csv_text,
-  }
-
-
 def test_files_in_subdirectories_are_skipped_by_default():
   result = b.run({
       "case.csv": _USA,
@@ -163,8 +155,8 @@ def test_empty_config_writes_no_provenance_or_source():
 def test_single_import_name_runs_only_that_subdirectory():
   result = b.run_dir(
       {
-          **_import_subdir("oecd", _USA),
-          **_import_subdir("ilo", _FRA),
+          **b.import_subdir("oecd", _USA),
+          **b.import_subdir("ilo", _FRA),
       },
       runner_kwargs={"import_names": ["oecd"]})
   b.assert_records(result.observations, [b.obs("country/USA", value=1)])
@@ -173,9 +165,9 @@ def test_single_import_name_runs_only_that_subdirectory():
 def test_selected_import_names_run_only_those_subdirectories():
   result = b.run_dir(
       {
-          **_import_subdir("oecd", _USA),
-          **_import_subdir("ilo", _FRA),
-          **_import_subdir("ignored", _DEU),
+          **b.import_subdir("oecd", _USA),
+          **b.import_subdir("ilo", _FRA),
+          **b.import_subdir("ignored", _DEU),
       },
       runner_kwargs={"import_names": ["oecd", "ilo"]})
   b.assert_records(
@@ -185,6 +177,22 @@ def test_selected_import_names_run_only_those_subdirectories():
   assert result.output["ingestion_report"]["run"]["folderNames"] == [
       "oecd", "ilo"
   ]
+
+
+# Beta comes first so that processing order would favour it.
+_TWO_IMPORTS = {
+    **b.import_subdir("beta", provenance="BetaProvenance", source="BetaSource"),
+    **b.import_subdir("alpha",
+                      provenance="AlphaProvenance",
+                      source="AlphaSource"),
+}
+
+
+def test_global_nodes_go_to_the_alphabetically_first_import_folder():
+  result = b.run_dir(_TWO_IMPORTS,
+                     runner_kwargs={"import_names": ["ALL_IMPORTS"]})
+  assert result.error is None, result.error
+  assert result.folders_of("dcid:dc/g/Root") == ["AlphaProvenance"]
 
 
 # --- StatVar groups -----------------------------------------------------------
@@ -370,8 +378,8 @@ def test_invalid_config(given, expect):
 def test_entities_block_in_an_import_subdirectory_config_is_rejected():
   """Multi-import runs validate each subdirectory's config.json the same way."""
   files = {
-      **_import_subdir("oecd", _USA),
-      **_import_subdir("ilo", _FRA),
+      **b.import_subdir("oecd", _USA),
+      **b.import_subdir("ilo", _FRA),
       "ilo/config.json":
           json.dumps({
               **b.obs_config(b.OBS_MAPPINGS), "entities": {
@@ -391,8 +399,8 @@ def test_entities_block_in_an_import_subdirectory_config_is_rejected():
 def test_csv_without_column_mappings_in_an_import_subdirectory_is_rejected():
   """Multi-import runs require columnMappings in each subdirectory's config."""
   files = {
-      **_import_subdir("oecd", _USA),
-      **_import_subdir("ilo", _FRA),
+      **b.import_subdir("oecd", _USA),
+      **b.import_subdir("ilo", _FRA),
       "ilo/config.json":
           json.dumps(b.without_column_mappings(b.obs_config(b.OBS_MAPPINGS))),
   }
