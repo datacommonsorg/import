@@ -61,8 +61,8 @@ _ARCHIVES_DIR_NAME = "archives"
 # GCS), so it is bounded independently of the CPU count; 32 matches the requests
 # connection pool size set in main.py.
 _MAX_HEADER_VALIDATION_THREADS = 32
-# Default worker processes per CPU, and their maximum, for runs that read or
-# write GCS (see default_max_workers).
+# Default worker processes per CPU for runs that read or write GCS, and the
+# count above which no extra workers are added (see default_max_workers).
 _GCS_WORKERS_PER_CPU = 2
 _MAX_GCS_WORKERS = 32
 
@@ -74,7 +74,8 @@ def default_max_workers(uses_gcs: bool) -> int:
   for the file it imports, so for local runs the default is the number of CPUs
   this process may run on: more workers add memory without adding throughput.
   Workers of a run that reads or writes GCS (`uses_gcs`) also wait on it, so
-  that default is `_GCS_WORKERS_PER_CPU` per CPU, at most `_MAX_GCS_WORKERS`.
+  that default is `_GCS_WORKERS_PER_CPU` per CPU, up to `_MAX_GCS_WORKERS`, and
+  never fewer than the CPUs.
 
   `os.sched_getaffinity` is preferred over `os.cpu_count` because it honors the
   CPU affinity mask and cpusets (e.g. a container or Cloud Batch task pinned to
@@ -87,7 +88,7 @@ def default_max_workers(uses_gcs: bool) -> int:
     cpus = os.cpu_count() or 1
   if not uses_gcs:
     return cpus
-  return min(_GCS_WORKERS_PER_CPU * cpus, _MAX_GCS_WORKERS)
+  return max(cpus, min(_GCS_WORKERS_PER_CPU * cpus, _MAX_GCS_WORKERS))
 
 
 def num_import_workers(max_workers: int, num_files: int) -> int:

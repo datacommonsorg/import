@@ -47,9 +47,9 @@ def test_default_max_workers_falls_back_to_cpu_count(monkeypatch):
   assert runner.default_max_workers(uses_gcs=False) == 6
 
 
-@pytest.mark.parametrize("cpus, expected", [(1, 2), (6, 12), (16, 32),
-                                            (64, 32)])
-def test_default_max_workers_on_gcs_is_two_per_cpu_up_to_32(
+@pytest.mark.parametrize("cpus, expected", [(1, 2), (6, 12), (16, 32), (24, 32),
+                                            (64, 64)])
+def test_default_max_workers_on_gcs_is_two_per_cpu_up_to_32_never_below_cpus(
     monkeypatch, cpus, expected):
   _set_cpus(monkeypatch, affinity=set(range(cpus)), cpu_count=128)
   assert runner.default_max_workers(uses_gcs=True) == expected
