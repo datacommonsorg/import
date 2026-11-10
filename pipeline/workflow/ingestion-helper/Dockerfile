@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Pinned by digest for reproducible builds. Python 3.13 because the 3.12 image
-# still bundles pip 25.0.1, which has known vulnerabilities.
-FROM python:3.13-slim@sha256:09a17cad02668ae61ece136b4fd36ac3849e14f670ebedb637ea3e15580525bc
+# Python 3.13 because the 3.12 image still bundles pip 25.0.1, which has known
+# vulnerabilities. The tag pins Python 3.13 and Debian trixie, and picks up
+# upstream patch releases on each build.
+FROM python:3.13-slim-trixie
 
 # Copy uv binary
 COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
