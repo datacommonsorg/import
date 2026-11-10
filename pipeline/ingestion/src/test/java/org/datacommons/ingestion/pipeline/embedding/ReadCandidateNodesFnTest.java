@@ -15,19 +15,22 @@
 package org.datacommons.ingestion.pipeline.embedding;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Value;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
-import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
+import org.datacommons.proto.Mcf.ValueType;
+import org.datacommons.util.GraphUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,8 +42,20 @@ public class ReadCandidateNodesFnTest {
 
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
+  private static McfGraph buildMcfNode(String subjectId, String name, String type) {
+    PropertyValues.Builder pvs = PropertyValues.newBuilder();
+    GraphUtils.setPropVal("dcid", ValueType.TEXT, subjectId, pvs);
+    if (name != null) {
+      GraphUtils.setPropVal("name", ValueType.TEXT, name, pvs);
+    }
+    if (type != null) {
+      GraphUtils.setPropVal("typeOf", ValueType.RESOLVED_REF, type, pvs);
+    }
+    return McfGraph.newBuilder().putNodes(subjectId, pvs.build()).build();
+  }
+
   @Test
-  public void testReadCandidateNodes_filtersAndDeduplicatesMutations() {
+  public void testReadCandidateNodes_filtersAndCombinesGraphs() {
     EmbeddingSpec spec =
         new EmbeddingSpec(
             "base_text_embedding",
@@ -52,86 +67,50 @@ public class ReadCandidateNodesFnTest {
                 "Topic", List.of("subject_id", "name")),
             NodeFilterType.NO_FILTER);
 
-    NodeRecord statVarNode =
-        new NodeRecord(
-            "Count_Person",
-            "Count_Person",
-            null,
-            "Total Population",
-            List.of("StatisticalVariable"));
-    NodeRecord topicNode =
-        new NodeRecord("dc/topic/Health", "dc/topic/Health", null, "Health", List.of("Topic"));
-    NodeRecord nonMatchingTypeNode =
-        new NodeRecord("country/USA", "country/USA", null, "United States", List.of("Country"));
-    NodeRecord emptyNameNode =
-        new NodeRecord(
-            "Count_EmptyName", "Count_EmptyName", null, "", List.of("StatisticalVariable"));
-    Mutation provisionalMutation =
-        Mutation.newInsertOrUpdateBuilder("Node")
-            .set(NodeRecord.COL_SUBJECT_ID)
-            .to("Provisional_1")
-            .set(NodeRecord.COL_LAST_UPDATE_TIMESTAMP)
-            .to(Value.COMMIT_TIMESTAMP)
-            .build();
+    McfGraph statVarGraph = buildMcfNode("Count_Person", "Total Population", "StatisticalVariable");
+    McfGraph topicGraph = buildMcfNode("dc/topic/Health", "Health", "Topic");
+    McfGraph nonMatchingTypeGraph = buildMcfNode("country/USA", "United States", "Country");
+    McfGraph emptyNameGraph = buildMcfNode("Count_EmptyName", "", "StatisticalVariable");
 
-    PCollection<Mutation> nodeMutations =
+    PCollection<McfGraph> graphs =
         pipeline.apply(
-            "CreateNodeMutations",
+            "CreateGraphs",
             Create.of(
-                statVarNode.toMutation("Node"),
-                statVarNode.toMutation("Node"), // duplicate across imports
-                topicNode.toMutation("Node"),
-                nonMatchingTypeNode.toMutation("Node"),
-                emptyNameNode.toMutation("Node"),
-                provisionalMutation));
+                statVarGraph,
+                statVarGraph, // duplicate across imports
+                topicGraph,
+                nonMatchingTypeGraph,
+                emptyNameGraph));
 
-    PCollection<NodeRecord> candidates =
-        ReadCandidateNodesFn.readCandidateNodes(nodeMutations, spec);
+    PCollection<String> candidateIds =
+        ReadCandidateNodesFn.readCandidateNodes(graphs, spec)
+            .apply(
+                "ExtractIds",
+                MapElements.into(TypeDescriptors.strings())
+                    .via(ReadCandidateNodesFn::getSubjectId));
 
-    PAssert.that(candidates).containsInAnyOrder(statVarNode, topicNode);
+    PAssert.that(candidateIds).containsInAnyOrder("Count_Person", "dc/topic/Health");
     pipeline.run();
   }
 
   @Test
-  public void testExtractCandidateNode_handlesValidAndInvalidMutations() {
+  public void testExtractCandidateGraphs_handlesValidAndInvalidNodes() {
     Set<String> targetTypes = Set.of("StatisticalVariable", "Topic", "Class");
 
-    NodeRecord validNode =
-        new NodeRecord(
-            "Count_Person",
-            "Count_Person",
-            null,
-            "Total Population",
-            List.of("StatisticalVariable"));
-    assertEquals(
-        validNode,
-        ReadCandidateNodesFn.extractCandidateNode(validNode.toMutation("Node"), targetTypes));
+    McfGraph validGraph = buildMcfNode("Count_Person", "Total Population", "StatisticalVariable");
+    List<McfGraph> extracted = ReadCandidateNodesFn.extractCandidateGraphs(validGraph, targetTypes);
+    assertEquals(1, extracted.size());
+    assertEquals("Count_Person", ReadCandidateNodesFn.getSubjectId(extracted.get(0)));
 
-    NodeRecord classNode = new NodeRecord("Farm", "Farm", null, "Farm", List.of("Class"));
-    assertEquals(
-        classNode,
-        ReadCandidateNodesFn.extractCandidateNode(classNode.toMutation("Node"), targetTypes));
+    McfGraph classGraph = buildMcfNode("Farm", "Farm", "Class");
+    assertEquals(1, ReadCandidateNodesFn.extractCandidateGraphs(classGraph, targetTypes).size());
 
-    // Non-matching type returns null
-    NodeRecord placeNode =
-        new NodeRecord("country/USA", "country/USA", null, "United States", List.of("Country"));
-    assertNull(
-        ReadCandidateNodesFn.extractCandidateNode(placeNode.toMutation("Node"), targetTypes));
+    // Non-matching type returns empty
+    McfGraph placeGraph = buildMcfNode("country/USA", "United States", "Country");
+    assertTrue(ReadCandidateNodesFn.extractCandidateGraphs(placeGraph, targetTypes).isEmpty());
 
-    // Empty name returns null
-    NodeRecord emptyNameNode =
-        new NodeRecord("Count_Empty", "Count_Empty", null, "   ", List.of("StatisticalVariable"));
-    assertNull(
-        ReadCandidateNodesFn.extractCandidateNode(emptyNameNode.toMutation("Node"), targetTypes));
-
-    // Provisional node mutation (missing name and types) returns null
-    Mutation provisionalMutation =
-        Mutation.newInsertOrUpdateBuilder("Node")
-            .set(NodeRecord.COL_SUBJECT_ID)
-            .to("Provisional_1")
-            .set(NodeRecord.COL_LAST_UPDATE_TIMESTAMP)
-            .to(Value.COMMIT_TIMESTAMP)
-            .build();
-    assertNull(ReadCandidateNodesFn.extractCandidateNode(provisionalMutation, targetTypes));
+    // Empty name returns empty
+    McfGraph emptyNameGraph = buildMcfNode("Count_Empty", "   ", "StatisticalVariable");
+    assertTrue(ReadCandidateNodesFn.extractCandidateGraphs(emptyNameGraph, targetTypes).isEmpty());
   }
 }

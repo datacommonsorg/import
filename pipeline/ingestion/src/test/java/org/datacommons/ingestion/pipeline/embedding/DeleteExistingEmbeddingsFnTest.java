@@ -15,17 +15,19 @@
 package org.datacommons.ingestion.pipeline.embedding;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.KeyRange;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Statement;
 import com.google.common.collect.Lists;
 import java.util.List;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
-import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +38,24 @@ import org.junit.runners.JUnit4;
 public class DeleteExistingEmbeddingsFnTest {
 
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
+
+  @Test
+  public void testBuildSubjectIdsByProvenanceStatement() {
+    SpannerClient spannerClient =
+        SpannerClient.builder()
+            .gcpProjectId("test-proj")
+            .spannerInstanceId("test-inst")
+            .spannerDatabaseId("test-db")
+            .build();
+
+    Statement stmt =
+        DeleteExistingEmbeddingsFn.buildSubjectIdsByProvenanceStatement(
+            spannerClient, "dc/base/Schema");
+    assertEquals(
+        "SELECT DISTINCT subject_id FROM Edge WHERE provenance = @provenance", stmt.getSql());
+    assertTrue(stmt.hasBinding("provenance"));
+    assertEquals("dc/base/Schema", stmt.getParameters().get("provenance").getString());
+  }
 
   @Test
   public void testBuildDeleteMutation() {
@@ -53,14 +73,11 @@ public class DeleteExistingEmbeddingsFnTest {
 
   @Test
   public void testBuildDeleteMutations_pipeline() {
-    NodeRecord node =
-        new NodeRecord(
-            "Count_Person", "", null, "Total Population", List.of("StatisticalVariable"));
-    PCollection<NodeRecord> candidates = pipeline.apply(Create.of(node));
+    PCollection<String> subjectIds = pipeline.apply(Create.of("Count_Person"));
 
     PCollection<Mutation> mutations =
         DeleteExistingEmbeddingsFn.buildDeleteMutations(
-            candidates, "NodeEmbedding", "base_text_embedding");
+            subjectIds, "NodeEmbedding", "base_text_embedding");
 
     Mutation expected =
         DeleteExistingEmbeddingsFn.buildDeleteMutation(

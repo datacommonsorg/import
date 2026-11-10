@@ -14,89 +14,99 @@
 
 package org.datacommons.ingestion.pipeline.embedding;
 
-import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Value;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.TypeDescriptors;
-import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.util.PipelineUtils;
+import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
+import org.datacommons.util.GraphUtils;
+import org.datacommons.util.McfUtil;
 
 /**
- * Extracts and filters candidate {@link NodeRecord}s for a single {@link EmbeddingSpec} from the
- * {@code Node} {@link Mutation}s aggregated across all imports.
+ * Extracts and filters candidate {@link McfGraph} nodes for a single {@link EmbeddingSpec} from the
+ * {@link McfGraph}s aggregated across all imports.
  *
- * <p>Filters imported {@code Node} mutations by non-empty {@code name} and configured {@code
- * node_types}, and deduplicates candidates by {@code subject_id}. Predicate and edge properties are
- * not processed here; they are resolved downstream in {@link GenerateEmbeddingContentFn}.
+ * <p>Filters imported {@link McfGraph} nodes by non-empty {@code name} and configured {@code
+ * node_types}, and combines nodes with the same {@code subject_id} via {@link
+ * PipelineUtils#combineGraphNodes}.
  */
 public final class ReadCandidateNodesFn {
 
   private ReadCandidateNodesFn() {}
 
   /**
-   * Step 1 of {@link EmbeddingPipeline}: extracts candidate {@link NodeRecord}s from the aggregated
-   * import {@code nodeMutations} filtered by non-empty {@code name} and {@code
-   * spec.getNodeTypeNames()}, deduplicated by {@code subject_id}.
+   * Extracts candidate {@link McfGraph} nodes from the aggregated import {@code graphs} filtered by
+   * non-empty {@code name} and {@code spec.getNodeTypeNames()}, combined by {@code subject_id}.
    */
-  public static PCollection<NodeRecord> readCandidateNodes(
-      PCollection<Mutation> nodeMutations, EmbeddingSpec spec) {
+  public static PCollection<McfGraph> readCandidateNodes(
+      PCollection<McfGraph> graphs, EmbeddingSpec spec) {
     String specId = spec.embeddingLabel();
     Set<String> targetNodeTypes = Set.copyOf(spec.getNodeTypeNames());
 
-    return nodeMutations
-        .apply(
-            "FilterAndParseCandidateNodes_" + specId,
+    PCollection<McfGraph> filteredGraphs =
+        graphs.apply(
+            "FilterCandidateGraphs_" + specId,
             ParDo.of(
-                new DoFn<Mutation, NodeRecord>() {
+                new DoFn<McfGraph, McfGraph>() {
                   @ProcessElement
                   public void processElement(
-                      @Element Mutation mutation, OutputReceiver<NodeRecord> receiver) {
-                    NodeRecord candidate = extractCandidateNode(mutation, targetNodeTypes);
-                    if (candidate != null) {
+                      @Element McfGraph graph, OutputReceiver<McfGraph> receiver) {
+                    for (McfGraph candidate : extractCandidateGraphs(graph, targetNodeTypes)) {
                       receiver.output(candidate);
                     }
                   }
-                }))
-        .apply(
-            "DeduplicateCandidateNodes_" + specId,
-            Distinct.<NodeRecord, String>withRepresentativeValueFn(NodeRecord::subjectId)
-                .withRepresentativeType(TypeDescriptors.strings()));
+                }));
+
+    return PipelineUtils.combineGraphNodes("CandidateNodes_" + specId, filteredGraphs);
   }
 
   /**
-   * Parses a {@code Node} {@link Mutation} into a {@link NodeRecord} if it has a non-empty {@code
-   * name} and at least one type in {@code targetNodeTypes}; otherwise returns {@code null}.
+   * Extracts single-node {@link McfGraph}s from {@code graph} for non-observation nodes that have a
+   * non-empty {@code subject_id}, non-empty {@code name}, and at least one {@code typeOf} in {@code
+   * targetNodeTypes}.
    */
-  static NodeRecord extractCandidateNode(Mutation mutation, Set<String> targetNodeTypes) {
-    Map<String, Value> map = mutation.asMap();
-    Value nameVal = map.get(NodeRecord.COL_NAME);
-    Value typesVal = map.get(NodeRecord.COL_TYPES);
-    if (nameVal == null
-        || nameVal.isNull()
-        || nameVal.getString().trim().isEmpty()
-        || typesVal == null
-        || typesVal.isNull()) {
-      return null;
+  static List<McfGraph> extractCandidateGraphs(McfGraph graph, Set<String> targetNodeTypes) {
+    if (graph == null || graph.getNodesMap().isEmpty()) {
+      return List.of();
     }
-
-    List<String> types = typesVal.getStringArray();
-    if (Collections.disjoint(types, targetNodeTypes)) {
-      return null;
+    List<McfGraph> results = new ArrayList<>();
+    for (Map.Entry<String, PropertyValues> entry : graph.getNodesMap().entrySet()) {
+      PropertyValues pvs = entry.getValue();
+      if (GraphUtils.isObservation(pvs)) {
+        continue;
+      }
+      String dcid =
+          McfUtil.stripNamespace(GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name()));
+      String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(entry.getKey());
+      String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name()).trim();
+      List<String> types =
+          GraphUtils.getPropertyValues(pvs.getPvsMap(), GraphUtils.Property.typeOf.name());
+      if (subjectId.isEmpty()
+          || name.isEmpty()
+          || types.isEmpty()
+          || Collections.disjoint(types, targetNodeTypes)) {
+        continue;
+      }
+      results.add(McfGraph.newBuilder().putNodes(subjectId, pvs).build());
     }
+    return results;
+  }
 
-    Value valueVal = map.get(NodeRecord.COL_VALUE);
-    Value bytesVal = map.get(NodeRecord.COL_BYTES);
-    return new NodeRecord(
-        map.get(NodeRecord.COL_SUBJECT_ID).getString(),
-        (valueVal == null || valueVal.isNull()) ? null : valueVal.getString(),
-        (bytesVal == null || bytesVal.isNull()) ? null : bytesVal.getBytes(),
-        nameVal.getString(),
-        types);
+  /** Returns the normalized {@code subject_id} (DCID) of a single-node {@link McfGraph}. */
+  public static String getSubjectId(McfGraph graph) {
+    if (graph == null || graph.getNodesMap().isEmpty()) {
+      return "";
+    }
+    Map.Entry<String, PropertyValues> entry = graph.getNodesMap().entrySet().iterator().next();
+    String dcid =
+        McfUtil.stripNamespace(
+            GraphUtils.getPropVal(entry.getValue(), GraphUtils.Property.dcid.name()));
+    return !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(entry.getKey());
   }
 }

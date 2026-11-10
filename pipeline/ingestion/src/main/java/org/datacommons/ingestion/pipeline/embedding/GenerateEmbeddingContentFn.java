@@ -14,16 +14,10 @@
 
 package org.datacommons.ingestion.pipeline.embedding;
 
-import com.google.cloud.spanner.DatabaseClient;
-import com.google.cloud.spanner.ResultSet;
-import com.google.cloud.spanner.Spanner;
-import com.google.cloud.spanner.Statement;
 import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,42 +26,32 @@ import java.util.Set;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.GroupIntoBatches;
-import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Values;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.TypeDescriptor;
-import org.apache.beam.sdk.values.TypeDescriptors;
-import org.datacommons.ingestion.spanner.SpannerClient;
-import org.datacommons.ingestion.spanner.model.EdgeRecord;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
+import org.datacommons.util.GraphUtils;
 
 /**
- * Generates {@link EmbeddingContent} payloads and FarmHash64 content keys from batched candidate
- * {@link NodeRecord} rows.
+ * Generates {@link EmbeddingContent} payloads and FarmHash64 content keys from candidate {@link
+ * McfGraph} nodes.
  *
- * <p>When predicates are configured in {@link EmbeddingSpec#nodeTypes()} (e.g., {@code
- * "description"} for {@code "Class"}), queries Spanner per batch for {@code Edge} and object {@code
- * Node.value} rows for the candidate {@code subject_id}s and aggregates them into the JSON payload.
+ * <p>Extracts {@code subject_id}, {@code name}, {@code types}, and any configured predicate
+ * properties in {@link EmbeddingSpec#nodeTypes()} (e.g., {@code "description"} for {@code "Class"})
+ * directly from each {@link McfGraph} node.
  */
-public class GenerateEmbeddingContentFn extends DoFn<Iterable<NodeRecord>, EmbeddingContent> {
+public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent> {
   private static final Gson GSON = new Gson();
   private static final Set<String> NODE_TABLE_FIELDS =
       Set.of(NodeRecord.COL_SUBJECT_ID, NodeRecord.COL_NAME);
-  public static final int PREDICATE_QUERY_BATCH_SIZE = 1000;
-  private static final int BATCH_SHARDS = 32;
+  // Approximate max token cap (2048 tokens * ~4 chars/token) to be embedded.
+  public static final int MAX_CHAR_LENGTH = 2048 * 4;
 
-  private final SpannerClient spannerClient;
   private final EmbeddingSpec spec;
   private final Counter contentCounter;
 
-  private transient Spanner spanner;
-  private transient DatabaseClient dbClient;
-
-  public GenerateEmbeddingContentFn(SpannerClient spannerClient, EmbeddingSpec spec) {
-    this.spannerClient = spannerClient;
+  public GenerateEmbeddingContentFn(EmbeddingSpec spec) {
     this.spec = spec;
     this.contentCounter =
         Metrics.counter(
@@ -75,226 +59,52 @@ public class GenerateEmbeddingContentFn extends DoFn<Iterable<NodeRecord>, Embed
             "embedding_content_generated:" + spec.embeddingLabel());
   }
 
-  public GenerateEmbeddingContentFn(EmbeddingSpec spec) {
-    this(null, spec);
-  }
-
   /**
-   * Resolved predicate-object value for a subject node.
-   *
-   * @param subjectId the subject node's DCID
-   * @param predicate the edge predicate (e.g., {@code "description"})
-   * @param value the object node's string {@code value}
-   */
-  public record PredicateObjectValue(String subjectId, String predicate, String value)
-      implements Serializable {}
-
-  /**
-   * Step 3 of {@link EmbeddingPipeline}: batches {@code candidateNodes} via {@link
-   * GroupIntoBatches}, resolves any configured predicate properties from Spanner, and transforms
-   * candidates into {@link EmbeddingContent} records for {@code spec}.
+   * Transforms candidate {@link McfGraph} nodes into {@link EmbeddingContent} records for {@code
+   * spec}.
    */
   public static PCollection<EmbeddingContent> generateEmbeddingContent(
-      PCollection<NodeRecord> candidateNodes, SpannerClient spannerClient, EmbeddingSpec spec) {
+      PCollection<McfGraph> candidateNodes, EmbeddingSpec spec) {
     String label = spec.embeddingLabel();
-    return candidateNodes
-        .apply(
-            "KeyCandidatesForBatching_" + label,
-            MapElements.into(
-                    TypeDescriptors.kvs(
-                        TypeDescriptors.integers(), TypeDescriptor.of(NodeRecord.class)))
-                .via(
-                    n ->
-                        KV.of(
-                            Math.floorMod(
-                                (n.subjectId() == null ? "" : n.subjectId()).hashCode(),
-                                BATCH_SHARDS),
-                            n)))
-        .apply(
-            "BatchCandidatesForContent_" + label,
-            GroupIntoBatches.ofSize(PREDICATE_QUERY_BATCH_SIZE))
-        .apply("ExtractCandidateBatches_" + label, Values.create())
-        .apply(
-            "GenerateEmbeddingContent_" + label,
-            ParDo.of(new GenerateEmbeddingContentFn(spannerClient, spec)));
-  }
-
-  @Setup
-  public void setup() {
-    if (spannerClient != null) {
-      this.spanner = spannerClient.createSpanner();
-      this.dbClient = spannerClient.getDatabaseClient(spanner);
-    }
-  }
-
-  @Teardown
-  public void teardown() {
-    if (spanner != null) {
-      spanner.close();
-    }
+    return candidateNodes.apply(
+        "GenerateEmbeddingContent_" + label, ParDo.of(new GenerateEmbeddingContentFn(spec)));
   }
 
   @ProcessElement
   public void processElement(
-      @Element Iterable<NodeRecord> candidates, OutputReceiver<EmbeddingContent> receiver) {
-    if (candidates == null) {
-      return;
+      @Element McfGraph candidate, OutputReceiver<EmbeddingContent> receiver) {
+    EmbeddingContent content = buildEmbeddingContent(candidate, spec);
+    if (content != null) {
+      contentCounter.inc();
+      receiver.output(content);
     }
-
-    List<NodeRecord> nodesWithPredicates = new ArrayList<>();
-    for (NodeRecord candidate : candidates) {
-      if (candidate == null
-          || candidate.subjectId() == null
-          || candidate.subjectId().trim().isEmpty()
-          || candidate.name() == null
-          || candidate.name().trim().isEmpty()) {
-        continue;
-      }
-
-      if (getAllowedPredicatesForNode(candidate.types(), spec).isEmpty()) {
-        EmbeddingContent content = buildEmbeddingContent(candidate, Map.of(), spec);
-        if (content != null) {
-          contentCounter.inc();
-          receiver.output(content);
-        }
-      } else {
-        nodesWithPredicates.add(candidate);
-      }
-    }
-
-    if (!nodesWithPredicates.isEmpty()) {
-      for (EmbeddingContent content : buildBatchContents(nodesWithPredicates)) {
-        contentCounter.inc();
-        receiver.output(content);
-      }
-    }
-  }
-
-  private List<EmbeddingContent> buildBatchContents(List<NodeRecord> batchNodes) {
-    List<PredicateObjectValue> resolvedValues =
-        dbClient != null ? fetchPredicateValuesFromSpanner(batchNodes) : List.of();
-    Map<String, Map<String, String>> propsBySubjectId =
-        aggregatePropertiesBySubject(batchNodes, resolvedValues, spec);
-
-    List<EmbeddingContent> results = new ArrayList<>(batchNodes.size());
-    for (NodeRecord node : batchNodes) {
-      Map<String, String> props = propsBySubjectId.getOrDefault(node.subjectId(), Map.of());
-      EmbeddingContent content = buildEmbeddingContent(node, props, spec);
-      if (content != null) {
-        results.add(content);
-      }
-    }
-    return results;
-  }
-
-  private List<PredicateObjectValue> fetchPredicateValuesFromSpanner(List<NodeRecord> batchNodes) {
-    Set<String> subjectIds = new LinkedHashSet<>();
-    Set<String> predicates = new LinkedHashSet<>();
-    for (NodeRecord node : batchNodes) {
-      subjectIds.add(node.subjectId());
-      predicates.addAll(getAllowedPredicatesForNode(node.types(), spec));
-    }
-    Statement stmt =
-        buildPredicateQueryStatement(
-            spannerClient.getEdgeTableName(),
-            spannerClient.getNodeTableName(),
-            subjectIds,
-            predicates);
-    List<PredicateObjectValue> values = new ArrayList<>();
-    try (ResultSet rs = dbClient.singleUse().executeQuery(stmt)) {
-      while (rs.next()) {
-        values.add(
-            new PredicateObjectValue(
-                rs.getString(EdgeRecord.COL_SUBJECT_ID),
-                rs.getString(EdgeRecord.COL_PREDICATE),
-                rs.getString(NodeRecord.COL_VALUE)));
-      }
-    }
-    return values;
   }
 
   /**
-   * Builds the parameterized Spanner SQL statement to fetch predicate edges and object {@code
-   * Node.value}s for a batch of candidate {@code subject_id}s.
-   */
-  public static Statement buildPredicateQueryStatement(
-      String edgeTable, String nodeTable, Set<String> subjectIds, Set<String> predicates) {
-    String sql =
-        String.format(
-            "SELECT e.%s, e.%s, o.%s "
-                + "FROM %s e JOIN %s o ON e.%s = o.%s "
-                + "WHERE e.%s IN UNNEST(@subject_ids) "
-                + "AND e.%s IN UNNEST(@predicates) "
-                + "AND o.%s IS NOT NULL AND o.%s != '' "
-                + "ORDER BY e.%s, e.%s, o.%s",
-            EdgeRecord.COL_SUBJECT_ID,
-            EdgeRecord.COL_PREDICATE,
-            NodeRecord.COL_VALUE,
-            edgeTable,
-            nodeTable,
-            EdgeRecord.COL_OBJECT_ID,
-            NodeRecord.COL_SUBJECT_ID,
-            EdgeRecord.COL_SUBJECT_ID,
-            EdgeRecord.COL_PREDICATE,
-            NodeRecord.COL_VALUE,
-            NodeRecord.COL_VALUE,
-            EdgeRecord.COL_SUBJECT_ID,
-            EdgeRecord.COL_PREDICATE,
-            NodeRecord.COL_VALUE);
-    return Statement.newBuilder(sql)
-        .bind("subject_ids")
-        .toStringArray(subjectIds)
-        .bind("predicates")
-        .toStringArray(predicates)
-        .build();
-  }
-
-  /**
-   * Aggregates resolved {@link PredicateObjectValue}s per candidate node, joining multiple values
-   * for the same predicate with {@code ". "}.
-   */
-  public static Map<String, Map<String, String>> aggregatePropertiesBySubject(
-      List<NodeRecord> nodes, Iterable<PredicateObjectValue> predicateValues, EmbeddingSpec spec) {
-    Map<String, Set<String>> allowedPredsBySubject = new LinkedHashMap<>();
-    for (NodeRecord node : nodes) {
-      allowedPredsBySubject.put(node.subjectId(), getAllowedPredicatesForNode(node.types(), spec));
-    }
-
-    Map<String, Map<String, String>> result = new LinkedHashMap<>();
-    for (PredicateObjectValue pv : predicateValues) {
-      Set<String> allowed = allowedPredsBySubject.get(pv.subjectId());
-      if (allowed != null && allowed.contains(pv.predicate())) {
-        result
-            .computeIfAbsent(pv.subjectId(), k -> new LinkedHashMap<>())
-            .merge(pv.predicate(), pv.value(), (existing, next) -> existing + ". " + next);
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Builds the {@link EmbeddingContent} for a single {@link NodeRecord} and its resolved {@code
-   * properties}.
+   * Builds the {@link EmbeddingContent} for a single-node {@link McfGraph}.
    *
    * <p>Fields {@code "subject_id"} and {@code "name"} configured in {@link
-   * EmbeddingSpec#nodeTypes()} are populated directly from the {@link NodeRecord}, while any other
-   * configured fields are populated from the resolved {@code properties} map.
+   * EmbeddingSpec#nodeTypes()} are populated from the node's DCID and {@code name}, while any other
+   * configured fields are populated from the node's MCF predicate values.
    */
-  public static EmbeddingContent buildEmbeddingContent(
-      NodeRecord candidate, Map<String, String> properties, EmbeddingSpec spec) {
-    if (candidate == null
-        || candidate.subjectId() == null
-        || candidate.subjectId().trim().isEmpty()
-        || candidate.name() == null
-        || candidate.name().trim().isEmpty()) {
+  public static EmbeddingContent buildEmbeddingContent(McfGraph candidate, EmbeddingSpec spec) {
+    if (candidate == null || candidate.getNodesMap().isEmpty()) {
       return null;
     }
 
-    JsonObject jsonObj = buildBaseJsonObject(candidate, spec);
-    if (properties != null && !properties.isEmpty()) {
-      for (Map.Entry<String, String> entry : properties.entrySet()) {
-        jsonObj.addProperty(entry.getKey(), entry.getValue());
-      }
+    String subjectId = ReadCandidateNodesFn.getSubjectId(candidate).trim();
+    PropertyValues pvs = candidate.getNodesMap().values().iterator().next();
+    String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name()).trim();
+    List<String> types =
+        GraphUtils.getPropertyValues(pvs.getPvsMap(), GraphUtils.Property.typeOf.name());
+    if (subjectId.isEmpty() || name.isEmpty() || types.isEmpty()) {
+      return null;
+    }
+
+    JsonObject jsonObj = buildBaseJsonObject(subjectId, name, types, spec);
+    Map<String, String> properties = extractPredicateProperties(pvs, types, spec);
+    for (Map.Entry<String, String> entry : properties.entrySet()) {
+      jsonObj.addProperty(entry.getKey(), entry.getValue());
     }
 
     if (jsonObj.size() == 0) {
@@ -303,27 +113,56 @@ public class GenerateEmbeddingContentFn extends DoFn<Iterable<NodeRecord>, Embed
 
     String jsonStr = GSON.toJson(jsonObj);
     String contentKey = computeFarmFingerprintKey(jsonStr);
+    String textToEmbed =
+        jsonStr.length() > MAX_CHAR_LENGTH ? jsonStr.substring(0, MAX_CHAR_LENGTH) : jsonStr;
     return new EmbeddingContent(
-        candidate.subjectId(),
+        subjectId,
         spec.embeddingLabel(),
         contentKey,
         jsonStr,
-        jsonStr,
-        candidate.types(),
+        textToEmbed,
+        types,
         spec.modelEndpoint(),
         spec.taskType());
   }
 
-  static JsonObject buildBaseJsonObject(NodeRecord candidate, EmbeddingSpec spec) {
+  static JsonObject buildBaseJsonObject(
+      String subjectId, String name, List<String> types, EmbeddingSpec spec) {
     JsonObject jsonObj = new JsonObject();
-    Set<String> allowedFields = getAllowedFieldsForNode(candidate.types(), spec);
+    Set<String> allowedFields = getAllowedFieldsForNode(types, spec);
     if (allowedFields.contains(NodeRecord.COL_SUBJECT_ID)) {
-      jsonObj.addProperty(NodeRecord.COL_SUBJECT_ID, candidate.subjectId());
+      jsonObj.addProperty(NodeRecord.COL_SUBJECT_ID, subjectId);
     }
     if (allowedFields.contains(NodeRecord.COL_NAME)) {
-      jsonObj.addProperty(NodeRecord.COL_NAME, candidate.name());
+      jsonObj.addProperty(NodeRecord.COL_NAME, name);
     }
     return jsonObj;
+  }
+
+  /**
+   * Extracts configured predicate properties for a node from its {@link PropertyValues}, joining
+   * multiple values for the same predicate with {@code ". "}.
+   */
+  public static Map<String, String> extractPredicateProperties(
+      PropertyValues pvs, List<String> types, EmbeddingSpec spec) {
+    Set<String> allowedPredicates = getAllowedPredicatesForNode(types, spec);
+    if (allowedPredicates.isEmpty() || pvs == null) {
+      return Map.of();
+    }
+
+    Map<String, String> result = new LinkedHashMap<>();
+    for (String predicate : allowedPredicates) {
+      List<String> values =
+          GraphUtils.getPropertyValues(pvs.getPvsMap(), predicate).stream()
+              .map(String::trim)
+              .filter(v -> !v.isEmpty())
+              .sorted()
+              .toList();
+      if (!values.isEmpty()) {
+        result.put(predicate, String.join(". ", values));
+      }
+    }
+    return result;
   }
 
   /**

@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.google.cloud.spanner.Statement;
 import com.google.common.hash.Hashing;
 import com.google.gson.JsonObject;
 import java.nio.charset.StandardCharsets;
@@ -32,8 +31,12 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
-import org.datacommons.ingestion.pipeline.embedding.GenerateEmbeddingContentFn.PredicateObjectValue;
-import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
+import org.datacommons.proto.Mcf.McfGraph.TypedValue;
+import org.datacommons.proto.Mcf.McfGraph.Values;
+import org.datacommons.proto.Mcf.ValueType;
+import org.datacommons.util.GraphUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +47,27 @@ import org.junit.runners.JUnit4;
 public class GenerateEmbeddingContentFnTest {
 
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
+
+  private static McfGraph buildMcfNode(
+      String subjectId, String name, String type, List<String> descriptions) {
+    PropertyValues.Builder pvs = PropertyValues.newBuilder();
+    GraphUtils.setPropVal("dcid", ValueType.TEXT, subjectId, pvs);
+    if (name != null) {
+      GraphUtils.setPropVal("name", ValueType.TEXT, name, pvs);
+    }
+    if (type != null) {
+      GraphUtils.setPropVal("typeOf", ValueType.RESOLVED_REF, type, pvs);
+    }
+    if (descriptions != null && !descriptions.isEmpty()) {
+      Values.Builder valuesBuilder = Values.newBuilder();
+      for (String desc : descriptions) {
+        valuesBuilder.addTypedValues(
+            TypedValue.newBuilder().setType(ValueType.TEXT).setValue(desc).build());
+      }
+      pvs.putPvs("description", valuesBuilder.build());
+    }
+    return McfGraph.newBuilder().putNodes(subjectId, pvs.build()).build();
+  }
 
   @Test
   public void testGetAllowedFieldsForNode() {
@@ -113,26 +137,25 @@ public class GenerateEmbeddingContentFnTest {
                 List.of("description")),
             NodeFilterType.NO_FILTER);
 
-    NodeRecord statVarNode =
-        new NodeRecord(
-            "Count_Person", "", null, "Total Population", List.of("StatisticalVariable"));
-    JsonObject statVarJson = GenerateEmbeddingContentFn.buildBaseJsonObject(statVarNode, spec);
+    JsonObject statVarJson =
+        GenerateEmbeddingContentFn.buildBaseJsonObject(
+            "Count_Person", "Total Population", List.of("StatisticalVariable"), spec);
     assertEquals("Count_Person", statVarJson.get("subject_id").getAsString());
     assertEquals("Total Population", statVarJson.get("name").getAsString());
 
-    NodeRecord classNode = new NodeRecord("Farm", "", null, "Farm", List.of("Class"));
-    JsonObject classJson = GenerateEmbeddingContentFn.buildBaseJsonObject(classNode, spec);
+    JsonObject classJson =
+        GenerateEmbeddingContentFn.buildBaseJsonObject("Farm", "Farm", List.of("Class"), spec);
     assertFalse(classJson.has("subject_id"));
     assertEquals("Farm", classJson.get("name").getAsString());
 
-    NodeRecord predOnlyNode =
-        new NodeRecord("dc/1", "", null, "Pred Only", List.of("PredicateOnly"));
-    JsonObject predOnlyJson = GenerateEmbeddingContentFn.buildBaseJsonObject(predOnlyNode, spec);
+    JsonObject predOnlyJson =
+        GenerateEmbeddingContentFn.buildBaseJsonObject(
+            "dc/1", "Pred Only", List.of("PredicateOnly"), spec);
     assertEquals(0, predOnlyJson.size());
   }
 
   @Test
-  public void testAggregatePropertiesBySubject() {
+  public void testExtractPredicateProperties() {
     EmbeddingSpec spec =
         new EmbeddingSpec(
             "type_embedding",
@@ -140,26 +163,36 @@ public class GenerateEmbeddingContentFnTest {
             "text-embedding-005",
             "RETRIEVAL_QUERY",
             Map.of("Class", List.of("name", "description")),
-            NodeFilterType.ENTITY_TYPES);
+            NodeFilterType.NO_FILTER);
 
-    NodeRecord farmNode = new NodeRecord("Farm", "", null, "Farm", List.of("Class"));
-    NodeRecord countryNode = new NodeRecord("Country", "", null, "Country", List.of("Class"));
+    McfGraph farmGraph =
+        buildMcfNode("Farm", "Farm", "Class", List.of("Second sentence", "First sentence"));
+    PropertyValues pvs = farmGraph.getNodesMap().get("Farm");
 
-    List<PredicateObjectValue> predicateValues =
-        List.of(
-            new PredicateObjectValue("Farm", "description", "First sentence"),
-            new PredicateObjectValue("Farm", "description", "Second sentence"),
-            new PredicateObjectValue("Farm", "unconfiguredPredicate", "Ignored value"),
-            new PredicateObjectValue("UnknownSubject", "description", "Ignored subject"));
+    Map<String, String> props =
+        GenerateEmbeddingContentFn.extractPredicateProperties(pvs, List.of("Class"), spec);
+    assertEquals(Map.of("description", "First sentence. Second sentence"), props);
+  }
 
-    Map<String, Map<String, String>> propsBySubject =
-        GenerateEmbeddingContentFn.aggregatePropertiesBySubject(
-            List.of(farmNode, countryNode), predicateValues, spec);
+  @Test
+  public void testBuildEmbeddingContent_capsTextToEmbedAtMaxCharLength() {
+    EmbeddingSpec spec =
+        new EmbeddingSpec(
+            "type_embedding",
+            "NodeEmbeddingModel",
+            "text-embedding-005",
+            "RETRIEVAL_QUERY",
+            Map.of("Class", List.of("name", "description")),
+            NodeFilterType.NO_FILTER);
 
-    assertEquals(1, propsBySubject.size());
-    assertEquals(
-        Map.of("description", "First sentence. Second sentence"), propsBySubject.get("Farm"));
-    assertNull(propsBySubject.get("Country"));
+    String longDesc = "a".repeat(10000);
+    McfGraph farmGraph = buildMcfNode("Farm", "Farm", "Class", List.of(longDesc));
+
+    EmbeddingContent content = GenerateEmbeddingContentFn.buildEmbeddingContent(farmGraph, spec);
+    assertNotNull(content);
+    assertEquals(GenerateEmbeddingContentFn.MAX_CHAR_LENGTH, content.textToEmbed().length());
+    assertTrue(
+        content.embeddingContentJson().length() > GenerateEmbeddingContentFn.MAX_CHAR_LENGTH);
   }
 
   @Test
@@ -191,12 +224,10 @@ public class GenerateEmbeddingContentFnTest {
                 List.of("subject_id", "name")),
             NodeFilterType.NO_FILTER);
 
-    NodeRecord candidate =
-        new NodeRecord(
-            "Count_Person", "", null, "Total Population", List.of("StatisticalVariable"));
+    McfGraph candidate =
+        buildMcfNode("Count_Person", "Total Population", "StatisticalVariable", List.of());
 
-    EmbeddingContent content =
-        GenerateEmbeddingContentFn.buildEmbeddingContent(candidate, Map.of(), spec);
+    EmbeddingContent content = GenerateEmbeddingContentFn.buildEmbeddingContent(candidate, spec);
 
     assertNotNull(content);
     assertEquals("Count_Person", content.subjectId());
@@ -223,22 +254,12 @@ public class GenerateEmbeddingContentFnTest {
             "gemini-embedding-001",
             "RETRIEVAL_DOCUMENT",
             Map.of("Class", List.of("name", "description")),
-            NodeFilterType.ENTITY_TYPES);
+            NodeFilterType.NO_FILTER);
 
-    NodeRecord farmNode = new NodeRecord("Farm", "", null, "Farm", List.of("Class"));
+    McfGraph farmGraph =
+        buildMcfNode("Farm", "Farm", "Class", List.of("Second sentence", "First sentence"));
 
-    List<PredicateObjectValue> predicateValues =
-        List.of(
-            new PredicateObjectValue("Farm", "description", "First sentence"),
-            new PredicateObjectValue("Farm", "description", "Second sentence"));
-
-    Map<String, Map<String, String>> propsBySubject =
-        GenerateEmbeddingContentFn.aggregatePropertiesBySubject(
-            List.of(farmNode), predicateValues, spec);
-
-    EmbeddingContent content =
-        GenerateEmbeddingContentFn.buildEmbeddingContent(
-            farmNode, propsBySubject.getOrDefault("Farm", Map.of()), spec);
+    EmbeddingContent content = GenerateEmbeddingContentFn.buildEmbeddingContent(farmGraph, spec);
 
     assertNotNull(content);
     String expectedJson = "{\"name\":\"Farm\",\"description\":\"First sentence. Second sentence\"}";
@@ -261,27 +282,12 @@ public class GenerateEmbeddingContentFnTest {
             Map.of("Entity", List.of("subject_id", "name")),
             NodeFilterType.NO_FILTER);
 
-    NodeRecord blankNameCandidate = new NodeRecord("dc/123", "", null, "   ", List.of("Entity"));
-    assertNull(
-        GenerateEmbeddingContentFn.buildEmbeddingContent(blankNameCandidate, Map.of(), spec));
+    McfGraph blankNameCandidate = buildMcfNode("dc/123", "   ", "Entity", List.of());
+    assertNull(GenerateEmbeddingContentFn.buildEmbeddingContent(blankNameCandidate, spec));
 
-    NodeRecord unmatchedTypeCandidate =
-        new NodeRecord("dc/456", "", null, "Valid Name", List.of("UnconfiguredType"));
-    assertNull(
-        GenerateEmbeddingContentFn.buildEmbeddingContent(unmatchedTypeCandidate, Map.of(), spec));
-  }
-
-  @Test
-  public void testBuildPredicateQueryStatement() {
-    Statement stmt =
-        GenerateEmbeddingContentFn.buildPredicateQueryStatement(
-            "Edge", "Node", Set.of("Farm", "Country"), Set.of("description"));
-    String sql = stmt.getSql();
-    assertTrue(sql.contains("SELECT e.subject_id, e.predicate, o.value"));
-    assertTrue(sql.contains("FROM Edge e JOIN Node o ON e.object_id = o.subject_id"));
-    assertTrue(sql.contains("e.subject_id IN UNNEST(@subject_ids)"));
-    assertTrue(sql.contains("e.predicate IN UNNEST(@predicates)"));
-    assertTrue(sql.contains("ORDER BY e.subject_id, e.predicate, o.value"));
+    McfGraph unmatchedTypeCandidate =
+        buildMcfNode("dc/456", "Valid Name", "UnconfiguredType", List.of());
+    assertNull(GenerateEmbeddingContentFn.buildEmbeddingContent(unmatchedTypeCandidate, spec));
   }
 
   @Test
@@ -299,15 +305,13 @@ public class GenerateEmbeddingContentFnTest {
                 List.of("subject_id", "name")),
             NodeFilterType.NO_FILTER);
 
-    NodeRecord matchingNode =
-        new NodeRecord(
-            "Count_Person", "", null, "Total Population", List.of("StatisticalVariable"));
-    NodeRecord emptyNameNode =
-        new NodeRecord("dc/empty", "", null, "", List.of("StatisticalVariable"));
+    McfGraph matchingNode =
+        buildMcfNode("Count_Person", "Total Population", "StatisticalVariable", List.of());
+    McfGraph emptyNameNode = buildMcfNode("dc/empty", "", "StatisticalVariable", List.of());
 
-    PCollection<NodeRecord> candidates = pipeline.apply(Create.of(matchingNode, emptyNameNode));
+    PCollection<McfGraph> candidates = pipeline.apply(Create.of(matchingNode, emptyNameNode));
     PCollection<EmbeddingContent> contents =
-        GenerateEmbeddingContentFn.generateEmbeddingContent(candidates, null, spec);
+        GenerateEmbeddingContentFn.generateEmbeddingContent(candidates, spec);
 
     String expectedJson = "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}";
     long expectedFp =

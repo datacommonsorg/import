@@ -17,8 +17,12 @@ package org.datacommons.ingestion.pipeline.embedding;
 import com.google.cloud.spanner.KeyRange;
 import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
-import java.util.LinkedHashSet;
+import com.google.cloud.spanner.Statement;
+import com.google.common.collect.Lists;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -26,19 +30,24 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupIntoBatches;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.spanner.SpannerClient;
-import org.datacommons.ingestion.spanner.model.NodeRecord;
+import org.datacommons.ingestion.spanner.model.EdgeRecord;
 
 /**
- * Builds primary-key prefix delete {@link Mutation}s in batches of {@link #DELETE_BATCH_SIZE} for a
- * target {@code embedding_label} and candidate {@code subject_id}s, and writes them to Spanner via
- * {@link SpannerClient#writeMutations}.
+ * Deletes existing rows in {@code NodeEmbedding} by querying distinct {@code subject_id}s from
+ * {@code Edge} for a given {@code provenance}, batching them in chunks of {@link
+ * #DELETE_BATCH_SIZE}, and writing primary-key prefix delete {@link Mutation}s via {@link
+ * SpannerClient#writeMutations}.
+ *
+ * <p>TODO: This class will help migrate the existing {@code NodeEmbedding} table to include {@code
+ * provenance} (by deleting legacy embedding rows without {@code provenance} via {@code subject_id}s
+ * from {@code Edge}). Once {@code NodeEmbedding} includes {@code provenance}, provenance-scoped
+ * deletion will be handled at the top level via {@link SpannerClient#deleteDataForImport}.
  */
-public class DeleteExistingEmbeddingsFn extends DoFn<Iterable<String>, Mutation> {
+public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
   public static final int DELETE_BATCH_SIZE = 1000;
   private static final int DELETE_SHARDS = 32;
 
@@ -55,63 +64,85 @@ public class DeleteExistingEmbeddingsFn extends DoFn<Iterable<String>, Mutation>
   }
 
   /**
-   * Step 2 of {@link EmbeddingPipeline}: batches candidate {@code subject_id}s, builds prefix
+   * Reads distinct {@code subject_id}s from {@code Edge} for {@code provenance}, builds prefix
    * delete {@link Mutation}s for {@code embeddingTable} and {@code embeddingLabel}, and writes them
    * via {@link SpannerClient#writeMutations}, returning a completion signal {@link PCollection} for
    * {@code Wait.on}.
    */
   public static PCollection<Void> deleteExistingEmbeddings(
-      PCollection<NodeRecord> candidateNodes,
+      Pipeline pipeline,
       SpannerClient spannerClient,
       String embeddingTable,
-      String embeddingLabel) {
+      String embeddingLabel,
+      String provenance) {
+    PCollection<String> subjectIds =
+        readSubjectIdsByProvenance(pipeline, spannerClient, provenance, embeddingLabel);
     PCollection<Mutation> deleteMutations =
-        buildDeleteMutations(candidateNodes, embeddingTable, embeddingLabel);
+        buildDeleteMutations(subjectIds, embeddingTable, embeddingLabel);
     SpannerWriteResult writeResult =
         spannerClient.writeMutations(
-            candidateNodes.getPipeline(),
-            "WriteDeletedEmbeddings_" + embeddingLabel,
-            deleteMutations);
+            pipeline, "WriteDeletedEmbeddings_" + embeddingLabel, deleteMutations);
     return writeResult.getOutput();
   }
 
+  /**
+   * Reads distinct {@code subject_id}s from the {@code Edge} table constrained to {@code
+   * provenance}.
+   */
+  public static PCollection<String> readSubjectIdsByProvenance(
+      Pipeline pipeline, SpannerClient spannerClient, String provenance, String stageSuffix) {
+    Statement stmt = buildSubjectIdsByProvenanceStatement(spannerClient, provenance);
+    return pipeline
+        .apply(
+            "ReadEdgeSubjectIdsForDelete_" + stageSuffix,
+            spannerClient.getReadTransform().withQuery(stmt))
+        .apply(
+            "ExtractEdgeSubjectIdForDelete_" + stageSuffix,
+            MapElements.into(TypeDescriptors.strings())
+                .via(struct -> struct.getString(EdgeRecord.COL_SUBJECT_ID)));
+  }
+
+  /**
+   * Builds the partitioned Spanner SQL {@link Statement} to read distinct {@code subject_id}s from
+   * {@code Edge} for {@code provenance}.
+   */
+  static Statement buildSubjectIdsByProvenanceStatement(
+      SpannerClient spannerClient, String provenance) {
+    String sql =
+        spannerClient.formatPartitionQuery(
+            "SELECT DISTINCT %s FROM %s WHERE %s = @provenance",
+            EdgeRecord.COL_SUBJECT_ID, spannerClient.getEdgeTableName(), EdgeRecord.COL_PROVENANCE);
+    return Statement.newBuilder(sql).bind(EdgeRecord.COL_PROVENANCE).to(provenance).build();
+  }
+
   static PCollection<Mutation> buildDeleteMutations(
-      PCollection<NodeRecord> candidateNodes, String embeddingTable, String embeddingLabel) {
-    return candidateNodes
+      PCollection<String> subjectIds, String embeddingTable, String embeddingLabel) {
+    return subjectIds
         .apply(
             "KeyCandidateIdsForDelete_" + embeddingLabel,
             MapElements.into(
                     TypeDescriptors.kvs(TypeDescriptors.integers(), TypeDescriptors.strings()))
-                .via(
-                    n ->
-                        KV.of(
-                            Math.floorMod(n.subjectId().hashCode(), DELETE_SHARDS), n.subjectId())))
+                .via(id -> KV.of(Math.floorMod(id.hashCode(), DELETE_SHARDS), id)))
         .apply(
             "BatchCandidateIdsForDelete_" + embeddingLabel,
             GroupIntoBatches.ofSize(DELETE_BATCH_SIZE))
-        .apply("ExtractCandidateIdBatches_" + embeddingLabel, Values.create())
+        .apply(
+            "ExtractCandidateIdBatches_" + embeddingLabel,
+            MapElements.into(TypeDescriptors.lists(TypeDescriptors.strings()))
+                .via(kv -> Lists.newArrayList(kv.getValue())))
         .apply(
             "BuildDeleteEmbeddingMutations_" + embeddingLabel,
             ParDo.of(new DeleteExistingEmbeddingsFn(embeddingTable, embeddingLabel)));
   }
 
   @ProcessElement
-  public void processElement(
-      @Element Iterable<String> subjectIds, OutputReceiver<Mutation> receiver) {
+  public void processElement(@Element List<String> subjectIds, OutputReceiver<Mutation> receiver) {
     if (subjectIds == null) {
       return;
     }
 
-    Set<String> uniqueIds = new LinkedHashSet<>();
-    for (String id : subjectIds) {
-      if (id != null && !id.isEmpty()) {
-        uniqueIds.add(id);
-      }
-    }
-
-    if (uniqueIds.isEmpty()) {
-      return;
-    }
+    Set<String> uniqueIds =
+        subjectIds.stream().filter(id -> id != null && !id.isEmpty()).collect(Collectors.toSet());
 
     deletedNodesCounter.inc(uniqueIds.size());
     receiver.output(buildDeleteMutation(embeddingTable, embeddingLabel, uniqueIds));
