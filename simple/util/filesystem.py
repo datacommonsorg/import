@@ -30,15 +30,75 @@ have been tested. In-memory (mem://) and temp (temp://) paths are also built in.
 
 import io
 import logging
+import os
 import time
 
 from fs import open_fs
 import fs.errors as fserrors
 import fs.path as fspath
 from fs_gcsfs import GCSFS
+from google.cloud import storage
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 # Paths with this prefix refer to Google Cloud Storage.
 _GCS_PATH_PREFIX = "gs://"
+
+# HTTP connections that the GCS client keeps open: enough for the threads that
+# validate CSV headers (runner._MAX_HEADER_VALIDATION_THREADS).
+_GCS_HTTP_POOL_SIZE = 32
+
+# This process's GCS client and the pid it was created in (see gcs_client()).
+_gcs_client: storage.Client | None = None
+_gcs_client_pid: int | None = None
+
+
+def gcs_client() -> storage.Client:
+  """Returns this process's GCS client, created on first use.
+
+  Creating a client looks up credentials and opens new connections, so every
+  GCS store and upload in a process shares one. A forked child creates its
+  own, since the connections of its parent's client can't be shared.
+  Requests that fail with 429 or 5xx are retried, as fs-gcsfs does by default.
+  """
+  global _gcs_client, _gcs_client_pid
+  if _gcs_client is not None and _gcs_client_pid == os.getpid():
+    return _gcs_client
+  client = storage.Client()
+  # allowed_methods=False retries every HTTP method, including uploads.
+  retry = Retry(total=5,
+                status_forcelist=[429, 502, 503, 504],
+                backoff_factor=0.5,
+                allowed_methods=False)
+  adapter = HTTPAdapter(pool_connections=_GCS_HTTP_POOL_SIZE,
+                        pool_maxsize=_GCS_HTTP_POOL_SIZE,
+                        max_retries=retry)
+  client._http.mount("https://", adapter)
+  # Plain HTTP is only used by GCS emulators.
+  client._http.mount("http://", adapter)
+  _gcs_client, _gcs_client_pid = client, os.getpid()
+  return client
+
+
+def _open_fs(url: str, create: bool, strict: bool = True):
+  """Opens a PyFilesystem FS like `open_fs`; gs:// URLs use `gcs_client()`.
+
+  For gs:// URLs, `strict=False` skips checking that the root directory's
+  marker exists (see `_fix_gcsfs_storage`).
+  """
+  if not url.startswith(_GCS_PATH_PREFIX):
+    return open_fs(url, create=create)
+  # Split the URL as fs-gcsfs's own opener does.
+  bucket_name, *path_parts = fspath.iteratepath(
+      url.removeprefix(_GCS_PATH_PREFIX))
+  # retry=0: gcs_client() already retries, and fs-gcsfs would otherwise
+  # replace its HTTP adapter.
+  return GCSFS(bucket_name,
+               root_path=fspath.join(*path_parts),
+               create=create,
+               client=gcs_client(),
+               retry=0,
+               strict=strict)
 
 
 def join_path(base: str, *args: str) -> str:
@@ -80,13 +140,11 @@ class Store:
     if not treat_as_file:
       try:
         # If the path is a GCS path, set strict=False in case the root_path is not initialized with an empty blob.
-        if self.root_path.startswith(_GCS_PATH_PREFIX):
-          self.fs = open_fs(f"{self.root_path}?strict=False",
-                            create=create_if_missing)
-          if mark_gcs_dirs:
-            _fix_gcsfs_storage(self.fs)
-        else:
-          self.fs = open_fs(self.root_path, create=create_if_missing)
+        self.fs = _open_fs(self.root_path,
+                           create=create_if_missing,
+                           strict=False)
+        if mark_gcs_dirs and isinstance(self.fs, GCSFS):
+          _fix_gcsfs_storage(self.fs)
 
         self._wrapper: _StoreWrapper = Dir(self, path="/")
         self._isdir = True
@@ -106,8 +164,8 @@ class Store:
       else:
         self.root_path = fspath.dirname(path)
       file_name = fspath.basename(path)
-      self.fs = open_fs(fspath.forcedir(self.root_path),
-                        create=create_if_missing)
+      self.fs = _open_fs(fspath.forcedir(self.root_path),
+                         create=create_if_missing)
       self._wrapper: _StoreWrapper = File(self,
                                           path=file_name,
                                           create_if_missing=create_if_missing)

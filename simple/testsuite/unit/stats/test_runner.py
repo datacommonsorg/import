@@ -15,6 +15,7 @@
 
 import os
 
+from google.cloud import storage
 from google.cloud.storage import Blob
 import pytest
 from stats import runner
@@ -50,24 +51,37 @@ def test_max_workers_must_be_positive(max_workers):
                   max_workers=max_workers)
 
 
-def test_import_workers_write_no_gcs_directory_markers(tmp_path, monkeypatch):
-  """Only the coordinator writes GCS directory markers, never the workers.
+def _record_calls(monkeypatch, log_path, cls, method_name, detail) -> None:
+  """Records calls to `cls.method_name` as "<pid> <detail>" lines in a file.
 
-  Workers marking directories for every file rewrite the same marker objects
-  until GCS rejects them with 429 errors. One worker imports both CSVs here,
-  so it would mark the folder of the shards it uploaded for the first one.
+  `detail(obj)` says what to record about the called object, or None to skip
+  the call. Workers are forked processes, so they report through a file.
   """
-  marker_writes = tmp_path / "marker_writes.txt"
-  real_upload_from_string = Blob.upload_from_string
+  real_method = getattr(cls, method_name)
 
-  def recording_upload_from_string(blob, data, *args, **kwargs):
-    # Workers are forked processes, so they report through a file.
-    if blob.name.endswith("/"):
-      with open(marker_writes, "a", encoding="utf-8") as f:
-        f.write(f"{os.getpid()} {blob.name}\n")
-    return real_upload_from_string(blob, data, *args, **kwargs)
+  def recording_method(obj, *args, **kwargs):
+    call_detail = detail(obj)
+    if call_detail is not None:
+      with open(log_path, "a", encoding="utf-8") as f:
+        f.write(f"{os.getpid()} {call_detail}\n")
+    return real_method(obj, *args, **kwargs)
 
-  monkeypatch.setattr(Blob, "upload_from_string", recording_upload_from_string)
+  monkeypatch.setattr(cls, method_name, recording_method)
+
+
+def _read_calls(log_path) -> list[tuple[bool, str]]:
+  """Returns (made by a worker, detail) for each call recorded in `log_path`."""
+  if not log_path.exists():
+    return []
+  calls = []
+  for line in log_path.read_text(encoding="utf-8").splitlines():
+    pid, call_detail = line.split(" ", 1)
+    calls.append((int(pid) != os.getpid(), call_detail))
+  return calls
+
+
+def _import_two_csvs_in_one_worker() -> None:
+  """Imports two CSVs from (fake) GCS, both in the same worker process."""
   result = b.run_dir(
       {
           "provenance.mcf": b.PROVENANCE_MCF,
@@ -77,8 +91,34 @@ def test_import_workers_write_no_gcs_directory_markers(tmp_path, monkeypatch):
       b.obs_config(b.OBS_MAPPINGS),
       mode="gcs_input",
       runner_kwargs={"max_workers": 1})
-
   assert result.output["error"] is None
-  writers = [line.split() for line in marker_writes.read_text().splitlines()]
-  assert writers, "the coordinator should still mark its directories"
-  assert [name for pid, name in writers if int(pid) != os.getpid()] == []
+
+
+def test_import_workers_write_no_gcs_directory_markers(tmp_path, monkeypatch):
+  """Only the coordinator writes GCS directory markers, never the workers.
+
+  Workers marking directories for every file rewrite the same marker objects
+  until GCS rejects them with 429 errors. Here the worker would mark the
+  folder of the shards it uploaded for the first CSV.
+  """
+  log_path = tmp_path / "marker_writes.txt"
+  _record_calls(monkeypatch, log_path, Blob, "upload_from_string",
+                lambda blob: blob.name if blob.name.endswith("/") else None)
+
+  _import_two_csvs_in_one_worker()
+
+  marker_writes = _read_calls(log_path)
+  assert marker_writes, "the coordinator should still mark its directories"
+  assert [name for by_worker, name in marker_writes if by_worker] == []
+
+
+def test_import_workers_create_one_gcs_client_each(tmp_path, monkeypatch):
+  """A worker reuses one GCS client for every file, store and upload."""
+  log_path = tmp_path / "clients.txt"
+  _record_calls(monkeypatch, log_path, storage.Client, "__init__",
+                lambda client: "client")
+
+  _import_two_csvs_in_one_worker()
+
+  worker_clients = [c for by_worker, c in _read_calls(log_path) if by_worker]
+  assert worker_clients == ["client"]
