@@ -202,7 +202,8 @@ public class GraphIngestionPipeline {
       deleteEdgesWait =
           spannerClient.deleteDataForImport(
               pipeline, provenance, spannerClient.getEdgeTableName(), "provenance");
-      // TODO: Once NodeEmbedding schema includes provenance, delete existing embeddings for this
+      // TODO(b/584694504): Once NodeEmbedding schema includes provenance, delete existing
+      // embeddings for this
       // import here via spannerClient.deleteDataForImport(pipeline, provenance, embeddingTable,
       // "provenance").
     } else {

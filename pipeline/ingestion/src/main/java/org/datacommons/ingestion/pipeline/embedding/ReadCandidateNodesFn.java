@@ -57,9 +57,8 @@ public final class ReadCandidateNodesFn {
                   @ProcessElement
                   public void processElement(
                       @Element McfGraph graph, OutputReceiver<McfGraph> receiver) {
-                    for (McfGraph candidate : extractCandidateGraphs(graph, targetNodeTypes)) {
-                      receiver.output(candidate);
-                    }
+                    extractCandidateGraphs(graph, targetNodeTypes).stream()
+                        .forEach(c -> receiver.output(c));
                   }
                 }));
 
@@ -76,31 +75,31 @@ public final class ReadCandidateNodesFn {
       return List.of();
     }
     List<McfGraph> results = new ArrayList<>();
-    for (Map.Entry<String, PropertyValues> entry : graph.getNodesMap().entrySet()) {
-      PropertyValues pvs = entry.getValue();
-      if (GraphUtils.isObservation(pvs)) {
-        continue;
-      }
-      String dcid =
-          McfUtil.stripNamespace(GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name()));
-      String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(entry.getKey());
-      String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name()).trim();
-      List<String> types =
-          GraphUtils.getPropertyValues(pvs.getPvsMap(), GraphUtils.Property.typeOf.name());
-      if (subjectId.isEmpty()
-          || name.isEmpty()
-          || types.isEmpty()
-          || Collections.disjoint(types, targetNodeTypes)) {
-        continue;
-      }
-      results.add(McfGraph.newBuilder().putNodes(subjectId, pvs).build());
-    }
+    graph.getNodesMap().entrySet().stream()
+        .filter(e -> !GraphUtils.isObservation(e.getValue()))
+        .forEach(
+            entry -> {
+              PropertyValues pvs = entry.getValue();
+              String dcid =
+                  McfUtil.stripNamespace(
+                      GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name()));
+              String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(entry.getKey());
+              String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name()).trim();
+              List<String> types =
+                  GraphUtils.getPropertyValues(pvs.getPvsMap(), GraphUtils.Property.typeOf.name());
+              if (!subjectId.isEmpty()
+                  && !name.isEmpty()
+                  && !types.isEmpty()
+                  && !Collections.disjoint(types, targetNodeTypes)) {
+                results.add(McfGraph.newBuilder().putNodes(subjectId, pvs).build());
+              }
+            });
     return results;
   }
 
   /** Returns the normalized {@code subject_id} (DCID) of a single-node {@link McfGraph}. */
   public static String getSubjectId(McfGraph graph) {
-    if (graph == null || graph.getNodesMap().isEmpty()) {
+    if (graph.getNodesMap().isEmpty()) {
       return "";
     }
     Map.Entry<String, PropertyValues> entry = graph.getNodesMap().entrySet().iterator().next();

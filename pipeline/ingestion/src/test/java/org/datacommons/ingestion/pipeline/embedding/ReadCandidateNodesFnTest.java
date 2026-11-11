@@ -30,7 +30,7 @@ import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.ValueType;
-import org.datacommons.util.GraphUtils;
+import org.datacommons.util.McfUtil;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,19 +40,64 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ReadCandidateNodesFnTest {
 
-  @Rule public final transient TestPipeline pipeline = TestPipeline.create();
+  private static final McfGraph STAT_VAR_GRAPH =
+      McfGraph.newBuilder()
+          .putNodes(
+              "Count_Person",
+              PropertyValues.newBuilder()
+                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Count_Person"))
+                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Total Population"))
+                  .putPvs(
+                      "typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "StatisticalVariable"))
+                  .build())
+          .build();
 
-  private static McfGraph buildMcfNode(String subjectId, String name, String type) {
-    PropertyValues.Builder pvs = PropertyValues.newBuilder();
-    GraphUtils.setPropVal("dcid", ValueType.TEXT, subjectId, pvs);
-    if (name != null) {
-      GraphUtils.setPropVal("name", ValueType.TEXT, name, pvs);
-    }
-    if (type != null) {
-      GraphUtils.setPropVal("typeOf", ValueType.RESOLVED_REF, type, pvs);
-    }
-    return McfGraph.newBuilder().putNodes(subjectId, pvs.build()).build();
-  }
+  private static final McfGraph TOPIC_GRAPH =
+      McfGraph.newBuilder()
+          .putNodes(
+              "dc/topic/Health",
+              PropertyValues.newBuilder()
+                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "dc/topic/Health"))
+                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Health"))
+                  .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "Topic"))
+                  .build())
+          .build();
+
+  private static final McfGraph CLASS_GRAPH =
+      McfGraph.newBuilder()
+          .putNodes(
+              "Farm",
+              PropertyValues.newBuilder()
+                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Farm"))
+                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Farm"))
+                  .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "Class"))
+                  .build())
+          .build();
+
+  private static final McfGraph PLACE_GRAPH =
+      McfGraph.newBuilder()
+          .putNodes(
+              "country/USA",
+              PropertyValues.newBuilder()
+                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "country/USA"))
+                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "United States"))
+                  .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "Country"))
+                  .build())
+          .build();
+
+  private static final McfGraph EMPTY_NAME_GRAPH =
+      McfGraph.newBuilder()
+          .putNodes(
+              "Count_Empty",
+              PropertyValues.newBuilder()
+                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Count_Empty"))
+                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "   "))
+                  .putPvs(
+                      "typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "StatisticalVariable"))
+                  .build())
+          .build();
+
+  @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
   @Test
   public void testReadCandidateNodes_filtersAndCombinesGraphs() {
@@ -67,20 +112,15 @@ public class ReadCandidateNodesFnTest {
                 "Topic", List.of("subject_id", "name")),
             NodeFilterType.NO_FILTER);
 
-    McfGraph statVarGraph = buildMcfNode("Count_Person", "Total Population", "StatisticalVariable");
-    McfGraph topicGraph = buildMcfNode("dc/topic/Health", "Health", "Topic");
-    McfGraph nonMatchingTypeGraph = buildMcfNode("country/USA", "United States", "Country");
-    McfGraph emptyNameGraph = buildMcfNode("Count_EmptyName", "", "StatisticalVariable");
-
     PCollection<McfGraph> graphs =
         pipeline.apply(
             "CreateGraphs",
             Create.of(
-                statVarGraph,
-                statVarGraph, // duplicate across imports
-                topicGraph,
-                nonMatchingTypeGraph,
-                emptyNameGraph));
+                STAT_VAR_GRAPH,
+                STAT_VAR_GRAPH, // duplicate across imports
+                TOPIC_GRAPH,
+                PLACE_GRAPH,
+                EMPTY_NAME_GRAPH));
 
     PCollection<String> candidateIds =
         ReadCandidateNodesFn.readCandidateNodes(graphs, spec)
@@ -97,20 +137,18 @@ public class ReadCandidateNodesFnTest {
   public void testExtractCandidateGraphs_handlesValidAndInvalidNodes() {
     Set<String> targetTypes = Set.of("StatisticalVariable", "Topic", "Class");
 
-    McfGraph validGraph = buildMcfNode("Count_Person", "Total Population", "StatisticalVariable");
-    List<McfGraph> extracted = ReadCandidateNodesFn.extractCandidateGraphs(validGraph, targetTypes);
+    List<McfGraph> extracted =
+        ReadCandidateNodesFn.extractCandidateGraphs(STAT_VAR_GRAPH, targetTypes);
     assertEquals(1, extracted.size());
     assertEquals("Count_Person", ReadCandidateNodesFn.getSubjectId(extracted.get(0)));
 
-    McfGraph classGraph = buildMcfNode("Farm", "Farm", "Class");
-    assertEquals(1, ReadCandidateNodesFn.extractCandidateGraphs(classGraph, targetTypes).size());
+    assertEquals(1, ReadCandidateNodesFn.extractCandidateGraphs(CLASS_GRAPH, targetTypes).size());
 
     // Non-matching type returns empty
-    McfGraph placeGraph = buildMcfNode("country/USA", "United States", "Country");
-    assertTrue(ReadCandidateNodesFn.extractCandidateGraphs(placeGraph, targetTypes).isEmpty());
+    assertTrue(ReadCandidateNodesFn.extractCandidateGraphs(PLACE_GRAPH, targetTypes).isEmpty());
 
     // Empty name returns empty
-    McfGraph emptyNameGraph = buildMcfNode("Count_Empty", "   ", "StatisticalVariable");
-    assertTrue(ReadCandidateNodesFn.extractCandidateGraphs(emptyNameGraph, targetTypes).isEmpty());
+    assertTrue(
+        ReadCandidateNodesFn.extractCandidateGraphs(EMPTY_NAME_GRAPH, targetTypes).isEmpty());
   }
 }

@@ -16,7 +16,6 @@ package org.datacommons.ingestion.pipeline.embedding;
 
 import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -101,17 +100,14 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
       return null;
     }
 
-    JsonObject jsonObj = buildBaseJsonObject(subjectId, name, types, spec);
-    Map<String, String> properties = extractPredicateProperties(pvs, types, spec);
-    for (Map.Entry<String, String> entry : properties.entrySet()) {
-      jsonObj.addProperty(entry.getKey(), entry.getValue());
-    }
+    Map<String, String> contentMap = buildBaseContentMap(subjectId, name, types, spec);
+    contentMap.putAll(extractPredicateProperties(pvs, types, spec));
 
-    if (jsonObj.size() == 0) {
+    if (contentMap.isEmpty()) {
       return null;
     }
 
-    String jsonStr = GSON.toJson(jsonObj);
+    String jsonStr = GSON.toJson(contentMap);
     String contentKey = computeFarmFingerprintKey(jsonStr);
     String textToEmbed =
         jsonStr.length() > MAX_CHAR_LENGTH ? jsonStr.substring(0, MAX_CHAR_LENGTH) : jsonStr;
@@ -126,17 +122,17 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
         spec.taskType());
   }
 
-  static JsonObject buildBaseJsonObject(
+  static Map<String, String> buildBaseContentMap(
       String subjectId, String name, List<String> types, EmbeddingSpec spec) {
-    JsonObject jsonObj = new JsonObject();
-    Set<String> allowedFields = getAllowedFieldsForNode(types, spec);
-    if (allowedFields.contains(NodeRecord.COL_SUBJECT_ID)) {
-      jsonObj.addProperty(NodeRecord.COL_SUBJECT_ID, subjectId);
+    Map<String, String> contentMap = new LinkedHashMap<>();
+    Set<String> embeddingFields = getEmbeddingNodeFields(types, spec);
+    if (embeddingFields.contains(NodeRecord.COL_SUBJECT_ID)) {
+      contentMap.put(NodeRecord.COL_SUBJECT_ID, subjectId);
     }
-    if (allowedFields.contains(NodeRecord.COL_NAME)) {
-      jsonObj.addProperty(NodeRecord.COL_NAME, name);
+    if (embeddingFields.contains(NodeRecord.COL_NAME)) {
+      contentMap.put(NodeRecord.COL_NAME, name);
     }
-    return jsonObj;
+    return contentMap;
   }
 
   /**
@@ -145,13 +141,13 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
    */
   public static Map<String, String> extractPredicateProperties(
       PropertyValues pvs, List<String> types, EmbeddingSpec spec) {
-    Set<String> allowedPredicates = getAllowedPredicatesForNode(types, spec);
-    if (allowedPredicates.isEmpty() || pvs == null) {
+    Set<String> embeddingPredicates = getEmbeddingPredicates(types, spec);
+    if (embeddingPredicates.isEmpty() || pvs == null) {
       return Map.of();
     }
 
     Map<String, String> result = new LinkedHashMap<>();
-    for (String predicate : allowedPredicates) {
+    for (String predicate : embeddingPredicates) {
       List<String> values =
           GraphUtils.getPropertyValues(pvs.getPvsMap(), predicate).stream()
               .map(String::trim)
@@ -176,27 +172,27 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
     return Long.toString(fingerprint);
   }
 
-  static Set<String> getAllowedFieldsForNode(List<String> nodeTypes, EmbeddingSpec spec) {
+  static Set<String> getEmbeddingNodeFields(List<String> nodeTypes, EmbeddingSpec spec) {
     if (nodeTypes == null || nodeTypes.isEmpty()) {
       return Set.of();
     }
-    Set<String> allowed = new LinkedHashSet<>();
+    Set<String> embeddingFields = new LinkedHashSet<>();
     for (String type : nodeTypes) {
       List<String> fields = spec.nodeTypes().get(type);
       if (fields != null) {
-        allowed.addAll(fields);
+        embeddingFields.addAll(fields);
       }
     }
-    return allowed;
+    return embeddingFields;
   }
 
-  static Set<String> getAllowedPredicatesForNode(List<String> nodeTypes, EmbeddingSpec spec) {
-    Set<String> allowed = new LinkedHashSet<>();
-    for (String field : getAllowedFieldsForNode(nodeTypes, spec)) {
+  static Set<String> getEmbeddingPredicates(List<String> nodeTypes, EmbeddingSpec spec) {
+    Set<String> embeddingPredicates = new LinkedHashSet<>();
+    for (String field : getEmbeddingNodeFields(nodeTypes, spec)) {
       if (!NODE_TABLE_FIELDS.contains(field)) {
-        allowed.add(field);
+        embeddingPredicates.add(field);
       }
     }
-    return allowed;
+    return embeddingPredicates;
   }
 }

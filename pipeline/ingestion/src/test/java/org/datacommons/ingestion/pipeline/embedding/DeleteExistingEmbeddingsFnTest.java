@@ -23,6 +23,11 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Statement;
 import com.google.common.collect.Lists;
 import java.util.List;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.metrics.MetricNameFilter;
+import org.apache.beam.sdk.metrics.MetricQueryResults;
+import org.apache.beam.sdk.metrics.MetricResult;
+import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
@@ -73,7 +78,7 @@ public class DeleteExistingEmbeddingsFnTest {
 
   @Test
   public void testBuildDeleteMutations_pipeline() {
-    PCollection<String> subjectIds = pipeline.apply(Create.of("Count_Person"));
+    PCollection<String> subjectIds = pipeline.apply(Create.of("Count_Person", "Count_Person"));
 
     PCollection<Mutation> mutations =
         DeleteExistingEmbeddingsFn.buildDeleteMutations(
@@ -83,6 +88,20 @@ public class DeleteExistingEmbeddingsFnTest {
         DeleteExistingEmbeddingsFn.buildDeleteMutation(
             "NodeEmbedding", "base_text_embedding", List.of("Count_Person"));
     PAssert.that(mutations).containsInAnyOrder(expected);
-    pipeline.run();
+    PipelineResult result = pipeline.run();
+
+    MetricQueryResults metrics =
+        result
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            DeleteExistingEmbeddingsFn.class,
+                            "embedding_deleted_nodes:base_text_embedding"))
+                    .build());
+    List<MetricResult<Long>> counters = Lists.newArrayList(metrics.getCounters());
+    assertEquals(1, counters.size());
+    assertEquals(Long.valueOf(1L), counters.get(0).getCommitted());
   }
 }
