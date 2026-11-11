@@ -344,7 +344,8 @@ class PlaceAggregationGenerator:
           entities,
           extra_entities_id,
           {fingerprint_step1_sql} AS facet_id,
-          facet
+          facet,
+          CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM ParsedTS;
 
 
@@ -425,7 +426,8 @@ class PlaceAggregationGenerator:
             facet_id,
             extra_entities_id,
             date,
-            CAST(total_val AS STRING) AS value
+            CAST(total_val AS STRING) AS value,
+            CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM AggregatedObs;
         """
 

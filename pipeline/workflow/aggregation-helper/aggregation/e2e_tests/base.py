@@ -153,8 +153,8 @@ class AggregationIntegrationTestBase(unittest.TestCase):
             with self.database.batch() as batch:
                 batch.insert(
                     table='TimeSeries',
-                    columns=['variable_measured', 'entities', 'extra_entities_id', 'facet_id', 'facet'],
-                    values=self.mock_timeseries
+                    columns=['variable_measured', 'entities', 'extra_entities_id', 'facet_id', 'facet', 'last_update_timestamp'],
+                    values=[row + (spanner.COMMIT_TIMESTAMP,) for row in self.mock_timeseries]
                 )
             self.mock_timeseries = []
         if self.mock_observations:
@@ -162,8 +162,8 @@ class AggregationIntegrationTestBase(unittest.TestCase):
             with self.database.batch() as batch:
                 batch.insert(
                     table='Observation',
-                    columns=['variable_measured', 'entity1', 'extra_entities_id', 'facet_id', 'date', 'value'],
-                    values=self.mock_observations
+                    columns=['variable_measured', 'entity1', 'extra_entities_id', 'facet_id', 'date', 'value', 'last_update_timestamp'],
+                    values=[row + (spanner.COMMIT_TIMESTAMP,) for row in self.mock_observations]
                 )
             self.mock_observations = []
 

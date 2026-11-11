@@ -70,6 +70,7 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
         # under the output import provenance.
         self.add_observation('Count_Person', 'geoId/99', '2010', 500.0, import_name=output_import_name)
         # Add a stale edge under output import provenance
+        self.add_node('geoId/99', 'Stale State', types=['State'])
         self.add_edge('geoId/99', 'typeOf', 'State', output_import_name)
         
         self.flush_to_spanner()
@@ -149,6 +150,7 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
         
         # 3. Setup Stale Aggregated Data
         self.add_observation('Count_Person', 'geoId/99', '2010', 500.0, import_name=output_import_name)
+        self.add_node('geoId/99', 'Stale State', types=['State'])
         self.add_edge('geoId/99', 'typeOf', 'State', output_import_name)
         
         self.flush_to_spanner()
@@ -213,9 +215,11 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
         
         # 3. Setup Stale Aggregated Data for both A and B
         self.add_observation('Count_Person', 'geoId/99', '2010', 500.0, import_name=output_a, facet_id='facet_out_a')
+        self.add_node('geoId/99', 'Stale State A', types=['State'])
         self.add_edge('geoId/99', 'typeOf', 'State', output_a)
         
         self.add_observation('Count_Person', 'geoId/88', '2010', 600.0, import_name=output_b, facet_id='facet_out_b')
+        self.add_node('geoId/88', 'Stale State B', types=['State'])
         self.add_edge('geoId/88', 'typeOf', 'State', output_b)
         
         self.flush_to_spanner()
@@ -287,7 +291,9 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
         prov_gen_a = 'dc/base/generated/ImportA_LinkedDelTest' if self.is_base_dc else 'generated/ImportA_LinkedDelTest'
         prov_gen_b = 'dc/base/generated/ImportB_LinkedDelTest' if self.is_base_dc else 'generated/ImportB_LinkedDelTest'
         
+        self.add_node('geoId/06075', 'San Francisco County', types=['County'])
         self.add_edge('geoId/06075', 'linkedContainedInPlace', 'geoId/06', f'generated/{import_a}')
+        self.add_node('geoId/36061', 'New York County', types=['County'])
         self.add_edge('geoId/36061', 'linkedContainedInPlace', 'geoId/36', f'generated/{import_b}')
         self.flush_to_spanner()
         
@@ -306,11 +312,15 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
         prov_gen_b = 'dc/base/generated/ImportB_SVGDelTest' if self.is_base_dc else 'generated/ImportB_SVGDelTest'
         
         # Stale StatVarGroup edges under two different import provenances
+        self.add_node('Count_Person', 'Population', types=['StatisticalVariable'])
         self.add_edge('Count_Person', 'memberOf', 'dc/g/OldGroupA', f'generated/ImportA_SVGDelTest')
+        self.add_node('dc/g/OldGroupA', 'Old Group A', types=['StatVarGroup'])
         self.add_edge('dc/g/OldGroupA', 'specializationOf', 'dc/g/Root', f'generated/ImportB_SVGDelTest')
         # Stale StatVarGroup edge under the shared StatVarGroupsByConstraint provenance
+        self.add_node('dc/g/OldGroupShared', 'Old Group Shared', types=['StatVarGroup'])
         self.add_edge('dc/g/OldGroupShared', 'specializationOf', 'dc/g/Root', 'generated/StatVarGroupsByConstraint')
         # Existing linked relationship edge that should NOT be touched
+        self.add_node('geoId/06075', 'San Francisco County', types=['County'])
         self.add_edge('geoId/06075', 'linkedContainedInPlace', 'geoId/06', f'generated/ImportA_SVGDelTest')
         self.flush_to_spanner()
         
