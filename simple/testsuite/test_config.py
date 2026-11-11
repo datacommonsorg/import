@@ -381,49 +381,34 @@ def test_invalid_config(given, expect):
   b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
 
 
-def test_invalid_config_is_reported_like_any_failed_run():
-  """report.json, the ingestion report and the handshake all record it."""
-  files = {
-      **b.import_subdir("oecd", _USA),
-      **b.import_subdir("ilo", _FRA),
-      "ilo/config.json":
-          json.dumps({
-              **b.obs_config(b.OBS_MAPPINGS), "unknownTopLevelKey": True
-          }),
-  }
-  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd", "ilo"]})
-  message = result.error["message"]
-  assert message.startswith("<input>/ilo/config.json: Unknown key(s) in"
-                            " config.json: ['unknownTopLevelKey']")
-  assert result.output["handshake"] == {
-      "status":
-          "FAILURE",
-      "errors": [{
-          "file": "",
-          "errorType": "INVALID_CONFIGURATION",
-          "problemColumns": [],
-          "errorMessage": message,
-      }],
-  }
-  assert result.output["report"] == {
-      "status": "FAILURE",
-      "error": message,
-      "importFiles": {},
-  }
-  assert result.output["ingestion_report"] == {
-      "folders": [{
-          "folderName": "oecd"
-      }, {
-          "folderName": "ilo"
-      }],
-      "run": {
-          "folderNames": ["oecd", "ilo"],
-          "mode": "INGEST",
-          "outputPath": "<output>/preprocessor_reports/testsuite-run",
-          "status": "FAILURE",
-          "workflowExecutionId": "testsuite-run",
-      },
-  }
+# A bad subdirectory config.json in a multi-import run is covered end to end by
+# the e2e/config_validation_failure dataset.
+
+INVALID_CONFIG_FILES = [
+    Case("subdirectory config with malformed JSON",
+         given={
+             **b.import_subdir("oecd", _USA),
+             "ilo/config.json": "{not json",
+         },
+         expect=b.Fails("JSONDecodeError",
+                        "Expecting property name enclosed in double quotes",
+                        _INVALID)),
+    Case("subdirectory config that is not a JSON object",
+         given={
+             **b.import_subdir("oecd", _USA),
+             "ilo/config.json": "[]",
+         },
+         expect=b.Fails(
+             "ValueError",
+             "Expected JSON object in <input>/ilo/config.json, got list",
+             _INVALID)),
+]
+
+
+@cases(*INVALID_CONFIG_FILES)
+def test_invalid_config_file(given, expect):
+  result = b.run_dir(given, runner_kwargs={"import_names": ["ALL_IMPORTS"]})
+  b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
 
 
 def test_entities_block_in_an_import_subdirectory_config_is_rejected():
