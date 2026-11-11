@@ -47,6 +47,10 @@ Execution modes (`lib/run.py`):
 - `tiny_chunks`: with chunk and shard sizes shrunk so that every boundary is
   crossed even by tiny inputs.
 
+Modes patch the preprocessor in the test process, and worker processes see
+those patches only if forked. Runs therefore fail unless the multiprocessing
+start method is `fork` (the Linux default up to Python 3.13; not macOS).
+
 ## Writing a test
 
 Inputs and expectations are built separately. Input builders write exactly
