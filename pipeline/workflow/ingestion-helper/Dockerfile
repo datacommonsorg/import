@@ -12,18 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.12-slim
+# Python 3.13 because the 3.12 image still bundles pip 25.0.1, which has known
+# vulnerabilities. The tag pins Python 3.13 and Debian trixie, and picks up
+# upstream patch releases on each build.
+FROM python:3.13-slim-trixie
 
 # Copy uv binary
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
 
 # Allow statements and log messages to immediately appear in the logs
-ENV PYTHONUNBUFFERED True
+ENV PYTHONUNBUFFERED=True
+
+# Use the image's Python instead of letting uv download one
+ENV UV_PYTHON_DOWNLOADS=never
 
 WORKDIR /app
 
-# Install protobuf compiler and curl
-RUN apt-get update && apt-get install -y protobuf-compiler curl && rm -rf /var/lib/apt/lists/*
+# Pick up OS security fixes released after the base image was built
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency definition files to leverage Docker layer caching
 COPY pyproject.toml uv.lock __init__.py ./
