@@ -108,7 +108,9 @@ class SummaryGenerator:
       provenance: list of provenances configured for the file.
       file_type: Lowercase file extension, e.g. "csv" or "mcf".
     """
-    stats = self._folders.setdefault(folder, _FolderStats())
+    if folder not in self._folders:
+      self._folders[folder] = _FolderStats()
+    stats = self._folders[folder]
     stats.files_by_type[file_type] += 1
     for provenance_id in provenance:
       stats.files_by_provenance[provenance_id] += 1
@@ -176,32 +178,33 @@ class SummaryGenerator:
     metadata.outputPath = self._output_dir.full_path(self._report_dir_name())
     # Folders and provenances are sorted so the report is the same however
     # the files were found.
-    folders = [
-        self._build_folder(name, self._folders[name])
-        for name in sorted(self._folders)
-    ]
-    metadata.folderNames = [f.folderName for f in folders]
+    folder_names = sorted(self._folders)
+    metadata.folderNames = folder_names
+
+    folders = []
+    for name in folder_names:
+      stats = self._folders[name]
+      folders.append(self._build_folder(name, stats))
+
     # TODO: Add observation and node counts once they are recorded.
     return IngestionReport(run=metadata, folders=folders)
 
   def _build_folder(self, name: str, stats: _FolderStats) -> Folder:
     """Returns the report entry for one folder."""
-    provenances = [
-        Provenance(id=provenance_id,
-                   sourceId=self._provenance_data.get(
-                       provenance_id, {}).get("source_id") or "",
-                   fileCount=file_count) for provenance_id, file_count in
-        sorted(stats.files_by_provenance.items())
-    ]
-    return Folder(
-        folderName=name,
-        summary=FolderSummary(
-            files=FileCounts(count=sum(stats.files_by_type.values()),
-                             byType=dict(sorted(stats.files_by_type.items()))),
-            provenanceCount=len(provenances),
-        ),
-        provenances=provenances,
-    )
+    provenances = []
+    for provenance_id in sorted(stats.files_by_provenance):
+      source_id = ""
+      if provenance_id in self._provenance_data:
+        source_id = self._provenance_data[provenance_id]["source_id"] or ""
+      provenances.append(
+          Provenance(id=provenance_id,
+                     sourceId=source_id,
+                     fileCount=stats.files_by_provenance[provenance_id]))
+
+    files = FileCounts(count=sum(stats.files_by_type.values()),
+                       byType=dict(sorted(stats.files_by_type.items())))
+    summary = FolderSummary(files=files, provenanceCount=len(provenances))
+    return Folder(folderName=name, summary=summary, provenances=provenances)
 
   def _report_dir_name(self) -> str:
     """Returns the report folder, relative to the output dir.

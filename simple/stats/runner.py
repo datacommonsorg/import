@@ -465,21 +465,21 @@ class Runner:
           file_type=fspath.splitext(file.path)[1].lstrip(".").lower())
 
   def _input_folder_name(self, file: File) -> str:
-    """Returns the import folder an input file belongs to, for the report.
-
-    For bulk and combined loads, the import folder the file is under, e.g.
-    "health/data.csv" -> "health". Otherwise the input dir's name, e.g.
-    "<input dir>/oecd" for a single import, or the input dir itself when
-    config.json is at its root.
-    """
+    """Returns the import folder an input file belongs to, for the report."""
     if self.active_import_prefixes:
-      prefixes = [
-          prefix for prefix in self.active_import_prefixes
-          if file.path.startswith(prefix)
-      ]
-      if prefixes:
-        return max(prefixes, key=len).rstrip("/")
-    return fspath.basename(file._store.root_path.rstrip("/"))
+      # Bulk or combined load: use the import folder the file is under, e.g.
+      # prefix "health/" for "health/data.csv". With nested imports
+      # ("a/" and "a/b/"), the longest matching prefix wins.
+      best_prefix = ""
+      for prefix in self.active_import_prefixes:
+        if file.path.startswith(prefix) and len(prefix) > len(best_prefix):
+          best_prefix = prefix
+      if best_prefix:
+        return best_prefix.rstrip("/")
+
+    # Single import, root config or --config_file: use the input dir's name.
+    input_dir = file._store.root_path.rstrip("/")
+    return fspath.basename(input_dir)
 
   def _record_provenance_sources(self) -> None:
     """Records each known provenance's source in the ingestion report."""

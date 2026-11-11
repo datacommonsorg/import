@@ -103,7 +103,6 @@ class Folder(BaseModel):
                                  description="Totals for the folder")
   provenances: list[Provenance] = Field(
       default_factory=list, description="Provenances in this folder")
-  # TODO: Add configUri.
 
 
 class IngestionReport(BaseModel):

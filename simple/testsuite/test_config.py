@@ -160,6 +160,7 @@ def test_single_import_name_runs_only_that_subdirectory():
       },
       runner_kwargs={"import_names": ["oecd"]})
   b.assert_records(result.observations, [b.obs("country/USA", value=1)])
+  assert result.output["ingestion_report"]["run"]["folderNames"] == ["oecd"]
 
 
 def test_selected_import_names_run_only_those_subdirectories():
