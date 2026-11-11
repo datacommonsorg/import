@@ -14,14 +14,15 @@
 
 package org.datacommons.ingestion.pipeline.embedding;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -42,8 +43,8 @@ import org.datacommons.util.GraphUtils;
  */
 public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent> {
   private static final Gson GSON = new Gson();
-  private static final Set<String> NODE_TABLE_FIELDS =
-      Set.of(NodeRecord.COL_SUBJECT_ID, NodeRecord.COL_NAME);
+  private static final ImmutableSet<String> NODE_TABLE_FIELDS =
+      ImmutableSet.of(NodeRecord.COL_SUBJECT_ID, NodeRecord.COL_NAME);
   // Approximate max token cap (2048 tokens * ~4 chars/token) to be embedded.
   public static final int MAX_CHAR_LENGTH = 2048 * 4;
 
@@ -100,8 +101,11 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
       return null;
     }
 
-    Map<String, String> contentMap = buildBaseContentMap(subjectId, name, types, spec);
-    contentMap.putAll(extractPredicateProperties(pvs, types, spec));
+    ImmutableMap<String, String> contentMap =
+        ImmutableMap.<String, String>builder()
+            .putAll(buildBaseContentMap(subjectId, name, types, spec))
+            .putAll(extractPredicateProperties(pvs, types, spec))
+            .buildKeepingLast();
 
     if (contentMap.isEmpty()) {
       return null;
@@ -122,43 +126,44 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
         spec.taskType());
   }
 
-  static Map<String, String> buildBaseContentMap(
+  static ImmutableMap<String, String> buildBaseContentMap(
       String subjectId, String name, List<String> types, EmbeddingSpec spec) {
-    Map<String, String> contentMap = new LinkedHashMap<>();
-    Set<String> embeddingFields = getEmbeddingNodeFields(types, spec);
+    ImmutableSet<String> embeddingFields = getEmbeddingNodeFields(types, spec);
+    ImmutableMap.Builder<String, String> contentMap = ImmutableMap.builder();
     if (embeddingFields.contains(NodeRecord.COL_SUBJECT_ID)) {
       contentMap.put(NodeRecord.COL_SUBJECT_ID, subjectId);
     }
     if (embeddingFields.contains(NodeRecord.COL_NAME)) {
       contentMap.put(NodeRecord.COL_NAME, name);
     }
-    return contentMap;
+    return contentMap.buildOrThrow();
   }
 
   /**
    * Extracts configured predicate properties for a node from its {@link PropertyValues}, joining
    * multiple values for the same predicate with {@code ". "}.
    */
-  public static Map<String, String> extractPredicateProperties(
+  public static ImmutableMap<String, String> extractPredicateProperties(
       PropertyValues pvs, List<String> types, EmbeddingSpec spec) {
-    Set<String> embeddingPredicates = getEmbeddingPredicates(types, spec);
+    ImmutableSet<String> embeddingPredicates = getEmbeddingPredicates(types, spec);
     if (embeddingPredicates.isEmpty() || pvs == null) {
-      return Map.of();
+      return ImmutableMap.of();
     }
 
-    Map<String, String> result = new LinkedHashMap<>();
-    for (String predicate : embeddingPredicates) {
-      List<String> values =
-          GraphUtils.getPropertyValues(pvs.getPvsMap(), predicate).stream()
-              .map(String::trim)
-              .filter(v -> !v.isEmpty())
-              .sorted()
-              .toList();
-      if (!values.isEmpty()) {
-        result.put(predicate, String.join(". ", values));
-      }
-    }
-    return result;
+    return embeddingPredicates.stream()
+        .map(predicate -> Map.entry(predicate, extractSinglePredicateValues(pvs, predicate)))
+        .filter(entry -> !entry.getValue().isEmpty())
+        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  static String extractSinglePredicateValues(PropertyValues pvs, String predicate) {
+    ImmutableList<String> values =
+        GraphUtils.getPropertyValues(pvs.getPvsMap(), predicate).stream()
+            .map(String::trim)
+            .filter(v -> !v.isEmpty())
+            .sorted()
+            .collect(ImmutableList.toImmutableList());
+    return String.join(". ", values);
   }
 
   /**
@@ -172,27 +177,20 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
     return Long.toString(fingerprint);
   }
 
-  static Set<String> getEmbeddingNodeFields(List<String> nodeTypes, EmbeddingSpec spec) {
+  static ImmutableSet<String> getEmbeddingNodeFields(List<String> nodeTypes, EmbeddingSpec spec) {
     if (nodeTypes == null || nodeTypes.isEmpty()) {
-      return Set.of();
+      return ImmutableSet.of();
     }
-    Set<String> embeddingFields = new LinkedHashSet<>();
-    for (String type : nodeTypes) {
-      List<String> fields = spec.nodeTypes().get(type);
-      if (fields != null) {
-        embeddingFields.addAll(fields);
-      }
-    }
-    return embeddingFields;
+    return nodeTypes.stream()
+        .map(type -> spec.nodeTypes().get(type))
+        .filter(Objects::nonNull)
+        .flatMap(List::stream)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
-  static Set<String> getEmbeddingPredicates(List<String> nodeTypes, EmbeddingSpec spec) {
-    Set<String> embeddingPredicates = new LinkedHashSet<>();
-    for (String field : getEmbeddingNodeFields(nodeTypes, spec)) {
-      if (!NODE_TABLE_FIELDS.contains(field)) {
-        embeddingPredicates.add(field);
-      }
-    }
-    return embeddingPredicates;
+  static ImmutableSet<String> getEmbeddingPredicates(List<String> nodeTypes, EmbeddingSpec spec) {
+    return getEmbeddingNodeFields(nodeTypes, spec).stream()
+        .filter(field -> !NODE_TABLE_FIELDS.contains(field))
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

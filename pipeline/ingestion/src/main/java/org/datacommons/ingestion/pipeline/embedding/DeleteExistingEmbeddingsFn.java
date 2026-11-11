@@ -18,10 +18,9 @@ import com.google.cloud.spanner.KeyRange;
 import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Statement;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
@@ -141,8 +140,10 @@ public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
       return;
     }
 
-    Set<String> uniqueIds =
-        subjectIds.stream().filter(id -> id != null && !id.isEmpty()).collect(Collectors.toSet());
+    ImmutableSet<String> uniqueIds =
+        subjectIds.stream()
+            .filter(id -> id != null && !id.isEmpty())
+            .collect(ImmutableSet.toImmutableSet());
 
     deletedNodesCounter.inc(uniqueIds.size());
     receiver.output(buildDeleteMutation(embeddingTable, embeddingLabel, uniqueIds));

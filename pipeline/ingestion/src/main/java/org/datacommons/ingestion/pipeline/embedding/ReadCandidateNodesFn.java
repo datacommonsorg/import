@@ -14,10 +14,12 @@
 
 package org.datacommons.ingestion.pipeline.embedding;
 
-import java.util.ArrayList;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -47,7 +49,7 @@ public final class ReadCandidateNodesFn {
   public static PCollection<McfGraph> readCandidateNodes(
       PCollection<McfGraph> graphs, EmbeddingSpec spec) {
     String specId = spec.embeddingLabel();
-    Set<String> targetNodeTypes = Set.copyOf(spec.getNodeTypeNames());
+    ImmutableSet<String> targetNodeTypes = ImmutableSet.copyOf(spec.getNodeTypeNames());
 
     PCollection<McfGraph> filteredGraphs =
         graphs.apply(
@@ -57,8 +59,7 @@ public final class ReadCandidateNodesFn {
                   @ProcessElement
                   public void processElement(
                       @Element McfGraph graph, OutputReceiver<McfGraph> receiver) {
-                    extractCandidateGraphs(graph, targetNodeTypes).stream()
-                        .forEach(c -> receiver.output(c));
+                    extractCandidateGraphs(graph, targetNodeTypes).forEach(receiver::output);
                   }
                 }));
 
@@ -70,31 +71,34 @@ public final class ReadCandidateNodesFn {
    * non-empty {@code subject_id}, non-empty {@code name}, and at least one {@code typeOf} in {@code
    * targetNodeTypes}.
    */
-  static List<McfGraph> extractCandidateGraphs(McfGraph graph, Set<String> targetNodeTypes) {
+  static ImmutableList<McfGraph> extractCandidateGraphs(
+      McfGraph graph, Set<String> targetNodeTypes) {
     if (graph == null || graph.getNodesMap().isEmpty()) {
-      return List.of();
+      return ImmutableList.of();
     }
-    List<McfGraph> results = new ArrayList<>();
-    graph.getNodesMap().entrySet().stream()
+    return graph.getNodesMap().entrySet().stream()
         .filter(e -> !GraphUtils.isObservation(e.getValue()))
-        .forEach(
-            entry -> {
-              PropertyValues pvs = entry.getValue();
-              String dcid =
-                  McfUtil.stripNamespace(
-                      GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name()));
-              String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(entry.getKey());
-              String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name()).trim();
-              List<String> types =
-                  GraphUtils.getPropertyValues(pvs.getPvsMap(), GraphUtils.Property.typeOf.name());
-              if (!subjectId.isEmpty()
-                  && !name.isEmpty()
-                  && !types.isEmpty()
-                  && !Collections.disjoint(types, targetNodeTypes)) {
-                results.add(McfGraph.newBuilder().putNodes(subjectId, pvs).build());
-              }
-            });
-    return results;
+        .map(entry -> extractSingleCandidate(entry, targetNodeTypes))
+        .filter(Objects::nonNull)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  static McfGraph extractSingleCandidate(
+      Map.Entry<String, PropertyValues> entry, Set<String> targetNodeTypes) {
+    PropertyValues pvs = entry.getValue();
+    String dcid =
+        McfUtil.stripNamespace(GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name()));
+    String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(entry.getKey());
+    String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name()).trim();
+    List<String> types =
+        GraphUtils.getPropertyValues(pvs.getPvsMap(), GraphUtils.Property.typeOf.name());
+    if (!subjectId.isEmpty()
+        && !name.isEmpty()
+        && !types.isEmpty()
+        && !Collections.disjoint(types, targetNodeTypes)) {
+      return McfGraph.newBuilder().putNodes(subjectId, pvs).build();
+    }
+    return null;
   }
 
   /** Returns the normalized {@code subject_id} (DCID) of a single-node {@link McfGraph}. */
