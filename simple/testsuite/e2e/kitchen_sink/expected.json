@@ -165,28 +165,6 @@
           }
         },
         "observations": {
-          "dcid:obs_18306a8ac534a683eb1fa397123f8fbc77e4be1a54c7c7ff6b2ea6b1aa21222e": {
-            "@id": "dcid:obs_18306a8ac534a683eb1fa397123f8fbc77e4be1a54c7c7ff6b2ea6b1aa21222e",
-            "@type": "dcid:StatVarObservation",
-            "dcid:destination": {
-              "@id": "dcid:country/FRA"
-            },
-            "dcid:observationAbout": {
-              "@id": "dcid:country/USA"
-            },
-            "dcid:observationDate": 2020,
-            "dcid:provenance": {
-              "@id": "dcid:KitchenProvenance"
-            },
-            "dcid:value": 10,
-            "dcid:variableMeasured": {
-              "@id": "dcid:Count_Trip",
-              "dcid:observationProperties": [
-                "dcid:observationAbout",
-                "dcid:destination"
-              ]
-            }
-          },
           "dcid:obs_2dc3fb2fcbfbe9c0fbeba04247d6bfb9de4cda1edc515c711085993204b98a2a": {
             "@id": "dcid:obs_2dc3fb2fcbfbe9c0fbeba04247d6bfb9de4cda1edc515c711085993204b98a2a",
             "@type": "dcid:StatVarObservation",
@@ -265,6 +243,28 @@
               ]
             }
           },
+          "dcid:obs_40e4e80848da8dc1713c0fc5e970cc8701e1d766867225ea97246221266b8b01": {
+            "@id": "dcid:obs_40e4e80848da8dc1713c0fc5e970cc8701e1d766867225ea97246221266b8b01",
+            "@type": "dcid:StatVarObservation",
+            "dcid:destination": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationAbout": {
+              "@id": "dcid:country/FRA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:KitchenProvenance"
+            },
+            "dcid:value": 7,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Trip",
+              "dcid:observationProperties": [
+                "dcid:observationAbout",
+                "dcid:destination"
+              ]
+            }
+          },
           "dcid:obs_67c52bc86d852d7490faed5a10828baed6bfd2d0e5b99eae2066e48c2440af3f": {
             "@id": "dcid:obs_67c52bc86d852d7490faed5a10828baed6bfd2d0e5b99eae2066e48c2440af3f",
             "@type": "dcid:StatVarObservation",
@@ -301,20 +301,20 @@
               ]
             }
           },
-          "dcid:obs_e3db16a4e39af8db99372286075642e3b2ee3c4c3e2ee46891322da43592a1de": {
-            "@id": "dcid:obs_e3db16a4e39af8db99372286075642e3b2ee3c4c3e2ee46891322da43592a1de",
+          "dcid:obs_7cd867beda89318603f24904cde20bb5d4090b1ca71f75bc6a84b19e06f08775": {
+            "@id": "dcid:obs_7cd867beda89318603f24904cde20bb5d4090b1ca71f75bc6a84b19e06f08775",
             "@type": "dcid:StatVarObservation",
             "dcid:destination": {
-              "@id": "dcid:country/USA"
+              "@id": "dcid:country/FRA"
             },
             "dcid:observationAbout": {
-              "@id": "dcid:country/FRA"
+              "@id": "dcid:country/USA"
             },
             "dcid:observationDate": 2020,
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 7,
+            "dcid:value": 10,
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Trip",
               "dcid:observationProperties": [

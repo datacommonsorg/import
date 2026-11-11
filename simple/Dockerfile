@@ -51,5 +51,25 @@ COPY run.sh .
 # Make script executable.
 RUN chmod +x run.sh
 
+# TODO(b/583773160): Switch the runtime image to distroless, which doesn't ship
+# these packages, and replace run.sh with a Python entrypoint (distroless has no
+# shell).
+# Remove unused Debian packages from the base image, they bring in vulnerabilities.
+RUN dpkg --purge --force-all \
+        apt libapt-pkg7.0 \
+        bsdutils libblkid1 liblastlog2-2 libmount1 libsmartcols1 libuuid1 login mount util-linux \
+        diffutils \
+        libacl1 \
+        libattr1 \
+        libbz2-1.0 \
+        libncursesw6 ncurses-base ncurses-bin \
+        libpam-modules libpam-modules-bin libpam-runtime libpam0g \
+        libsqlite3-0 \
+        libsystemd0 libudev1 \
+        login.defs passwd \
+        tar \
+    && dpkg --purge --force-all perl-base \
+    && PYTHONPATH=/workspace/import/simple python3 -c "import stats.main, stats.runner"
+
 # Set the entrypoint to force bash execution
 ENTRYPOINT ["/bin/bash", "./run.sh"]

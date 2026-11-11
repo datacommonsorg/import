@@ -192,7 +192,44 @@ def test_rows_with_different_keys_get_different_ids():
   assert len(_ids(result)) == 2
 
 
+def test_dimension_order_in_the_config_does_not_change_the_id():
+  """Two files declare the same entity dimensions in opposite orders."""
+  header = b.OBS_HEADER + ["origin", "dest"]
+  row = b.obs_row() + ["country/FRA", "country/DEU"]
+  origin = {"dcid:origin": "origin"}
+  dest = {"dcid:destination": "dest"}
+  config = b.obs_config({**b.OBS_MAPPINGS, **origin, **dest}, pattern="a.csv")
+  config["inputFiles"].append({
+      **config["inputFiles"][-1],
+      "pattern": "b.csv",
+      "columnMappings": {
+          **b.OBS_MAPPINGS,
+          **dest,
+          **origin
+      },
+  })
+  result = b.run(
+      {
+          "a.csv": b.csv_file(row, header=header),
+          "b.csv": b.csv_file(row, header=header),
+      }, config)
+  assert result.error is None, result.error
+  assert len(result.observations) == 2
+  assert len(_ids(result)) == 1
+
+
 _COLLISION_SUMMARY = "Observation @ID Collision Summary:"
+
+
+def _collision_summary(caplog) -> list[str]:
+  """Returns the lines of the run's one collision summary."""
+  summaries = [
+      r.getMessage()
+      for r in caplog.records
+      if r.getMessage().startswith(_COLLISION_SUMMARY)
+  ]
+  assert len(summaries) == 1, summaries
+  return summaries[0].splitlines()
 
 
 def test_collisions_of_every_file_are_summarized(caplog):
@@ -217,13 +254,7 @@ def test_collisions_of_every_file_are_summarized(caplog):
   with caplog.at_level(logging.WARNING):
     result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
   assert result.error is None, result.error
-  summaries = [
-      r.getMessage()
-      for r in caplog.records
-      if r.getMessage().startswith(_COLLISION_SUMMARY)
-  ]
-  assert len(summaries) == 1, summaries
-  header, *details = summaries[0].splitlines()
+  header, *details = _collision_summary(caplog)
   assert header == (f"{_COLLISION_SUMMARY} Total of 2 observation @id"
                     " collisions detected across 2 file(s):")
   assert sorted(line for line in details if line.startswith("  File ")) == [
@@ -232,6 +263,47 @@ def test_collisions_of_every_file_are_summarized(caplog):
   ]
   samples = [line for line in details if line.startswith("    - @id=")]
   assert len(samples) == 2, details
+
+
+def test_collisions_across_files_are_summarized(caplog):
+  """
+  Two files that produce the same observation id collide.
+
+  Each file is imported by its own worker, which only sees its own file, so the
+  coordinator finds the collision. It is counted for the later file (in import
+  order), and the sample names the earlier one.
+  """
+  row = b.obs_row("country/X", value="1")
+  files = {
+      "provenance.mcf": b.PROVENANCE_MCF,
+      "case_x.csv": b.csv_file(row),
+      "case_y.csv": b.csv_file(row, b.obs_row("country/Y", value="1")),
+  }
+  with caplog.at_level(logging.WARNING):
+    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
+  assert result.error is None, result.error
+  header, file_line, sample = _collision_summary(caplog)
+  assert header == (f"{_COLLISION_SUMMARY} Total of 1 observation @id"
+                    " collisions detected across 1 file(s):")
+  assert file_line == "  File 'case_y.csv': 1 collision(s)"
+  assert sample.startswith("    - @id='dcid:obs_"), sample
+  assert sample.endswith(" also produced by 'case_x.csv'"), sample
+
+
+def test_files_with_the_same_name_in_two_imports_are_summarized_apart(caplog):
+  duplicate_rows = b.csv_file(b.obs_row(value="1"), b.obs_row(value="2"))
+  files = {
+      **b.import_subdir("alpha", duplicate_rows, provenance="AlphaProvenance"),
+      **b.import_subdir("beta", duplicate_rows, provenance="BetaProvenance"),
+  }
+  with caplog.at_level(logging.WARNING):
+    result = b.run_dir(files, runner_kwargs={"import_names": ["ALL_IMPORTS"]})
+  assert result.error is None, result.error
+  _, *details = _collision_summary(caplog)
+  assert sorted(line for line in details if line.startswith("  File ")) == [
+      "  File 'alpha/case.csv': 1 collision(s)",
+      "  File 'beta/case.csv': 1 collision(s)",
+  ]
 
 
 @known_bug(reason="the observation id is hashed before trimming whitespace, so"
