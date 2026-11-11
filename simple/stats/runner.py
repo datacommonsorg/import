@@ -29,6 +29,7 @@ from stats.data import FileValidationError
 from stats.data import ImportType
 from stats.data import Provenance
 from stats.data import Source
+from stats.data import strip_namespace
 from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
@@ -401,10 +402,8 @@ class Runner:
         os.getenv("WORKFLOW_EXECUTION_ID"))
 
   def run(self):
-    self.summary_generator.set_execution_metadata(
-        start_time=_utc_now(),
-        folder_names=self._report_folder_names(),
-        output_dir=self.output_dir)
+    self.summary_generator.set_execution_metadata(start_time=_utc_now(),
+                                                  output_dir=self.output_dir)
     try:
       self._run_imports_and_export_jsonld()
 
@@ -412,6 +411,7 @@ class Runner:
 
       # Report done.
       self.reporter.report_done()
+      self._record_provenance_sources()
       self.summary_generator.write_to_json(RunStatus.SUCCESS, _utc_now())
 
       # Close all file storage.
@@ -434,6 +434,7 @@ class Runner:
                                 error_message=str(e))
         ]
 
+      self._record_provenance_sources()
       self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now())
 
       for store in self.all_stores:
@@ -448,13 +449,36 @@ class Runner:
       )
       raise
 
-  def _report_folder_names(self) -> list[str]:
-    """Returns the individual import folders in the case of bulk reports"""
-    if self.import_names == [constants.ALL_IMPORTS]:
-      # The folders found under the input dir, e.g. "folderA/" -> "folderA".
-      return sorted(
-          prefix.rstrip("/") for prefix in self.active_import_prefixes or [])
-    return list(self.import_names or [])
+  def _record_input_files(self, files: list[File]) -> None:
+    """Records each matched input file in the ingestion report."""
+    for file in files:
+      self.summary_generator.record_input_file(
+          folder=self._input_folder_name(file),
+          provenance=[strip_namespace(self.config.provenance_name(file))],
+          file_type=fspath.splitext(file.path)[1].lstrip(".").lower())
+
+  def _input_folder_name(self, file: File) -> str:
+    """Returns the import folder an input file belongs to, for the report.
+
+    For bulk and combined loads, the import folder the file is under, e.g.
+    "health/data.csv" -> "health". Otherwise the input dir's name, e.g.
+    "<input dir>/oecd" for a single import, or the input dir itself when
+    config.json is at its root.
+    """
+    if self.active_import_prefixes:
+      prefixes = [
+          prefix for prefix in self.active_import_prefixes
+          if file.path.startswith(prefix)
+      ]
+      if prefixes:
+        return max(prefixes, key=len).rstrip("/")
+    return fspath.basename(file._store.root_path.rstrip("/"))
+
+  def _record_provenance_sources(self) -> None:
+    """Records each known provenance's source in the ingestion report."""
+    for provenance in self.nodes.provenances.values():
+      self.summary_generator.set_provenance_data(provenance.id,
+                                                 provenance.source_id)
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
@@ -720,6 +744,8 @@ class Runner:
   def _run_all_data_imports(self):
     """Finds the input files, validates CSV headers, and imports every file."""
     csv_files, mcf_files = self._find_and_filter_input_files()
+    # Before header validation, so failed runs still report their files.
+    self._record_input_files(csv_files + mcf_files)
 
     logging.info("Found %d CSV files to import", len(csv_files))
     logging.info("Found %d MCF files to import", len(mcf_files))

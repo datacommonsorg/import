@@ -16,10 +16,44 @@
   "ingestion_report": {
     "folders": [
       {
-        "folderName": "health"
+        "folderName": "health",
+        "provenances": [
+          {
+            "fileCount": 2,
+            "id": "healthProvenance",
+            "sourceId": "healthSource"
+          }
+        ],
+        "summary": {
+          "files": {
+            "byType": {
+              "csv": 1,
+              "mcf": 1
+            },
+            "count": 2
+          },
+          "provenanceCount": 1
+        }
       },
       {
-        "folderName": "population"
+        "folderName": "population",
+        "provenances": [
+          {
+            "fileCount": 2,
+            "id": "populationProvenance",
+            "sourceId": "populationSource"
+          }
+        ],
+        "summary": {
+          "files": {
+            "byType": {
+              "csv": 1,
+              "mcf": 1
+            },
+            "count": 2
+          },
+          "provenanceCount": 1
+        }
       }
     ],
     "run": {

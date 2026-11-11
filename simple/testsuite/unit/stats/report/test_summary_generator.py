@@ -19,8 +19,11 @@ import unittest
 from unittest import mock
 
 from stats.report.model.summary import ExecutionMetadata
+from stats.report.model.summary import FileCounts
 from stats.report.model.summary import Folder
+from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import Provenance
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
@@ -33,11 +36,9 @@ _END = "2026-10-29T00:05:00Z"
 
 def _generator(workflow_execution_id: str | None,
                output_dir: Dir) -> SummaryGenerator:
-  """A generator with execution metadata for two folders."""
+  """A generator with execution metadata."""
   generator = SummaryGenerator(workflow_execution_id)
-  generator.set_execution_metadata(start_time=_START,
-                                   folder_names=["oecd", "ilo"],
-                                   output_dir=output_dir)
+  generator.set_execution_metadata(start_time=_START, output_dir=output_dir)
   return generator
 
 
@@ -59,12 +60,17 @@ class TestSummaryGenerator(unittest.TestCase):
     self.assertIsNone(result)
     output_dir.open_file.assert_called_once()
 
-  def test_build_report_fills_run_metadata(self):
-    """The recorded metadata becomes the run block and one entry per folder."""
+  def test_build_report_fills_run_metadata_and_folders(self):
+    """Recorded files become per-folder and per-provenance counts, sorted."""
     with tempfile.TemporaryDirectory() as tmp, \
          create_store(tmp) as store:
-      report = _generator("wf-123",
-                          store.as_dir()).build_report(RunStatus.SUCCESS, _END)
+      generator = _generator("wf-123", store.as_dir())
+      generator.record_input_file("oecd", ["oecdProv"], "csv")
+      generator.record_input_file("ilo", ["iloProv"], "csv")
+      generator.record_input_file("oecd", ["oecdProv"], "csv")
+      generator.record_input_file("oecd", ["oecdSchema"], "mcf")
+      generator.set_provenance_data("oecdProv", "oecdSource")
+      report = generator.build_report(RunStatus.SUCCESS, _END)
 
     self.assertEqual(
         report,
@@ -74,11 +80,30 @@ class TestSummaryGenerator(unittest.TestCase):
                                   status=RunStatus.SUCCESS,
                                   startTime=_START,
                                   endTime=_END,
-                                  folderNames=["oecd", "ilo"],
+                                  folderNames=["ilo", "oecd"],
                                   outputPath=os.path.join(
                                       tmp, "preprocessor_reports", "wf-123")),
-            folders=[Folder(folderName="oecd"),
-                     Folder(folderName="ilo")]))
+            folders=[
+                Folder(folderName="ilo",
+                       summary=FolderSummary(files=FileCounts(count=1,
+                                                              byType={"csv": 1
+                                                                     }),
+                                             provenanceCount=1),
+                       provenances=[Provenance(id="iloProv", fileCount=1)]),
+                Folder(folderName="oecd",
+                       summary=FolderSummary(files=FileCounts(count=3,
+                                                              byType={
+                                                                  "csv": 2,
+                                                                  "mcf": 1
+                                                              }),
+                                             provenanceCount=2),
+                       provenances=[
+                           Provenance(id="oecdProv",
+                                      sourceId="oecdSource",
+                                      fileCount=2),
+                           Provenance(id="oecdSchema", fileCount=1),
+                       ]),
+            ]))
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""
