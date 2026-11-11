@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from stats.data import ImportType
+from stats.data import invalid_configuration
 from stats.data import strip_namespace
+from stats.data import ValidationErrorType
 from util.file_match import match
 from util.filesystem import File
 
@@ -106,6 +108,19 @@ class Config:
     """
 
   def __init__(self, data: dict) -> None:
+    """Validates `data`, the parsed config.json.
+
+    Raises:
+      ValueError: If `data` is not a valid config. Runner reports it as
+        INVALID_CONFIGURATION.
+    """
+    try:
+      self._parse(data)
+    except ValueError as e:
+      e.error_type = ValidationErrorType.INVALID_CONFIGURATION
+      raise
+
+  def _parse(self, data: dict) -> None:
     if not isinstance(data, dict):
       raise ValueError(
           f"config.json must be a JSON object. Got: {type(data).__name__}")
@@ -177,7 +192,7 @@ class Config:
       return []
     if isinstance(cfg, list):
       return cfg
-    raise ValueError(
+    raise invalid_configuration(
         f"{_DATA_DOWNLOAD_URL_FIELD} can only be a list, found: {cfg}")
 
   def import_type(self, input_file: File) -> ImportType:
