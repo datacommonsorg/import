@@ -41,7 +41,6 @@ public record EmbeddingSpec(
   /** Supported node filtering strategies from aggregation-helper. */
   public enum NodeFilterType {
     NO_FILTER,
-    NL_STATISTICAL_VARIABLE,
     ENTITY_TYPES
   }
 
