@@ -17,7 +17,6 @@ import logging
 from absl import app
 from absl import flags
 from freezegun import freeze_time
-import requests.adapters
 from stats import constants
 from stats.logger import initialize_logger
 from stats.runner import Runner
@@ -52,8 +51,9 @@ flags.DEFINE_integer(
     "max_workers",
     None,
     "The maximum number of worker processes that import files concurrently. "
-    "Defaults to the number of CPUs available to this process (respecting "
-    "CPU affinity and cpusets). Lower it to reduce peak memory, since each "
+    "Defaults to the number of CPUs available to this process, or twice that "
+    "(at most 32) when the input or output is on GCS; see "
+    "runner.default_max_workers. Lower it to reduce peak memory, since each "
     "worker holds the data of the file it is importing.",
     lower_bound=1,
 )
@@ -85,9 +85,6 @@ def _warn_if_mode_is_set():
 
 
 def _run():
-  # Configure requests adapter default pool size to support parallel GCS uploads
-  requests.adapters.DEFAULT_POOLSIZE = 32
-
   initialize_logger()
 
   _warn_if_mode_is_set()
