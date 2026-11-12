@@ -119,8 +119,9 @@ have defined in MCF.
 
 For `"entities"` imports, `dcid:dcid` and `dcid:typeOf` are always required:
 the column mapped to `dcid:dcid` gives each row's DCID, and the column mapped to
-`dcid:typeOf` gives its type (class DCID), for example `Author`. Each other
-mapped column's values are written under its mapped DCID. For example:
+`dcid:typeOf` gives its type (class DCID), for example `Author`. A row with
+either value empty fails the import, with an error listing those rows. Each
+other mapped column's values are written under its mapped DCID. For example:
 
 ```json
 "columnMappings": {
