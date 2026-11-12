@@ -29,8 +29,6 @@ from util.file_match import match
 from util.file_match import validate_pattern
 from util.filesystem import File
 
-# Default and only accepted variable import format
-_VARIABLE_PER_ROW_FORMAT = "variablePerRow"
 # Removed top-level block that used to define Class node metadata. Rejected
 # with a pointer to MCF rather than the generic unknown-key error.
 _REMOVED_ENTITIES_FIELD = "entities"
@@ -63,7 +61,6 @@ class InputFileConfig(_ConfigModel):
   pattern: str = ""
   provenance: str = ""
   import_type: ImportType = ImportType.OBSERVATIONS
-  format: str | None = None
   column_mappings: dict[str, str] = {}
   ignore_columns: list[str] = []
   observation_properties: dict[str, str | int | float] = {}
@@ -99,14 +96,6 @@ class InputFileConfig(_ConfigModel):
 
   @model_validator(mode="after")
   def _check_fields(self) -> "InputFileConfig":
-    # `format` is a no-op because every observations CSV is variable-per-row.
-    # It is still validated so that a config carrying a stale value fails
-    # loudly instead of having its CSVs silently misread.
-    if self.format and self.format != _VARIABLE_PER_ROW_FORMAT:
-      raise ValueError(
-          f"Unsupported format '{self.format}' for '{self.pattern}'. The only"
-          f" supported format is '{_VARIABLE_PER_ROW_FORMAT}', which is also"
-          " the default.")
     if self.import_type == ImportType.ENTITIES and not self.row_entity_type:
       raise ValueError(
           f"'rowEntityType' is required for 'importType':"

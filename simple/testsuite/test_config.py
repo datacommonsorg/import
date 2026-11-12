@@ -382,12 +382,6 @@ INVALID_CONFIGS = [
              "entities": {},
          },
          expect=b.Fails("ValueError", _ENTITIES_BLOCK_REMOVED, _INVALID)),
-    Case("unsupported format",
-         given=b.obs_config(b.OBS_MAPPINGS, format="variablePerColumn"),
-         expect=b.Fails(
-             "ValueError", "Unsupported format 'variablePerColumn' for"
-             " 'case*.csv'. The only supported format is 'variablePerRow'",
-             _INVALID)),
     Case("unsupported importType",
          given=b.obs_config(b.OBS_MAPPINGS, importType="Observations"),
          expect=b.Fails("ValueError", "Unsupported import type: Observations",
