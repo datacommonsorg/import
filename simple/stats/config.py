@@ -30,9 +30,6 @@ from util.file_match import match
 from util.file_match import validate_pattern
 from util.filesystem import File
 
-# Removed top-level block that used to define Class node metadata. Rejected
-# with a pointer to MCF rather than the generic unknown-key error.
-_REMOVED_ENTITIES_FIELD = "entities"
 # Deprecated top-level key: accepted, with a warning, but ignored.
 # Subdirectories of the input directory are always searched.
 _INCLUDE_INPUT_SUBDIRS_FIELD = "includeInputSubdirs"
@@ -124,7 +121,6 @@ class ImportConfig(_ConfigModel):
     if not isinstance(data, dict):
       raise ValueError(
           f"config.json must be a JSON object. Got: {type(data).__name__}")
-    _reject_entities_block(data)
     input_files = data.get("inputFiles", [])
     if not isinstance(input_files, list):
       raise ValueError(
@@ -153,29 +149,6 @@ def _drop_include_input_subdirs(data: dict) -> dict:
       " are imported. Remove it from config.json.",
       _INCLUDE_INPUT_SUBDIRS_FIELD)
   return {k: v for k, v in data.items() if k != _INCLUDE_INPUT_SUBDIRS_FIELD}
-
-
-def _reject_entities_block(data: dict) -> None:
-  """Raises ValueError if `data` has the removed top-level `entities` block.
-
-  Class nodes for entity types used to be defined in config.json. They must now
-  be defined in an MCF file like any other schema node.
-  """
-  # TODO(gmechali): Delete this migration error after a few releases; the
-  # generic unknown-key validation will then reject the block.
-  if _REMOVED_ENTITIES_FIELD not in data:
-    return
-  entities = data[_REMOVED_ENTITIES_FIELD]
-  found = (f" Found entries for: {sorted(entities)}."
-           if isinstance(entities, dict) and entities else "")
-  raise ValueError(
-      f"The top-level '{_REMOVED_ENTITIES_FIELD}' block in config.json is no "
-      f"longer supported.{found} Define each entity type that is not already in "
-      "the Data Commons schema as a Class node in an MCF file instead, e.g.:\n"
-      "  Node: dcid:Author\n"
-      "  typeOf: dcs:Class\n"
-      '  name: "Author"\n'
-      '  description: "A person who wrote an article"')
 
 
 def parse_config(data: Any) -> ImportConfig:

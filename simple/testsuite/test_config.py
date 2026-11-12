@@ -216,14 +216,6 @@ def test_global_nodes_go_to_the_alphabetically_first_import_folder():
 # Handshake error types of a run that fails on its config.json.
 _INVALID = ("INVALID_CONFIGURATION",)
 
-_ENTITIES_BLOCK_REMOVED = (
-    "The top-level 'entities' block in config.json is no longer supported.")
-_ENTITIES_BLOCK_MCF_HINT = (
-    "Define each entity type that is not already in the Data Commons schema"
-    " as a Class node in an MCF file instead, e.g.:\n"
-    "  Node: dcid:Author\n"
-    "  typeOf: dcs:Class")
-
 INVALID_CONFIGS = [
     Case(
         "inputFiles given as a map",
@@ -323,27 +315,6 @@ INVALID_CONFIGS = [
              " ['columnsToResolve', 'referenceColumns']. Write each"
              " reference as a cell value with a 'dcid:' prefix instead, e.g."
              " 'dcid:country/USA'.", _INVALID)),
-    Case("removed entities block is rejected with a pointer to MCF",
-         given={
-             **b.entities_config(mappings=b.AUTHOR_MAPPINGS),
-             "entities": {
-                 "Author": {
-                     "name": "Author",
-                     "description": "A person who wrote an article",
-                 },
-                 "Book": {},
-             },
-         },
-         expect=b.Fails(
-             "ValueError", "The top-level 'entities' block in config.json is"
-             " no longer supported. Found entries for: ['Author', 'Book']. " +
-             _ENTITIES_BLOCK_MCF_HINT, _INVALID)),
-    Case("empty entities block is rejected too",
-         given={
-             **b.obs_config(b.OBS_MAPPINGS),
-             "entities": {},
-         },
-         expect=b.Fails("ValueError", _ENTITIES_BLOCK_REMOVED, _INVALID)),
     Case("unsupported importType",
          given=b.obs_config(b.OBS_MAPPINGS, importType="Observations"),
          expect=b.Fails("ValueError", "Unsupported import type: Observations",
@@ -449,27 +420,6 @@ INVALID_CONFIG_FILES = [
 def test_invalid_config_file(given, expect):
   result = b.run_dir(given, runner_kwargs={"import_names": ["ALL_IMPORTS"]})
   b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
-
-
-def test_entities_block_in_an_import_subdirectory_config_is_rejected():
-  """Multi-import runs validate each subdirectory's config.json the same way."""
-  files = {
-      **b.import_subdir("oecd", _USA),
-      **b.import_subdir("ilo", _FRA),
-      "ilo/config.json":
-          json.dumps({
-              **b.obs_config(b.OBS_MAPPINGS), "entities": {
-                  "Author": {
-                      "name": "Author"
-                  }
-              }
-          }),
-  }
-  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd", "ilo"]})
-  b.assert_fails(result,
-                 "ValueError",
-                 f"<input>/ilo/config.json: {_ENTITIES_BLOCK_REMOVED}",
-                 handshake_error_types=_INVALID)
 
 
 def test_csv_without_column_mappings_in_an_import_subdirectory_is_rejected():
