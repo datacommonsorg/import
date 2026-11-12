@@ -126,7 +126,6 @@ class ImportConfig(_ConfigModel):
   # "yes" as the only true strings.
   group_stat_vars_by_property: bool = False
   include_input_subdirs: bool = False
-  import_name: str = ""
 
   @model_validator(mode="before")
   @classmethod

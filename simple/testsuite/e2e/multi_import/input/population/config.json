@@ -1,5 +1,4 @@
 {
-  "importName": "population_import",
   "inputFiles": [
     {"pattern": "*.mcf", "provenance": "dcid:populationProvenance"},
     {"pattern": "data.csv", "provenance": "dcid:populationProvenance",
