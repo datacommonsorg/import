@@ -26,13 +26,21 @@ The config parameters for the files to be imported should be specified in a `con
 }
 ```
 
+## Validation
+
+`config.json` is validated when the import starts, before any file is read.
+Unknown keys, values of the wrong type (for example a string where a list is
+expected), unsupported values and duplicate patterns are errors. Every problem
+is reported at once, and the run fails with an `INVALID_CONFIGURATION` error.
+
 ## `inputFiles`
 
 The top-level `inputFiles` field is a list of objects, one per group of input
 files. Each object identifies the files it applies to with a `pattern`, and
 carries the parameters for those files.
 
-If a file matches multiple patterns, the first match in list order wins.
+If a file matches multiple patterns, the first match in list order wins. Each
+pattern can only appear once.
 
 Example:
 
