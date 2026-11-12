@@ -30,8 +30,8 @@ from util.file_match import match
 from util.file_match import validate_pattern
 from util.filesystem import File
 
-# Deprecated top-level key: accepted, with a warning, but ignored.
-# Subdirectories of the input directory are always searched.
+# Deprecated top-level key: accepted, with a warning (see parse_config), but
+# ignored. Subdirectories of the input directory are always searched.
 _INCLUDE_INPUT_SUBDIRS_FIELD = "includeInputSubdirs"
 _REFERENCE_HINT = ("Write each reference as a cell value with a 'dcid:' prefix"
                    " instead, e.g. 'dcid:country/USA'.")
@@ -144,21 +144,28 @@ def _drop_include_input_subdirs(data: dict) -> dict:
   """Returns `data` without the deprecated `includeInputSubdirs`, if set."""
   if _INCLUDE_INPUT_SUBDIRS_FIELD not in data:
     return data
-  logging.warning(
-      "'%s' in config.json is deprecated and ignored: subdirectories of the"
-      " input directory are always searched, and patterns decide which files"
-      " are imported. Remove it from config.json.",
-      _INCLUDE_INPUT_SUBDIRS_FIELD)
   return {k: v for k, v in data.items() if k != _INCLUDE_INPUT_SUBDIRS_FIELD}
 
 
-def parse_config(data: Any) -> ImportConfig:
-  """Validates `data`, the parsed config.json.
+def _warn_if_include_input_subdirs(data: Any, path: str) -> None:
+  """Logs that `includeInputSubdirs`, if set in `data`, is ignored."""
+  if not isinstance(data, dict) or _INCLUDE_INPUT_SUBDIRS_FIELD not in data:
+    return
+  logging.warning(
+      "%s: '%s' is deprecated and ignored: subdirectories of the input"
+      " directory are always searched, and patterns decide which files are"
+      " imported. Remove it from this config.json.", path,
+      _INCLUDE_INPUT_SUBDIRS_FIELD)
+
+
+def parse_config(data: Any, path: str = "config.json") -> ImportConfig:
+  """Validates `data`, the parsed config.json at `path`.
 
   Raises:
     ValueError: Listing every problem found. Runner reports it as
       INVALID_CONFIGURATION.
   """
+  _warn_if_include_input_subdirs(data, path)
   try:
     return ImportConfig.model_validate(data)
   except ValidationError as e:

@@ -100,8 +100,25 @@ def test_files_in_subdirectories_are_imported_except_archives():
        b.obs("country/FRA", value=2)])
 
 
-# includeInputSubdirs is deprecated: any value is accepted, with a warning,
-# and subdirectories are searched regardless.
+# includeInputSubdirs is deprecated: any value is accepted, with a warning
+# naming its config.json, and subdirectories are searched regardless.
+
+_INCLUDE_INPUT_SUBDIRS_WARNING = (
+    ": 'includeInputSubdirs' is deprecated and ignored")
+
+
+def _include_input_subdirs_warnings(caplog) -> list[str]:
+  """The config.json paths, relative to the input dir, the warnings name."""
+  paths = []
+  for record in caplog.records:
+    path, found, _ = record.getMessage().partition(
+        _INCLUDE_INPUT_SUBDIRS_WARNING)
+    if found:
+      # Runner reads a copy of the input dir at <work dir>/input.
+      paths.append(path.split("/input/")[-1])
+  return paths
+
+
 @pytest.mark.parametrize("given", [True, "false"])
 def test_include_input_subdirs_is_ignored_with_a_warning(given, caplog):
   with caplog.at_level(logging.WARNING):
@@ -113,8 +130,22 @@ def test_include_input_subdirs_is_ignored_with_a_warning(given, caplog):
       result.observations,
       [b.obs("country/USA", value=1),
        b.obs("country/FRA", value=2)])
-  assert any("'includeInputSubdirs' in config.json is deprecated and ignored" in
-             r.getMessage() for r in caplog.records)
+  assert _include_input_subdirs_warnings(caplog) == ["config.json"]
+
+
+def test_include_input_subdirs_warning_names_its_import_config(caplog):
+  files = {
+      **b.import_subdir("oecd", _USA),
+      **b.import_subdir("ilo", _FRA),
+  }
+  ilo_config = json.loads(files["ilo/config.json"])
+  files["ilo/config.json"] = json.dumps({
+      **ilo_config, "includeInputSubdirs": True
+  })
+  with caplog.at_level(logging.WARNING):
+    result = b.run_dir(files, runner_kwargs={"import_names": ["oecd", "ilo"]})
+  assert result.error is None, result.error
+  assert _include_input_subdirs_warnings(caplog) == ["ilo/config.json"]
 
 
 _PLACE_MAPPINGS = {**b.OBS_MAPPINGS, "dcid:observationAbout": "place"}

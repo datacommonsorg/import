@@ -285,7 +285,7 @@ def _read_config_file(file: File) -> ImportConfig:
   """Reads and validates a `config.json` file."""
   config_data = _parse_config_json(file.read(), file.full_path())
   try:
-    return parse_config(config_data)
+    return parse_config(config_data, file.full_path())
   except ValueError as e:
     raise invalid_configuration(f"{file.full_path()}: {e}") from e
 
@@ -525,11 +525,12 @@ class Runner:
 
   def _read_config_in_dir(self, input_dir: Dir) -> None:
     """Reads and validates the `config.json` at the root of `input_dir`."""
-    raw_config = input_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
-                                     create_if_missing=False).read()
-    config_data = (_parse_config_json(
-        raw_config, constants.CONFIG_JSON_FILE_NAME) if raw_config else {})
-    self.config = Config(data=config_data)
+    file = input_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
+                               create_if_missing=False)
+    raw_config = file.read()
+    config_data = (_parse_config_json(raw_config, file.full_path())
+                   if raw_config else {})
+    self.config = Config(parse_config(config_data, file.full_path()))
 
   def _merge_configs(self, configs: list, base_dir: Dir):
     """Merges multiple config.json files into a single configuration.
