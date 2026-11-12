@@ -7,11 +7,14 @@ are consumed by the Data Commons ingestion pipeline (the "dcpbridge" workflow).
 ## Default usage
 
 ```shell
-python3 -m stats.main
+python3 -m stats.main --imports=<import>
 ```
 
-By default it reads input files from the `.data/input` folder and writes output
-to the `.data/output` folder.
+Each import is a subdirectory of the input directory with its own
+`config.json` (see [config.md](stats/config.md)). `--imports` is required: one
+import, several comma-separated ones, or `ALL_IMPORTS` for every subdirectory
+that has a `config.json`. By default it reads input files from the
+`.data/input` folder and writes output to the `.data/output` folder.
 
 ## Other options
 

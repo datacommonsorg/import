@@ -9,9 +9,15 @@
     ]
   },
   "ingestion_report": {
-    "folders": [],
+    "folders": [
+      {
+        "folderName": "nested_data_dir"
+      }
+    ],
     "run": {
-      "folderNames": [],
+      "folderNames": [
+        "nested_data_dir"
+      ],
       "mode": "INGEST",
       "outputPath": "<output>/preprocessor_reports/testsuite-run",
       "status": "SUCCESS",
@@ -95,13 +101,13 @@
   },
   "report": {
     "importFiles": {
-      "<input>/data/countries_a.csv": {
+      "<input>/nested_data_dir/data/countries_a.csv": {
         "status": "NOT_STARTED"
       },
-      "<input>/data/countries_b.csv": {
+      "<input>/nested_data_dir/data/countries_b.csv": {
         "status": "NOT_STARTED"
       },
-      "<input>/data/provenance.mcf": {
+      "<input>/nested_data_dir/data/provenance.mcf": {
         "status": "NOT_STARTED"
       }
     },

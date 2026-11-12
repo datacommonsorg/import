@@ -130,7 +130,7 @@ def test_include_input_subdirs_is_ignored_with_a_warning(given, caplog):
       result.observations,
       [b.obs("country/USA", value=1),
        b.obs("country/FRA", value=2)])
-  assert _include_input_subdirs_warnings(caplog) == ["config.json"]
+  assert _include_input_subdirs_warnings(caplog) == [f"{b.IMPORT}/config.json"]
 
 
 def test_include_input_subdirs_warning_names_its_import_config(caplog):
@@ -499,10 +499,15 @@ def test_csv_without_column_mappings_in_an_import_subdirectory_is_rejected():
 def test_missing_config_json_fails():
   result = b.run({"case.csv": _USA}, None)
   b.assert_fails(result, "FileNotFoundError",
-                 "File not found: <input>/config.json")
+                 f"File not found: <input>/{b.IMPORT}/config.json")
 
 
-def test_empty_input_directory_fails():
-  result = b.run_dir({})
-  b.assert_fails(result, "FileNotFoundError",
-                 "File not found: <input>/config.json")
+def test_a_run_without_imports_fails():
+  """Every import is a subdirectory with its own config.json; none is at the
+  root of the input dir."""
+  result = b.run_dir({"config.json": json.dumps(b.obs_config(b.OBS_MAPPINGS))})
+  b.assert_fails(result,
+                 "ValueError",
+                 "No imports to run. Pass --imports with the import"
+                 " subdirectories of the input directory to import",
+                 handshake_error_types=_INVALID)

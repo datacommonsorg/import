@@ -9,9 +9,15 @@
     ]
   },
   "ingestion_report": {
-    "folders": [],
+    "folders": [
+      {
+        "folderName": "kitchen_sink"
+      }
+    ],
     "run": {
-      "folderNames": [],
+      "folderNames": [
+        "kitchen_sink"
+      ],
       "mode": "INGEST",
       "outputPath": "<output>/preprocessor_reports/testsuite-run",
       "status": "SUCCESS",
@@ -305,19 +311,19 @@
   },
   "report": {
     "importFiles": {
-      "<input>/authors.csv": {
+      "<input>/kitchen_sink/authors.csv": {
         "status": "NOT_STARTED"
       },
-      "<input>/observations.csv": {
+      "<input>/kitchen_sink/observations.csv": {
         "status": "NOT_STARTED"
       },
-      "<input>/provenance.mcf": {
+      "<input>/kitchen_sink/provenance.mcf": {
         "status": "NOT_STARTED"
       },
-      "<input>/schema.mcf": {
+      "<input>/kitchen_sink/schema.mcf": {
         "status": "NOT_STARTED"
       },
-      "<input>/trips.csv": {
+      "<input>/kitchen_sink/trips.csv": {
         "status": "NOT_STARTED"
       }
     },

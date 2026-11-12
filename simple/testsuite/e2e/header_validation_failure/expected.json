@@ -17,9 +17,15 @@
     "status": "FAILURE"
   },
   "ingestion_report": {
-    "folders": [],
+    "folders": [
+      {
+        "folderName": "header_validation_failure"
+      }
+    ],
     "run": {
-      "folderNames": [],
+      "folderNames": [
+        "header_validation_failure"
+      ],
       "mode": "INGEST",
       "outputPath": "<output>/preprocessor_reports/testsuite-run",
       "status": "FAILURE",
@@ -32,7 +38,7 @@
   "report": {
     "error": "CSV Header Validation Failed! The following errors were found:\nFile 'data.csv': The CSV file 'data.csv' contains unmapped columns: ['notes']. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json.",
     "importFiles": {
-      "<input>/data.csv": {
+      "<input>/header_validation_failure/data.csv": {
         "status": "NOT_STARTED"
       }
     },

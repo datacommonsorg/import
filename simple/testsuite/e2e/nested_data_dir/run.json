@@ -1,3 +1,8 @@
 {
-  "description": "Files in a data/ subdirectory are found; only files matching an inputFiles pattern (glob countries_*.csv) are imported, and other.csv is ignored."
+  "description": "Files in a data/ subdirectory are found; only files matching an inputFiles pattern (glob countries_*.csv) are imported, and other.csv is ignored.",
+  "runner_kwargs": {
+    "import_names": [
+      "nested_data_dir"
+    ]
+  }
 }
