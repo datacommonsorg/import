@@ -36,6 +36,8 @@ from util.filesystem import File
 _DCID_PROPERTY = "dcid"
 _TYPE_OF_PROPERTY = "typeOf"
 _REQUIRED_PROPERTIES = (_DCID_PROPERTY, _TYPE_OF_PROPERTY)
+# Most rows listed per column in an empty-value error.
+_MAX_LISTED_ROWS = 10
 
 
 def _missing_required_mappings_error(
@@ -56,6 +58,12 @@ def _missing_required_mappings_error(
       " 'dcid:dcid' and the column holding its type to 'dcid:typeOf'.")
 
 
+def _empty_rows(column: pd.Series) -> list[int]:
+  """The rows of `column` with no value, numbered from 1."""
+  empty = column.isna() | (column.astype(str).str.strip() == "")
+  return [index + 1 for index in column.index[empty]]
+
+
 def _parse_object_ids(v_str: str) -> str | list[str]:
   """Splits comma-separated entity references and strips namespace prefixes."""
   if "," in v_str:
@@ -67,7 +75,7 @@ class EntitiesImporter(Importer):
   """Imports a single entities input file.
 
   Key behaviors at this time:
-  - `columnMappings` is required, and must map a `dcid:dcid` and a `dcid:typeOf` column: they give each row's DCID and type. Every other column must be mapped or ignored, and is encoded as property triples under its mapped predicate.
+  - `columnMappings` is required, and must map a `dcid:dcid` and a `dcid:typeOf` column: they give each row's DCID and type, so a row with either empty fails the file. Every other column must be mapped or ignored, and is encoded as property triples under its mapped predicate.
   - Cell values with a namespace prefix (e.g. `dcid:`) are entity references, encoded as object_id in the triples tables. Others are encoded as object_value.
     + Currently this importer does not resolve any entities and all entities are assumed to be pre-resolved into dcids.
     """
@@ -95,6 +103,7 @@ class EntitiesImporter(Importer):
       self.provenance_id = self.nodes.provenance_id(self.input_file)
       self._read_csv()
       self._drop_ignored_columns()
+      self._check_required_values()
       self._write_row_entity_triples()
       self.reporter.report_success()
     except Exception as e:
@@ -133,6 +142,27 @@ class EntitiesImporter(Importer):
   def _drop_ignored_columns(self):
     if self.ignore_columns:
       self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
+
+  def _check_required_values(self) -> None:
+    """Raises ValueError if a row has no DCID or type, before any is written."""
+    column_by_property = {
+        prop: col for col, prop in self.reverse_mappings.items()
+    }
+    problems = []
+    for prop in _REQUIRED_PROPERTIES:
+      column = column_by_property[prop]
+      rows = _empty_rows(self.df[column])
+      if rows:
+        problems.append(f"column '{column}' (mapped to 'dcid:{prop}') at"
+                        f" row(s) {rows[:_MAX_LISTED_ROWS]}")
+    if not problems:
+      return
+    error = ValueError(
+        f"Empty value(s) in entities CSV file '{self.input_file.path}': " +
+        "; ".join(problems) + ". Rows are numbered from 1, the first row after"
+        " the header. Every row needs a DCID and a type.")
+    error.file_path = self.input_file.path
+    raise error
 
   def _mapped_columns(self) -> pd.DataFrame:
     """Returns the mapped columns, renamed to their predicates."""
