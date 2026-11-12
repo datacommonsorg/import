@@ -282,7 +282,7 @@ class JsonLdStreamWriter(GraphWriter):
         import_name = "_".join(import_names)
 
     self.import_name = import_name or "default_import_name"
-    if self.import_name and "/" in self.import_name:
+    if "/" in self.import_name:
       self.import_name = self.import_name.replace("/", "_")
 
     if jsonld_dir_name:
