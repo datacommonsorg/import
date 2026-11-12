@@ -510,12 +510,12 @@ class Runner:
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
-    for file in files:.
+    for file in files:
       provenance_name = self.config.provenance_name(file)
+      provenance = [strip_namespace(provenance_name)] if provenance_name else []
       self.summary_generator.record_input_file(
           folder=self._input_folder_name(file),
-          provenance=[strip_namespace(provenance_name)]
-          if provenance_name else [],
+          provenance=provenance,
           file_type=fspath.splitext(file.path)[1].lstrip(".").lower())
 
   def _input_folder_name(self, file: File) -> str:
