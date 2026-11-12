@@ -1,7 +1,6 @@
 {
   "error": null,
   "handshake": {
-    "generateStatVarGroups": false,
     "importList": [
       {
         "graphPath": "<output>/jsonld/<run>/KitchenProvenance/**/*.jsonld",
@@ -38,6 +37,14 @@
             "dcid:domain": "kitchen.example.org",
             "dcid:name": "Kitchen Source",
             "dcid:url": "https://kitchen.example.org"
+          },
+          "dcid:c/g/Root": {
+            "@id": "dcid:c/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Custom Variables",
+            "dcid:specializationOf": {
+              "@id": "dcid:dc/g/Root"
+            }
           },
           "dcid:dc/g/Root": {
             "@id": "dcid:dc/g/Root",

@@ -121,10 +121,6 @@ class ImportConfig(_ConfigModel):
   """A whole config.json."""
 
   input_files: list[InputFileConfig] = []
-  # TODO(gmechali): groupStatVarsByProperty is slated for deprecation. Until
-  # then it keeps its historical leniency: any value, with "true", "1" and
-  # "yes" as the only true strings.
-  group_stat_vars_by_property: bool = False
   include_input_subdirs: bool = False
 
   @model_validator(mode="before")
@@ -140,13 +136,6 @@ class ImportConfig(_ConfigModel):
           "'inputFiles' must be a list of objects, each with a "
           f"'pattern' and a 'provenance'. Got: {type(input_files).__name__}")
     return data
-
-  @field_validator("group_stat_vars_by_property", mode="before")
-  @classmethod
-  def _lenient_bool(cls, value: Any) -> bool:
-    if isinstance(value, str):
-      return value.lower() in ("true", "1", "yes")
-    return bool(value)
 
   @model_validator(mode="after")
   def _check_unique_patterns(self) -> "ImportConfig":
@@ -294,9 +283,6 @@ class Config:
   def observation_properties(self,
                              input_file: File) -> dict[str, str | int | float]:
     return self._entry(input_file).observation_properties
-
-  def generate_hierarchy(self) -> bool:
-    return self.model.group_stat_vars_by_property
 
   def include_input_subdirs(self) -> bool:
     return self.model.include_input_subdirs

@@ -506,7 +506,6 @@ class Runner:
     else:
       handshake_payload = {
           "importList": json.dumps(self.trigger_workflow_info),
-          "generateStatVarGroups": bool(self.config.generate_hierarchy()),
       }
 
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"

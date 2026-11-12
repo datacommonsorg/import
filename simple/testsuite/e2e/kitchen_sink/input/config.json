@@ -41,6 +41,5 @@
         "dcid:author_country": "author_country"
       }
     }
-  ],
-  "groupStatVarsByProperty": true
+  ]
 }

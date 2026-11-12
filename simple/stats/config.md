@@ -165,12 +165,3 @@ Unlike other columns, it does not need a `columnMappings` entry.
 
 If `true`, recursively scans subdirectories of the input directory for files
 matching `inputFiles` patterns. Default is `false`.
-
-## `groupStatVarsByProperty`
-
-If `true`, requests a hierarchy of StatVarGroups generated from the properties
-of the variables in the dataset. Default is `false`.
-
-The importer does not build the hierarchy itself. It creates the custom root
-StatVarGroup and forwards the request to the ingestion pipeline as
-`generateStatVarGroups` in the handshake record.
