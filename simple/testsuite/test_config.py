@@ -284,7 +284,7 @@ INVALID_CONFIGS = [
          }]},
          expect=b.Fails(
              "ValueError", "Invalid entry in 'inputFiles': must specify"
-             " 'pattern' or 'filename'.", _INVALID)),
+             " a 'pattern'.", _INVALID)),
     Case("unknown top-level key",
          given={
              **b.obs_config(b.OBS_MAPPINGS),

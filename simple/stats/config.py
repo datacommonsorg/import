@@ -61,8 +61,6 @@ class InputFileConfig(_ConfigModel):
   """One `inputFiles` entry: the files it applies to and their parameters."""
 
   pattern: str = ""
-  # Undocumented alias of `pattern`, used when `pattern` is not set.
-  filename: str = ""
   provenance: str = ""
   import_type: ImportType = ImportType.OBSERVATIONS
   format: str | None = None
@@ -72,28 +70,22 @@ class InputFileConfig(_ConfigModel):
   row_entity_type: str = ""
   id_column: str = ""
 
-  @property
-  def key(self) -> str:
-    """The pattern that selects this entry's files."""
-    return self.pattern or self.filename
-
   @model_validator(mode="before")
   @classmethod
   def _check_entry(cls, data: Any) -> Any:
     if not isinstance(data, dict):
       raise ValueError("Invalid entry in 'inputFiles': must be a"
                        f" JSON object. Got: {data}")
-    if not (data.get("pattern") or data.get("filename")):
+    if not data.get("pattern"):
       raise ValueError("Invalid entry in 'inputFiles': must specify"
-                       f" 'pattern' or 'filename'. Got: {data}")
+                       f" a 'pattern'. Got: {data}")
     _reject_removed_keys(data)
     return data
 
-  @field_validator("pattern", "filename")
+  @field_validator("pattern")
   @classmethod
   def _check_pattern(cls, pattern: str) -> str:
-    if pattern:
-      validate_pattern(pattern)
+    validate_pattern(pattern)
     return pattern
 
   @field_validator("import_type", mode="before")
@@ -112,13 +104,13 @@ class InputFileConfig(_ConfigModel):
     # loudly instead of having its CSVs silently misread.
     if self.format and self.format != _VARIABLE_PER_ROW_FORMAT:
       raise ValueError(
-          f"Unsupported format '{self.format}' for '{self.key}'. The only"
+          f"Unsupported format '{self.format}' for '{self.pattern}'. The only"
           f" supported format is '{_VARIABLE_PER_ROW_FORMAT}', which is also"
           " the default.")
     if self.import_type == ImportType.ENTITIES and not self.row_entity_type:
       raise ValueError(
           f"'rowEntityType' is required for 'importType':"
-          f" '{ImportType.ENTITIES}', but entry '{self.key}' has none.")
+          f" '{ImportType.ENTITIES}', but entry '{self.pattern}' has none.")
     return self
 
 
@@ -132,9 +124,8 @@ def _reject_removed_keys(entry: dict) -> None:
   if not removed:
     return
   hints = dict.fromkeys(_REMOVED_ENTRY_KEYS[key] for key in removed)
-  pattern = entry.get("pattern") or entry.get("filename")
   raise ValueError("Removed key(s) in 'inputFiles' entry for"
-                   f" '{pattern}': {removed}. " + " ".join(hints))
+                   f" '{entry['pattern']}': {removed}. " + " ".join(hints))
 
 
 class ImportConfig(_ConfigModel):
@@ -171,7 +162,7 @@ class ImportConfig(_ConfigModel):
 
   @model_validator(mode="after")
   def _check_unique_patterns(self) -> "ImportConfig":
-    counts = collections.Counter(f.key for f in self.input_files)
+    counts = collections.Counter(f.pattern for f in self.input_files)
     duplicates = sorted(key for key, count in counts.items() if count > 1)
     if duplicates:
       raise ValueError(
@@ -251,12 +242,11 @@ def _describe_object(loc: tuple, data: Any) -> str:
   """Names the object at `loc`: config.json or an `inputFiles` entry.
 
   Errors inside an entry only occur once `_check_entry` accepted it, so the
-  entry is an object with a pattern or filename.
+  entry is an object with a pattern.
   """
   if len(loc) >= 2 and loc[0] == "inputFiles":
     entry = data["inputFiles"][loc[1]]
-    key = entry.get("pattern") or entry.get("filename")
-    return f"'inputFiles' entry for '{key}'"
+    return f"'inputFiles' entry for '{entry['pattern']}'"
   return "config.json"
 
 
@@ -285,7 +275,7 @@ class Config:
     self.model = data if isinstance(data, ImportConfig) else parse_config(data)
     # Patterns are unique, and dicts keep the config's order.
     self._input_files_config: dict[str, InputFileConfig] = {
-        f.key: f for f in self.model.input_files
+        f.pattern: f for f in self.model.input_files
     }
     # Cache of a file's full path to the pattern of the first entry that
     # matches it (or None), e.g. "path/to/foo1.csv" -> "foo*.csv".

@@ -301,13 +301,9 @@ def _parse_config_json(text: str, path: str) -> object:
 
 
 def _scope_input_file(entry: InputFileConfig, rel_dir: str) -> InputFileConfig:
-  """Prefixes the entry's `pattern` (or `filename`) with `rel_dir`."""
+  """Prefixes the entry's `pattern` with `rel_dir`."""
   return entry.model_copy(
-      update={
-          field: fspath.join(rel_dir, getattr(entry, field))
-          for field in ("pattern", "filename")
-          if getattr(entry, field)
-      })
+      update={"pattern": fspath.join(rel_dir, entry.pattern)})
 
 
 class Runner:
