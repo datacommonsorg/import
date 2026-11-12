@@ -326,8 +326,10 @@ class Runner:
     if max_workers is not None and max_workers < 1:
       raise ValueError(f"max_workers must be at least 1, got {max_workers}")
 
-    assert input_dir_path, "input_dir must be specified"
-    assert output_dir_path, "output_dir must be specified"
+    if not input_dir_path:
+      raise ValueError("input_dir must be specified")
+    if not output_dir_path:
+      raise ValueError("output_dir must be specified")
 
     self.input_dir_path = input_dir_path
     self.import_names = import_names
