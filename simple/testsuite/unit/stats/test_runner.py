@@ -90,6 +90,14 @@ def test_max_workers_must_be_positive(max_workers):
                   max_workers=max_workers)
 
 
+@pytest.mark.parametrize("input_dir, output_dir, missing",
+                         [("", "unused", "input_dir"),
+                          ("unused", "", "output_dir")])
+def test_input_and_output_dirs_are_required(input_dir, output_dir, missing):
+  with pytest.raises(ValueError, match=f"{missing} must be specified"):
+    runner.Runner(input_dir_path=input_dir, output_dir_path=output_dir)
+
+
 def _record_calls(monkeypatch, log_path, cls, method_name, detail) -> None:
   """Records calls to `cls.method_name` as "<pid> <detail>" lines in a file.
 
