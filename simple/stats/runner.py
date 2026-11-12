@@ -510,13 +510,19 @@ class Runner:
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
-    for file in files:
-      provenance_name = self.config.provenance_name(file)
-      provenance = [strip_namespace(provenance_name)] if provenance_name else []
-      self.summary_generator.record_input_file(
-          folder=self._input_folder_name(file),
-          provenance=provenance,
-          file_type=fspath.splitext(file.path)[1].lstrip(".").lower())
+    try:
+      for file in files:
+        provenance_name = self.config.provenance_name(file)
+        provenance = []
+        if provenance_name:
+          provenance = [strip_namespace(provenance_name)]
+        self.summary_generator.record_input_file(
+            folder=self._input_folder_name(file),
+            provenance=provenance,
+            file_type=fspath.splitext(file.path)[1].lstrip(".").lower())
+    except Exception:  # The report must never fail the run.
+      logging.exception(
+          "Failed to record input files for the ingestion report.")
 
   def _input_folder_name(self, file: File) -> str:
     """Returns the import folder an input file belongs to, for the report."""
@@ -537,9 +543,13 @@ class Runner:
 
   def _record_provenance_sources(self) -> None:
     """Records each known provenance's source in the ingestion report."""
-    for provenance in self.nodes.provenances.values():
-      self.summary_generator.set_provenance_data(provenance.id,
-                                                 provenance.source_id)
+    try:
+      for provenance in self.nodes.provenances.values():
+        self.summary_generator.set_provenance_data(provenance.id,
+                                                   provenance.source_id)
+    except Exception:  # The report must never fail the run.
+      logging.exception(
+          "Failed to record provenance sources for the ingestion report.")
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
