@@ -273,6 +273,11 @@ INVALID_CONFIGS = [
         expect=b.Fails(
             "ValueError", "'inputFiles' must be a list of objects, each with a"
             " 'pattern' and a 'provenance'. Got: dict", _INVALID)),
+    Case("inputFiles entry that is not an object",
+         given={"inputFiles": ["case*.csv"]},
+         expect=b.Fails(
+             "ValueError", "Invalid entry in 'inputFiles': must be a JSON"
+             " object. Got: case*.csv", _INVALID)),
     Case("inputFiles entry without a pattern",
          given={"inputFiles": [{
              "provenance": f"dcid:{b.PROVENANCE}"

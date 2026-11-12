@@ -119,6 +119,10 @@ class InputFileConfig(BaseModel):
     return self
 
 
+# The entry of a file that no `inputFiles` entry matches: every field defaults.
+_NO_ENTRY = InputFileConfig.model_construct()
+
+
 def _keys_set(model: BaseModel) -> set[str]:
   """The config.json keys set in the object `model` was validated from."""
   fields = type(model).model_fields
@@ -241,16 +245,15 @@ def _render_errors(error: ValidationError, data: Any) -> str:
 
 
 def _describe_object(loc: tuple, data: Any) -> str:
-  """Names the object at `loc`: config.json or an `inputFiles` entry."""
+  """Names the object at `loc`: config.json or an `inputFiles` entry.
+
+  Errors inside an entry only occur once `_check_entry` accepted it, so the
+  entry is an object with a pattern or filename.
+  """
   if len(loc) >= 2 and loc[0] == _INPUT_FILES_FIELD:
-    try:
-      entry = data[_INPUT_FILES_FIELD][loc[1]]
-      key = entry.get("pattern") or entry.get("filename")
-    except (AttributeError, IndexError, KeyError, TypeError):
-      key = None
-    if key:
-      return f"'{_INPUT_FILES_FIELD}' entry for '{key}'"
-    return f"'{_INPUT_FILES_FIELD}' entry {loc[1]}"
+    entry = data[_INPUT_FILES_FIELD][loc[1]]
+    key = entry.get("pattern") or entry.get("filename")
+    return f"'{_INPUT_FILES_FIELD}' entry for '{key}'"
   return "config.json"
 
 
@@ -281,11 +284,8 @@ class Config:
     self._input_files_config: dict[str, InputFileConfig] = {
         f.key: f for f in self.model.input_files
     }
-    # If input file paths are specified with wildcards - e.g. "gs://bucket/foo*.csv",
-    # this dict maintains a mapping from actual file path to the wildcard key
-    # for fast lookup.
-    # e.g. "foo1.csv" -> "foo*.csv", "foo2.csv" -> "foo*.csv",
-    # "path/to/foo.csv" -> "**/foo.csv, etc.
+    # Cache of a file's full path to the pattern of the first entry that
+    # matches it (or None), e.g. "path/to/foo1.csv" -> "foo*.csv".
     self._config_key_by_full_path: dict[str, str | None] = {}
 
   def patterns(self) -> list[str]:
@@ -296,38 +296,30 @@ class Config:
     return self.model.data_download_url
 
   def import_type(self, input_file: File) -> ImportType:
-    cfg = self.for_file(input_file)
-    return cfg.import_type if cfg else ImportType.OBSERVATIONS
+    return self._entry(input_file).import_type
 
   def column_mappings(self, input_file: File) -> dict[str, str]:
-    cfg = self.for_file(input_file)
-    return cfg.column_mappings if cfg else {}
+    return self._entry(input_file).column_mappings
 
   def id_column(self, input_file: File) -> str:
-    cfg = self.for_file(input_file)
-    return cfg.id_column if cfg else ""
+    return self._entry(input_file).id_column
 
   def ignore_columns(self, input_file: File) -> list[str]:
-    cfg = self.for_file(input_file)
-    return cfg.ignore_columns if cfg else []
+    return self._entry(input_file).ignore_columns
 
   def provenance_name(self, input_file: File) -> str:
-    cfg = self.for_file(input_file)
-    return cfg.provenance if cfg else ""
+    return self._entry(input_file).provenance
 
   def row_entity_type(self, input_file: File) -> str:
-    cfg = self.for_file(input_file)
-    return cfg.row_entity_type if cfg else ""
+    return self._entry(input_file).row_entity_type
 
   def entity_columns(self, input_file: File) -> list[str]:
-    cfg = self.for_file(input_file)
-    if not cfg:
-      return []
-    return cfg.reference_columns or cfg.columns_to_resolve
+    entry = self._entry(input_file)
+    return entry.reference_columns or entry.columns_to_resolve
 
-  def observation_properties(self, input_file: File) -> dict[str, str]:
-    cfg = self.for_file(input_file)
-    return cfg.observation_properties if cfg else {}
+  def observation_properties(self,
+                             input_file: File) -> dict[str, str | int | float]:
+    return self._entry(input_file).observation_properties
 
   def generate_hierarchy(self) -> bool:
     return self.model.group_stat_vars_by_property
@@ -370,6 +362,10 @@ class Config:
 
     key = self._config_key_by_full_path[input_file.full_path()]
     return self._input_files_config.get(key) if key else None
+
+  def _entry(self, input_file: File) -> InputFileConfig:
+    """The entry for `input_file`, or an empty one (all defaults) if none."""
+    return self.for_file(input_file) or _NO_ENTRY
 
   def _find_first_matching_config_key(self, input_file: File) -> str | None:
     for input_file_pattern in self._input_files_config.keys():
