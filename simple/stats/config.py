@@ -105,6 +105,7 @@ def _reject_removed_keys(entry: dict) -> None:
   removed = sorted(key for key in entry if key in _REMOVED_ENTRY_KEYS)
   if not removed:
     return
+  # Each hint once, in key order: both reference keys share one.
   hints = dict.fromkeys(_REMOVED_ENTRY_KEYS[key] for key in removed)
   raise ValueError("Removed key(s) in 'inputFiles' entry for"
                    f" '{entry['pattern']}': {removed}. " + " ".join(hints))

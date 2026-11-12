@@ -105,8 +105,9 @@ Maps DCIDs to the CSV's column headings. There are no built-in default column
 names, and no column heading is used as a DCID on its own.
 
 Every column in the CSV must be either mapped in `columnMappings` or listed in
-`ignoreColumns`. Otherwise the import fails with one error that lists all the unmapped columns.
-A CSV whose entry has no `columnMappings` fails the import as well.
+`ignoreColumns`. Otherwise the import fails with one error that lists all the
+unmapped columns. A CSV whose entry has no `columnMappings` fails the import as
+well.
 Each property may be mapped from only one column. Keys that differ only by
 namespace name the same property, so mapping both `dcid:unit` and `unit` fails
 the import too. Likewise, each column may be mapped to only one property.
