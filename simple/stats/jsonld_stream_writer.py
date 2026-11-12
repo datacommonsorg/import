@@ -28,7 +28,6 @@ import uuid
 from google.api_core.exceptions import GoogleAPICallError
 from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
-from google.cloud import storage
 import pandas as pd
 import requests
 from stats import constants
@@ -39,6 +38,7 @@ from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import create_store
 from util.filesystem import File
+from util.filesystem import gcs_client
 
 DCID_URL = "https://datacommons.org/browser/"
 
@@ -517,15 +517,7 @@ class JsonLdStreamWriter(GraphWriter):
     bucket_name = parts[0]
     blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
 
-    client = storage.Client()
-
-    # Configure connection pool size for concurrent GCS uploads
-    adapter = requests.adapters.HTTPAdapter(
-        pool_connections=_UPLOAD_CONCURRENCY, pool_maxsize=_UPLOAD_CONCURRENCY)
-    client._http.mount("https://", adapter)
-    client._http.mount("http://", adapter)
-
-    bucket = client.bucket(bucket_name)
+    bucket = gcs_client().bucket(bucket_name)
 
     gcs_retry = Retry(
         initial=1.0,
