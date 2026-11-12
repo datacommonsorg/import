@@ -7,6 +7,8 @@ USAGE="Script to process stats with simple importer.
 Usage: $(basename $0) [Options]
 Options:
   -i <dir>        Input directory to process
+  -n <imports>    Imports to run: comma-separated subdirectories of the input
+                    directory, or ALL_IMPORTS
   -o <dir>        Output folder for stats importer. Default: $OUTPUT_DIR
   -m <dcpbridge>  Mode of operation for simple importer. Default: $MODE
   -j <jar>        DC Import java jar file.
@@ -48,6 +50,7 @@ function parse_options {
   while (( $# > 0 )); do
     case $1 in
       -i) shift; INPUT_DIR=$(readlink -f "$1");;
+      -n) shift; IMPORTS="$1";;
       -o) shift; OUTPUT_DIR="$1";;
       -m) shift; MODE="$1";;
       -j) shift; DC_IMPORT_JAR="$1";;
@@ -133,8 +136,8 @@ function setup {
 
 # Check parameters for simple_import
 function check_simple_import {
-  if [[ "$INPUT_DIR" == "" ]]; then
-    echo_fatal "No input directory. Specify the '-i' command line option.
+  if [[ "$INPUT_DIR" == "" || "$IMPORTS" == "" ]]; then
+    echo_fatal "No input directory or imports. Specify the '-i' and '-n' command line options.
 $USAGE"
   fi
 }
@@ -148,6 +151,7 @@ function simple_import {
   # Build options for simple importer
   local importer_options=""
   [[ -n "$INPUT_DIR" ]] && importer_options="$importer_options --input_dir=$INPUT_DIR"
+  [[ -n "$IMPORTS" ]] && importer_options="$importer_options --imports=$IMPORTS"
   [[ -n "$MODE" ]] && importer_options="$importer_options --mode=$MODE"
   [[ -n "$OUTPUT_DIR" ]] && importer_options="$importer_options --output_dir=$OUTPUT_DIR"
   mkdir -p $OUTPUT_DIR

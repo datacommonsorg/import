@@ -27,8 +27,11 @@ flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
                     "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
-flags.DEFINE_list("imports", [],
-                  "The names of the imports (subdirectories under input_dir).")
+flags.DEFINE_list(
+    "imports", [],
+    "Required. The imports to run: one or more comma-separated subdirectories"
+    f" of input_dir, each with its own config.json, or {constants.ALL_IMPORTS}"
+    " for every subdirectory that has one.")
 flags.DEFINE_string(
     "mode",
     "",

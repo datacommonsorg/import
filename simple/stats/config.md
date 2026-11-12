@@ -1,6 +1,8 @@
 # Importer Config
 
 The config parameters for the files to be imported should be specified in a `config.json` file.
+Each import is a subdirectory of the input directory with its own `config.json`,
+and every run names the imports it runs with `--imports`.
 
 ## Sample `config.json`
 
@@ -164,7 +166,7 @@ custom dimension properties) applied as defaults to every row in the file.
 
 ## Subdirectories
 
-Files in subdirectories of the input directory are matched against the
+Files in subdirectories of an import's directory are matched against the
 `inputFiles` patterns like any other file, except those under an `archives/`
 directory, which are never imported.
 

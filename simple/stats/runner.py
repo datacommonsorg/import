@@ -59,6 +59,12 @@ from util.filesystem import join_path
 from util.filesystem import Store
 
 _ARCHIVES_DIR_NAME = "archives"
+# Every run names its imports: each is a subdirectory of the input dir with its
+# own config.json.
+_NO_IMPORTS_ERROR = (
+    "No imports to run. Pass --imports with the import subdirectories of the"
+    " input directory to import, e.g. --imports=oecd or --imports=oecd,ilo, or"
+    f" --imports={constants.ALL_IMPORTS} for all of them.")
 # Upper bound on the threads that validate CSV headers. Header validation reads
 # only the first rows of each file and spends its time waiting on storage (often
 # GCS), so it is bounded independently of the CPU count; 32 matches the GCS
@@ -373,6 +379,8 @@ class Runner:
   def _load_config(self) -> None:
     """Opens the input store, and reads and validates the config."""
     imports = self.import_names or []
+    if not imports:
+      raise invalid_configuration(_NO_IMPORTS_ERROR)
 
     # Case A: Bulk Load (ALL_IMPORTS)
     if imports == [constants.ALL_IMPORTS]:
@@ -392,15 +400,10 @@ class Runner:
           f"{fspath.dirname(c.path)}/" for c in configs)
 
     # Case C: Single Import
-    elif imports:
+    else:
       import_dir = join_path(self.input_dir_path, imports[0])
       logging.info("Using import specific directory: %s", import_dir)
       input_store = self._open_input_store(import_dir)
-      self._read_config_in_dir(input_store.as_dir())
-
-    # Case D: Default action (config at root)
-    else:
-      input_store = self._open_input_store(self.input_dir_path)
       self._read_config_in_dir(input_store.as_dir())
 
     # The input dir is searched recursively, so it must not hold the output.

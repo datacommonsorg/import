@@ -16,8 +16,10 @@ End-to-end: these input files produce exactly this output, in every mode.
 
 Each folder under e2e/ is one dataset:
 
-  e2e/<name>/input/        the input directory (config.json + data files)
-  e2e/<name>/run.json      description, plus optional "runner_kwargs"
+  e2e/<name>/input/        the input directory: one subdirectory per import,
+                           each with its config.json and data files
+  e2e/<name>/run.json      description and "runner_kwargs", which name the
+                           imports to run
   e2e/<name>/expected.json the canonical output (see lib/canonical.py):
                            every JSON-LD record per import folder, the
                            report.json summary, the workflow handshake, the
