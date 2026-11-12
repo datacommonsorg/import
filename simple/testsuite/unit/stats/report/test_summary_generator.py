@@ -65,10 +65,10 @@ class TestSummaryGenerator(unittest.TestCase):
     with tempfile.TemporaryDirectory() as tmp, \
          create_store(tmp) as store:
       generator = _generator("wf-123", store.as_dir())
-      generator.record_input_file("oecd", ["oecdProv"], "csv")
-      generator.record_input_file("ilo", ["iloProv"], "csv")
-      generator.record_input_file("oecd", ["oecdProv"], "csv")
-      generator.record_input_file("oecd", ["oecdSchema"], "mcf")
+      generator.record_input_file("oecd", ["oecdProv"], "oecd/a.csv")
+      generator.record_input_file("ilo", ["iloProv"], "ilo/b.csv")
+      generator.record_input_file("oecd", ["oecdProv"], "oecd/c.CSV")
+      generator.record_input_file("oecd", ["oecdSchema"], "oecd/schema.mcf")
       generator.set_provenance_data("oecdProv", "oecdSource")
       report = generator.build_report(RunStatus.SUCCESS, _END)
 

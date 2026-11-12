@@ -68,8 +68,8 @@ class Provenance(BaseModel):
   """One entry in `folders[].provenances[]`."""
 
   id: str = Field(description="Provenance DCID")
-  sourceId: str = Field(default="",
-                        description="DCID of the provenance's source, if known")
+  sourceId: str | None = Field(
+      default=None, description="DCID of the provenance's source, if known")
   fileCount: int = Field(
       default=0, description="Input files imported under this provenance")
   # TODO: Add observations, dateRange, node counts by type and

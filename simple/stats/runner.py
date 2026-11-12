@@ -31,7 +31,6 @@ from stats.data import ImportType
 from stats.data import invalid_configuration
 from stats.data import Provenance
 from stats.data import Source
-from stats.data import strip_namespace
 from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
@@ -450,12 +449,9 @@ class Runner:
                                                   output_dir=self.output_dir)
 
   def run(self):
-    start_time = _utc_now()
-    summary_started = False
+    self._start_summary(_utc_now())
     try:
       self._load_config()
-      self._start_summary(start_time)
-      summary_started = True
 
       self._run_imports_and_export_jsonld()
 
@@ -463,8 +459,7 @@ class Runner:
 
       # Report done.
       self.reporter.report_done()
-      self._record_provenance_sources()
-      self.summary_generator.write_to_json(RunStatus.SUCCESS, _utc_now())
+      self._write_report(RunStatus.SUCCESS)
 
       # Close all file storage.
       for store in self.all_stores:
@@ -487,14 +482,7 @@ class Runner:
                                 error_message=str(e))
         ]
 
-      # The config failed to load: start the summary so a report is still
-      # written.
-      if not summary_started:
-        self._start_summary(start_time)
-      # Without a loaded config there are no provenances to report.
-      if self.nodes:
-        self._record_provenance_sources()
-      self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now())
+      self._write_report(RunStatus.FAILURE)
 
       for store in self.all_stores:
         try:
@@ -510,19 +498,11 @@ class Runner:
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
-    try:
-      for file in files:
-        provenance_name = self.config.provenance_name(file)
-        provenance = []
-        if provenance_name:
-          provenance = [strip_namespace(provenance_name)]
-        self.summary_generator.record_input_file(
-            folder=self._input_folder_name(file),
-            provenance=provenance,
-            file_type=fspath.splitext(file.path)[1].lstrip(".").lower())
-    except Exception:  # The report must never fail the run.
-      logging.exception(
-          "Failed to record input files for the ingestion report.")
+    for file in files:
+      self.summary_generator.record_input_file(
+          folder=self._input_folder_name(file),
+          provenance=[self.nodes.provenance_id(file)],
+          file_path=file.path)
 
   def _input_folder_name(self, file: File) -> str:
     """Returns the import folder an input file belongs to, for the report."""
@@ -543,13 +523,15 @@ class Runner:
 
   def _record_provenance_sources(self) -> None:
     """Records each known provenance's source in the ingestion report."""
-    try:
-      for provenance in self.nodes.provenances.values():
-        self.summary_generator.set_provenance_data(provenance.id,
-                                                   provenance.source_id)
-    except Exception:  # The report must never fail the run.
-      logging.exception(
-          "Failed to record provenance sources for the ingestion report.")
+    for provenance in self.nodes.provenances.values():
+      self.summary_generator.set_provenance_data(provenance.id,
+                                                 provenance.source_id)
+
+  def _write_report(self, status: RunStatus) -> None:
+    """Writes the ingestion report with the run's final status."""
+    if self.nodes:  # No provenances if the config failed to load.
+      self._record_provenance_sources()
+    self.summary_generator.write_to_json(status, _utc_now())
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""

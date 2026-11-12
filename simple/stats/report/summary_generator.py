@@ -18,9 +18,11 @@ raised.
 """
 
 from collections import Counter
+from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
 import logging
+import os
 
 from stats import constants
 from stats.data import FileValidationError
@@ -77,7 +79,7 @@ class SummaryGenerator:
     # Provenance metadata, keyed by provenance DCID.
     self._provenance_data: dict[str, dict] = {}
     # Counts per import folder, keyed by folder name.
-    self._folders: dict[str, _FolderStats] = {}
+    self._folders: dict[str, _FolderStats] = defaultdict(_FolderStats)
     # TODO: Add containers for merged FileSummary counts, node counts and
     # errors.
 
@@ -100,16 +102,15 @@ class SummaryGenerator:
     self._output_dir = output_dir
 
   def record_input_file(self, folder: str, provenance: list[str],
-                        file_type: str) -> None:
+                        file_path: str) -> None:
     """Records one matched input file, before it is imported.
 
     Args:
       folder: Import folder the file belongs to.
-      provenance: list of provenances configured for the file.
-      file_type: Lowercase file extension, e.g. "csv" or "mcf".
+      provenance: IDs of the provenances configured for the file.
+      file_path: Path of the file; its extension is the file type.
     """
-    if folder not in self._folders:
-      self._folders[folder] = _FolderStats()
+    file_type = os.path.splitext(file_path)[1].lstrip(".").lower()
     stats = self._folders[folder]
     stats.files_by_type[file_type] += 1
     for provenance_id in provenance:
@@ -193,9 +194,8 @@ class SummaryGenerator:
     """Returns the report entry for one folder."""
     provenances = []
     for provenance_id in sorted(stats.files_by_provenance):
-      source_id = ""
-      if provenance_id in self._provenance_data:
-        source_id = self._provenance_data[provenance_id]["source_id"] or ""
+      source_id = self._provenance_data.get(provenance_id,
+                                            {}).get("source_id") or None
       provenances.append(
           Provenance(id=provenance_id,
                      sourceId=source_id,
