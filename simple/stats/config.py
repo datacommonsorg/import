@@ -216,12 +216,13 @@ def _describe_object(loc: tuple, data: Any) -> str:
 
 
 def _describe_location(loc: tuple, data: Any) -> str:
-  """Names the value at `loc`, e.g. 'ignoreColumns' in an inputFiles entry."""
-  if len(loc) >= 3 and loc[0] == "inputFiles":
-    field = ".".join(str(part) for part in loc[2:])
-    return f"'{field}' in {_describe_object(loc[:2], data)}"
-  field = ".".join(str(part) for part in loc)
-  return f"'{field}' in config.json"
+  """Names the value at `loc`, e.g. 'ignoreColumns' in an inputFiles entry.
+
+  Only fields of an `inputFiles` entry get pydantic's own errors: every other
+  problem is raised by our validators, with its own message.
+  """
+  field = ".".join(str(part) for part in loc[2:])
+  return f"'{field}' in {_describe_object(loc[:2], data)}"
 
 
 class Config:
