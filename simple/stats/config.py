@@ -14,6 +14,7 @@
 """The import config specified via config.json: its schema and accessors."""
 
 import collections
+import logging
 from typing import Any
 
 from pydantic import BaseModel
@@ -32,6 +33,9 @@ from util.filesystem import File
 # Removed top-level block that used to define Class node metadata. Rejected
 # with a pointer to MCF rather than the generic unknown-key error.
 _REMOVED_ENTITIES_FIELD = "entities"
+# Deprecated top-level key: accepted, with a warning, but ignored.
+# Subdirectories of the input directory are always searched.
+_INCLUDE_INPUT_SUBDIRS_FIELD = "includeInputSubdirs"
 _REFERENCE_HINT = ("Write each reference as a cell value with a 'dcid:' prefix"
                    " instead, e.g. 'dcid:country/USA'.")
 # Removed `inputFiles` entry keys, rejected with how to migrate rather than
@@ -121,7 +125,6 @@ class ImportConfig(_ConfigModel):
   """A whole config.json."""
 
   input_files: list[InputFileConfig] = []
-  include_input_subdirs: bool = False
 
   @model_validator(mode="before")
   @classmethod
@@ -135,7 +138,7 @@ class ImportConfig(_ConfigModel):
       raise ValueError(
           "'inputFiles' must be a list of objects, each with a "
           f"'pattern' and a 'provenance'. Got: {type(input_files).__name__}")
-    return data
+    return _drop_include_input_subdirs(data)
 
   @model_validator(mode="after")
   def _check_unique_patterns(self) -> "ImportConfig":
@@ -146,6 +149,18 @@ class ImportConfig(_ConfigModel):
           f"Duplicate pattern(s) in 'inputFiles': {duplicates}. Each"
           " pattern can only have one entry.")
     return self
+
+
+def _drop_include_input_subdirs(data: dict) -> dict:
+  """Returns `data` without the deprecated `includeInputSubdirs`, if set."""
+  if _INCLUDE_INPUT_SUBDIRS_FIELD not in data:
+    return data
+  logging.warning(
+      "'%s' in config.json is deprecated and ignored: subdirectories of the"
+      " input directory are always searched, and patterns decide which files"
+      " are imported. Remove it from config.json.",
+      _INCLUDE_INPUT_SUBDIRS_FIELD)
+  return {k: v for k, v in data.items() if k != _INCLUDE_INPUT_SUBDIRS_FIELD}
 
 
 def _reject_entities_block(data: dict) -> None:
@@ -283,9 +298,6 @@ class Config:
   def observation_properties(self,
                              input_file: File) -> dict[str, str | int | float]:
     return self._entry(input_file).observation_properties
-
-  def include_input_subdirs(self) -> bool:
-    return self.model.include_input_subdirs
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""

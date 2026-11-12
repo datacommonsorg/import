@@ -14,7 +14,9 @@
 """Config: how config.json selects input files, and how bad configs fail."""
 
 import json
+import logging
 
+import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
@@ -78,46 +80,41 @@ PATTERNS = [
 
 @cases(*PATTERNS)
 def test_input_files_pattern_matching(given, expect):
-  result = b.run(_PATTERN_FILES, {
-      "includeInputSubdirs": True,
-      **b.obs_config(b.OBS_MAPPINGS, pattern=given),
-  })
+  result = b.run(_PATTERN_FILES, b.obs_config(b.OBS_MAPPINGS, pattern=given))
   b.assert_records(result.observations,
                    [b.obs(about, value=val) for about, val in expect])
 
 
-def test_files_in_subdirectories_are_skipped_by_default():
-  result = b.run({
-      "case.csv": _USA,
-      "nested/case_deeper.csv": _FRA
-  }, b.obs_config(b.OBS_MAPPINGS))
-  b.assert_records(result.observations, [b.obs("country/USA", value=1)])
+_NESTED_FILES = {
+    "case.csv": _USA,
+    "nested/case_deeper.csv": _FRA,
+    "archives/case_old.csv": _DEU,
+}
 
 
-INCLUDE_INPUT_SUBDIRS = [
-    Case("true picks up nested files",
-         given=True,
-         expect=[("country/USA", 1), ("country/FRA", 2)]),
-    Case("string true, as documented, picks up nested files",
-         given="true",
-         expect=[("country/USA", 1), ("country/FRA", 2)]),
-    Case("string false skips nested files",
-         given="false",
-         expect=[("country/USA", 1)]),
-]
+def test_files_in_subdirectories_are_imported_except_archives():
+  result = b.run(_NESTED_FILES, b.obs_config(b.OBS_MAPPINGS))
+  b.assert_records(
+      result.observations,
+      [b.obs("country/USA", value=1),
+       b.obs("country/FRA", value=2)])
 
 
-@cases(*INCLUDE_INPUT_SUBDIRS)
-def test_include_input_subdirs(given, expect):
-  result = b.run({
-      "case.csv": _USA,
-      "nested/case_deeper.csv": _FRA
-  }, {
-      "includeInputSubdirs": given,
-      **b.obs_config(b.OBS_MAPPINGS, pattern="**/case*.csv")
-  })
-  b.assert_records(result.observations,
-                   [b.obs(about, value=val) for about, val in expect])
+# includeInputSubdirs is deprecated: any value is accepted, with a warning,
+# and subdirectories are searched regardless.
+@pytest.mark.parametrize("given", [True, "false"])
+def test_include_input_subdirs_is_ignored_with_a_warning(given, caplog):
+  with caplog.at_level(logging.WARNING):
+    result = b.run(_NESTED_FILES, {
+        "includeInputSubdirs": given,
+        **b.obs_config(b.OBS_MAPPINGS)
+    })
+  b.assert_records(
+      result.observations,
+      [b.obs("country/USA", value=1),
+       b.obs("country/FRA", value=2)])
+  assert any("'includeInputSubdirs' in config.json is deprecated and ignored" in
+             r.getMessage() for r in caplog.records)
 
 
 _PLACE_MAPPINGS = {**b.OBS_MAPPINGS, "dcid:observationAbout": "place"}
@@ -371,13 +368,6 @@ INVALID_CONFIGS = [
          expect=b.Fails(
              "ValueError", "Invalid 'columnMappings' in 'inputFiles' entry for"
              " 'case*.csv': Input should be a valid dictionary", _INVALID)),
-    Case("includeInputSubdirs that is not a boolean",
-         given={
-             **b.obs_config(b.OBS_MAPPINGS), "includeInputSubdirs": "maybe"
-         },
-         expect=b.Fails(
-             "ValueError", "Invalid 'includeInputSubdirs' in config.json:"
-             " Input should be a valid boolean", _INVALID)),
     Case("duplicate pattern",
          given={
              "inputFiles": [
@@ -409,12 +399,9 @@ def test_every_config_problem_is_reported_at_once():
                         ignoreColumns="notes",
                         otherFileKey=True,
                         unknownFileKey=True)
-  result = b.run_csv(_USA, {
-      **config, "includeInputSubdirs": "maybe",
-      "unknownTopLevelKey": True
-  })
+  result = b.run_csv(_USA, {**config, "unknownTopLevelKey": True})
   b.assert_fails(
-      result, "ValueError", "Found 4 problems in config.json:\n"
+      result, "ValueError", "Found 3 problems in config.json:\n"
       "- Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys"
       " are: [", _INVALID)
   for problem in [
@@ -422,8 +409,6 @@ def test_every_config_problem_is_reported_at_once():
       " ['otherFileKey', 'unknownFileKey']. Allowed keys are: [",
       "\n- Invalid 'ignoreColumns' in 'inputFiles' entry for 'case*.csv':"
       " Input should be a valid list",
-      "\n- Invalid 'includeInputSubdirs' in config.json: Input should be a"
-      " valid boolean",
   ]:
     assert problem in result.error["message"]
 

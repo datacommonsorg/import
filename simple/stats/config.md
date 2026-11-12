@@ -161,7 +161,11 @@ Optional, for `"entities"` imports. The column whose cell value provides each
 row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
 Unlike other columns, it does not need a `columnMappings` entry.
 
-## `includeInputSubdirs`
+## Subdirectories
 
-If `true`, recursively scans subdirectories of the input directory for files
-matching `inputFiles` patterns. Default is `false`.
+Files in subdirectories of the input directory are matched against the
+`inputFiles` patterns like any other file, except those under an `archives/`
+directory, which are never imported.
+
+`includeInputSubdirs` is deprecated and ignored: subdirectories are always
+searched. A config that still sets it is accepted, with a warning in the log.

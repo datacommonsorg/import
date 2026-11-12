@@ -401,10 +401,8 @@ class Runner:
       input_store = self._open_input_store(self.input_dir_path)
       self._read_config_in_dir(input_store.as_dir())
 
-    # New option to traverse subdirs of the input dir. Defaults to false.
-    self.include_input_subdirs = self.config.include_input_subdirs()
-    if self.include_input_subdirs:
-      _check_not_overlapping(self.input_store, self.output_store)
+    # The input dir is searched recursively, so it must not hold the output.
+    _check_not_overlapping(self.input_store, self.output_store)
 
     self.nodes = Nodes(self.config)
     if self.max_workers is None:
@@ -548,8 +546,7 @@ class Runner:
       input_files.extend(
           _scope_input_file(entry, rel_dir) for entry in config.input_files)
 
-    self.config = Config(
-        ImportConfig(input_files=input_files, include_input_subdirs=True))
+    self.config = Config(ImportConfig(input_files=input_files))
 
   def _find_configs_in_dir(self, directory: Dir) -> list:
     """Finds all config.json files in a directory, excluding archives."""
@@ -632,8 +629,7 @@ class Runner:
 
   def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
     """Discovers, filters, sorts, and returns matched CSV and MCF files."""
-    input_files = self.input_store.as_dir().all_files(
-        self.include_input_subdirs)
+    input_files = self.input_store.as_dir().all_files(include_subdirs=True)
     csv_files: list[File] = []
     mcf_files: list[File] = []
 

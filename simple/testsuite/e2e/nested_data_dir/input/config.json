@@ -1,5 +1,4 @@
 {
-  "includeInputSubdirs": true,
   "inputFiles": [
     {"pattern": "*.mcf", "provenance": "dcid:KitchenProvenance"},
     {"pattern": "countries_*.csv", "provenance": "dcid:KitchenProvenance",
