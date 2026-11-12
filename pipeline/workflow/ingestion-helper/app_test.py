@@ -394,7 +394,7 @@ class TestMain(unittest.TestCase):
         )
 
     @patch('routes.imports.import_utils.get_ingestion_metrics')
-    def test_update_ingestion_history_retry(self, mock_get_ingestion_metrics):
+    def test_update_ingestion_history_rollback(self, mock_get_ingestion_metrics):
         mock_spanner_client = MagicMock()
         app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
@@ -409,7 +409,7 @@ class TestMain(unittest.TestCase):
 
         payload = {
             "workflowId": "wf-123",
-            "status": "RETRY",
+            "status": "ROLLBACK",
             "stage": "dataflow",
             "jobId": "job-456",
             "importList": [{"importName": "import1"}]
@@ -424,7 +424,7 @@ class TestMain(unittest.TestCase):
         )
         mock_spanner_client.update_ingestion_history.assert_called_once_with(
             workflow_id="wf-123",
-            status="RETRY",
+            status="ROLLBACK",
             stage="dataflow",
             job_id="job-456",
             ingested_imports=["import1"],
