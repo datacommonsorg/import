@@ -45,7 +45,7 @@ class EntitiesImporter(Importer):
   Key behaviors at this time:
   - `columnMappings` is required. Every column must be mapped or ignored, except the id column. Each mapped column is encoded as property triples under its mapped predicate.
   - If an id column was configured, it will be used as the entity dcid. Else a new dcid will be generated for each entity. The id column is only written as a property if it is mapped.
-  - Columns specified as entity columns will be encoded as object_id in the triples tables. Others will be encoded as object_value.
+  - Cell values with a namespace prefix (e.g. `dcid:`) are entity references, encoded as object_id in the triples tables. Others are encoded as object_value.
     + Currently this importer does not resolve any entities and all entities are assumed to be pre-resolved into dcids.
     """
 
@@ -65,11 +65,6 @@ class EntitiesImporter(Importer):
     self.id_column = self.config.id_column(self.input_file)
     # Map from CSV column name to the predicate its values are written under.
     self.reverse_mappings = self.get_reverse_column_mappings()
-    # Predicates of the columns holding entity references.
-    self.entity_columns = {
-        self.reverse_mappings.get(col, col)
-        for col in self.config.entity_columns(self.input_file)
-    }
 
     self.df = pd.DataFrame()
 
@@ -120,9 +115,6 @@ class EntitiesImporter(Importer):
     if self.ignore_columns:
       self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
 
-  def _is_entity_reference_column(self, col: str) -> bool:
-    return col in self.entity_columns
-
   def _property_columns(self) -> pd.DataFrame:
     """Returns the mapped columns, renamed to their predicates.
 
@@ -147,7 +139,7 @@ class EntitiesImporter(Importer):
       if pd.isna(v):
         continue
       v_str = str(v)
-      if self._is_entity_reference_column(k) or has_namespace_prefix(v_str):
+      if has_namespace_prefix(v_str):
         prop_object_ids[k] = _parse_object_ids(v_str)
       else:
         prop_object_values[k] = v

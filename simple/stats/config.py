@@ -34,7 +34,14 @@ _VARIABLE_PER_ROW_FORMAT = "variablePerRow"
 # Removed top-level block that used to define Class node metadata. Rejected
 # with a pointer to MCF rather than the generic unknown-key error.
 _REMOVED_ENTITIES_FIELD = "entities"
-_REFERENCE_COLUMN_FIELDS = ("columnsToResolve", "referenceColumns")
+_REFERENCE_HINT = ("Write each reference as a cell value with a 'dcid:' prefix"
+                   " instead, e.g. 'dcid:country/USA'.")
+# Removed `inputFiles` entry keys, rejected with how to migrate rather than
+# the generic unknown-key error.
+_REMOVED_ENTRY_KEYS = {
+    "columnsToResolve": _REFERENCE_HINT,
+    "referenceColumns": _REFERENCE_HINT,
+}
 
 
 class _ConfigModel(BaseModel):
@@ -64,8 +71,6 @@ class InputFileConfig(_ConfigModel):
   observation_properties: dict[str, str | int | float] = {}
   row_entity_type: str = ""
   id_column: str = ""
-  columns_to_resolve: list[str] = []
-  reference_columns: list[str] = []
 
   @property
   def key(self) -> str:
@@ -81,6 +86,7 @@ class InputFileConfig(_ConfigModel):
     if not (data.get("pattern") or data.get("filename")):
       raise ValueError("Invalid entry in 'inputFiles': must specify"
                        f" 'pattern' or 'filename'. Got: {data}")
+    _reject_removed_keys(data)
     return data
 
   @field_validator("pattern", "filename")
@@ -109,14 +115,7 @@ class InputFileConfig(_ConfigModel):
           f"Unsupported format '{self.format}' for '{self.key}'. The only"
           f" supported format is '{_VARIABLE_PER_ROW_FORMAT}', which is also"
           " the default.")
-    is_entities = self.import_type == ImportType.ENTITIES
-    reference_fields = sorted(_keys_set(self) & set(_REFERENCE_COLUMN_FIELDS))
-    if reference_fields and not is_entities:
-      raise ValueError(
-          f"'{reference_fields[0]}' is only supported for 'importType':"
-          f" '{ImportType.ENTITIES}', but entry '{self.key}' has"
-          f" importType '{self.import_type}'.")
-    if is_entities and not self.row_entity_type:
+    if self.import_type == ImportType.ENTITIES and not self.row_entity_type:
       raise ValueError(
           f"'rowEntityType' is required for 'importType':"
           f" '{ImportType.ENTITIES}', but entry '{self.key}' has none.")
@@ -127,10 +126,15 @@ class InputFileConfig(_ConfigModel):
 _NO_ENTRY = InputFileConfig.model_construct()
 
 
-def _keys_set(model: BaseModel) -> set[str]:
-  """The config.json keys set in the object `model` was validated from."""
-  fields = type(model).model_fields
-  return {fields[name].alias or name for name in model.model_fields_set}
+def _reject_removed_keys(entry: dict) -> None:
+  """Raises ValueError, with how to migrate, if `entry` has a removed key."""
+  removed = sorted(key for key in entry if key in _REMOVED_ENTRY_KEYS)
+  if not removed:
+    return
+  hints = dict.fromkeys(_REMOVED_ENTRY_KEYS[key] for key in removed)
+  pattern = entry.get("pattern") or entry.get("filename")
+  raise ValueError("Removed key(s) in 'inputFiles' entry for"
+                   f" '{pattern}': {removed}. " + " ".join(hints))
 
 
 class ImportConfig(_ConfigModel):
@@ -308,10 +312,6 @@ class Config:
 
   def row_entity_type(self, input_file: File) -> str:
     return self._entry(input_file).row_entity_type
-
-  def entity_columns(self, input_file: File) -> list[str]:
-    entry = self._entry(input_file)
-    return entry.reference_columns or entry.columns_to_resolve
 
   def observation_properties(self,
                              input_file: File) -> dict[str, str | int | float]:

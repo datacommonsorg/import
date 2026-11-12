@@ -106,16 +106,15 @@ def test_class_node_for_the_row_type_is_defined_in_mcf():
 _ARTICLE_MAPPINGS = b.same_name_mappings("article_id", "article_author")
 
 
-def test_reference_columns_hold_one_reference_per_listed_value():
-  """In entities imports, columnsToResolve (or referenceColumns) marks reference columns."""
+def test_prefixed_values_are_references_and_others_are_literals():
+  """A dcid: prefix makes a cell a reference, or a list of references."""
   result = b.run_csv(
-      b.csv_file(["article1", "author1"], ["article2", "author1,author2"],
-                 ["article3", "author2, author3"],
+      b.csv_file(["article1", "dcid:author1"],
+                 ["article2", "dcid:author1,dcid:author2"],
+                 ["article3", "dcid:author2, dcid:author3"],
+                 ["article4", "author4"],
                  header=["article_id", "article_author"]),
-      b.entities_config("Article",
-                        "article_id",
-                        mappings=_ARTICLE_MAPPINGS,
-                        columnsToResolve=["article_author"]))
+      b.entities_config("Article", "article_id", mappings=_ARTICLE_MAPPINGS))
   b.assert_records(result.of_type("Article"), [
       b.entity("article1",
                "Article",
@@ -131,28 +130,10 @@ def test_reference_columns_hold_one_reference_per_listed_value():
                article_id="article3",
                article_author=[b.ref("author2"),
                                b.ref("author3")]),
-  ])
-
-
-def test_reference_columns_field_marks_reference_columns():
-  """ReferenceColumns is accepted as the clearer name for columnsToResolve."""
-  result = b.run_csv(
-      b.csv_file(["article1", "author1"], ["article2", "author1,author2"],
-                 header=["article_id", "article_author"]),
-      b.entities_config("Article",
-                        "article_id",
-                        mappings=_ARTICLE_MAPPINGS,
-                        referenceColumns=["article_author"]))
-  b.assert_records(result.of_type("Article"), [
-      b.entity("article1",
+      b.entity("article4",
                "Article",
-               article_id="article1",
-               article_author=b.ref("author1")),
-      b.entity("article2",
-               "Article",
-               article_id="article2",
-               article_author=[b.ref("author1"),
-                               b.ref("author2")]),
+               article_id="article4",
+               article_author="author4"),
   ])
 
 

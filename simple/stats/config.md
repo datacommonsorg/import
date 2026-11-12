@@ -121,6 +121,11 @@ For `"entities"` imports, each mapped column's values are written under its
 mapped DCID. The `idColumn` does not need a mapping; it is only written as a
 property if it is mapped.
 
+For `"entities"` imports, a cell value with a namespace prefix, such as
+`dcid:country/USA`, is a reference to that entity rather than a literal value.
+A comma-separated list of prefixed values, such as
+`dcid:author1,dcid:author2`, is a list of references.
+
 #### `ignoreColumns`
 
 The list of column names to be ignored by the importer, if any.
@@ -155,12 +160,6 @@ description: "A person who wrote an article"
 Optional, for `"entities"` imports. The column whose cell value provides each
 row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
 Unlike other columns, it does not need a `columnMappings` entry.
-
-#### `referenceColumns` _(or `columnsToResolve`)_
-
-Optional, for `"entities"` imports. The list of columns whose cell values are
-entity DCID references (or comma-separated lists of entity DCIDs) rather than
-literal values.
 
 ## `includeInputSubdirs`
 

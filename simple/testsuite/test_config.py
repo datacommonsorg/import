@@ -351,20 +351,16 @@ INVALID_CONFIGS = [
              "ValueError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['entityType']", _INVALID)),
-    Case("columnsToResolve on observations entry is rejected",
-         given=b.obs_config(b.OBS_MAPPINGS, columnsToResolve=["entity"]),
+    Case("removed reference column keys are rejected with how to migrate",
+         given=b.entities_config(mappings=b.AUTHOR_MAPPINGS,
+                                 columnsToResolve=["author_country"],
+                                 referenceColumns=["author_country"]),
          expect=b.Fails(
              "ValueError",
-             "'columnsToResolve' is only supported for 'importType':"
-             " 'entities', but entry 'case*.csv' has importType"
-             " 'observations'.", _INVALID)),
-    Case("referenceColumns on observations entry is rejected",
-         given=b.obs_config(b.OBS_MAPPINGS, referenceColumns=["entity"]),
-         expect=b.Fails(
-             "ValueError",
-             "'referenceColumns' is only supported for 'importType':"
-             " 'entities', but entry 'case*.csv' has importType"
-             " 'observations'.", _INVALID)),
+             "Removed key(s) in 'inputFiles' entry for 'case*.csv':"
+             " ['columnsToResolve', 'referenceColumns']. Write each"
+             " reference as a cell value with a 'dcid:' prefix instead, e.g."
+             " 'dcid:country/USA'.", _INVALID)),
     Case("removed entities block is rejected with a pointer to MCF",
          given={
              **b.entities_config(mappings=b.AUTHOR_MAPPINGS),
