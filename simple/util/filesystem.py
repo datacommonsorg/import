@@ -86,10 +86,13 @@ def is_gcs_path(path: str) -> bool:
 
 
 def _open_fs(url: str, create: bool, strict: bool = True):
-  """Opens a PyFilesystem FS like `open_fs`; gs:// URLs use `gcs_client()`.
+  """Opens a PyFilesystem FS for `url`, like `open_fs`.
 
-  For gs:// URLs, `strict=False` skips checking that the root directory's
-  marker exists (see `_fix_gcsfs_storage`).
+  Args:
+    url: A local path or URL. gs:// URLs are opened with `gcs_client()`.
+    create: Whether to create the directory if it doesn't exist.
+    strict: For gs:// URLs only: whether to check that the root directory's
+      marker blob exists (see `_fix_gcsfs_storage`).
   """
   if not is_gcs_path(url):
     return open_fs(url, create=create)
