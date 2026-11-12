@@ -402,6 +402,32 @@ def test_invalid_config(given, expect):
   b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
 
 
+# A column is either imported or ignored, for every kind of CSV.
+MAPPED_AND_IGNORED = [
+    Case("observations",
+         given=(_USA,
+                b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["value", "date"])),
+         expect="['date', 'value']"),
+    Case("entities",
+         given=(b.csv_file(["author1", "Author"], header=["author_id", "type"]),
+                b.entities_config(mappings=b.entity_mappings(),
+                                  ignoreColumns=["author_id"])),
+         expect="['author_id']"),
+]
+
+
+@cases(*MAPPED_AND_IGNORED)
+def test_column_both_mapped_and_ignored_fails(given, expect):
+  csv_text, config = given
+  result = b.run_csv(csv_text, config)
+  b.assert_fails(result,
+                 "ValueError",
+                 "The CSV file 'case.csv' both maps and ignores column(s):"
+                 f" {expect}. Remove each from 'columnMappings' or from"
+                 " 'ignoreColumns'.",
+                 handshake_error_types=_INVALID)
+
+
 def test_every_config_problem_is_reported_at_once():
   """Unknown keys are grouped per object, then every other problem follows."""
   config = b.obs_config(b.OBS_MAPPINGS,
