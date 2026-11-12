@@ -58,8 +58,8 @@ from util.filesystem import Store
 _ARCHIVES_DIR_NAME = "archives"
 # Upper bound on the threads that validate CSV headers. Header validation reads
 # only the first rows of each file and spends its time waiting on storage (often
-# GCS), so it is bounded independently of the CPU count; 32 matches the requests
-# connection pool size set in main.py.
+# GCS), so it is bounded independently of the CPU count; 32 matches the GCS
+# client's connection pool (filesystem._GCS_HTTP_POOL_SIZE).
 _MAX_HEADER_VALIDATION_THREADS = 32
 # Default worker processes per CPU for runs that read or write GCS, and the
 # count above which no extra workers are added (see default_max_workers).
