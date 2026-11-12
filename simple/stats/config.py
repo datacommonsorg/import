@@ -43,6 +43,8 @@ _REFERENCE_HINT = ("Write each reference as a cell value with a 'dcid:' prefix"
 _REMOVED_ENTRY_KEYS = {
     "columnsToResolve": _REFERENCE_HINT,
     "referenceColumns": _REFERENCE_HINT,
+    "rowEntityType": "Map a 'dcid:typeOf' column in 'columnMappings' instead.",
+    "idColumn": "Map a 'dcid:dcid' column in 'columnMappings' instead.",
 }
 
 
@@ -68,8 +70,6 @@ class InputFileConfig(_ConfigModel):
   column_mappings: dict[str, str] = {}
   ignore_columns: list[str] = []
   observation_properties: dict[str, str | int | float] = {}
-  row_entity_type: str = ""
-  id_column: str = ""
 
   @model_validator(mode="before")
   @classmethod
@@ -97,14 +97,6 @@ class InputFileConfig(_ConfigModel):
     if value not in {t.value for t in ImportType}:
       raise ValueError(f"Unsupported import type: {value}")
     return value
-
-  @model_validator(mode="after")
-  def _check_fields(self) -> "InputFileConfig":
-    if self.import_type == ImportType.ENTITIES and not self.row_entity_type:
-      raise ValueError(
-          f"'rowEntityType' is required for 'importType':"
-          f" '{ImportType.ENTITIES}', but entry '{self.pattern}' has none.")
-    return self
 
 
 # The entry of a file that no `inputFiles` entry matches: every field defaults.
@@ -283,17 +275,11 @@ class Config:
   def column_mappings(self, input_file: File) -> dict[str, str]:
     return self._entry(input_file).column_mappings
 
-  def id_column(self, input_file: File) -> str:
-    return self._entry(input_file).id_column
-
   def ignore_columns(self, input_file: File) -> list[str]:
     return self._entry(input_file).ignore_columns
 
   def provenance_name(self, input_file: File) -> str:
     return self._entry(input_file).provenance
-
-  def row_entity_type(self, input_file: File) -> str:
-    return self._entry(input_file).row_entity_type
 
   def observation_properties(self,
                              input_file: File) -> dict[str, str | int | float]:

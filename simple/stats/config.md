@@ -105,8 +105,7 @@ Maps DCIDs to the CSV's column headings. There are no built-in default column
 names, and no column heading is used as a DCID on its own.
 
 Every column in the CSV must be either mapped in `columnMappings` or listed in
-`ignoreColumns`. The one exception is the `idColumn` of an `"entities"` import.
-Otherwise the import fails with one error that lists all the unmapped columns.
+`ignoreColumns`. Otherwise the import fails with one error that lists all the unmapped columns.
 A CSV whose entry has no `columnMappings` fails the import as well.
 Each property may be mapped from only one column. Keys that differ only by
 namespace name the same property, so mapping both `dcid:unit` and `unit` fails
@@ -117,9 +116,30 @@ and `dcid:value` are always required, along with one to three entity
 dimensions: `dcid:observationAbout` and/or custom observation properties you
 have defined in MCF.
 
-For `"entities"` imports, each mapped column's values are written under its
-mapped DCID. The `idColumn` does not need a mapping; it is only written as a
-property if it is mapped.
+For `"entities"` imports, `dcid:dcid` and `dcid:typeOf` are always required:
+the column mapped to `dcid:dcid` gives each row's DCID, and the column mapped to
+`dcid:typeOf` gives its type (class DCID), for example `Author`. Each other
+mapped column's values are written under its mapped DCID. For example:
+
+```json
+"columnMappings": {
+  "dcid:dcid": "author_id",
+  "dcid:typeOf": "type",
+  "dcid:name": "author_name"
+}
+```
+
+The importer only writes a `typeOf` reference on each row; the `Class` node
+itself is not created. If the type is not already in the Data Commons schema,
+define it (with its `name` and `description`) in an MCF file matched by an
+`inputFiles` entry, for example:
+
+```
+Node: dcid:Author
+typeOf: dcs:Class
+name: "Author"
+description: "A person who wrote an article"
+```
 
 For `"entities"` imports, a cell value with a namespace prefix, such as
 `dcid:country/USA`, is a reference to that entity rather than a literal value.
@@ -139,27 +159,6 @@ Optional. Either `"observations"` (the default) or `"entities"`.
 Optional, for observations CSVs. A map of observation properties (such as
 `"unit"`, `"scalingFactor"`, `"measurementMethod"`, `"observationPeriod"`, or
 custom dimension properties) applied as defaults to every row in the file.
-
-#### `rowEntityType`
-
-Required when `importType` is `"entities"`. The type (class DCID) assigned to
-each row entity in the CSV. The importer only writes a `typeOf` reference to
-this type on each row; the `Class` node itself is not created. If the type is
-not already in the Data Commons schema, define it (with its `name` and
-`description`) in an MCF file matched by an `inputFiles` entry, for example:
-
-```
-Node: dcid:Author
-typeOf: dcs:Class
-name: "Author"
-description: "A person who wrote an article"
-```
-
-#### `idColumn`
-
-Optional, for `"entities"` imports. The column whose cell value provides each
-row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
-Unlike other columns, it does not need a `columnMappings` entry.
 
 ## Subdirectories
 

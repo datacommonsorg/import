@@ -379,11 +379,18 @@ INVALID_CONFIGS = [
              "ValueError", "Duplicate pattern(s) in 'inputFiles':"
              " ['case*.csv']. Each pattern can only have one entry.",
              _INVALID)),
-    Case("entities entry without rowEntityType",
-         given=b.entities_config(row_type="", mappings=b.AUTHOR_MAPPINGS),
-         expect=b.Fails(
-             "ValueError", "'rowEntityType' is required for 'importType':"
-             " 'entities', but entry 'case*.csv' has none.", _INVALID)),
+    Case(
+        "removed rowEntityType and idColumn keys are rejected with how to"
+        " migrate",
+        given=b.entities_config(mappings=b.AUTHOR_MAPPINGS,
+                                rowEntityType="Author",
+                                idColumn="author_id"),
+        expect=b.Fails(
+            "ValueError",
+            "Removed key(s) in 'inputFiles' entry for 'case*.csv':"
+            " ['idColumn', 'rowEntityType']. Map a 'dcid:dcid' column in"
+            " 'columnMappings' instead. Map a 'dcid:typeOf' column in"
+            " 'columnMappings' instead.", _INVALID)),
 ]
 
 
