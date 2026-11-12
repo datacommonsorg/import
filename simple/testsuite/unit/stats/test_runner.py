@@ -70,10 +70,8 @@ def test_runner_defaults_workers_by_where_it_reads_and_writes(
     fake_gcs.upload_dir(local_input_dir, input_dir)
   output_dir = (fake_gcs.new_prefix() if output_on_gcs else str(tmp_path))
   try:
-    r = runner.Runner(config_file_path=None,
-                      input_dir_path=input_dir,
-                      output_dir_path=output_dir)
-    r._load_config()  # Opens the input stores.
+    r = runner.Runner(input_dir_path=input_dir, output_dir_path=output_dir)
+    r._load_config()  # Opens the input store.
     assert r.max_workers == expected
   finally:
     shutil.rmtree(local_input_dir, ignore_errors=True)
@@ -87,8 +85,7 @@ def test_num_import_workers_never_exceeds_the_files():
 @pytest.mark.parametrize("max_workers", [0, -1])
 def test_max_workers_must_be_positive(max_workers):
   with pytest.raises(ValueError, match="max_workers must be at least 1"):
-    runner.Runner(config_file_path=None,
-                  input_dir_path="unused",
+    runner.Runner(input_dir_path="unused",
                   output_dir_path="unused",
                   max_workers=max_workers)
 

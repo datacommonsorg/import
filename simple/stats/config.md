@@ -167,37 +167,6 @@ literal values.
 If `true`, recursively scans subdirectories of the input directory for files
 matching `inputFiles` patterns. Default is `false`.
 
-## `dataDownloadUrl`
-
-Examples:
-
-Web URLs _(coming soon)_:
-
-```json
-{
-  "dataDownloadUrl": [
-    "http://domain/path/1.csv",
-    "https://domain/path/2.csv"
-  ]
-}
-```
-
-GCS directory:
-
-```json
-{
-  "dataDownloadUrl": ["gs://bucket/path/to/dir"]
-}
-```
-
-Local directory:
-
-```json
-{
-  "dataDownloadUrl": ["//local/path/to/dir"]
-}
-```
-
 ## `groupStatVarsByProperty`
 
 If `true`, requests a hierarchy of StatVarGroups generated from the properties

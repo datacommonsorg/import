@@ -492,20 +492,18 @@ def run_dir(files: dict[str, str],
             config: dict | None = None,
             *,
             mode: str = runlib.DEFAULT_MODE,
-            runner_kwargs: dict | None = None,
-            config_file: str | None = None) -> Result:
+            runner_kwargs: dict | None = None) -> Result:
   """
   Runs the preprocessor on a raw directory layout without shared files.
 
   Used for multi-import parent directories (runner_kwargs={"import_names": ...})
-  and --config_file runs where shared-provenance subtraction does not apply.
+  where shared-provenance subtraction does not apply.
   """
-  input_dir = runlib.write_input_dir(files, config, config_file=config_file)
+  input_dir = runlib.write_input_dir(files, config)
   try:
     output = runlib.run_preprocessor(input_dir,
                                      mode,
-                                     runner_kwargs=runner_kwargs,
-                                     config_file=config_file).output
+                                     runner_kwargs=runner_kwargs).output
   finally:
     shutil.rmtree(input_dir, ignore_errors=True)
   if output["error"]:

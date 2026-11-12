@@ -143,7 +143,6 @@ class ImportConfig(_ConfigModel):
   group_stat_vars_by_property: bool = False
   include_input_subdirs: bool = False
   import_name: str = ""
-  data_download_url: list[str] = []
 
   @model_validator(mode="before")
   @classmethod
@@ -291,9 +290,6 @@ class Config:
   def patterns(self) -> list[str]:
     """The `inputFiles` patterns, in config order."""
     return list(self._input_files_config)
-
-  def data_download_urls(self) -> list[str]:
-    return self.model.data_download_url
 
   def import_type(self, input_file: File) -> ImportType:
     return self._entry(input_file).import_type

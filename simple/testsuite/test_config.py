@@ -552,16 +552,3 @@ def test_empty_input_directory_fails():
   result = b.run_dir({})
   b.assert_fails(result, "FileNotFoundError",
                  "File not found: <input>/config.json")
-
-
-def test_config_file_without_data_download_url_fails():
-  result = b.run_dir({}, {}, config_file="config.json")
-  b.assert_fails(result,
-                 "ValueError",
-                 "Data Download URLs not found in config.",
-                 handshake_error_types=_INVALID)
-
-
-def test_missing_config_file_fails():
-  result = b.run_dir({}, config_file="nonexistent.json")
-  b.assert_fails(result, "FileNotFoundError", "<input>/nonexistent.json")
