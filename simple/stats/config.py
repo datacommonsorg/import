@@ -34,7 +34,6 @@ _VARIABLE_PER_ROW_FORMAT = "variablePerRow"
 # Removed top-level block that used to define Class node metadata. Rejected
 # with a pointer to MCF rather than the generic unknown-key error.
 _REMOVED_ENTITIES_FIELD = "entities"
-_INPUT_FILES_FIELD = "inputFiles"
 _REFERENCE_COLUMN_FIELDS = ("columnsToResolve", "referenceColumns")
 
 # Unknown keys are rejected, and validated models are immutable.
@@ -72,10 +71,10 @@ class InputFileConfig(BaseModel):
   @classmethod
   def _check_entry(cls, data: Any) -> Any:
     if not isinstance(data, dict):
-      raise ValueError(f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a"
+      raise ValueError("Invalid entry in 'inputFiles': must be a"
                        f" JSON object. Got: {data}")
     if not (data.get("pattern") or data.get("filename")):
-      raise ValueError(f"Invalid entry in '{_INPUT_FILES_FIELD}': must specify"
+      raise ValueError("Invalid entry in 'inputFiles': must specify"
                        f" 'pattern' or 'filename'. Got: {data}")
     return data
 
@@ -134,7 +133,7 @@ class ImportConfig(BaseModel):
   model_config = _MODEL_CONFIG
 
   input_files: list[InputFileConfig] = Field(default_factory=list,
-                                             alias=_INPUT_FILES_FIELD)
+                                             alias="inputFiles")
   # TODO(gmechali): groupStatVarsByProperty is slated for deprecation. Until
   # then it keeps its historical leniency: any value, with "true", "1" and
   # "yes" as the only true strings.
@@ -152,10 +151,10 @@ class ImportConfig(BaseModel):
       raise ValueError(
           f"config.json must be a JSON object. Got: {type(data).__name__}")
     _reject_entities_block(data)
-    input_files = data.get(_INPUT_FILES_FIELD, [])
+    input_files = data.get("inputFiles", [])
     if not isinstance(input_files, list):
       raise ValueError(
-          f"'{_INPUT_FILES_FIELD}' must be a list of objects, each with a "
+          "'inputFiles' must be a list of objects, each with a "
           f"'pattern' and a 'provenance'. Got: {type(input_files).__name__}")
     return data
 
@@ -172,7 +171,7 @@ class ImportConfig(BaseModel):
     duplicates = sorted(key for key, count in counts.items() if count > 1)
     if duplicates:
       raise ValueError(
-          f"Duplicate pattern(s) in '{_INPUT_FILES_FIELD}': {duplicates}. Each"
+          f"Duplicate pattern(s) in 'inputFiles': {duplicates}. Each"
           " pattern can only have one entry.")
     return self
 
@@ -250,16 +249,16 @@ def _describe_object(loc: tuple, data: Any) -> str:
   Errors inside an entry only occur once `_check_entry` accepted it, so the
   entry is an object with a pattern or filename.
   """
-  if len(loc) >= 2 and loc[0] == _INPUT_FILES_FIELD:
-    entry = data[_INPUT_FILES_FIELD][loc[1]]
+  if len(loc) >= 2 and loc[0] == "inputFiles":
+    entry = data["inputFiles"][loc[1]]
     key = entry.get("pattern") or entry.get("filename")
-    return f"'{_INPUT_FILES_FIELD}' entry for '{key}'"
+    return f"'inputFiles' entry for '{key}'"
   return "config.json"
 
 
 def _describe_location(loc: tuple, data: Any) -> str:
   """Names the value at `loc`, e.g. 'ignoreColumns' in an inputFiles entry."""
-  if len(loc) >= 3 and loc[0] == _INPUT_FILES_FIELD:
+  if len(loc) >= 3 and loc[0] == "inputFiles":
     field = ".".join(str(part) for part in loc[2:])
     return f"'{field}' in {_describe_object(loc[:2], data)}"
   field = ".".join(str(part) for part in loc)
