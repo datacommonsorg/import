@@ -29,6 +29,7 @@ public final class Vocabulary {
   public static final String SOURCE_TYPE = "Source";
   public static final String STAT_VAR_TYPE = "StatisticalVariable";
   public static final String STAT_VAR_OBSERVATION_TYPE = "StatVarObservation";
+  public static final String STATISTICAL_POPULATION_TYPE = "StatisticalPopulation";
   public static final String LEGACY_OBSERVATION_TYPE_SUFFIX = "Observation";
   public static final String LEGACY_POPULATION_TYPE_SUFFIX = "Population";
   public static final String STAT_VAR_GROUP_TYPE = "StatVarGroup";
