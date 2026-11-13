@@ -25,9 +25,8 @@ from stats.data import strip_namespace_series
 from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
-from stats.importer import duplicate_column_errors
-from stats.importer import duplicate_property_errors
 from stats.importer import Importer
+from stats.importer import mapping_errors
 from stats.importer import missing_column_mappings_error
 from stats.importer import read_csv_columns
 from stats.nodes import Nodes
@@ -127,10 +126,10 @@ class VariablePerRowImporter(Importer):
     mappings = self.get_column_mappings()
     if not mappings:
       return [missing_column_mappings_error(self.input_file.path)]
-    duplicates = (duplicate_property_errors(self.input_file.path, mappings) +
-                  duplicate_column_errors(self.input_file.path, mappings))
-    if duplicates:
-      return duplicates
+    errors = mapping_errors(self.input_file.path, mappings,
+                            self.config.ignore_columns(self.input_file))
+    if errors:
+      return errors
 
     column_mappings, custom_dimensions = self._parse_column_mappings()
     errors = self._validate_mappings(column_mappings, custom_dimensions)

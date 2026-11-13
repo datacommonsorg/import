@@ -86,6 +86,22 @@ def test_csv_without_a_dcid_or_type_mapping_fails(given, expect):
                  handshake_error_types=("INVALID_CONFIGURATION",))
 
 
+def test_rows_without_a_dcid_or_type_fail_before_anything_is_written():
+  """Rows are numbered from 1, the first row after the header."""
+  result = b.run_csv(
+      b.csv_file(["author1", "Author", "Jane Doe"], ["", "Author", "Joe Smith"],
+                 ["author3", "", "Ann Lee"], ["author4", " ", "Bo Kim"],
+                 header=["author_id", "type", "author_name"]),
+      b.entities_config(mappings=b.entity_mappings("author_name")))
+  b.assert_fails(
+      result, "ValueError",
+      "Empty value(s) in entities CSV file 'case.csv': column 'author_id'"
+      " (mapped to 'dcid:dcid') at row(s) [2]; column 'type' (mapped to"
+      " 'dcid:typeOf') at row(s) [3, 4]. Rows are numbered from 1, the first"
+      " row after the header. Every row needs a DCID and a type.")
+  b.assert_records(result.of_type("Author"), [])
+
+
 def test_no_class_node_is_written_for_the_row_type():
   """Rows reference their type; the Class node itself must come from MCF."""
   result = b.run_csv(

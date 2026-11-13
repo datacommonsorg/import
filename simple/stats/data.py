@@ -279,7 +279,7 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
                                          constants.COLUMN_VALUE].unique()
   ex = ValueError(
       f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
-      f"{list(invalid_examples)[:10]}. If these represent missing values, please configure "
-      f"them under 'naValues' in config.json.")
+      f"{list(invalid_examples)[:10]}. If these represent missing values, leave the"
+      f" cells empty or use one of: {constants.STANDARD_NA_VALUES}.")
   ex.file_path = file_path
   raise ex
