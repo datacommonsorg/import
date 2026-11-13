@@ -18,10 +18,10 @@ from typing import Any
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 from pydantic import ValidationError
+from pydantic.alias_generators import to_camel
 from stats.data import ImportType
 from stats.data import invalid_configuration
 from stats.data import strip_namespace
@@ -36,31 +36,36 @@ _VARIABLE_PER_ROW_FORMAT = "variablePerRow"
 _REMOVED_ENTITIES_FIELD = "entities"
 _REFERENCE_COLUMN_FIELDS = ("columnsToResolve", "referenceColumns")
 
-# Unknown keys are rejected, and validated models are immutable.
-_MODEL_CONFIG = ConfigDict(extra="forbid", frozen=True, populate_by_name=True)
+
+class _ConfigModel(BaseModel):
+  """A config.json object.
+
+  Its keys are the camelCase names of the fields, e.g. `columnMappings` for
+  `column_mappings`. Unknown keys are rejected, and validated models are
+  immutable.
+  """
+  model_config = ConfigDict(alias_generator=to_camel,
+                            extra="forbid",
+                            frozen=True,
+                            populate_by_name=True)
 
 
-class InputFileConfig(BaseModel):
+class InputFileConfig(_ConfigModel):
   """One `inputFiles` entry: the files it applies to and their parameters."""
-  model_config = _MODEL_CONFIG
 
   pattern: str = ""
   # Undocumented alias of `pattern`, used when `pattern` is not set.
   filename: str = ""
   provenance: str = ""
-  import_type: ImportType = Field(ImportType.OBSERVATIONS, alias="importType")
+  import_type: ImportType = ImportType.OBSERVATIONS
   format: str | None = None
-  column_mappings: dict[str, str] = Field(default_factory=dict,
-                                          alias="columnMappings")
-  ignore_columns: list[str] = Field(default_factory=list, alias="ignoreColumns")
-  observation_properties: dict[str, str | int | float] = Field(
-      default_factory=dict, alias="observationProperties")
-  row_entity_type: str = Field("", alias="rowEntityType")
-  id_column: str = Field("", alias="idColumn")
-  columns_to_resolve: list[str] = Field(default_factory=list,
-                                        alias="columnsToResolve")
-  reference_columns: list[str] = Field(default_factory=list,
-                                       alias="referenceColumns")
+  column_mappings: dict[str, str] = {}
+  ignore_columns: list[str] = []
+  observation_properties: dict[str, str | int | float] = {}
+  row_entity_type: str = ""
+  id_column: str = ""
+  columns_to_resolve: list[str] = []
+  reference_columns: list[str] = []
 
   @property
   def key(self) -> str:
@@ -128,21 +133,17 @@ def _keys_set(model: BaseModel) -> set[str]:
   return {fields[name].alias or name for name in model.model_fields_set}
 
 
-class ImportConfig(BaseModel):
+class ImportConfig(_ConfigModel):
   """A whole config.json."""
-  model_config = _MODEL_CONFIG
 
-  input_files: list[InputFileConfig] = Field(default_factory=list,
-                                             alias="inputFiles")
+  input_files: list[InputFileConfig] = []
   # TODO(gmechali): groupStatVarsByProperty is slated for deprecation. Until
   # then it keeps its historical leniency: any value, with "true", "1" and
   # "yes" as the only true strings.
-  group_stat_vars_by_property: bool = Field(False,
-                                            alias="groupStatVarsByProperty")
-  include_input_subdirs: bool = Field(False, alias="includeInputSubdirs")
-  import_name: str = Field("", alias="importName")
-  data_download_url: list[str] = Field(default_factory=list,
-                                       alias="dataDownloadUrl")
+  group_stat_vars_by_property: bool = False
+  include_input_subdirs: bool = False
+  import_name: str = ""
+  data_download_url: list[str] = []
 
   @model_validator(mode="before")
   @classmethod
