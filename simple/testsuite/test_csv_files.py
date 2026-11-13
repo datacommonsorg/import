@@ -90,16 +90,16 @@ def test_observation_csv_format(given, expect):
 
 # --- Entities CSVs ------------------------------------------------------------
 
-_ENTITY_HEADER = ["author_id", "bio"]
+_ENTITY_HEADER = ["author_id", "type", "bio"]
 _ENTITY_ROWS = [
-    ["author1", "a, b"],
-    ["author2", 'line one\nline "two"'],
-    ["author3", "plain"],
+    ["author1", "Author", "a, b"],
+    ["author2", "Author", 'line one\nline "two"'],
+    ["author3", "Author", "plain"],
 ]
 _ENTITY_EXPECTED = [
-    b.entity("author1", author_id="author1", bio="a, b"),
-    b.entity("author2", author_id="author2", bio='line one\nline "two"'),
-    b.entity("author3", author_id="author3", bio="plain"),
+    b.entity("author1", bio="a, b"),
+    b.entity("author2", bio='line one\nline "two"'),
+    b.entity("author3", bio="plain"),
 ]
 
 ENTITY_FORMATS = [
@@ -128,13 +128,13 @@ ENTITY_FORMATS = [
                  b.csv_file(*_ENTITY_ROWS, header=_ENTITY_HEADER, bom=True)
          },
          expect=_ENTITY_EXPECTED),
-    Case("id column last",
+    Case("dcid column last",
          given={
              "case.csv":
-                 b.csv_file(["a, b", "author1"],
-                            ['line one\nline "two"', "author2"],
-                            ["plain", "author3"],
-                            header=["bio", "author_id"])
+                 b.csv_file(["Author", "a, b", "author1"],
+                            ["Author", 'line one\nline "two"', "author2"],
+                            ["Author", "plain", "author3"],
+                            header=["type", "bio", "author_id"])
          },
          expect=_ENTITY_EXPECTED),
     Case("rows in another order",
@@ -154,6 +154,5 @@ ENTITY_FORMATS = [
 
 @cases(*ENTITY_FORMATS)
 def test_entity_csv_format(given, expect):
-  result = b.run(
-      given, b.entities_config(mappings=b.same_name_mappings(*_ENTITY_HEADER)))
+  result = b.run(given, b.entities_config(mappings=b.entity_mappings("bio")))
   b.assert_records(result.of_type("Author"), expect)
