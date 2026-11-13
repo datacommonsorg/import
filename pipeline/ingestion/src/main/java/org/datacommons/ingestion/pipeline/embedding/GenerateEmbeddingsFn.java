@@ -44,7 +44,8 @@ import org.datacommons.ingestion.spanner.SpannerClient;
  */
 public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation> {
   public static final int DEFAULT_BATCH_SIZE = 100;
-  private static final int BATCH_SHARDS = 32;
+  public static final int MAX_BATCH_SIZE = 250;
+  private static final int BATCH_SHARDS = 128;
 
   private final VertexAiEmbeddingClient embeddingClient;
   private final String embeddingTableName;
@@ -105,7 +106,8 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
       EmbeddingSpec spec,
       int batchSize) {
     String label = spec.embeddingLabel();
-    int effectiveBatchSize = batchSize > 0 ? batchSize : DEFAULT_BATCH_SIZE;
+    int effectiveBatchSize =
+        batchSize > 0 ? Math.min(batchSize, MAX_BATCH_SIZE) : DEFAULT_BATCH_SIZE;
     return contents
         .apply(
             "KeyContentsForEmbedding_" + label,
