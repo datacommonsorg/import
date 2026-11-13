@@ -119,7 +119,7 @@ To measure coverage locally:
 PY_TEST_COVERAGE=1 ./run_test.sh -p
 ```
 
-This writes `simple/coverage.xml`. Set `COVERAGE_BASE_BRANCH=master` to also print coverage of the lines you changed.
+This writes `simple/coverage.xml` and `pipeline/workflow/*-helper/coverage.xml`. Set `COVERAGE_BASE_BRANCH=master` to also print coverage of the lines you changed.
 
 ### Coding Guidelines
 

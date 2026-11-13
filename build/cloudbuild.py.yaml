@@ -17,8 +17,9 @@ steps:
   - id: py_test
     name: python:3.11.3
     entrypoint: /bin/sh
-    # PY_TEST_COVERAGE makes -p also log coverage of simple/ and of the lines
-    # the PR changes, vs the PR's base branch. The report never fails the step.
+    # PY_TEST_COVERAGE makes -p also log coverage of simple/, of the workflow
+    # helpers and of the lines the PR changes, vs the PR's base branch. The
+    # report never fails the step.
     env:
       - PY_TEST_COVERAGE=1
       - COVERAGE_BASE_BRANCH=$_BASE_BRANCH
@@ -40,7 +41,7 @@ steps:
         s=$(mktemp) && trap 'rm -f "$$s"' EXIT
         curl -fsSL --retry 3 -o "$$s" "$_SHARED_SCRIPTS_URL/upload_coverage.sh" \
           || { echo "Codacy upload skipped: script download failed"; exit 0; }
-        bash "$$s" simple/coverage.xml \
+        bash "$$s" simple/coverage.xml pipeline/workflow/*-helper/coverage.xml \
           || echo "Codacy upload failed (report-only)"
     env:
       - COMMIT_SHA=$COMMIT_SHA
