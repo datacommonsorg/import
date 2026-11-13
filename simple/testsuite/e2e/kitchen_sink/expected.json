@@ -10,32 +10,9 @@
     ]
   },
   "ingestion_report": {
-    "folders": [
-      {
-        "folderName": "input",
-        "provenances": [
-          {
-            "fileCount": 5,
-            "id": "KitchenProvenance",
-            "sourceId": "KitchenSource"
-          }
-        ],
-        "summary": {
-          "files": {
-            "byType": {
-              "csv": 3,
-              "mcf": 2
-            },
-            "count": 5
-          },
-          "provenanceCount": 1
-        }
-      }
-    ],
+    "folders": [],
     "run": {
-      "folderNames": [
-        "input"
-      ],
+      "folderNames": [],
       "mode": "INGEST",
       "outputPath": "<output>/preprocessor_reports/testsuite-run",
       "status": "SUCCESS",

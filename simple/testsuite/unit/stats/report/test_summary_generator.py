@@ -70,6 +70,8 @@ class TestSummaryGenerator(unittest.TestCase):
       generator.record_input_file("oecd", ["oecdProv"], "oecd/c.CSV")
       generator.record_input_file("oecd", ["oecdSchema"], "oecd/schema.mcf")
       generator.set_provenance_data("oecdProv", "oecdSource")
+      # Requested folders are listed even without input files.
+      generator.add_folders(["ilo", "oecd", "wto"])
       report = generator.build_report(RunStatus.SUCCESS, _END)
 
     self.assertEqual(
@@ -80,7 +82,7 @@ class TestSummaryGenerator(unittest.TestCase):
                                   status=RunStatus.SUCCESS,
                                   startTime=_START,
                                   endTime=_END,
-                                  folderNames=["ilo", "oecd"],
+                                  folderNames=["ilo", "oecd", "wto"],
                                   outputPath=os.path.join(
                                       tmp, "preprocessor_reports", "wf-123")),
             folders=[
@@ -103,6 +105,7 @@ class TestSummaryGenerator(unittest.TestCase):
                                       fileCount=2),
                            Provenance(id="oecdSchema", fileCount=1),
                        ]),
+                Folder(folderName="wto"),
             ]))
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):

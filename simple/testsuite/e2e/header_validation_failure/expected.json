@@ -17,32 +17,9 @@
     "status": "FAILURE"
   },
   "ingestion_report": {
-    "folders": [
-      {
-        "folderName": "input",
-        "provenances": [
-          {
-            "fileCount": 2,
-            "id": "KitchenProvenance",
-            "sourceId": null
-          }
-        ],
-        "summary": {
-          "files": {
-            "byType": {
-              "csv": 1,
-              "mcf": 1
-            },
-            "count": 2
-          },
-          "provenanceCount": 1
-        }
-      }
-    ],
+    "folders": [],
     "run": {
-      "folderNames": [
-        "input"
-      ],
+      "folderNames": [],
       "mode": "INGEST",
       "outputPath": "<output>/preprocessor_reports/testsuite-run",
       "status": "FAILURE",

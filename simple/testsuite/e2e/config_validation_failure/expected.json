@@ -15,9 +15,35 @@
     "status": "FAILURE"
   },
   "ingestion_report": {
-    "folders": [],
+    "folders": [
+      {
+        "folderName": "health",
+        "provenances": [],
+        "summary": {
+          "files": {
+            "byType": {},
+            "count": 0
+          },
+          "provenanceCount": 0
+        }
+      },
+      {
+        "folderName": "population",
+        "provenances": [],
+        "summary": {
+          "files": {
+            "byType": {},
+            "count": 0
+          },
+          "provenanceCount": 0
+        }
+      }
+    ],
     "run": {
-      "folderNames": [],
+      "folderNames": [
+        "health",
+        "population"
+      ],
       "mode": "INGEST",
       "outputPath": "<output>/preprocessor_reports/testsuite-run",
       "status": "FAILURE",

@@ -498,6 +498,9 @@ class Runner:
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
+    # Folders come only from --imports; without it, no folder is reported.
+    if not self.import_names:
+      return
     for file in files:
       self.summary_generator.record_input_file(
           folder=self._input_folder_name(file),
@@ -517,9 +520,16 @@ class Runner:
       if best_prefix:
         return best_prefix.rstrip("/")
 
-    # Single import, root config or --config_file: use the input dir's name.
-    input_dir = file._store.root_path.rstrip("/")
-    return fspath.basename(input_dir)
+    # Single import: the file belongs to the one import we were asked to run.
+    return self.import_names[0]
+
+  def _report_folder_names(self) -> list[str]:
+    """Returns the import folders this run was asked to import."""
+    if self.import_names == [constants.ALL_IMPORTS]:
+      # The folders found under the input dir, e.g. "folderA/" -> "folderA".
+      return sorted(
+          prefix.rstrip("/") for prefix in self.active_import_prefixes or [])
+    return list(self.import_names or [])
 
   def _record_provenance_sources(self) -> None:
     """Records each known provenance's source in the ingestion report."""
@@ -529,6 +539,8 @@ class Runner:
 
   def _write_report(self, status: RunStatus) -> None:
     """Writes the ingestion report with the run's final status."""
+    # Requested folders are listed even if no input files were found in them.
+    self.summary_generator.add_folders(self._report_folder_names())
     if self.nodes:  # No provenances if the config failed to load.
       self._record_provenance_sources()
     self.summary_generator.write_to_json(status, _utc_now())

@@ -116,6 +116,15 @@ class SummaryGenerator:
     for provenance_id in provenance:
       stats.files_by_provenance[provenance_id] += 1
 
+  def add_folders(self, names: list[str]) -> None:
+    """Lists folders in the report even if no input file is recorded for them.
+
+    Args:
+      names: Import folders the run was asked to import.
+    """
+    for name in names:
+      self._folders[name]  # The defaultdict creates an empty entry.
+
   def set_provenance_data(self, provenance_id: str,
                           source_id: str | None) -> None:
     """Sets metadata for one provenance, once its source is known.
