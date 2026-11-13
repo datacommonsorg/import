@@ -29,9 +29,7 @@ public record EmbeddingContent(
     String embeddingContentKey,
     String embeddingContentJson,
     String textToEmbed,
-    List<String> nodeTypes,
-    String modelEndpoint,
-    String taskType)
+    List<String> nodeTypes)
     implements Serializable {
 
   public EmbeddingContent {
