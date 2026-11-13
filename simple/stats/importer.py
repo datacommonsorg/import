@@ -50,9 +50,9 @@ def column_coverage_errors(
   """
   Checks that the CSV header and the config describe the same columns.
 
-  Every expected column (mapped in `columnMappings`, or the entities
-  `idColumn`) must be in the CSV, and every CSV column must be expected or
-  listed in `ignoreColumns`. Each check reports all of its columns at once.
+  Every expected column (mapped in `columnMappings`) must be in the CSV, and
+  every CSV column must be expected or listed in `ignoreColumns`. Each check
+  reports all of its columns at once.
   """
   errors = []
   missing = sorted(expected_columns - actual_columns)

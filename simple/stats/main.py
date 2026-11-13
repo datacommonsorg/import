@@ -23,7 +23,6 @@ from stats.runner import Runner
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("config_file", None, "The config file.")
 flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
                     "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
@@ -92,7 +91,6 @@ def _run():
   logging.info("Starting stats data importer job.")
 
   Runner(
-      config_file_path=FLAGS.config_file,
       input_dir_path=FLAGS.input_dir,
       output_dir_path=FLAGS.output_dir,
       import_names=FLAGS.imports,
