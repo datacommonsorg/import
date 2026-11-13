@@ -268,12 +268,12 @@ class JsonLdStreamWriter(GraphWriter):
                nodes,
                jsonld_dir_name: Optional[str] = None) -> None:
     self.output_dir = output_dir
-    self.import_names = import_names
     self.nodes = nodes
     self.config = nodes.config
 
-    # Names the run's output folder, with a timestamp below. A run always has
-    # imports (e.g. ["oecd", "ilo"] -> "oecd_ilo", or ALL_IMPORTS).
+    # The run's name, from its imports (e.g. ["oecd", "ilo"] -> "oecd_ilo", or
+    # ALL_IMPORTS): names its timestamped output folder below, and is the
+    # default folder for global triples (see _global_triples_import).
     self.import_name = "_".join(import_names).replace("/", "_")
 
     if jsonld_dir_name:
