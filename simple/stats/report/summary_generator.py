@@ -54,9 +54,10 @@ class SummaryGenerator:
   """Collects stats during a preprocessor run and writes the ingestion report.
 
   Runner calls, in order: set_execution_metadata(), record_input_file() per
-  matched file, add_file_summary() per imported file, set_provenance_data()
-  and populate_node_info() after worker results are merged, record_failure()
-  on failure, and write_to_json() at the end of the run.
+  matched file, add_file_summary() per imported file, populate_node_info()
+  after worker results are merged, record_failure() on failure, and, at the
+  end of the run on success or failure, add_folders(), set_provenance_data()
+  and write_to_json().
 
   Worker processes can't update this object, so each returns a FileSummary
   to the parent and Runner passes it to add_file_summary().

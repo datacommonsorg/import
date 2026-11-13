@@ -58,8 +58,7 @@ class ExecutionMetadata(BaseModel):
   endTime: str = Field(default="",
                        description="ISO-8601 UTC time the run ended")
   folderNames: list[str] = Field(
-      default_factory=list,
-      description="Import folders the run found input files in")
+      default_factory=list, description="Import folders requested for the run")
   outputPath: str = Field(default="",
                           description="Folder this report is written to")
 
