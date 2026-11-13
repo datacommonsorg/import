@@ -24,6 +24,7 @@ report and handshake.
     {
       "records": [("<import folder>", "nodes" | "observations", {record}), ...],
       "report": {...},     # process/report.json, times and paths removed
+      "ingestion_report": {...},  # process/ingestion_report.json, times and paths removed
       "handshake": {...},  # ingestion-workflow record, or null
       "error": {...}       # exception raised by Runner.run(), or null
     }
@@ -37,7 +38,7 @@ import glob
 import json
 import os
 import re
-from typing import Any
+from typing import Any, Iterable
 
 OBSERVATIONS = "observations"
 NODES = "nodes"
@@ -81,6 +82,21 @@ def load_jsonld(jsonld_root: str) -> list[tuple[str, str, dict]]:
   return records
 
 
+def group_by_folder(
+    records: Iterable[tuple[str, str, dict]]
+) -> dict[str, dict[str, dict[str, list[dict]]]]:
+  """
+  {import folder: {kind: {@id: [copies]}}} of load_jsonld records.
+
+  Every folder lists both kinds, even if one has no records.
+  """
+  folders = {}
+  for folder, kind, rec in records:
+    kinds = folders.setdefault(folder, {NODES: {}, OBSERVATIONS: {}})
+    kinds[kind].setdefault(rec.get("@id"), []).append(rec)
+  return folders
+
+
 def normalize_report(report: dict | None, path_tokens: dict[str, str]):
   if report is None:
     return None
@@ -98,6 +114,20 @@ def normalize_report(report: dict | None, path_tokens: dict[str, str]):
   if "error" in out:
     out["error"] = replace_paths(out["error"], path_tokens)
   return out
+
+
+def normalize_ingestion_report(report: dict | None, tokens: dict[str, str]):
+  """The ingestion report without its timestamps, which change every run."""
+  if report is None:
+    return None
+  run = {
+      k: v
+      for k, v in report.get("run", {}).items()
+      if k not in ("startTime", "endTime")
+  }
+  if "outputPath" in run:
+    run["outputPath"] = replace_paths(run["outputPath"], tokens)
+  return {**report, "run": run}
 
 
 def normalize_handshake(handshake: dict | None, path_tokens: dict[str, str]):

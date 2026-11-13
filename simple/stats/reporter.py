@@ -45,6 +45,7 @@ class ImportReporter:
     """
 
   def __init__(self, report_file: File) -> None:
+    # Header validation calls get_file_reporter from a thread pool.
     self.lock = threading.RLock()
     self.status = Status.NOT_STARTED
     self.start_time = None

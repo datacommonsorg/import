@@ -17,14 +17,12 @@ import logging
 from absl import app
 from absl import flags
 from freezegun import freeze_time
-import requests.adapters
 from stats import constants
 from stats.logger import initialize_logger
 from stats.runner import Runner
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("config_file", None, "The config file.")
 flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
                     "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
@@ -47,6 +45,16 @@ flags.DEFINE_string(
     "frozen_time",
     constants.DEFAULT_FROZEN_TIME,
     "If freeze_time is True, the time that the run is frozen at.",
+)
+flags.DEFINE_integer(
+    "max_workers",
+    None,
+    "The maximum number of worker processes that import files concurrently. "
+    "Defaults to the number of CPUs available to this process, or twice that "
+    "(at most 32) when the input or output is on GCS; see "
+    "runner.default_max_workers. Lower it to reduce peak memory, since each "
+    "worker holds the data of the file it is importing.",
+    lower_bound=1,
 )
 
 # If running with time frozen, the packages to be ignored.
@@ -76,9 +84,6 @@ def _warn_if_mode_is_set():
 
 
 def _run():
-  # Configure requests adapter default pool size to support parallel GCS uploads
-  requests.adapters.DEFAULT_POOLSIZE = 32
-
   initialize_logger()
 
   _warn_if_mode_is_set()
@@ -86,10 +91,10 @@ def _run():
   logging.info("Starting stats data importer job.")
 
   Runner(
-      config_file_path=FLAGS.config_file,
       input_dir_path=FLAGS.input_dir,
       output_dir_path=FLAGS.output_dir,
       import_names=FLAGS.imports,
+      max_workers=FLAGS.max_workers,
   ).run()
   logging.info("Runner finished successfully.")
 

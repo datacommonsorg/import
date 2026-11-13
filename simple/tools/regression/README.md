@@ -48,10 +48,6 @@ python3 -m tools.regression --input_dir=/data/un_input -- --imports=global,unodc
 python3 -m tools.regression --input_dir=gs://my-bucket/path/to/input \
     --work_dir=/mnt/disk/ab1
 
-# Config-driven: no --input_dir. Paths in extra flags must be absolute or
-# gs://, because each side runs from its own checkout.
-python3 -m tools.regression -- --config_file=gs://my-bucket/path/config.json
-
 # Two refs, such as a branch against master.
 python3 -m tools.regression --input_dir=/data/in --baseline=upstream/master \
     --candidate=origin/my-branch
@@ -82,8 +78,7 @@ Run `python3 -m tools.regression --help` for every flag.
    at the end even on failure or Ctrl-C. Refs that resolve to the same commit
    share one. The working tree candidate runs in place.
 3. Each side runs `python -m stats.main --input_dir=... --output_dir=...
-   <extra flags>` from its own `simple/`, in the default multiprocess
-   (production) mode, without `PYTHONPATH`, `WORKFLOW_EXECUTION_ID` and
+   <extra flags>` from its own `simple/`, without `PYTHONPATH`, `WORKFLOW_EXECUTION_ID` and
    `TEMP_LOCATION`, and with `TMPDIR` in the run directory. With `--repeats`,
    the sides alternate (B1, A1, B2, A2, ...) to spread machine drift.
 4. The outputs of run 1 are compared; those of later repeats are deleted
@@ -240,7 +235,7 @@ Outputs are always written to local disk, so upload time is not measured.
 ## Caveat: `--freeze_time`
 
 Do not pass `--freeze_time=True` (it is not passed by default). On
-`upstream/master` it hangs the default multiprocess mode: the main process
+`upstream/master` it hangs the preprocessor: the main process
 spins while every pool worker waits on a futex, probably because freezegun's
 frozen clock breaks the process pool's timeouts. The comparison already
 ignores report and run directory timestamps, so the flag is not needed.

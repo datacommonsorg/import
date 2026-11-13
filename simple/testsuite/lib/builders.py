@@ -116,34 +116,37 @@ def same_name_mappings(*columns: str) -> dict[str, str]:
   return {f"dcid:{column}": column for column in columns}
 
 
-# columnMappings for all three author columns, a convenience for
-# entities_config().
-AUTHOR_MAPPINGS = same_name_mappings("author_id", "author_name",
-                                     "author_country")
-
-
-def entities_config(row_type: str = "Author",
-                    id_column: str | None = "author_id",
-                    *,
-                    mappings: dict[str, str],
-                    **file_options: Any) -> dict:
+def entity_mappings(*columns: str, dcid: str = "author_id") -> dict[str, str]:
   """
-  Config importing *.mcf and case*.csv as entities of row_type.
+  columnMappings of an entities CSV: its dcid column, its "type" column, and
+  same_name_mappings(*columns).
+  """
+  return {
+      "dcid:dcid": dcid,
+      "dcid:typeOf": "type",
+      **same_name_mappings(*columns)
+  }
 
-  mappings is the CSV's columnMappings, e.g. AUTHOR_MAPPINGS. Pass
-  id_column=None for no idColumn. file_options are added to the CSV's
-  inputFiles entry.
+
+# columnMappings of an author_id, type, author_name, author_country CSV, a
+# convenience for entities_config().
+AUTHOR_MAPPINGS = entity_mappings("author_name", "author_country")
+
+
+def entities_config(*, mappings: dict[str, str], **file_options: Any) -> dict:
+  """
+  Config importing *.mcf and case*.csv as entities.
+
+  mappings is the CSV's columnMappings, e.g. AUTHOR_MAPPINGS or
+  entity_mappings(...). file_options are added to the CSV's inputFiles entry.
   """
   entry = {
       "pattern": "case*.csv",
       "importType": "entities",
-      "rowEntityType": row_type,
       "provenance": f"dcid:{PROVENANCE}",
       "columnMappings": mappings,
       **file_options,
   }
-  if id_column:
-    entry["idColumn"] = id_column
   return {"inputFiles": [*MCF_CONFIG["inputFiles"], entry]}
 
 
@@ -257,6 +260,45 @@ def csv_file(*rows: list[str],
   writer.writerow(header or OBS_HEADER)
   writer.writerows(rows)
   return ("\ufeff" if bom else "") + out.getvalue()
+
+
+def import_subdir(name: str,
+                  csv_text: str | None = None,
+                  *,
+                  provenance: str = PROVENANCE,
+                  source: str = SOURCE) -> dict[str, str]:
+  """
+  The files of import subdirectory name, for run_dir().
+
+  Its config.json imports *.mcf and case*.csv under provenance, and its
+  provenance.mcf defines provenance and source (with a url derived from
+  source). csv_text defaults to one obs_row().
+  """
+  provenance_ref = f"dcid:{provenance}"
+  config = {
+      "inputFiles": [
+          {
+              "pattern": "*.mcf",
+              "provenance": provenance_ref
+          },
+          {
+              "pattern": "case*.csv",
+              "provenance": provenance_ref,
+              "columnMappings": OBS_MAPPINGS
+          },
+      ]
+  }
+  provenance_mcf = mcf(
+      mcf_node(f"dcid:{source}",
+               typeOf="dcs:Source",
+               url=f'"https://{source.lower()}.example.org"'),
+      mcf_node(provenance_ref, typeOf="dcs:Provenance",
+               source=f"dcid:{source}"))
+  return {
+      f"{name}/config.json": json.dumps(config),
+      f"{name}/provenance.mcf": provenance_mcf,
+      f"{name}/case.csv": csv_text or csv_file(obs_row()),
+  }
 
 
 # --- Expectation builders -----------------------------------------------------
@@ -414,10 +456,15 @@ class Result:
     """Every record the run wrote, shared or not."""
     return _records(_record_counts(self.output))
 
+  def folders_of(self, record_id: str) -> list[str]:
+    """The import folder of every copy of a record, e.g. "dcid:X", sorted."""
+    return sorted(folder for folder, _, record in self.output["records"]
+                  if record.get("@id") == record_id)
+
 
 def run(files: dict[str, str],
         config: dict | None,
-        mode: str = "threaded",
+        mode: str = runlib.DEFAULT_MODE,
         shared_files: dict[str, str] | None = None) -> Result:
   """
   Runs the preprocessor on files plus the shared files.
@@ -447,21 +494,19 @@ def run(files: dict[str, str],
 def run_dir(files: dict[str, str],
             config: dict | None = None,
             *,
-            mode: str = "threaded",
-            runner_kwargs: dict | None = None,
-            config_file: str | None = None) -> Result:
+            mode: str = runlib.DEFAULT_MODE,
+            runner_kwargs: dict | None = None) -> Result:
   """
   Runs the preprocessor on a raw directory layout without shared files.
 
   Used for multi-import parent directories (runner_kwargs={"import_names": ...})
-  and --config_file runs where shared-provenance subtraction does not apply.
+  where shared-provenance subtraction does not apply.
   """
-  input_dir = runlib.write_input_dir(files, config, config_file=config_file)
+  input_dir = runlib.write_input_dir(files, config)
   try:
     output = runlib.run_preprocessor(input_dir,
                                      mode,
-                                     runner_kwargs=runner_kwargs,
-                                     config_file=config_file).output
+                                     runner_kwargs=runner_kwargs).output
   finally:
     shutil.rmtree(input_dir, ignore_errors=True)
   if output["error"]:
@@ -471,14 +516,14 @@ def run_dir(files: dict[str, str],
                 removed=[])
 
 
-def run_mcf(*blocks: str, mode: str = "threaded") -> Result:
+def run_mcf(*blocks: str, mode: str = runlib.DEFAULT_MODE) -> Result:
   """Runs MCF blocks as one nodes.mcf file under MCF_CONFIG."""
   return run({"nodes.mcf": mcf(*blocks)}, MCF_CONFIG, mode)
 
 
 def run_csv(csv_text: str,
             config: dict | None = None,
-            mode: str = "threaded",
+            mode: str = runlib.DEFAULT_MODE,
             **run_kwargs: Any) -> Result:
   """
   Runs csv_text as case.csv.
@@ -532,9 +577,7 @@ class Fails:
   """
   How a run is expected to fail, for a Case's expect (see assert_fails).
 
-  handshake is empty when the error is raised while Runner is being
-  constructed, before run(): then no FAILURE handshake is written and the
-  ingestion workflow gets no structured error.
+  handshake lists the error types of the FAILURE handshake.
   """
 
   error_type: str
@@ -558,7 +601,13 @@ def assert_fails(
     message: str,
     handshake_error_types: tuple[str, ...] = ("GENERIC_ERROR",)
 ) -> None:
-  """The run failed with this error, reported it, and wrote no JSON-LD."""
+  """
+  The run failed with this error and reported it.
+
+  Not checked: that the run wrote no JSON-LD. Workers upload their output as
+  they finish, before metadata is validated, so a failed run can leave
+  output behind.
+  """
   error = result.error
   if error is None:
     pytest.fail("expected the run to fail, but it succeeded", pytrace=False)
@@ -572,8 +621,5 @@ def assert_fails(
   if got_types != sorted(handshake_error_types):
     problems.append(f"handshake error types: want"
                     f" {sorted(handshake_error_types)}, got {got_types}")
-  if result.output["records"]:
-    problems.append("a failed run left JSON-LD behind: "
-                    f"{result.output['records'][:3]}")
   if problems:
     pytest.fail("\n".join(problems), pytrace=False)

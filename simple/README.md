@@ -21,20 +21,6 @@ To see all parameters and overrides supported by the script:
 python3 -m stats.main --help
 ```
 
-## Config driven imports
-
-The importer can be bootstrapped either by an input directory or by a config
-file. Use the `--config_file` flag to use the latter:
-
-```shell
-python3 -m stats.main \
-  --config_file=//path/to/config.json \
-  --output_dir=//path/to/output/dir
-```
-
-For config driven imports, the import files are specified using the
-[dataDownloadUrl](stats/config.md#dataDownloadUrl) field.
-
 ## Output
 
 All output is written under `--output_dir`, which can be a local path or a

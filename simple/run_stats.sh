@@ -6,7 +6,6 @@ OUTPUT_DIR=".data/output_$MODE"
 USAGE="Script to process stats with simple importer.
 Usage: $(basename $0) [Options]
 Options:
-  -c <file>       Json config file for stats importer
   -i <dir>        Input directory to process
   -o <dir>        Output folder for stats importer. Default: $OUTPUT_DIR
   -m <dcpbridge>  Mode of operation for simple importer. Default: $MODE
@@ -49,7 +48,6 @@ function parse_options {
   while (( $# > 0 )); do
     case $1 in
       -i) shift; INPUT_DIR=$(readlink -f "$1");;
-      -c) shift; CONFIG=$(readlink -f "$1");;
       -o) shift; OUTPUT_DIR="$1";;
       -m) shift; MODE="$1";;
       -j) shift; DC_IMPORT_JAR="$1";;
@@ -72,6 +70,7 @@ function setup_python {
   then
     echo_log "Installing Python requirements from $SIMPLE_DIR/requirements.txt"
     pip3 install -r $SIMPLE_DIR/requirements.txt >> $LOG 2>&1
+    pip3 install --no-deps -r $SIMPLE_DIR/requirements_nodeps.txt >> $LOG 2>&1
     PYTHON_REQUIREMENTS_INSTALLED=true
   fi
 }
@@ -134,13 +133,13 @@ function setup {
 
 # Check parameters for simple_import
 function check_simple_import {
-  if [[ "$INPUT_DIR$CONFIG" == "" ]]; then
-    echo_fatal "No input directory or config. Specify one of '-i' or '-c' command line options.
+  if [[ "$INPUT_DIR" == "" ]]; then
+    echo_fatal "No input directory. Specify the '-i' command line option.
 $USAGE"
   fi
 }
 
-# Run the simple import on the specified config/input files.
+# Run the simple import on the specified input files.
 # Geneates output into OUTPUT_DIR
 function simple_import {
   check_simple_import
@@ -149,7 +148,6 @@ function simple_import {
   # Build options for simple importer
   local importer_options=""
   [[ -n "$INPUT_DIR" ]] && importer_options="$importer_options --input_dir=$INPUT_DIR"
-  [[ -n "$CONFIG" ]] && importer_options="$importer_options --config_file=$CONFIG"
   [[ -n "$MODE" ]] && importer_options="$importer_options --mode=$MODE"
   [[ -n "$OUTPUT_DIR" ]] && importer_options="$importer_options --output_dir=$OUTPUT_DIR"
   mkdir -p $OUTPUT_DIR

@@ -89,7 +89,11 @@ public class ReadHistoricalObservationsFn extends DoFn<List<List<String>>, Mutat
     try (ResultSet rs =
         dbClient
             .singleUse(TimestampBound.ofReadTimestamp(tPre))
-            .read(observationTable, toParentPrefixKeySet(batch), ObservationRecord.READ_COLUMNS)) {
+            .read(
+                observationTable,
+                toParentPrefixKeySet(batch),
+                ObservationRecord.READ_COLUMNS,
+                SpannerClient.LOW_PRIORITY)) {
       while (rs.next()) {
         restoredObservationsCounter.inc();
         receiver.output(

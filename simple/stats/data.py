@@ -22,7 +22,6 @@ from urllib.parse import urlparse
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
-from stats.util import is_uri_or_namespace
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
@@ -72,7 +71,9 @@ class Provenance:
   source_id: str
   name: str
   url: str = ""
-  properties: dict[str, str] = field(default_factory=dict)
+  # MCF triples about this node that no field above holds (other predicates,
+  # other types, extra values), with `id` as their subject.
+  custom_triples: list[Triple] = field(default_factory=list)
   provenance_id: str = ""
 
   def triples(self) -> list[Triple]:
@@ -84,18 +85,7 @@ class Provenance:
     ])
     if self.url:
       triples.append(Triple(self.id, _PREDICATE_URL, object_value=self.url))
-
-    # Dynamically serialize any custom properties
-    for pred, val in self.properties.items():
-      # Skip hardcoded fields to prevent duplication
-      if pred in ["typeOf", "name", "sourceLink", "source", "url"]:
-        continue
-      if is_uri_or_namespace(val):
-        triples.append(Triple(self.id, pred, object_id=val))
-      else:
-        triples.append(Triple(self.id, pred, object_value=val))
-
-    return triples
+    return triples + self.custom_triples
 
 
 @dataclass
@@ -104,8 +94,12 @@ class Source:
   name: str
   url: str = ""
   domain: str = field(init=False)
-  properties: dict[str, str] = field(default_factory=dict)
-  provenance_id: str = ""
+  # MCF triples about this node that no field above holds (other predicates,
+  # other types, extra values), with `id` as their subject.
+  custom_triples: list[Triple] = field(default_factory=list)
+  # The import folder the Source is written to (import folders are named
+  # after provenances, see Config.import_name), or "" for the global folder.
+  import_folder: str = ""
 
   def __post_init__(self):
     self.domain = urlparse(self.url).netloc
@@ -118,21 +112,18 @@ class Source:
     ])
     if self.url:
       triples.append(Triple(self.id, _PREDICATE_URL, object_value=self.url))
-    if self.domain:
+    # A domain given in MCF (a custom triple) takes precedence over the one
+    # derived from the url.
+    if self.domain and not _has_predicate(self.custom_triples,
+                                          _PREDICATE_DOMAIN):
       triples.append(
           Triple(self.id, _PREDICATE_DOMAIN, object_value=self.domain))
+    return triples + self.custom_triples
 
-    # Dynamically serialize any custom properties
-    for pred, val in self.properties.items():
-      # Skip hardcoded fields to prevent duplication
-      if pred in ["typeOf", "name", "url", "domain"]:
-        continue
-      if is_uri_or_namespace(val):
-        triples.append(Triple(self.id, pred, object_id=val))
-      else:
-        triples.append(Triple(self.id, pred, object_value=val))
 
-    return triples
+def _has_predicate(triples: list[Triple], predicate: str) -> bool:
+  """Returns whether any of `triples` has `predicate`, ignoring namespaces."""
+  return any(strip_namespace(t.predicate) == predicate for t in triples)
 
 
 @dataclass
@@ -194,6 +185,13 @@ class ValidationErrorType(StrEnum):
   MISSING_SOURCE = "MISSING_SOURCE"
   MISSING_PROVENANCE = "MISSING_PROVENANCE"
   GENERIC_ERROR = "GENERIC_ERROR"
+
+
+def invalid_configuration(message: str) -> ValueError:
+  """Returns a config error, which Runner reports as INVALID_CONFIGURATION."""
+  error = ValueError(message)
+  error.error_type = ValidationErrorType.INVALID_CONFIGURATION
+  return error
 
 
 @dataclass

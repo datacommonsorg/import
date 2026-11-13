@@ -307,8 +307,10 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         Setup:
           Observations:
             Count_Person at geoId/06 on 2020 = 100.0 (Normal: has Node and typeOf)
-            Count_Person at geoId/99 on 2020 = 150.0 (Dangling 1: has typeOf, but NO Node)
-            Count_Person at geoId/88 on 2020 = 250.0 (Dangling 2: has Node, but NO typeOf)
+            Count_Person at geoId/88 on 2020 = 250.0 (Dangling: has Node, but NO typeOf)
+
+        Note: an Edge without its subject Node (typeOf, but NO Node) is not covered.
+        The production schema interleaves Edge in Node, so Spanner rejects such rows.
         """
         import_name = 'USFed_ConstantMaturityRates_Test'
         
@@ -316,22 +318,17 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_node('geoId/06', 'California', types=['State'])
         self.add_edge('geoId/06', 'typeOf', 'State', import_name)
         
-        # 2. Dangling 1: We only add typeOf edge, NO node
-        self.add_edge('geoId/99', 'typeOf', 'State', import_name)
-        
-        # 3. Dangling 2: We only add node, NO typeOf edge
+        # 2. Dangling: We only add node, NO typeOf edge
         self.add_node('geoId/88', 'Unknown Place', types=['State'])
         
         self.add_node('State', 'State Class', types=['Class'])
         
         # Add TimeSeries explicitly
         self.add_timeseries('Count_Person', 'geoId/06', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
-        self.add_timeseries('Count_Person', 'geoId/99', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
         self.add_timeseries('Count_Person', 'geoId/88', 'CensusACS5yrSurvey', 'P1Y', '1', '1', import_name)
         
-        # Add observations for all 3
+        # Add observations for both
         self.add_observation('Count_Person', 'geoId/06', '2020', 100.0)
-        self.add_observation('Count_Person', 'geoId/99', '2020', 150.0)
         self.add_observation('Count_Person', 'geoId/88', '2020', 250.0)
         
         self.flush_to_spanner()
@@ -361,8 +358,8 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertIsInstance(value_json, Mapping)
             
             # Overall stats include ALL observations
-            self.assertEqual(value_json['observation_count'], 3.0)
-            self.assertEqual(value_json['time_series_count'], 3.0)
+            self.assertEqual(value_json['observation_count'], 2.0)
+            self.assertEqual(value_json['time_series_count'], 2.0)
             
             series_summary = value_json['series_summary']
             self.assertEqual(len(series_summary), 1)
@@ -370,30 +367,26 @@ class ProvenanceSummaryGeneratorIntegrationTest(AggregationIntegrationTestBase):
             
             self.assertEqual(summary['min_value'], 100.0)
             self.assertEqual(summary['max_value'], 250.0)
-            self.assertEqual(summary['observation_count'], 3.0)
-            self.assertEqual(summary['time_series_count'], 3.0)
+            self.assertEqual(summary['observation_count'], 2.0)
+            self.assertEqual(summary['time_series_count'], 2.0)
             
             # Place type summary for State
-            # Should ONLY include geoId/06 and geoId/99 (which have typeOf=State)
+            # Should ONLY include geoId/06 (which has typeOf=State).
             # geoId/88 should be excluded because it has no typeOf edge.
             pts = summary['place_type_summary']
             self.assertIsNotNone(pts)
             self.assertIn('State', pts)
             state_summary = pts['State']
-            self.assertEqual(state_summary['place_count'], 2.0)
+            self.assertEqual(state_summary['place_count'], 1.0)
             self.assertEqual(state_summary['min_value'], 100.0)
-            self.assertEqual(state_summary['max_value'], 150.0) # geoId/99 is 150, geoId/88 (250) is excluded
+            self.assertEqual(state_summary['max_value'], 100.0) # geoId/88 (250) is excluded
             
             top_places = state_summary['top_places']
-            self.assertEqual(len(top_places), 2)
+            self.assertEqual(len(top_places), 1)
             
             # geoId/06 (California)
             self.assertEqual(top_places[0]['dcid'], 'geoId/06')
             self.assertEqual(top_places[0]['name'], 'California')
-            
-            # geoId/99 (Dangling: name should be None or empty, but must not crash)
-            self.assertEqual(top_places[1]['dcid'], 'geoId/99')
-            self.assertIsNone(top_places[1]['name']) # BigQuery LEFT JOIN returns NULL for missing name
 
     def test_provenance_summary_aggregation_multiple_imports(self):
         """Tests run_all with multiple imports at once."""

@@ -1,0 +1,45 @@
+{
+  "error": {
+    "message": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
+    "type": "ValueError"
+  },
+  "handshake": {
+    "errors": [
+      {
+        "errorMessage": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
+        "errorType": "INVALID_CONFIGURATION",
+        "file": "",
+        "problemColumns": []
+      }
+    ],
+    "status": "FAILURE"
+  },
+  "ingestion_report": {
+    "folders": [
+      {
+        "folderName": "health"
+      },
+      {
+        "folderName": "population"
+      }
+    ],
+    "run": {
+      "folderNames": [
+        "health",
+        "population"
+      ],
+      "mode": "INGEST",
+      "outputPath": "<output>/preprocessor_reports/testsuite-run",
+      "status": "FAILURE",
+      "workflowExecutionId": "testsuite-run"
+    }
+  },
+  "records": {
+    "folders": {}
+  },
+  "report": {
+    "error": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
+    "importFiles": {},
+    "status": "FAILURE"
+  }
+}
