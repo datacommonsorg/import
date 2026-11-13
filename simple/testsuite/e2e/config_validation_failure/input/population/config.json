@@ -1,5 +1,4 @@
 {
-  "importName": "population_import",
   "inputFiles": [
     {
       "pattern": "*.mcf",

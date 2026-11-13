@@ -14,6 +14,7 @@
 """The import config specified via config.json: its schema and accessors."""
 
 import collections
+import logging
 from typing import Any
 
 from pydantic import BaseModel
@@ -29,12 +30,19 @@ from util.file_match import match
 from util.file_match import validate_pattern
 from util.filesystem import File
 
-# Default and only accepted variable import format
-_VARIABLE_PER_ROW_FORMAT = "variablePerRow"
-# Removed top-level block that used to define Class node metadata. Rejected
-# with a pointer to MCF rather than the generic unknown-key error.
-_REMOVED_ENTITIES_FIELD = "entities"
-_REFERENCE_COLUMN_FIELDS = ("columnsToResolve", "referenceColumns")
+# Deprecated top-level key: accepted, with a warning (see parse_config), but
+# ignored. Subdirectories of the input directory are always searched.
+_INCLUDE_INPUT_SUBDIRS_FIELD = "includeInputSubdirs"
+_REFERENCE_HINT = ("Write each reference as a cell value with a 'dcid:' prefix"
+                   " instead, e.g. 'dcid:country/USA'.")
+# Removed `inputFiles` entry keys, rejected with how to migrate rather than
+# the generic unknown-key error.
+_REMOVED_ENTRY_KEYS = {
+    "columnsToResolve": _REFERENCE_HINT,
+    "referenceColumns": _REFERENCE_HINT,
+    "rowEntityType": "Map a 'dcid:typeOf' column in 'columnMappings' instead.",
+    "idColumn": "Map a 'dcid:dcid' column in 'columnMappings' instead.",
+}
 
 
 class _ConfigModel(BaseModel):
@@ -54,23 +62,11 @@ class InputFileConfig(_ConfigModel):
   """One `inputFiles` entry: the files it applies to and their parameters."""
 
   pattern: str = ""
-  # Undocumented alias of `pattern`, used when `pattern` is not set.
-  filename: str = ""
   provenance: str = ""
   import_type: ImportType = ImportType.OBSERVATIONS
-  format: str | None = None
   column_mappings: dict[str, str] = {}
   ignore_columns: list[str] = []
   observation_properties: dict[str, str | int | float] = {}
-  row_entity_type: str = ""
-  id_column: str = ""
-  columns_to_resolve: list[str] = []
-  reference_columns: list[str] = []
-
-  @property
-  def key(self) -> str:
-    """The pattern that selects this entry's files."""
-    return self.pattern or self.filename
 
   @model_validator(mode="before")
   @classmethod
@@ -78,16 +74,16 @@ class InputFileConfig(_ConfigModel):
     if not isinstance(data, dict):
       raise ValueError("Invalid entry in 'inputFiles': must be a"
                        f" JSON object. Got: {data}")
-    if not (data.get("pattern") or data.get("filename")):
+    if not data.get("pattern"):
       raise ValueError("Invalid entry in 'inputFiles': must specify"
-                       f" 'pattern' or 'filename'. Got: {data}")
+                       f" a 'pattern'. Got: {data}")
+    _reject_removed_keys(data)
     return data
 
-  @field_validator("pattern", "filename")
+  @field_validator("pattern")
   @classmethod
   def _check_pattern(cls, pattern: str) -> str:
-    if pattern:
-      validate_pattern(pattern)
+    validate_pattern(pattern)
     return pattern
 
   @field_validator("import_type", mode="before")
@@ -99,51 +95,26 @@ class InputFileConfig(_ConfigModel):
       raise ValueError(f"Unsupported import type: {value}")
     return value
 
-  @model_validator(mode="after")
-  def _check_fields(self) -> "InputFileConfig":
-    # `format` is a no-op because every observations CSV is variable-per-row.
-    # It is still validated so that a config carrying a stale value fails
-    # loudly instead of having its CSVs silently misread.
-    if self.format and self.format != _VARIABLE_PER_ROW_FORMAT:
-      raise ValueError(
-          f"Unsupported format '{self.format}' for '{self.key}'. The only"
-          f" supported format is '{_VARIABLE_PER_ROW_FORMAT}', which is also"
-          " the default.")
-    is_entities = self.import_type == ImportType.ENTITIES
-    reference_fields = sorted(_keys_set(self) & set(_REFERENCE_COLUMN_FIELDS))
-    if reference_fields and not is_entities:
-      raise ValueError(
-          f"'{reference_fields[0]}' is only supported for 'importType':"
-          f" '{ImportType.ENTITIES}', but entry '{self.key}' has"
-          f" importType '{self.import_type}'.")
-    if is_entities and not self.row_entity_type:
-      raise ValueError(
-          f"'rowEntityType' is required for 'importType':"
-          f" '{ImportType.ENTITIES}', but entry '{self.key}' has none.")
-    return self
-
 
 # The entry of a file that no `inputFiles` entry matches: every field defaults.
 _NO_ENTRY = InputFileConfig.model_construct()
 
 
-def _keys_set(model: BaseModel) -> set[str]:
-  """The config.json keys set in the object `model` was validated from."""
-  fields = type(model).model_fields
-  return {fields[name].alias or name for name in model.model_fields_set}
+def _reject_removed_keys(entry: dict) -> None:
+  """Raises ValueError, with how to migrate, if `entry` has a removed key."""
+  removed = sorted(key for key in entry if key in _REMOVED_ENTRY_KEYS)
+  if not removed:
+    return
+  # Each hint once, in key order: both reference keys share one.
+  hints = dict.fromkeys(_REMOVED_ENTRY_KEYS[key] for key in removed)
+  raise ValueError("Removed key(s) in 'inputFiles' entry for"
+                   f" '{entry['pattern']}': {removed}. " + " ".join(hints))
 
 
 class ImportConfig(_ConfigModel):
   """A whole config.json."""
 
   input_files: list[InputFileConfig] = []
-  # TODO(gmechali): groupStatVarsByProperty is slated for deprecation. Until
-  # then it keeps its historical leniency: any value, with "true", "1" and
-  # "yes" as the only true strings.
-  group_stat_vars_by_property: bool = False
-  include_input_subdirs: bool = False
-  import_name: str = ""
-  data_download_url: list[str] = []
 
   @model_validator(mode="before")
   @classmethod
@@ -151,24 +122,16 @@ class ImportConfig(_ConfigModel):
     if not isinstance(data, dict):
       raise ValueError(
           f"config.json must be a JSON object. Got: {type(data).__name__}")
-    _reject_entities_block(data)
     input_files = data.get("inputFiles", [])
     if not isinstance(input_files, list):
       raise ValueError(
           "'inputFiles' must be a list of objects, each with a "
           f"'pattern' and a 'provenance'. Got: {type(input_files).__name__}")
-    return data
-
-  @field_validator("group_stat_vars_by_property", mode="before")
-  @classmethod
-  def _lenient_bool(cls, value: Any) -> bool:
-    if isinstance(value, str):
-      return value.lower() in ("true", "1", "yes")
-    return bool(value)
+    return _drop_include_input_subdirs(data)
 
   @model_validator(mode="after")
   def _check_unique_patterns(self) -> "ImportConfig":
-    counts = collections.Counter(f.key for f in self.input_files)
+    counts = collections.Counter(f.pattern for f in self.input_files)
     duplicates = sorted(key for key, count in counts.items() if count > 1)
     if duplicates:
       raise ValueError(
@@ -177,36 +140,32 @@ class ImportConfig(_ConfigModel):
     return self
 
 
-def _reject_entities_block(data: dict) -> None:
-  """Raises ValueError if `data` has the removed top-level `entities` block.
+def _drop_include_input_subdirs(data: dict) -> dict:
+  """Returns `data` without the deprecated `includeInputSubdirs`, if set."""
+  if _INCLUDE_INPUT_SUBDIRS_FIELD not in data:
+    return data
+  return {k: v for k, v in data.items() if k != _INCLUDE_INPUT_SUBDIRS_FIELD}
 
-  Class nodes for entity types used to be defined in config.json. They must now
-  be defined in an MCF file like any other schema node.
-  """
-  # TODO(gmechali): Delete this migration error after a few releases; the
-  # generic unknown-key validation will then reject the block.
-  if _REMOVED_ENTITIES_FIELD not in data:
+
+def _warn_if_include_input_subdirs(data: Any, path: str) -> None:
+  """Logs that `includeInputSubdirs`, if set in `data`, is ignored."""
+  if not isinstance(data, dict) or _INCLUDE_INPUT_SUBDIRS_FIELD not in data:
     return
-  entities = data[_REMOVED_ENTITIES_FIELD]
-  found = (f" Found entries for: {sorted(entities)}."
-           if isinstance(entities, dict) and entities else "")
-  raise ValueError(
-      f"The top-level '{_REMOVED_ENTITIES_FIELD}' block in config.json is no "
-      f"longer supported.{found} Define each entity type that is not already in "
-      "the Data Commons schema as a Class node in an MCF file instead, e.g.:\n"
-      "  Node: dcid:Author\n"
-      "  typeOf: dcs:Class\n"
-      '  name: "Author"\n'
-      '  description: "A person who wrote an article"')
+  logging.warning(
+      "%s: '%s' is deprecated and ignored: subdirectories of the input"
+      " directory are always searched, and patterns decide which files are"
+      " imported. Remove it from this config.json.", path,
+      _INCLUDE_INPUT_SUBDIRS_FIELD)
 
 
-def parse_config(data: Any) -> ImportConfig:
-  """Validates `data`, the parsed config.json.
+def parse_config(data: Any, path: str = "config.json") -> ImportConfig:
+  """Validates `data`, the parsed config.json at `path`.
 
   Raises:
     ValueError: Listing every problem found. Runner reports it as
       INVALID_CONFIGURATION.
   """
+  _warn_if_include_input_subdirs(data, path)
   try:
     return ImportConfig.model_validate(data)
   except ValidationError as e:
@@ -248,22 +207,22 @@ def _describe_object(loc: tuple, data: Any) -> str:
   """Names the object at `loc`: config.json or an `inputFiles` entry.
 
   Errors inside an entry only occur once `_check_entry` accepted it, so the
-  entry is an object with a pattern or filename.
+  entry is an object with a pattern.
   """
   if len(loc) >= 2 and loc[0] == "inputFiles":
     entry = data["inputFiles"][loc[1]]
-    key = entry.get("pattern") or entry.get("filename")
-    return f"'inputFiles' entry for '{key}'"
+    return f"'inputFiles' entry for '{entry['pattern']}'"
   return "config.json"
 
 
 def _describe_location(loc: tuple, data: Any) -> str:
-  """Names the value at `loc`, e.g. 'ignoreColumns' in an inputFiles entry."""
-  if len(loc) >= 3 and loc[0] == "inputFiles":
-    field = ".".join(str(part) for part in loc[2:])
-    return f"'{field}' in {_describe_object(loc[:2], data)}"
-  field = ".".join(str(part) for part in loc)
-  return f"'{field}' in config.json"
+  """Names the value at `loc`, e.g. 'ignoreColumns' in an inputFiles entry.
+
+  Only fields of an `inputFiles` entry get pydantic's own errors: every other
+  problem is raised by our validators, with its own message.
+  """
+  field = ".".join(str(part) for part in loc[2:])
+  return f"'{field}' in {_describe_object(loc[:2], data)}"
 
 
 class Config:
@@ -282,7 +241,7 @@ class Config:
     self.model = data if isinstance(data, ImportConfig) else parse_config(data)
     # Patterns are unique, and dicts keep the config's order.
     self._input_files_config: dict[str, InputFileConfig] = {
-        f.key: f for f in self.model.input_files
+        f.pattern: f for f in self.model.input_files
     }
     # Cache of a file's full path to the pattern of the first entry that
     # matches it (or None), e.g. "path/to/foo1.csv" -> "foo*.csv".
@@ -292,17 +251,11 @@ class Config:
     """The `inputFiles` patterns, in config order."""
     return list(self._input_files_config)
 
-  def data_download_urls(self) -> list[str]:
-    return self.model.data_download_url
-
   def import_type(self, input_file: File) -> ImportType:
     return self._entry(input_file).import_type
 
   def column_mappings(self, input_file: File) -> dict[str, str]:
     return self._entry(input_file).column_mappings
-
-  def id_column(self, input_file: File) -> str:
-    return self._entry(input_file).id_column
 
   def ignore_columns(self, input_file: File) -> list[str]:
     return self._entry(input_file).ignore_columns
@@ -310,22 +263,9 @@ class Config:
   def provenance_name(self, input_file: File) -> str:
     return self._entry(input_file).provenance
 
-  def row_entity_type(self, input_file: File) -> str:
-    return self._entry(input_file).row_entity_type
-
-  def entity_columns(self, input_file: File) -> list[str]:
-    entry = self._entry(input_file)
-    return entry.reference_columns or entry.columns_to_resolve
-
   def observation_properties(self,
                              input_file: File) -> dict[str, str | int | float]:
     return self._entry(input_file).observation_properties
-
-  def generate_hierarchy(self) -> bool:
-    return self.model.group_stat_vars_by_property
-
-  def include_input_subdirs(self) -> bool:
-    return self.model.include_input_subdirs
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""

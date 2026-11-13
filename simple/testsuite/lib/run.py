@@ -99,15 +99,9 @@ class RunResult:
 
 def run_preprocessor(input_dir: str,
                      mode: Mode | str = DEFAULT_MODE,
-                     runner_kwargs: dict | None = None,
-                     config_file: str | None = None) -> RunResult:
+                     runner_kwargs: dict | None = None) -> RunResult:
   """
   Runs Runner on a copy of input_dir and returns its canonical output.
-
-  By default Runner discovers config.json in the input dir. With config_file
-  (a path relative to input_dir), Runner is driven by that config file
-  instead; "<input>" in it (e.g. in dataDownloadUrl) is replaced by the
-  input location of this run.
 
   The run's work directory is deleted afterwards, unless the
   TESTSUITE_KEEP_WORK_DIRS environment variable is set.
@@ -116,8 +110,7 @@ def run_preprocessor(input_dir: str,
     mode = MODES[mode]
   work = tempfile.mkdtemp(prefix=f"testsuite-{mode.name}-")
   try:
-    return RunResult(
-        output=_run_in(work, input_dir, mode, runner_kwargs, config_file))
+    return RunResult(output=_run_in(work, input_dir, mode, runner_kwargs))
   finally:
     if not os.environ.get(_KEEP_WORK_DIRS_ENV):
       shutil.rmtree(work, ignore_errors=True)
@@ -142,42 +135,25 @@ class _Paths:
     return f"{self.gcs_root}/temp"
 
 
-def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
-            config_file: str | None) -> dict:
+def _run_in(work: str, input_dir: str, mode: Mode,
+            runner_kwargs: dict | None) -> dict:
   """Stages input_dir under work, runs Runner and reads its output back."""
   gcs_root = fake_gcs.new_prefix()
   local_out = os.path.join(work, "output")
   input_path = (f"{gcs_root}/input" if mode.gcs_input else os.path.join(
       work, "input"))
   paths = _Paths(local_out, gcs_root, input_path)
-  _stage_input(input_dir, os.path.join(work, "staged"), paths, mode,
-               config_file)
-  error = _run_runner(paths, mode, runner_kwargs, config_file)
+  _stage_input(input_dir, paths, mode)
+  error = _run_runner(paths, mode, runner_kwargs)
   return _read_output(paths, error)
 
 
-def _stage_input(input_dir: str, staged: str, paths: _Paths, mode: Mode,
-                 config_file: str | None) -> None:
+def _stage_input(input_dir: str, paths: _Paths, mode: Mode) -> None:
   """Copies input_dir to where Runner reads it (local disk or GCS)."""
-  shutil.copytree(input_dir, staged)
-  _replace_input_token_in_config_file(staged, config_file, paths.input)
   if mode.gcs_input:
-    fake_gcs.upload_dir(staged, paths.input)
+    fake_gcs.upload_dir(input_dir, paths.input)
   else:
-    shutil.copytree(staged, paths.input)
-
-
-def _replace_input_token_in_config_file(staged: str, config_file: str | None,
-                                        input_path: str) -> None:
-  if not config_file:
-    return
-  config_path = os.path.join(staged, config_file)
-  if not os.path.exists(config_path):
-    return
-  with open(config_path, encoding="utf-8") as f:
-    text = f.read().replace("<input>", input_path)
-  with open(config_path, "w", encoding="utf-8") as f:
-    f.write(text)
+    shutil.copytree(input_dir, paths.input)
 
 
 def _check_workers_inherit_patches() -> None:
@@ -196,8 +172,8 @@ def _check_workers_inherit_patches() -> None:
         f" '{method}'. See testsuite/README.md.")
 
 
-def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
-                config_file: str | None) -> dict | None:
+def _run_runner(paths: _Paths, mode: Mode,
+                runner_kwargs: dict | None) -> dict | None:
   """
   Runs Runner; returns the exception it raised, as a dict, or None.
 
@@ -215,9 +191,7 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
        mode.patches():
     from stats.runner import Runner  # pylint: disable=import-outside-toplevel
     try:
-      Runner(config_file_path=(f"{paths.input}/{config_file}"
-                               if config_file else None),
-             input_dir_path=None if config_file else paths.input,
+      Runner(input_dir_path=paths.input,
              output_dir_path=paths.output,
              **(runner_kwargs or {})).run()
     except Exception as e:  # pylint: disable=broad-except
@@ -272,9 +246,7 @@ def _read_json(path: str) -> Any:
     return json.load(f)
 
 
-def write_input_dir(files: dict[str, str | bytes],
-                    config: dict | None,
-                    config_file: str | None = None) -> str:
+def write_input_dir(files: dict[str, str | bytes], config: dict | None) -> str:
   """Materializes {relative path: content} (+ config) in a temp dir."""
   root = tempfile.mkdtemp(prefix="testsuite-input-")
   for rel, content in files.items():
@@ -285,8 +257,6 @@ def write_input_dir(files: dict[str, str | bytes],
     with open(path, mode, **text_args) as f:
       f.write(content)
   if config is not None:
-    config_path = os.path.join(root, config_file or "config.json")
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    with open(config_path, "w", encoding="utf-8") as f:
+    with open(os.path.join(root, "config.json"), "w", encoding="utf-8") as f:
       json.dump(config, f, indent=2)
   return root

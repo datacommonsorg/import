@@ -116,34 +116,37 @@ def same_name_mappings(*columns: str) -> dict[str, str]:
   return {f"dcid:{column}": column for column in columns}
 
 
-# columnMappings for all three author columns, a convenience for
-# entities_config().
-AUTHOR_MAPPINGS = same_name_mappings("author_id", "author_name",
-                                     "author_country")
-
-
-def entities_config(row_type: str = "Author",
-                    id_column: str | None = "author_id",
-                    *,
-                    mappings: dict[str, str],
-                    **file_options: Any) -> dict:
+def entity_mappings(*columns: str, dcid: str = "author_id") -> dict[str, str]:
   """
-  Config importing *.mcf and case*.csv as entities of row_type.
+  columnMappings of an entities CSV: its dcid column, its "type" column, and
+  same_name_mappings(*columns).
+  """
+  return {
+      "dcid:dcid": dcid,
+      "dcid:typeOf": "type",
+      **same_name_mappings(*columns)
+  }
 
-  mappings is the CSV's columnMappings, e.g. AUTHOR_MAPPINGS. Pass
-  id_column=None for no idColumn. file_options are added to the CSV's
-  inputFiles entry.
+
+# columnMappings of an author_id, type, author_name, author_country CSV, a
+# convenience for entities_config().
+AUTHOR_MAPPINGS = entity_mappings("author_name", "author_country")
+
+
+def entities_config(*, mappings: dict[str, str], **file_options: Any) -> dict:
+  """
+  Config importing *.mcf and case*.csv as entities.
+
+  mappings is the CSV's columnMappings, e.g. AUTHOR_MAPPINGS or
+  entity_mappings(...). file_options are added to the CSV's inputFiles entry.
   """
   entry = {
       "pattern": "case*.csv",
       "importType": "entities",
-      "rowEntityType": row_type,
       "provenance": f"dcid:{PROVENANCE}",
       "columnMappings": mappings,
       **file_options,
   }
-  if id_column:
-    entry["idColumn"] = id_column
   return {"inputFiles": [*MCF_CONFIG["inputFiles"], entry]}
 
 
@@ -492,20 +495,18 @@ def run_dir(files: dict[str, str],
             config: dict | None = None,
             *,
             mode: str = runlib.DEFAULT_MODE,
-            runner_kwargs: dict | None = None,
-            config_file: str | None = None) -> Result:
+            runner_kwargs: dict | None = None) -> Result:
   """
   Runs the preprocessor on a raw directory layout without shared files.
 
   Used for multi-import parent directories (runner_kwargs={"import_names": ...})
-  and --config_file runs where shared-provenance subtraction does not apply.
+  where shared-provenance subtraction does not apply.
   """
-  input_dir = runlib.write_input_dir(files, config, config_file=config_file)
+  input_dir = runlib.write_input_dir(files, config)
   try:
     output = runlib.run_preprocessor(input_dir,
                                      mode,
-                                     runner_kwargs=runner_kwargs,
-                                     config_file=config_file).output
+                                     runner_kwargs=runner_kwargs).output
   finally:
     shutil.rmtree(input_dir, ignore_errors=True)
   if output["error"]:

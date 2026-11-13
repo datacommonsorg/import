@@ -285,7 +285,7 @@ def _read_config_file(file: File) -> ImportConfig:
   """Reads and validates a `config.json` file."""
   config_data = _parse_config_json(file.read(), file.full_path())
   try:
-    return parse_config(config_data)
+    return parse_config(config_data, file.full_path())
   except ValueError as e:
     raise invalid_configuration(f"{file.full_path()}: {e}") from e
 
@@ -301,13 +301,9 @@ def _parse_config_json(text: str, path: str) -> object:
 
 
 def _scope_input_file(entry: InputFileConfig, rel_dir: str) -> InputFileConfig:
-  """Prefixes the entry's `pattern` (or `filename`) with `rel_dir`."""
+  """Prefixes the entry's `pattern` with `rel_dir`."""
   return entry.model_copy(
-      update={
-          field: fspath.join(rel_dir, getattr(entry, field))
-          for field in ("pattern", "filename")
-          if getattr(entry, field)
-      })
+      update={"pattern": fspath.join(rel_dir, entry.pattern)})
 
 
 class Runner:
@@ -315,7 +311,6 @@ class Runner:
 
   def __init__(
       self,
-      config_file_path: str,
       input_dir_path: str,
       output_dir_path: str,
       import_names: Optional[list[str]] = None,
@@ -331,19 +326,17 @@ class Runner:
     if max_workers is not None and max_workers < 1:
       raise ValueError(f"max_workers must be at least 1, got {max_workers}")
 
-    assert (config_file_path or
-            input_dir_path), "One of config_file or input_dir must be specified"
-    assert output_dir_path, "output_dir must be specified"
+    if not input_dir_path:
+      raise ValueError("input_dir must be specified")
+    if not output_dir_path:
+      raise ValueError("output_dir must be specified")
 
-    self.config_file_path = config_file_path
     self.input_dir_path = input_dir_path
     self.import_names = import_names
     self.active_import_prefixes = None
 
     # File systems, both input and output. Must be closed when run finishes.
     self.all_stores: list[Store] = []
-    # Input-only stores
-    self.input_stores: list[Store] = []
 
     # Output directories. Set up before the config is read so that a bad
     # config is reported like any other failure.
@@ -361,6 +354,7 @@ class Runner:
     # input or output store is on GCS.
     self.max_workers: int | None = max_workers
     # Set by _load_config().
+    self.input_store: Store | None = None
     self.config: Config | None = None
     self.nodes: Nodes | None = None
     # Set while importing.
@@ -371,69 +365,46 @@ class Runner:
         os.getenv("WORKFLOW_EXECUTION_ID"))
 
   def _open_input_store(self, path: str) -> Store:
-    """Opens an input store, to be closed with the others when the run ends."""
-    input_store = create_store(path)
-    self.all_stores.append(input_store)
-    self.input_stores.append(input_store)
-    return input_store
+    """Opens the input store, to be closed with the others when the run ends."""
+    self.input_store = create_store(path)
+    self.all_stores.append(self.input_store)
+    return self.input_store
 
   def _load_config(self) -> None:
-    """Reads and validates the config, and opens the input stores."""
-    # Config file driven (input paths pulled from config)
-    if self.config_file_path:
-      self._read_config_from_file(self.config_file_path)
+    """Opens the input store, and reads and validates the config."""
+    imports = self.import_names or []
 
-      input_urls = self.config.data_download_urls()
-      if not input_urls:
-        raise invalid_configuration("Data Download URLs not found in config.")
-      for input_url in input_urls:
-        self._open_input_store(input_url)
+    # Case A: Bulk Load (ALL_IMPORTS)
+    if imports == [constants.ALL_IMPORTS]:
+      logging.info("Running bulk load for all imports under: %s",
+                   self.input_dir_path)
+      input_store = self._open_input_store(self.input_dir_path)
+      configs = self._read_configs_from_subdirs(input_store.as_dir())
+      self.active_import_prefixes = set(
+          f"{fspath.dirname(c.path)}/" for c in configs)
 
-    # Input dir driven (config file found in input dir)
+    # Case B: Combined Load for specific imports (len > 1)
+    elif len(imports) > 1:
+      logging.info("Running combined load for specific imports: %s", imports)
+      input_store = self._open_input_store(self.input_dir_path)
+      configs = self._read_configs_from_list(input_store.as_dir(), imports)
+      self.active_import_prefixes = set(
+          f"{fspath.dirname(c.path)}/" for c in configs)
+
+    # Case C: Single Import
+    elif imports:
+      import_dir = join_path(self.input_dir_path, imports[0])
+      logging.info("Using import specific directory: %s", import_dir)
+      input_store = self._open_input_store(import_dir)
+      self._read_config_in_dir(input_store.as_dir())
+
+    # Case D: Default action (config at root)
     else:
-      effective_input_dir = self.input_dir_path
-      imports = self.import_names or []
+      input_store = self._open_input_store(self.input_dir_path)
+      self._read_config_in_dir(input_store.as_dir())
 
-      # Case A: Bulk Load (ALL_IMPORTS)
-      if imports == [constants.ALL_IMPORTS]:
-        logging.info("Running bulk load for all imports under: %s",
-                     effective_input_dir)
-        input_store = self._open_input_store(effective_input_dir)
-        configs = self._read_configs_from_subdirs(input_store.as_dir())
-        self.active_import_prefixes = set(
-            f"{fspath.dirname(c.path)}/" for c in configs)
-
-      # Case B: Combined Load for specific imports (len > 1)
-      elif len(imports) > 1:
-        logging.info("Running combined load for specific imports: %s", imports)
-        input_store = self._open_input_store(effective_input_dir)
-        configs = self._read_configs_from_list(input_store.as_dir(), imports)
-        self.active_import_prefixes = set(
-            f"{fspath.dirname(c.path)}/" for c in configs)
-
-      # Case C: Single Import
-      elif imports:
-        effective_input_dir = join_path(self.input_dir_path, imports[0])
-        logging.info("Using import specific directory: %s", effective_input_dir)
-        input_store = self._open_input_store(effective_input_dir)
-        self._read_config_from_file(
-            config_file_path=constants.CONFIG_JSON_FILE_NAME,
-            config_file_dir=input_store.as_dir(),
-        )
-
-      # Case D: Default action (config at root)
-      else:
-        input_store = self._open_input_store(effective_input_dir)
-        self._read_config_from_file(
-            config_file_path=constants.CONFIG_JSON_FILE_NAME,
-            config_file_dir=input_store.as_dir(),
-        )
-
-    # New option to traverse subdirs of input dir(s). Defaults to false.
-    self.include_input_subdirs = self.config.include_input_subdirs()
-    if self.include_input_subdirs:
-      for input_store in self.input_stores:
-        _check_not_overlapping(input_store, self.output_store)
+    # The input dir is searched recursively, so it must not hold the output.
+    _check_not_overlapping(self.input_store, self.output_store)
 
     self.nodes = Nodes(self.config)
     if self.max_workers is None:
@@ -535,7 +506,6 @@ class Runner:
     else:
       handshake_payload = {
           "importList": json.dumps(self.trigger_workflow_info),
-          "generateStatVarGroups": bool(self.config.generate_hierarchy()),
       }
 
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
@@ -555,19 +525,14 @@ class Runner:
     else:
       logging.info("Successfully wrote preprocessor result to GCS.")
 
-  def _read_config_from_file(self,
-                             config_file_path: str,
-                             config_file_dir: Optional[Dir] = None) -> Config:
-    if config_file_dir:
-      raw_config = config_file_dir.open_file(config_file_path,
-                                             create_if_missing=False).read()
-    else:
-      with create_store(config_file_path) as config_store:
-        raw_config = config_store.as_file().read()
-
-    config_data = (_parse_config_json(raw_config, config_file_path)
+  def _read_config_in_dir(self, input_dir: Dir) -> None:
+    """Reads and validates the `config.json` at the root of `input_dir`."""
+    file = input_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
+                               create_if_missing=False)
+    raw_config = file.read()
+    config_data = (_parse_config_json(raw_config, file.full_path())
                    if raw_config else {})
-    self.config = Config(data=config_data)
+    self.config = Config(parse_config(config_data, file.full_path()))
 
   def _merge_configs(self, configs: list, base_dir: Dir):
     """Merges multiple config.json files into a single configuration.
@@ -584,8 +549,7 @@ class Runner:
       input_files.extend(
           _scope_input_file(entry, rel_dir) for entry in config.input_files)
 
-    self.config = Config(
-        ImportConfig(input_files=input_files, include_input_subdirs=True))
+    self.config = Config(ImportConfig(input_files=input_files))
 
   def _find_configs_in_dir(self, directory: Dir) -> list:
     """Finds all config.json files in a directory, excluding archives."""
@@ -668,14 +632,7 @@ class Runner:
 
   def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
     """Discovers, filters, sorts, and returns matched CSV and MCF files."""
-    input_files: list[File] = []
-    for input_store in self.input_stores:
-      if input_store.isdir():
-        input_files.extend(input_store.as_dir().all_files(
-            self.include_input_subdirs))
-      else:
-        input_files.append(input_store.as_file())
-
+    input_files = self.input_store.as_dir().all_files(include_subdirs=True)
     csv_files: list[File] = []
     mcf_files: list[File] = []
 

@@ -1,12 +1,12 @@
 {
   "error": {
-    "message": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['dataDownloadUrl', 'groupStatVarsByProperty', 'importName', 'includeInputSubdirs', 'inputFiles']",
+    "message": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
     "type": "ValueError"
   },
   "handshake": {
     "errors": [
       {
-        "errorMessage": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['dataDownloadUrl', 'groupStatVarsByProperty', 'importName', 'includeInputSubdirs', 'inputFiles']",
+        "errorMessage": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
         "errorType": "INVALID_CONFIGURATION",
         "file": "",
         "problemColumns": []
@@ -38,7 +38,7 @@
     "folders": {}
   },
   "report": {
-    "error": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['dataDownloadUrl', 'groupStatVarsByProperty', 'importName', 'includeInputSubdirs', 'inputFiles']",
+    "error": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
     "importFiles": {},
     "status": "FAILURE"
   }
