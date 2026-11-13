@@ -109,6 +109,18 @@ curl http://localhost:8080/stat/series?place=country/USA&statVar=<statVar>
 
 Then should see "Hello World!" in the console output.
 
+### Test coverage
+
+CI measures test coverage on every pull request to `master`, prints it in the build log, and uploads it to [Codacy](https://app.codacy.com/gh/datacommonsorg/import/coverage) (report-only: coverage never fails the build).
+
+To measure coverage locally:
+
+```bash
+PY_TEST_COVERAGE=1 ./run_test.sh -p
+```
+
+This writes `simple/coverage.xml`. Set `COVERAGE_BASE_BRANCH=master` to also print coverage of the lines you changed.
+
 ### Coding Guidelines
 
 The code is formatted using
