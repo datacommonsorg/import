@@ -53,7 +53,7 @@ it with `upstream/master` on a real dataset using the
 [regression check tool](tools/regression/README.md):
 
 ```shell
-python3 -m tools.regression --input_dir=//path/to/input
+python3 -m tools.regression --input_dir=//path/to/input -- --imports=<import>
 ```
 
 It reports output differences (byte-level and semantic), wall and CPU time,
