@@ -28,7 +28,8 @@ class IngestionState(str, Enum):
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     FAILURE = "FAILURE"
-    RETRY = "RETRY"
+    RETRY = "RETRY"  # Deprecated: replaced by ROLLBACK
+    ROLLBACK = "ROLLBACK"
 
 
 class IngestionStage(str, Enum):
@@ -405,12 +406,13 @@ class SpannerClient:
 
             # The statements below allow us to construct a partial update, only for the fields that are set.
             if status in (IngestionState.SUCCESS, IngestionState.FAILURE,
-                          IngestionState.RETRY):
+                          IngestionState.RETRY, IngestionState.ROLLBACK):
                 columns.append("CompletionTimestamp")
                 values.append(spanner.COMMIT_TIMESTAMP)
                 columns.append("IngestionFailure")
                 values.append(status in (IngestionState.FAILURE,
-                                         IngestionState.RETRY))
+                                         IngestionState.RETRY,
+                                         IngestionState.ROLLBACK))
 
                 # Calculate workflow execution time from CreationTimestamp
                 exec_time = self._get_workflow_execution_time(
@@ -524,10 +526,11 @@ class SpannerClient:
         try:
             with self.database.snapshot() as snapshot:
                 results = snapshot.execute_sql(
-                    "SELECT 1 FROM ImportStatus WHERE State = 'RETRY' LIMIT 1")
+                    "SELECT 1 FROM ImportStatus WHERE State IN ('RETRY', 'ROLLBACK') LIMIT 1"
+                )
                 return any(results)
         except Exception as e:
-            logging.error(f'Error checking for retry imports: {e}')
+            logging.error(f'Error checking for retry/rollback imports: {e}')
             return True
 
     def get_imports_for_workflow(self, workflow_id: str) -> list[str]:
