@@ -225,7 +225,7 @@ def _render_errors(error: ValidationError, data: Any) -> str:
     loc = e["loc"]
     if e["type"] == "extra_forbidden":
       unknown_keys[loc[:-1]].append(str(loc[-1]))
-    elif e["type"] == "value_error" and "error" in e.get("ctx", {}):
+    elif e["type"] == "value_error" and "error" in (e.get("ctx") or {}):
       lines.append(str(e["ctx"]["error"]))
     else:
       lines.append(f"Invalid {_describe_location(loc, data)}: {e['msg']}")
