@@ -1,5 +1,5 @@
 {
-  "description": "Combined load of two named imports where one subdirectory's config.json has an unknown key. The run must fail before importing anything and report the error like any other failure: report.json, the ingestion report (listing both folders) and a FAILURE handshake with INVALID_CONFIGURATION naming that config.json.",
+  "description": "Combined load of two named imports where one subdirectory's config.json has an unknown key. The run must fail before importing anything and report the error like any other failure: report.json, the ingestion report (listing both requested folders, with zero counts) and a FAILURE handshake with INVALID_CONFIGURATION naming that config.json.",
   "runner_kwargs": {
     "import_names": [
       "health",

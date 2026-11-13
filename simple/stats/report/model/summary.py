@@ -67,18 +67,41 @@ class Provenance(BaseModel):
   """One entry in `folders[].provenances[]`."""
 
   id: str = Field(description="Provenance DCID")
-  # TODO: Add source_id, file_count, observation_count, date_range,
-  # node counts by type, and provenance-level errors.
+  sourceId: str | None = Field(
+      default=None, description="DCID of the provenance's source, if known")
+  fileCount: int = Field(
+      default=0, description="Input files imported under this provenance")
+  # TODO: Add observations, dateRange, node counts by type and
+  # provenance-level errors.
+
+
+class FileCounts(BaseModel):
+  """`folders[].summary.files`: input files in one folder."""
+
+  count: int = Field(default=0, description="Number of input files")
+  byType: dict[str, int] = Field(
+      default_factory=dict,
+      description="Number of input files per lowercase extension")
+
+
+class FolderSummary(BaseModel):
+  """`folders[].summary`: totals for one imported folder."""
+
+  files: FileCounts = Field(default_factory=FileCounts,
+                            description="Input files in the folder")
+  provenanceCount: int = Field(
+      default=0, description="Number of provenances in the folder")
+  # TODO: Add observations and node counts by type.
 
 
 class Folder(BaseModel):
   """One entry in `folders[]`: summary of one imported folder."""
 
   folderName: str = Field(description="Name of the imported folder")
-  # TODO: Add provenances (list[Provenance]) once they are recorded, so the
-  # report doesn't show an empty list that looks like "no provenances".
-  # TODO: Add provenance_count, observation_count, file counts by type,
-  # node counts by type, and configUri.
+  summary: FolderSummary = Field(default_factory=FolderSummary,
+                                 description="Totals for the folder")
+  provenances: list[Provenance] = Field(
+      default_factory=list, description="Provenances in this folder")
 
 
 class IngestionReport(BaseModel):
