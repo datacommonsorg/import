@@ -19,6 +19,7 @@ from datetime import timezone
 import json
 import logging
 import os
+import posixpath
 import tempfile
 import traceback
 from typing import Callable, Optional
@@ -74,6 +75,24 @@ _MAX_HEADER_VALIDATION_THREADS = 32
 # count above which no extra workers are added (see default_max_workers).
 _GCS_WORKERS_PER_CPU = 2
 _MAX_GCS_WORKERS = 32
+
+
+def _import_names_or_raise(names: list[str] | None) -> list[str]:
+  """Returns the run's imports, stripped and without blanks.
+
+  Each must name a subdirectory of the input dir, so names that resolve to the
+  input dir itself or outside it (".", "..", "../x", "/x") are rejected.
+  """
+  imports = [name.strip() for name in names or [] if name.strip()]
+  if not imports:
+    raise invalid_configuration(_NO_IMPORTS_ERROR)
+  for name in imports:
+    path = posixpath.normpath(name)
+    if path in (".", "..") or path.startswith("../") or posixpath.isabs(path):
+      raise invalid_configuration(
+          f"Invalid import {name!r}: an import is a subdirectory of the input"
+          " directory.")
+  return imports
 
 
 def default_max_workers(uses_gcs: bool) -> int:
@@ -378,9 +397,9 @@ class Runner:
 
   def _load_config(self) -> None:
     """Opens the input store, and reads and validates the config."""
-    imports = self.import_names or []
-    if not imports:
-      raise invalid_configuration(_NO_IMPORTS_ERROR)
+    imports = _import_names_or_raise(self.import_names)
+    # Reports and the writer name the run's folders after the cleaned names.
+    self.import_names = imports
 
     # Case A: Bulk Load (ALL_IMPORTS)
     if imports == [constants.ALL_IMPORTS]:
