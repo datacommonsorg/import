@@ -94,46 +94,65 @@ def test_files_in_subdirectories_are_skipped_by_default():
   b.assert_records(result.observations, [b.obs("country/USA", value=1)])
 
 
-def test_include_input_subdirs_picks_up_nested_files():
+INCLUDE_INPUT_SUBDIRS = [
+    Case("true picks up nested files",
+         given=True,
+         expect=[("country/USA", 1), ("country/FRA", 2)]),
+    Case("string true, as documented, picks up nested files",
+         given="true",
+         expect=[("country/USA", 1), ("country/FRA", 2)]),
+    Case("string false skips nested files",
+         given="false",
+         expect=[("country/USA", 1)]),
+]
+
+
+@cases(*INCLUDE_INPUT_SUBDIRS)
+def test_include_input_subdirs(given, expect):
   result = b.run({
       "case.csv": _USA,
       "nested/case_deeper.csv": _FRA
   }, {
-      "includeInputSubdirs": True,
+      "includeInputSubdirs": given,
       **b.obs_config(b.OBS_MAPPINGS, pattern="**/case*.csv")
   })
-  b.assert_records(
-      result.observations,
-      [b.obs("country/USA", value=1),
-       b.obs("country/FRA", value=2)])
+  b.assert_records(result.observations,
+                   [b.obs(about, value=val) for about, val in expect])
 
 
-def test_first_matching_input_files_entry_wins():
-  """
-  countries_b.csv matches both CSV entries; the first one's mappings apply.
+_PLACE_MAPPINGS = {**b.OBS_MAPPINGS, "dcid:observationAbout": "place"}
 
-  other.txt matches no entry and is ignored.
-  """
-  place_mappings = {**b.OBS_MAPPINGS, "dcid:observationAbout": "place"}
-  place_header = ["place", "variable", "date", "value"]
-  config = b.obs_config(place_mappings, pattern="countries_*.csv")
-  config["inputFiles"].append(
-      b.obs_config(b.OBS_MAPPINGS, pattern="*.csv")["inputFiles"][-1])
+# countries.csv has a "place" column, so only an entry with _PLACE_MAPPINGS can
+# import it; other.txt matches no entry and is ignored.
+ENTRY_FOR_A_FILE = [
+    Case("the first matching glob wins",
+         given=[(_PLACE_MAPPINGS, "countries*.csv"), (b.OBS_MAPPINGS, "*.csv")],
+         expect=[("country/USA", 1)]),
+    Case("an exact file name wins over an earlier glob",
+         given=[(b.OBS_MAPPINGS, "*.csv"), (_PLACE_MAPPINGS, "countries.csv")],
+         expect=[("country/USA", 1)]),
+]
+
+
+@cases(*ENTRY_FOR_A_FILE)
+def test_input_files_entry_for_a_file(given, expect):
+  config = {
+      "inputFiles": [
+          *b.MCF_CONFIG["inputFiles"],
+          *(b.obs_config(mappings, pattern=pattern)["inputFiles"][-1]
+            for mappings, pattern in given),
+      ]
+  }
   result = b.run(
       {
-          "countries_a.csv":
+          "countries.csv":
               b.csv_file(b.obs_row("country/USA", value="1"),
-                         header=place_header),
-          "countries_b.csv":
-              b.csv_file(b.obs_row("country/FRA", value="2"),
-                         header=place_header),
+                         header=["place", "variable", "date", "value"]),
           "other.txt":
               "not,a,csv\n",
       }, config)
-  b.assert_records(
-      result.observations,
-      [b.obs("country/USA", value=1),
-       b.obs("country/FRA", value=2)])
+  b.assert_records(result.observations,
+                   [b.obs(about, value=val) for about, val in expect])
 
 
 def test_empty_config_writes_no_provenance_or_source():
@@ -254,6 +273,11 @@ INVALID_CONFIGS = [
         expect=b.Fails(
             "ValueError", "'inputFiles' must be a list of objects, each with a"
             " 'pattern' and a 'provenance'. Got: dict", _INVALID)),
+    Case("inputFiles entry that is not an object",
+         given={"inputFiles": ["case*.csv"]},
+         expect=b.Fails(
+             "ValueError", "Invalid entry in 'inputFiles': must be a JSON"
+             " object. Got: case*.csv", _INVALID)),
     Case("inputFiles entry without a pattern",
          given={"inputFiles": [{
              "provenance": f"dcid:{b.PROVENANCE}"
@@ -307,6 +331,14 @@ INVALID_CONFIGS = [
              "ValueError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['unknownFileKey']", _INVALID)),
+    Case("non-string columnMappings value",
+         given=b.obs_config({
+             **b.OBS_MAPPINGS, "dcid:value": 1
+         }),
+         expect=b.Fails(
+             "ValueError", "Invalid 'columnMappings.dcid:value' in 'inputFiles'"
+             " entry for 'case*.csv': Input should be a valid string",
+             _INVALID)),
     Case("legacy importProxyEntities key is rejected",
          given=b.obs_config(b.OBS_MAPPINGS, importProxyEntities=True),
          expect=b.Fails(
@@ -362,16 +394,51 @@ INVALID_CONFIGS = [
              _INVALID)),
     Case("unsupported importType",
          given=b.obs_config(b.OBS_MAPPINGS, importType="Observations"),
-         expect=b.Fails("ValueError", "CSV Header Validation Failed!")),
+         expect=b.Fails("ValueError", "Unsupported import type: Observations",
+                        _INVALID)),
     Case("events importType is not supported",
          given=b.obs_config(b.OBS_MAPPINGS, importType="events"),
-         expect=b.Fails("ValueError", "Unsupported import type: events")),
+         expect=b.Fails("ValueError", "Unsupported import type: events",
+                        _INVALID)),
     Case("double wildcard in filename pattern",
          given=b.obs_config(b.OBS_MAPPINGS, pattern="**.csv"),
          expect=b.Fails(
              "ValueError",
              "Adjacent double wildcards in the name portion of a pattern are"
-             " not supported")),
+             " not supported", _INVALID)),
+    Case("ignoreColumns that is not a list",
+         given=b.obs_config(b.OBS_MAPPINGS, ignoreColumns="notes"),
+         expect=b.Fails(
+             "ValueError", "Invalid 'ignoreColumns' in 'inputFiles' entry for"
+             " 'case*.csv': Input should be a valid list", _INVALID)),
+    Case("columnMappings that is not an object",
+         given=b.obs_config(list(b.OBS_MAPPINGS)),
+         expect=b.Fails(
+             "ValueError", "Invalid 'columnMappings' in 'inputFiles' entry for"
+             " 'case*.csv': Input should be a valid dictionary", _INVALID)),
+    Case("includeInputSubdirs that is not a boolean",
+         given={
+             **b.obs_config(b.OBS_MAPPINGS), "includeInputSubdirs": "maybe"
+         },
+         expect=b.Fails(
+             "ValueError", "Invalid 'includeInputSubdirs' in config.json:"
+             " Input should be a valid boolean", _INVALID)),
+    Case("duplicate pattern",
+         given={
+             "inputFiles": [
+                 *b.obs_config(b.OBS_MAPPINGS)["inputFiles"],
+                 *b.obs_config(b.OBS_MAPPINGS)["inputFiles"][1:],
+             ]
+         },
+         expect=b.Fails(
+             "ValueError", "Duplicate pattern(s) in 'inputFiles':"
+             " ['case*.csv']. Each pattern can only have one entry.",
+             _INVALID)),
+    Case("entities entry without rowEntityType",
+         given=b.entities_config(row_type="", mappings=b.AUTHOR_MAPPINGS),
+         expect=b.Fails(
+             "ValueError", "'rowEntityType' is required for 'importType':"
+             " 'entities', but entry 'case*.csv' has none.", _INVALID)),
 ]
 
 
@@ -379,6 +446,31 @@ INVALID_CONFIGS = [
 def test_invalid_config(given, expect):
   result = b.run_csv(_USA, given)
   b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
+
+
+def test_every_config_problem_is_reported_at_once():
+  """Unknown keys are grouped per object, then every other problem follows."""
+  config = b.obs_config(b.OBS_MAPPINGS,
+                        ignoreColumns="notes",
+                        otherFileKey=True,
+                        unknownFileKey=True)
+  result = b.run_csv(_USA, {
+      **config, "includeInputSubdirs": "maybe",
+      "unknownTopLevelKey": True
+  })
+  b.assert_fails(
+      result, "ValueError", "Found 4 problems in config.json:\n"
+      "- Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys"
+      " are: [", _INVALID)
+  for problem in [
+      "\n- Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
+      " ['otherFileKey', 'unknownFileKey']. Allowed keys are: [",
+      "\n- Invalid 'ignoreColumns' in 'inputFiles' entry for 'case*.csv':"
+      " Input should be a valid list",
+      "\n- Invalid 'includeInputSubdirs' in config.json: Input should be a"
+      " valid boolean",
+  ]:
+    assert problem in result.error["message"]
 
 
 # A bad subdirectory config.json in a multi-import run is covered end to end by
@@ -393,15 +485,16 @@ INVALID_CONFIG_FILES = [
          expect=b.Fails("JSONDecodeError",
                         "Expecting property name enclosed in double quotes",
                         _INVALID)),
-    Case("subdirectory config that is not a JSON object",
-         given={
-             **b.import_subdir("oecd", _USA),
-             "ilo/config.json": "[]",
-         },
-         expect=b.Fails(
-             "ValueError",
-             "Expected JSON object in <input>/ilo/config.json, got list",
-             _INVALID)),
+    Case(
+        "subdirectory config that is not a JSON object",
+        given={
+            **b.import_subdir("oecd", _USA),
+            "ilo/config.json": "[]",
+        },
+        expect=b.Fails(
+            "ValueError",
+            "<input>/ilo/config.json: config.json must be a JSON object. Got: list",
+            _INVALID)),
 ]
 
 

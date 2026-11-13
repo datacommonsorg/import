@@ -26,6 +26,9 @@ from typing import Callable, Optional
 import fs.path as fspath
 from stats import constants
 from stats.config import Config
+from stats.config import ImportConfig
+from stats.config import InputFileConfig
+from stats.config import parse_config
 from stats.data import FileValidationError
 from stats.data import ImportType
 from stats.data import invalid_configuration
@@ -159,7 +162,7 @@ class _WorkerArgs:
   output_dir_path: str
   process_dir_path: str
   import_names: list[str] | None
-  config_json_str: str
+  config: ImportConfig
   jsonld_dir_name: str
 
 
@@ -249,7 +252,7 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
     process_store = process_store_obj.as_dir()
     input_store = input_dir.open_file(file_rel_path)
 
-    config = Config(json.loads(args.config_json_str))
+    config = Config(args.config)
     nodes = Nodes(config=config)
     graph_writer = JsonLdStreamWriter(output_store,
                                       args.import_names,
@@ -278,17 +281,13 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
     )
 
 
-def _read_config_dict(file: File) -> dict:
-  """Reads and parses a `config.json` file, validating its structure and keys."""
+def _read_config_file(file: File) -> ImportConfig:
+  """Reads and validates a `config.json` file."""
   config_data = _parse_config_json(file.read(), file.full_path())
-  if not isinstance(config_data, dict):
-    raise invalid_configuration(f"Expected JSON object in {file.full_path()}, "
-                                f"got {type(config_data).__name__}")
   try:
-    Config(config_data)
+    return parse_config(config_data)
   except ValueError as e:
     raise invalid_configuration(f"{file.full_path()}: {e}") from e
-  return config_data
 
 
 def _parse_config_json(text: str, path: str) -> object:
@@ -301,17 +300,14 @@ def _parse_config_json(text: str, path: str) -> object:
     raise
 
 
-def _scope_input_file_entry(entry: object, rel_dir: str, import_name: str,
-                            config_path: str) -> dict:
-  """Prefixes `pattern`/`filename` with `rel_dir` and attaches `_import_name`."""
-  if not isinstance(entry, dict):
-    raise ValueError(f"Invalid entry in 'inputFiles' in {config_path}: "
-                     f"must be a JSON object. Got: {entry}")
-  scoped = dict(entry, _import_name=import_name)
-  for key_field in ("pattern", "filename"):
-    if key_field in scoped:
-      scoped[key_field] = fspath.join(rel_dir, scoped[key_field])
-  return scoped
+def _scope_input_file(entry: InputFileConfig, rel_dir: str) -> InputFileConfig:
+  """Prefixes the entry's `pattern` (or `filename`) with `rel_dir`."""
+  return entry.model_copy(
+      update={
+          field: fspath.join(rel_dir, getattr(entry, field))
+          for field in ("pattern", "filename")
+          if getattr(entry, field)
+      })
 
 
 class Runner:
@@ -580,23 +576,16 @@ class Runner:
       configs: A list of File objects representing the config.json files to merge.
       base_dir: The base directory used to calculate relative paths for input files.
     """
-    merged_data = {
-        "includeInputSubdirs": True,
-        "inputFiles": [],
-        "_dir_import_names": {}
-    }
-
+    input_files = []
     for file in configs:
-      config_data = _read_config_dict(file)
+      config = _read_config_file(file)
       rel_dir = fspath.relativefrom(base_dir.path, fspath.dirname(file.path))
-      import_name = config_data.get("importName") or rel_dir
       logging.info("Merging config from import directory: %s", rel_dir)
-      merged_data["_dir_import_names"][rel_dir] = import_name
-      merged_data["inputFiles"].extend(
-          _scope_input_file_entry(entry, rel_dir, import_name, file.full_path())
-          for entry in config_data.get("inputFiles", []))
+      input_files.extend(
+          _scope_input_file(entry, rel_dir) for entry in config.input_files)
 
-    self.config = Config(data=merged_data)
+    self.config = Config(
+        ImportConfig(input_files=input_files, include_input_subdirs=True))
 
   def _find_configs_in_dir(self, directory: Dir) -> list:
     """Finds all config.json files in a directory, excluding archives."""
@@ -675,9 +664,7 @@ class Runner:
 
   def _matches_config_pattern(self, file: File) -> bool:
     """Returns True if `file` matches at least one `inputFiles` pattern."""
-    return any(
-        match(file, pattern)
-        for pattern in self.config._input_files_config.keys())
+    return any(match(file, pattern) for pattern in self.config.patterns())
 
   def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
     """Discovers, filters, sorts, and returns matched CSV and MCF files."""
@@ -733,7 +720,7 @@ class Runner:
     # The threads only build importers and read headers: they write nothing to
     # Nodes or the graph writer, which are not thread-safe.
     for file in csv_files:
-      self.config._per_file_config(file)
+      self.config.for_file(file)
 
     all_errors = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(
@@ -761,7 +748,7 @@ class Runner:
         output_dir_path=self.output_dir.full_path(),
         process_dir_path=self.process_dir.full_path(),
         import_names=self.import_names,
-        config_json_str=json.dumps(self.config.data),
+        config=self.config.model,
         jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
     )
     num_workers = num_import_workers(self.max_workers, len(files))
