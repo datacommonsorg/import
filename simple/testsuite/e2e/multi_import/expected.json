@@ -1,7 +1,6 @@
 {
   "error": null,
   "handshake": {
-    "generateStatVarGroups": false,
     "importList": [
       {
         "graphPath": "<output>/jsonld/<run>/healthProvenance/**/*.jsonld",
@@ -37,6 +36,14 @@
     "folders": {
       "healthProvenance": {
         "nodes": {
+          "dcid:c/g/Root": {
+            "@id": "dcid:c/g/Root",
+            "@type": "dcid:StatVarGroup",
+            "dcid:name": "Custom Variables",
+            "dcid:specializationOf": {
+              "@id": "dcid:dc/g/Root"
+            }
+          },
           "dcid:dc/g/Root": {
             "@id": "dcid:dc/g/Root",
             "@type": "dcid:StatVarGroup",

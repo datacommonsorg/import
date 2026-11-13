@@ -61,17 +61,14 @@ class MetadataValidator:
     starting with 'dcid:'.
     """
     referenced = set()
-    entries = self.config.data.get("inputFiles", [])
-
-    for entry in entries:
-      if not isinstance(entry, dict):
-        continue
-      prov = entry.get("provenance")
+    for entry in self.config.model.input_files:
+      prov = entry.provenance
       if not prov:
         ex = ValueError(
             f"Metadata Validation Failed: Every input file in config.json "
             f"must have a 'provenance' property. "
-            f"Found entry missing provenance: {entry}")
+            f"Found entry missing provenance: "
+            f"{entry.model_dump(by_alias=True, exclude_unset=True)}")
         ex.error_type = ValidationErrorType.INVALID_CONFIGURATION
         raise ex
       if not is_uri_or_namespace(prov):

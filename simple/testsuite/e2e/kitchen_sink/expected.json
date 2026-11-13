@@ -1,7 +1,6 @@
 {
   "error": null,
   "handshake": {
-    "generateStatVarGroups": true,
     "importList": [
       {
         "graphPath": "<output>/jsonld/<run>/KitchenProvenance/**/*.jsonld",

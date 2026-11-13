@@ -1,4 +1,5 @@
 absl-py==1.4.0
+annotated-types==0.8.0
 appdirs==1.4.4
 certifi==2026.10.23
 charset-normalizer==3.2.0
@@ -17,6 +18,7 @@ pytz==2023.3.post1
 requests==2.34.2
 six==1.16.0
 tomli==2.0.1
+typing-extensions==4.16.0
 tzdata==2023.3
 urllib3==2.8.0
 zipp==3.19.1

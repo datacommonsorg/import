@@ -56,6 +56,14 @@ def match(f: File, pattern: str) -> bool:
   return re.search(regex, target) is not None
 
 
+def validate_pattern(pattern: str) -> None:
+  """Raises ValueError if `pattern` is not a supported pattern."""
+  protocol, pattern_body, _ = _parse_pattern(pattern)
+  if protocol:
+    _glob_to_regex(protocol)
+  _glob_to_regex(pattern_body)
+
+
 def _parse_pattern(pattern: str) -> tuple[str | None, str, bool]:
   """Parses a pattern into (protocol, body, anchored) tuple."""
   anchored = False
