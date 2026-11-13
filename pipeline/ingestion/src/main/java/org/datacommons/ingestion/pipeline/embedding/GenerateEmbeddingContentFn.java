@@ -116,14 +116,7 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
     String textToEmbed =
         jsonStr.length() > MAX_CHAR_LENGTH ? jsonStr.substring(0, MAX_CHAR_LENGTH) : jsonStr;
     return new EmbeddingContent(
-        subjectId,
-        spec.embeddingLabel(),
-        contentKey,
-        jsonStr,
-        textToEmbed,
-        types,
-        spec.modelEndpoint(),
-        spec.taskType());
+        subjectId, spec.embeddingLabel(), contentKey, jsonStr, textToEmbed, types);
   }
 
   static ImmutableMap<String, String> buildBaseContentMap(
