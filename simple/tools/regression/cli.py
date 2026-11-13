@@ -20,7 +20,7 @@ and report.json. See README.md.
 
   cd simple
   python3 -m tools.regression --input_dir=/path/to/input [--baseline=upstream/master]
-      [-- <extra stats.main flags>]
+      -- --imports=<import>[,...] [<extra stats.main flags>]
 
 Exit codes: 0 identical and no perf regression, 5 a run of either side
 failed (non-zero exit or timeout), 3 output differs, 4 perf regression only,
