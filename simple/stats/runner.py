@@ -186,7 +186,7 @@ class _WorkerArgs:
   """Arguments that are the same for every worker process in a run."""
   output_dir_path: str
   process_dir_path: str
-  import_names: list[str] | None
+  import_names: list[str]
   config: ImportConfig
   jsonld_dir_name: str
 
