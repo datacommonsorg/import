@@ -130,7 +130,7 @@ def test_include_input_subdirs_is_ignored_with_a_warning(given, caplog):
       result.observations,
       [b.obs("country/USA", value=1),
        b.obs("country/FRA", value=2)])
-  assert _include_input_subdirs_warnings(caplog) == ["config.json"]
+  assert _include_input_subdirs_warnings(caplog) == [f"{b.IMPORT}/config.json"]
 
 
 def test_include_input_subdirs_warning_names_its_import_config(caplog):
@@ -499,10 +499,31 @@ def test_csv_without_column_mappings_in_an_import_subdirectory_is_rejected():
 def test_missing_config_json_fails():
   result = b.run({"case.csv": _USA}, None)
   b.assert_fails(result, "FileNotFoundError",
-                 "File not found: <input>/config.json")
+                 f"File not found: <input>/{b.IMPORT}/config.json")
 
 
-def test_empty_input_directory_fails():
-  result = b.run_dir({})
-  b.assert_fails(result, "FileNotFoundError",
-                 "File not found: <input>/config.json")
+# An input dir whose only config.json is at its root, which is never an import.
+_ROOT_CONFIG_ONLY = {"config.json": json.dumps(b.obs_config(b.OBS_MAPPINGS))}
+
+
+@pytest.mark.parametrize("import_names", [[], [""], [" "]],
+                         ids=["no_names", "empty_name", "blank_name"])
+def test_a_run_without_imports_fails(import_names):
+  result = b.run_dir(_ROOT_CONFIG_ONLY,
+                     runner_kwargs={"import_names": import_names})
+  b.assert_fails(result,
+                 "ValueError",
+                 "No imports to run. Pass --imports with the import"
+                 " subdirectories of the input directory to import",
+                 handshake_error_types=_INVALID)
+
+
+@pytest.mark.parametrize("import_name", [".", "..", "../x", "/x"])
+def test_an_import_outside_a_subdirectory_of_the_input_dir_fails(import_name):
+  result = b.run_dir(_ROOT_CONFIG_ONLY,
+                     runner_kwargs={"import_names": [import_name]})
+  b.assert_fails(result,
+                 "ValueError",
+                 f"Invalid import {import_name!r}: an import is a subdirectory"
+                 " of the input directory.",
+                 handshake_error_types=_INVALID)

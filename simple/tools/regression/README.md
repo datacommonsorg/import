@@ -21,11 +21,12 @@ crafted inputs; this tool covers real datasets of any size.
 
 ```bash
 cd simple
-python3 -m tools.regression --input_dir=/path/to/input
+python3 -m tools.regression --input_dir=/path/to/input -- --imports=<import>
 ```
 
 This compares your working tree, uncommitted changes included, with
-`upstream/master` on `/path/to/input`. The last lines printed are the verdict
+`upstream/master` on the import `<import>` of `/path/to/input`. Arguments after
+`--` go to `stats.main` on both sides, which requires `--imports`. The last lines printed are the verdict
 and the path of the report:
 
 ```
@@ -46,19 +47,20 @@ python3 -m tools.regression --input_dir=/data/un_input -- --imports=global,unodc
 
 # A dataset on GCS, staged to local disk once (read-only rsync).
 python3 -m tools.regression --input_dir=gs://my-bucket/path/to/input \
-    --work_dir=/mnt/disk/ab1
+    --work_dir=/mnt/disk/ab1 -- --imports=<import>
 
 # Two refs, such as a branch against master.
 python3 -m tools.regression --input_dir=/data/in --baseline=upstream/master \
-    --candidate=origin/my-branch
+    --candidate=origin/my-branch -- --imports=<import>
 
 # Run the baseline once, keep its output, then iterate on the candidate.
-python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab1 --keep_outputs
+python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab1 \
+    --keep_outputs -- --imports=<import>
 python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab2 \
-    --baseline_output=/mnt/disk/ab1/baseline/run-1/output
+    --baseline_output=/mnt/disk/ab1/baseline/run-1/output -- --imports=<import>
 
 # Timing: three runs per side, reporting medians.
-python3 -m tools.regression --input_dir=/data/in --repeats=3
+python3 -m tools.regression --input_dir=/data/in --repeats=3 -- --imports=<import>
 ```
 
 `--baseline_output` and `--candidate_output` accept any output directory. For

@@ -63,14 +63,17 @@ def test_runner_defaults_workers_by_where_it_reads_and_writes(
   _set_cpus(monkeypatch, affinity={0, 1, 2}, cpu_count=64)
   for name, value in fake_gcs.env().items():
     monkeypatch.setenv(name, value)
-  local_input_dir = runlib.write_input_dir({}, b.obs_config(b.OBS_MAPPINGS))
+  local_input_dir = runlib.write_input_dir({}, b.obs_config(b.OBS_MAPPINGS),
+                                           b.IMPORT)
   input_dir = local_input_dir
   if input_on_gcs:
     input_dir = fake_gcs.new_prefix()
     fake_gcs.upload_dir(local_input_dir, input_dir)
   output_dir = (fake_gcs.new_prefix() if output_on_gcs else str(tmp_path))
   try:
-    r = runner.Runner(input_dir_path=input_dir, output_dir_path=output_dir)
+    r = runner.Runner(input_dir_path=input_dir,
+                      output_dir_path=output_dir,
+                      import_names=[b.IMPORT])
     r._load_config()  # Opens the input store.
     assert r.max_workers == expected
   finally:
