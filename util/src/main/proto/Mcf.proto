@@ -99,14 +99,13 @@ enum ValueType {
 // This is effectively similar to SourceSeries, but with free PVs per SVObs.
 message McfStatVarObsSeries {
   message StatVarObs {
+    reserved 2;
+    reserved "number";
+
     required string date = 1;
 
-    oneof val {
-      // Vast majority of values are numbers, storing them as double will be
-      // more space efficient.
-      double number = 2;
-      string text = 3;
-    }
+    // Value of the observation in text format.
+    optional string text = 3;
 
     // Any additional PVs associated with the StatVarObs.
     optional McfGraph.PropertyValues pvs = 4;
