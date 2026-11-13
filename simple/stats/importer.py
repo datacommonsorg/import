@@ -165,8 +165,10 @@ def mapped_and_ignored_errors(
 def mapping_errors(file_path: str, mappings: dict[str, str],
                    ignore_columns: list[str]) -> list[FileValidationError]:
   """
-  The errors of a CSV's `columnMappings` that need no header: properties or
-  columns mapped twice, and columns both mapped and ignored.
+  Returns the `columnMappings` errors that can be found without the header.
+
+  These are properties or columns mapped twice, and columns both mapped and
+  ignored.
   """
   return (duplicate_property_errors(file_path, mappings) +
           duplicate_column_errors(file_path, mappings) +
