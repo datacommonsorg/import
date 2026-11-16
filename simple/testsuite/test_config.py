@@ -207,6 +207,26 @@ def test_single_import_name_runs_only_that_subdirectory():
       },
       runner_kwargs={"import_names": ["oecd"]})
   b.assert_records(result.observations, [b.obs("country/USA", value=1)])
+  assert result.output["ingestion_report"]["run"]["folderNames"] == ["oecd"]
+  assert result.output["ingestion_report"]["folders"] == [{
+      "folderName":
+          "oecd",
+      "summary": {
+          "files": {
+              "count": 2,
+              "byType": {
+                  "csv": 1,
+                  "mcf": 1
+              }
+          },
+          "provenanceCount": 1
+      },
+      "provenances": [{
+          "id": b.PROVENANCE,
+          "sourceId": b.SOURCE,
+          "fileCount": 2
+      }],
+  }]
 
 
 def test_selected_import_names_run_only_those_subdirectories():
@@ -222,8 +242,36 @@ def test_selected_import_names_run_only_those_subdirectories():
       [b.obs("country/USA", value=1),
        b.obs("country/FRA", value=2)])
   assert result.output["ingestion_report"]["run"]["folderNames"] == [
-      "oecd", "ilo"
+      "ilo", "oecd"
   ]
+
+
+NESTED_IMPORTS = [
+    Case("single import",
+         given=["unitednations/ilo"],
+         expect=["unitednations/ilo"]),
+    Case("multiple imports",
+         given=["unitednations/ilo", "oecd/gender_wage_gap"],
+         expect=["oecd/gender_wage_gap", "unitednations/ilo"]),
+    Case("all imports",
+         given=["ALL_IMPORTS"],
+         expect=["oecd/gender_wage_gap", "unitednations/ilo"]),
+]
+
+
+@cases(*NESTED_IMPORTS)
+def test_nested_import_folder_is_reported_as_given(given, expect):
+  """The report names a nested import folder by its full path."""
+  result = b.run_dir(
+      {
+          **b.import_subdir("unitednations/ilo", _USA),
+          **b.import_subdir("oecd/gender_wage_gap", _FRA),
+      },
+      runner_kwargs={"import_names": given})
+  assert result.error is None, result.error
+  report = result.output["ingestion_report"]
+  assert report["run"]["folderNames"] == expect
+  assert [f["folderName"] for f in report["folders"]] == expect
 
 
 # Beta comes first so that processing order would favour it.
