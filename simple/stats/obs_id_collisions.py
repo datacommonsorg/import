@@ -49,6 +49,20 @@ def save_obs_ids(obs_ids: Collection[int], path: str) -> None:
   np.save(path, ids, allow_pickle=False)
 
 
+def merge_part_obs_ids(part_paths: list[str], path: str) -> np.ndarray:
+  """Merges the ids that the parts of a split file saved into one file's.
+
+  Saves the distinct ids of all parts to `path`, as `save_obs_ids` does, and
+  returns the ids that several parts produced, once for each part but the
+  first: with the collisions each part counts within itself, the file's
+  collisions are then those of the file imported whole.
+  """
+  ids = np.sort(np.concatenate([np.load(p) for p in part_paths]))
+  repeated = ids[1:] == ids[:-1]
+  np.save(path, ids[np.concatenate(([True], ~repeated))], allow_pickle=False)
+  return ids[1:][repeated]
+
+
 @dataclass
 class CrossFileCollisions:
   """Collisions between files, each counted for the later of the two files.

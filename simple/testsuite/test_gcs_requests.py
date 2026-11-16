@@ -19,6 +19,7 @@ files. Budgets are written so that a per-file request makes them fail.
 """
 
 import collections
+from unittest import mock
 from urllib.parse import parse_qs
 from urllib.parse import urlparse
 
@@ -127,3 +128,21 @@ def test_larger_files_are_imported_first():
   sizes = {name.split("/", 1)[1]: len(text) for name, text in files.items()}
   assert read == sorted(read, key=lambda name: -sizes[name])
   assert len(read) == len(sizes) - 1  # Every file but config.json.
+
+
+def test_a_split_csv_is_read_once_to_plan_it_and_once_by_its_parts():
+  files = _imports("alpha")
+  rows = [b.obs_row(date=str(1000 + n % 1000)) for n in range(40_000)]
+  files["alpha/case.csv"] = b.csv_file(*rows)
+  part_bytes = 256 * 1024
+  num_parts = -(-len(files["alpha/case.csv"]) // part_bytes)
+  with mock.patch("stats.csv_split.SPLIT_TARGET_BYTES", part_bytes):
+    requests = _run(files, ["alpha"])
+
+  assert [r.kind for r in requests.of("plan_splits")] == ["download"]
+  reads = [
+      r for r in requests.of(gcs_requests.WORKER, "range")
+      if urlparse(r.url).path.endswith("/case.csv")
+  ]
+  # A part reads the header, then its rows: one read for the first part.
+  assert len(reads) == 2 * num_parts - 1

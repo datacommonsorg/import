@@ -16,20 +16,25 @@ import concurrent.futures
 from dataclasses import dataclass
 from datetime import datetime
 from datetime import timezone
+import functools
 import json
 import logging
 import os
 import posixpath
+import re
 import tempfile
 import traceback
 from typing import Callable, Optional
 
 import fs.path as fspath
+import numpy as np
 from stats import constants
+from stats import csv_split
 from stats.config import Config
 from stats.config import ImportConfig
 from stats.config import InputFileConfig
 from stats.config import parse_config
+from stats.csv_split import FilePart
 from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import ImportType
@@ -42,9 +47,12 @@ from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.jsonld_stream_writer import collision_file_key
 from stats.jsonld_stream_writer import JsonLdStreamWriter
+from stats.jsonld_stream_writer import MAX_SAMPLES_PER_FILE
+from stats.jsonld_stream_writer import observation_shard_stem
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
+from stats.obs_id_collisions import merge_part_obs_ids
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import FileSummary
 from stats.report.model.summary import RunStatus
@@ -77,6 +85,10 @@ _MAX_HEADER_VALIDATION_THREADS = 32
 # count above which no extra workers are added (see default_max_workers).
 _GCS_WORKERS_PER_CPU = 2
 _MAX_GCS_WORKERS = 32
+# Upper bound on the threads that plan how to split large CSVs: each reads a
+# whole file, from a temporary local copy (in TMPDIR) if it is on GCS, so up
+# to this many copies of large files are on local disk at once.
+_MAX_SPLIT_PLANNING_THREADS = 4
 
 
 def _import_names_or_raise(names: list[str] | None) -> list[str]:
@@ -131,7 +143,9 @@ def _create_importer_for_file(
     input_file: File,
     graph_writer: GraphWriter,
     nodes: Nodes,
+    part: FilePart | None = None,
 ) -> Importer:
+  """Returns the importer of `input_file`, or of its `part` (observations)."""
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
         input_file=input_file,
@@ -148,6 +162,7 @@ def _create_importer_for_file(
           input_file=input_file,
           graph_writer=graph_writer,
           nodes=nodes,
+          part=part,
       )
 
     case ImportType.ENTITIES:
@@ -190,6 +205,21 @@ class _WorkerArgs:
   jsonld_dir_name: str
 
 
+@dataclass(frozen=True)
+class _ImportTask:
+  """What a worker process imports: a file, or one part of a split file."""
+  file_rel_path: str
+  gcs_object: GcsObject | None
+  input_dir_path: str
+  size: int  # The bytes that the task reads.
+  part: FilePart | None = None  # None for the whole file.
+
+  @classmethod
+  def of(cls, file: File, part: FilePart | None = None) -> "_ImportTask":
+    size = part.size if part else file.size()
+    return cls(file.path, file.gcs_object(), file.store_path(), size, part)
+
+
 @dataclass
 class _FileFailure:
   """A file whose import raised, with the traceback text.
@@ -225,24 +255,70 @@ def _submit_largest_first(
   return futures
 
 
-def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
-                    merge: Callable[[File, ImportProcResult], None]) -> None:
+def _finish_imports(
+    files: list[File], futures_by_file: list[list[concurrent.futures.Future]],
+    merge: Callable[[File, list[ImportProcResult]], None],
+    import_whole: Callable[[File], concurrent.futures.Future]) -> None:
   """Waits for every file, then raises if any of them failed.
 
-  Every file runs to completion even if others fail. Results are awaited in
-  submission order, so passing each successful one to `merge`, with its file,
-  is deterministic. See `_raise_for_failures` for what is raised.
+  `futures_by_file[i]` are the tasks of `files[i]`: the whole file, or each of
+  its parts. Every file runs to completion even if others fail. Files are
+  awaited in order, so passing each successful one to `merge`, with the
+  results of its tasks, is deterministic. A split file that failed is
+  imported whole again, with `import_whole`, to report the error it would
+  have had unsplit; that runs after the tasks submitted before it, which only
+  delays a failing run. See `_raise_for_failures` for what is raised.
   """
   failures: list[_FileFailure] = []
-  for file, future in zip(files, futures, strict=True):
-    try:
-      result = future.result()
-    except Exception as e:
+  for file, futures in zip(files, futures_by_file, strict=True):
+    results, part_errors = _wait_for_tasks(futures)
+    if not part_errors:
+      merge(file, results)
+    elif len(futures) == 1:
+      failures.append(_file_failure(file, part_errors[0][1]))
+    else:
       failures.append(
-          _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
-      continue
-    merge(file, result)
+          _split_file_failure(file, part_errors[0], import_whole(file)))
   _raise_for_failures(failures)
+
+
+def _wait_for_tasks(
+    futures: list[concurrent.futures.Future]
+) -> tuple[list[ImportProcResult], list[tuple[int, Exception]]]:
+  """Returns the results of a file's tasks, and (task index, error) pairs."""
+  results, errors = [], []
+  for i, future in enumerate(futures):
+    try:
+      results.append(future.result())
+    except Exception as e:
+      errors.append((i, e))
+  return results, errors
+
+
+def _split_file_failure(
+    file: File, part_error: tuple[int, Exception],
+    whole_import: concurrent.futures.Future) -> _FileFailure:
+  """Returns the failure of a split file, as if it had been imported whole.
+
+  Errors name rows and values as the whole file's import reads them, so a
+  part's could differ. If the whole file imports without error, splitting is
+  at fault: the file still fails, with the part's error.
+  """
+  try:
+    whole_import.result()
+  except Exception as e:
+    return _file_failure(file, e)
+  part, error = part_error
+  logging.error(
+      "Part %d of %s failed to import, but the whole file imported: a bug in"
+      " splitting files (stats.csv_split). The part's error: %s", part,
+      file.path, error)
+  return _file_failure(file, error)
+
+
+def _file_failure(file: File, error: Exception) -> _FileFailure:
+  return _FileFailure(file.path, error,
+                      "".join(traceback.format_exception(error)))
 
 
 def _raise_for_failures(failures: list[_FileFailure]) -> None:
@@ -273,42 +349,43 @@ def _open_worker_store(path: str) -> Store:
   return create_store(path, mark_gcs_dirs=False)
 
 
-def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
-                            input_dir_path: str, args: _WorkerArgs,
-                            obs_ids_path: str) -> ImportProcResult:
-  """Imports one file in a worker process and returns its results.
+def _run_single_import_proc(task: _ImportTask, args: _WorkerArgs,
+                            obs_ids_path: str | None) -> ImportProcResult:
+  """Imports one file, or part of one, in a worker process; returns its results.
 
   The worker starts from an empty `Nodes`: a CSV needs only its provenance id,
   which comes from config. The Provenance and Source nodes that an MCF file
   defines are returned for the coordinator to merge. The file's observation
-  ids, if any, are saved to `obs_ids_path` (see `stats.obs_id_collisions`).
-  The coordinator found the file, and its GCS object if any, so neither is
-  looked up again, and it writes the run's report: the worker's stays in
-  memory.
+  ids, if any, are saved to `obs_ids_path` unless it is None (see
+  `stats.obs_id_collisions`). The coordinator found the file, and its GCS
+  object if any, so neither is looked up again, and it writes the run's
+  report: the worker's stays in memory.
   """
-  with _open_worker_store(input_dir_path) as input_store_obj, \
+  with _open_worker_store(task.input_dir_path) as input_store_obj, \
        _open_worker_store(args.output_dir_path) as output_store_obj:
     input_file = File(input_store_obj,
-                      file_rel_path,
+                      task.file_rel_path,
                       create_if_missing=False,
                       exists=True,
-                      gcs_object=gcs_object)
+                      gcs_object=task.gcs_object)
 
     config = Config(args.config)
     nodes = Nodes(config=config)
+    shard_tag = f"p{task.part.index:03d}" if task.part else ""
     graph_writer = JsonLdStreamWriter(output_store_obj.as_dir(),
                                       args.import_names,
                                       nodes,
-                                      jsonld_dir_name=args.jsonld_dir_name)
+                                      jsonld_dir_name=args.jsonld_dir_name,
+                                      obs_shard_tag=shard_tag)
     importer = _create_importer_for_file(config, input_file, graph_writer,
-                                         nodes)
+                                         nodes, task.part)
     importer.do_import()
     graph_writer.commit_and_close()
-    if graph_writer.obs_hash_set:
+    if obs_ids_path and graph_writer.obs_hash_set:
       save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
 
     return ImportProcResult(
-        file_rel_path=file_rel_path,
+        file_rel_path=task.file_rel_path,
         file_collision_counts=dict(graph_writer.file_collision_counts),
         file_sample_collisions=dict(graph_writer.file_sample_collisions),
         sources=dict(nodes.sources),
@@ -797,47 +874,91 @@ class Runner:
           "\n".join(formatted_errors))
       raise ValueError(consolidated_msg)
 
-  def _run_multiprocess_imports(self, files: list[File]) -> None:
+  def _run_multiprocess_imports(
+      self, files: list[File], parts_by_path: dict[str,
+                                                   list[FilePart]]) -> None:
     """Imports `files` in worker processes and merges each result.
 
-    See `_finish_imports` for the merge order and for failures. Once every
-    file is merged, looks for observation ids that several files produced.
+    A file in `parts_by_path` is imported in those parts, in parallel. See
+    `_finish_imports` for the merge order and for failures. Once every file is
+    merged, looks for observation ids that several files produced.
     """
+    tasks_by_file = [[
+        _ImportTask.of(file, part) for part in parts_by_path.get(file.path, [])
+    ] or [_ImportTask.of(file)] for file in files]
+    tasks = [task for file_tasks in tasks_by_file for task in file_tasks]
     worker_args = _WorkerArgs(
         output_dir_path=self.output_dir.full_path(),
         import_names=self.import_names,
         config=self.config.model,
         jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
     )
-    num_workers = num_import_workers(self.max_workers, len(files))
-    logging.info("Importing %d files with %d worker processes", len(files),
-                 num_workers)
+    num_workers = num_import_workers(self.max_workers, len(tasks))
+    logging.info("Importing %d files (%d tasks) with %d worker processes",
+                 len(files), len(tasks), num_workers)
     # Workers run on this machine, so they can save ids to a local directory.
     with tempfile.TemporaryDirectory(prefix="obs-ids-") as obs_ids_dir:
       obs_ids_paths = [
-          os.path.join(obs_ids_dir, f"{i:06d}.npy") for i in range(len(files))
+          os.path.join(obs_ids_dir, f"{i:06d}.npy") for i in range(len(tasks))
       ]
       with concurrent.futures.ProcessPoolExecutor(
           max_workers=num_workers) as executor:
 
         def submit(i: int) -> concurrent.futures.Future:
-          file = files[i]
-          return executor.submit(_run_single_import_proc, file.path,
-                                 file.gcs_object(), file.store_path(),
-                                 worker_args, obs_ids_paths[i])
+          return executor.submit(_run_single_import_proc, tasks[i], worker_args,
+                                 obs_ids_paths[i])
 
-        futures = _submit_largest_first([file.size() for file in files], submit)
-        _finish_imports(files, futures, merge=self._merge_worker_result)
-      # Workers save ids only for files with observations.
+        def import_whole(file: File) -> concurrent.futures.Future:
+          # Its ids aren't needed: the run fails.
+          return executor.submit(_run_single_import_proc, _ImportTask.of(file),
+                                 worker_args, None)
+
+        futures = iter(_submit_largest_first([t.size for t in tasks], submit))
+        futures_by_file = [
+            [next(futures) for _ in file_tasks] for file_tasks in tasks_by_file
+        ]
+        _finish_imports(files,
+                        futures_by_file,
+                        merge=self._merge_file_results,
+                        import_whole=import_whole)
+      ids_paths = iter(obs_ids_paths)
       self._merge_cross_file_collisions([
-          (collision_file_key(file.path), ids_path)
-          for file, ids_path in zip(files, obs_ids_paths)
-          if os.path.exists(ids_path)
+          self._file_obs_ids(file, [next(ids_paths)
+                                    for _ in file_tasks])
+          for file, file_tasks in zip(files, tasks_by_file)
       ])
 
+  def _file_obs_ids(self, file: File,
+                    task_ids_paths: list[str]) -> tuple[str, str | None]:
+    """Returns (collision key, ids path or None) of a file's observations.
+
+    The ids of a split file's parts are merged into one file's, and the ids
+    that several parts produced are counted as collisions within the file.
+    Workers save ids only for tasks with observations.
+    """
+    key = collision_file_key(file.path)
+    paths = [path for path in task_ids_paths if os.path.exists(path)]
+    if len(task_ids_paths) == 1 or not paths:
+      return key, paths[0] if paths else None
+    merged_path = f"{task_ids_paths[0]}.file.npy"
+    repeated = merge_part_obs_ids(paths, merged_path)
+    if len(repeated):
+      samples = [
+          f"@id='dcid:obs_{obs_id:016x}...' in several parts of the file"
+          for obs_id in np.unique(repeated)[:MAX_SAMPLES_PER_FILE].tolist()
+      ]
+      self.graph_writer.merge_collisions({key: len(repeated)}, {key: samples})
+    return key, merged_path
+
   def _merge_cross_file_collisions(
-      self, obs_ids_files: list[tuple[str, str]]) -> None:
-    """Adds the collisions between `obs_ids_files` to the writer's summary."""
+      self, file_obs_ids: list[tuple[str, str | None]]) -> None:
+    """Adds the collisions between files to the writer's summary.
+
+    Args:
+      file_obs_ids: (collision key, ids path) of each file, in import order;
+        the path is None for a file without observations.
+    """
+    obs_ids_files = [(key, path) for key, path in file_obs_ids if path]
     if len(obs_ids_files) < 2:
       return
     logging.info("Checking observation ids of %d files for collisions...",
@@ -863,6 +984,7 @@ class Runner:
 
     # Validate all CSV headers upfront
     self._validate_all_headers(csv_files)
+    parts_by_path = self._plan_split_files(csv_files)
 
     self.reporter.report_started()
 
@@ -875,17 +997,51 @@ class Runner:
                  self._total_files_count, len(mcf_files), len(csv_files))
     # MCF and CSV files are imported together: a CSV needs nothing from MCF.
     files = mcf_files + csv_files
-    self._run_multiprocess_imports(files)
+    self._run_multiprocess_imports(files, parts_by_path)
 
-  def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
-    """Merges a worker process's `ImportProcResult` for `file`."""
-    self._log_file_progress(res.file_rel_path)
-    self.nodes.merge_metadata(res.provenances, res.sources)
-    self._merge_worker_writer_state(res)
-    self._record_file_summary(file, res)
+  def _plan_split_files(self,
+                        csv_files: list[File]) -> dict[str, list[FilePart]]:
+    """Returns the parts to import large observation CSVs in, by file path.
 
-  def _record_file_summary(self, file: File, res: ImportProcResult) -> None:
-    """Passes a worker's observation counts for `file` to the report."""
+    Files larger than `csv_split.SPLIT_TARGET_BYTES` are split into parts that
+    workers import in parallel (see `stats.csv_split`). A file that can't be
+    split, or whose plan fails, is imported whole.
+    """
+    stems = {observation_shard_stem(file.path) for file in csv_files}
+    large_files = [
+        file for file in csv_files
+        if file.size() > csv_split.SPLIT_TARGET_BYTES and
+        self.config.import_type(file) == ImportType.OBSERVATIONS and
+        not _part_shards_could_collide(observation_shard_stem(file.path), stems)
+    ]
+    if not large_files:
+      return {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(
+        _MAX_SPLIT_PLANNING_THREADS, len(large_files))) as executor:
+      plans = list(executor.map(_plan_file_parts_or_none, large_files))
+    parts_by_path = {
+        file.path: parts
+        for file, parts in zip(large_files, plans)
+        if parts is not None
+    }
+    if parts_by_path:
+      logging.info("Splitting %d large files into %d parts", len(parts_by_path),
+                   sum(len(parts) for parts in parts_by_path.values()))
+    return parts_by_path
+
+  def _merge_file_results(self, file: File,
+                          results: list[ImportProcResult]) -> None:
+    """Merges the results of `file`'s tasks: the whole file, or its parts."""
+    self._log_file_progress(results[0].file_rel_path)
+    for res in results:
+      self.nodes.merge_metadata(res.provenances, res.sources)
+      self._merge_worker_writer_state(res)
+    # One summary for the file: its parts' counts, added up.
+    counts = functools.reduce(ImportCounts.add, [res.counts for res in results])
+    self._record_file_summary(file, counts)
+
+  def _record_file_summary(self, file: File, counts: ImportCounts) -> None:
+    """Passes the observation counts of `file` to the report."""
     # Folders come only from --imports, as in _record_input_files.
     if not self.import_names:
       return
@@ -894,8 +1050,8 @@ class Runner:
         FileSummary(filePath=file.path,
                     folder=folder,
                     provenanceId=provenance_id,
-                    observations=res.counts.observations,
-                    dateRange=res.counts.date_range))
+                    observations=counts.observations,
+                    dateRange=counts.date_range))
 
   def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
     """Merges a worker's processed imports and collision stats into the writer."""
@@ -950,6 +1106,26 @@ class Runner:
       logging.info(
           "Not running under ingestion workflow or output is local. Skipping handshake info."
       )
+
+
+def _part_shards_could_collide(stem: str, stems: set[str]) -> bool:
+  """Whether the shards of a split file could have another file's names.
+
+  A part's shards are named "observation-<stem>-p001-00000.jsonld", which a
+  file named "<stem>-p001.csv" also writes; such a file isn't split.
+  """
+  part_stem = re.compile(re.escape(stem) + r"-p\d{3}")
+  return any(part_stem.fullmatch(other) for other in stems)
+
+
+def _plan_file_parts_or_none(file: File) -> list[FilePart] | None:
+  """Plans the parts of `file`; None to import it whole, e.g. if that fails."""
+  try:
+    return csv_split.plan_file_parts(file)
+  except Exception:  # pylint: disable=broad-except
+    logging.exception("Failed to plan parts of %s; importing it whole",
+                      file.path)
+    return None
 
 
 def _utc_now() -> str:

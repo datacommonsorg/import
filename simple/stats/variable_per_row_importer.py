@@ -17,6 +17,7 @@ import json
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
+from stats.csv_split import FilePart
 from stats.data import FileValidationError
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
@@ -98,10 +99,19 @@ class VariablePerRowImporter(Importer):
   All entity DCIDs are expected to arrive pre-resolved in the CSV.
   """
 
-  def __init__(self, input_file: File, graph_writer: GraphWriter,
-               nodes: Nodes) -> None:
+  def __init__(self,
+               input_file: File,
+               graph_writer: GraphWriter,
+               nodes: Nodes,
+               part: FilePart | None = None) -> None:
+    """
+    Args:
+      part: The part of `input_file` to import (see `stats.csv_split`), or
+        None to import all of it.
+    """
     super().__init__()
     self.input_file = input_file
+    self.part = part
     self.graph_writer = graph_writer
     self.nodes = nodes
     self.config = nodes.config
@@ -200,13 +210,14 @@ class VariablePerRowImporter(Importer):
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
-    with self.input_file.open_stream() as stream:
+    with self._open_rows() as stream:
       reader = pd.read_csv(stream,
                            na_values=constants.STANDARD_NA_VALUES,
                            chunksize=10000,
                            dtype=str)
 
       for chunk_df in reader:
+        self._check_no_implicit_index(chunk_df)
         if chunk_df.empty:
           continue
         observations_df = (self._apply_column_mappings(chunk_df).pipe(
@@ -219,6 +230,25 @@ class VariablePerRowImporter(Importer):
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.counts = self.counts.add(self.count_nodes(observations_df))
         self.graph_writer.write_observations(observations_df, self.input_file)
+
+  def _open_rows(self):
+    """Opens a text stream of the CSV header and the rows to import."""
+    if self.part is None:
+      return self.input_file.open_stream()
+    return self.input_file.open_part_stream(self.part.header_end,
+                                            self.part.start, self.part.end)
+
+  def _check_no_implicit_index(self, df: pd.DataFrame) -> None:
+    """Raises if a part's first row has one more field than its header.
+
+    pandas then makes the first field of every row an index. The file's own
+    first rows don't (see `csv_split.plan_parts`), so imported whole, the file
+    fails on that row; the part must fail too, for the runner to report that.
+    """
+    if self.part is not None and not isinstance(df.index, pd.RangeIndex):
+      raise ValueError(
+          f"Part {self.part.index} of {self.input_file.path} starts with a row"
+          " with more fields than the header")
 
   def _apply_column_mappings(self, df: pd.DataFrame) -> pd.DataFrame:
     """Rename physical CSV columns to logical column names."""

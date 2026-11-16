@@ -19,14 +19,19 @@ three rows; their last column holds the cells that need CSV quoting. Header
 cases check the edges of reading a header.
 """
 
+import logging
+from unittest import mock
+
 import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
 
-# Input on GCS is streamed in ranged reads, local input is not: CSV parsing,
-# headers included, must not depend on where the input is.
-_INPUT_MODES = pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
+# Input on GCS is streamed in ranged reads, and large files are split into
+# parts (tiny_split splits every file): CSV parsing, headers included, must
+# depend on neither.
+_INPUT_MODES = pytest.mark.parametrize(
+    "mode", ["disk_input", "gcs_input", "tiny_split"])
 
 # --- Observation CSVs ---------------------------------------------------------
 
@@ -212,3 +217,66 @@ def test_entity_csv_format(given, expect, mode):
                  mode=mode)
   assert result.error is None, result.error
   b.assert_records(result.of_type("Author"), expect)
+
+
+# --- Split files --------------------------------------------------------------
+# A part's errors would name its own rows, so a split file that fails is
+# imported whole again for its error.
+
+_SPLIT_MODES = pytest.mark.parametrize("mode", ["disk_input", "tiny_split"])
+
+
+@_SPLIT_MODES
+def test_a_split_file_fails_with_the_error_of_the_whole_file(mode):
+  csv_text = b.csv_file(b.obs_row(value="1"), b.obs_row(value="2"),
+                        b.obs_row(value="abc"), b.obs_row(value="def"))
+  result = b.run_dir({"case.csv": csv_text},
+                     b.obs_config(b.OBS_MAPPINGS),
+                     mode=mode)
+  b.assert_fails(
+      result, "ValueError",
+      "Invalid non-numeric value(s) found in observation values of"
+      " file 'case.csv': ['abc', 'def']")
+
+
+@_SPLIT_MODES
+def test_a_row_with_an_extra_field_fails_as_in_the_whole_file(mode):
+  """A part that starts with it would make its first field an index."""
+  csv_text = b.csv_file(b.obs_row(), b.obs_row(date="2021"),
+                        b.obs_row(date="2022") + ["5"])
+  result = b.run_dir({"case.csv": csv_text},
+                     b.obs_config(b.OBS_MAPPINGS),
+                     mode=mode)
+  b.assert_fails(result, "ParserError", "Expected 4 fields in line 4, saw 5")
+
+
+def test_a_split_that_fails_where_the_whole_file_imports_is_logged(caplog):
+  """With a splitter that ignores quotes, a quoted newline breaks a part."""
+  csv_text = b.csv_file(*_OBS_ROWS, header=_OBS_HEADER)
+  ignore_quotes = mock.patch(
+      "stats.csv_split._RowBoundaries._quoted_field_from",
+      lambda self, pos: None)
+  with ignore_quotes, caplog.at_level(logging.ERROR):
+    result = b.run_dir({"case.csv": csv_text},
+                       b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]),
+                       mode="tiny_split")
+  # The part's error: pandas finds a quoted field that never ends.
+  b.assert_fails(result, "ParserError", "EOF inside string")
+  assert any(
+      "but the whole file imported: a bug in splitting files" in r.getMessage()
+      for r in caplog.records), caplog.text
+
+
+def test_a_file_whose_part_shards_could_take_another_files_names_is_not_split():
+  """case.csv's part 1 would write observation-case-p001-00000.jsonld."""
+  rows = [b.obs_row(date=str(2000 + n)) for n in range(3)]
+  files = {
+      "provenance.mcf": b.PROVENANCE_MCF,
+      "case.csv": b.csv_file(*rows),
+      "case-p001.csv": b.csv_file(b.obs_row("country/Y")),
+  }
+  result = b.run_dir(files,
+                     b.obs_config(b.OBS_MAPPINGS, pattern="case*.csv"),
+                     mode="tiny_split")
+  assert result.error is None, result.error
+  assert len(result.observations) == 4

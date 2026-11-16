@@ -217,20 +217,33 @@ def test_a_gzip_encoded_gcs_object_is_downloaded_whole():
     with mock.patch.object(store.fs, "open", return_value=whole) as fs_open:
       assert file.open_stream() is whole
     fs_open.assert_called_once_with("data.csv", "r")
-
-
-class _ShortReadBlob:
-  """A blob whose ranged downloads return one byte less than asked for."""
-  name = "data.csv"
-  bucket = mock.Mock()
-  bucket.name = "bucket"
-
-  def download_as_bytes(self, start, end, checksum):
-    del checksum  # Unused.
-    return b"x" * (end - start)
+    assert not file.can_read_ranges()  # So it isn't split into parts.
 
 
 def test_a_short_ranged_read_fails_rather_than_truncate_the_file():
-  reader = filesystem._GcsRangeReader(_ShortReadBlob(), size=10, chunk_size=4)
-  with pytest.raises(OSError, match="Expected 4 bytes at offset 0"):
+
+  def short_fetch(start: int, end: int) -> bytes:
+    return b"x" * (end - start - 1)
+
+  reader = filesystem._RangesReader(short_fetch, [(0, 10)],
+                                    chunk_size=4,
+                                    name="gs://bucket/data.csv")
+  with pytest.raises(OSError, match="Expected 4 bytes at offset 0 of gs://"):
     reader.read(10)
+
+
+@pytest.mark.parametrize("chunk_size", [7, 10_001])
+def test_a_part_stream_reads_the_header_then_the_part(tmp_path, chunk_size):
+  text = "h1,h2\n" + "".join(f"{i},\u00e9\n" for i in range(3000))
+  (tmp_path / "data.csv").write_bytes(text.encode())
+  gcs = f"{fake_gcs.new_prefix()}/input"
+  fake_gcs.write_blob(f"{gcs}/data.csv", text)
+  data = text.encode()
+  header_end, start, end = 6, data.index(b"\n1000,") + 1, len(data) - 5
+  expected = (data[:header_end] + data[start:end]).decode()
+  with create_store(str(tmp_path)) as local_store, \
+       create_store(gcs, mark_gcs_dirs=False) as gcs_store:
+    for store in [local_store, gcs_store]:
+      [file] = store.as_dir().all_files()
+      with file.open_part_stream(header_end, start, end, chunk_size) as stream:
+        assert stream.read() == expected
