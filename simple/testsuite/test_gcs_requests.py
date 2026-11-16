@@ -18,6 +18,7 @@ number of requests per input file, not the bytes, sets the run time of small
 files. Budgets are written so that a per-file request makes them fail.
 """
 
+import collections
 from urllib.parse import parse_qs
 from urllib.parse import urlparse
 
@@ -80,3 +81,26 @@ def test_a_csv_header_check_is_one_ranged_read():
   kinds = [r.kind for r in requests.of("validate_headers")]
   # case.csv and the case<n>.csv files.
   assert kinds == ["range"] * (1 + _CSVS_PER_IMPORT), kinds
+
+
+def test_a_worker_reads_each_input_file_once_and_writes_only_shards():
+  requests = _run(_imports("alpha"), ["alpha"])
+
+  kinds = collections.Counter(r.kind for r in requests.of(gcs_requests.WORKER))
+  # Per CSV: one ranged read and one observation shard upload. The MCF file
+  # is read whole: a metadata get and a download.
+  csvs = 1 + _CSVS_PER_IMPORT
+  assert kinds == {"range": csvs, "upload": csvs, "get": 1, "download": 1}
+
+
+def test_a_csv_larger_than_a_header_read_is_read_in_one_request():
+  files = _imports("alpha")
+  # 1 MiB: several header reads (256 KiB), one data chunk (8 MiB).
+  rows = [b.obs_row(date=str(1000 + n % 1000)) for n in range(40_000)]
+  files["alpha/case.csv"] = b.csv_file(*rows)
+  assert len(files["alpha/case.csv"]) > 1024 * 1024
+  requests = _run(files, ["alpha"])
+
+  reads = [r for r in requests.of(gcs_requests.WORKER, "range")]
+  assert len([r for r in reads if r.url.split("?")[0].endswith("/case.csv")
+             ]) == 1

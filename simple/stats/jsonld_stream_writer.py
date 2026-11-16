@@ -277,12 +277,13 @@ class JsonLdStreamWriter(GraphWriter):
     self.import_name = "_".join(import_names).replace("/", "_")
 
     if jsonld_dir_name:
-      unique_dir_name = jsonld_dir_name
+      # A worker's writer: the coordinator's writer created the run folder.
+      self.jsonld_dir = output_dir.open_dir("jsonld", create=False).open_dir(
+          jsonld_dir_name, create=False)
     else:
       timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-      unique_dir_name = f"{self.import_name}_{timestamp}"
-
-    self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(unique_dir_name)
+      self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(
+          f"{self.import_name}_{timestamp}")
 
     self.obs_shard_index = 0
     self.node_shard_index = 0

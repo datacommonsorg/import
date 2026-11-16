@@ -190,7 +190,11 @@ class Importer:
     pass
 
   def validate_headers(self) -> list[FileValidationError]:
-    """Validates CSV headers and returns a list of validation errors (empty if valid)."""
+    """Validates CSV headers and returns a list of validation errors (empty if valid).
+
+    The runner calls this for every CSV before it imports any file, so
+    `do_import` doesn't repeat it.
+    """
     return []
 
   def get_column_mappings(self) -> dict[str, str]:

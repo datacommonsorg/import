@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Comparison of process/report.json and the per-file report_*.json files.
+Comparison of process/report.json.
 
 Timestamps are dropped and input paths are made relative to each side's input
 root (see volatile.py). Per-file reports are compared by the input file they
 describe, not by their file name.
 """
 
-import glob
 import os
 from typing import Any
 
@@ -30,7 +29,6 @@ from tools.regression.comparison.categories import sides
 
 _IMPORT_FILES = "importFiles"
 _REPORT_FILE = "report.json"
-_WORKER_REPORT_GLOB = "report_*.json"
 
 
 def _normalize(report: dict, input_root: str | None) -> dict:
@@ -48,15 +46,6 @@ def _load_main(output_dir: str, input_root: str | None) -> dict:
   if not os.path.exists(path):
     return {}
   return _normalize(load_json(path), input_root)
-
-
-def _load_workers(output_dir: str, input_root: str | None) -> dict[str, Any]:
-  """Merges the importFiles entries of every per-file report."""
-  merged = {}
-  pattern = os.path.join(output_dir, "process", _WORKER_REPORT_GLOB)
-  for path in sorted(glob.glob(pattern)):
-    merged.update(_normalize(load_json(path), input_root)[_IMPORT_FILES])
-  return merged
 
 
 def _diff_dicts(base: dict, cand: dict, category: str, label: str,
@@ -78,13 +67,7 @@ def compare_reports(baseline_dir: str, baseline_input: str | None,
   cand_files = cand.pop(_IMPORT_FILES, {})
   _diff_dicts(base, cand, "report_json_changed", "field", findings)
   _diff_dicts(base_files, cand_files, "report_json_changed", "file", findings)
-  base_workers = _load_workers(baseline_dir, baseline_input)
-  cand_workers = _load_workers(candidate_dir, candidate_input)
-  _diff_dicts(base_workers, cand_workers, "worker_reports_changed", "file",
-              findings)
   return {
       "status": [base.get("status"), cand.get("status")],
       "import_files": [len(base_files), len(cand_files)],
-      "worker_report_files": [len(base_workers),
-                              len(cand_workers)],
   }

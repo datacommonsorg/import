@@ -129,9 +129,7 @@ side's code, output directory and log, then:
 - **Nodes** are matched by @id. All records of an @id, from any folder or
   shard, are merged into one set of values per property first, so splitting
   or duplicating a subject's records does not change its content.
-- **Reports:** `process/report.json` and the per-file `report_*.json`,
-  without volatile fields. Per-file reports are matched by the input file
-  they describe.
+- **Reports:** `process/report.json`, without volatile fields.
 - **Shards:** observation shards are matched by name. Node shards, whose
   names end in a random uid, are matched by content within their folder.
 
@@ -148,7 +146,6 @@ Informational ones change only the layout of the same graph, or the warnings.
 | `error_lines_increased` | failing | The candidate logged more ERROR/CRITICAL lines or Python tracebacks. |
 | `warning_lines_changed` | informational | The number of WARNING lines differs. |
 | `report_json_changed` | failing | A top-level field or an `importFiles` entry of `process/report.json` differs. |
-| `worker_reports_changed` | failing | A per-file `report_*.json` entry differs or exists on one side only. |
 | `run_dir_name_changed` | failing | The `jsonld/<import name>` run directory, without its timestamp, differs. |
 | `jsonld_context_changed` | failing | The set of `@context` values in the shards differs. |
 | `shard_set_changed` | informational | An observation shard name exists on one side only, or a folder has a different number of node shards. |

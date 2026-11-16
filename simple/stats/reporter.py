@@ -41,10 +41,11 @@ def _is_done_status(status: Status) -> bool:
 class ImportReporter:
   """Generates a report on every reported change.
 
-    The report is written to report.json in the process directory.
+    The report is written to `report_file` (report.json in the process
+    directory), or only kept in memory if it is None, as in worker processes.
     """
 
-  def __init__(self, report_file: File) -> None:
+  def __init__(self, report_file: File | None) -> None:
     # Header validation calls get_file_reporter from a thread pool.
     self.lock = threading.RLock()
     self.status = Status.NOT_STARTED
@@ -125,6 +126,8 @@ class ImportReporter:
 
   def save(self) -> None:
     self.last_update = datetime.now()
+    if self.report_file is None:
+      return
     should_report = not self.last_reported or time.time(
     ) - self.last_reported >= _REPORT_SAVE_INTERVAL_SECONDS or _is_done_status(
         self.status)

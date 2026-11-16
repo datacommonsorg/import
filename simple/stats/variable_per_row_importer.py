@@ -112,9 +112,6 @@ class VariablePerRowImporter(Importer):
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
-      errors = self.validate_headers()
-      if errors:
-        raise ValueError("\n".join(e.error_message for e in errors))
       self._map_columns()
       self._write_observations()
       self.reporter.report_success()

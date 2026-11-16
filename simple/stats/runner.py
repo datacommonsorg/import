@@ -55,6 +55,7 @@ from util.file_match import match
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
+from util.filesystem import GcsObject
 from util.filesystem import is_gcs_path
 from util.filesystem import join_path
 from util.filesystem import Store
@@ -185,7 +186,6 @@ class ImportProcResult:
 class _WorkerArgs:
   """Arguments that are the same for every worker process in a run."""
   output_dir_path: str
-  process_dir_path: str
   import_names: list[str]
   config: ImportConfig
   jsonld_dir_name: str
@@ -260,8 +260,8 @@ def _open_worker_store(path: str) -> Store:
   return create_store(path, mark_gcs_dirs=False)
 
 
-def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
-                            args: _WorkerArgs,
+def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
+                            input_dir_path: str, args: _WorkerArgs,
                             obs_ids_path: str) -> ImportProcResult:
   """Imports one file in a worker process and returns its results.
 
@@ -269,28 +269,27 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
   which comes from config. The Provenance and Source nodes that an MCF file
   defines are returned for the coordinator to merge. The file's observation
   ids, if any, are saved to `obs_ids_path` (see `stats.obs_id_collisions`).
+  The coordinator found the file, and its GCS object if any, so neither is
+  looked up again, and it writes the run's report: the worker's stays in
+  memory.
   """
   with _open_worker_store(input_dir_path) as input_store_obj, \
-       _open_worker_store(args.output_dir_path) as output_store_obj, \
-       _open_worker_store(args.process_dir_path) as process_store_obj:
-    input_dir = input_store_obj.as_dir()
-    output_store = output_store_obj.as_dir()
-    process_store = process_store_obj.as_dir()
-    input_store = input_dir.open_file(file_rel_path)
+       _open_worker_store(args.output_dir_path) as output_store_obj:
+    input_file = File(input_store_obj,
+                      file_rel_path,
+                      create_if_missing=False,
+                      exists=True,
+                      gcs_object=gcs_object)
 
     config = Config(args.config)
     nodes = Nodes(config=config)
-    graph_writer = JsonLdStreamWriter(output_store,
+    graph_writer = JsonLdStreamWriter(output_store_obj.as_dir(),
                                       args.import_names,
                                       nodes,
                                       jsonld_dir_name=args.jsonld_dir_name)
+    reporter = ImportReporter(report_file=None).get_file_reporter(input_file)
 
-    sanitized_path = input_store.full_path().replace("://",
-                                                     "_").replace("/", "_")
-    report_file = process_store.open_file(f"report_{sanitized_path}.json")
-    reporter = ImportReporter(report_file).get_file_reporter(input_store)
-
-    importer = _create_importer_for_file(config, input_store, graph_writer,
+    importer = _create_importer_for_file(config, input_file, graph_writer,
                                          reporter, nodes)
     importer.do_import()
     graph_writer.commit_and_close()
@@ -788,7 +787,6 @@ class Runner:
     """
     worker_args = _WorkerArgs(
         output_dir_path=self.output_dir.full_path(),
-        process_dir_path=self.process_dir.full_path(),
         import_names=self.import_names,
         config=self.config.model,
         jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
@@ -805,7 +803,8 @@ class Runner:
           max_workers=num_workers) as executor:
         futures = [
             executor.submit(_run_single_import_proc, file.path,
-                            file._store.root_path, worker_args, ids_path)
+                            file.gcs_object(), file._store.root_path,
+                            worker_args, ids_path)
             for file, ids_path in zip(files, obs_ids_paths)
         ]
         _finish_imports(files, futures, merge=self._merge_worker_result)
