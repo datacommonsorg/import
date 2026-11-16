@@ -19,6 +19,7 @@ from datetime import timezone
 import json
 import logging
 import os
+import posixpath
 import tempfile
 import traceback
 from typing import Callable, Optional
@@ -59,6 +60,12 @@ from util.filesystem import join_path
 from util.filesystem import Store
 
 _ARCHIVES_DIR_NAME = "archives"
+# Every run names its imports: each is a subdirectory of the input dir with its
+# own config.json.
+_NO_IMPORTS_ERROR = (
+    "No imports to run. Pass --imports with the import subdirectories of the"
+    " input directory to import, e.g. --imports=oecd or --imports=oecd,ilo, or"
+    f" --imports={constants.ALL_IMPORTS} for all of them.")
 # Upper bound on the threads that validate CSV headers. Header validation reads
 # only the first rows of each file and spends its time waiting on storage (often
 # GCS), so it is bounded independently of the CPU count; 32 matches the GCS
@@ -68,6 +75,24 @@ _MAX_HEADER_VALIDATION_THREADS = 32
 # count above which no extra workers are added (see default_max_workers).
 _GCS_WORKERS_PER_CPU = 2
 _MAX_GCS_WORKERS = 32
+
+
+def _import_names_or_raise(names: list[str] | None) -> list[str]:
+  """Returns the run's imports, stripped and without blanks.
+
+  Each must name a subdirectory of the input dir, so names that resolve to the
+  input dir itself or outside it (".", "..", "../x", "/x") are rejected.
+  """
+  imports = [name.strip() for name in names or [] if name.strip()]
+  if not imports:
+    raise invalid_configuration(_NO_IMPORTS_ERROR)
+  for name in imports:
+    path = posixpath.normpath(name)
+    if path in (".", "..") or path.startswith("../") or posixpath.isabs(path):
+      raise invalid_configuration(
+          f"Invalid import {name!r}: an import is a subdirectory of the input"
+          " directory.")
+  return imports
 
 
 def default_max_workers(uses_gcs: bool) -> int:
@@ -161,7 +186,7 @@ class _WorkerArgs:
   """Arguments that are the same for every worker process in a run."""
   output_dir_path: str
   process_dir_path: str
-  import_names: list[str] | None
+  import_names: list[str]
   config: ImportConfig
   jsonld_dir_name: str
 
@@ -372,7 +397,9 @@ class Runner:
 
   def _load_config(self) -> None:
     """Opens the input store, and reads and validates the config."""
-    imports = self.import_names or []
+    imports = _import_names_or_raise(self.import_names)
+    # Reports and the writer name the run's folders after the cleaned names.
+    self.import_names = imports
 
     # Case A: Bulk Load (ALL_IMPORTS)
     if imports == [constants.ALL_IMPORTS]:
@@ -392,15 +419,10 @@ class Runner:
           f"{fspath.dirname(c.path)}/" for c in configs)
 
     # Case C: Single Import
-    elif imports:
+    else:
       import_dir = join_path(self.input_dir_path, imports[0])
       logging.info("Using import specific directory: %s", import_dir)
       input_store = self._open_input_store(import_dir)
-      self._read_config_in_dir(input_store.as_dir())
-
-    # Case D: Default action (config at root)
-    else:
-      input_store = self._open_input_store(self.input_dir_path)
       self._read_config_in_dir(input_store.as_dir())
 
     # The input dir is searched recursively, so it must not hold the output.
@@ -465,9 +487,6 @@ class Runner:
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
-    # Folders come only from --imports; without it, no folder is reported.
-    if not self.import_names:
-      return
     for file in files:
       self.summary_generator.record_input_file(
           folder=self._input_folder_name(file),
@@ -475,20 +494,19 @@ class Runner:
           file_path=file.path)
 
   def _input_folder_name(self, file: File) -> str:
-    """Returns the import folder an input file belongs to, for the report."""
-    if self.active_import_prefixes:
-      # Bulk or combined load: use the import folder the file is under, e.g.
-      # prefix "health/" for "health/data.csv". With nested imports
-      # ("a/" and "a/b/"), the longest matching prefix wins.
-      best_prefix = ""
-      for prefix in self.active_import_prefixes:
-        if file.path.startswith(prefix) and len(prefix) > len(best_prefix):
-          best_prefix = prefix
-      if best_prefix:
-        return best_prefix.rstrip("/")
+    """Returns the import an input file belongs to, for the report.
 
-    # Single import: the file belongs to the one import we were asked to run.
-    return self.import_names[0]
+    With several imports or ALL_IMPORTS, the import folder the file is under,
+    e.g. "health" for "health/data.csv" (with nested imports "a/" and "a/b/",
+    the longest matching one); otherwise the one import --imports named.
+    """
+    prefixes = [
+        prefix for prefix in self.active_import_prefixes or []
+        if file.path.startswith(prefix)
+    ]
+    if not prefixes:
+      return self.import_names[0]
+    return max(prefixes, key=len).rstrip("/")
 
   def _report_folder_names(self) -> list[str]:
     """Returns the import folders this run was asked to import."""

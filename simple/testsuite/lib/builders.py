@@ -462,14 +462,19 @@ class Result:
                   if record.get("@id") == record_id)
 
 
+# The import that run() and run_dir() put a test's files and config in, and
+# run with --imports.
+IMPORT = "case_import"
+
+
 def run(files: dict[str, str],
         config: dict | None,
         mode: str = runlib.DEFAULT_MODE,
         shared_files: dict[str, str] | None = None) -> Result:
   """
-  Runs the preprocessor on files plus the shared files.
+  Runs the preprocessor on files plus the shared files, as the import IMPORT.
 
-  config is written as config.json; None leaves config.json out.
+  config is written as its config.json; None leaves config.json out.
 
   shared_files defaults to {"provenance.mcf": PROVENANCE_MCF}. Records that
   the shared files produce on their own (under MCF_CONFIG, in the same mode)
@@ -497,12 +502,17 @@ def run_dir(files: dict[str, str],
             mode: str = runlib.DEFAULT_MODE,
             runner_kwargs: dict | None = None) -> Result:
   """
-  Runs the preprocessor on a raw directory layout without shared files.
+  Runs the preprocessor without shared files.
 
-  Used for multi-import parent directories (runner_kwargs={"import_names": ...})
-  where shared-provenance subtraction does not apply.
+  With config, files and config are the import IMPORT, which is run. Without,
+  files is the raw input dir, e.g. several import subdirectories, and
+  runner_kwargs={"import_names": ...} names the imports to run.
   """
-  input_dir = runlib.write_input_dir(files, config)
+  import_name = None
+  if config is not None:
+    import_name = IMPORT
+    runner_kwargs = {**(runner_kwargs or {}), "import_names": [IMPORT]}
+  input_dir = runlib.write_input_dir(files, config, import_name)
   try:
     output = runlib.run_preprocessor(input_dir,
                                      mode,
@@ -544,9 +554,13 @@ def _freeze(value: dict | None) -> str:
 def _run(files_json: str, config_json: str, mode: str) -> dict:
   """Runs once per input; the shared-files run is reused across tests."""
   input_dir = runlib.write_input_dir(json.loads(files_json),
-                                     json.loads(config_json))
+                                     json.loads(config_json), IMPORT)
   try:
-    return runlib.run_preprocessor(input_dir, mode).output
+    return runlib.run_preprocessor(input_dir,
+                                   mode,
+                                   runner_kwargs={
+                                       "import_names": [IMPORT]
+                                   }).output
   finally:
     shutil.rmtree(input_dir, ignore_errors=True)
 
