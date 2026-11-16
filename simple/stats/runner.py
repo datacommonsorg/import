@@ -803,8 +803,8 @@ class Runner:
           max_workers=num_workers) as executor:
         futures = [
             executor.submit(_run_single_import_proc, file.path,
-                            file.gcs_object(), file._store.root_path,
-                            worker_args, ids_path)
+                            file.gcs_object(), file.store_path(), worker_args,
+                            ids_path)
             for file, ids_path in zip(files, obs_ids_paths)
         ]
         _finish_imports(files, futures, merge=self._merge_worker_result)

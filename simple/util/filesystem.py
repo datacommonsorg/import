@@ -224,6 +224,10 @@ class _StoreWrapper():
   def fs(self):
     return self._store.fs
 
+  def store_path(self) -> str:
+    """The path or URL of the store that this file or dir is in."""
+    return self._store.root_path
+
   def full_path(self, sub_path="") -> str:
     """ Absolute path to this file or dir, or a sub file or dir if sub_path is given."""
     root_path = self._store.root_path
