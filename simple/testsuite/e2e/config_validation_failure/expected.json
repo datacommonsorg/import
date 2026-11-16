@@ -17,10 +17,26 @@
   "ingestion_report": {
     "folders": [
       {
-        "folderName": "health"
+        "folderName": "health",
+        "provenances": [],
+        "summary": {
+          "files": {
+            "byType": {},
+            "count": 0
+          },
+          "provenanceCount": 0
+        }
       },
       {
-        "folderName": "population"
+        "folderName": "population",
+        "provenances": [],
+        "summary": {
+          "files": {
+            "byType": {},
+            "count": 0
+          },
+          "provenanceCount": 0
+        }
       }
     ],
     "run": {

@@ -412,18 +412,13 @@ class Runner:
           is_gcs_path(store.root_path) for store in self.all_stores))
 
   def _start_summary(self, start_time: str) -> None:
-    self.summary_generator.set_execution_metadata(
-        start_time=start_time,
-        folder_names=self._report_folder_names(),
-        output_dir=self.output_dir)
+    self.summary_generator.set_execution_metadata(start_time=start_time,
+                                                  output_dir=self.output_dir)
 
   def run(self):
-    start_time = _utc_now()
-    summary_started = False
+    self._start_summary(_utc_now())
     try:
       self._load_config()
-      self._start_summary(start_time)
-      summary_started = True
 
       self._run_imports_and_export_jsonld()
 
@@ -431,7 +426,7 @@ class Runner:
 
       # Report done.
       self.reporter.report_done()
-      self.summary_generator.write_to_json(RunStatus.SUCCESS, _utc_now())
+      self._write_report(RunStatus.SUCCESS)
 
       # Close all file storage.
       for store in self.all_stores:
@@ -454,10 +449,7 @@ class Runner:
                                 error_message=str(e))
         ]
 
-      # The config failed to load: the summary starts with the folders known.
-      if not summary_started:
-        self._start_summary(start_time)
-      self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now())
+      self._write_report(RunStatus.FAILURE)
 
       for store in self.all_stores:
         try:
@@ -471,13 +463,54 @@ class Runner:
       )
       raise
 
+  def _record_input_files(self, files: list[File]) -> None:
+    """Records each matched input file in the ingestion report."""
+    # Folders come only from --imports; without it, no folder is reported.
+    if not self.import_names:
+      return
+    for file in files:
+      self.summary_generator.record_input_file(
+          folder=self._input_folder_name(file),
+          provenance=[self.nodes.provenance_id(file)],
+          file_path=file.path)
+
+  def _input_folder_name(self, file: File) -> str:
+    """Returns the import folder an input file belongs to, for the report."""
+    if self.active_import_prefixes:
+      # Bulk or combined load: use the import folder the file is under, e.g.
+      # prefix "health/" for "health/data.csv". With nested imports
+      # ("a/" and "a/b/"), the longest matching prefix wins.
+      best_prefix = ""
+      for prefix in self.active_import_prefixes:
+        if file.path.startswith(prefix) and len(prefix) > len(best_prefix):
+          best_prefix = prefix
+      if best_prefix:
+        return best_prefix.rstrip("/")
+
+    # Single import: the file belongs to the one import we were asked to run.
+    return self.import_names[0]
+
   def _report_folder_names(self) -> list[str]:
-    """Returns the individual import folders in the case of bulk reports"""
+    """Returns the import folders this run was asked to import."""
     if self.import_names == [constants.ALL_IMPORTS]:
       # The folders found under the input dir, e.g. "folderA/" -> "folderA".
       return sorted(
           prefix.rstrip("/") for prefix in self.active_import_prefixes or [])
     return list(self.import_names or [])
+
+  def _record_provenance_sources(self) -> None:
+    """Records each known provenance's source in the ingestion report."""
+    for provenance in self.nodes.provenances.values():
+      self.summary_generator.set_provenance_data(provenance.id,
+                                                 provenance.source_id)
+
+  def _write_report(self, status: RunStatus) -> None:
+    """Writes the ingestion report with the run's final status."""
+    # Requested folders are listed even if no input files were found in them.
+    self.summary_generator.add_folders(self._report_folder_names())
+    if self.nodes:  # No provenances if the config failed to load.
+      self._record_provenance_sources()
+    self.summary_generator.write_to_json(status, _utc_now())
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
@@ -749,6 +782,8 @@ class Runner:
   def _run_all_data_imports(self):
     """Finds the input files, validates CSV headers, and imports every file."""
     csv_files, mcf_files = self._find_and_filter_input_files()
+    # Before header validation, so failed runs still report their files.
+    self._record_input_files(csv_files + mcf_files)
 
     logging.info("Found %d CSV files to import", len(csv_files))
     logging.info("Found %d MCF files to import", len(mcf_files))
