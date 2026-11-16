@@ -49,6 +49,8 @@ _GCS_PATH_PREFIX = "gs://"
 # validate CSV headers (runner._MAX_HEADER_VALIDATION_THREADS).
 _GCS_HTTP_POOL_SIZE = 32
 
+# The Content-Encoding of objects stored gzip-compressed (`gsutil cp -Z`).
+_GZIP = "gzip"
 # Bytes fetched per request when a GCS file is streamed (see File.open_stream).
 _GCS_STREAM_CHUNK_BYTES = 8 * 1024 * 1024
 
@@ -393,6 +395,10 @@ class File(_StoreWrapper):
 
   def _open_gcs_stream(self, chunk_size: int) -> io.TextIOWrapper:
     gcs_object = self._gcs_object or self._get_gcs_object()
+    if gcs_object.content_encoding == _GZIP:
+      # Ranges of a gzip-encoded object are of its compressed bytes, so it
+      # is downloaded whole, decompressed, as before.
+      return self.fs().open(self.path, "r")
     blob = self.fs().bucket.blob(_gcs_key(self.fs(), self.path),
                                  generation=gcs_object.generation)
     raw = _GcsRangeReader(blob, gcs_object.size, chunk_size)
@@ -413,10 +419,13 @@ class GcsObject:
   """What a GCS listing says about an object, for reading it."""
   size: int
   generation: int
+  content_encoding: str | None
 
   @classmethod
   def of(cls, blob: storage.Blob) -> "GcsObject":
-    return cls(size=blob.size, generation=blob.generation)
+    return cls(size=blob.size,
+               generation=blob.generation,
+               content_encoding=blob.content_encoding)
 
 
 class _GcsRangeReader(io.RawIOBase):
@@ -459,12 +468,8 @@ class _GcsRangeReader(io.RawIOBase):
     data = self._blob.download_as_bytes(start=self._pos,
                                         end=end - 1,
                                         checksum=None)
-    if self._pos == 0 and len(data) > end:
-      # GCS ignores ranges of gzip-encoded objects and sends the whole
-      # decompressed object, whose size isn't the listed (compressed) one.
-      self._size = len(data)
-    elif len(data) != end - self._pos:
-      raise IOError(f"Expected {end - self._pos} bytes at offset {self._pos} of"
+    if len(data) != end - self._pos:
+      raise OSError(f"Expected {end - self._pos} bytes at offset {self._pos} of"
                     f" gs://{self._blob.bucket.name}/{self._blob.name}, got"
                     f" {len(data)}")
     self._chunk, self._chunk_pos = data, 0
