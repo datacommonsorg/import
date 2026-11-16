@@ -211,6 +211,20 @@ class FileImportsFailedError(Exception):
     super().__init__(f"{len(failures)} files failed to import:\n{details}")
 
 
+def _submit_largest_first(
+    sizes: list[int], submit: Callable[[int], concurrent.futures.Future]
+) -> list[concurrent.futures.Future]:
+  """Submits task i with `submit(i)`, largest `sizes[i]` first.
+
+  A large task submitted last would run alone at the end of the run. Returns
+  the futures in task order, so that results are still merged in that order.
+  """
+  futures: list[concurrent.futures.Future | None] = [None] * len(sizes)
+  for i in sorted(range(len(sizes)), key=lambda i: sizes[i], reverse=True):
+    futures[i] = submit(i)
+  return futures
+
+
 def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
                     merge: Callable[[File, ImportProcResult], None]) -> None:
   """Waits for every file, then raises if any of them failed.
@@ -805,12 +819,14 @@ class Runner:
       ]
       with concurrent.futures.ProcessPoolExecutor(
           max_workers=num_workers) as executor:
-        futures = [
-            executor.submit(_run_single_import_proc, file.path,
-                            file.gcs_object(), file.store_path(), worker_args,
-                            ids_path)
-            for file, ids_path in zip(files, obs_ids_paths)
-        ]
+
+        def submit(i: int) -> concurrent.futures.Future:
+          file = files[i]
+          return executor.submit(_run_single_import_proc, file.path,
+                                 file.gcs_object(), file.store_path(),
+                                 worker_args, obs_ids_paths[i])
+
+        futures = _submit_largest_first([file.size() for file in files], submit)
         _finish_imports(files, futures, merge=self._merge_worker_result)
       # Workers save ids only for files with observations.
       self._merge_cross_file_collisions([

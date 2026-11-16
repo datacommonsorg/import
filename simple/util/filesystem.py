@@ -363,6 +363,12 @@ class File(_StoreWrapper):
     """The file's GCS object, as listed, if known (see __init__)."""
     return self._gcs_object
 
+  def size(self) -> int:
+    """The file's size in bytes: as listed, if it was found by a listing."""
+    if self._gcs_object is not None:
+      return self._gcs_object.size
+    return self.fs().getsize(self.path)
+
   def read(self) -> str:
     """Returns file contents as a string."""
     return self.fs().readtext(self.path)

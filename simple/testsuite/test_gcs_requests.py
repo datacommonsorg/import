@@ -40,11 +40,14 @@ def _imports(*names: str) -> dict[str, str]:
   return files
 
 
-def _run(files: dict[str, str], import_names: list[str]):
+def _run(files: dict[str, str], import_names: list[str], **runner_kwargs):
   with gcs_requests.record() as requests:
     result = b.run_dir(files,
                        mode="gcs_input",
-                       runner_kwargs={"import_names": import_names})
+                       runner_kwargs={
+                           "import_names": import_names,
+                           **runner_kwargs
+                       })
   assert result.error is None, result.error
   return requests
 
@@ -106,3 +109,21 @@ def test_a_csv_larger_than_a_header_read_is_read_in_one_request():
       if urlparse(r.url).path.endswith("/case.csv")
   ]
   assert len(case_reads) == 1, case_reads
+
+
+def test_larger_files_are_imported_first():
+  files = _imports("alpha")
+  for n in range(_CSVS_PER_IMPORT):
+    rows = [b.obs_row(date=str(2000 + i)) for i in range((n * 5) % 8 + 1)]
+    files[f"alpha/case{n}.csv"] = b.csv_file(*rows)
+  # One worker imports the files in the order they are submitted.
+  requests = _run(files, ["alpha"], max_workers=1)
+
+  read = [
+      urlparse(r.url).path.rsplit("/", 1)[1]
+      for r in requests.of(gcs_requests.WORKER)
+      if r.kind in ("range", "download")
+  ]
+  sizes = {name.split("/", 1)[1]: len(text) for name, text in files.items()}
+  assert read == sorted(read, key=lambda name: -sizes[name])
+  assert len(read) == len(sizes) - 1  # Every file but config.json.
