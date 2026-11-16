@@ -65,33 +65,29 @@ class TestSummaryGenerator(unittest.TestCase):
     with tempfile.TemporaryDirectory() as tmp, \
          create_store(tmp) as store:
       generator = _generator("wf-123", store.as_dir())
+      # A nested import folder keeps its full name.
+      generator.record_input_file("unitednations/ilo", ["iloProv"],
+                                  "unitednations/ilo/b.csv")
       generator.record_input_file("oecd", ["oecdProv"], "oecd/a.csv")
-      generator.record_input_file("ilo", ["iloProv"], "ilo/b.csv")
       generator.record_input_file("oecd", ["oecdProv"], "oecd/c.CSV")
       generator.record_input_file("oecd", ["oecdSchema"], "oecd/schema.mcf")
       generator.set_provenance_data("oecdProv", "oecdSource")
       # Requested folders are listed even without input files.
-      generator.add_folders(["ilo", "oecd", "wto"])
+      generator.add_folders(["unitednations/ilo", "oecd", "wto"])
       report = generator.build_report(RunStatus.SUCCESS, _END)
 
     self.assertEqual(
         report,
         IngestionReport(
-            run=ExecutionMetadata(workflowExecutionId="wf-123",
-                                  mode=RunMode.INGEST,
-                                  status=RunStatus.SUCCESS,
-                                  startTime=_START,
-                                  endTime=_END,
-                                  folderNames=["ilo", "oecd", "wto"],
-                                  outputPath=os.path.join(
-                                      tmp, "preprocessor_reports", "wf-123")),
+            run=ExecutionMetadata(
+                workflowExecutionId="wf-123",
+                mode=RunMode.INGEST,
+                status=RunStatus.SUCCESS,
+                startTime=_START,
+                endTime=_END,
+                folderNames=["oecd", "unitednations/ilo", "wto"],
+                outputPath=os.path.join(tmp, "preprocessor_reports", "wf-123")),
             folders=[
-                Folder(folderName="ilo",
-                       summary=FolderSummary(files=FileCounts(count=1,
-                                                              byType={"csv": 1
-                                                                     }),
-                                             provenanceCount=1),
-                       provenances=[Provenance(id="iloProv", fileCount=1)]),
                 Folder(folderName="oecd",
                        summary=FolderSummary(files=FileCounts(count=3,
                                                               byType={
@@ -105,6 +101,12 @@ class TestSummaryGenerator(unittest.TestCase):
                                       fileCount=2),
                            Provenance(id="oecdSchema", fileCount=1),
                        ]),
+                Folder(folderName="unitednations/ilo",
+                       summary=FolderSummary(files=FileCounts(count=1,
+                                                              byType={"csv": 1
+                                                                     }),
+                                             provenanceCount=1),
+                       provenances=[Provenance(id="iloProv", fileCount=1)]),
                 Folder(folderName="wto"),
             ]))
 

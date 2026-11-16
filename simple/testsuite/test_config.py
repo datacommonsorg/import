@@ -246,6 +246,34 @@ def test_selected_import_names_run_only_those_subdirectories():
   ]
 
 
+NESTED_IMPORTS = [
+    Case("single import",
+         given=["unitednations/ilo"],
+         expect=["unitednations/ilo"]),
+    Case("multiple imports",
+         given=["unitednations/ilo", "oecd/gender_wage_gap"],
+         expect=["oecd/gender_wage_gap", "unitednations/ilo"]),
+    Case("all imports",
+         given=["ALL_IMPORTS"],
+         expect=["oecd/gender_wage_gap", "unitednations/ilo"]),
+]
+
+
+@cases(*NESTED_IMPORTS)
+def test_nested_import_folder_is_reported_as_given(given, expect):
+  """The report names a nested import folder by its full path."""
+  result = b.run_dir(
+      {
+          **b.import_subdir("unitednations/ilo", _USA),
+          **b.import_subdir("oecd/gender_wage_gap", _FRA),
+      },
+      runner_kwargs={"import_names": given})
+  assert result.error is None, result.error
+  report = result.output["ingestion_report"]
+  assert report["run"]["folderNames"] == expect
+  assert [f["folderName"] for f in report["folders"]] == expect
+
+
 # Beta comes first so that processing order would favour it.
 _TWO_IMPORTS = {
     **b.import_subdir("beta", provenance="BetaProvenance", source="BetaSource"),
