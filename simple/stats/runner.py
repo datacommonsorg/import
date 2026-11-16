@@ -252,9 +252,10 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
 def _open_worker_store(path: str) -> Store:
   """Opens, in a worker process, a directory that the coordinator opened.
 
-  The coordinator's stores already wrote the GCS directory markers that the
-  worker needs. Marking again for every file sends the same marker objects
-  many concurrent writes, which GCS rejects with 429 errors.
+  Workers only read the input, which needs no GCS directory markers, and
+  write under output dirs whose markers the coordinator already wrote.
+  Marking again for every file sends the same marker objects many concurrent
+  writes, which GCS rejects with 429 errors.
   """
   return create_store(path, mark_gcs_dirs=False)
 
@@ -382,6 +383,9 @@ class Runner:
     self.input_store: Store | None = None
     self.config: Config | None = None
     self.nodes: Nodes | None = None
+    # Every file under an input dir, by the dir's path relative to the input
+    # store ("" for its root), filled as _list_input_dir() lists each dir.
+    self._input_dir_files: dict[str, list[File]] = {}
     # Set while importing.
     self.graph_writer = None
     self.trigger_workflow_info = None
@@ -390,8 +394,11 @@ class Runner:
         os.getenv("WORKFLOW_EXECUTION_ID"))
 
   def _open_input_store(self, path: str) -> Store:
-    """Opens the input store, to be closed with the others when the run ends."""
-    self.input_store = create_store(path)
+    """Opens the input store, to be closed with the others when the run ends.
+
+    The input is only read, so no GCS directory markers are written into it.
+    """
+    self.input_store = create_store(path, mark_gcs_dirs=False)
     self.all_stores.append(self.input_store)
     return self.input_store
 
@@ -602,15 +609,29 @@ class Runner:
 
     self.config = Config(ImportConfig(input_files=input_files))
 
-  def _find_configs_in_dir(self, directory: Dir) -> list:
-    """Finds all config.json files in a directory, excluding archives."""
-    configs = []
-    for file in directory.all_files(include_subdirs=True):
-      if _ARCHIVES_DIR_NAME in file.path.split("/"):
-        continue
-      if file.name() == constants.CONFIG_JSON_FILE_NAME:
-        configs.append(file)
-    return configs
+  def _list_input_dir(self, path: str) -> list[File]:
+    """Returns every file under input dir `path` ("" for the input root).
+
+    Each dir is listed once per run, and its listing reused.
+    """
+    directory = self.input_store.as_dir().open_dir(path, create=False)
+    if directory.path not in self._input_dir_files:
+      self._input_dir_files[directory.path] = directory.all_files(
+          include_subdirs=True)
+    return self._input_dir_files[directory.path]
+
+  def _find_configs_in_dir(self, path: str) -> list[File]:
+    """Finds all config.json files under input dir `path`, excluding archives.
+
+    Shallower configs come first, then by path, so that their patterns are
+    matched first; e.g. "a/config.json" before "a/b/config.json".
+    """
+    configs = [
+        file for file in self._list_input_dir(path)
+        if file.name() == constants.CONFIG_JSON_FILE_NAME and
+        _ARCHIVES_DIR_NAME not in file.path.split("/")
+    ]
+    return sorted(configs, key=lambda f: (f.path.count("/"), f.path))
 
   def _read_configs_from_subdirs(self, base_dir: Dir) -> list:
     """Scans subdirectories for config.json files and merges them.
@@ -621,7 +642,7 @@ class Runner:
     Raises:
       FileNotFoundError: If no config.json files are found.
     """
-    configs = self._find_configs_in_dir(base_dir)
+    configs = self._find_configs_in_dir("")
     logging.info("Found %s config files in subdirectories.", len(configs))
     if not configs:
       raise FileNotFoundError(
@@ -644,11 +665,10 @@ class Runner:
     configs = []
     for name in import_names:
       name = name.strip()
-      target_path = fspath.join(base_dir.path, name)
-      if not base_dir.fs().isdir(target_path):
+      if not base_dir.is_subdir(name):
         raise FileNotFoundError(f"Import directory not found: {name}")
       try:
-        imp_dir = base_dir.open_dir(name)
+        imp_dir = base_dir.open_dir(name, create=False)
         file = imp_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
                                  create_if_missing=False)
         configs.append(file)
@@ -656,7 +676,7 @@ class Runner:
         logging.info(
             "Config file not found at root of %s. Scanning subdirectories.",
             name)
-        sub_configs = self._find_configs_in_dir(imp_dir)
+        sub_configs = self._find_configs_in_dir(imp_dir.path)
         if not sub_configs:
           raise FileNotFoundError(f"No config files found for {name}")
         configs.extend(sub_configs)
@@ -681,9 +701,23 @@ class Runner:
     """Returns True if `file` matches at least one `inputFiles` pattern."""
     return any(match(file, pattern) for pattern in self.config.patterns())
 
+  def _list_input_files(self) -> list[File]:
+    """Returns the files under the run's imports.
+
+    With several imports, only their dirs are listed, not the whole input dir.
+    """
+    if len(self.import_names) == 1:  # One import, or ALL_IMPORTS.
+      return self._list_input_dir("")
+    files_by_path = {}
+    for name in self.import_names:
+      # Nested imports, e.g. "a" and "a/b", list some files twice.
+      for file in self._list_input_dir(name):
+        files_by_path[file.path] = file
+    return list(files_by_path.values())
+
   def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
     """Discovers, filters, sorts, and returns matched CSV and MCF files."""
-    input_files = self.input_store.as_dir().all_files(include_subdirs=True)
+    input_files = self._list_input_files()
     csv_files: list[File] = []
     mcf_files: list[File] = []
 

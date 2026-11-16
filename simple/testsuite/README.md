@@ -36,6 +36,7 @@ filesystem edge cases or a validator's rules.
 | `test_csv_files.py` | CSV formatting (quoting, CRLF, BOM, column and row order, split files), for every CSV import type |
 | `test_provenance.py` | Provenances and sources: registered nodes, provenance URL on the provenance node, validation |
 | `test_config.py` | config.json: which files are imported, top-level flags, invalid configs |
+| `test_gcs_requests.py` | GCS request budgets of a run with its input on GCS (`lib/gcs_requests.py`), so per-file requests don't creep back |
 
 For a refactor or performance PR, `test_e2e.py` passing with every
 `expected.json` unchanged means the output did not change.
