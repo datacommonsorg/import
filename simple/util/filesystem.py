@@ -131,7 +131,8 @@ def create_store(path: str,
   Args:
     mark_gcs_dirs: For a GCS directory, lists everything under it and writes
       the directory markers that are missing (see `_fix_gcsfs_storage`). Set
-      to False to skip that when the directory was already opened with it.
+      to False when the directory was already marked, or is only read: reads
+      and `Dir.all_files` don't need markers.
   """
   return Store(path, create_if_missing, treat_as_file, mark_gcs_dirs)
 
@@ -242,15 +243,37 @@ class Dir(_StoreWrapper):
   def name(self) -> str:
     return fspath.basename(self.path.rstrip("/"))
 
-  def open_dir(self, path: str) -> "Dir":
+  def open_dir(self, path: str, create: bool = True) -> "Dir":
+    """Returns the subdirectory at `path`, relative to this one.
+
+    Args:
+      create: Whether to create the directory if it's missing and check that
+        it is one. Set to False for a directory that is only listed or known
+        to exist: that doesn't access storage at all.
+    """
     # The new dir will use the same underlying store with a path relative to
     # the same root.
     new_path = fspath.join(self.path, path)
+    if not create:
+      return Dir(self._store, new_path)
     if not self.fs().exists(new_path):
       self.fs().makedirs(new_path)
     if not self.fs().isdir(new_path):
       raise ValueError(f"{self.full_path(path)} exists and is not a directory")
     return Dir(self._store, new_path)
+
+  def is_subdir(self, path: str) -> bool:
+    """Whether `path`, relative to this dir, is a directory.
+
+    On GCS, a directory is a prefix that some object starts with, so this
+    lists at most one object rather than requiring a directory marker.
+    """
+    new_path = fspath.join(self.path, path)
+    if not isinstance(self.fs(), GCSFS):
+      return self.fs().isdir(new_path)
+    prefix = self._gcs_key_prefix(new_path)
+    blobs = self.fs().bucket.list_blobs(prefix=prefix, max_results=1)
+    return next(iter(blobs), None) is not None
 
   def open_file(self, path: str, create_if_missing: bool = True) -> "File":
     new_path = fspath.join(self.path, path)
@@ -259,7 +282,14 @@ class Dir(_StoreWrapper):
           f"{self.full_path(path)} exists and is a directory, not a file")
     return File(self._store, new_path, create_if_missing)
 
-  def all_files(self, include_subdirs: bool = False):
+  def all_files(self, include_subdirs: bool = False) -> list["File"]:
+    """Returns the files in this dir, and in its subdirs if `include_subdirs`.
+
+    The order is unspecified. On GCS, one listing of the dir's prefix finds
+    them all, without a request per file or directory.
+    """
+    if isinstance(self.fs(), GCSFS):
+      return self._list_gcs_files(include_subdirs)
     files = []
     subfs = self.fs().opendir(self.path)
     max_depth = None if include_subdirs else 1
@@ -267,11 +297,57 @@ class Dir(_StoreWrapper):
       files.append(self.open_file(abspath.lstrip("/")))
     return files
 
+  def _gcs_key_prefix(self, path: str) -> str:
+    """Returns the GCS object name prefix of everything under dir `path`."""
+    key = _gcs_key(self.fs(), path)
+    return f"{key}/" if key else ""
+
+  def _list_gcs_files(self, include_subdirs: bool) -> list["File"]:
+    """Lists this dir's files on GCS with one (paginated) listing.
+
+    Directory marker objects (names ending with "/") are skipped. Files are
+    built from the listing, so neither their existence nor their size needs
+    another request.
+    """
+    prefix = self._gcs_key_prefix(self.path)
+    delimiter = None if include_subdirs else "/"
+    files = []
+    for blob in self.fs().bucket.list_blobs(prefix=prefix, delimiter=delimiter):
+      rel_path = blob.name[len(prefix):]
+      if not rel_path or rel_path.endswith("/"):
+        continue
+      if any(part in ("", ".", "..") for part in rel_path.split("/")):
+        # Its path would name another object, or none.
+        logging.warning(
+            "Skipping GCS object with an empty or dot path"
+            " segment: %s", blob.name)
+        continue
+      files.append(
+          File(self._store,
+               fspath.join(self.path, rel_path),
+               create_if_missing=False,
+               known_size=blob.size))
+    return files
+
 
 class File(_StoreWrapper):
 
-  def __init__(self, store: "Store", path: str, create_if_missing: bool):
+  def __init__(self,
+               store: "Store",
+               path: str,
+               create_if_missing: bool,
+               known_size: int | None = None):
+    """Opens the file at `path`, relative to the store's root.
+
+    Args:
+      known_size: The file's size in bytes, when the caller knows it, e.g.
+        from a listing. The file is then known to exist, so that isn't
+        checked.
+    """
     super().__init__(store, path)
+    self._size = known_size
+    if known_size is not None:
+      return
     if not self.fs().exists(self.path):
       if create_if_missing:
         parent_dir_path = fspath.dirname(path)
@@ -284,6 +360,18 @@ class File(_StoreWrapper):
   def name(self) -> str:
     """The file name, including any extension and without a leading slash."""
     return fspath.basename(self.path)
+
+  def size(self) -> int:
+    """The file's size in bytes: as listed, if it was found by a listing."""
+    if self._size is not None:
+      return self._size
+    if not isinstance(self.fs(), GCSFS):
+      return self.fs().getsize(self.path)
+    # Unlike fs.getsize, this doesn't need the parent's directory marker.
+    blob = self.fs().bucket.get_blob(_gcs_key(self.fs(), self.path))
+    if blob is None:
+      raise FileNotFoundError(f"File not found: {self.full_path()}")
+    return blob.size
 
   def read(self) -> str:
     """Returns file contents as a string."""
@@ -308,6 +396,12 @@ class File(_StoreWrapper):
             "Transient error opening stream for %s (attempt %d/%d): %s. Retrying...",
             self.path, attempt + 1, max_retries, e)
         time.sleep(1)
+
+
+def _gcs_key(fs: GCSFS, path: str) -> str:
+  """Returns the GCS object name of `path`, relative to the root of `fs`."""
+  parts = [fs.root_path.strip("/"), path.strip("/")]
+  return "/".join(part for part in parts if part)
 
 
 def _fix_gcsfs_storage(fs: GCSFS) -> None:

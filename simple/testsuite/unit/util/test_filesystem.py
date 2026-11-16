@@ -1,7 +1,9 @@
 import os
+import shutil
 import tempfile
 import unittest
 
+from testsuite.lib import fake_gcs
 from util.filesystem import create_store
 
 
@@ -101,3 +103,68 @@ class TestFilesystem(unittest.TestCase):
           file.full_path() for file in dir.all_files()
       ]
       self.assertListEqual(all_file_paths_excluding_subdirs, ["mem://bar.txt"])
+
+
+class TestGcsListing(unittest.TestCase):
+  """Dir listings on (fake) GCS find what the local walk finds."""
+
+  # Directory markers are written for some directories only, as GCS trees
+  # written by other tools have them for some or none.
+  _FILES = {"a.csv": "1", "d1/b.csv": "22", "d1/d2/c.csv": "333"}
+  _MARKERS = ["d1/", "empty/"]
+
+  def setUp(self):
+    self.local = tempfile.mkdtemp()
+    for rel, content in self._FILES.items():
+      os.makedirs(os.path.dirname(os.path.join(self.local, rel)), exist_ok=True)
+      with open(os.path.join(self.local, rel), "w") as f:
+        f.write(content)
+    os.makedirs(os.path.join(self.local, "empty"))
+    self.gcs = f"{fake_gcs.new_prefix()}/input"
+    fake_gcs.upload_dir(self.local, self.gcs)
+    for marker in self._MARKERS:
+      fake_gcs.write_blob(f"{self.gcs}/{marker}", "")
+
+  def tearDown(self):
+    shutil.rmtree(self.local)
+
+  def _listing(self, root: str, subdir: str, include_subdirs: bool):
+    with create_store(root, mark_gcs_dirs=False) as store:
+      directory = store.as_dir().open_dir(subdir, create=False)
+      return sorted(
+          (f.path, f.size()) for f in directory.all_files(include_subdirs))
+
+  def test_all_files_finds_the_files_and_sizes_that_the_local_walk_finds(self):
+    for subdir in ["", "d1", "d1/d2", "empty"]:
+      for include_subdirs in [True, False]:
+        with self.subTest(subdir=subdir, include_subdirs=include_subdirs):
+          self.assertEqual(self._listing(self.gcs, subdir, include_subdirs),
+                           self._listing(self.local, subdir, include_subdirs))
+
+  def test_all_files_skips_objects_with_empty_or_dot_segments(self):
+    for name in ["/x.csv", "d1//y.csv", "d1/./z.csv"]:
+      fake_gcs.write_blob(f"{self.gcs}/{name}", "1")
+    self.assertEqual(self._listing(self.gcs, "", include_subdirs=True),
+                     self._listing(self.local, "", include_subdirs=True))
+
+  def test_size_of_a_file_that_was_not_listed(self):
+    for root in [self.local, self.gcs]:
+      with create_store(root, mark_gcs_dirs=False) as store:
+        with self.subTest(root=root):
+          file = store.as_dir().open_file("d1/d2/c.csv",
+                                          create_if_missing=False)
+          self.assertEqual(file.size(), 3)
+
+  def test_is_subdir_with_and_without_directory_markers(self):
+    expected = {
+        "d1": True,
+        "d1/d2": True,
+        "empty": True,
+        "a.csv": False,
+        "missing": False
+    }
+    for root in [self.local, self.gcs]:
+      with create_store(root, mark_gcs_dirs=False) as store:
+        for path, is_dir in expected.items():
+          with self.subTest(root=root, path=path):
+            self.assertEqual(store.as_dir().is_subdir(path), is_dir)
