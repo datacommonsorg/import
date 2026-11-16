@@ -752,7 +752,10 @@ class Runner:
       ]
 
   def _validate_all_headers(self, csv_files: list[File]) -> None:
-    """Validates all CSV headers upfront and raises ValueError if any validation fails."""
+    """Validates every CSV's headers before any file is imported.
+
+    Raises ValueError if any fail. Importers don't check headers again.
+    """
     if not csv_files:
       return
 
