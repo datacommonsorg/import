@@ -35,13 +35,16 @@ import requests as http
 PHASES = {
     "_load_config": "load_config",
     "_find_and_filter_input_files": "find_input_files",
+    "_validate_all_headers": "validate_headers",
 }
 
 
 @dataclasses.dataclass(frozen=True)
 class Request:
   phase: str  # A PHASES value.
-  kind: str  # "list", "get" (metadata), "download", "upload" or the method.
+  # "list", "get" (metadata), "download" (of a whole object), "range" (a
+  # ranged download), "upload" or the HTTP method.
+  kind: str
   url: str  # Percent-decoded.
 
 
@@ -58,11 +61,12 @@ class Requests:
     ]
 
 
-def _kind(method: str, url: str) -> str:
+def _kind(method: str, url: str, headers: dict) -> str:
   if "/upload/" in url:
     return "upload"
   if "alt=media" in url:
-    return "download"
+    ranged = any(name.lower() == "range" for name in headers)
+    return "range" if ranged else "download"
   if re.search(r"/b/[^/]+/o(\?|$)", url):
     return "list"
   if method == "GET":
@@ -82,7 +86,8 @@ def record() -> Iterator[Requests]:
   def recording_request(session, method, url, *args, **kwargs):
     if phase["name"]:
       decoded = unquote(str(url))
-      result.all.append(Request(phase["name"], _kind(method, decoded), decoded))
+      kind = _kind(method, decoded, kwargs.get("headers") or {})
+      result.all.append(Request(phase["name"], kind, decoded))
     return real_request(session, method, url, *args, **kwargs)
 
   def in_phase(name, method):

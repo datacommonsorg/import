@@ -18,9 +18,14 @@ Each CSV import type has one table. Every case writes the same three rows,
 whose last column holds the cells that need CSV quoting.
 """
 
+import pytest
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
+
+# Input on GCS is streamed in ranged reads, local input is not: CSV parsing,
+# headers included, must not depend on where the input is.
+_INPUT_MODES = pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
 
 # --- Observation CSVs ---------------------------------------------------------
 
@@ -82,10 +87,55 @@ OBSERVATION_FORMATS = [
 ]
 
 
+@_INPUT_MODES
 @cases(*OBSERVATION_FORMATS)
-def test_observation_csv_format(given, expect):
-  result = b.run(given, b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]))
+def test_observation_csv_format(given, expect, mode):
+  result = b.run(given,
+                 b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]),
+                 mode=mode)
+  assert result.error is None, result.error
   b.assert_records(result.observations, expect)
+
+
+# An ignored column whose name is longer than the first read of a header.
+_LONG_NAME = "x" * 300_000
+
+HEADER_FORMATS = [
+    Case("header only",
+         given=(b.csv_file(header=_OBS_HEADER), "notes"),
+         expect=[]),
+    Case("header only, without a final newline",
+         given=(",".join(_OBS_HEADER), "notes"),
+         expect=[]),
+    Case("quoted header cell with a newline",
+         given=(b.csv_file(*_OBS_ROWS,
+                           header=b.OBS_HEADER + ["two\nlines"]), "two\nlines"),
+         expect=_OBS_EXPECTED),
+    Case("header longer than its first read",
+         given=(b.csv_file(*_OBS_ROWS,
+                           header=b.OBS_HEADER + [_LONG_NAME]), _LONG_NAME),
+         expect=_OBS_EXPECTED),
+]
+
+
+@_INPUT_MODES
+@cases(*HEADER_FORMATS)
+def test_observation_csv_header(given, expect, mode):
+  csv_text, ignored_column = given
+  result = b.run({"case.csv": csv_text},
+                 b.obs_config(b.OBS_MAPPINGS, ignoreColumns=[ignored_column]),
+                 mode=mode)
+  assert result.error is None, result.error
+  b.assert_records(result.observations, expect)
+
+
+@_INPUT_MODES
+def test_an_empty_csv_fails_header_validation(mode):
+  result = b.run({"case.csv": ""}, b.obs_config(b.OBS_MAPPINGS), mode=mode)
+  b.assert_fails(
+      result, "ValueError",
+      "Failed to read CSV headers for 'case.csv': No columns to parse from file"
+  )
 
 
 # --- Entities CSVs ------------------------------------------------------------
@@ -152,7 +202,11 @@ ENTITY_FORMATS = [
 ]
 
 
+@_INPUT_MODES
 @cases(*ENTITY_FORMATS)
-def test_entity_csv_format(given, expect):
-  result = b.run(given, b.entities_config(mappings=b.entity_mappings("bio")))
+def test_entity_csv_format(given, expect, mode):
+  result = b.run(given,
+                 b.entities_config(mappings=b.entity_mappings("bio")),
+                 mode=mode)
+  assert result.error is None, result.error
   b.assert_records(result.of_type("Author"), expect)

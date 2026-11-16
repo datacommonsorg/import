@@ -28,6 +28,7 @@ in PyFilesystem. So far, OSFS (with system paths) and GCSFS (with gs:// paths)
 have been tested. In-memory (mem://) and temp (temp://) paths are also built in.
 """
 
+import dataclasses
 import io
 import logging
 import os
@@ -47,6 +48,9 @@ _GCS_PATH_PREFIX = "gs://"
 # HTTP connections that the GCS client keeps open: enough for the threads that
 # validate CSV headers (runner._MAX_HEADER_VALIDATION_THREADS).
 _GCS_HTTP_POOL_SIZE = 32
+
+# Bytes fetched per request when a GCS file is streamed (see File.open_stream).
+_GCS_STREAM_CHUNK_BYTES = 8 * 1024 * 1024
 
 # This process's GCS client and the pid it was created in (see gcs_client()).
 _gcs_client: storage.Client | None = None
@@ -310,7 +314,8 @@ class Dir(_StoreWrapper):
           File(self._store,
                fspath.join(self.path, rel_path),
                create_if_missing=False,
-               exists=True))
+               exists=True,
+               gcs_object=GcsObject.of(blob)))
     return files
 
 
@@ -320,14 +325,19 @@ class File(_StoreWrapper):
                store: "Store",
                path: str,
                create_if_missing: bool,
-               exists: bool = False):
+               exists: bool = False,
+               gcs_object: "GcsObject | None" = None):
     """Opens the file at `path`, relative to the store's root.
 
     Args:
       exists: Whether the caller knows that the file exists, e.g. from a
         listing, so that it isn't checked.
+      gcs_object: The file's GCS object, as listed: `open_stream` then needs
+        no other lookup, and fails if the object was replaced since rather
+        than mix its versions.
     """
     super().__init__(store, path)
+    self._gcs_object = gcs_object
     if exists:
       return
     if not self.fs().exists(self.path):
@@ -343,6 +353,10 @@ class File(_StoreWrapper):
     """The file name, including any extension and without a leading slash."""
     return fspath.basename(self.path)
 
+  def gcs_object(self) -> "GcsObject | None":
+    """The file's GCS object, as listed, if known (see __init__)."""
+    return self._gcs_object
+
   def read(self) -> str:
     """Returns file contents as a string."""
     return self.fs().readtext(self.path)
@@ -354,8 +368,18 @@ class File(_StoreWrapper):
   def read_string_io(self) -> io.StringIO:
     return io.StringIO(self.read())
 
-  def open_stream(self, max_retries: int = 3):
-    """Returns an open text stream for streaming line-by-line with retries for transient network drops."""
+  def open_stream(self,
+                  chunk_size: int = _GCS_STREAM_CHUNK_BYTES,
+                  max_retries: int = 3):
+    """Returns an open text stream of the file, e.g. to read it line by line.
+
+    On GCS, the file is fetched as the stream is read, one ranged request per
+    `chunk_size` bytes, each retried by the GCS client: reading only the
+    header fetches only the first chunk. Elsewhere, opening the file is
+    retried up to `max_retries` times for transient errors.
+    """
+    if isinstance(self.fs(), GCSFS):
+      return self._open_gcs_stream(chunk_size)
     for attempt in range(max_retries):
       try:
         return self.fs().open(self.path, "r")
@@ -366,6 +390,86 @@ class File(_StoreWrapper):
             "Transient error opening stream for %s (attempt %d/%d): %s. Retrying...",
             self.path, attempt + 1, max_retries, e)
         time.sleep(1)
+
+  def _open_gcs_stream(self, chunk_size: int) -> io.TextIOWrapper:
+    gcs_object = self._gcs_object or self._get_gcs_object()
+    blob = self.fs().bucket.blob(_gcs_key(self.fs(), self.path),
+                                 generation=gcs_object.generation)
+    raw = _GcsRangeReader(blob, gcs_object.size, chunk_size)
+    # Decoded as fs.open(path, "r") does, also without a buffered layer, so
+    # that the decoder sees the same reads.
+    return io.TextIOWrapper(raw, encoding="utf-8", newline="")
+
+  def _get_gcs_object(self) -> "GcsObject":
+    """Looks up the file's GCS object (without needing directory markers)."""
+    blob = self.fs().bucket.get_blob(_gcs_key(self.fs(), self.path))
+    if blob is None:
+      raise FileNotFoundError(f"File not found: {self.full_path()}")
+    return GcsObject.of(blob)
+
+
+@dataclasses.dataclass(frozen=True)
+class GcsObject:
+  """What a GCS listing says about an object, for reading it."""
+  size: int
+  generation: int
+
+  @classmethod
+  def of(cls, blob: storage.Blob) -> "GcsObject":
+    return cls(size=blob.size, generation=blob.generation)
+
+
+class _GcsRangeReader(io.RawIOBase):
+  """Reads a GCS object of known size in ranged requests of `chunk_size`.
+
+  Reads return as many bytes as asked for until the end, like a local file's.
+  Reading at the end sends no request.
+  """
+
+  def __init__(self, blob: storage.Blob, size: int, chunk_size: int) -> None:
+    super().__init__()
+    self._blob = blob
+    self._size = size
+    self._chunk_size = chunk_size
+    self._chunk = b""  # The last bytes fetched, from offset _pos - len.
+    self._chunk_pos = 0  # Bytes of _chunk already read.
+    self._pos = 0  # Offset of the end of _chunk.
+
+  def readable(self) -> bool:
+    return True
+
+  def readinto(self, buffer) -> int:
+    view = memoryview(buffer).cast("B")
+    filled = 0
+    while filled < len(view):
+      if self._chunk_pos == len(self._chunk) and not self._fetch_chunk():
+        break
+      n = min(len(view) - filled, len(self._chunk) - self._chunk_pos)
+      view[filled:filled + n] = self._chunk[self._chunk_pos:self._chunk_pos + n]
+      filled += n
+      self._chunk_pos += n
+    return filled
+
+  def _fetch_chunk(self) -> bool:
+    """Fetches the next chunk; returns False at the end of the object."""
+    if self._pos >= self._size:
+      return False
+    end = min(self._pos + self._chunk_size, self._size)
+    # Checksums are of whole objects, so they can't validate a range.
+    data = self._blob.download_as_bytes(start=self._pos,
+                                        end=end - 1,
+                                        checksum=None)
+    if self._pos == 0 and len(data) > end:
+      # GCS ignores ranges of gzip-encoded objects and sends the whole
+      # decompressed object, whose size isn't the listed (compressed) one.
+      self._size = len(data)
+    elif len(data) != end - self._pos:
+      raise IOError(f"Expected {end - self._pos} bytes at offset {self._pos} of"
+                    f" gs://{self._blob.bucket.name}/{self._blob.name}, got"
+                    f" {len(data)}")
+    self._chunk, self._chunk_pos = data, 0
+    self._pos += len(data)
+    return True
 
 
 def _gcs_key(fs: GCSFS, path: str) -> str:

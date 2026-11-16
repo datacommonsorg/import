@@ -72,3 +72,11 @@ def test_a_bulk_load_lists_the_input_dir_once():
   # One listing, then each config.json is read: a metadata get and a download.
   kinds = sorted(r.kind for r in requests.of("load_config"))
   assert kinds == ["download"] * 3 + ["get"] * 3 + ["list"], kinds
+
+
+def test_a_csv_header_check_is_one_ranged_read():
+  requests = _run(_imports("alpha"), ["alpha"])
+
+  kinds = [r.kind for r in requests.of("validate_headers")]
+  # case.csv and the case<n>.csv files.
+  assert kinds == ["range"] * (1 + _CSVS_PER_IMPORT), kinds

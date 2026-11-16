@@ -31,10 +31,18 @@ def missing_column_mappings_error(file_path: str) -> FileValidationError:
       "to a property DCID, or list it in 'ignoreColumns'.")
 
 
+# Bytes fetched per request when reading a CSV header from GCS: enough for the
+# header and first row of almost every file in one request.
+_HEADER_READ_CHUNK_BYTES = 256 * 1024
+
+
 def read_csv_columns(input_file) -> set[str] | FileValidationError:
-  """Returns the header columns of a CSV file, or the error if it can't be read."""
+  """Returns the header columns of a CSV file, or the error if it can't be read.
+
+  Only the start of the file is read.
+  """
   try:
-    with input_file.open_stream() as stream:
+    with input_file.open_stream(chunk_size=_HEADER_READ_CHUNK_BYTES) as stream:
       return set(pd.read_csv(stream, nrows=0).columns)
   except Exception as e:
     return FileValidationError(
