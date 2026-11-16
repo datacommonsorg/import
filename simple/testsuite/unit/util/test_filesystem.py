@@ -8,6 +8,8 @@ import pytest
 from testsuite.lib import fake_gcs
 from util.filesystem import create_store
 
+from util import filesystem
+
 
 class TestFilesystem(unittest.TestCase):
 
@@ -215,3 +217,20 @@ def test_a_gzip_encoded_gcs_object_is_downloaded_whole():
     with mock.patch.object(store.fs, "open", return_value=whole) as fs_open:
       assert file.open_stream() is whole
     fs_open.assert_called_once_with("data.csv", "r")
+
+
+class _ShortReadBlob:
+  """A blob whose ranged downloads return one byte less than asked for."""
+  name = "data.csv"
+  bucket = mock.Mock()
+  bucket.name = "bucket"
+
+  def download_as_bytes(self, start, end, checksum):
+    del checksum  # Unused.
+    return b"x" * (end - start)
+
+
+def test_a_short_ranged_read_fails_rather_than_truncate_the_file():
+  reader = filesystem._GcsRangeReader(_ShortReadBlob(), size=10, chunk_size=4)
+  with pytest.raises(OSError, match="Expected 4 bytes at offset 0"):
+    reader.read(10)

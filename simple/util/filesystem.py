@@ -338,9 +338,9 @@ class File(_StoreWrapper):
     Args:
       exists: Whether the caller knows that the file exists, e.g. from a
         listing, so that it isn't checked.
-      gcs_object: The file's GCS object, as listed: `open_stream` then needs
-        no other lookup, and fails if the object was replaced since rather
-        than mix its versions.
+      gcs_object: The file's GCS object, as listed. `open_stream` needs it to
+        stream the file in ranges, and fails if the object was replaced since
+        rather than mix its versions.
     """
     super().__init__(store, path)
     self._gcs_object = gcs_object
@@ -379,8 +379,8 @@ class File(_StoreWrapper):
                   max_retries: int = 3):
     """Returns an open text stream of the file, e.g. to read it line by line.
 
-    On GCS, the file is fetched as the stream is read, one ranged request per
-    `chunk_size` bytes, each retried by the GCS client: reading only the
+    On GCS, a listed file is fetched as the stream is read, one ranged request
+    per `chunk_size` bytes, each retried by the GCS client: reading only the
     header fetches only the first chunk. Elsewhere, opening the file is
     retried up to `max_retries` times for transient errors.
     """
@@ -398,10 +398,11 @@ class File(_StoreWrapper):
         time.sleep(1)
 
   def _open_gcs_stream(self, chunk_size: int) -> io.TextIOWrapper:
-    gcs_object = self._gcs_object or self._get_gcs_object()
-    if gcs_object.content_encoding == _GZIP:
-      # Ranges of a gzip-encoded object are of its compressed bytes, so it
-      # is downloaded whole, decompressed, as before.
+    gcs_object = self._gcs_object
+    if gcs_object is None or gcs_object.content_encoding == _GZIP:
+      # Unlisted, there is no size or generation to read ranges of; and
+      # ranges of a gzip-encoded object are of its compressed bytes. Either
+      # way the object is downloaded whole, as before.
       return self.fs().open(self.path, "r")
     blob = self.fs().bucket.blob(_gcs_key(self.fs(), self.path),
                                  generation=gcs_object.generation)
@@ -409,13 +410,6 @@ class File(_StoreWrapper):
     # Decoded as fs.open(path, "r") does, also without a buffered layer, so
     # that the decoder sees the same reads.
     return io.TextIOWrapper(raw, encoding="utf-8", newline="")
-
-  def _get_gcs_object(self) -> "GcsObject":
-    """Looks up the file's GCS object (without needing directory markers)."""
-    blob = self.fs().bucket.get_blob(_gcs_key(self.fs(), self.path))
-    if blob is None:
-      raise FileNotFoundError(f"File not found: {self.full_path()}")
-    return GcsObject.of(blob)
 
 
 @dataclasses.dataclass(frozen=True)
