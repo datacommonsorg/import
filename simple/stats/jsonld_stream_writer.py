@@ -295,8 +295,6 @@ class JsonLdStreamWriter(GraphWriter):
     self._processed_imports = set()
     self._node_streaming_started = set()
     self.obs_hash_set: set[int] = set()
-    # For the ingestion report. The date range is None until a dated
-    # observation is written.
     self.observation_count: int = 0
     self.observation_dates: DateRange | None = None
     self.obs_collision_count: int = 0
@@ -383,12 +381,6 @@ class JsonLdStreamWriter(GraphWriter):
     self._record_observation_stats(observations_df)
 
   def _record_observation_stats(self, observations_df: pd.DataFrame) -> None:
-    """Adds a written chunk's observation count and date range to the totals.
-
-    Every row became one StatVarObservation node, so the row count is the
-    number of nodes written; rows with the same observation @id are counted
-    each time. Rows without a date are counted but don't affect the range.
-    """
     self.observation_count += len(observations_df)
     dates = observations_df[constants.COLUMN_DATE].dropna()
     if not dates.empty:

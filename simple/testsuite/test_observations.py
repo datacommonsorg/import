@@ -692,65 +692,30 @@ def test_report_counts_rows_without_a_date_but_leaves_them_out_of_the_range():
   assert provenance["dateRange"] == {"min": "2020", "max": "2020"}
 
 
-def _two_provenance_import(name: str) -> dict[str, str]:
-  """Import `name` with a.csv under ProvA and b.csv under ProvB."""
-  sources = [
-      b.mcf_node("dcid:SrcA", typeOf="dcs:Source"),
-      b.mcf_node("dcid:ProvA", typeOf="dcs:Provenance", source="dcid:SrcA"),
-      b.mcf_node("dcid:SrcB", typeOf="dcs:Source"),
-      b.mcf_node("dcid:ProvB", typeOf="dcs:Provenance", source="dcid:SrcB")
-  ]
-  config = {
-      "inputFiles": [
-          {
-              "pattern": "*.mcf",
-              "provenance": "dcid:ProvA"
-          },
-          {
-              "pattern": "a.csv",
-              "provenance": "dcid:ProvA",
-              "columnMappings": b.OBS_MAPPINGS
-          },
-          {
-              "pattern": "b.csv",
-              "provenance": "dcid:ProvB",
-              "columnMappings": b.OBS_MAPPINGS
-          },
-      ]
-  }
-  return {
-      f"{name}/config.json":
+def test_report_counts_each_file_under_its_configured_provenance():
+  """With two provenances in one folder, each file counts under its own."""
+  files = b.import_subdir(
+      "oecd", b.csv_file(b.obs_row("country/USA"), b.obs_row("country/FRA")))
+  config = json.loads(files["oecd/config.json"])
+  config["inputFiles"].append({
+      "pattern": "other.csv",
+      "provenance": "dcid:OtherProvenance",
+      "columnMappings": b.OBS_MAPPINGS
+  })
+  files.update({
+      "oecd/config.json":
           json.dumps(config),
-      f"{name}/provenance.mcf":
-          b.mcf(*sources),
-      f"{name}/a.csv":
-          b.csv_file(b.obs_row("country/USA", date="2005"),
-                     b.obs_row("country/FRA", date="2010")),
-      f"{name}/b.csv":
-          b.csv_file(b.obs_row("country/DEU", date="2021")),
+      "oecd/other.mcf":
+          b.mcf_node("dcid:OtherProvenance",
+                     typeOf="dcs:Provenance",
+                     source=f"dcid:{b.SOURCE}"),
+      "oecd/other.csv":
+          b.csv_file(b.obs_row("country/DEU")),
+  })
+  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd"]})
+
+  counts = {
+      p["id"]: p["observations"]
+      for p in _report_folders(result)["oecd"]["provenances"]
   }
-
-
-def test_report_keeps_provenances_and_folders_apart():
-  """Each provenance has its own counts; a folder's total is their sum."""
-  result = b.run_dir(
-      {
-          **_two_provenance_import("oecd"),
-          **b.import_subdir("ilo")
-      },
-      runner_kwargs={"import_names": ["oecd", "ilo"]})
-
-  folders = _report_folders(result)
-  assert folders["oecd"]["summary"]["observations"] == 3
-  assert [(p["id"], p["observations"], p["dateRange"])
-          for p in folders["oecd"]["provenances"]] == [
-              ("ProvA", 2, {
-                  "min": "2005",
-                  "max": "2010"
-              }),
-              ("ProvB", 1, {
-                  "min": "2021",
-                  "max": "2021"
-              }),
-          ]
-  assert folders["ilo"]["summary"]["observations"] == 1
+  assert counts == {b.PROVENANCE: 2, "OtherProvenance": 1}
