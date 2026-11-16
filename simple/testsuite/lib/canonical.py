@@ -103,14 +103,6 @@ def normalize_report(report: dict | None, path_tokens: dict[str, str]):
   out = {
       k: v for k, v in report.items() if k not in ("startTime", "lastUpdate")
   }
-  files = {}
-  for path, data in report.get("importFiles", {}).items():
-    data = {
-        k: v for k, v in data.items() if k not in ("startTime", "lastUpdate")
-    }
-    files[replace_paths(path, path_tokens)] = data
-  if "importFiles" in report:
-    out["importFiles"] = dict(sorted(files.items()))
   if "error" in out:
     out["error"] = replace_paths(out["error"], path_tokens)
   return out

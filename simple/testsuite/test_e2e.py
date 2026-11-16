@@ -62,11 +62,7 @@ KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {}
 # Known bugs that every mode shares are written into expected.json instead, so
 # the rest of the aspect is still checked (see "Known bugs" in README.md). The
 # fix updates expected.json.
-GOLDEN_BUGS = {
-    "report.json leaves every file NOT_STARTED: workers report to their own"
-    " files, never merged into it":
-        "b/580998027",
-}
+GOLDEN_BUGS: dict[str, str] = {}
 
 
 def _known_issue(dataset: str, mode: str, aspect: str):

@@ -27,11 +27,9 @@ import pytest
 from tools.regression.comparison.categories import CATEGORIES
 from tools.regression.comparison.compare import compare_outputs
 from tools.regression.comparison.compare import Comparison
-from tools.regression.comparison.compare import SideOutput
 from tools.regression.comparison.shards import load_output_tree
 
 CONTEXT = {"dcid": "https://datacommons.org/browser/"}
-INPUT_ROOT = "/data/input"
 RUN_DIR = "default_import_name_20260101_000000_000000"
 NODE_SHARD_A = "node-00000-aaaaaaaaaaaa.jsonld"
 NODE_SHARD_B = "node-00000-bbbbbbbbbbbb.jsonld"
@@ -79,12 +77,7 @@ BASE_SHARDS = {
 BASE_REPORT = {
     "status": "SUCCESS",
     "startTime": "2026-01-01 00:00:00",
-    "importFiles": {
-        f"{INPUT_ROOT}/data.csv": {
-            "status": "SUCCESS",
-            "lastUpdate": "2026-01-01 00:00:01"
-        }
-    },
+    "lastUpdate": "2026-01-01 00:00:01",
 }
 
 
@@ -107,14 +100,8 @@ def write_output(root: str,
   return root
 
 
-def compare_dirs(tmp_path,
-                 base: str,
-                 cand: str,
-                 cand_input_root: str = INPUT_ROOT) -> Comparison:
-  return compare_outputs(SideOutput(base, INPUT_ROOT),
-                         SideOutput(cand, cand_input_root),
-                         scratch_dir=str(tmp_path),
-                         workers=2)
+def compare_dirs(tmp_path, base: str, cand: str) -> Comparison:
+  return compare_outputs(base, cand, scratch_dir=str(tmp_path), workers=2)
 
 
 def compare(tmp_path,
@@ -223,27 +210,25 @@ def test_identical_outputs_report_no_difference(tmp_path):
 
 
 def test_volatile_fields_are_ignored(tmp_path):
-  """Timestamps, the run dir timestamp, node shard uids and input roots."""
+  """Timestamps, the run dir timestamp and node shard uids."""
   shards = copy.deepcopy(BASE_SHARDS)
   shards["ProvB"]["node-00000-cccccccccccc.jsonld"] = shards["ProvB"].pop(
       NODE_SHARD_B)
   report = copy.deepcopy(BASE_REPORT)
   report["startTime"] = "2027-05-05 12:00:00"
-  moved_report = json.loads(
-      json.dumps(report).replace(INPUT_ROOT, "/elsewhere/input"))
   base = write_output(str(tmp_path / "base"), BASE_SHARDS)
   cand = write_output(str(tmp_path / "cand"),
                       shards,
-                      report=moved_report,
+                      report=report,
                       run_dir="default_import_name_20270505_120000_123456")
-  result = compare_dirs(tmp_path, base, cand, "/elsewhere/input")
+  result = compare_dirs(tmp_path, base, cand)
   assert nonzero(result) == {}
 
 
 def test_report_json_changed(tmp_path):
   report = copy.deepcopy(BASE_REPORT)
   report["status"] = "FAILURE"
-  report["importFiles"][f"{INPUT_ROOT}/data.csv"]["status"] = "FAILURE"
+  report["error"] = "Boom"
   assert nonzero(compare(tmp_path,
                          report=report)) == dict(report_json_changed=2)
 

@@ -182,20 +182,6 @@
     }
   },
   "report": {
-    "importFiles": {
-      "<input>/health/data.csv": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/health/provenance.mcf": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/population/data.csv": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/population/provenance.mcf": {
-        "status": "NOT_STARTED"
-      }
-    },
     "status": "SUCCESS"
   }
 }

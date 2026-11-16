@@ -117,17 +117,6 @@
     }
   },
   "report": {
-    "importFiles": {
-      "<input>/nested_data_dir/data/countries_a.csv": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/nested_data_dir/data/countries_b.csv": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/nested_data_dir/data/provenance.mcf": {
-        "status": "NOT_STARTED"
-      }
-    },
     "status": "SUCCESS"
   }
 }

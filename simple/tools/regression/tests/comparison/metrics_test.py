@@ -37,7 +37,7 @@ METRICS = RunMetrics(exit_code=0,
 
 
 def side(*metrics: RunMetrics) -> SideRuns:
-  return SideRuns("code", "/out", None, metrics, "/side/run-1/preprocessor.log")
+  return SideRuns("code", "/out", metrics, "/side/run-1/preprocessor.log")
 
 
 def test_perf_regression_beyond_threshold():
@@ -125,5 +125,5 @@ def test_timeout_is_a_failure():
 
 
 def test_reused_output_without_metrics_is_not_a_failure():
-  reused = SideRuns("code", "/out", None, (), None)
+  reused = SideRuns("code", "/out", (), None)
   assert run_failures(reused, reused) == []
