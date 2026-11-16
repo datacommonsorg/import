@@ -276,8 +276,6 @@ public class GenerateEmbeddingContentFnTest {
     assertNotNull(content);
     assertEquals("Count_Person", content.subjectId());
     assertEquals("base_text_embedding", content.embeddingLabel());
-    assertEquals("gemini-embedding-001", content.modelEndpoint());
-    assertEquals("RETRIEVAL_DOCUMENT", content.taskType());
     assertEquals(List.of("StatisticalVariable"), content.nodeTypes());
 
     String expectedJson = "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}";
@@ -358,9 +356,7 @@ public class GenerateEmbeddingContentFnTest {
                 String.valueOf(expectedFp),
                 expectedJson,
                 expectedJson,
-                List.of("StatisticalVariable"),
-                "gemini-embedding-001",
-                "RETRIEVAL_DOCUMENT"));
+                List.of("StatisticalVariable")));
     pipeline.run();
   }
 }

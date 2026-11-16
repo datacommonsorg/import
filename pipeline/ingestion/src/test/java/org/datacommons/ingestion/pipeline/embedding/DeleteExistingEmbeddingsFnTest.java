@@ -78,7 +78,7 @@ public class DeleteExistingEmbeddingsFnTest {
 
   @Test
   public void testBuildDeleteMutations_pipeline() {
-    PCollection<String> subjectIds = pipeline.apply(Create.of("Count_Person", "Count_Person"));
+    PCollection<String> subjectIds = pipeline.apply(Create.of("Count_Person"));
 
     PCollection<Mutation> mutations =
         DeleteExistingEmbeddingsFn.buildDeleteMutations(
@@ -103,5 +103,36 @@ public class DeleteExistingEmbeddingsFnTest {
     List<MetricResult<Long>> counters = Lists.newArrayList(metrics.getCounters());
     assertEquals(1, counters.size());
     assertEquals(Long.valueOf(1L), counters.get(0).getCommitted());
+  }
+
+  @Test
+  public void testProcessElement_dedupsIdsInSameBatch() {
+    PCollection<List<String>> batchedIds =
+        pipeline.apply(Create.of(List.of(List.of("Count_Person", "Count_Person", "dc/topic/1"))));
+
+    PCollection<Mutation> mutations =
+        batchedIds.apply(
+            org.apache.beam.sdk.transforms.ParDo.of(
+                new DeleteExistingEmbeddingsFn("NodeEmbedding", "base_text_embedding")));
+
+    Mutation expected =
+        DeleteExistingEmbeddingsFn.buildDeleteMutation(
+            "NodeEmbedding", "base_text_embedding", List.of("Count_Person", "dc/topic/1"));
+    PAssert.that(mutations).containsInAnyOrder(expected);
+    PipelineResult result = pipeline.run();
+
+    MetricQueryResults metrics =
+        result
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(
+                        MetricNameFilter.named(
+                            DeleteExistingEmbeddingsFn.class,
+                            "embedding_deleted_nodes:base_text_embedding"))
+                    .build());
+    List<MetricResult<Long>> counters = Lists.newArrayList(metrics.getCounters());
+    assertEquals(1, counters.size());
+    assertEquals(Long.valueOf(2L), counters.get(0).getCommitted());
   }
 }

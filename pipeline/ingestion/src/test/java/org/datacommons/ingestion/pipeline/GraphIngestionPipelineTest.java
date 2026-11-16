@@ -11,8 +11,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.Compression;
@@ -21,8 +19,6 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.spanner.SpannerClient;
@@ -41,11 +37,9 @@ public class GraphIngestionPipelineTest implements Serializable {
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
   @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
-  public static List<Mutation> capturedMutations = Collections.synchronizedList(new ArrayList<>());
-
   @Before
   public void setUp() {
-    capturedMutations.clear();
+    MockSpannerClient.clearCapturedMutations();
   }
 
   @Test
@@ -86,7 +80,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     pipeline.run().waitUntilFinish();
 
     // 6. Assertions
-    verifyMutations(capturedMutations);
+    verifyMutations(MockSpannerClient.getCapturedMutations());
   }
 
   private void verifyMutations(List<Mutation> capturedMutations) {
@@ -156,7 +150,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     // 6. Assertions
     // If combined, we should see only 1 Node mutation for geoId/06!
     int nodeMutationCount = 0;
-    for (com.google.cloud.spanner.Mutation m : capturedMutations) {
+    for (com.google.cloud.spanner.Mutation m : MockSpannerClient.getCapturedMutations()) {
       if (m.getTable().equals("Node")
           && m.asMap().get("subject_id").getString().equals("geoId/06")) {
         nodeMutationCount++;
@@ -212,7 +206,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     // "gender" is NOT in NON_CONSTRAINT_PROPS, so it would normally trigger constraintProperties
     // generation.
     boolean foundConstraintProperties = false;
-    for (Mutation m : capturedMutations) {
+    for (Mutation m : MockSpannerClient.getCapturedMutations()) {
       if (m.getTable().equals("Edge")
           && m.asMap().get("subject_id").getString().equals("testStatVar")
           && m.asMap().get("predicate").getString().equals("constraintProperties")) {
@@ -262,7 +256,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     SpannerWriteResult mockWriteResult =
         mock(SpannerWriteResult.class, withSettings().serializable());
     PCollection<Void> mockWriteOutput =
-        pipeline.apply("CreateWriteSignal_TfRecord", Create.empty(TypeDescriptor.of(Void.class)));
+        pipeline.apply("CreateWriteOutput_TfRecord", Create.empty(TypeDescriptor.of(Void.class)));
     when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
     SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
 
@@ -271,10 +265,10 @@ public class GraphIngestionPipelineTest implements Serializable {
     pipeline.run().waitUntilFinish();
 
     // 5. Assertions: one TimeSeries mutation per record, one Observation mutation per obs.
-    long timeSeriesCount =
-        capturedMutations.stream().filter(m -> m.getTable().equals("TimeSeries")).count();
+    List<Mutation> captured = MockSpannerClient.getCapturedMutations();
+    long timeSeriesCount = captured.stream().filter(m -> m.getTable().equals("TimeSeries")).count();
     long observationCount =
-        capturedMutations.stream().filter(m -> m.getTable().equals("Observation")).count();
+        captured.stream().filter(m -> m.getTable().equals("Observation")).count();
     assertEquals(2, timeSeriesCount);
     assertEquals(3, observationCount);
   }
@@ -365,42 +359,5 @@ public class GraphIngestionPipelineTest implements Serializable {
 
     assertTrue("Process should terminate within 30 seconds without hanging", finished);
     assertTrue("Process should exit with non-zero exit code", process.exitValue() != 0);
-  }
-
-  static class MockSpannerClient extends SpannerClient {
-    private final transient PCollection<Void> deleteSignal;
-    private final transient SpannerWriteResult mockWriteResult;
-
-    public MockSpannerClient(PCollection<Void> deleteSignal, SpannerWriteResult mockWriteResult) {
-      super(
-          SpannerClient.builder()
-              .gcpProjectId("test")
-              .spannerInstanceId("test")
-              .spannerDatabaseId("test"));
-      this.deleteSignal = deleteSignal;
-      this.mockWriteResult = mockWriteResult;
-    }
-
-    @Override
-    public PCollection<Void> deleteDataForImport(
-        Pipeline pipeline, String importName, String tableName, String columnName) {
-      return deleteSignal;
-    }
-
-    @Override
-    public SpannerWriteResult writeMutations(
-        Pipeline pipeline, String name, PCollection<Mutation> mutations) {
-
-      mutations.apply(
-          "Capture" + name + "Mutations",
-          ParDo.of(
-              new DoFn<Mutation, Void>() {
-                @ProcessElement
-                public void processElement(@Element Mutation m) {
-                  capturedMutations.add(m);
-                }
-              }));
-      return mockWriteResult;
-    }
   }
 }
