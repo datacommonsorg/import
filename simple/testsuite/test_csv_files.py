@@ -14,8 +14,9 @@
 """
 CSV files: the same data, written differently, gives the same records.
 
-Each CSV import type has one table. Every case writes the same three rows,
-whose last column holds the cells that need CSV quoting.
+Each CSV import type has one table of formats, whose cases write the same
+three rows; their last column holds the cells that need CSV quoting. Header
+cases check the edges of reading a header.
 """
 
 import pytest
@@ -100,6 +101,7 @@ def test_observation_csv_format(given, expect, mode):
 # An ignored column whose name is longer than the first read of a header.
 _LONG_NAME = "x" * 300_000
 
+# given: (CSV text, the column to ignore).
 HEADER_FORMATS = [
     Case("header only",
          given=(b.csv_file(header=_OBS_HEADER), "notes"),

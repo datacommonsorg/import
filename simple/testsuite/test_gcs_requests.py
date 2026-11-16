@@ -101,6 +101,8 @@ def test_a_csv_larger_than_a_header_read_is_read_in_one_request():
   assert len(files["alpha/case.csv"]) > 1024 * 1024
   requests = _run(files, ["alpha"])
 
-  reads = [r for r in requests.of(gcs_requests.WORKER, "range")]
-  assert len([r for r in reads if r.url.split("?")[0].endswith("/case.csv")
-             ]) == 1
+  case_reads = [
+      r for r in requests.of(gcs_requests.WORKER, "range")
+      if urlparse(r.url).path.endswith("/case.csv")
+  ]
+  assert len(case_reads) == 1, case_reads

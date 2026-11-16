@@ -15,8 +15,8 @@
 Comparison of process/report.json.
 
 Timestamps are dropped and input paths are made relative to each side's input
-root (see volatile.py). Per-file reports are compared by the input file they
-describe, not by their file name.
+root (see volatile.py). importFiles entries are compared by the input file
+they describe.
 """
 
 import os
