@@ -136,10 +136,10 @@ function setup {
 
 # Check parameters for simple_import
 function check_simple_import {
-  if [[ "$INPUT_DIR" == "" || "$IMPORTS" == "" ]]; then
-    echo_fatal "No input directory or imports. Specify the '-i' and '-n' command line options.
+  [[ -n "$INPUT_DIR" ]] || echo_fatal "No input directory. Specify the '-i' command line option.
 $USAGE"
-  fi
+  [[ -n "$IMPORTS" ]] || echo_fatal "No imports. Specify '-n' with one or more comma-separated subdirectories of the input directory, or ALL_IMPORTS.
+$USAGE"
 }
 
 # Run the simple import on the specified input files.
@@ -149,9 +149,7 @@ function simple_import {
   setup_python
 
   # Build options for simple importer
-  local importer_options=""
-  [[ -n "$INPUT_DIR" ]] && importer_options="$importer_options --input_dir=$INPUT_DIR"
-  [[ -n "$IMPORTS" ]] && importer_options="$importer_options --imports=$IMPORTS"
+  local importer_options="--input_dir=$INPUT_DIR --imports=$IMPORTS"
   [[ -n "$MODE" ]] && importer_options="$importer_options --mode=$MODE"
   [[ -n "$OUTPUT_DIR" ]] && importer_options="$importer_options --output_dir=$OUTPUT_DIR"
   mkdir -p $OUTPUT_DIR
