@@ -54,11 +54,6 @@
   },
   "report": {
     "error": "CSV Header Validation Failed! The following errors were found:\nFile 'data.csv': The CSV file 'data.csv' contains unmapped columns: ['notes']. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json.",
-    "importFiles": {
-      "<input>/header_validation_failure/data.csv": {
-        "status": "NOT_STARTED"
-      }
-    },
     "status": "FAILURE"
   }
 }

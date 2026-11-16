@@ -179,7 +179,6 @@ def _stats_section(report: Report) -> list[str]:
       _pair_row("Node records", nodes["records"]),
       _pair_row("Node @ids", nodes["ids"]),
       _pair_row("report.json status", reports["status"]),
-      _pair_row("report.json importFiles", reports["import_files"]),
   ]
   return (_heading("Output summary") + _table(_SIDES_HEADER, rows) +
           _pair_table("Observations per folder (differing only)", "Folder",

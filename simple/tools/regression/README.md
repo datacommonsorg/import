@@ -67,8 +67,6 @@ python3 -m tools.regression --input_dir=/data/in --repeats=3 -- --imports=<impor
 one written by this tool (`<work_dir>/<side>/run-1/output`), the metrics are
 reused from the `run.json` files next to it; for any other, perf is not judged
 for that side. Passing both compares two outputs without running anything.
-Report paths are compared relative to each side's input root, so the outputs
-may come from different copies of the input.
 
 Run `python3 -m tools.regression --help` for every flag.
 
@@ -145,7 +143,7 @@ Informational ones change only the layout of the same graph, or the warnings.
 | `exit_status_changed` | failing | The exit status differs, or one side timed out. |
 | `error_lines_increased` | failing | The candidate logged more ERROR/CRITICAL lines or Python tracebacks. |
 | `warning_lines_changed` | informational | The number of WARNING lines differs. |
-| `report_json_changed` | failing | A top-level field or an `importFiles` entry of `process/report.json` differs. |
+| `report_json_changed` | failing | A field of `process/report.json` differs. |
 | `run_dir_name_changed` | failing | The `jsonld/<import name>` run directory, without its timestamp, differs. |
 | `jsonld_context_changed` | failing | The set of `@context` values in the shards differs. |
 | `shard_set_changed` | informational | An observation shard name exists on one side only, or a folder has a different number of node shards. |
@@ -166,7 +164,7 @@ Informational ones change only the layout of the same graph, or the warnings.
 The comparison ignores only what is listed in
 [comparison/volatile.py](comparison/volatile.py): report timestamps
 (`startTime`, `lastUpdate`), the run directory's timestamp suffix, the random
-uid in node shard names, and each side's input root in report paths.
+uid in node shard names.
 
 ## Thresholds and exit codes
 
