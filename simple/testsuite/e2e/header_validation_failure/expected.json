@@ -22,8 +22,10 @@
         "folderName": "header_validation_failure",
         "provenances": [
           {
+            "dateRange": null,
             "fileCount": 2,
             "id": "KitchenProvenance",
+            "observations": 0,
             "sourceId": null
           }
         ],
@@ -35,6 +37,7 @@
             },
             "count": 2
           },
+          "observations": 0,
           "provenanceCount": 1
         }
       }
