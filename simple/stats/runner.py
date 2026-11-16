@@ -487,9 +487,6 @@ class Runner:
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
-    # Folders come only from --imports; without it, no folder is reported.
-    if not self.import_names:
-      return
     for file in files:
       self.summary_generator.record_input_file(
           folder=self._input_folder_name(file),
@@ -497,20 +494,19 @@ class Runner:
           file_path=file.path)
 
   def _input_folder_name(self, file: File) -> str:
-    """Returns the import folder an input file belongs to, for the report."""
-    if self.active_import_prefixes:
-      # Bulk or combined load: use the import folder the file is under, e.g.
-      # prefix "health/" for "health/data.csv". With nested imports
-      # ("a/" and "a/b/"), the longest matching prefix wins.
-      best_prefix = ""
-      for prefix in self.active_import_prefixes:
-        if file.path.startswith(prefix) and len(prefix) > len(best_prefix):
-          best_prefix = prefix
-      if best_prefix:
-        return best_prefix.rstrip("/")
+    """Returns the import an input file belongs to, for the report.
 
-    # Single import: the file belongs to the one import we were asked to run.
-    return self.import_names[0]
+    With several imports or ALL_IMPORTS, the import folder the file is under,
+    e.g. "health" for "health/data.csv" (with nested imports "a/" and "a/b/",
+    the longest matching one); otherwise the one import --imports named.
+    """
+    prefixes = [
+        prefix for prefix in self.active_import_prefixes or []
+        if file.path.startswith(prefix)
+    ]
+    if not prefixes:
+      return self.import_names[0]
+    return max(prefixes, key=len).rstrip("/")
 
   def _report_folder_names(self) -> list[str]:
     """Returns the import folders this run was asked to import."""
