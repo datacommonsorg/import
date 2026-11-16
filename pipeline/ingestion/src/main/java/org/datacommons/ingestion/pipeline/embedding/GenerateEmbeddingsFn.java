@@ -16,7 +16,6 @@ package org.datacommons.ingestion.pipeline.embedding;
 
 import com.google.cloud.spanner.Mutation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -25,19 +24,15 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
+import org.apache.beam.sdk.transforms.BatchElements;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.GroupIntoBatches;
-import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Wait;
-import org.apache.beam.sdk.transforms.WithKeys;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.TypeDescriptor;
-import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.spanner.SpannerClient;
 
 /**
- * Batches {@link EmbeddingContent} elements via {@link GroupIntoBatches}, invokes {@link
+ * Batches {@link EmbeddingContent} elements via {@link BatchElements}, invokes {@link
  * VertexAiEmbeddingClient#predictEmbeddings(List, String, String)} per batch using the model
  * endpoint and task type from {@link EmbeddingSpec}, and emits Spanner {@link Mutation}s for the
  * {@code NodeEmbedding} table.
@@ -95,7 +90,7 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
   }
 
   /**
-   * Keys and batches {@code contents} into chunks of {@code batchSize} and applies {@link
+   * Batches {@code contents} into chunks of {@code batchSize} and applies {@link
    * GenerateEmbeddingsFn} to produce Spanner {@link Mutation}s for {@code embeddingTableName}.
    */
   public static PCollection<Mutation> buildEmbeddingMutations(
@@ -107,15 +102,13 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
     String label = spec.embeddingLabel();
     int effectiveBatchSize =
         batchSize > 0 ? Math.min(batchSize, MAX_BATCH_SIZE) : DEFAULT_BATCH_SIZE;
+    BatchElements.BatchConfig batchConfig =
+        BatchElements.BatchConfig.builder()
+            .withMinBatchSize(effectiveBatchSize)
+            .withMaxBatchSize(effectiveBatchSize)
+            .build();
     return contents
-        .apply("KeyContentsForEmbedding_" + label, WithKeys.of(""))
-        .apply(
-            "BatchContentsForEmbedding_" + label,
-            GroupIntoBatches.<String, EmbeddingContent>ofSize(effectiveBatchSize).withShardedKey())
-        .apply(
-            "ExtractContentBatches_" + label,
-            MapElements.into(TypeDescriptors.lists(TypeDescriptor.of(EmbeddingContent.class)))
-                .via(kv -> Lists.newArrayList(kv.getValue())))
+        .apply("BatchContentsForEmbedding_" + label, BatchElements.withConfig(batchConfig))
         .apply(
             "GenerateEmbeddings_" + label,
             ParDo.of(new GenerateEmbeddingsFn(embeddingClient, embeddingTableName, spec)));

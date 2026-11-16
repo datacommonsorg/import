@@ -19,17 +19,15 @@ import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Statement;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
+import org.apache.beam.sdk.transforms.BatchElements;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.GroupIntoBatches;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.WithKeys;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.spanner.SpannerClient;
@@ -115,15 +113,14 @@ public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
 
   static PCollection<Mutation> buildDeleteMutations(
       PCollection<String> subjectIds, String embeddingTable, String embeddingLabel) {
+    BatchElements.BatchConfig batchConfig =
+        BatchElements.BatchConfig.builder()
+            .withMinBatchSize(DELETE_BATCH_SIZE)
+            .withMaxBatchSize(DELETE_BATCH_SIZE)
+            .build();
     return subjectIds
-        .apply("KeyCandidateIdsForDelete_" + embeddingLabel, WithKeys.of(""))
         .apply(
-            "BatchCandidateIdsForDelete_" + embeddingLabel,
-            GroupIntoBatches.<String, String>ofSize(DELETE_BATCH_SIZE).withShardedKey())
-        .apply(
-            "ExtractCandidateIdBatches_" + embeddingLabel,
-            MapElements.into(TypeDescriptors.lists(TypeDescriptors.strings()))
-                .via(kv -> Lists.newArrayList(kv.getValue())))
+            "BatchCandidateIdsForDelete_" + embeddingLabel, BatchElements.withConfig(batchConfig))
         .apply(
             "BuildDeleteEmbeddingMutations_" + embeddingLabel,
             ParDo.of(new DeleteExistingEmbeddingsFn(embeddingTable, embeddingLabel)));
