@@ -41,28 +41,29 @@ import org.junit.runners.JUnit4;
 public class VertexAiEmbeddingClientTest {
 
   @Test
-  public void testConstructorAndLocationResolution() {
-    VertexAiEmbeddingClient defaultClient = new VertexAiEmbeddingClient("my-gcp-project");
-    assertEquals("my-gcp-project", defaultClient.getProjectId());
-    assertEquals("us-central1", defaultClient.getLocation());
-    assertEquals("us-central1-aiplatform.googleapis.com:443", defaultClient.getEndpoint());
-
-    VertexAiEmbeddingClient regionClient =
+  public void testConstructorResolution_success() {
+    VertexAiEmbeddingClient defaultClient =
         new VertexAiEmbeddingClient("my-gcp-project", "us-east1");
-    assertEquals("us-east1", regionClient.getLocation());
-    assertEquals("us-east1-aiplatform.googleapis.com:443", regionClient.getEndpoint());
 
-    VertexAiEmbeddingClient blankLocationClient =
-        new VertexAiEmbeddingClient("my-gcp-project", "   ");
-    assertEquals("us-central1", blankLocationClient.getLocation());
-    assertEquals("us-central1-aiplatform.googleapis.com:443", blankLocationClient.getEndpoint());
-
-    assertThrows(IllegalArgumentException.class, () -> new VertexAiEmbeddingClient(null));
-    assertThrows(IllegalArgumentException.class, () -> new VertexAiEmbeddingClient("  "));
+    assertEquals(defaultClient.getProjectId(), "my-gcp-project");
+    assertEquals(defaultClient.getLocation(), "us-east1");
+    assertEquals(defaultClient.getEndpoint(), "us-east1-aiplatform.googleapis.com:443");
   }
 
   @Test
-  public void testBuildPredictRequest() {
+  public void testConstructorResolution_fail() {
+    assertThrows(
+        IllegalArgumentException.class, () -> new VertexAiEmbeddingClient(null, "us-central1"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new VertexAiEmbeddingClient("  ", "us-central1"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new VertexAiEmbeddingClient("my-gcp-project", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new VertexAiEmbeddingClient("my-gcp-project", "   "));
+  }
+
+  @Test
+  public void testBuildPredictRequest_withTaskType_success() {
     VertexAiEmbeddingClient client = new VertexAiEmbeddingClient("my-gcp-project", "us-central1");
 
     PredictRequest request =
@@ -70,22 +71,28 @@ public class VertexAiEmbeddingClientTest {
             "text-embedding-005", List.of("Total Population", "Median Income"), "RETRIEVAL_QUERY");
 
     assertEquals(
-        "projects/my-gcp-project/locations/us-central1/publishers/google/models/text-embedding-005",
-        request.getEndpoint());
-    assertEquals(2, request.getInstancesCount());
+        request.getEndpoint(),
+        "projects/my-gcp-project/locations/us-central1/publishers/google/models/text-embedding-005");
+    assertEquals(request.getInstancesCount(), 2);
 
     Struct firstInstance = request.getInstances(0).getStructValue();
-    assertEquals("Total Population", firstInstance.getFieldsOrThrow("content").getStringValue());
-    assertEquals("RETRIEVAL_QUERY", firstInstance.getFieldsOrThrow("task_type").getStringValue());
+    assertEquals(firstInstance.getFieldsOrThrow("content").getStringValue(), "Total Population");
+    assertEquals(firstInstance.getFieldsOrThrow("task_type").getStringValue(), "RETRIEVAL_QUERY");
+  }
+
+  @Test
+  public void testBuildPredictRequest_withoutTaskType_omitsTaskType() {
+    VertexAiEmbeddingClient client = new VertexAiEmbeddingClient("my-gcp-project", "us-central1");
 
     PredictRequest requestNoTaskType =
         client.buildPredictRequest("text-embedding-005", List.of("Hello"), null);
+
     assertFalse(
         requestNoTaskType.getInstances(0).getStructValue().getFieldsMap().containsKey("task_type"));
   }
 
   @Test
-  public void testParsePredictResponse() {
+  public void testParsePredictResponse_success() {
     PredictResponse response =
         PredictResponse.newBuilder()
             .addPredictions(buildPredictionValue(List.of(0.1, -0.25, 0.5)))
@@ -93,19 +100,45 @@ public class VertexAiEmbeddingClientTest {
             .build();
 
     List<List<Double>> vectors = VertexAiEmbeddingClient.parsePredictResponse(response, 2);
-    assertEquals(2, vectors.size());
-    assertEquals(List.of(0.1, -0.25, 0.5), vectors.get(0));
-    assertEquals(List.of(0.75, 0.0, -0.5), vectors.get(1));
 
-    // Count mismatch throws IllegalStateException
+    assertEquals(vectors.size(), 2);
+    assertEquals(vectors.get(0), List.of(0.1, -0.25, 0.5));
+    assertEquals(vectors.get(1), List.of(0.75, 0.0, -0.5));
+  }
+
+  @Test
+  public void testParsePredictResponse_nullResponse_throwsException() {
+    assertThrows(
+        IllegalStateException.class, () -> VertexAiEmbeddingClient.parsePredictResponse(null, 2));
+  }
+
+  @Test
+  public void testParsePredictResponse_countMismatch_throwsException() {
+    PredictResponse response =
+        PredictResponse.newBuilder()
+            .addPredictions(buildPredictionValue(List.of(0.1, -0.25, 0.5)))
+            .addPredictions(buildPredictionValue(List.of(0.75, 0.0, -0.5)))
+            .build();
+
     assertThrows(
         IllegalStateException.class,
         () -> VertexAiEmbeddingClient.parsePredictResponse(response, 1));
   }
 
   @Test
+  public void testPredictEmbeddings_beforeSetup_throwsException() {
+    VertexAiEmbeddingClient client = new VertexAiEmbeddingClient("my-gcp-project", "us-central1");
+
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            client.predictEmbeddings(
+                List.of("Count_Person"), "text-embedding-005", "RETRIEVAL_QUERY"));
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
-  public void testPredictEmbeddings_setupAndTeardownLifecycle() throws Exception {
+  public void testPredictEmbeddings_setupAndTeardownLifecycle_success() throws Exception {
     PredictionServiceStub mockStub = mock(PredictionServiceStub.class);
     UnaryCallable<PredictRequest, PredictResponse> mockCallable = mock(UnaryCallable.class);
     PredictResponse fakeResponse =
@@ -119,21 +152,16 @@ public class VertexAiEmbeddingClientTest {
     VertexAiEmbeddingClient client =
         new VertexAiEmbeddingClient("my-gcp-project", "us-central1") {
           @Override
-          PredictionServiceClient createPredictionServiceClient() {
-            createCount[0]++;
-            return PredictionServiceClient.create(mockStub);
+          public void setup() {
+            if (predictionServiceClient == null) {
+              createCount[0]++;
+              predictionServiceClient = PredictionServiceClient.create(mockStub);
+            }
           }
         };
 
-    // Calling predictEmbeddings before setup() throws IllegalStateException
-    assertThrows(
-        IllegalStateException.class,
-        () ->
-            client.predictEmbeddings(
-                List.of("Count_Person"), "text-embedding-005", "RETRIEVAL_QUERY"));
-
     client.setup();
-    assertEquals(1, createCount[0]);
+    assertEquals(createCount[0], 1);
 
     List<List<Double>> firstBatch =
         client.predictEmbeddings(List.of("Count_Person"), "text-embedding-005", "RETRIEVAL_QUERY");
@@ -141,9 +169,9 @@ public class VertexAiEmbeddingClientTest {
         client.predictEmbeddings(
             List.of("Median_Income_Person"), "text-embedding-005", "RETRIEVAL_QUERY");
 
-    assertEquals(List.of(List.of(0.2, 0.8)), firstBatch);
-    assertEquals(List.of(List.of(0.2, 0.8)), secondBatch);
-    assertEquals(1, createCount[0]);
+    assertEquals(firstBatch, List.of(List.of(0.2, 0.8)));
+    assertEquals(secondBatch, List.of(List.of(0.2, 0.8)));
+    assertEquals(createCount[0], 1);
 
     assertTrue(
         client.predictEmbeddings(List.of(), "text-embedding-005", "RETRIEVAL_QUERY").isEmpty());

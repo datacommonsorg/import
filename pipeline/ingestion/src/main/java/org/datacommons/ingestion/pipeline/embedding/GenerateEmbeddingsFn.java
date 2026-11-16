@@ -30,7 +30,7 @@ import org.apache.beam.sdk.transforms.GroupIntoBatches;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Wait;
-import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.transforms.WithKeys;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.sdk.values.TypeDescriptors;
@@ -45,7 +45,6 @@ import org.datacommons.ingestion.spanner.SpannerClient;
 public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation> {
   public static final int DEFAULT_BATCH_SIZE = 100;
   public static final int MAX_BATCH_SIZE = 250;
-  private static final int BATCH_SHARDS = 128;
 
   private final VertexAiEmbeddingClient embeddingClient;
   private final String embeddingTableName;
@@ -109,19 +108,10 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
     int effectiveBatchSize =
         batchSize > 0 ? Math.min(batchSize, MAX_BATCH_SIZE) : DEFAULT_BATCH_SIZE;
     return contents
+        .apply("KeyContentsForEmbedding_" + label, WithKeys.of(""))
         .apply(
-            "KeyContentsForEmbedding_" + label,
-            MapElements.into(
-                    TypeDescriptors.kvs(
-                        TypeDescriptors.integers(), TypeDescriptor.of(EmbeddingContent.class)))
-                .via(
-                    c ->
-                        KV.of(
-                            Math.floorMod(
-                                (c.subjectId() == null ? "" : c.subjectId()).hashCode(),
-                                BATCH_SHARDS),
-                            c)))
-        .apply("BatchContentsForEmbedding_" + label, GroupIntoBatches.ofSize(effectiveBatchSize))
+            "BatchContentsForEmbedding_" + label,
+            GroupIntoBatches.<String, EmbeddingContent>ofSize(effectiveBatchSize).withShardedKey())
         .apply(
             "ExtractContentBatches_" + label,
             MapElements.into(TypeDescriptors.lists(TypeDescriptor.of(EmbeddingContent.class)))

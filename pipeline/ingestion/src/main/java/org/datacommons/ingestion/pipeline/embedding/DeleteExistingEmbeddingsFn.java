@@ -29,7 +29,7 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupIntoBatches;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.transforms.WithKeys;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.spanner.SpannerClient;
@@ -48,7 +48,6 @@ import org.datacommons.ingestion.spanner.model.EdgeRecord;
  */
 public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
   public static final int DELETE_BATCH_SIZE = 1000;
-  private static final int DELETE_SHARDS = 32;
 
   private final String embeddingTable;
   private final String embeddingLabel;
@@ -117,14 +116,10 @@ public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
   static PCollection<Mutation> buildDeleteMutations(
       PCollection<String> subjectIds, String embeddingTable, String embeddingLabel) {
     return subjectIds
-        .apply(
-            "KeyCandidateIdsForDelete_" + embeddingLabel,
-            MapElements.into(
-                    TypeDescriptors.kvs(TypeDescriptors.integers(), TypeDescriptors.strings()))
-                .via(id -> KV.of(Math.floorMod(id.hashCode(), DELETE_SHARDS), id)))
+        .apply("KeyCandidateIdsForDelete_" + embeddingLabel, WithKeys.of(""))
         .apply(
             "BatchCandidateIdsForDelete_" + embeddingLabel,
-            GroupIntoBatches.ofSize(DELETE_BATCH_SIZE))
+            GroupIntoBatches.<String, String>ofSize(DELETE_BATCH_SIZE).withShardedKey())
         .apply(
             "ExtractCandidateIdBatches_" + embeddingLabel,
             MapElements.into(TypeDescriptors.lists(TypeDescriptors.strings()))

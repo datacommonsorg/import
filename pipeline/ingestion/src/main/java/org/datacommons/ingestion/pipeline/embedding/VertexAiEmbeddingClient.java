@@ -32,26 +32,23 @@ import java.util.Objects;
  * PredictionServiceClient} (e.g., {@code text-embedding-005}).
  */
 public class VertexAiEmbeddingClient implements Serializable, AutoCloseable {
-  public static final String DEFAULT_LOCATION = "us-central1";
   private static final String DEFAULT_PUBLISHER = "google";
   private static final String ENDPOINT_SUFFIX = "-aiplatform.googleapis.com:443";
 
   private final String projectId;
   private final String location;
   private final String endpoint;
-  private transient PredictionServiceClient predictionServiceClient;
-
-  public VertexAiEmbeddingClient(String projectId) {
-    this(projectId, DEFAULT_LOCATION);
-  }
+  transient PredictionServiceClient predictionServiceClient;
 
   public VertexAiEmbeddingClient(String projectId, String location) {
     if (projectId == null || projectId.trim().isEmpty()) {
       throw new IllegalArgumentException("projectId must not be null or empty");
     }
+    if (location == null || location.trim().isEmpty()) {
+      throw new IllegalArgumentException("location must not be null or empty");
+    }
     this.projectId = projectId.trim();
-    this.location =
-        (location == null || location.trim().isEmpty()) ? DEFAULT_LOCATION : location.trim();
+    this.location = location.trim();
     this.endpoint = this.location + ENDPOINT_SUFFIX;
   }
 
@@ -73,32 +70,28 @@ public class VertexAiEmbeddingClient implements Serializable, AutoCloseable {
    */
   public void setup() throws IOException {
     if (predictionServiceClient == null) {
-      predictionServiceClient = createPredictionServiceClient();
+      PredictionServiceSettings settings =
+          PredictionServiceSettings.newBuilder().setEndpoint(endpoint).build();
+      predictionServiceClient = PredictionServiceClient.create(settings);
     }
   }
 
   /**
-   * Predicts vector embeddings for a batch of input text strings using the specified Vertex AI
-   * model endpoint and task type.
+   * Predicts vector embeddings for a batch of input embedding content strings using the specified
+   * Vertex AI model endpoint and task type.
    */
   public List<List<Double>> predictEmbeddings(
-      List<String> texts, String modelEndpoint, String taskType) {
-    if (texts == null || texts.isEmpty()) {
+      List<String> embeddingContents, String modelEndpoint, String taskType) {
+    if (embeddingContents == null || embeddingContents.isEmpty()) {
       return ImmutableList.of();
     }
     if (predictionServiceClient == null) {
       throw new IllegalStateException(
           "VertexAiEmbeddingClient is not initialized; call setup() before predictEmbeddings()");
     }
-    PredictRequest request = buildPredictRequest(modelEndpoint, texts, taskType);
+    PredictRequest request = buildPredictRequest(modelEndpoint, embeddingContents, taskType);
     PredictResponse response = predictionServiceClient.predict(request);
-    return parsePredictResponse(response, texts.size());
-  }
-
-  PredictionServiceClient createPredictionServiceClient() throws IOException {
-    PredictionServiceSettings settings =
-        PredictionServiceSettings.newBuilder().setEndpoint(endpoint).build();
-    return PredictionServiceClient.create(settings);
+    return parsePredictResponse(response, embeddingContents.size());
   }
 
   @Override
@@ -109,7 +102,8 @@ public class VertexAiEmbeddingClient implements Serializable, AutoCloseable {
     }
   }
 
-  PredictRequest buildPredictRequest(String modelEndpoint, List<String> texts, String taskType) {
+  PredictRequest buildPredictRequest(
+      String modelEndpoint, List<String> embeddingContents, String taskType) {
     if (modelEndpoint == null || modelEndpoint.trim().isEmpty()) {
       throw new IllegalArgumentException("modelEndpoint must not be null or empty");
     }
@@ -117,8 +111,8 @@ public class VertexAiEmbeddingClient implements Serializable, AutoCloseable {
         EndpointName.ofProjectLocationPublisherModelName(
             projectId, location, DEFAULT_PUBLISHER, modelEndpoint.trim());
     ImmutableList<Value> instances =
-        texts.stream()
-            .map(text -> buildInstanceValue(text, taskType))
+        embeddingContents.stream()
+            .map(embeddingContent -> buildInstanceValue(embeddingContent, taskType))
             .collect(ImmutableList.toImmutableList());
     return PredictRequest.newBuilder()
         .setEndpoint(endpointName.toString())
@@ -126,9 +120,10 @@ public class VertexAiEmbeddingClient implements Serializable, AutoCloseable {
         .build();
   }
 
-  static Value buildInstanceValue(String text, String taskType) {
+  static Value buildInstanceValue(String embeddingContent, String taskType) {
     Struct.Builder structBuilder =
-        Struct.newBuilder().putFields("content", valueOf(Objects.requireNonNullElse(text, "")));
+        Struct.newBuilder()
+            .putFields("content", valueOf(Objects.requireNonNullElse(embeddingContent, "")));
     if (taskType != null && !taskType.trim().isEmpty()) {
       structBuilder.putFields("task_type", valueOf(taskType.trim()));
     }
@@ -137,12 +132,14 @@ public class VertexAiEmbeddingClient implements Serializable, AutoCloseable {
 
   static ImmutableList<List<Double>> parsePredictResponse(
       PredictResponse response, int expectedCount) {
-    if (response == null || response.getPredictionsCount() != expectedCount) {
-      int actualCount = response == null ? 0 : response.getPredictionsCount();
+    if (response == null) {
+      throw new IllegalStateException("Received null PredictResponse from Vertex AI");
+    }
+    if (response.getPredictionsCount() != expectedCount) {
       throw new IllegalStateException(
           String.format(
               "Expected %d embedding predictions from Vertex AI, but got %d",
-              expectedCount, actualCount));
+              expectedCount, response.getPredictionsCount()));
     }
     return response.getPredictionsList().stream()
         .map(VertexAiEmbeddingClient::extractVector)
