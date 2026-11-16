@@ -281,7 +281,10 @@ def _parent_and_nested_imports() -> dict[str, str]:
                            source="ParentSource")
   del parent["a/case.csv"]
   config = json.loads(parent["a/config.json"])
-  config["inputFiles"][1]["pattern"] = "*/case*.csv"
+  [csv_entry] = [
+      entry for entry in config["inputFiles"] if entry["pattern"] == "case*.csv"
+  ]
+  csv_entry["pattern"] = "*/case*.csv"
   parent["a/config.json"] = json.dumps(config)
   nested = b.import_subdir("a/b",
                            provenance="NestedProvenance",

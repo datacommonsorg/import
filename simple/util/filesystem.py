@@ -271,7 +271,7 @@ class Dir(_StoreWrapper):
     new_path = fspath.join(self.path, path)
     if not isinstance(self.fs(), GCSFS):
       return self.fs().isdir(new_path)
-    prefix = self._gcs_key_prefix(new_path)
+    prefix = _gcs_dir_prefix(self.fs(), new_path)
     blobs = self.fs().bucket.list_blobs(prefix=prefix, max_results=1)
     return next(iter(blobs), None) is not None
 
@@ -297,18 +297,13 @@ class Dir(_StoreWrapper):
       files.append(self.open_file(abspath.lstrip("/")))
     return files
 
-  def _gcs_key_prefix(self, path: str) -> str:
-    """Returns the GCS object name prefix of everything under dir `path`."""
-    key = _gcs_key(self.fs(), path)
-    return f"{key}/" if key else ""
-
   def _list_gcs_files(self, include_subdirs: bool) -> list["File"]:
     """Lists this dir's files on GCS with one (paginated) listing.
 
     Directory marker objects (names ending with "/") are skipped. The listing
     shows that the files exist, so that isn't checked again.
     """
-    prefix = self._gcs_key_prefix(self.path)
+    prefix = _gcs_dir_prefix(self.fs(), self.path)
     delimiter = None if include_subdirs else "/"
     files = []
     for blob in self.fs().bucket.list_blobs(prefix=prefix, delimiter=delimiter):
@@ -387,6 +382,12 @@ def _gcs_key(fs: GCSFS, path: str) -> str:
   """Returns the GCS object name of `path`, relative to the root of `fs`."""
   parts = [fs.root_path.strip("/"), path.strip("/")]
   return "/".join(part for part in parts if part)
+
+
+def _gcs_dir_prefix(fs: GCSFS, path: str) -> str:
+  """Returns the GCS object name prefix of everything under dir `path`."""
+  key = _gcs_key(fs, path)
+  return f"{key}/" if key else ""
 
 
 def _fix_gcsfs_storage(fs: GCSFS) -> None:

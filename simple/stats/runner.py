@@ -326,6 +326,11 @@ def _parse_config_json(text: str, path: str) -> object:
     raise
 
 
+def _is_archived(file: File) -> bool:
+  """Whether `file` is under an archives dir, whose files aren't imported."""
+  return _ARCHIVES_DIR_NAME in file.path.split("/")
+
+
 def _scope_input_file(entry: InputFileConfig, rel_dir: str) -> InputFileConfig:
   """Prefixes the entry's `pattern` with `rel_dir`."""
   return entry.model_copy(
@@ -629,7 +634,7 @@ class Runner:
     configs = [
         file for file in self._list_input_dir(path)
         if file.name() == constants.CONFIG_JSON_FILE_NAME and
-        _ARCHIVES_DIR_NAME not in file.path.split("/")
+        not _is_archived(file)
     ]
     return sorted(configs, key=lambda f: (f.path.count("/"), f.path))
 
@@ -642,7 +647,7 @@ class Runner:
     Raises:
       FileNotFoundError: If no config.json files are found.
     """
-    configs = self._find_configs_in_dir("")
+    configs = self._find_configs_in_dir(base_dir.path)
     logging.info("Found %s config files in subdirectories.", len(configs))
     if not configs:
       raise FileNotFoundError(
@@ -664,7 +669,6 @@ class Runner:
     """
     configs = []
     for name in import_names:
-      name = name.strip()
       if not base_dir.is_subdir(name):
         raise FileNotFoundError(f"Import directory not found: {name}")
       try:
@@ -690,7 +694,7 @@ class Runner:
 
   def _is_active_import_file(self, file: File) -> bool:
     """Returns True if `file` is not archived and belongs to an active import."""
-    if _ARCHIVES_DIR_NAME in file.path.split("/"):
+    if _is_archived(file):
       return False
     if not self.active_import_prefixes:
       return True
