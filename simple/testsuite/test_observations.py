@@ -21,9 +21,12 @@ Observation ids are content hashes, so these tests compare records without
 "@id"; the e2e expected.json files pin exact ids.
 """
 
+import json
 import logging
 
+import pytest
 from testsuite.lib import builders as b
+from testsuite.lib import run as runlib
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
 from testsuite.lib.builders import known_bug
@@ -593,3 +596,161 @@ def test_missing_required_mapping_fails():
                  "ValueError",
                  "CSV Header Validation Failed!",
                  handshake_error_types=("MISSING_REQUIRED_COLUMNS",))
+
+
+# --- Ingestion report ---------------------------------------------------------
+
+
+def _report_folders(result: b.Result) -> dict[str, dict]:
+  """The run's ingestion report folders, by folder name."""
+  return {
+      folder["folderName"]: folder
+      for folder in result.output["ingestion_report"]["folders"]
+  }
+
+
+@pytest.mark.parametrize("mode", runlib.ALL_MODES)
+def test_report_counts_the_observations_written(mode):
+  """The count and date range match the records written, chunk by chunk.
+
+  tiny_chunks reads two rows per chunk: the earliest and latest dates are in
+  the first chunk, so a range taken from the last chunk would be wrong. The
+  dropped row has the earliest date of all, so a range that includes it would
+  start at 1990.
+  """
+  result = b.run_dir(b.import_subdir(
+      "oecd",
+      b.csv_file(b.obs_row("country/USA", date="2019"),
+                 b.obs_row("country/DEU", date="2021-06"),
+                 b.obs_row("country/FRA", date="1990", value=""),
+                 b.obs_row("country/GBR", date="2020"))),
+                     mode=mode,
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  folder = _report_folders(result)["oecd"]
+  [provenance] = folder["provenances"]
+  assert provenance["observations"] == len(result.observations) == 3
+  assert provenance["dateRange"] == {"min": "2019", "max": "2021-06"}
+  assert folder["summary"]["observations"] == 3
+
+
+def test_report_sums_the_files_of_a_provenance_with_any_worker_count():
+  """Files are summed whichever worker process imports them.
+
+  One worker imports every file in turn, so counts must not leak between files.
+  """
+  files = {
+      **b.import_subdir(
+          "oecd",
+          b.csv_file(b.obs_row("country/USA", date="2005"),
+                     b.obs_row("country/FRA", date="2010"))),
+      "oecd/case2.csv":
+          b.csv_file(b.obs_row("country/DEU", date="2021")),
+  }
+  reports = [
+      b.run_dir(files,
+                runner_kwargs={
+                    "import_names": ["oecd"],
+                    "max_workers": workers
+                }).output["ingestion_report"] for workers in (1, 4)
+  ]
+
+  assert reports[0] == reports[1]
+  [provenance] = reports[0]["folders"][0]["provenances"]
+  assert provenance["observations"] == 3
+  assert provenance["dateRange"] == {"min": "2005", "max": "2021"}
+
+
+def test_report_counts_rows_with_the_same_observation_id_each_time():
+  """The count is nodes written, not distinct observations."""
+  row = b.obs_row("country/USA", date="2020")
+  result = b.run_dir(b.import_subdir("oecd", b.csv_file(row, row)),
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  [provenance] = _report_folders(result)["oecd"]["provenances"]
+  assert provenance["observations"] == 2
+
+
+def test_report_has_no_date_range_without_observations():
+  result = b.run_dir(b.import_subdir("oecd", b.csv_file(b.obs_row(value=""))),
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  [provenance] = _report_folders(result)["oecd"]["provenances"]
+  assert provenance["observations"] == 0
+  assert provenance["dateRange"] is None
+
+
+def test_report_counts_rows_without_a_date_but_leaves_them_out_of_the_range():
+  result = b.run_dir(b.import_subdir(
+      "oecd",
+      b.csv_file(b.obs_row("country/USA", date=""),
+                 b.obs_row("country/FRA", date="2020"))),
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  [provenance] = _report_folders(result)["oecd"]["provenances"]
+  assert provenance["observations"] == 2
+  assert provenance["dateRange"] == {"min": "2020", "max": "2020"}
+
+
+def _two_provenance_import(name: str) -> dict[str, str]:
+  """Import `name` with a.csv under ProvA and b.csv under ProvB."""
+  sources = [
+      b.mcf_node("dcid:SrcA", typeOf="dcs:Source"),
+      b.mcf_node("dcid:ProvA", typeOf="dcs:Provenance", source="dcid:SrcA"),
+      b.mcf_node("dcid:SrcB", typeOf="dcs:Source"),
+      b.mcf_node("dcid:ProvB", typeOf="dcs:Provenance", source="dcid:SrcB")
+  ]
+  config = {
+      "inputFiles": [
+          {
+              "pattern": "*.mcf",
+              "provenance": "dcid:ProvA"
+          },
+          {
+              "pattern": "a.csv",
+              "provenance": "dcid:ProvA",
+              "columnMappings": b.OBS_MAPPINGS
+          },
+          {
+              "pattern": "b.csv",
+              "provenance": "dcid:ProvB",
+              "columnMappings": b.OBS_MAPPINGS
+          },
+      ]
+  }
+  return {
+      f"{name}/config.json":
+          json.dumps(config),
+      f"{name}/provenance.mcf":
+          b.mcf(*sources),
+      f"{name}/a.csv":
+          b.csv_file(b.obs_row("country/USA", date="2005"),
+                     b.obs_row("country/FRA", date="2010")),
+      f"{name}/b.csv":
+          b.csv_file(b.obs_row("country/DEU", date="2021")),
+  }
+
+
+def test_report_keeps_provenances_and_folders_apart():
+  """Each provenance has its own counts; a folder's total is their sum."""
+  result = b.run_dir(
+      {
+          **_two_provenance_import("oecd"),
+          **b.import_subdir("ilo")
+      },
+      runner_kwargs={"import_names": ["oecd", "ilo"]})
+
+  folders = _report_folders(result)
+  assert folders["oecd"]["summary"]["observations"] == 3
+  assert [(p["id"], p["observations"], p["dateRange"])
+          for p in folders["oecd"]["provenances"]] == [
+              ("ProvA", 2, {
+                  "min": "2005",
+                  "max": "2010"
+              }),
+              ("ProvB", 1, {
+                  "min": "2021",
+                  "max": "2021"
+              }),
+          ]
+  assert folders["ilo"]["summary"]["observations"] == 1

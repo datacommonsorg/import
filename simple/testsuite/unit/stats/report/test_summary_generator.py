@@ -18,8 +18,10 @@ import tempfile
 import unittest
 from unittest import mock
 
+from stats.report.model.summary import DateRange
 from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileCounts
+from stats.report.model.summary import FileSummary
 from stats.report.model.summary import Folder
 from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
@@ -40,6 +42,31 @@ def _generator(workflow_execution_id: str | None,
   generator = SummaryGenerator(workflow_execution_id)
   generator.set_execution_metadata(start_time=_START, output_dir=output_dir)
   return generator
+
+
+def _file(path: str,
+          observations: int = 0,
+          dates: tuple[str, str] | None = None,
+          folder: str = "oecd",
+          provenance_id: str = "oecdProv") -> FileSummary:
+  """A FileSummary for one imported file; `dates` is (min, max)."""
+  return FileSummary(
+      filePath=path,
+      folder=folder,
+      provenanceId=provenance_id,
+      observations=observations,
+      dateRange=DateRange(min=dates[0], max=dates[1]) if dates else None)
+
+
+def _folders(output_dir: Dir, summaries: list[FileSummary]) -> list[Folder]:
+  """The report's folders after recording and merging `summaries` in order."""
+  generator = _generator("wf-123", output_dir)
+  for summary in summaries:
+    generator.record_input_file(summary.folder, [summary.provenanceId],
+                                summary.filePath)
+  for summary in summaries:
+    generator.add_file_summary(summary)
+  return generator.build_report(RunStatus.SUCCESS, _END).folders
 
 
 class TestSummaryGenerator(unittest.TestCase):
@@ -109,6 +136,57 @@ class TestSummaryGenerator(unittest.TestCase):
                        provenances=[Provenance(id="iloProv", fileCount=1)]),
                 Folder(folderName="wto"),
             ]))
+
+  def test_file_summaries_add_up_per_provenance_and_folder(self):
+    """Counts are summed and date ranges widened across files."""
+    with tempfile.TemporaryDirectory() as tmp, \
+         create_store(tmp) as store:
+      folders = _folders(
+          store.as_dir(),
+          [
+              _file("oecd/a.csv", 100, ("2005", "2010")),
+              _file("oecd/b.csv", 50, ("2008", "2021")),
+              _file(
+                  "oecd/c.csv", 30,
+                  ("2015", "2016"), provenance_id="oecdOther"),
+              # MCF files are imported without observations.
+              _file("oecd/schema.mcf", provenance_id="oecdSchema"),
+          ])
+
+    self.assertEqual(folders, [
+        Folder(folderName="oecd",
+               summary=FolderSummary(files=FileCounts(count=4,
+                                                      byType={
+                                                          "csv": 3,
+                                                          "mcf": 1
+                                                      }),
+                                     provenanceCount=3,
+                                     observations=180),
+               provenances=[
+                   Provenance(id="oecdOther",
+                              fileCount=1,
+                              observations=30,
+                              dateRange=DateRange(min="2015", max="2016")),
+                   Provenance(id="oecdProv",
+                              fileCount=2,
+                              observations=150,
+                              dateRange=DateRange(min="2005", max="2021")),
+                   Provenance(id="oecdSchema", fileCount=1),
+               ])
+    ])
+
+  def test_dates_are_compared_as_strings(self):
+    """ISO dates of different precision order correctly as strings."""
+    with tempfile.TemporaryDirectory() as tmp, \
+         create_store(tmp) as store:
+      folders = _folders(store.as_dir(), [
+          _file("oecd/a.csv", 1, ("2005-06", "2005-06")),
+          _file("oecd/b.csv", 1, ("2006", "2006")),
+          _file("oecd/c.csv", 1, ("2005", "2005")),
+      ])
+
+    self.assertEqual(folders[0].provenances[0].dateRange,
+                     DateRange(min="2005", max="2006"))
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""

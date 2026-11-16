@@ -63,6 +63,17 @@ class ExecutionMetadata(BaseModel):
                           description="Folder this report is written to")
 
 
+class DateRange(BaseModel):
+  """Earliest and latest observation dates, as they appear in the data.
+
+  Dates are compared as strings, which orders ISO-8601 dates correctly
+  (2005 < 2005-06 < 2006). Other formats are reported as-is.
+  """
+
+  min: str = Field(description="Earliest observation date")
+  max: str = Field(description="Latest observation date")
+
+
 class Provenance(BaseModel):
   """One entry in `folders[].provenances[]`."""
 
@@ -71,8 +82,14 @@ class Provenance(BaseModel):
       default=None, description="DCID of the provenance's source, if known")
   fileCount: int = Field(
       default=0, description="Input files imported under this provenance")
-  # TODO: Add observations, dateRange, node counts by type and
-  # provenance-level errors.
+  observations: int = Field(default=0,
+                            description="StatVarObservation nodes written")
+  dateRange: DateRange | None = Field(
+      default=None,
+      description=("Observation dates covered, or null without dated "
+                   "observations. Rows without a date count toward "
+                   "observations but not toward dateRange."))
+  # TODO: Add node counts by type and provenance-level errors.
 
 
 class FileCounts(BaseModel):
@@ -91,7 +108,10 @@ class FolderSummary(BaseModel):
                             description="Input files in the folder")
   provenanceCount: int = Field(
       default=0, description="Number of provenances in the folder")
-  # TODO: Add observations and node counts by type.
+  observations: int = Field(
+      default=0,
+      description="StatVarObservation nodes written, over all provenances")
+  # TODO: Add node counts by type.
 
 
 class Folder(BaseModel):
@@ -115,16 +135,18 @@ class IngestionReport(BaseModel):
 
 
 class FileSummary(BaseModel):
-  """Counts for one imported file, returned by the worker that imported it.
+  """Counts for one imported file.
 
-  Not part of the report itself: SummaryGenerator merges these into the
-  folder and provenance totals.
+  Not part of the report itself. Runner builds one from each worker's result,
+  adding the file's folder and provenance, and SummaryGenerator merges it into
+  the folder and provenance totals.
   """
 
   filePath: str = Field(description="Input file path")
   folder: str = Field(description="Import folder the file belongs to")
-  provenance: str | None = Field(
-      default=None, description="Provenance configured for the file")
+  provenanceId: str = Field(description="ID of the file's provenance")
   observations: int = Field(default=0,
                             description="StatVarObservation nodes written")
-  # TODO: Add minDate, maxDate and nodesByType.
+  dateRange: DateRange | None = Field(
+      default=None, description="Observation dates covered, if any")
+  # TODO: Add nodesByType.

@@ -45,6 +45,8 @@ from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
+from stats.report.model.summary import DateRange
+from stats.report.model.summary import FileSummary
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
 from stats.reporter import ImportReporter
@@ -166,8 +168,8 @@ class ImportProcResult:
 
   `sources` and `provenances` are all of the worker's nodes, keyed as in
   `Nodes`; the coordinator merges them with `Nodes.merge_metadata`. The
-  collision fields mirror the worker's `JsonLdStreamWriter` stats, which cover
-  collisions within the file only.
+  collision and observation fields mirror the worker's `JsonLdStreamWriter`
+  stats, which cover the file only.
   """
   file_rel_path: str
   file_collision_counts: dict[str, int]
@@ -175,6 +177,8 @@ class ImportProcResult:
   sources: dict[str, Source]
   provenances: dict[str, Provenance]
   processed_imports: set[str]
+  observation_count: int
+  observation_dates: DateRange | None
 
 
 @dataclass(frozen=True)
@@ -208,12 +212,12 @@ class FileImportsFailedError(Exception):
 
 
 def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
-                    merge: Callable[[ImportProcResult], None]) -> None:
+                    merge: Callable[[File, ImportProcResult], None]) -> None:
   """Waits for every file, then raises if any of them failed.
 
   Every file runs to completion even if others fail. Results are awaited in
-  submission order, so passing each successful one to `merge` is
-  deterministic. See `_raise_for_failures` for what is raised.
+  submission order, so passing each successful one to `merge`, with its file,
+  is deterministic. See `_raise_for_failures` for what is raised.
   """
   failures: list[_FileFailure] = []
   for file, future in zip(files, futures, strict=True):
@@ -223,7 +227,7 @@ def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
       failures.append(
           _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
       continue
-    merge(result)
+    merge(file, result)
   _raise_for_failures(failures)
 
 
@@ -296,6 +300,8 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
         sources=dict(nodes.sources),
         provenances=dict(nodes.provenances),
         processed_imports=set(graph_writer._processed_imports),
+        observation_count=graph_writer.observation_count,
+        observation_dates=graph_writer.observation_dates,
     )
 
 
@@ -491,10 +497,14 @@ class Runner:
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
     for file in files:
-      self.summary_generator.record_input_file(
-          folder=self._input_folder_name(file),
-          provenance=[self.nodes.provenance_id(file)],
-          file_path=file.path)
+      folder, provenance_id = self._report_folder_and_provenance(file)
+      self.summary_generator.record_input_file(folder=folder,
+                                               provenance=[provenance_id],
+                                               file_path=file.path)
+
+  def _report_folder_and_provenance(self, file: File) -> tuple[str, str]:
+    """Returns the folder and provenance ID the report counts `file` under."""
+    return self._input_folder_name(file), self.nodes.provenance_id(file)
 
   def _input_folder_name(self, file: File) -> str:
     """Returns the import an input file belongs to, for the report.
@@ -852,11 +862,25 @@ class Runner:
     files = mcf_files + csv_files
     self._run_multiprocess_imports(files)
 
-  def _merge_worker_result(self, res: ImportProcResult) -> None:
-    """Merges a worker process's `ImportProcResult` into the coordinator."""
+  def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
+    """Merges a worker process's `ImportProcResult` for `file`."""
     self._log_file_progress(res.file_rel_path)
     self.nodes.merge_metadata(res.provenances, res.sources)
     self._merge_worker_writer_state(res)
+    self._record_file_summary(file, res)
+
+  def _record_file_summary(self, file: File, res: ImportProcResult) -> None:
+    """Passes a worker's observation counts for `file` to the report."""
+    # Folders come only from --imports, as in _record_input_files.
+    if not self.import_names:
+      return
+    folder, provenance_id = self._report_folder_and_provenance(file)
+    self.summary_generator.add_file_summary(
+        FileSummary(filePath=file.path,
+                    folder=folder,
+                    provenanceId=provenance_id,
+                    observations=res.observation_count,
+                    dateRange=res.observation_dates))
 
   def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
     """Merges a worker's processed imports and collision stats into the writer."""
