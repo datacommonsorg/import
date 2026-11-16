@@ -132,9 +132,9 @@ class TestGcsListing(unittest.TestCase):
     with create_store(root, mark_gcs_dirs=False) as store:
       directory = store.as_dir().open_dir(subdir, create=False)
       return sorted(
-          (f.path, f.size()) for f in directory.all_files(include_subdirs))
+          (f.path, f.read()) for f in directory.all_files(include_subdirs))
 
-  def test_all_files_finds_the_files_and_sizes_that_the_local_walk_finds(self):
+  def test_all_files_finds_the_files_that_the_local_walk_finds(self):
     for subdir in ["", "d1", "d1/d2", "empty"]:
       for include_subdirs in [True, False]:
         with self.subTest(subdir=subdir, include_subdirs=include_subdirs):
@@ -146,14 +146,6 @@ class TestGcsListing(unittest.TestCase):
       fake_gcs.write_blob(f"{self.gcs}/{name}", "1")
     self.assertEqual(self._listing(self.gcs, "", include_subdirs=True),
                      self._listing(self.local, "", include_subdirs=True))
-
-  def test_size_of_a_file_that_was_not_listed(self):
-    for root in [self.local, self.gcs]:
-      with create_store(root, mark_gcs_dirs=False) as store:
-        with self.subTest(root=root):
-          file = store.as_dir().open_file("d1/d2/c.csv",
-                                          create_if_missing=False)
-          self.assertEqual(file.size(), 3)
 
   def test_is_subdir_with_and_without_directory_markers(self):
     expected = {

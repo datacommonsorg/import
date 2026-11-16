@@ -305,9 +305,8 @@ class Dir(_StoreWrapper):
   def _list_gcs_files(self, include_subdirs: bool) -> list["File"]:
     """Lists this dir's files on GCS with one (paginated) listing.
 
-    Directory marker objects (names ending with "/") are skipped. Files are
-    built from the listing, so neither their existence nor their size needs
-    another request.
+    Directory marker objects (names ending with "/") are skipped. The listing
+    shows that the files exist, so that isn't checked again.
     """
     prefix = self._gcs_key_prefix(self.path)
     delimiter = None if include_subdirs else "/"
@@ -326,7 +325,7 @@ class Dir(_StoreWrapper):
           File(self._store,
                fspath.join(self.path, rel_path),
                create_if_missing=False,
-               known_size=blob.size))
+               exists=True))
     return files
 
 
@@ -336,17 +335,15 @@ class File(_StoreWrapper):
                store: "Store",
                path: str,
                create_if_missing: bool,
-               known_size: int | None = None):
+               exists: bool = False):
     """Opens the file at `path`, relative to the store's root.
 
     Args:
-      known_size: The file's size in bytes, when the caller knows it, e.g.
-        from a listing. The file is then known to exist, so that isn't
-        checked.
+      exists: Whether the caller knows that the file exists, e.g. from a
+        listing, so that it isn't checked.
     """
     super().__init__(store, path)
-    self._size = known_size
-    if known_size is not None:
+    if exists:
       return
     if not self.fs().exists(self.path):
       if create_if_missing:
@@ -360,18 +357,6 @@ class File(_StoreWrapper):
   def name(self) -> str:
     """The file name, including any extension and without a leading slash."""
     return fspath.basename(self.path)
-
-  def size(self) -> int:
-    """The file's size in bytes: as listed, if it was found by a listing."""
-    if self._size is not None:
-      return self._size
-    if not isinstance(self.fs(), GCSFS):
-      return self.fs().getsize(self.path)
-    # Unlike fs.getsize, this doesn't need the parent's directory marker.
-    blob = self.fs().bucket.get_blob(_gcs_key(self.fs(), self.path))
-    if blob is None:
-      raise FileNotFoundError(f"File not found: {self.full_path()}")
-    return blob.size
 
   def read(self) -> str:
     """Returns file contents as a string."""
