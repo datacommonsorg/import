@@ -31,6 +31,7 @@ from stats.config import ImportConfig
 from stats.config import InputFileConfig
 from stats.config import parse_config
 from stats.data import FileValidationError
+from stats.data import ImportCounts
 from stats.data import ImportType
 from stats.data import invalid_configuration
 from stats.data import Provenance
@@ -45,7 +46,6 @@ from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
-from stats.report.model.summary import DateRange
 from stats.report.model.summary import FileSummary
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
@@ -168,8 +168,9 @@ class ImportProcResult:
 
   `sources` and `provenances` are all of the worker's nodes, keyed as in
   `Nodes`; the coordinator merges them with `Nodes.merge_metadata`. The
-  collision and observation fields mirror the worker's `JsonLdStreamWriter`
-  stats, which cover the file only.
+  collision fields mirror the worker's `JsonLdStreamWriter` stats, which cover
+  collisions within the file only. `counts` are the importer's counts of the
+  nodes it wrote, for the ingestion report.
   """
   file_rel_path: str
   file_collision_counts: dict[str, int]
@@ -177,8 +178,7 @@ class ImportProcResult:
   sources: dict[str, Source]
   provenances: dict[str, Provenance]
   processed_imports: set[str]
-  observation_count: int
-  observation_dates: DateRange | None
+  counts: ImportCounts
 
 
 @dataclass(frozen=True)
@@ -300,8 +300,7 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
         sources=dict(nodes.sources),
         provenances=dict(nodes.provenances),
         processed_imports=set(graph_writer._processed_imports),
-        observation_count=graph_writer.observation_count,
-        observation_dates=graph_writer.observation_dates,
+        counts=importer.counts,
     )
 
 
@@ -879,8 +878,8 @@ class Runner:
         FileSummary(filePath=file.path,
                     folder=folder,
                     provenanceId=provenance_id,
-                    observations=res.observation_count,
-                    dateRange=res.observation_dates))
+                    observations=res.counts.observations,
+                    dateRange=res.counts.date_range))
 
   def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
     """Merges a worker's processed imports and collision stats into the writer."""

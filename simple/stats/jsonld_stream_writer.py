@@ -30,11 +30,9 @@ from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
 import pandas as pd
 import requests
-from stats import constants
 from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
-from stats.report.model.summary import DateRange
 from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import create_store
@@ -296,8 +294,6 @@ class JsonLdStreamWriter(GraphWriter):
     self._processed_imports = set()
     self._node_streaming_started = set()
     self.obs_hash_set: set[int] = set()
-    self.observation_count: int = 0
-    self.observation_dates: DateRange | None = None
     self.obs_collision_count: int = 0
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
@@ -379,15 +375,6 @@ class JsonLdStreamWriter(GraphWriter):
     self._write_observations_df_to_disk(observations_df,
                                         import_name,
                                         file_name=file_name)
-    self._record_observation_stats(observations_df)
-
-  def _record_observation_stats(self, observations_df: pd.DataFrame) -> None:
-    self.observation_count += len(observations_df)
-    dates = observations_df[constants.COLUMN_DATE].dropna()
-    if not dates.empty:
-      chunk_dates = DateRange(min=dates.min(), max=dates.max())
-      self.observation_dates = (chunk_dates if self.observation_dates is None
-                                else self.observation_dates.widen(chunk_dates))
 
   def _init_import_export_dir(self, import_name: str):
     dir_name = import_name.replace("/", "_")

@@ -15,9 +15,12 @@
 import collections
 
 import pandas as pd
+from stats import constants
 from stats.data import FileValidationError
+from stats.data import ImportCounts
 from stats.data import strip_namespace
 from stats.data import ValidationErrorType
+from stats.report.model.summary import DateRange
 
 
 def missing_column_mappings_error(file_path: str) -> FileValidationError:
@@ -185,6 +188,23 @@ def mapping_errors(file_path: str, mappings: dict[str, str],
 
 class Importer:
   """The base class for all importers."""
+
+  def __init__(self) -> None:
+    # The file's counts so far, for the ingestion report. Each importer adds
+    # the nodes it is about to write with count_nodes().
+    self.counts = ImportCounts()
+
+  def count_nodes(self, nodes_df: pd.DataFrame) -> ImportCounts:
+    """Counts a chunk of nodes about to be written, one row per node.
+
+    Only observation rows are counted for now: every row becomes one
+    StatVarObservation node. Rows without a date are counted but don't affect
+    the date range.
+    """
+    dates = nodes_df[constants.COLUMN_DATE].dropna()
+    return ImportCounts(observations=len(nodes_df),
+                        date_range=DateRange(min=dates.min(), max=dates.max())
+                        if not dates.empty else None)
 
   def do_import(self) -> None:
     pass
