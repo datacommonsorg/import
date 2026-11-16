@@ -449,7 +449,8 @@ class EntityAggregationGenerator:
             'true'   -- isDcAggregate
           )) AS STRING) AS facet_id,
           entities,
-          facet
+          facet,
+          CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM PreparedTS;
         """)
 
@@ -471,7 +472,8 @@ class EntityAggregationGenerator:
             'true'
           )) AS STRING) AS facet_id,
           obs_date AS date,
-          CAST(event_count AS STRING) AS value
+          CAST(event_count AS STRING) AS value,
+          CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM `temp_aggregated_with_sv`;
         """)
 

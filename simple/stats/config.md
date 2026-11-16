@@ -26,13 +26,21 @@ The config parameters for the files to be imported should be specified in a `con
 }
 ```
 
+## Validation
+
+`config.json` is validated when the import starts, before any file is read.
+Unknown keys, values of the wrong type (for example a string where a list is
+expected), unsupported values and duplicate patterns are errors. Every problem
+is reported at once, and the run fails with an `INVALID_CONFIGURATION` error.
+
 ## `inputFiles`
 
 The top-level `inputFiles` field is a list of objects, one per group of input
 files. Each object identifies the files it applies to with a `pattern`, and
 carries the parameters for those files.
 
-If a file matches multiple patterns, the first match in list order wins.
+If a file matches multiple patterns, the first match in list order wins. Each
+pattern can only appear once.
 
 Example:
 
@@ -97,9 +105,9 @@ Maps DCIDs to the CSV's column headings. There are no built-in default column
 names, and no column heading is used as a DCID on its own.
 
 Every column in the CSV must be either mapped in `columnMappings` or listed in
-`ignoreColumns`. The one exception is the `idColumn` of an `"entities"` import.
-Otherwise the import fails with one error that lists all the unmapped columns.
-A CSV whose entry has no `columnMappings` fails the import as well.
+`ignoreColumns`. Otherwise the import fails with one error that lists all the
+unmapped columns. A CSV whose entry has no `columnMappings` fails the import as
+well.
 Each property may be mapped from only one column. Keys that differ only by
 namespace name the same property, so mapping both `dcid:unit` and `unit` fails
 the import too. Likewise, each column may be mapped to only one property.
@@ -109,9 +117,35 @@ and `dcid:value` are always required, along with one to three entity
 dimensions: `dcid:observationAbout` and/or custom observation properties you
 have defined in MCF.
 
-For `"entities"` imports, each mapped column's values are written under its
-mapped DCID. The `idColumn` does not need a mapping; it is only written as a
-property if it is mapped.
+For `"entities"` imports, `dcid:dcid` and `dcid:typeOf` are always required:
+the column mapped to `dcid:dcid` gives each row's DCID, and the column mapped to
+`dcid:typeOf` gives its type (class DCID), for example `Author`. Each other
+mapped column's values are written under its mapped DCID. For example:
+
+```json
+"columnMappings": {
+  "dcid:dcid": "author_id",
+  "dcid:typeOf": "type",
+  "dcid:name": "author_name"
+}
+```
+
+The importer only writes a `typeOf` reference on each row; the `Class` node
+itself is not created. If the type is not already in the Data Commons schema,
+define it (with its `name` and `description`) in an MCF file matched by an
+`inputFiles` entry, for example:
+
+```
+Node: dcid:Author
+typeOf: dcs:Class
+name: "Author"
+description: "A person who wrote an article"
+```
+
+For `"entities"` imports, a cell value with a namespace prefix, such as
+`dcid:country/USA`, is a reference to that entity rather than a literal value.
+A comma-separated list of prefixed values, such as
+`dcid:author1,dcid:author2`, is a list of references.
 
 #### `ignoreColumns`
 
@@ -127,74 +161,11 @@ Optional, for observations CSVs. A map of observation properties (such as
 `"unit"`, `"scalingFactor"`, `"measurementMethod"`, `"observationPeriod"`, or
 custom dimension properties) applied as defaults to every row in the file.
 
-#### `rowEntityType`
+## Subdirectories
 
-Required when `importType` is `"entities"`. The type (class DCID) assigned to
-each row entity in the CSV. The importer only writes a `typeOf` reference to
-this type on each row; the `Class` node itself is not created. If the type is
-not already in the Data Commons schema, define it (with its `name` and
-`description`) in an MCF file matched by an `inputFiles` entry, for example:
+Files in subdirectories of the input directory are matched against the
+`inputFiles` patterns like any other file, except those under an `archives/`
+directory, which are never imported.
 
-```
-Node: dcid:Author
-typeOf: dcs:Class
-name: "Author"
-description: "A person who wrote an article"
-```
-
-#### `idColumn`
-
-Optional, for `"entities"` imports. The column whose cell value provides each
-row entity's DCID. If omitted, IDs are generated as `<rowEntityType>_<rowIndex>`.
-Unlike other columns, it does not need a `columnMappings` entry.
-
-#### `referenceColumns` _(or `columnsToResolve`)_
-
-Optional, for `"entities"` imports. The list of columns whose cell values are
-entity DCID references (or comma-separated lists of entity DCIDs) rather than
-literal values.
-
-## `includeInputSubdirs`
-
-If `true`, recursively scans subdirectories of the input directory for files
-matching `inputFiles` patterns. Default is `false`.
-
-## `dataDownloadUrl`
-
-Examples:
-
-Web URLs _(coming soon)_:
-
-```json
-{
-  "dataDownloadUrl": [
-    "http://domain/path/1.csv",
-    "https://domain/path/2.csv"
-  ]
-}
-```
-
-GCS directory:
-
-```json
-{
-  "dataDownloadUrl": ["gs://bucket/path/to/dir"]
-}
-```
-
-Local directory:
-
-```json
-{
-  "dataDownloadUrl": ["//local/path/to/dir"]
-}
-```
-
-## `groupStatVarsByProperty`
-
-If `true`, requests a hierarchy of StatVarGroups generated from the properties
-of the variables in the dataset. Default is `false`.
-
-The importer does not build the hierarchy itself. It creates the custom root
-StatVarGroup and forwards the request to the ingestion pipeline as
-`generateStatVarGroups` in the handshake record.
+`includeInputSubdirs` is deprecated and ignored: subdirectories are always
+searched. A config that still sets it is accepted, with a warning in the log.

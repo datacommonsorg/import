@@ -26,13 +26,12 @@ class TestMetadataValidator(unittest.TestCase):
 
   def test_validation_success(self):
     # Setup mock config with referenced provenance
-    mock_config = mock.MagicMock(spec=Config)
-    mock_config.data = {
+    config = Config({
         "inputFiles": [{
             "pattern": "data.csv",
             "provenance": "dcid:MyProvenance"
         }]
-    }
+    })
 
     # Setup mock database with matching MCF definitions
     mock_db = mock.MagicMock(spec=GraphWriter)
@@ -47,19 +46,18 @@ class TestMetadataValidator(unittest.TestCase):
         ]
     }
 
-    validator = MetadataValidator(mock_config, mock_db)
+    validator = MetadataValidator(config, mock_db)
     # Should complete without raising an error
     validator.validate()
 
   def test_validation_missing_provenance(self):
     # Setup mock config with referenced provenance
-    mock_config = mock.MagicMock(spec=Config)
-    mock_config.data = {
+    config = Config({
         "inputFiles": [{
             "pattern": "data.csv",
             "provenance": "dcid:MissingProvenance"
         }]
-    }
+    })
 
     # Setup mock database missing the provenance definition
     mock_db = mock.MagicMock(spec=GraphWriter)
@@ -67,7 +65,7 @@ class TestMetadataValidator(unittest.TestCase):
         "_global": [Triple("dcid:MySource", "typeOf", object_id="Source"),]
     }
 
-    validator = MetadataValidator(mock_config, mock_db)
+    validator = MetadataValidator(config, mock_db)
     with self.assertRaises(ValueError) as context:
       validator.validate()
 
@@ -79,13 +77,12 @@ class TestMetadataValidator(unittest.TestCase):
 
   def test_validation_missing_source_link(self):
     # Setup mock config with referenced provenance
-    mock_config = mock.MagicMock(spec=Config)
-    mock_config.data = {
+    config = Config({
         "inputFiles": [{
             "pattern": "data.csv",
             "provenance": "dcid:MyProvenance"
         }]
-    }
+    })
 
     # Setup mock database where Provenance is defined but completely lacks a linked source
     mock_db = mock.MagicMock(spec=GraphWriter)
@@ -95,7 +92,7 @@ class TestMetadataValidator(unittest.TestCase):
         ]
     }
 
-    validator = MetadataValidator(mock_config, mock_db)
+    validator = MetadataValidator(config, mock_db)
     with self.assertRaises(ValueError) as context:
       validator.validate()
 
@@ -107,13 +104,12 @@ class TestMetadataValidator(unittest.TestCase):
 
   def test_validation_undefined_source_node_passes(self):
     # Setup mock config with referenced provenance
-    mock_config = mock.MagicMock(spec=Config)
-    mock_config.data = {
+    config = Config({
         "inputFiles": [{
             "pattern": "data.csv",
             "provenance": "dcid:MyProvenance"
         }]
-    }
+    })
 
     # Setup mock database where Provenance is defined and points to a source,
     # but the Source node itself is NOT defined in the database triples
@@ -125,19 +121,18 @@ class TestMetadataValidator(unittest.TestCase):
         ]
     }
 
-    validator = MetadataValidator(mock_config, mock_db)
+    validator = MetadataValidator(config, mock_db)
     # This should now succeed without raising any exceptions!
     validator.validate()
 
   def test_validation_missing_provenance_key(self):
     # Setup mock config with missing provenance property
-    mock_config = mock.MagicMock(spec=Config)
-    mock_config.data = {"inputFiles": [{"pattern": "data.csv"}]}
+    config = Config({"inputFiles": [{"pattern": "data.csv"}]})
 
     mock_db = mock.MagicMock(spec=GraphWriter)
     mock_db._triples = {}
 
-    validator = MetadataValidator(mock_config, mock_db)
+    validator = MetadataValidator(config, mock_db)
     with self.assertRaises(ValueError) as context:
       validator.validate()
 
@@ -147,18 +142,17 @@ class TestMetadataValidator(unittest.TestCase):
 
   def test_validation_invalid_provenance_format(self):
     # Setup mock config with provenance that doesn't start with 'dcid:'
-    mock_config = mock.MagicMock(spec=Config)
-    mock_config.data = {
+    config = Config({
         "inputFiles": [{
             "pattern": "data.csv",
             "provenance": "InvalidProvenanceName"
         }]
-    }
+    })
 
     mock_db = mock.MagicMock(spec=GraphWriter)
     mock_db._triples = {}
 
-    validator = MetadataValidator(mock_config, mock_db)
+    validator = MetadataValidator(config, mock_db)
     with self.assertRaises(ValueError) as context:
       validator.validate()
 

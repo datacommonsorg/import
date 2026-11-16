@@ -187,6 +187,13 @@ class ValidationErrorType(StrEnum):
   GENERIC_ERROR = "GENERIC_ERROR"
 
 
+def invalid_configuration(message: str) -> ValueError:
+  """Returns a config error, which Runner reports as INVALID_CONFIGURATION."""
+  error = ValueError(message)
+  error.error_type = ValidationErrorType.INVALID_CONFIGURATION
+  return error
+
+
 @dataclass
 class FileValidationError:
   file: str

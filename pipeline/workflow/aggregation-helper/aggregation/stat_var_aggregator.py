@@ -225,7 +225,8 @@ class StatVarAggregator:
             COALESCE(JSON_VALUE(facet, '$.isDcAggregate'), 'true')
           )) AS STRING) AS facet_id,
           entities,
-          facet
+          facet,
+          CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM ParsedTS;
         """
         return query
@@ -323,7 +324,8 @@ class StatVarAggregator:
           facet_id,
           date,
           -- Cast back to string as Spanner Observation.value is STRING(MAX)
-          CAST(total_val AS STRING) AS value
+          CAST(total_val AS STRING) AS value,
+          CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM AggregatedObs
         WHERE {filter_condition} AND total_val IS NOT NULL;
         """

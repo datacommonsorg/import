@@ -413,7 +413,8 @@ class SuperEnumAggregationGenerator:
             COALESCE(JSON_VALUE(facet, '$.unit'), ''), '^',
             COALESCE(JSON_VALUE(facet, '$.isDcAggregate'), 'true')
           )) AS STRING) AS facet_id,
-          facet
+          facet,
+          CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM ParsedTS;
 
         -- =========================================================================
@@ -480,7 +481,8 @@ class SuperEnumAggregationGenerator:
           extra_entities_id,
           facet_id,
           date,
-          CAST(total_val AS STRING) AS value
+          CAST(total_val AS STRING) AS value,
+          CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM AggregatedObs
         WHERE total_val IS NOT NULL;
         """

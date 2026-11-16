@@ -1,0 +1,10 @@
+Node: dcid:healthSource
+typeOf: dcs:Source
+name: "health source"
+url: "https://health.example.org"
+
+Node: dcid:healthProvenance
+typeOf: dcs:Provenance
+name: "health provenance"
+source: dcid:healthSource
+url: "https://health.example.org/data"

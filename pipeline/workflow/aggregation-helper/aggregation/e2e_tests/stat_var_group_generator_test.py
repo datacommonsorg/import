@@ -67,9 +67,11 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_node('Thing', 'Thing', value='Thing', types=['Class'])
         
         # Spec mappings
+        self.add_node('Spec_Student', 'Spec_Student', types=['StatVarGroupSpec'])
         self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Student', 'populationType', 'Student', 'TestImport')
         self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')
+        self.add_node('Spec_Person', 'Spec_Person', types=['StatVarGroupSpec'])
         self.add_edge('Spec_Person', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Person', 'populationType', 'Person', 'TestImport')
         self.add_edge('Spec_Person', 'observationProperties', 'measuredProperty=count', 'TestImport')
@@ -522,6 +524,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         # Spec 1: DPV spec with 2 DPVs, 0 cprops, vertical=Demographics
         # SVs with cprops exactly {age, incomeStatus} and matching pv values will match this spec.
         # Both pvs get stripped → 0 remaining cprops → SV attached to Demographics.
+        self.add_node('Spec_DPV_Full', 'Spec_DPV_Full', types=['StatVarGroupSpec'])
         self.add_edge('Spec_DPV_Full', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_DPV_Full', 'populationType', 'Person', 'TestImport')
         self.add_edge('Spec_DPV_Full', 'statVarProperties', 'svProp_measuredProperty_income', 'TestImport')
@@ -532,6 +535,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         # Spec 2: DPV spec with 1 DPV, 1 cprop (age), no vertical
         # SVs with cprops exactly {age, incomeStatus} where incomeStatus=WithIncome will match.
         # incomeStatus gets stripped, age remains → hierarchy uses age only.
+        self.add_node('Spec_DPV_Partial', 'Spec_DPV_Partial', types=['StatVarGroupSpec'])
         self.add_edge('Spec_DPV_Partial', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_DPV_Partial', 'populationType', 'Person', 'TestImport')
         self.add_edge('Spec_DPV_Partial', 'statVarProperties', 'svProp_measuredProperty_income', 'TestImport')
@@ -544,6 +548,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         # NOTE: This spec has 2 cprops, so it's EXCLUDED from VerticalSpec (only 0-1 cprop specs
         # participate in vertical matching). It's only used for DPV stripping.
         # The 1-cprop specs below handle vertical attachment for the individual cprops.
+        self.add_node('Spec_DPV_Military', 'Spec_DPV_Military', types=['StatVarGroupSpec'])
         self.add_edge('Spec_DPV_Military', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_DPV_Military', 'populationType', 'Person', 'TestImport')
         self.add_edge('Spec_DPV_Military', 'statVarProperties', 'svProp_measuredProperty_income', 'TestImport')
@@ -555,6 +560,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         # Spec 4: 1-cprop vertical spec for armedForcesStatus → MilitaryService
         # (Not a DPV spec — used for vertical matching of Person_ArmedForcesStatus SVG)
+        self.add_node('Spec_ArmedForces', 'Spec_ArmedForces', types=['StatVarGroupSpec'])
         self.add_edge('Spec_ArmedForces', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_ArmedForces', 'populationType', 'Person', 'TestImport')
         self.add_edge('Spec_ArmedForces', 'statVarProperties', 'svProp_measuredProperty_income', 'TestImport')
@@ -563,6 +569,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         # Spec 5: 1-cprop vertical spec for veteranStatus → MilitaryService
         # (Not a DPV spec — used for vertical matching of Person_VeteranStatus SVG)
+        self.add_node('Spec_Veteran', 'Spec_Veteran', types=['StatVarGroupSpec'])
         self.add_edge('Spec_Veteran', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Veteran', 'populationType', 'Person', 'TestImport')
         self.add_edge('Spec_Veteran', 'statVarProperties', 'svProp_measuredProperty_income', 'TestImport')
@@ -742,6 +749,7 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self.add_node(f'{ns}g/TestVertical', 'Test Vertical', value=f'{ns}g/TestVertical', types=['StatVarGroup'])
         self.add_node('Student', 'Student', value='Student', types=['Class'])
         # Spec that attaches Student SVGs under TestVertical, which sits under Root.
+        self.add_node('Spec_Student', 'Spec_Student', types=['StatVarGroupSpec'])
         self.add_edge('Spec_Student', 'typeOf', 'StatVarGroupSpec', 'TestImport')
         self.add_edge('Spec_Student', 'populationType', 'Student', 'TestImport')
         self.add_edge('Spec_Student', 'vertical', f'{ns}g/TestVertical', 'TestImport')

@@ -717,7 +717,8 @@ class StatVarSeriesAggregator:
             COALESCE(JSON_VALUE(facet, '$.unit'), ''), '^',
             'true'
           )) AS STRING) AS facet_id,
-          facet
+          facet,
+          CURRENT_TIMESTAMP() AS last_update_timestamp
         FROM (
           SELECT
             variable_measured,
@@ -845,7 +846,10 @@ class StatVarSeriesAggregator:
                WHERE ts.provenance IN ({input_provenance_str}) {obs_exclude_filter_spanner} ''')
         ),
         {obs_ctes_combined}
-        {obs_final_select};
+        SELECT *, CURRENT_TIMESTAMP() AS last_update_timestamp
+        FROM (
+          {obs_final_select}
+        );
         """
 
         return f"{ts_query}\n\n{obs_query}"

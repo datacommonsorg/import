@@ -52,8 +52,9 @@ _EXTRA_FLAGS_SEPARATOR = "--"
 def _add_input_args(p: argparse.ArgumentParser) -> None:
   """Adds the input directory flag."""
   p.add_argument("--input_dir",
-                 help="Input directory, local or gs://. Omit for runs driven "
-                 "by --config_file alone (pass that after --).")
+                 help="Input directory, local or gs://. Can be omitted when "
+                 "both sides reuse an output (--baseline_output and "
+                 "--candidate_output).")
 
 
 def _add_code_args(p: argparse.ArgumentParser) -> None:

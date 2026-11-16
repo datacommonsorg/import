@@ -48,10 +48,6 @@ python3 -m tools.regression --input_dir=/data/un_input -- --imports=global,unodc
 python3 -m tools.regression --input_dir=gs://my-bucket/path/to/input \
     --work_dir=/mnt/disk/ab1
 
-# Config-driven: no --input_dir. Paths in extra flags must be absolute or
-# gs://, because each side runs from its own checkout.
-python3 -m tools.regression -- --config_file=gs://my-bucket/path/config.json
-
 # Two refs, such as a branch against master.
 python3 -m tools.regression --input_dir=/data/in --baseline=upstream/master \
     --candidate=origin/my-branch

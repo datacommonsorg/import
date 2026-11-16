@@ -32,11 +32,6 @@ public interface EmbeddingOptions extends PipelineOptions {
 
   void setEmbeddingTableName(String embeddingTableName);
 
-  @Description("GCS URI or local path to the NL statistical variable sentences CSV file.")
-  String getNlStatVarFilePath();
-
-  void setNlStatVarFilePath(String nlStatVarFilePath);
-
   @Description("Batch size for Vertex AI embedding prediction requests.")
   @Default.Integer(100)
   int getEmbeddingBatchSize();

@@ -201,9 +201,10 @@ def update_ingestion_history(
 
     metrics = None
     if req.status in (
-            IngestionState.SUCCESS, IngestionState.RETRY
+            IngestionState.SUCCESS, IngestionState.RETRY,
+            IngestionState.ROLLBACK
     ) and req.jobId and req.jobId != "N/A":
-        # Only update metrics for successful or retried jobs when a valid Dataflow jobId is provided.
+        # Only update metrics for successful, retried, or rolled-back jobs when a valid Dataflow jobId is provided.
         try:
             metrics = import_utils.get_ingestion_metrics(
                 config.PROJECT_ID, config.LOCATION, req.jobId)

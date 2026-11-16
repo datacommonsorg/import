@@ -265,16 +265,14 @@ def _assert_undefined_provenances(result: b.Result, *prov_ids: str) -> None:
   """
   The run failed with the MetadataValidator error naming prov_ids.
 
-  The handshake error type is GENERIC_ERROR, although the validator raises the
-  error with the MISSING_PROVENANCE type. Production workers have already
-  uploaded their output (see test_files_after_a_failed_one_still_run).
+  Production workers have already uploaded their output (see test_files_after_a_failed_one_still_run).
   """
   assert result.error["type"] == "ValueError"
   assert _undefined_provenances(*prov_ids) in result.error["message"]
   handshake_types = {
       e["errorType"] for e in result.output["handshake"]["errors"]
   }
-  assert handshake_types == {"GENERIC_ERROR"}
+  assert handshake_types == {"MISSING_PROVENANCE"}
 
 
 def test_provenance_defined_in_mcf_is_used():
@@ -403,14 +401,14 @@ INVALID_PROVENANCES = [
          expect=b.Fails(
              "ValueError", "The 'provenance' property must be a valid DCID or"
              f" URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL)."
-             f" Found invalid provenance: '{b.PROVENANCE}'")),
-    # The handshake error type is GENERIC_ERROR, although the validator raises
-    # the error with the MISSING_PROVENANCE type.
+             f" Found invalid provenance: '{b.PROVENANCE}'",
+             ("INVALID_CONFIGURATION",))),
     Case("provenance that no MCF defines",
          given=b.obs_config(b.OBS_MAPPINGS,
                             provenance="dcid:UndefinedProvenance"),
          expect=b.Fails("ValueError",
-                        _undefined_provenances("dcid:UndefinedProvenance"))),
+                        _undefined_provenances("dcid:UndefinedProvenance"),
+                        ("MISSING_PROVENANCE",))),
 ]
 
 
@@ -422,7 +420,10 @@ def test_invalid_provenance_config(given, expect):
 
 def test_provenance_without_a_source_fails():
   result = b.run_csv(_ONE_ROW, shared_files=_provenance_mcf(with_source=False))
-  b.assert_fails(result, "ValueError", _MISSING_SOURCES)
+  b.assert_fails(result,
+                 "ValueError",
+                 _MISSING_SOURCES,
+                 handshake_error_types=("MISSING_SOURCE",))
 
 
 def test_provenance_linked_to_an_undefined_source_is_accepted():
@@ -450,4 +451,4 @@ def test_provenance_declared_only_in_the_config_sources_block_fails():
   b.assert_fails(result,
                  "ValueError",
                  "Unknown key(s) in config.json: ['sources']",
-                 handshake_error_types=())
+                 handshake_error_types=("INVALID_CONFIGURATION",))

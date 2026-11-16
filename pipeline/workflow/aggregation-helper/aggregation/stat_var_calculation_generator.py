@@ -289,7 +289,8 @@ class StatVarCalculationGenerator:
               entities,
               extra_entities_id,
               {fingerprint_ts_expr} AS facet_id,
-              facet
+              facet,
+              CURRENT_TIMESTAMP() AS last_update_timestamp
             FROM ParsedTS;
 
 
@@ -351,7 +352,8 @@ class StatVarCalculationGenerator:
               extra_entities_id,
               calculated_facet_id AS facet_id,
               date,
-              CAST(calculated_val AS STRING) AS value
+              CAST(calculated_val AS STRING) AS value,
+              CURRENT_TIMESTAMP() AS last_update_timestamp
             FROM JoinedObs
             WHERE calculated_val IS NOT NULL;
             """

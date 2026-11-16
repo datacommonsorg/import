@@ -17,14 +17,22 @@ Report code must never change the outcome of a run: errors are logged, not
 raised.
 """
 
+from collections import Counter
+from collections import defaultdict
+from dataclasses import dataclass
+from dataclasses import field
 import logging
+import os
 
 from stats import constants
 from stats.data import FileValidationError
 from stats.report.model.summary import ExecutionMetadata
+from stats.report.model.summary import FileCounts
 from stats.report.model.summary import FileSummary
 from stats.report.model.summary import Folder
+from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import Provenance
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from util.filesystem import Dir
@@ -32,13 +40,24 @@ from util.filesystem import File
 from util.filesystem import join_path
 
 
+@dataclass
+class _FolderStats:
+  """Counts recorded for one import folder."""
+
+  # Number of input files per lowercase extension, e.g. {"csv": 3, "mcf": 1}.
+  files_by_type: Counter = field(default_factory=Counter)
+  # Number of input files per provenance ID.
+  files_by_provenance: Counter = field(default_factory=Counter)
+
+
 class SummaryGenerator:
   """Collects stats during a preprocessor run and writes the ingestion report.
 
   Runner calls, in order: set_execution_metadata(), record_input_file() per
-  matched file, add_file_summary() per imported file, set_provenance_data()
-  and populate_node_info() after worker results are merged, record_failure()
-  on failure, and write_to_json() at the end of the run.
+  matched file, add_file_summary() per imported file, populate_node_info()
+  after worker results are merged, record_failure() on failure, and, at the
+  end of the run on success or failure, add_folders(), set_provenance_data()
+  and write_to_json().
 
   Worker processes can't update this object, so each returns a FileSummary
   to the parent and Runner passes it to add_file_summary().
@@ -60,11 +79,12 @@ class SummaryGenerator:
     self._output_dir: Dir | None = None
     # Provenance metadata, keyed by provenance DCID.
     self._provenance_data: dict[str, dict] = {}
-    # TODO: Add containers for input files, merged FileSummary counts per
-    # folder and provenance, node counts and errors.
+    # Counts per import folder, keyed by folder name.
+    self._folders: dict[str, _FolderStats] = defaultdict(_FolderStats)
+    # TODO: Add containers for merged FileSummary counts, node counts and
+    # errors.
 
-  def set_execution_metadata(self, start_time: str, folder_names: list[str],
-                             output_dir: Dir) -> None:
+  def set_execution_metadata(self, start_time: str, output_dir: Dir) -> None:
     """Sets run metadata known at the start of the run.
 
     Status and end time are only known at the end, so they are passed to
@@ -72,7 +92,6 @@ class SummaryGenerator:
 
     Args:
       start_time: ISO-8601 UTC time the run started.
-      folder_names: Import folders requested for the run.
       output_dir: The run's output directory containing the JSON-LD shards
         and summary report.
     """
@@ -80,20 +99,32 @@ class SummaryGenerator:
         workflowExecutionId=self._workflow_execution_id,
         mode=RunMode.INGEST,
         startTime=start_time,
-        folderNames=list(folder_names),
     )
     self._output_dir = output_dir
 
   def record_input_file(self, folder: str, provenance: list[str],
-                        file_type: str) -> None:
+                        file_path: str) -> None:
     """Records one matched input file, before it is imported.
 
     Args:
       folder: Import folder the file belongs to.
-      provenance: list of provenances configured for the file.
-      file_type: Lowercase file extension, e.g. "csv" or "mcf".
+      provenance: IDs of the provenances configured for the file.
+      file_path: Path of the file; its extension is the file type.
     """
-    # TODO: Count files by folder, type and provenance.
+    file_type = os.path.splitext(file_path)[1].lstrip(".").lower()
+    stats = self._folders[folder]
+    stats.files_by_type[file_type] += 1
+    for provenance_id in provenance:
+      stats.files_by_provenance[provenance_id] += 1
+
+  def add_folders(self, names: list[str]) -> None:
+    """Lists folders in the report even if no input file is recorded for them.
+
+    Args:
+      names: Import folders the run was asked to import.
+    """
+    for name in names:
+      self._folders[name]  # The defaultdict creates an empty entry.
 
   def set_provenance_data(self, provenance_id: str,
                           source_id: str | None) -> None:
@@ -156,11 +187,34 @@ class SummaryGenerator:
     # Folder the report is written to, e.g.
     # gs://<bucket>/.../datacommons/preprocessor_reports/<workflowExecutionId>.
     metadata.outputPath = self._output_dir.full_path(self._report_dir_name())
-    # TODO: Add file, provenance and node counts once they are recorded.
-    return IngestionReport(
-        run=metadata,
-        folders=[Folder(folderName=name) for name in metadata.folderNames],
-    )
+    # Folders and provenances are sorted so the report is the same however
+    # the files were found.
+    folder_names = sorted(self._folders)
+    metadata.folderNames = folder_names
+
+    folders = []
+    for name in folder_names:
+      stats = self._folders[name]
+      folders.append(self._build_folder(name, stats))
+
+    # TODO: Add observation and node counts once they are recorded.
+    return IngestionReport(run=metadata, folders=folders)
+
+  def _build_folder(self, name: str, stats: _FolderStats) -> Folder:
+    """Returns the report entry for one folder."""
+    provenances = []
+    for provenance_id in sorted(stats.files_by_provenance):
+      source_id = self._provenance_data.get(provenance_id,
+                                            {}).get("source_id") or None
+      provenances.append(
+          Provenance(id=provenance_id,
+                     sourceId=source_id,
+                     fileCount=stats.files_by_provenance[provenance_id]))
+
+    files = FileCounts(count=sum(stats.files_by_type.values()),
+                       byType=dict(sorted(stats.files_by_type.items())))
+    summary = FolderSummary(files=files, provenanceCount=len(provenances))
+    return Folder(folderName=name, summary=summary, provenances=provenances)
 
   def _report_dir_name(self) -> str:
     """Returns the report folder, relative to the output dir.

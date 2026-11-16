@@ -17,8 +17,7 @@ End-to-end: these input files produce exactly this output, in every mode.
 Each folder under e2e/ is one dataset:
 
   e2e/<name>/input/        the input directory (config.json + data files)
-  e2e/<name>/run.json      description, plus optional "runner_kwargs" and
-                           "config_file"
+  e2e/<name>/run.json      description, plus optional "runner_kwargs"
   e2e/<name>/expected.json the canonical output (see lib/canonical.py):
                            every JSON-LD record per import folder, the
                            report.json summary, the workflow handshake, the
@@ -56,9 +55,7 @@ ASPECTS = ("records", "report", "handshake", "ingestion_report", "error")
 # Known bugs, as xfails. Strict ones fail with XPASS once fixed, so the entry
 # must then be removed. Non-strict ones are for nondeterministic bugs.
 # Keys: (dataset, mode, aspect); "*" matches any value.
-_GCS_CONFIG = (
-    "--config_file on GCS fails with 'Not a file': create_store() opens"
-    " the path as a directory first, which always works on GCS")
+KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {}
 
 # Known bugs that every mode shares are written into expected.json instead, so
 # the rest of the aspect is still checked (see "Known bugs" in README.md). The
@@ -67,10 +64,6 @@ GOLDEN_BUGS = {
     "report.json leaves every file NOT_STARTED: workers report to their own"
     " files, never merged into it":
         "b/580998027",
-}
-
-KNOWN_ISSUES: dict[tuple[str, str, str], tuple[str, bool]] = {
-    ("config_file_driven", "gcs_input", "*"): (_GCS_CONFIG, True),
 }
 
 
@@ -116,8 +109,7 @@ def _output(dataset: str, mode: str) -> dict:
   spec = _spec(dataset)
   result = run.run_preprocessor(os.path.join(E2E_DIR, dataset, "input"),
                                 mode,
-                                runner_kwargs=spec.get("runner_kwargs"),
-                                config_file=spec.get("config_file"))
+                                runner_kwargs=spec.get("runner_kwargs"))
   return result.output
 
 

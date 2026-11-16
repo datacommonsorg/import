@@ -49,11 +49,10 @@ def resolve_input_dir(input_dir: str | None, gcs_input: GcsInput,
   """
   Returns the input directory to pass to the preprocessor.
 
-  input_dir is a local directory or a gs:// path, or None for config-driven
-  runs whose files come from --config_file. gcs_input says what to do with a
-  gs:// input_dir. stage_dir is where a staged gs:// input is copied; an
-  existing copy is updated incrementally, so the directory can be reused
-  across runs.
+  input_dir is a local directory or a gs:// path, or None when both sides
+  reuse an output. gcs_input says what to do with a gs:// input_dir.
+  stage_dir is where a staged gs:// input is copied; an existing copy is
+  updated incrementally, so the directory can be reused across runs.
   """
   if input_dir is None:
     return None

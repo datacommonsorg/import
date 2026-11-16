@@ -40,12 +40,10 @@ class Nodes:
     self.provenances: dict[str, Provenance] = {}
     # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
-    # Always ensure the global root StatVarGroup (dc/g/Root) exists so manually
-    # defined StatVarGroup hierarchies in MCF have a root Node in Spanner.
-    self._ensure_root_group()
-    # If generating SV hierarchy, create default custom dc group at the outset.
-    if config.generate_hierarchy():
-      self._default_custom_group()
+    # Always ensure the global root StatVarGroup (dc/g/Root) and the custom
+    # root under it (c/g/Root) exist, so manually defined StatVarGroup
+    # hierarchies in MCF have their root Nodes in Spanner.
+    self._default_custom_group()
 
   def register_provenance(
       self,

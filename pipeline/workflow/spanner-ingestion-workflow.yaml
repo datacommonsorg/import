@@ -151,13 +151,13 @@ main:
           database: ${spanner_db_path}
           importList: ${import_info_list}
 
-# Reusable sub-workflow that updates ingestion-history, and conditionally ingestion-status for SUCCESS or RETRY
+# Reusable sub-workflow that updates ingestion-history, and conditionally ingestion-status for SUCCESS, ROLLBACK, or RETRY
 update_state_subworkflow:
   params: [helper_url, workflow_id, status, import_list, job_id]
   steps:
     - check_update_status:
         switch:
-          - condition: ${status == "SUCCESS" or status == "RETRY"}
+          - condition: ${status == "SUCCESS" or status == "ROLLBACK" or status == "RETRY"}
             next: update_status
         next: update_history
     - update_status:
@@ -320,7 +320,7 @@ run_dataflow_job:
         next: wait_for_job_completion
 
 # This sub-workflow performs Spanner rollback to rollback_timestamp (T_pre) using the rollback Dataflow pipeline
-# and marks the imports and workflow history as RETRY.
+# and marks the imports and workflow history as ROLLBACK.
 # If rollback fails, it raises an error so the parent workflow skips lock release and alerts oncall.
 rollback_subworkflow:
   params: [workflow_id, helper_url, import_list, project_id, rollback_gcs_path, rollback_timestamp, location, spanner_project_id, spanner_instance_id, spanner_database_id, wait_period, {pipeline_err: null}]
@@ -349,15 +349,15 @@ rollback_subworkflow:
                   workflow_id: ${workflow_id}
                   rollback_timestamp: ${rollback_timestamp}
                 result: rollback_job_id
-            - update_retry_state:
+            - update_rollback_state:
                 call: update_state_subworkflow
                 args:
                   helper_url: ${helper_url}
                   workflow_id: '${workflow_id}'
-                  status: 'RETRY'
+                  status: 'ROLLBACK'
                   import_list: ${import_list}
                   job_id: ${rollback_job_id}
-                result: retry_state_response
+                result: rollback_state_response
             - log_rollback_complete:
                 call: sys.log
                 args:
@@ -368,9 +368,9 @@ rollback_subworkflow:
                   status: "ROLLBACK_SUCCESS"
                   rollbackJobId: ${default(rollback_job_id, "N/A")}
         except:
-          as: retry_err
+          as: rollback_err
           steps:
             - rollback_failure:
                 raise:
-                  message: '${"Pipeline failed and rollback also failed. Original error: " + json.encode_to_string(pipeline_err) + " | Rollback error: " + json.encode_to_string(retry_err)}'
+                  message: '${"Pipeline failed and rollback also failed. Original error: " + json.encode_to_string(pipeline_err) + " | Rollback error: " + json.encode_to_string(rollback_err)}'
                   code: 500

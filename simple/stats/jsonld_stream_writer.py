@@ -28,7 +28,6 @@ import uuid
 from google.api_core.exceptions import GoogleAPICallError
 from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
-from google.cloud import storage
 import pandas as pd
 import requests
 from stats import constants
@@ -39,6 +38,7 @@ from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import create_store
 from util.filesystem import File
+from util.filesystem import gcs_client
 
 DCID_URL = "https://datacommons.org/browser/"
 
@@ -91,6 +91,19 @@ def _parse_numeric(val):
     return str(val)
 
 
+# Collision samples kept per file for the end-of-run summary.
+MAX_SAMPLES_PER_FILE = 3
+
+
+def collision_file_key(file_path: str) -> str:
+  """Returns the key under which collisions of `file_path` are summarized.
+
+  The path relative to the input directory, so that files with the same name in
+  different import folders are told apart.
+  """
+  return file_path or "unknown"
+
+
 def _prefix_dcid(key: str) -> str:
   """Ensures `key` has a `dcid:` prefix unless it is already a URI or prefixed."""
   if key.startswith(("dcid:", "http://", "https://")):
@@ -115,11 +128,14 @@ def _parse_props_json(props: str, entity: str, variable: str) -> dict:
 def _build_observation_node(row: tuple) -> dict:
   """Builds a single `dcid:StatVarObservation` JSON-LD node dict from a row."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{props}"
+  props_dict = _parse_props_json(props, entity, variable)
+  # Sorted, so that the @id does not depend on the order the config declares
+  # the properties in. observationProperties keeps the declared order.
+  id_props = json.dumps(props_dict, sort_keys=True) if props_dict else props
+  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{id_props}"
   obs_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
 
   var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
-  props_dict = _parse_props_json(props, entity, variable)
   if props_dict and var_obj:
     var_obj["dcid:observationProperties"] = [
         _prefix_dcid(k) for k in props_dict.keys()
@@ -265,9 +281,8 @@ class JsonLdStreamWriter(GraphWriter):
       else:
         import_name = "_".join(import_names)
 
-    self.import_name = import_name or nodes.config.data.get(
-        "importName") or "default_import_name"
-    if self.import_name and "/" in self.import_name:
+    self.import_name = import_name or "default_import_name"
+    if "/" in self.import_name:
       self.import_name = self.import_name.replace("/", "_")
 
     if jsonld_dir_name:
@@ -288,7 +303,6 @@ class JsonLdStreamWriter(GraphWriter):
     self._node_streaming_started = set()
     self.obs_hash_set: set[int] = set()
     self.obs_collision_count: int = 0
-    self.obs_sample_collisions: list[str] = []
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
@@ -297,8 +311,12 @@ class JsonLdStreamWriter(GraphWriter):
       chunk_items: list[tuple[str, str, str, str, str]],
       file_name: str = "",
   ) -> None:
-    """Tracks observation hashes for a shard chunk and logs any collisions."""
-    file_key = os.path.basename(file_name) if file_name else "unknown"
+    """Tracks observation hashes for a shard chunk and logs any collisions.
+
+    Only collisions with observations that this writer saw are found: a worker
+    sees one file. See `stats.obs_id_collisions` for collisions between files.
+    """
+    file_key = collision_file_key(file_name)
     for obs_hash, ent, var, dt, prov in chunk_items:
       hash_int = int(obs_hash[:16], 16)
       if hash_int not in self.obs_hash_set:
@@ -309,9 +327,7 @@ class JsonLdStreamWriter(GraphWriter):
       sample_info = (
           f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
       )
-      if len(self.obs_sample_collisions) < 10:
-        self.obs_sample_collisions.append(sample_info)
-      if len(self.file_sample_collisions[file_key]) < 3:
+      if len(self.file_sample_collisions[file_key]) < MAX_SAMPLES_PER_FILE:
         self.file_sample_collisions[file_key].append(sample_info)
         logging.warning(
             "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
@@ -320,6 +336,22 @@ class JsonLdStreamWriter(GraphWriter):
         logging.warning(
             "Detected %d observation @id collisions so far across processed datasets.",
             self.obs_collision_count)
+
+  def merge_collisions(self, file_counts: dict[str, int],
+                       file_samples: dict[str, list[str]]) -> None:
+    """Adds collisions found elsewhere to this writer's end-of-run summary.
+
+    Args:
+      file_counts: collision count per file key (see `collision_file_key`).
+      file_samples: sample descriptions per file key.
+    """
+    for f_name, count in file_counts.items():
+      self.obs_collision_count += count
+      self.file_collision_counts[f_name] += count
+      samples = self.file_sample_collisions[f_name]
+      samples.extend(
+          file_samples.get(f_name,
+                           [])[:max(0, MAX_SAMPLES_PER_FILE - len(samples))])
 
   def _write_observations_df_to_disk(self,
                                      df: pd.DataFrame,
@@ -484,15 +516,7 @@ class JsonLdStreamWriter(GraphWriter):
     bucket_name = parts[0]
     blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
 
-    client = storage.Client()
-
-    # Configure connection pool size for concurrent GCS uploads
-    adapter = requests.adapters.HTTPAdapter(
-        pool_connections=_UPLOAD_CONCURRENCY, pool_maxsize=_UPLOAD_CONCURRENCY)
-    client._http.mount("https://", adapter)
-    client._http.mount("http://", adapter)
-
-    bucket = client.bucket(bucket_name)
+    bucket = gcs_client().bucket(bucket_name)
 
     gcs_retry = Retry(
         initial=1.0,

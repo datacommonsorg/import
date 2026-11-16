@@ -19,6 +19,7 @@ from stats.data import FileValidationError
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
+from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
 from stats.importer import duplicate_column_errors
@@ -30,6 +31,30 @@ from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.util import has_namespace_prefix
 from util.filesystem import File
+
+# Properties whose columns give each row's DCID and type. Every entities CSV
+# must map both; they are not written as properties.
+_DCID_PROPERTY = "dcid"
+_TYPE_OF_PROPERTY = "typeOf"
+_REQUIRED_PROPERTIES = (_DCID_PROPERTY, _TYPE_OF_PROPERTY)
+
+
+def _missing_required_mappings_error(
+    file_path: str, properties: set[str]) -> FileValidationError | None:
+  """Returns the error if `properties` lacks `dcid` or `typeOf`, else None."""
+  missing = [
+      f"dcid:{prop}" for prop in _REQUIRED_PROPERTIES if prop not in properties
+  ]
+  if not missing:
+    return None
+  return FileValidationError(
+      file=file_path,
+      error_type=ValidationErrorType.INVALID_CONFIGURATION,
+      problem_columns=missing,
+      error_message=
+      f"Missing required column mapping(s) for entities CSV file '{file_path}'"
+      f" in config.json: {missing}. Map the column holding each row's DCID to"
+      " 'dcid:dcid' and the column holding its type to 'dcid:typeOf'.")
 
 
 def _parse_object_ids(v_str: str) -> str | list[str]:
@@ -43,9 +68,8 @@ class EntitiesImporter(Importer):
   """Imports a single entities input file.
 
   Key behaviors at this time:
-  - `columnMappings` is required. Every column must be mapped or ignored, except the id column. Each mapped column is encoded as property triples under its mapped predicate.
-  - If an id column was configured, it will be used as the entity dcid. Else a new dcid will be generated for each entity. The id column is only written as a property if it is mapped.
-  - Columns specified as entity columns will be encoded as object_id in the triples tables. Others will be encoded as object_value.
+  - `columnMappings` is required, and must map a `dcid:dcid` and a `dcid:typeOf` column: they give each row's DCID and type. Every other column must be mapped or ignored, and is encoded as property triples under its mapped predicate.
+  - Cell values with a namespace prefix (e.g. `dcid:`) are entity references, encoded as object_id in the triples tables. Others are encoded as object_value.
     + Currently this importer does not resolve any entities and all entities are assumed to be pre-resolved into dcids.
     """
 
@@ -58,18 +82,8 @@ class EntitiesImporter(Importer):
     self.config = nodes.config
     self.ignore_columns = self.config.ignore_columns(self.input_file)
     self.provenance_id = ""
-
-    self.row_entity_type = self.config.row_entity_type(self.input_file)
-    assert self.row_entity_type, f"Row entity type must be specified: {self.input_file.full_path()}"
-
-    self.id_column = self.config.id_column(self.input_file)
     # Map from CSV column name to the predicate its values are written under.
     self.reverse_mappings = self.get_reverse_column_mappings()
-    # Predicates of the columns holding entity references.
-    self.entity_columns = {
-        self.reverse_mappings.get(col, col)
-        for col in self.config.entity_columns(self.input_file)
-    }
 
     self.df = pd.DataFrame()
 
@@ -96,14 +110,16 @@ class EntitiesImporter(Importer):
                   duplicate_column_errors(self.input_file.path, mappings))
     if duplicates:
       return duplicates
+    missing = _missing_required_mappings_error(
+        self.input_file.path, set(self.reverse_mappings.values()))
+    if missing:
+      return [missing]
     actual_columns = read_csv_columns(self.input_file)
     if isinstance(actual_columns, FileValidationError):
       return [actual_columns]
-    expected_columns = set(self.reverse_mappings)
-    if self.id_column:
-      expected_columns.add(self.id_column)
     return column_coverage_errors(self.input_file.path, actual_columns,
-                                  expected_columns, set(self.ignore_columns))
+                                  set(self.reverse_mappings),
+                                  set(self.ignore_columns))
 
   def _read_csv(self) -> None:
     # Read CSVs with the following behaviors:
@@ -120,22 +136,10 @@ class EntitiesImporter(Importer):
     if self.ignore_columns:
       self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
 
-  def _is_entity_reference_column(self, col: str) -> bool:
-    return col in self.entity_columns
-
-  def _property_columns(self) -> pd.DataFrame:
-    """Returns the mapped columns, renamed to their predicates.
-
-    An unmapped id column is left out: it only supplies the entity dcids.
-    """
+  def _mapped_columns(self) -> pd.DataFrame:
+    """Returns the mapped columns, renamed to their predicates."""
     mapped = [col for col in self.df.columns if col in self.reverse_mappings]
     return self.df[mapped].rename(columns=self.reverse_mappings)
-
-  def _raw_dcid(self, index: int) -> str:
-    """Returns row `index`'s id column value, else a generated `<type>_<index>`."""
-    if self.id_column:
-      return str(self.df.at[index, self.id_column])
-    return f"{self.row_entity_type}_{index}"
 
   def _extract_row_properties(
       self,
@@ -147,7 +151,7 @@ class EntitiesImporter(Importer):
       if pd.isna(v):
         continue
       v_str = str(v)
-      if self._is_entity_reference_column(k) or has_namespace_prefix(v_str):
+      if has_namespace_prefix(v_str):
         prop_object_ids[k] = _parse_object_ids(v_str)
       else:
         prop_object_values[k] = v
@@ -155,10 +159,11 @@ class EntitiesImporter(Importer):
 
   def _write_row_entity_triples(self) -> None:
     triples: list[Triple] = []
-    entity_type = strip_namespace(self.row_entity_type)
-    for index, row in self._property_columns().iterrows():
-      dcid = strip_namespace(self._raw_dcid(index))
-      prop_object_values, prop_object_ids = self._extract_row_properties(row)
+    for _, row in self._mapped_columns().iterrows():
+      dcid = strip_namespace(str(row[_DCID_PROPERTY]))
+      entity_type = strip_namespace(str(row[_TYPE_OF_PROPERTY]))
+      prop_object_values, prop_object_ids = self._extract_row_properties(
+          row.drop(list(_REQUIRED_PROPERTIES)))
       row_entity = RowEntity(dcid,
                              entity_type,
                              provenance_id=self.provenance_id,
