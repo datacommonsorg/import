@@ -139,6 +139,42 @@ def duplicate_column_errors(
   ]
 
 
+def mapped_and_ignored_errors(
+    file_path: str, mappings: dict[str, str],
+    ignore_columns: list[str]) -> list[FileValidationError]:
+  """
+  Checks that no column is both mapped and listed in `ignoreColumns`.
+
+  A column is either imported or ignored; listing it in both says neither.
+  Reports every such column at once.
+  """
+  both = sorted(set(mappings.values()) & set(ignore_columns))
+  if not both:
+    return []
+  return [
+      FileValidationError(
+          file=file_path,
+          error_type=ValidationErrorType.INVALID_CONFIGURATION,
+          problem_columns=both,
+          error_message=
+          f"The CSV file '{file_path}' both maps and ignores column(s): {both}. Remove each from 'columnMappings' or from 'ignoreColumns'."
+      )
+  ]
+
+
+def mapping_errors(file_path: str, mappings: dict[str, str],
+                   ignore_columns: list[str]) -> list[FileValidationError]:
+  """
+  Returns the `columnMappings` errors that can be found without the header.
+
+  These are properties or columns mapped twice, and columns both mapped and
+  ignored.
+  """
+  return (duplicate_property_errors(file_path, mappings) +
+          duplicate_column_errors(file_path, mappings) +
+          mapped_and_ignored_errors(file_path, mappings, ignore_columns))
+
+
 class Importer:
   """The base class for all importers."""
 
