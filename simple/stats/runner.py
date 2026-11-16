@@ -503,7 +503,7 @@ class Runner:
                                                file_path=file.path)
 
   def _report_folder_and_provenance(self, file: File) -> tuple[str, str]:
-    """Returns the folder and provenance ID the report counts `file` under."""
+    """Returns the import folder and provenance ID that `file` belongs to."""
     return self._input_folder_name(file), self.nodes.provenance_id(file)
 
   def _input_folder_name(self, file: File) -> str:

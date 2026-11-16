@@ -15,7 +15,8 @@
 
 These types describe the report's shape and are the contract for anything
 that reads it. They hold no counting logic: summary_generator builds them once
-at the end of a run and serializes them.
+at the end of a run and serializes them. The one exception is DateRange.widen,
+the merge rule that the writer and summary_generator share.
 
 The report has three levels:
   run          Metadata for the preprocessor run: workflow execution ID,
@@ -72,6 +73,10 @@ class DateRange(BaseModel):
 
   min: str = Field(description="Earliest observation date")
   max: str = Field(description="Latest observation date")
+
+  def widen(self, other: "DateRange") -> "DateRange":
+    """Returns the smallest range that covers both this range and `other`."""
+    return DateRange(min=min(self.min, other.min), max=max(self.max, other.max))
 
 
 class Provenance(BaseModel):

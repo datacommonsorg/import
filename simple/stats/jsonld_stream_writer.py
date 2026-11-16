@@ -34,7 +34,6 @@ from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
 from stats.report.model.summary import DateRange
-from stats.report.summary_generator import widen_date_range
 from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import create_store
@@ -393,8 +392,9 @@ class JsonLdStreamWriter(GraphWriter):
     self.observation_count += len(observations_df)
     dates = observations_df[constants.COLUMN_DATE].dropna()
     if not dates.empty:
-      self.observation_dates = widen_date_range(
-          self.observation_dates, DateRange(min=dates.min(), max=dates.max()))
+      chunk_dates = DateRange(min=dates.min(), max=dates.max())
+      self.observation_dates = (chunk_dates if self.observation_dates is None
+                                else self.observation_dates.widen(chunk_dates))
 
   def _init_import_export_dir(self, import_name: str):
     dir_name = import_name.replace("/", "_")

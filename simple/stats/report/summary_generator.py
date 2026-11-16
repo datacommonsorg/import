@@ -155,8 +155,10 @@ class SummaryGenerator:
     provenance_id = summary.provenanceId
     stats.observations_by_provenance[provenance_id] += summary.observations
     if summary.dateRange is not None:
-      stats.date_range_by_provenance[provenance_id] = widen_date_range(
-          stats.date_range_by_provenance.get(provenance_id), summary.dateRange)
+      current = stats.date_range_by_provenance.get(provenance_id)
+      stats.date_range_by_provenance[provenance_id] = (
+          summary.dateRange
+          if current is None else current.widen(summary.dateRange))
 
   def populate_node_info(self, folder: str, provenance: list[str],
                          counts_by_type: dict[str, int]) -> None:
@@ -269,13 +271,3 @@ class SummaryGenerator:
     except Exception:  # The report must never fail the run.
       logging.exception("Failed to write the ingestion report.")
       return None
-
-
-def widen_date_range(current: DateRange | None, new: DateRange) -> DateRange:
-  """Returns the smallest range that covers both `current` and `new`.
-
-  Dates are compared as strings, as they appear in the data.
-  """
-  if current is None:
-    return new
-  return DateRange(min=min(current.min, new.min), max=max(current.max, new.max))
