@@ -265,12 +265,13 @@ def csv_file(*rows: list[str],
 def import_subdir(name: str,
                   csv_text: str | None = None,
                   *,
+                  csv_pattern: str = "case*.csv",
                   provenance: str = PROVENANCE,
                   source: str = SOURCE) -> dict[str, str]:
   """
   The files of import subdirectory name, for run_dir().
 
-  Its config.json imports *.mcf and case*.csv under provenance, and its
+  Its config.json imports *.mcf and csv_pattern under provenance, and its
   provenance.mcf defines provenance and source (with a url derived from
   source). csv_text defaults to one obs_row().
   """
@@ -282,7 +283,7 @@ def import_subdir(name: str,
               "provenance": provenance_ref
           },
           {
-              "pattern": "case*.csv",
+              "pattern": csv_pattern,
               "provenance": provenance_ref,
               "columnMappings": OBS_MAPPINGS
           },

@@ -274,32 +274,27 @@ def test_nested_import_folder_is_reported_as_given(given, expect):
   assert [f["folderName"] for f in report["folders"]] == expect
 
 
-def _parent_and_nested_imports() -> dict[str, str]:
-  """Import "a", whose config also matches the CSV of nested import "a/b"."""
-  parent = b.import_subdir("a",
-                           provenance="ParentProvenance",
-                           source="ParentSource")
-  del parent["a/case.csv"]
-  config = json.loads(parent["a/config.json"])
-  [csv_entry] = [
-      entry for entry in config["inputFiles"] if entry["pattern"] == "case*.csv"
-  ]
-  csv_entry["pattern"] = "*/case*.csv"
-  parent["a/config.json"] = json.dumps(config)
-  nested = b.import_subdir("a/b",
-                           provenance="NestedProvenance",
-                           source="NestedSource")
-  return {**parent, **nested}
+# Both configs match a/b/case.csv: the parent's "*/case*.csv" is scoped to
+# "a/*/case*.csv". (It doesn't match the parent's own a/case.csv.)
+_PARENT_AND_NESTED_IMPORTS = {
+    **b.import_subdir("a",
+                      csv_pattern="*/case*.csv",
+                      provenance="ParentProvenance",
+                      source="ParentSource"),
+    **b.import_subdir("a/b",
+                      provenance="NestedProvenance",
+                      source="NestedSource"),
+}
 
 
 @pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
 def test_a_parent_import_config_is_matched_before_a_nested_one(mode):
-  result = b.run_dir(_parent_and_nested_imports(),
+  result = b.run_dir(_PARENT_AND_NESTED_IMPORTS,
                      mode=mode,
                      runner_kwargs={"import_names": ["ALL_IMPORTS"]})
   assert result.error is None, result.error
-  assert [o["dcid:provenance"] for o in result.observations
-         ] == [b.ref("ParentProvenance")]
+  provenances = [o["dcid:provenance"] for o in result.observations]
+  assert provenances == [b.ref("ParentProvenance")]
 
 
 # Beta comes first so that processing order would favour it.
