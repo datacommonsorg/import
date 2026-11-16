@@ -17,6 +17,7 @@ from collections import defaultdict
 import concurrent.futures
 from datetime import datetime
 from datetime import timezone
+import functools
 import hashlib
 import json
 import logging
@@ -45,6 +46,11 @@ DCID_URL = "https://datacommons.org/browser/"
 _CHUNK_SIZE = 10000
 _UPLOAD_CONCURRENCY = 4
 
+# Distinct values whose JSON-LD forms are cached, per process: enough for the
+# variables, places and properties of a large file. Each cache holds at most
+# a few tens of MB.
+_CACHE_SIZE = 1 << 16
+
 _KNOWN_CUSTOM_PREFIXES = set()
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
@@ -53,6 +59,8 @@ def _rewrite_custom_ns_to_dcid(val: str) -> str:
   """Rewrites custom namespaces to 'dcid:' as a temporary workaround until the ingestion loader natively supports custom namespaces.
 
   This allows users to author schemas with their custom namespaces today, which will be fully preserved when we re-ingest after backend support is added.
+
+  `_ref` caches the result, so it must stay a function of `val` alone.
   """
   if not isinstance(val, str) or not val:
     return val
@@ -77,6 +85,24 @@ def _uri_ref(val):
   if is_uri_or_namespace(val_str):
     return {"@id": val_str}
   return {"@id": f"dcid:{val_str.lstrip('/')}"}
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def _cached_ref(val: str) -> dict | None:
+  return _uri_ref(_rewrite_custom_ns_to_dcid(val))
+
+
+def _ref(val) -> dict | None:
+  """Returns `_uri_ref` of `val` with its custom namespace rewritten.
+
+  A new dict, which the caller may change. Cached: the result depends only on
+  `val`, since `_KNOWN_CUSTOM_PREFIXES` only remembers prefixes that
+  `_rewrite_custom_ns_to_dcid` would rewrite anyway.
+  """
+  if not isinstance(val, str):
+    return _uri_ref(_rewrite_custom_ns_to_dcid(val))
+  ref = _cached_ref(val)
+  return dict(ref) if ref is not None else None
 
 
 def _parse_numeric(val):
@@ -110,31 +136,43 @@ def _prefix_dcid(key: str) -> str:
   return f"dcid:{key}"
 
 
-def _parse_props_json(props: str, entity: str, variable: str) -> dict:
-  """Parses a serialized observation properties JSON string into a dict."""
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def _decode_props(props: str) -> tuple[dict, str]:
+  """The cached part of `_parse_props_json`. Don't change the returned dict."""
+  parsed = json.loads(props)
+  if not isinstance(parsed, dict) or not parsed:
+    return {}, props
+  return parsed, json.dumps(parsed, sort_keys=True)
+
+
+def _parse_props_json(props: str, entity: str,
+                      variable: str) -> tuple[dict, str]:
+  """Parses an observation's properties JSON for its node and its @id.
+
+  Returns the properties, in their order in `props`, and their JSON with
+  sorted keys, so that the @id doesn't depend on the order the config declares
+  them in (or `props` itself if there are none).
+  """
   if not props:
-    return {}
+    return {}, props
   try:
-    parsed = json.loads(props)
-    return parsed if isinstance(parsed, dict) else {}
+    parsed, id_props = _decode_props(props)
   except json.JSONDecodeError as e:
     logging.warning(
         "Failed to decode properties JSON for observation %s/%s: %s", entity,
         variable, e)
-    return {}
+    return {}, props
+  return dict(parsed), id_props
 
 
 def _build_observation_node(row: tuple) -> dict:
   """Builds a single `dcid:StatVarObservation` JSON-LD node dict from a row."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-  props_dict = _parse_props_json(props, entity, variable)
-  # Sorted, so that the @id does not depend on the order the config declares
-  # the properties in. observationProperties keeps the declared order.
-  id_props = json.dumps(props_dict, sort_keys=True) if props_dict else props
+  props_dict, id_props = _parse_props_json(props, entity, variable)
   key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{id_props}"
   obs_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
 
-  var_obj = _uri_ref(_rewrite_custom_ns_to_dcid(variable))
+  var_obj = _ref(variable)
   if props_dict and var_obj:
     var_obj["dcid:observationProperties"] = [
         _prefix_dcid(k) for k in props_dict.keys()
@@ -147,26 +185,24 @@ def _build_observation_node(row: tuple) -> dict:
       "dcid:observationDate": _parse_numeric(date),
       "dcid:value": _parse_numeric(value),
   }
-  entity_ref = _uri_ref(_rewrite_custom_ns_to_dcid(entity))
+  entity_ref = _ref(entity)
   if entity_ref:
     obs_obj["dcid:observationAbout"] = entity_ref
   if provenance:
-    obs_obj["dcid:provenance"] = _uri_ref(
-        _rewrite_custom_ns_to_dcid(provenance))
+    obs_obj["dcid:provenance"] = _ref(provenance)
   if unit:
-    obs_obj["dcid:unit"] = _uri_ref(_rewrite_custom_ns_to_dcid(unit))
+    obs_obj["dcid:unit"] = _ref(unit)
   if scaling_factor:
     obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
   if mmethod:
-    obs_obj["dcid:measurementMethod"] = _uri_ref(
-        _rewrite_custom_ns_to_dcid(mmethod))
+    obs_obj["dcid:measurementMethod"] = _ref(mmethod)
   if period:
     obs_obj["dcid:observationPeriod"] = period
 
   for k, v in props_dict.items():
     prop_key = _prefix_dcid(k)
     if is_entity_reference(v):
-      obs_obj[prop_key] = _uri_ref(_rewrite_custom_ns_to_dcid(v))
+      obs_obj[prop_key] = _ref(v)
     else:
       obs_obj[prop_key] = _parse_numeric(v)
   return obs_obj

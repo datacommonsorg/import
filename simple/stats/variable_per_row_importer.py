@@ -233,10 +233,15 @@ class VariablePerRowImporter(Importer):
       df[constants.COLUMN_PROPERTIES] = static_json
       return df
 
-    serialized = [
-        _serialize_row_dimensions(row, static_props)
-        for row in df[custom_cols].to_dict(orient="records")
-    ]
+    # Rows repeat the same few dimension values (e.g. places), so each
+    # distinct combination is serialized once.
+    serialized_by_values: dict[tuple, str] = {}
+    serialized = []
+    for values in df[custom_cols].itertuples(index=False, name=None):
+      if values not in serialized_by_values:
+        serialized_by_values[values] = _serialize_row_dimensions(
+            dict(zip(custom_cols, values)), static_props)
+      serialized.append(serialized_by_values[values])
     df[constants.COLUMN_PROPERTIES] = serialized
     return df.drop(columns=custom_cols)
 
