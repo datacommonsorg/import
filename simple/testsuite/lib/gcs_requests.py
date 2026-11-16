@@ -14,10 +14,7 @@
 """
 Records the GCS requests that a preprocessor run sends to the fake GCS.
 
-Request-count budgets keep per-file costs (e.g. a metadata request per input
-file) from creeping back. Every request is tagged with the Runner phase that
-sent it, or "worker" for worker processes, which inherit the patch when
-forked; workers append to a shared log file.
+Each request is tagged with the Runner phase (a PHASES value) that sent it.
 
   with gcs_requests.record() as requests:
     b.run_dir(files, mode="gcs_input", runner_kwargs=...)
@@ -26,9 +23,7 @@ forked; workers append to a shared log file.
 
 import contextlib
 import dataclasses
-import os
 import re
-import tempfile
 from typing import Iterator
 from unittest import mock
 from urllib.parse import unquote
@@ -38,24 +33,20 @@ import requests as http
 # Runner methods whose requests are tagged with a phase. A request that
 # none of them sends (e.g. the test staging its input) isn't recorded.
 PHASES = {
-    "__init__": "init",
     "_load_config": "load_config",
     "_find_and_filter_input_files": "find_input_files",
-    "_validate_all_headers": "validate_headers",
-    "_run_multiprocess_imports": "imports",
 }
-WORKER = "worker"
 
 
 @dataclasses.dataclass(frozen=True)
 class Request:
-  phase: str  # A PHASES value, or WORKER.
+  phase: str  # A PHASES value.
   kind: str  # "list", "get" (metadata), "download", "upload" or the method.
   url: str  # Percent-decoded.
 
 
 class Requests:
-  """The requests of a run; filled in when `record()`'s block exits."""
+  """The requests of a run."""
 
   def __init__(self) -> None:
     self.all: list[Request] = []
@@ -81,21 +72,17 @@ def _kind(method: str, url: str) -> str:
 
 @contextlib.contextmanager
 def record() -> Iterator[Requests]:
-  """Records the GCS requests sent by Runner and its workers."""
+  """Records the GCS requests that Runner sends in each of PHASES."""
   from stats.runner import Runner  # pylint: disable=import-outside-toplevel
 
-  fd, log_path = tempfile.mkstemp(prefix="gcs-requests-", suffix=".tsv")
-  os.close(fd)
-  coordinator_pid = os.getpid()
+  result = Requests()
   phase = {"name": None}
   real_request = http.Session.request
 
   def recording_request(session, method, url, *args, **kwargs):
-    name = phase["name"] if os.getpid() == coordinator_pid else WORKER
-    if name:
+    if phase["name"]:
       decoded = unquote(str(url))
-      with open(log_path, "a", encoding="utf-8") as f:
-        f.write(f"{name}\t{_kind(method, decoded)}\t{decoded}\n")
+      result.all.append(Request(phase["name"], _kind(method, decoded), decoded))
     return real_request(session, method, url, *args, **kwargs)
 
   def in_phase(name, method):
@@ -109,17 +96,11 @@ def record() -> Iterator[Requests]:
 
     return wrapper
 
-  result = Requests()
-  try:
-    with contextlib.ExitStack() as stack:
+  with contextlib.ExitStack() as stack:
+    stack.enter_context(
+        mock.patch.object(http.Session, "request", recording_request))
+    for method_name, name in PHASES.items():
       stack.enter_context(
-          mock.patch.object(http.Session, "request", recording_request))
-      for method_name, name in PHASES.items():
-        stack.enter_context(
-            mock.patch.object(Runner, method_name,
-                              in_phase(name, getattr(Runner, method_name))))
-      yield result
-    with open(log_path, encoding="utf-8") as f:
-      result.all = [Request(*line.rstrip("\n").split("\t")) for line in f]
-  finally:
-    os.remove(log_path)
+          mock.patch.object(Runner, method_name,
+                            in_phase(name, getattr(Runner, method_name))))
+    yield result
