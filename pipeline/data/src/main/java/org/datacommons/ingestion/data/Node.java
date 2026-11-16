@@ -32,7 +32,7 @@ public class Node implements Serializable {
     this.value = builder.value;
     this.bytes = builder.bytes != null ? builder.bytes.toByteArray() : null;
     this.name = builder.name;
-    this.types = new ArrayList<>(builder.types);
+    this.types = builder.types != null ? new ArrayList<>(builder.types) : new ArrayList<>();
   }
 
   public static Builder builder() {

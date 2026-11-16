@@ -5,9 +5,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
-import java.util.ArrayList;
+import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
@@ -688,7 +687,7 @@ public class GraphReaderTest {
   }
 
   @Test
-  public void testGraphToNodesAndEdges() {
+  public void testGraphToNodesAndEdges_success() {
     Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
     String geoJson =
         "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],      "
@@ -745,43 +744,52 @@ public class GraphReaderTest {
                 PropertyValues.newBuilder().build())
             .build();
 
-    List<KV<Node, List<Edge>>> actual =
-        GraphReader.graphToNodesAndEdges(graph, "dc/base/Test", mockMcfNodesWithoutTypeCounter);
+    Comparator<KV<Node, List<Edge>>> kvComparator =
+        Comparator.comparing(kv -> kv.getKey().getSubjectId());
+    Comparator<Edge> edgeComparator =
+        Comparator.comparing(Edge::getSubjectId)
+            .thenComparing(Edge::getPredicate)
+            .thenComparing(Edge::getObjectId);
+
+    ImmutableList<KV<Node, List<Edge>>> actual =
+        ImmutableList.sortedCopyOf(
+            kvComparator,
+            GraphReader.graphToNodesAndEdges(
+                graph, "dc/base/Test", mockMcfNodesWithoutTypeCounter));
 
     Node expectedDcid0 =
         Node.builder()
             .subjectId("dcid0")
             .value("dcid0")
             .name("Node Zero")
-            .types(List.of("Class"))
+            .types(ImmutableList.of("Class"))
             .build();
-    List<Edge> expectedDcid0Edges =
-        new ArrayList<>(
-            Arrays.asList(
-                Edge.builder()
-                    .subjectId("dcid0")
-                    .predicate("name")
-                    .objectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
-                    .provenance("dc/base/Test")
-                    .build(),
-                Edge.builder()
-                    .subjectId("dcid0")
-                    .predicate("typeOf")
-                    .objectId("Class")
-                    .provenance("dc/base/Test")
-                    .build(),
-                Edge.builder()
-                    .subjectId("dcid0")
-                    .predicate("geoJsonCoordinates")
-                    .objectId("{   \"type\": \"Pol:EvbccRWWGibzhA4ntdF1bboIUsn4ThUiAZe3TV4hmB8=")
-                    .provenance("dc/base/Test")
-                    .build()));
+    ImmutableList<Edge> expectedDcid0Edges =
+        ImmutableList.of(
+            Edge.builder()
+                .subjectId("dcid0")
+                .predicate("name")
+                .objectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
+                .provenance("dc/base/Test")
+                .build(),
+            Edge.builder()
+                .subjectId("dcid0")
+                .predicate("typeOf")
+                .objectId("Class")
+                .provenance("dc/base/Test")
+                .build(),
+            Edge.builder()
+                .subjectId("dcid0")
+                .predicate("geoJsonCoordinates")
+                .objectId("{   \"type\": \"Pol:EvbccRWWGibzhA4ntdF1bboIUsn4ThUiAZe3TV4hmB8=")
+                .provenance("dc/base/Test")
+                .build());
     Node expectedDcid2 =
         Node.builder()
             .subjectId("dcid2")
             .value("dcid2")
             .name("dcid2")
-            .types(List.of("Thing"))
+            .types(ImmutableList.of("Thing"))
             .build();
     Node expectedNameLeaf =
         Node.builder()
@@ -794,38 +802,30 @@ public class GraphReaderTest {
             .bytes(ByteArray.copyFrom(PipelineUtils.compressString(geoJson)))
             .build();
 
-    List<KV<Node, List<Edge>>> expected =
-        Arrays.asList(
-            KV.of(expectedDcid0, expectedDcid0Edges),
-            KV.of(expectedDcid2, Collections.emptyList()),
-            KV.of(expectedNameLeaf, Collections.emptyList()),
-            KV.of(expectedGeoLeaf, Collections.emptyList()));
+    ImmutableList<KV<Node, List<Edge>>> expected =
+        ImmutableList.sortedCopyOf(
+            kvComparator,
+            ImmutableList.of(
+                KV.of(expectedDcid0, expectedDcid0Edges),
+                KV.of(expectedDcid2, ImmutableList.of()),
+                KV.of(expectedNameLeaf, ImmutableList.of()),
+                KV.of(expectedGeoLeaf, ImmutableList.of())));
 
-    Comparator<KV<Node, List<Edge>>> kvComparator =
-        Comparator.comparing(kv -> kv.getKey().getSubjectId());
-    Comparator<Edge> edgeComparator =
-        Comparator.comparing(Edge::getSubjectId)
-            .thenComparing(Edge::getPredicate)
-            .thenComparing(Edge::getObjectId);
-
-    actual.sort(kvComparator);
-    expected.sort(kvComparator);
-
-    assertEquals(expected.size(), actual.size());
+    assertEquals(actual.size(), expected.size());
     for (int i = 0; i < expected.size(); i++) {
-      assertEquals(expected.get(i).getKey(), actual.get(i).getKey());
-      List<Edge> expEdges = new ArrayList<>(expected.get(i).getValue());
-      List<Edge> actEdges = new ArrayList<>(actual.get(i).getValue());
-      expEdges.sort(edgeComparator);
-      actEdges.sort(edgeComparator);
-      assertEquals(expEdges, actEdges);
+      assertEquals(actual.get(i).getKey(), expected.get(i).getKey());
+      ImmutableList<Edge> actEdges =
+          ImmutableList.sortedCopyOf(edgeComparator, actual.get(i).getValue());
+      ImmutableList<Edge> expEdges =
+          ImmutableList.sortedCopyOf(edgeComparator, expected.get(i).getValue());
+      assertEquals(actEdges, expEdges);
     }
 
     Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(1)).inc();
   }
 
   @Test
-  public void testGraphToNodesAndEdgesPCollectionAndMutations() {
+  public void testGraphToNodesAndEdgesPCollectionAndMutations_success() {
     McfGraph graph =
         McfGraph.newBuilder()
             .setType(McfType.INSTANCE_MCF)
@@ -874,7 +874,7 @@ public class GraphReaderTest {
             .subjectId("dcid0")
             .value("dcid0")
             .name("Node Zero")
-            .types(List.of("Class"))
+            .types(ImmutableList.of("Class"))
             .build();
     Node expectedLeafNode =
         Node.builder()
