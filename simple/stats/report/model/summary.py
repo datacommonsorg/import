@@ -28,6 +28,7 @@ The report has three levels:
 """
 
 from enum import Enum
+from typing import Self
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -74,7 +75,7 @@ class DateRange(BaseModel):
   min: str = Field(description="Earliest observation date")
   max: str = Field(description="Latest observation date")
 
-  def widen(self, other: "DateRange") -> "DateRange":
+  def widen(self, other: Self) -> Self:
     """Returns the smallest range that covers both this range and `other`."""
     return DateRange(min=min(self.min, other.min), max=max(self.max, other.max))
 

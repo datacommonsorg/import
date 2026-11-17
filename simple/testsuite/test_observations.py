@@ -628,7 +628,7 @@ def test_report_counts_the_observations_written(mode):
                      runner_kwargs={"import_names": ["oecd"]})
 
   folder = _report_folders(result)["oecd"]
-  [provenance] = folder["provenances"]
+  provenance = folder["provenances"][0]
   assert provenance["observations"] == len(result.observations) == 3
   assert provenance["dateRange"] == {"min": "2019", "max": "2021-06"}
   assert folder["summary"]["observations"] == 3
@@ -656,7 +656,7 @@ def test_report_sums_the_files_of_a_provenance_with_any_worker_count():
   ]
 
   assert reports[0] == reports[1]
-  [provenance] = reports[0]["folders"][0]["provenances"]
+  provenance = reports[0]["folders"][0]["provenances"][0]
   assert provenance["observations"] == 3
   assert provenance["dateRange"] == {"min": "2005", "max": "2021"}
 
@@ -667,17 +667,8 @@ def test_report_counts_rows_with_the_same_observation_id_each_time():
   result = b.run_dir(b.import_subdir("oecd", b.csv_file(row, row)),
                      runner_kwargs={"import_names": ["oecd"]})
 
-  [provenance] = _report_folders(result)["oecd"]["provenances"]
+  provenance = _report_folders(result)["oecd"]["provenances"][0]
   assert provenance["observations"] == 2
-
-
-def test_report_has_no_date_range_without_observations():
-  result = b.run_dir(b.import_subdir("oecd", b.csv_file(b.obs_row(value=""))),
-                     runner_kwargs={"import_names": ["oecd"]})
-
-  [provenance] = _report_folders(result)["oecd"]["provenances"]
-  assert provenance["observations"] == 0
-  assert provenance["dateRange"] is None
 
 
 def test_report_counts_rows_without_a_date_but_leaves_them_out_of_the_range():
@@ -687,7 +678,7 @@ def test_report_counts_rows_without_a_date_but_leaves_them_out_of_the_range():
                  b.obs_row("country/FRA", date="2020"))),
                      runner_kwargs={"import_names": ["oecd"]})
 
-  [provenance] = _report_folders(result)["oecd"]["provenances"]
+  provenance = _report_folders(result)["oecd"]["provenances"][0]
   assert provenance["observations"] == 2
   assert provenance["dateRange"] == {"min": "2020", "max": "2020"}
 

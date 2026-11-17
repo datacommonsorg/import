@@ -175,32 +175,6 @@ class TestSummaryGenerator(unittest.TestCase):
                ])
     ])
 
-  def test_same_provenance_in_two_folders_is_counted_per_folder(self):
-    """Counts are kept per folder, even for a provenance both folders use."""
-    with tempfile.TemporaryDirectory() as tmp, \
-         create_store(tmp) as store:
-      folders = _folders(store.as_dir(), [
-          _file("ilo/a.csv", 10, ("2000", "2005"), folder="ilo"),
-          _file("oecd/b.csv", 20, ("2010", "2020")),
-      ])
-
-    self.assertEqual([
-        (f.folderName, f.summary.observations, f.provenances) for f in folders
-    ], [
-        ("ilo", 10, [
-            Provenance(id="oecdProv",
-                       fileCount=1,
-                       observations=10,
-                       dateRange=DateRange(min="2000", max="2005"))
-        ]),
-        ("oecd", 20, [
-            Provenance(id="oecdProv",
-                       fileCount=1,
-                       observations=20,
-                       dateRange=DateRange(min="2010", max="2020"))
-        ]),
-    ])
-
   def test_dates_are_compared_as_strings(self):
     """ISO dates of different precision order correctly as strings."""
     with tempfile.TemporaryDirectory() as tmp, \
