@@ -44,6 +44,14 @@ _REMOVED_ENTRY_KEYS = {
     "idColumn": "Map a 'dcid:dcid' column in 'columnMappings' instead.",
 }
 
+# Our wording, in JSON terms, for pydantic messages in Python terms or naming
+# our classes, by error type.
+_PYDANTIC_MESSAGE_OVERRIDES = {
+    "model_type": "Input should be a JSON object",
+    "dict_type": "Input should be a JSON object",
+    "list_type": "Input should be a JSON array",
+}
+
 
 class _ConfigModel(BaseModel):
   """A config.json object.
@@ -68,17 +76,13 @@ class InputFileConfig(_ConfigModel):
   ignore_columns: list[str] = []
   observation_properties: dict[str, str | int | float] = {}
 
-  @model_validator(mode="before")
-  @classmethod
-  def _check_entry(cls, data: Any) -> Any:
-    if not isinstance(data, dict):
-      raise ValueError("Invalid entry in 'inputFiles': must be a"
-                       f" JSON object. Got: {data}")
-    if not data.get("pattern"):
-      raise ValueError("Invalid entry in 'inputFiles': must specify"
-                       f" a 'pattern'. Got: {data}")
-    _reject_removed_keys(data)
-    return data
+  @model_validator(mode="after")
+  def _check_pattern_is_set(self) -> "InputFileConfig":
+    if not self.pattern:
+      got = self.model_dump(mode="json", by_alias=True, exclude_unset=True)
+      raise ValueError("Invalid entry in 'inputFiles': must specify a"
+                       f" 'pattern'. Got: {got}")
+    return self
 
   @field_validator("pattern")
   @classmethod
@@ -88,27 +92,15 @@ class InputFileConfig(_ConfigModel):
 
   @field_validator("import_type", mode="before")
   @classmethod
-  def _check_import_type(cls, value: Any) -> Any:
-    if not value:
+  def _default_empty_import_type(cls, value: Any) -> Any:
+    """An `importType` of "" or null means the default."""
+    if value is None or value == "":
       return ImportType.OBSERVATIONS
-    if value not in {t.value for t in ImportType}:
-      raise ValueError(f"Unsupported import type: {value}")
     return value
 
 
 # The entry of a file that no `inputFiles` entry matches: every field defaults.
 _NO_ENTRY = InputFileConfig.model_construct()
-
-
-def _reject_removed_keys(entry: dict) -> None:
-  """Raises ValueError, with how to migrate, if `entry` has a removed key."""
-  removed = sorted(key for key in entry if key in _REMOVED_ENTRY_KEYS)
-  if not removed:
-    return
-  # Each hint once, in key order: both reference keys share one.
-  hints = dict.fromkeys(_REMOVED_ENTRY_KEYS[key] for key in removed)
-  raise ValueError("Removed key(s) in 'inputFiles' entry for"
-                   f" '{entry['pattern']}': {removed}. " + " ".join(hints))
 
 
 class ImportConfig(_ConfigModel):
@@ -118,16 +110,11 @@ class ImportConfig(_ConfigModel):
 
   @model_validator(mode="before")
   @classmethod
-  def _check_top_level(cls, data: Any) -> Any:
-    if not isinstance(data, dict):
-      raise ValueError(
-          f"config.json must be a JSON object. Got: {type(data).__name__}")
-    input_files = data.get("inputFiles", [])
-    if not isinstance(input_files, list):
-      raise ValueError(
-          "'inputFiles' must be a list of objects, each with a "
-          f"'pattern' and a 'provenance'. Got: {type(input_files).__name__}")
-    return _drop_include_input_subdirs(data)
+  def _drop_include_input_subdirs(cls, data: Any) -> Any:
+    """Drops the deprecated `includeInputSubdirs`, if set."""
+    if not isinstance(data, dict) or _INCLUDE_INPUT_SUBDIRS_FIELD not in data:
+      return data
+    return {k: v for k, v in data.items() if k != _INCLUDE_INPUT_SUBDIRS_FIELD}
 
   @model_validator(mode="after")
   def _check_unique_patterns(self) -> "ImportConfig":
@@ -138,13 +125,6 @@ class ImportConfig(_ConfigModel):
           f"Duplicate pattern(s) in 'inputFiles': {duplicates}. Each"
           " pattern can only have one entry.")
     return self
-
-
-def _drop_include_input_subdirs(data: dict) -> dict:
-  """Returns `data` without the deprecated `includeInputSubdirs`, if set."""
-  if _INCLUDE_INPUT_SUBDIRS_FIELD not in data:
-    return data
-  return {k: v for k, v in data.items() if k != _INCLUDE_INPUT_SUBDIRS_FIELD}
 
 
 def _warn_if_include_input_subdirs(data: Any, path: str) -> None:
@@ -175,54 +155,81 @@ def parse_config(data: Any, path: str = "config.json") -> ImportConfig:
 def _render_errors(error: ValidationError, data: Any) -> str:
   """Renders a ValidationError as one message, one line per problem.
 
-  Unknown keys are grouped per object, as "Unknown key(s) in ...", with the
-  allowed keys. Errors raised by our validators keep their own message.
+  Unknown and removed keys are grouped per object, first. Errors raised by our
+  validators keep their own message; pydantic's are prefixed with where they
+  are.
   """
   unknown_keys: dict[tuple, list[str]] = collections.defaultdict(list)
+  removed_keys: dict[tuple, list[str]] = collections.defaultdict(list)
   lines = []
   for e in error.errors(include_url=False):
     loc = e["loc"]
     if e["type"] == "extra_forbidden":
-      unknown_keys[loc[:-1]].append(str(loc[-1]))
+      parent, key = loc[:-1], str(loc[-1])
+      # Removed keys are entry keys: at the top level, a key is just unknown.
+      if parent and key in _REMOVED_ENTRY_KEYS:
+        removed_keys[parent].append(key)
+      else:
+        unknown_keys[parent].append(key)
     elif e["type"] == "value_error" and "error" in (e.get("ctx") or {}):
       lines.append(str(e["ctx"]["error"]))
     else:
-      lines.append(f"Invalid {_describe_location(loc, data)}: {e['msg']}")
-  unknown_key_lines = []
+      message = _PYDANTIC_MESSAGE_OVERRIDES.get(e["type"], e["msg"])
+      # A file that isn't an object: Runner may prefix the file's own path.
+      where = _describe(loc, data) if loc else "top-level value"
+      lines.append(f"Invalid {where}: {message}")
   # Top-level keys first, then each inputFiles entry in order.
-  for parent, keys in sorted(unknown_keys.items(), key=lambda kv: kv[0]):
-    model = InputFileConfig if parent else ImportConfig
-    allowed = sorted(f.alias or name for name, f in model.model_fields.items())
-    unknown_key_lines.append(
-        f"Unknown key(s) in {_describe_object(parent, data)}:"
-        f" {sorted(keys)}. Allowed keys are: {allowed}")
-  lines = unknown_key_lines + lines
+  key_lines = []
+  for parent, keys in sorted(unknown_keys.items()):
+    key_lines.append(_unknown_keys_line(parent, keys, data))
+  for parent, keys in sorted(removed_keys.items()):
+    key_lines.append(_removed_keys_line(parent, keys, data))
+  lines = key_lines + lines
   if len(lines) == 1:
     return lines[0]
   return (f"Found {len(lines)} problems in config.json:\n" +
           "\n".join(f"- {line}" for line in lines))
 
 
-def _describe_object(loc: tuple, data: Any) -> str:
-  """Names the object at `loc`: config.json or an `inputFiles` entry.
-
-  Errors inside an entry only occur once `_check_entry` accepted it, so the
-  entry is an object with a pattern.
-  """
-  if len(loc) >= 2 and loc[0] == "inputFiles":
-    entry = data["inputFiles"][loc[1]]
-    return f"'inputFiles' entry for '{entry['pattern']}'"
-  return "config.json"
+def _unknown_keys_line(parent: tuple, keys: list[str], data: Any) -> str:
+  model = InputFileConfig if parent else ImportConfig
+  allowed = sorted(f.alias or name for name, f in model.model_fields.items())
+  return (f"Unknown key(s) in {_describe(parent, data)}: {sorted(keys)}."
+          f" Allowed keys are: {allowed}")
 
 
-def _describe_location(loc: tuple, data: Any) -> str:
+def _removed_keys_line(parent: tuple, keys: list[str], data: Any) -> str:
+  # Each hint once, in key order: both reference keys share one.
+  hints = dict.fromkeys(_REMOVED_ENTRY_KEYS[key] for key in sorted(keys))
+  return (f"Removed key(s) in {_describe(parent, data)}: {sorted(keys)}. " +
+          " ".join(hints))
+
+
+def _describe(loc: tuple, data: Any) -> str:
   """Names the value at `loc`, e.g. 'ignoreColumns' in an inputFiles entry.
 
-  Only fields of an `inputFiles` entry get pydantic's own errors: every other
-  problem is raised by our validators, with its own message.
+  `inputFiles` is the only top-level field, so a longer `loc` is inside an
+  entry.
   """
+  if not loc:
+    return "config.json"
+  if len(loc) == 1:
+    return f"'{loc[0]}' in config.json"
+  # loc[0] is the key as written: "input_files" is also accepted.
+  entry = _describe_entry(data[loc[0]], loc[1])
+  if len(loc) == 2:
+    return entry
   field = ".".join(str(part) for part in loc[2:])
-  return f"'{field}' in {_describe_object(loc[:2], data)}"
+  return f"'{field}' in {entry}"
+
+
+def _describe_entry(input_files: list, index: int) -> str:
+  """Names an `inputFiles` entry by its pattern, else by its index."""
+  entry = input_files[index]
+  pattern = entry.get("pattern") if isinstance(entry, dict) else None
+  if isinstance(pattern, str) and pattern:
+    return f"'inputFiles' entry for '{pattern}'"
+  return f"'inputFiles' entry at index {index}"
 
 
 class Config:

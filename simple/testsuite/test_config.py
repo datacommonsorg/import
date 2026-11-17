@@ -323,6 +323,9 @@ def test_global_nodes_go_to_the_alphabetically_first_import_folder():
 
 # Handshake error types of a run that fails on its config.json.
 _INVALID = ("INVALID_CONFIGURATION",)
+_BAD_IMPORT_TYPE = (
+    "Invalid 'importType' in 'inputFiles' entry for 'case*.csv':"
+    " Input should be 'observations' or 'entities'")
 
 INVALID_CONFIGS = [
     Case(
@@ -333,13 +336,13 @@ INVALID_CONFIGS = [
             }
         }},
         expect=b.Fails(
-            "ValueError", "'inputFiles' must be a list of objects, each with a"
-            " 'pattern' and a 'provenance'. Got: dict", _INVALID)),
+            "ValueError", "Invalid 'inputFiles' in config.json: Input should"
+            " be a JSON array", _INVALID)),
     Case("inputFiles entry that is not an object",
          given={"inputFiles": ["case*.csv"]},
          expect=b.Fails(
-             "ValueError", "Invalid entry in 'inputFiles': must be a JSON"
-             " object. Got: case*.csv", _INVALID)),
+             "ValueError", "Invalid 'inputFiles' entry at index 0: Input"
+             " should be a JSON object", _INVALID)),
     Case("inputFiles entry without a pattern",
          given={"inputFiles": [{
              "provenance": f"dcid:{b.PROVENANCE}"
@@ -347,6 +350,16 @@ INVALID_CONFIGS = [
          expect=b.Fails(
              "ValueError", "Invalid entry in 'inputFiles': must specify"
              " a 'pattern'.", _INVALID)),
+    Case("inputFiles entry whose pattern is not a string",
+         given={
+             "inputFiles": [{
+                 "pattern": 1,
+                 "provenance": f"dcid:{b.PROVENANCE}"
+             }]
+         },
+         expect=b.Fails(
+             "ValueError", "Invalid 'pattern' in 'inputFiles' entry at index"
+             " 0: Input should be a valid string", _INVALID)),
     Case("unknown top-level key",
          given={
              **b.obs_config(b.OBS_MAPPINGS),
@@ -423,14 +436,27 @@ INVALID_CONFIGS = [
              " ['columnsToResolve', 'referenceColumns']. Write each"
              " reference as a cell value with a 'dcid:' prefix instead, e.g."
              " 'dcid:country/USA'.", _INVALID)),
+    Case("invalid entry under the snake_case 'input_files' key",
+         given={
+             "input_files":
+                 b.obs_config(b.OBS_MAPPINGS, ignoreColumns="notes")
+                 ["inputFiles"]
+         },
+         expect=b.Fails(
+             "ValueError", "Invalid 'ignoreColumns' in 'inputFiles' entry for"
+             " 'case*.csv': Input should be a JSON array", _INVALID)),
     Case("unsupported importType",
          given=b.obs_config(b.OBS_MAPPINGS, importType="Observations"),
-         expect=b.Fails("ValueError", "Unsupported import type: Observations",
-                        _INVALID)),
+         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
     Case("events importType is not supported",
          given=b.obs_config(b.OBS_MAPPINGS, importType="events"),
-         expect=b.Fails("ValueError", "Unsupported import type: events",
-                        _INVALID)),
+         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
+    Case("non-string importType",
+         given=b.obs_config(b.OBS_MAPPINGS, importType=["observations"]),
+         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
+    Case("empty list importType",
+         given=b.obs_config(b.OBS_MAPPINGS, importType=[]),
+         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
     Case("double wildcard in filename pattern",
          given=b.obs_config(b.OBS_MAPPINGS, pattern="**.csv"),
          expect=b.Fails(
@@ -441,12 +467,12 @@ INVALID_CONFIGS = [
          given=b.obs_config(b.OBS_MAPPINGS, ignoreColumns="notes"),
          expect=b.Fails(
              "ValueError", "Invalid 'ignoreColumns' in 'inputFiles' entry for"
-             " 'case*.csv': Input should be a valid list", _INVALID)),
+             " 'case*.csv': Input should be a JSON array", _INVALID)),
     Case("columnMappings that is not an object",
          given=b.obs_config(list(b.OBS_MAPPINGS)),
          expect=b.Fails(
              "ValueError", "Invalid 'columnMappings' in 'inputFiles' entry for"
-             " 'case*.csv': Input should be a valid dictionary", _INVALID)),
+             " 'case*.csv': Input should be a JSON object", _INVALID)),
     Case("duplicate pattern",
          given={
              "inputFiles": [
@@ -506,21 +532,25 @@ def test_column_both_mapped_and_ignored_fails(given, expect):
 
 
 def test_every_config_problem_is_reported_at_once():
-  """Unknown keys are grouped per object, then every other problem follows."""
+  """Unknown, then removed, keys are grouped per object, then every other
+  problem follows."""
   config = b.obs_config(b.OBS_MAPPINGS,
                         ignoreColumns="notes",
+                        idColumn="entity",
                         otherFileKey=True,
                         unknownFileKey=True)
   result = b.run_csv(_USA, {**config, "unknownTopLevelKey": True})
   b.assert_fails(
-      result, "ValueError", "Found 3 problems in config.json:\n"
+      result, "ValueError", "Found 4 problems in config.json:\n"
       "- Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys"
       " are: [", _INVALID)
   for problem in [
       "\n- Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
       " ['otherFileKey', 'unknownFileKey']. Allowed keys are: [",
+      "\n- Removed key(s) in 'inputFiles' entry for 'case*.csv':"
+      " ['idColumn']. Map a 'dcid:dcid' column in 'columnMappings' instead.",
       "\n- Invalid 'ignoreColumns' in 'inputFiles' entry for 'case*.csv':"
-      " Input should be a valid list",
+      " Input should be a JSON array",
   ]:
     assert problem in result.error["message"]
 
@@ -537,16 +567,15 @@ INVALID_CONFIG_FILES = [
          expect=b.Fails("JSONDecodeError",
                         "Expecting property name enclosed in double quotes",
                         _INVALID)),
-    Case(
-        "subdirectory config that is not a JSON object",
-        given={
-            **b.import_subdir("oecd", _USA),
-            "ilo/config.json": "[]",
-        },
-        expect=b.Fails(
-            "ValueError",
-            "<input>/ilo/config.json: config.json must be a JSON object. Got: list",
-            _INVALID)),
+    Case("subdirectory config that is not a JSON object",
+         given={
+             **b.import_subdir("oecd", _USA),
+             "ilo/config.json": "[]",
+         },
+         expect=b.Fails(
+             "ValueError",
+             "<input>/ilo/config.json: Invalid top-level value: Input should be"
+             " a JSON object", _INVALID)),
 ]
 
 
