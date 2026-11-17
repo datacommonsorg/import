@@ -13,6 +13,7 @@
 # limitations under the License.
 """Worker processes: pool sizing and what they write to GCS."""
 
+import logging
 import os
 import shutil
 
@@ -174,17 +175,64 @@ def test_import_workers_create_one_gcs_client_each(tmp_path, monkeypatch):
   assert worker_clients == ["client"]
 
 
-def test_a_local_run_writes_only_the_shards_and_the_ingestion_report(
-    tmp_path, monkeypatch):
+# An import whose config.json fails validation.
+_BAD_CONFIG_IMPORT = {
+    **b.import_subdir("demo"), "demo/config.json": '{"unknownKey": 1}'
+}
+
+
+def _run_locally(tmp_path, monkeypatch, files: dict[str, str]) -> None:
+  """Runs the import "demo" of `files` from and to local dirs, outside the
+  ingestion workflow."""
   monkeypatch.delenv("WORKFLOW_EXECUTION_ID", raising=False)
-  for path, text in b.import_subdir("demo").items():
+  for path, text in files.items():
     (tmp_path / "input" / path).parent.mkdir(parents=True, exist_ok=True)
     (tmp_path / "input" / path).write_text(text)
-
   runner.Runner(input_dir_path=str(tmp_path / "input"),
                 output_dir_path=str(tmp_path / "output"),
                 import_names=["demo"],
                 max_workers=1).run()
 
+
+def _errors(caplog) -> list[str]:
+  return [r.getMessage() for r in caplog.records if r.levelname == "ERROR"]
+
+
+def test_a_local_run_writes_only_the_shards_and_the_ingestion_report(
+    tmp_path, monkeypatch):
+  _run_locally(tmp_path, monkeypatch, b.import_subdir("demo"))
+
   outputs = sorted(os.listdir(tmp_path / "output"))
   assert outputs == ["jsonld", "preprocessor_reports"]
+
+
+def test_progress_counts_each_imported_file(tmp_path, monkeypatch, caplog):
+  with caplog.at_level(logging.INFO):
+    _run_locally(tmp_path, monkeypatch, b.import_subdir("demo"))
+
+  progress = [m for m in caplog.messages if "Imported file" in m]
+  assert progress == [
+      "[1/2] Imported file: provenance.mcf", "[2/2] Imported file: case.csv"
+  ]
+
+
+def test_a_failed_local_run_does_not_claim_a_handshake(tmp_path, monkeypatch,
+                                                       caplog):
+  with pytest.raises(ValueError, match="unknownKey"):
+    _run_locally(tmp_path, monkeypatch, _BAD_CONFIG_IMPORT)
+
+  assert "Preprocessor execution failed!" in _errors(caplog)
+  assert not [m for m in _errors(caplog) if "handshake" in m]
+
+
+def test_a_failed_workflow_run_logs_its_handshake_path(caplog):
+  result = b.run_dir(_BAD_CONFIG_IMPORT,
+                     runner_kwargs={"import_names": ["demo"]})
+
+  assert result.output["handshake"]["status"] == "FAILURE"
+  [message] = [m for m in _errors(caplog) if "handshake" in m]
+  assert message.startswith("Preprocessor execution failed! Diagnostic error"
+                            " details were written to the GCS handshake path:"
+                            " gs://")
+  assert message.endswith(
+      f"/datacommons/ingestion_records/{runlib.WORKFLOW_ID}.json")
