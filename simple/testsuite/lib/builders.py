@@ -397,6 +397,8 @@ class Result:
   output: dict  # Canonical output of the run (see canonical.py).
   added: list[dict]  # Records not produced by the shared inputs alone.
   removed: list[dict]  # Shared-input records this run no longer produces.
+  # Names at the top of the output dir, sorted (run_dir only).
+  output_entries: list[str] = dataclasses.field(default_factory=list)
 
   @property
   def error(self) -> dict | None:
@@ -501,13 +503,15 @@ def run_dir(files: dict[str, str],
             config: dict | None = None,
             *,
             mode: str = runlib.DEFAULT_MODE,
-            runner_kwargs: dict | None = None) -> Result:
+            runner_kwargs: dict | None = None,
+            workflow: bool = True) -> Result:
   """
   Runs the preprocessor without shared files.
 
   With config, files and config are the import IMPORT, which is run. Without,
   files is the raw input dir, e.g. several import subdirectories, and
-  runner_kwargs={"import_names": ...} names the imports to run.
+  runner_kwargs={"import_names": ...} names the imports to run. Without
+  workflow, it runs outside an ingestion workflow (see run_preprocessor).
   """
   import_name = None
   if config is not None:
@@ -515,16 +519,18 @@ def run_dir(files: dict[str, str],
     runner_kwargs = {**(runner_kwargs or {}), "import_names": [IMPORT]}
   input_dir = runlib.write_input_dir(files, config, import_name)
   try:
-    output = runlib.run_preprocessor(input_dir,
-                                     mode,
-                                     runner_kwargs=runner_kwargs).output
+    run = runlib.run_preprocessor(input_dir,
+                                  mode,
+                                  runner_kwargs=runner_kwargs,
+                                  workflow=workflow)
   finally:
     shutil.rmtree(input_dir, ignore_errors=True)
-  if output["error"]:
-    return Result(output=output, added=[], removed=[])
+  output = run.output
+  added = [] if output["error"] else _records(_record_counts(output))
   return Result(output=output,
-                added=_records(_record_counts(output)),
-                removed=[])
+                added=added,
+                removed=[],
+                output_entries=run.output_entries)
 
 
 def run_mcf(*blocks: str, mode: str = runlib.DEFAULT_MODE) -> Result:

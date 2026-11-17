@@ -37,6 +37,7 @@ filesystem edge cases or a validator's rules.
 | `test_provenance.py` | Provenances and sources: registered nodes, provenance URL on the provenance node, validation |
 | `test_config.py` | config.json: which files are imported, top-level flags, invalid configs |
 | `test_gcs_requests.py` | GCS request budgets of a run with its input on GCS (`lib/gcs_requests.py`) |
+| `test_run_outputs.py` | What a run writes besides records: its output dirs, and whether its failure log claims a handshake (in or outside an ingestion workflow) |
 
 For a refactor or performance PR, `test_e2e.py` passing with every
 `expected.json` unchanged means the output did not change.
