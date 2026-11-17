@@ -14,7 +14,8 @@
 """
 Shard discovery and byte-level inventory of one preprocessor output.
 
-An output directory holds `process/` and `jsonld/<run dir>/<folder>/*.jsonld`.
+An output directory holds `preprocessor_reports/` and
+`jsonld/<run dir>/<folder>/*.jsonld`.
 Observation shard names are deterministic and are matched by name. Node shard
 names end in a random uid, so node shards are matched by content within their
 folder.
