@@ -2,6 +2,8 @@ import os
 import tempfile
 import unittest
 
+import pytest
+from testsuite.lib import fake_gcs
 from util.filesystem import create_store
 
 
@@ -101,3 +103,69 @@ class TestFilesystem(unittest.TestCase):
           file.full_path() for file in dir.all_files()
       ]
       self.assertListEqual(all_file_paths_excluding_subdirs, ["mem://bar.txt"])
+
+
+# --- Listing dirs on GCS ------------------------------------------------------
+#
+# On GCS a "directory" is only a name prefix. Tools that write GCS trees add
+# directory marker objects ("d1/") for some directories or for none, so this
+# tree has both: d1 has a marker, d1/d2 doesn't, and "empty" is only a marker.
+# On disk, a marker is a directory.
+
+_TREE = {
+    "a.csv": "1",
+    "d1/": "",
+    "d1/b.csv": "22",
+    "d1/d2/c.csv": "333",
+    "empty/": "",
+}
+
+
+@pytest.fixture(name="input_dir", params=["disk", "gcs"])
+def fixture_input_dir(request, tmp_path) -> str:
+  """`_TREE` written on local disk or on fake GCS; returns its root."""
+  if request.param == "disk":
+    for name, content in _TREE.items():
+      path = tmp_path / name
+      if name.endswith("/"):
+        path.mkdir(parents=True, exist_ok=True)
+      else:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+    return str(tmp_path)
+  root = f"{fake_gcs.new_prefix()}/input"
+  for name, content in _TREE.items():
+    fake_gcs.write_blob(f"{root}/{name}", content)
+  return root
+
+
+def _list(root: str, subdir: str, include_subdirs: bool) -> dict[str, str]:
+  """The files `all_files` finds under `subdir`, as {path: content}."""
+  with create_store(root, mark_gcs_dirs=False) as store:
+    directory = store.as_dir().open_dir(subdir, create=False)
+    return {f.path: f.read() for f in directory.all_files(include_subdirs)}
+
+
+@pytest.mark.parametrize("subdir, include_subdirs, expected", [
+    ("", True, ["a.csv", "d1/b.csv", "d1/d2/c.csv"]),
+    ("", False, ["a.csv"]),
+    ("d1", True, ["d1/b.csv", "d1/d2/c.csv"]),
+    ("d1", False, ["d1/b.csv"]),
+    ("d1/d2", True, ["d1/d2/c.csv"]),
+    ("empty", True, []),
+    ("missing", True, []),
+])
+def test_all_files_lists_files_but_not_directory_markers(
+    input_dir, subdir, include_subdirs, expected, caplog):
+  # Reading each file checks that it is the listed object.
+  assert _list(input_dir, subdir, include_subdirs) == {
+      path: _TREE[path] for path in expected
+  }
+  assert not caplog.records  # Markers are skipped quietly.
+
+
+def test_gcs_objects_with_empty_or_dot_path_segments_are_skipped():
+  root = f"{fake_gcs.new_prefix()}/input"
+  for name in ["a.csv", "/x.csv", "d1//y.csv", "d1/./z.csv"]:
+    fake_gcs.write_blob(f"{root}/{name}", "1")
+  assert _list(root, "", include_subdirs=True) == {"a.csv": "1"}

@@ -131,7 +131,8 @@ def create_store(path: str,
   Args:
     mark_gcs_dirs: For a GCS directory, lists everything under it and writes
       the directory markers that are missing (see `_fix_gcsfs_storage`). Set
-      to False to skip that when the directory was already opened with it.
+      to False when the directory was already marked, or is only read: reads
+      and `Dir.all_files` don't need markers.
   """
   return Store(path, create_if_missing, treat_as_file, mark_gcs_dirs)
 
@@ -242,10 +243,19 @@ class Dir(_StoreWrapper):
   def name(self) -> str:
     return fspath.basename(self.path.rstrip("/"))
 
-  def open_dir(self, path: str) -> "Dir":
+  def open_dir(self, path: str, create: bool = True) -> "Dir":
+    """Returns the subdirectory at `path`, relative to this one.
+
+    Args:
+      create: Whether to create the directory if it's missing and check that
+        it is one. Set to False for a directory that is only listed or known
+        to exist: that doesn't access storage at all.
+    """
     # The new dir will use the same underlying store with a path relative to
     # the same root.
     new_path = fspath.join(self.path, path)
+    if not create:
+      return Dir(self._store, new_path)
     if not self.fs().exists(new_path):
       self.fs().makedirs(new_path)
     if not self.fs().isdir(new_path):
@@ -259,7 +269,17 @@ class Dir(_StoreWrapper):
           f"{self.full_path(path)} exists and is a directory, not a file")
     return File(self._store, new_path, create_if_missing)
 
-  def all_files(self, include_subdirs: bool = False):
+  def all_files(self, include_subdirs: bool = False) -> list["File"]:
+    """Returns the files in this dir, and in its subdirs if `include_subdirs`.
+
+    The order is unspecified, and a missing dir has none. On GCS, one listing
+    of the dir's prefix finds them all, without a request per file or
+    directory.
+    """
+    if isinstance(self.fs(), GCSFS):
+      return self._list_gcs_files(include_subdirs)
+    if not self.fs().isdir(self.path):
+      return []
     files = []
     subfs = self.fs().opendir(self.path)
     max_depth = None if include_subdirs else 1
@@ -267,11 +287,49 @@ class Dir(_StoreWrapper):
       files.append(self.open_file(abspath.lstrip("/")))
     return files
 
+  def _list_gcs_files(self, include_subdirs: bool) -> list["File"]:
+    """Lists this dir's files on GCS with one (paginated) listing.
+
+    Directory marker objects (names ending with "/") are skipped. The listing
+    shows that the files exist, so that isn't checked again.
+    """
+    prefix = _gcs_dir_prefix(self.fs(), self.path)
+    delimiter = None if include_subdirs else "/"
+    files = []
+    for blob in self.fs().bucket.list_blobs(prefix=prefix, delimiter=delimiter):
+      rel_path = blob.name[len(prefix):]
+      if not rel_path or rel_path.endswith("/"):
+        continue
+      if any(part in ("", ".", "..") for part in rel_path.split("/")):
+        # Its path would name another object, or none.
+        logging.warning(
+            "Skipping GCS object with an empty or dot path"
+            " segment: %s", blob.name)
+        continue
+      files.append(
+          File(self._store,
+               fspath.join(self.path, rel_path),
+               create_if_missing=False,
+               exists=True))
+    return files
+
 
 class File(_StoreWrapper):
 
-  def __init__(self, store: "Store", path: str, create_if_missing: bool):
+  def __init__(self,
+               store: "Store",
+               path: str,
+               create_if_missing: bool,
+               exists: bool = False):
+    """Opens the file at `path`, relative to the store's root.
+
+    Args:
+      exists: Whether the caller knows that the file exists, e.g. from a
+        listing, so that it isn't checked.
+    """
     super().__init__(store, path)
+    if exists:
+      return
     if not self.fs().exists(self.path):
       if create_if_missing:
         parent_dir_path = fspath.dirname(path)
@@ -308,6 +366,18 @@ class File(_StoreWrapper):
             "Transient error opening stream for %s (attempt %d/%d): %s. Retrying...",
             self.path, attempt + 1, max_retries, e)
         time.sleep(1)
+
+
+def _gcs_key(fs: GCSFS, path: str) -> str:
+  """Returns the GCS object name of `path`, relative to the root of `fs`."""
+  parts = [fs.root_path.strip("/"), path.strip("/")]
+  return "/".join(part for part in parts if part)
+
+
+def _gcs_dir_prefix(fs: GCSFS, path: str) -> str:
+  """Returns the GCS object name prefix of everything under dir `path`."""
+  key = _gcs_key(fs, path)
+  return f"{key}/" if key else ""
 
 
 def _fix_gcsfs_storage(fs: GCSFS) -> None:

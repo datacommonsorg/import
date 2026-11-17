@@ -274,6 +274,29 @@ def test_nested_import_folder_is_reported_as_given(given, expect):
   assert [f["folderName"] for f in report["folders"]] == expect
 
 
+# Both configs match a/b/case.csv: the parent's "*/case*.csv" is scoped to
+# "a/*/case*.csv". (It doesn't match the parent's own a/case.csv.)
+_PARENT_AND_NESTED_IMPORTS = {
+    **b.import_subdir("a",
+                      csv_pattern="*/case*.csv",
+                      provenance="ParentProvenance",
+                      source="ParentSource"),
+    **b.import_subdir("a/b",
+                      provenance="NestedProvenance",
+                      source="NestedSource"),
+}
+
+
+@pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
+def test_a_parent_import_config_is_matched_before_a_nested_one(mode):
+  result = b.run_dir(_PARENT_AND_NESTED_IMPORTS,
+                     mode=mode,
+                     runner_kwargs={"import_names": ["ALL_IMPORTS"]})
+  assert result.error is None, result.error
+  provenances = [o["dcid:provenance"] for o in result.observations]
+  assert provenances == [b.ref("ParentProvenance")]
+
+
 # Beta comes first so that processing order would favour it.
 _TWO_IMPORTS = {
     **b.import_subdir("beta", provenance="BetaProvenance", source="BetaSource"),
@@ -575,3 +598,23 @@ def test_an_import_outside_a_subdirectory_of_the_input_dir_fails(import_name):
                  f"Invalid import {import_name!r}: an import is a subdirectory"
                  " of the input directory.",
                  handshake_error_types=_INVALID)
+
+
+_BETA_MISSING_OR_WITHOUT_CONFIG = [
+    ({}, "Import directory not found or empty: beta"),
+    ({
+        "beta/case.csv": _USA
+    }, "No config files found for beta"),
+]
+
+
+@pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
+@pytest.mark.parametrize("beta_files, message",
+                         _BETA_MISSING_OR_WITHOUT_CONFIG,
+                         ids=["missing", "without_config"])
+def test_a_requested_import_without_a_config_fails(beta_files, message, mode):
+  files = {**b.import_subdir("alpha"), **beta_files}
+  result = b.run_dir(files,
+                     mode=mode,
+                     runner_kwargs={"import_names": ["alpha", "beta"]})
+  b.assert_fails(result, "FileNotFoundError", message)
