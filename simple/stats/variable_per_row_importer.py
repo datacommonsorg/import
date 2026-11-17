@@ -236,10 +236,12 @@ class VariablePerRowImporter(Importer):
       return df
 
     # Rows repeat the same few dimension values (e.g. places), so each
-    # distinct combination is serialized once.
+    # distinct combination is serialized once. Missing values become "", which
+    # serializing skips too, so that they compare equal (NaN != NaN).
     serialized_by_values: dict[tuple, str] = {}
     serialized = []
-    for values in df[custom_cols].itertuples(index=False, name=None):
+    dimensions = df[custom_cols].fillna("")
+    for values in dimensions.itertuples(index=False, name=None):
       if values not in serialized_by_values:
         serialized_by_values[values] = _serialize_row_dimensions(
             dict(zip(custom_cols, values)), static_props)
