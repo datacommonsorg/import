@@ -51,9 +51,5 @@
   },
   "records": {
     "folders": {}
-  },
-  "report": {
-    "error": "CSV Header Validation Failed! The following errors were found:\nFile 'data.csv': The CSV file 'data.csv' contains unmapped columns: ['notes']. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json.",
-    "status": "FAILURE"
   }
 }

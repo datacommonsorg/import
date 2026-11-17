@@ -155,10 +155,6 @@ function simple_import {
   mkdir -p $OUTPUT_DIR
   OUTPUT_DIR=$(readlink -f $OUTPUT_DIR)
 
-  # Clear state from old run
-  report_json=$OUTPUT_DIR/process/report.json
-  rm $report_json
-
   # Run the simple importer
   local cwd="$PWD"
   cd "$SIMPLE_DIR"
@@ -170,9 +166,6 @@ function simple_import {
   if [[ "$cmd_status" != "0" ]]; then
     echo_fatal "Failed to run simple importer: $cmd. Logs in $LOG"
   fi
-
-  status=$(grep '"status"' $report_json)
-  echo_log "simple importer: $status"
 }
 
 # Generate tmcf for a csv file in dir

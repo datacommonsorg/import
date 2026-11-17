@@ -52,9 +52,5 @@
   },
   "records": {
     "folders": {}
-  },
-  "report": {
-    "error": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
-    "status": "FAILURE"
   }
 }

@@ -47,7 +47,6 @@ from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
-from stats.reporter import ImportReporter
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
@@ -367,11 +366,6 @@ class Runner:
     self.output_store = output_store
     self.all_stores.append(output_store)
     self.output_dir = output_store.as_dir()
-    self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
-
-    # Reporter.
-    self.reporter = ImportReporter(
-        report_file=self.process_dir.open_file(constants.REPORT_JSON_FILE_NAME))
 
     # If None, _load_config() sets the default, which depends on whether any
     # input or output store is on GCS.
@@ -450,7 +444,6 @@ class Runner:
 
       self.graph_writer.commit_and_close()
 
-      self.reporter.report_done()
       self._write_report(RunStatus.SUCCESS)
 
       # Close all file storage.
@@ -463,7 +456,6 @@ class Runner:
 
     except Exception as e:
       logging.exception("Error updating stats")
-      self.reporter.report_failure(error=str(e))
 
       if not hasattr(self, "_failure_errors"):
         self._failure_errors = [
@@ -838,8 +830,6 @@ class Runner:
 
     # Validate all CSV headers upfront
     self._validate_all_headers(csv_files)
-
-    self.reporter.report_started()
 
     self._completed_files_count = 0
     self._total_files_count = len(csv_files) + len(mcf_files)
