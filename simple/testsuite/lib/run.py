@@ -17,8 +17,8 @@ Runs the real preprocessor (stats.runner.Runner) hermetically.
 Every test in the suite goes through run_preprocessor(): it takes an input
 directory (one subdirectory per import, each with its config.json and data
 files), runs Runner in the requested mode and returns the canonical output
-(see canonical.py). Runner writes to a fake GCS, as in the ingestion workflow,
-except in local_output mode; the output is read back from there.
+(see canonical.py). Runner always writes to a fake GCS, as in the ingestion
+workflow; the output is read back from there.
 
 Modes change *how* the preprocessor runs, never *what* it must produce. Every
 mode imports files in worker processes, as in production:
@@ -28,7 +28,6 @@ mode imports files in worker processes, as in production:
   tiny_chunks   input on local disk, with shard and CSV chunk sizes shrunk to
                 1-2 so that every chunk/shard boundary is crossed even by tiny
                 inputs.
-  local_output  input and output on local disk.
 
 Patches are applied in the test process; worker processes inherit them only if
 forked, so runs fail unless the start method is fork.
@@ -77,7 +76,6 @@ def _tiny_chunks() -> Iterator[None]:
 class Mode:
   name: str
   gcs_input: bool = False  # Runner reads its input from GCS, not local disk.
-  local_output: bool = False  # Runner writes to local disk, not GCS.
   patches: Callable[[], contextlib.AbstractContextManager] = _no_patches
 
 
@@ -86,7 +84,6 @@ MODES = {
         Mode("disk_input"),
         Mode("gcs_input", gcs_input=True),
         Mode("tiny_chunks", patches=_tiny_chunks),
-        Mode("local_output", local_output=True),
     ]
 }
 ALL_MODES = tuple(MODES)
@@ -124,16 +121,13 @@ def run_preprocessor(input_dir: str,
 class _Paths:
   """Where one run reads and writes."""
 
-  local_out: str  # The output on local disk: downloaded, or written there.
+  local_out: str  # Local copy of the output, downloaded after the run.
   gcs_root: str  # This run's prefix on the fake GCS.
   input: str  # What Runner reads: local, or on GCS in gcs_input mode.
-  local_output: bool  # Whether Runner writes local_out itself.
 
   @property
   def output(self) -> str:
-    """What Runner writes: on GCS, or local_out in local_output mode."""
-    if self.local_output:
-      return self.local_out
+    """What Runner writes: always on GCS."""
     return f"{self.gcs_root}/output"
 
   @property
@@ -149,7 +143,7 @@ def _run_in(work: str, input_dir: str, mode: Mode,
   local_out = os.path.join(work, "output")
   input_path = (f"{gcs_root}/input" if mode.gcs_input else os.path.join(
       work, "input"))
-  paths = _Paths(local_out, gcs_root, input_path, mode.local_output)
+  paths = _Paths(local_out, gcs_root, input_path)
   _stage_input(input_dir, paths, mode)
   error = _run_runner(paths, mode, runner_kwargs)
   return _read_output(paths, error)
@@ -208,8 +202,7 @@ def _run_runner(paths: _Paths, mode: Mode,
 
 def _read_output(paths: _Paths, error: dict | None) -> dict:
   """Reads the run's records, handshake and ingestion report into canonical form."""
-  if not paths.local_output:
-    fake_gcs.download_dir(paths.output, paths.local_out)
+  fake_gcs.download_dir(paths.output, paths.local_out)
   handshake_text = fake_gcs.read_text(
       f"{paths.temp}/datacommons/ingestion_records/{WORKFLOW_ID}.json")
   ingestion_report = _read_json(

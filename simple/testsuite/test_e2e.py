@@ -84,10 +84,6 @@ def pytest_generate_tests(metafunc):
     for dataset in DATASETS:
       for mode in _selected_modes(metafunc.config):
         for aspect in ASPECTS:
-          if aspect == "handshake" and run.MODES[mode].local_output:
-            # The ingestion workflow reads output from GCS only, so a run
-            # writing to local disk hands no imports over to it.
-            continue
           marks = []
           known = _known_issue(dataset, mode, aspect)
           if known:
