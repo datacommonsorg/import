@@ -96,18 +96,13 @@ _KEEP_WORK_DIRS_ENV = "TESTSUITE_KEEP_WORK_DIRS"
 @dataclasses.dataclass
 class RunResult:
   output: dict  # Canonical output (see canonical.py).
-  output_entries: list[str]  # Names at the top of the output dir, sorted.
 
 
 def run_preprocessor(input_dir: str,
                      mode: Mode | str = DEFAULT_MODE,
-                     runner_kwargs: dict | None = None,
-                     workflow: bool = True) -> RunResult:
+                     runner_kwargs: dict | None = None) -> RunResult:
   """
   Runs Runner on a copy of input_dir and returns its canonical output.
-
-  With workflow, the run is part of an ingestion workflow execution
-  (WORKFLOW_EXECUTION_ID is set), as on DCP; without, it is a local run.
 
   The run's work directory is deleted afterwards, unless the
   TESTSUITE_KEEP_WORK_DIRS environment variable is set.
@@ -116,7 +111,7 @@ def run_preprocessor(input_dir: str,
     mode = MODES[mode]
   work = tempfile.mkdtemp(prefix=f"testsuite-{mode.name}-")
   try:
-    return _run_in(work, input_dir, mode, runner_kwargs, workflow)
+    return RunResult(output=_run_in(work, input_dir, mode, runner_kwargs))
   finally:
     if not os.environ.get(_KEEP_WORK_DIRS_ENV):
       shutil.rmtree(work, ignore_errors=True)
@@ -141,8 +136,8 @@ class _Paths:
     return f"{self.gcs_root}/temp"
 
 
-def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
-            workflow: bool) -> RunResult:
+def _run_in(work: str, input_dir: str, mode: Mode,
+            runner_kwargs: dict | None) -> dict:
   """Stages input_dir under work, runs Runner and reads its output back."""
   gcs_root = fake_gcs.new_prefix()
   local_out = os.path.join(work, "output")
@@ -150,10 +145,8 @@ def _run_in(work: str, input_dir: str, mode: Mode, runner_kwargs: dict | None,
       work, "input"))
   paths = _Paths(local_out, gcs_root, input_path)
   _stage_input(input_dir, paths, mode)
-  error = _run_runner(paths, mode, runner_kwargs, workflow)
-  output = _read_output(paths, error, workflow)
-  return RunResult(output=output,
-                   output_entries=sorted(os.listdir(paths.local_out)))
+  error = _run_runner(paths, mode, runner_kwargs)
+  return _read_output(paths, error)
 
 
 def _stage_input(input_dir: str, paths: _Paths, mode: Mode) -> None:
@@ -180,8 +173,8 @@ def _check_workers_inherit_patches() -> None:
         f" '{method}'. See testsuite/README.md.")
 
 
-def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
-                workflow: bool) -> dict | None:
+def _run_runner(paths: _Paths, mode: Mode,
+                runner_kwargs: dict | None) -> dict | None:
   """
   Runs Runner; returns the exception it raised, as a dict, or None.
 
@@ -189,14 +182,14 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
   starts from a clean slate so runs cannot influence each other.
   """
   _check_workers_inherit_patches()
-  env = {"TEMP_LOCATION": paths.temp, **fake_gcs.env()}
-  if workflow:
-    env["WORKFLOW_EXECUTION_ID"] = WORKFLOW_ID
+  env = {
+      "WORKFLOW_EXECUTION_ID": WORKFLOW_ID,
+      "TEMP_LOCATION": paths.temp,
+      **fake_gcs.env(),
+  }
   with mock.patch.dict(os.environ, env), \
        mock.patch("stats.jsonld_stream_writer._KNOWN_CUSTOM_PREFIXES", set()), \
        mode.patches():
-    if not workflow:
-      os.environ.pop("WORKFLOW_EXECUTION_ID", None)  # Restored on exit.
     from stats.runner import Runner  # pylint: disable=import-outside-toplevel
     try:
       Runner(input_dir_path=paths.input,
@@ -211,16 +204,14 @@ def _run_runner(paths: _Paths, mode: Mode, runner_kwargs: dict | None,
   return None
 
 
-def _read_output(paths: _Paths, error: dict | None, workflow: bool) -> dict:
+def _read_output(paths: _Paths, error: dict | None) -> dict:
   """Reads the run's records, handshake and ingestion report into canonical form."""
   fake_gcs.download_dir(paths.output, paths.local_out)
   handshake_text = fake_gcs.read_text(
       f"{paths.temp}/datacommons/ingestion_records/{WORKFLOW_ID}.json")
-  reports_dir = os.path.join(paths.local_out, "preprocessor_reports")
-  if workflow:
-    reports_dir = os.path.join(reports_dir, WORKFLOW_ID)
   ingestion_report = _read_json(
-      os.path.join(reports_dir, "ingestion_report.json"))
+      os.path.join(paths.local_out, "preprocessor_reports", WORKFLOW_ID,
+                   "ingestion_report.json"))
   tokens = {
       paths.input: "<input>",
       paths.output: "<output>",
