@@ -454,6 +454,9 @@ INVALID_CONFIGS = [
     Case("non-string importType",
          given=b.obs_config(b.OBS_MAPPINGS, importType=["observations"]),
          expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
+    Case("empty list importType",
+         given=b.obs_config(b.OBS_MAPPINGS, importType=[]),
+         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
     Case("double wildcard in filename pattern",
          given=b.obs_config(b.OBS_MAPPINGS, pattern="**.csv"),
          expect=b.Fails(

@@ -93,8 +93,8 @@ class InputFileConfig(_ConfigModel):
   @field_validator("import_type", mode="before")
   @classmethod
   def _default_empty_import_type(cls, value: Any) -> Any:
-    """An empty `importType` (e.g. "" or null) means the default."""
-    if not value:
+    """An `importType` of "" or null means the default."""
+    if value is None or value == "":
       return ImportType.OBSERVATIONS
     return value
 
