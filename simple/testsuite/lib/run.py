@@ -177,9 +177,6 @@ def _run_runner(paths: _Paths, mode: Mode,
                 runner_kwargs: dict | None) -> dict | None:
   """
   Runs Runner; returns the exception it raised, as a dict, or None.
-
-  The writer caches custom namespace prefixes in a module global; every run
-  starts from a clean slate so runs cannot influence each other.
   """
   _check_workers_inherit_patches()
   env = {
@@ -188,7 +185,6 @@ def _run_runner(paths: _Paths, mode: Mode,
       **fake_gcs.env(),
   }
   with mock.patch.dict(os.environ, env), \
-       mock.patch("stats.jsonld_stream_writer._KNOWN_CUSTOM_PREFIXES", set()), \
        mode.patches():
     from stats.runner import Runner  # pylint: disable=import-outside-toplevel
     try:
