@@ -19,9 +19,8 @@ source of run-to-run noise belongs in this module.
 """
 
 import re
-from typing import Any
 
-# Keys dropped, at any depth, from process/report.json.
+# Keys dropped from process/report.json.
 REPORT_TIMESTAMP_KEYS = frozenset({"startTime", "lastUpdate"})
 
 # The JSON-LD run directory is "<import name>_<YYYYmmdd_HHMMSS_ffffff>".
@@ -36,14 +35,10 @@ def stable_run_dir_name(name: str) -> str:
   return _RUN_DIR_TIMESTAMP.sub("", name)
 
 
-def strip_report_timestamps(value: Any) -> Any:
-  """Returns a copy of a report JSON value without REPORT_TIMESTAMP_KEYS."""
-  if isinstance(value, dict):
-    return {
-        key: strip_report_timestamps(item)
-        for key, item in value.items()
-        if key not in REPORT_TIMESTAMP_KEYS
-    }
-  if isinstance(value, list):
-    return [strip_report_timestamps(item) for item in value]
-  return value
+def strip_report_timestamps(report: dict) -> dict:
+  """Returns a copy of report.json without REPORT_TIMESTAMP_KEYS."""
+  return {
+      key: value
+      for key, value in report.items()
+      if key not in REPORT_TIMESTAMP_KEYS
+  }
