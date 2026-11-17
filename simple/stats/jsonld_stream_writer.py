@@ -51,7 +51,6 @@ _UPLOAD_CONCURRENCY = 4
 # a few tens of MB.
 _CACHE_SIZE = 1 << 16
 
-_KNOWN_CUSTOM_PREFIXES = set()
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
 
@@ -66,12 +65,7 @@ def _rewrite_custom_ns_to_dcid(val: str) -> str:
     return val
   if ":" in val and " " not in val:
     prefix, suffix = val.split(":", 1)
-    if prefix in _KNOWN_CUSTOM_PREFIXES:
-      return f"dcid:{suffix.lstrip('/')}"
-    if prefix in _STANDARD_PREFIXES:
-      return val
     if prefix.isalnum() and prefix.lower() not in _STANDARD_PREFIXES:
-      _KNOWN_CUSTOM_PREFIXES.add(prefix)
       return f"dcid:{suffix.lstrip('/')}"
   return val
 
@@ -95,9 +89,8 @@ def _cached_ref(val: str) -> dict | None:
 def _ref(val) -> dict | None:
   """Returns `_uri_ref` of `val` with its custom namespace rewritten.
 
-  A new dict, which the caller may change. Cached: the result depends only on
-  `val`, since `_KNOWN_CUSTOM_PREFIXES` only remembers prefixes that
-  `_rewrite_custom_ns_to_dcid` would rewrite anyway.
+  Cached per distinct `val`, and returned as a new dict, which the caller may
+  change (observationProperties is set on a variable's).
   """
   if not isinstance(val, str):
     return _uri_ref(_rewrite_custom_ns_to_dcid(val))
@@ -138,7 +131,7 @@ def _prefix_dcid(key: str) -> str:
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
 def _decode_props(props: str) -> tuple[dict, str]:
-  """The cached part of `_parse_props_json`. Don't change the returned dict."""
+  """The cached part of `_parse_props_json`."""
   parsed = json.loads(props)
   if not isinstance(parsed, dict) or not parsed:
     return {}, props
@@ -151,18 +144,18 @@ def _parse_props_json(props: str, entity: str,
 
   Returns the properties, in their order in `props`, and their JSON with
   sorted keys, so that the @id doesn't depend on the order the config declares
-  them in (or `props` itself if there are none).
+  them in (or `props` itself if there are none). The properties are cached
+  and shared between rows, so don't change them.
   """
   if not props:
     return {}, props
   try:
-    parsed, id_props = _decode_props(props)
+    return _decode_props(props)
   except json.JSONDecodeError as e:
     logging.warning(
         "Failed to decode properties JSON for observation %s/%s: %s", entity,
         variable, e)
     return {}, props
-  return dict(parsed), id_props
 
 
 def _build_observation_node(row: tuple) -> dict:
