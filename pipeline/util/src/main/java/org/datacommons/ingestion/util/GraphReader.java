@@ -6,7 +6,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,119 +41,6 @@ public class GraphReader implements Serializable {
   private static final Logger LOGGER = LoggerFactory.getLogger(GraphReader.class);
   private static final String DC_AGGREGATE = "dcAggregate/";
   private static final String DATCOM_AGGREGATE = "DataCommonsAggregate";
-
-  public static List<Node> graphToNodes(McfGraph graph, Counter mcfNodesWithoutTypeCounter) {
-    List<Node> nodes = new ArrayList<>();
-    for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
-      PropertyValues pvs = nodeEntry.getValue();
-      if (!GraphUtils.isObservation(pvs)) {
-
-        // Generate corresponding node
-        Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        Node.Builder node = Node.builder();
-        String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
-        String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
-        node.subjectId(subjectId);
-
-        List<String> types = GraphUtils.getPropertyValues(pv, "typeOf");
-        if (types.isEmpty()) {
-          types = List.of(PipelineUtils.TYPE_THING);
-          LOGGER.info("Found MCF node with no type: {}", nodeEntry.getKey());
-          mcfNodesWithoutTypeCounter.inc();
-        }
-        node.value(subjectId);
-        String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name());
-        node.name(!name.isEmpty() ? name : subjectId);
-        node.types(types);
-        nodes.add(node.build());
-
-        // Generate any leaf nodes
-        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
-          if (entry.getKey().equals("dcid")) {
-            continue;
-          }
-          for (TypedValue val : entry.getValue().getTypedValuesList()) {
-            if (val.getType() != ValueType.RESOLVED_REF) {
-              boolean storeAsBytes = PipelineUtils.storeValueAsBytes(entry.getKey());
-              byte[] compressedBytes =
-                  storeAsBytes ? PipelineUtils.compressString(val.getValue()) : null;
-              int valSize = storeAsBytes ? compressedBytes.length : val.getValue().length();
-              int maxSize =
-                  storeAsBytes
-                      ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
-                      : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
-              if (valSize > maxSize) {
-                LOGGER.warn(
-                    "Dropping node from {} because value size {} exceeds max size.",
-                    subjectId,
-                    valSize);
-                continue;
-              }
-              node = Node.builder();
-              node.subjectId(PipelineUtils.generateObjectValueKey(val.getValue()));
-              if (storeAsBytes) {
-                node.bytes(ByteArray.copyFrom(compressedBytes));
-              } else {
-                node.value(val.getValue());
-              }
-              nodes.add(node.build());
-            }
-          }
-        }
-      }
-    }
-    return nodes;
-  }
-
-  public static List<Edge> graphToEdges(McfGraph graph, String provenance) {
-    List<Edge> edges = new ArrayList<>();
-    for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
-      PropertyValues pvs = nodeEntry.getValue();
-      if (!GraphUtils.isObservation(pvs)) {
-        Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
-        String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
-        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
-          if (entry.getKey().equals("dcid")) {
-            continue;
-          }
-          for (TypedValue val : entry.getValue().getTypedValuesList()) {
-            if (val.getType() != ValueType.RESOLVED_REF) {
-              boolean storeAsBytes = PipelineUtils.storeValueAsBytes(entry.getKey());
-              int maxSize =
-                  storeAsBytes
-                      ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
-                      : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
-
-              int valSize = val.getValue().length();
-              if (storeAsBytes && valSize > maxSize) {
-                valSize = PipelineUtils.compressString(val.getValue()).length;
-              }
-
-              if (valSize > maxSize) {
-                LOGGER.warn(
-                    "Dropping edge from {} because value size {} exceeds max size.",
-                    subjectId,
-                    valSize);
-                continue;
-              }
-            }
-            Edge.Builder edge = Edge.builder();
-            edge.subjectId(subjectId);
-            edge.predicate(entry.getKey());
-            edge.provenance(provenance);
-            if (val.getType() == ValueType.RESOLVED_REF) {
-              edge.objectId(McfUtil.stripNamespace(val.getValue()));
-            } else {
-              edge.objectId(PipelineUtils.generateObjectValueKey(val.getValue()));
-            }
-            edges.add(edge.build());
-          }
-        }
-      }
-    }
-    return edges;
-  }
 
   public static PCollection<TimeSeries> extractUniqueSeries(
       PCollection<McfGraph> graph, String importName, boolean isBaseDc, Counter tsCounter) {
@@ -674,58 +560,6 @@ public class GraphReader implements Serializable {
                   edges.forEach(edge -> receiver.output(spannerClient.toEdgeMutation(edge)));
                   edgeCounter.inc(edges.size());
                 }
-              }
-            }));
-  }
-
-  public static PCollection<KV<String, Mutation>> graphToNodes(
-      String importName,
-      PCollection<McfGraph> graph,
-      SpannerClient spannerClient,
-      Counter nodeCounter,
-      Counter mcfNodesWithoutTypeCounter) {
-    return graph.apply(
-        "GenerateNodeMutations-" + importName,
-        ParDo.of(
-            new DoFn<McfGraph, KV<String, Mutation>>() {
-              @ProcessElement
-              public void processElement(
-                  @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
-                List<Node> nodes = graphToNodes(element, mcfNodesWithoutTypeCounter);
-                List<KV<String, Mutation>> mutations =
-                    spannerClient.toGraphKVMutations(nodes, Collections.emptyList());
-                mutations.stream()
-                    .forEach(
-                        e -> {
-                          receiver.output(e);
-                        });
-                nodeCounter.inc(mutations.size());
-              }
-            }));
-  }
-
-  public static PCollection<KV<String, Mutation>> graphToEdges(
-      String importName,
-      PCollection<McfGraph> graph,
-      String provenance,
-      SpannerClient spannerClient,
-      Counter edgeCounter) {
-    return graph.apply(
-        "GenerateEdgeMutations-" + importName,
-        ParDo.of(
-            new DoFn<McfGraph, KV<String, Mutation>>() {
-              @ProcessElement
-              public void processElement(
-                  @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
-                List<Edge> edges = graphToEdges(element, provenance);
-                List<KV<String, Mutation>> mutations =
-                    spannerClient.toGraphKVMutations(Collections.emptyList(), edges);
-                mutations.stream()
-                    .forEach(
-                        e -> {
-                          receiver.output(e);
-                        });
-                edgeCounter.inc(mutations.size());
               }
             }));
   }
