@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.beam.sdk.metrics.Counter;
@@ -544,39 +545,55 @@ public class GraphReader implements Serializable {
             .types(types)
             .build();
 
-    ImmutableList.Builder<Edge> subjectEdges = ImmutableList.builder();
-    ImmutableList.Builder<KV<Node, List<Edge>>> leafEntries = ImmutableList.builder();
-    for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
-      String predicate = entry.getKey();
-      if (predicate.equals(GraphUtils.Property.dcid.name())) {
-        continue;
-      }
-      for (TypedValue val : entry.getValue().getTypedValuesList()) {
-        String objectId;
-        if (val.getType() == ValueType.RESOLVED_REF) {
-          objectId = McfUtil.stripNamespace(val.getValue());
-        } else {
-          Node leafNode = buildLeafNode(subjectId, predicate, val.getValue());
-          if (leafNode == null) {
-            continue;
-          }
-          objectId = leafNode.getSubjectId();
-          leafEntries.add(KV.of(leafNode, ImmutableList.of()));
-        }
-        subjectEdges.add(
-            Edge.builder()
-                .subjectId(subjectId)
-                .predicate(predicate)
-                .provenance(provenance)
-                .objectId(objectId)
-                .build());
-      }
-    }
+    ImmutableList<KV<Edge, Node>> edgesAndLeafNodes =
+        pv.entrySet().stream()
+            .filter(entry -> !entry.getKey().equals(GraphUtils.Property.dcid.name()))
+            .flatMap(
+                entry ->
+                    entry.getValue().getTypedValuesList().stream()
+                        .map(
+                            val ->
+                                extractEdgeAndLeafNode(subjectId, entry.getKey(), provenance, val))
+                        .filter(Objects::nonNull))
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableList<Edge> subjectEdges =
+        edgesAndLeafNodes.stream().map(KV::getKey).collect(ImmutableList.toImmutableList());
+
+    ImmutableList<KV<Node, List<Edge>>> leafEntries =
+        edgesAndLeafNodes.stream()
+            .map(KV::getValue)
+            .filter(Objects::nonNull)
+            .map(leafNode -> KV.<Node, List<Edge>>of(leafNode, ImmutableList.of()))
+            .collect(ImmutableList.toImmutableList());
 
     return ImmutableList.<KV<Node, List<Edge>>>builder()
-        .add(KV.of(subjectNode, subjectEdges.build()))
-        .addAll(leafEntries.build())
+        .add(KV.of(subjectNode, subjectEdges))
+        .addAll(leafEntries)
         .build();
+  }
+
+  static KV<Edge, Node> extractEdgeAndLeafNode(
+      String subjectId, String predicate, String provenance, TypedValue val) {
+    String objectId;
+    Node leafNode = null;
+    if (val.getType() == ValueType.RESOLVED_REF) {
+      objectId = McfUtil.stripNamespace(val.getValue());
+    } else {
+      leafNode = buildLeafNode(subjectId, predicate, val.getValue());
+      if (leafNode == null) {
+        return null;
+      }
+      objectId = leafNode.getSubjectId();
+    }
+    Edge edge =
+        Edge.builder()
+            .subjectId(subjectId)
+            .predicate(predicate)
+            .provenance(provenance)
+            .objectId(objectId)
+            .build();
+    return KV.of(edge, leafNode);
   }
 
   static Node buildLeafNode(String subjectId, String predicate, String rawValue) {
