@@ -51,8 +51,8 @@ CATEGORIES: tuple[Category, ...] = (
     Category("warning_lines_changed", _I,
              "The number of WARNING log lines differs."),
     # Reports.
-    Category("report_json_changed", _F,
-             "A field of process/report.json differs."),
+    Category("ingestion_report_changed", _F,
+             "The ingestion report's run status, mode or folders differ."),
     # Run directory and shards.
     Category("run_dir_name_changed", _F,
              "The JSON-LD run directory name (without timestamp) differs."),

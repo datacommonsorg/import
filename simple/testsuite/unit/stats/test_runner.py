@@ -172,3 +172,19 @@ def test_import_workers_create_one_gcs_client_each(tmp_path, monkeypatch):
 
   worker_clients = [c for by_worker, c in _read_calls(log_path) if by_worker]
   assert worker_clients == ["client"]
+
+
+def test_a_local_run_writes_only_the_shards_and_the_ingestion_report(
+    tmp_path, monkeypatch):
+  monkeypatch.delenv("WORKFLOW_EXECUTION_ID", raising=False)
+  for path, text in b.import_subdir("demo").items():
+    (tmp_path / "input" / path).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / "input" / path).write_text(text)
+
+  runner.Runner(input_dir_path=str(tmp_path / "input"),
+                output_dir_path=str(tmp_path / "output"),
+                import_names=["demo"],
+                max_workers=1).run()
+
+  outputs = sorted(os.listdir(tmp_path / "output"))
+  assert outputs == ["jsonld", "preprocessor_reports"]
