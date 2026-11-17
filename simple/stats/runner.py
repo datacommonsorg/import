@@ -168,7 +168,6 @@ class ImportProcResult:
   collision fields mirror the worker's `JsonLdStreamWriter` stats, which cover
   collisions within the file only.
   """
-  file_rel_path: str
   file_collision_counts: dict[str, int]
   file_sample_collisions: dict[str, list[str]]
   sources: dict[str, Source]
@@ -212,9 +211,11 @@ def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
 
   Every file runs to completion even if others fail. Results are awaited in
   submission order, so passing each successful one to `merge` is
-  deterministic. See `_raise_for_failures` for what is raised.
+  deterministic; each is logged as "[i/N] Imported file". See
+  `_raise_for_failures` for what is raised.
   """
   failures: list[_FileFailure] = []
+  imported = 0
   for file, future in zip(files, futures, strict=True):
     try:
       result = future.result()
@@ -222,6 +223,8 @@ def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
       failures.append(
           _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
       continue
+    imported += 1
+    logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
     merge(result)
   _raise_for_failures(failures)
 
@@ -288,7 +291,6 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
       save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
 
     return ImportProcResult(
-        file_rel_path=file_rel_path,
         file_collision_counts=dict(graph_writer.file_collision_counts),
         file_sample_collisions=dict(graph_writer.file_sample_collisions),
         sources=dict(nodes.sources),
@@ -379,6 +381,8 @@ class Runner:
     # Set while importing.
     self.graph_writer = None
     self.trigger_workflow_info = None
+    # The errors for the FAILURE handshake, set when the run fails.
+    self._failure_errors: list[FileValidationError] | None = None
 
     self.summary_generator = SummaryGenerator(
         os.getenv("WORKFLOW_EXECUTION_ID"))
@@ -456,7 +460,7 @@ class Runner:
     except Exception as e:
       logging.exception("Error updating stats")
 
-      if not hasattr(self, "_failure_errors"):
+      if self._failure_errors is None:
         self._failure_errors = [
             FileValidationError(file=getattr(e, "file_path", ""),
                                 error_type=getattr(
@@ -473,10 +477,13 @@ class Runner:
         except Exception:
           pass
 
-      self._handle_workflow_handoff()
-      logging.error(
-          "Preprocessor execution failed! Diagnostic error details were written to the GCS handshake path."
-      )
+      handshake_path = self._handle_workflow_handoff()
+      if handshake_path:
+        logging.error(
+            "Preprocessor execution failed! Diagnostic error details were"
+            " written to the GCS handshake path: %s", handshake_path)
+      else:
+        logging.error("Preprocessor execution failed!")
       raise
 
   def _record_input_files(self, files: list[File]) -> None:
@@ -524,29 +531,29 @@ class Runner:
       self._record_provenance_sources()
     self.summary_generator.write_to_json(status, _utc_now())
 
-  def _handle_workflow_handoff(self) -> None:
-    """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
-    if not self.trigger_workflow_info and not hasattr(self, "_failure_errors"):
-      return
+  def _handle_workflow_handoff(self) -> str | None:
+    """Writes processed import metadata to a GCS handshake file for the ingestion workflow.
+
+    Returns the handshake's path, or None if none was written.
+    """
+    if not self.trigger_workflow_info and self._failure_errors is None:
+      return None
 
     workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
     temp_location = os.getenv("TEMP_LOCATION", "")
 
     if not workflow_id:
       logging.warning("WORKFLOW_EXECUTION_ID not set. Skipping GCS handshake.")
-      return
+      return None
 
     if not temp_location.startswith("gs://"):
       logging.warning(
           "TEMP_LOCATION (%s) is not a GCS path. Skipping GCS handshake.",
           temp_location)
-      return
+      return None
 
-    if hasattr(self, "_failure_errors"):
-      errors_dict = [
-          err.to_dict() if hasattr(err, "to_dict") else err
-          for err in self._failure_errors
-      ]
+    if self._failure_errors is not None:
+      errors_dict = [err.to_dict() for err in self._failure_errors]
       handshake_payload = {"status": "FAILURE", "errors": errors_dict}
     else:
       handshake_payload = {
@@ -562,13 +569,9 @@ class Runner:
                       treat_as_file=True) as store:
       store.as_file().write(json.dumps(handshake_payload, indent=2))
 
-    if hasattr(self, "_failure_errors"):
-      logging.info(
-          "Successfully wrote preprocessor error report to GCS handshake path: %s. "
-          "Structured error details are available in this file for diagnostic parsing.",
-          output_json_path)
-    else:
+    if self._failure_errors is None:
       logging.info("Successfully wrote preprocessor result to GCS.")
+    return output_json_path
 
   def _read_config_in_dir(self, input_dir: Dir) -> None:
     """Reads and validates the `config.json` at the root of `input_dir`."""
@@ -830,20 +833,16 @@ class Runner:
     # Validate all CSV headers upfront
     self._validate_all_headers(csv_files)
 
-    self._completed_files_count = 0
-    self._total_files_count = len(csv_files) + len(mcf_files)
-
-    if not self._total_files_count:
-      return
-    logging.info("Importing %d files (%d MCF, %d CSV)...",
-                 self._total_files_count, len(mcf_files), len(csv_files))
     # MCF and CSV files are imported together: a CSV needs nothing from MCF.
     files = mcf_files + csv_files
+    if not files:
+      return
+    logging.info("Importing %d files (%d MCF, %d CSV)...", len(files),
+                 len(mcf_files), len(csv_files))
     self._run_multiprocess_imports(files)
 
   def _merge_worker_result(self, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` into the coordinator."""
-    self._log_file_progress(res.file_rel_path)
     self.nodes.merge_metadata(res.provenances, res.sources)
     self._merge_worker_writer_state(res)
 
@@ -852,12 +851,6 @@ class Runner:
     self.graph_writer._processed_imports.update(res.processed_imports)
     self.graph_writer.merge_collisions(res.file_collision_counts,
                                        res.file_sample_collisions)
-
-  def _log_file_progress(self, file_path: str):
-    """Counts `file_path` as imported and logs the run's progress."""
-    self._completed_files_count += 1
-    logging.info("[%d/%d] Imported file: %s", self._completed_files_count,
-                 self._total_files_count, file_path)
 
   def _create_importer(self, input_file: File) -> Importer:
     return _create_importer_for_file(
