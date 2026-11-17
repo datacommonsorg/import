@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Worker processes: pool sizing and what they write to GCS."""
+"""Worker processes: pool sizing and what they write."""
 
 import os
+import re
 import shutil
 
+from fs.osfs import OSFS
 from google.cloud import storage
 from google.cloud.storage import Blob
 import pytest
@@ -172,3 +174,30 @@ def test_import_workers_create_one_gcs_client_each(tmp_path, monkeypatch):
 
   worker_clients = [c for by_worker, c in _read_calls(log_path) if by_worker]
   assert worker_clients == ["client"]
+
+
+def test_a_worker_writes_into_an_import_folder_that_another_just_made(
+    monkeypatch):
+  """With local output, workers make the import folders they write shards to.
+
+  Here another worker always makes an import folder first, right before this
+  one does.
+  """
+  real_makedir = OSFS.makedir
+
+  def makedir_after_another_worker(fs, path, permissions=None, recreate=False):
+    if re.search(r"jsonld/[^/]+/[^/]+/?$", path):
+      os.makedirs(fs.getsyspath(path), exist_ok=True)
+    return real_makedir(fs, path, permissions, recreate)
+
+  monkeypatch.setattr(OSFS, "makedir", makedir_after_another_worker)
+  result = b.run_dir(
+      {
+          "provenance.mcf": b.PROVENANCE_MCF,
+          "case.csv": b.csv_file(b.obs_row()),
+      },
+      b.obs_config(b.OBS_MAPPINGS),
+      mode="local_output")
+
+  assert result.error is None, result.error
+  b.assert_records(result.observations, [b.obs()])
