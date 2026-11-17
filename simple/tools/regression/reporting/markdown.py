@@ -178,7 +178,8 @@ def _stats_section(report: Report) -> list[str]:
       _pair_row("Observations with provenanceUrl", obs["with_provenance_url"]),
       _pair_row("Node records", nodes["records"]),
       _pair_row("Node @ids", nodes["ids"]),
-      _pair_row("report.json status", reports["status"]),
+      _pair_row("Ingestion report status", reports["status"]),
+      _pair_row("Ingestion report folders", reports["folders"]),
   ]
   return (_heading("Output summary") + _table(_SIDES_HEADER, rows) +
           _pair_table("Observations per folder (differing only)", "Folder",

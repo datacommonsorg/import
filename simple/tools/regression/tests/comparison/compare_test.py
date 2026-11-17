@@ -75,9 +75,32 @@ BASE_SHARDS = {
     },
 }
 BASE_REPORT = {
-    "status": "SUCCESS",
-    "startTime": "2026-01-01 00:00:00",
-    "lastUpdate": "2026-01-01 00:00:01",
+    "run": {
+        "workflowExecutionId": "",
+        "mode": "INGEST",
+        "status": "SUCCESS",
+        "startTime": "2026-01-01T00:00:00Z",
+        "endTime": "2026-01-01T00:00:01Z",
+        "folderNames": ["ProvA", "ProvB"],
+        "outputPath": "/base/preprocessor_reports",
+    },
+    "folders": [{
+        "folderName": folder,
+        "summary": {
+            "files": {
+                "count": 1,
+                "byType": {
+                    "csv": 1
+                }
+            },
+            "provenanceCount": 1
+        },
+        "provenances": [{
+            "id": folder,
+            "sourceId": None,
+            "fileCount": 1
+        }],
+    } for folder in ("ProvA", "ProvB")],
 }
 
 
@@ -93,9 +116,10 @@ def write_output(root: str,
       path = os.path.join(root, "jsonld", run_dir, folder, name)
       with open(path, "w") as f:
         json.dump({"@context": context or CONTEXT, "@graph": records}, f)
-  os.makedirs(os.path.join(root, "process"))
+  os.makedirs(os.path.join(root, "preprocessor_reports"))
   report = BASE_REPORT if report is None else report
-  with open(os.path.join(root, "process", "report.json"), "w") as f:
+  with open(os.path.join(root, "preprocessor_reports", "ingestion_report.json"),
+            "w") as f:
     json.dump(report, f)
   return root
 
@@ -210,12 +234,14 @@ def test_identical_outputs_report_no_difference(tmp_path):
 
 
 def test_volatile_fields_are_ignored(tmp_path):
-  """Timestamps, the run dir timestamp and node shard uids."""
+  """Report times and path, the run dir timestamp and node shard uids."""
   shards = copy.deepcopy(BASE_SHARDS)
   shards["ProvB"]["node-00000-cccccccccccc.jsonld"] = shards["ProvB"].pop(
       NODE_SHARD_B)
   report = copy.deepcopy(BASE_REPORT)
-  report["startTime"] = "2027-05-05 12:00:00"
+  report["run"].update(startTime="2027-05-05T12:00:00Z",
+                       endTime="2027-05-05T12:00:09Z",
+                       outputPath="/cand/preprocessor_reports")
   base = write_output(str(tmp_path / "base"), BASE_SHARDS)
   cand = write_output(str(tmp_path / "cand"),
                       shards,
@@ -225,12 +251,13 @@ def test_volatile_fields_are_ignored(tmp_path):
   assert nonzero(result) == {}
 
 
-def test_report_json_changed(tmp_path):
+def test_ingestion_report_changed(tmp_path):
+  """One finding per differing run field and per differing folder."""
   report = copy.deepcopy(BASE_REPORT)
-  report["status"] = "FAILURE"
-  report["error"] = "Boom"
+  report["run"]["status"] = "FAILURE"
+  report["folders"][1]["provenances"][0]["fileCount"] = 2
   assert nonzero(compare(tmp_path,
-                         report=report)) == dict(report_json_changed=2)
+                         report=report)) == dict(ingestion_report_changed=2)
 
 
 def test_missing_output_on_one_side(tmp_path):
@@ -240,7 +267,7 @@ def test_missing_output_on_one_side(tmp_path):
   counts = compare_dirs(tmp_path, base, empty).findings.counts
   assert counts["obs_only_baseline"] == 501
   assert counts["node_only_baseline"] == 3
-  assert counts["report_json_changed"] > 0
+  assert counts["ingestion_report_changed"] > 0
 
 
 @pytest.mark.parametrize("strict", [False, True])
