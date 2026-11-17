@@ -159,7 +159,9 @@ def test_non_numeric_value_fails():
   b.assert_fails(
       result, "ValueError",
       "Invalid non-numeric value(s) found in observation values of file"
-      " 'case.csv': ['lots']")
+      " 'case.csv': ['lots']. If these represent missing values, leave the"
+      " cells empty or use one of: ['-', 'nil', 'n/a', 'na', 'none', 'null',"
+      " '<na>'].")
 
 
 def test_non_numeric_values_are_listed_ten_at_most():

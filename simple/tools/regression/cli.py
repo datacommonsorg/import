@@ -20,7 +20,7 @@ and report.json. See README.md.
 
   cd simple
   python3 -m tools.regression --input_dir=/path/to/input [--baseline=upstream/master]
-      [-- <extra stats.main flags>]
+      -- --imports=<import>[,...] [<extra stats.main flags>]
 
 Exit codes: 0 identical and no perf regression, 5 a run of either side
 failed (non-zero exit or timeout), 3 output differs, 4 perf regression only,
@@ -186,7 +186,7 @@ def _run_or_reuse(args: argparse.Namespace, spec: run.RunSpec,
       }
       ran = run.run_sides(code, spec, work_dir, args.repeats)
   return {
-      side: ran.get(side) or run.load_side(reused[side], spec.input_dir)
+      side: ran.get(side) or run.load_side(reused[side])
       for side in (BASELINE, CANDIDATE)
   }
 
@@ -233,12 +233,11 @@ def main(argv: list[str]) -> int:
   sides = _run_or_reuse(args, spec, work_dir)
   base, cand = sides[BASELINE], sides[CANDIDATE]
   logging.info("Comparing %s with %s", base.output_dir, cand.output_dir)
-  comparison = compare.compare_outputs(
-      compare.SideOutput(base.output_dir, base.input_root),
-      compare.SideOutput(cand.output_dir, cand.input_root),
-      scratch_dir=work_dir,
-      workers=args.compare_workers,
-      max_samples=args.samples)
+  comparison = compare.compare_outputs(base.output_dir,
+                                       cand.output_dir,
+                                       scratch_dir=work_dir,
+                                       workers=args.compare_workers,
+                                       max_samples=args.samples)
   metrics.compare_health(base, cand, comparison.findings)
   perf_result = metrics.compare_perf(base, cand, _thresholds(args))
   verdict = report_lib.Verdict(comparison.findings.failing(args.strict),

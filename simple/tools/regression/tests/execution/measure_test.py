@@ -71,5 +71,5 @@ def test_reused_runs_are_loaded_in_run_number_order(tmp_path):
     metrics = RunMetrics(0, False, number, 0, 0, 0, 0, 0, 0)
     run = {"code": "HEAD", "input_dir": "/in", "metrics": vars(metrics)}
     (run_dir / RUN_JSON).write_text(json.dumps(run))
-  runs = load_side(str(tmp_path / "candidate" / "run-1" / "output"), None)
+  runs = load_side(str(tmp_path / "candidate" / "run-1" / "output"))
   assert [m.wall_seconds for m in runs.metrics] == list(range(1, 12))
