@@ -658,35 +658,31 @@ class Runner:
 
   def _read_configs_from_list(self, base_dir: Dir,
                               import_names: list[str]) -> list:
-    """Reads configs for specific imports specified in a list and merges them.
-    
-    Args:
-      base_dir: The base directory containing the import subdirectories.
-      import_names: A list of subdirectory names to look for configs in.
-      
+    """Reads and merges the configs of the imports in `import_names`.
+
+    An import's config.json is the one at its root, or else those in its
+    subdirectories. Each import dir is listed once; finding input files reuses
+    the listing.
+
     Raises:
-      FileNotFoundError: If no config files are found for a requested import.
+      FileNotFoundError: If an import dir is missing or empty, or has no
+        config.json.
     """
     configs = []
     for name in import_names:
-      if not base_dir.is_subdir(name):
-        raise FileNotFoundError(f"Import directory not found: {name}")
-      try:
-        imp_dir = base_dir.open_dir(name, create=False)
-        file = imp_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
-                                 create_if_missing=False)
-        configs.append(file)
-      except FileNotFoundError:
+      files = self._list_input_dir(name)
+      if not files:
+        raise FileNotFoundError(f"Import directory not found or empty: {name}")
+      root_config = fspath.join(name, constants.CONFIG_JSON_FILE_NAME)
+      found = [f for f in files if f.path == root_config]
+      if not found:
         logging.info(
             "Config file not found at root of %s. Scanning subdirectories.",
             name)
-        sub_configs = self._find_configs_in_dir(imp_dir.path)
-        if not sub_configs:
-          raise FileNotFoundError(f"No config files found for {name}")
-        configs.extend(sub_configs)
-      except ValueError as e:
-        logging.error("Invalid directory for import %s: %s", name, e)
-        raise e
+        found = self._find_configs_in_dir(name)
+      if not found:
+        raise FileNotFoundError(f"No config files found for {name}")
+      configs.extend(found)
 
     logging.info("Found %s config files from list.", len(configs))
     self._merge_configs(configs, base_dir)

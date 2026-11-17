@@ -262,19 +262,6 @@ class Dir(_StoreWrapper):
       raise ValueError(f"{self.full_path(path)} exists and is not a directory")
     return Dir(self._store, new_path)
 
-  def is_subdir(self, path: str) -> bool:
-    """Whether `path`, relative to this dir, is a directory.
-
-    On GCS, a directory is a prefix that some object starts with, so this
-    lists at most one object rather than requiring a directory marker.
-    """
-    new_path = fspath.join(self.path, path)
-    if not isinstance(self.fs(), GCSFS):
-      return self.fs().isdir(new_path)
-    prefix = _gcs_dir_prefix(self.fs(), new_path)
-    blobs = self.fs().bucket.list_blobs(prefix=prefix, max_results=1)
-    return next(iter(blobs), None) is not None
-
   def open_file(self, path: str, create_if_missing: bool = True) -> "File":
     new_path = fspath.join(self.path, path)
     if self.fs().isdir(new_path):
@@ -285,11 +272,14 @@ class Dir(_StoreWrapper):
   def all_files(self, include_subdirs: bool = False) -> list["File"]:
     """Returns the files in this dir, and in its subdirs if `include_subdirs`.
 
-    The order is unspecified. On GCS, one listing of the dir's prefix finds
-    them all, without a request per file or directory.
+    The order is unspecified, and a missing dir has none. On GCS, one listing
+    of the dir's prefix finds them all, without a request per file or
+    directory.
     """
     if isinstance(self.fs(), GCSFS):
       return self._list_gcs_files(include_subdirs)
+    if not self.fs().isdir(self.path):
+      return []
     files = []
     subfs = self.fs().opendir(self.path)
     max_depth = None if include_subdirs else 1

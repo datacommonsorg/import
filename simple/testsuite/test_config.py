@@ -598,3 +598,23 @@ def test_an_import_outside_a_subdirectory_of_the_input_dir_fails(import_name):
                  f"Invalid import {import_name!r}: an import is a subdirectory"
                  " of the input directory.",
                  handshake_error_types=_INVALID)
+
+
+_BETA_MISSING_OR_WITHOUT_CONFIG = [
+    ({}, "Import directory not found or empty: beta"),
+    ({
+        "beta/case.csv": _USA
+    }, "No config files found for beta"),
+]
+
+
+@pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
+@pytest.mark.parametrize("beta_files, message",
+                         _BETA_MISSING_OR_WITHOUT_CONFIG,
+                         ids=["missing", "without_config"])
+def test_a_requested_import_without_a_config_fails(beta_files, message, mode):
+  files = {**b.import_subdir("alpha"), **beta_files}
+  result = b.run_dir(files,
+                     mode=mode,
+                     runner_kwargs={"import_names": ["alpha", "beta"]})
+  b.assert_fails(result, "FileNotFoundError", message)

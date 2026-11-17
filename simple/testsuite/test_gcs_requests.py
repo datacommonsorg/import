@@ -54,12 +54,13 @@ def _listed_prefix(request: gcs_requests.Request) -> str:
   return prefix.split("/input/", 1)[1]
 
 
-def test_finding_input_files_lists_each_requested_import_once():
+def test_each_requested_import_is_listed_once():
   requests = _run(_imports("alpha", "beta", "gamma"), ["alpha", "beta"])
 
-  found = requests.of("find_input_files")
-  assert [r.kind for r in found] == ["list", "list"], found
-  assert sorted(_listed_prefix(r) for r in found) == ["alpha/", "beta/"]
+  # Loading the config lists each import; finding input files reuses that.
+  lists = requests.of("load_config", "list")
+  assert sorted(_listed_prefix(r) for r in lists) == ["alpha/", "beta/"]
+  assert not requests.of("find_input_files")
   # Opening the input store used to write its missing directory markers.
   assert not requests.of("load_config", "upload")
 

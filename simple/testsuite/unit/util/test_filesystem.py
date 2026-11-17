@@ -153,6 +153,7 @@ def _list(root: str, subdir: str, include_subdirs: bool) -> dict[str, str]:
     ("d1", False, ["d1/b.csv"]),
     ("d1/d2", True, ["d1/d2/c.csv"]),
     ("empty", True, []),
+    ("missing", True, []),
 ])
 def test_all_files_lists_files_but_not_directory_markers(
     input_dir, subdir, include_subdirs, expected, caplog):
@@ -168,15 +169,3 @@ def test_gcs_objects_with_empty_or_dot_path_segments_are_skipped():
   for name in ["a.csv", "/x.csv", "d1//y.csv", "d1/./z.csv"]:
     fake_gcs.write_blob(f"{root}/{name}", "1")
   assert _list(root, "", include_subdirs=True) == {"a.csv": "1"}
-
-
-@pytest.mark.parametrize("path, is_dir", [
-    ("d1", True),
-    ("d1/d2", True),
-    ("empty", True),
-    ("a.csv", False),
-    ("missing", False),
-])
-def test_is_subdir_with_or_without_a_directory_marker(input_dir, path, is_dir):
-  with create_store(input_dir, mark_gcs_dirs=False) as store:
-    assert store.as_dir().is_subdir(path) == is_dir
