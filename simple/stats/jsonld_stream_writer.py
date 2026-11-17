@@ -56,6 +56,16 @@ _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 _NO_PROPS: Mapping[str, Any] = types.MappingProxyType({})
 
 
+def _to_json(doc: dict) -> str:
+  """Serializes a shard compactly.
+
+  The ingestion pipeline parses each shard as a whole JSON document, so layout
+  doesn't matter. Pretty-printing (indent=...) would make shards ~1.7x larger
+  and force Python's pure-Python encoder instead of the C one.
+  """
+  return json.dumps(doc, separators=(",", ":"))
+
+
 def _rewrite_custom_ns_to_dcid(val: str) -> str:
   """Rewrites custom namespaces to 'dcid:' as a temporary workaround until the ingestion loader natively supports custom namespaces.
 
@@ -231,8 +241,7 @@ def _write_observation_shard(chunk,
     shard_name = f"observation-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
-    output_dir.open_file(shard_name).write(
-        json.dumps(compacted_jsonld, indent=4))
+    output_dir.open_file(shard_name).write(_to_json(compacted_jsonld))
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
@@ -283,8 +292,7 @@ def _write_node_shard(args):
   shard_name = f"node-{shard_index:05d}-{unique_id}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
-    output_dir.open_file(shard_name).write(
-        json.dumps(compacted_jsonld, indent=4))
+    output_dir.open_file(shard_name).write(_to_json(compacted_jsonld))
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
