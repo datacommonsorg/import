@@ -30,7 +30,6 @@ from stats.importer import mapping_errors
 from stats.importer import missing_column_mappings_error
 from stats.importer import read_csv_columns
 from stats.nodes import Nodes
-from stats.reporter import FileImportReporter
 from util.filesystem import File
 
 # Mapping from official DCID keys in config.json to internal importer columns.
@@ -100,24 +99,17 @@ class VariablePerRowImporter(Importer):
   """
 
   def __init__(self, input_file: File, graph_writer: GraphWriter,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
+               nodes: Nodes) -> None:
     self.input_file = input_file
     self.graph_writer = graph_writer
-    self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
     self.custom_dimensions = []
     self.column_mappings = {}
 
   def do_import(self) -> None:
-    self.reporter.report_started()
-    try:
-      self._map_columns()
-      self._write_observations()
-      self.reporter.report_success()
-    except Exception as e:
-      self.reporter.report_failure(str(e))
-      raise e
+    self._map_columns()
+    self._write_observations()
 
   def validate_headers(self) -> list[FileValidationError]:
     mappings = self.get_column_mappings()

@@ -47,7 +47,6 @@ from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
-from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
@@ -129,14 +128,12 @@ def _create_importer_for_file(
     config: Config,
     input_file: File,
     graph_writer: GraphWriter,
-    reporter: FileImportReporter,
     nodes: Nodes,
 ) -> Importer:
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
         input_file=input_file,
         graph_writer=graph_writer,
-        reporter=reporter,
         nodes=nodes,
     )
 
@@ -148,7 +145,6 @@ def _create_importer_for_file(
       return VariablePerRowImporter(
           input_file=input_file,
           graph_writer=graph_writer,
-          reporter=reporter,
           nodes=nodes,
       )
 
@@ -156,7 +152,6 @@ def _create_importer_for_file(
       return EntitiesImporter(
           input_file=input_file,
           graph_writer=graph_writer,
-          reporter=reporter,
           nodes=nodes,
       )
 
@@ -287,10 +282,8 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
                                       args.import_names,
                                       nodes,
                                       jsonld_dir_name=args.jsonld_dir_name)
-    reporter = ImportReporter(report_file=None).get_file_reporter(input_file)
-
     importer = _create_importer_for_file(config, input_file, graph_writer,
-                                         reporter, nodes)
+                                         nodes)
     importer.do_import()
     graph_writer.commit_and_close()
     if graph_writer.obs_hash_set:
@@ -457,7 +450,6 @@ class Runner:
 
       self.graph_writer.commit_and_close()
 
-      # Report done.
       self.reporter.report_done()
       self._write_report(RunStatus.SUCCESS)
 
@@ -847,7 +839,7 @@ class Runner:
     # Validate all CSV headers upfront
     self._validate_all_headers(csv_files)
 
-    self.reporter.report_started(import_files=list(csv_files + mcf_files))
+    self.reporter.report_started()
 
     self._completed_files_count = 0
     self._total_files_count = len(csv_files) + len(mcf_files)
@@ -879,12 +871,10 @@ class Runner:
                  self._total_files_count, file_path)
 
   def _create_importer(self, input_file: File) -> Importer:
-    reporter = self.reporter.get_file_reporter(input_file)
     return _create_importer_for_file(
         self.config,
         input_file,
         self.graph_writer,
-        reporter,
         self.nodes,
     )
 

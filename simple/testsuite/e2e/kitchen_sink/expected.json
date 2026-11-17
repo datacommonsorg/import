@@ -327,23 +327,6 @@
     }
   },
   "report": {
-    "importFiles": {
-      "<input>/kitchen_sink/authors.csv": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/kitchen_sink/observations.csv": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/kitchen_sink/provenance.mcf": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/kitchen_sink/schema.mcf": {
-        "status": "NOT_STARTED"
-      },
-      "<input>/kitchen_sink/trips.csv": {
-        "status": "NOT_STARTED"
-      }
-    },
     "status": "SUCCESS"
   }
 }

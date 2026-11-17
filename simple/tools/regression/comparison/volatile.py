@@ -19,18 +19,12 @@ source of run-to-run noise belongs in this module.
 """
 
 import re
-from typing import Any
 
-# Keys dropped, at any depth, from process/report.json.
+# Keys dropped from process/report.json.
 REPORT_TIMESTAMP_KEYS = frozenset({"startTime", "lastUpdate"})
 
 # The JSON-LD run directory is "<import name>_<YYYYmmdd_HHMMSS_ffffff>".
 _RUN_DIR_TIMESTAMP = re.compile(r"_\d{8}_\d{6}_\d{6}$")
-
-# Report keys hold input file paths; each side's input root becomes this
-# placeholder so that runs on different copies of the same input still compare
-# equal.
-INPUT_ROOT_PLACEHOLDER = "<input>"
 
 # Node shards are named "node-<index>-<random uid>.jsonld". They are never
 # matched by name; see shards.py.
@@ -41,24 +35,10 @@ def stable_run_dir_name(name: str) -> str:
   return _RUN_DIR_TIMESTAMP.sub("", name)
 
 
-def strip_report_timestamps(value: Any) -> Any:
-  """Returns a copy of a report JSON value without REPORT_TIMESTAMP_KEYS."""
-  if isinstance(value, dict):
-    return {
-        key: strip_report_timestamps(item)
-        for key, item in value.items()
-        if key not in REPORT_TIMESTAMP_KEYS
-    }
-  if isinstance(value, list):
-    return [strip_report_timestamps(item) for item in value]
-  return value
-
-
-def tokenize_input_root(path: str, input_root: str | None) -> str:
-  """Replaces the input root prefix of a reported file path by a placeholder."""
-  if not input_root:
-    return path
-  root = input_root.rstrip("/")
-  if path == root or path.startswith(root + "/"):
-    return INPUT_ROOT_PLACEHOLDER + path[len(root):]
-  return path
+def strip_report_timestamps(report: dict) -> dict:
+  """Returns a copy of report.json without REPORT_TIMESTAMP_KEYS."""
+  return {
+      key: value
+      for key, value in report.items()
+      if key not in REPORT_TIMESTAMP_KEYS
+  }

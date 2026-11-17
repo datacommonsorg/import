@@ -32,7 +32,7 @@ All output is written under `--output_dir`, which can be a local path or a
 * `jsonld/<import_name>_<timestamp>/<import_name>/`: the generated JSON-LD
   shards. Node shards are named `node-<index>-<uid>.jsonld` and observation
   shards are named `observation-<sanitized_input_file>-<index>.jsonld`.
-* `process/report.json`: the import report, including per-file status.
+* `process/report.json`: the run's status (and error, if it failed).
 
 There is no database output. The importer streams shards to a local temporary
 directory as it runs and bulk uploads them to the output directory at the end

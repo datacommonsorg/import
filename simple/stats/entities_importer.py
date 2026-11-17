@@ -27,7 +27,6 @@ from stats.importer import mapping_errors
 from stats.importer import missing_column_mappings_error
 from stats.importer import read_csv_columns
 from stats.nodes import Nodes
-from stats.reporter import FileImportReporter
 from stats.util import has_namespace_prefix
 from util.filesystem import File
 
@@ -81,10 +80,9 @@ class EntitiesImporter(Importer):
     """
 
   def __init__(self, input_file: File, graph_writer: GraphWriter,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
+               nodes: Nodes) -> None:
     self.input_file = input_file
     self.graph_writer = graph_writer
-    self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
     self.ignore_columns = self.config.ignore_columns(self.input_file)
@@ -95,17 +93,11 @@ class EntitiesImporter(Importer):
     self.df = pd.DataFrame()
 
   def do_import(self) -> None:
-    self.reporter.report_started()
-    try:
-      self.provenance_id = self.nodes.provenance_id(self.input_file)
-      self._read_csv()
-      self._drop_ignored_columns()
-      self._check_required_values()
-      self._write_row_entity_triples()
-      self.reporter.report_success()
-    except Exception as e:
-      self.reporter.report_failure(str(e))
-      raise e
+    self.provenance_id = self.nodes.provenance_id(self.input_file)
+    self._read_csv()
+    self._drop_ignored_columns()
+    self._check_required_values()
+    self._write_row_entity_triples()
 
   def validate_headers(self) -> list[FileValidationError]:
     mappings = self.get_column_mappings()
