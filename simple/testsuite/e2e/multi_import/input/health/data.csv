@@ -1,2 +1,5 @@
 entity,variable,date,value
+country/USA,Prevalence_Obesity,2018,40.1
 country/USA,Prevalence_Obesity,2020,41.9
+country/USA,Prevalence_Obesity,2022-06,42.4
+country/FRA,Prevalence_Obesity,2019,17.0

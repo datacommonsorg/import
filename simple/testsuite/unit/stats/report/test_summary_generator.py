@@ -18,8 +18,10 @@ import tempfile
 import unittest
 from unittest import mock
 
+from stats.report.model.summary import DateRange
 from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileCounts
+from stats.report.model.summary import FileSummary
 from stats.report.model.summary import Folder
 from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
@@ -109,6 +111,34 @@ class TestSummaryGenerator(unittest.TestCase):
                        provenances=[Provenance(id="iloProv", fileCount=1)]),
                 Folder(folderName="wto"),
             ]))
+
+  def test_file_summary_adds_observations_and_date_range(self):
+    """A file's observations and dates are reported under its provenance."""
+    with tempfile.TemporaryDirectory() as tmp, \
+         create_store(tmp) as store:
+      generator = _generator("wf-123", store.as_dir())
+      generator.record_input_file("oecd", ["oecdProv"], "oecd/a.csv")
+      generator.add_file_summary(
+          FileSummary(filePath="oecd/a.csv",
+                      folder="oecd",
+                      provenanceId="oecdProv",
+                      observations=100,
+                      dateRange=DateRange(min="2005", max="2010")))
+      report = generator.build_report(RunStatus.SUCCESS, _END)
+
+    self.assertEqual(report.folders, [
+        Folder(folderName="oecd",
+               summary=FolderSummary(files=FileCounts(count=1,
+                                                      byType={"csv": 1}),
+                                     provenanceCount=1,
+                                     observations=100),
+               provenances=[
+                   Provenance(id="oecdProv",
+                              fileCount=1,
+                              observations=100,
+                              dateRange=DateRange(min="2005", max="2010"))
+               ])
+    ])
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""
