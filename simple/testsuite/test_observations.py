@@ -477,13 +477,13 @@ def test_observation_properties_order():
 
 def test_each_observation_declares_only_its_own_dimensions():
   """Observations of one variable with and without a dimension value."""
-  header = b.OBS_HEADER + ["sex"]
+  header = b.OBS_HEADER + ["age"]
   result = b.run_csv(
-      b.csv_file(b.obs_row(date="2020") + ["Male"],
+      b.csv_file(b.obs_row(date="2020") + ["Years15To64"],
                  b.obs_row(date="2021") + [""],
                  header=header),
       b.obs_config({
-          **b.OBS_MAPPINGS, "dcid:sex": "sex"
+          **b.OBS_MAPPINGS, "dcid:age": "age"
       }))
   assert result.error is None, result.error
   declared = {
@@ -493,7 +493,7 @@ def test_each_observation_declares_only_its_own_dimensions():
       if r.get("@type") == "dcid:StatVarObservation"
   }
   assert declared == {
-      2020: ["dcid:observationAbout", "dcid:sex"],
+      2020: ["dcid:observationAbout", "dcid:age"],
       2021: ["dcid:observationAbout"],
   }, declared
 
