@@ -93,7 +93,8 @@ function run_py_test {
   python3 -m pytest kg_util/ -s "${cov[@]}"
 
   echo -e "#### Running preprocessor test suite"
-  python3 -m pytest testsuite/ -n auto "${cov_append[@]}"
+  # --durations lists the slowest tests, which bound the parallel run's time.
+  python3 -m pytest testsuite/ -n auto --durations=15 "${cov_append[@]}"
 
   echo -e "#### Running preprocessor regression tool tests"
   python3 -m pytest tools/ "${cov_append[@]}"

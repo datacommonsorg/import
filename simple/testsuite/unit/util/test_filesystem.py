@@ -180,13 +180,20 @@ def test_gcs_objects_with_empty_or_dot_path_segments_are_skipped():
 # File.open_stream decodes text as fs.open(path, "r") does (utf-8,
 # newline=""), so a BOM and CRLF line ends come through unchanged.
 
-# Longer than one read of the text stream (8 KiB), with a quoted line break and
-# multibyte characters that cross read boundaries.
-_LONG_TEXT = "\ufeffa,b\r\n" + "\"x\r\ny\",\u00e9\u4e2d\r\n" * 2000
+# Text with a quoted line break and multibyte characters, after a BOM.
+_ROW = "\"x\r\ny\",\u00e9\u4e2d\r\n"
+_SHORT_TEXT = "\ufeffa,b\r\n" + _ROW * 3
+# Longer than one read of the text stream (8 KiB).
+_LONG_TEXT = "\ufeffa,b\r\n" + _ROW * 2000
 
 
-@pytest.mark.parametrize("text", ["", _LONG_TEXT], ids=["empty", "long"])
-@pytest.mark.parametrize("chunk_size", [7, 8191, 10_001])
+# Tiny chunks only on a short text: each chunk is a request to the fake GCS.
+@pytest.mark.parametrize("text, chunk_size", [
+    pytest.param("", 5, id="empty"),
+    pytest.param(_SHORT_TEXT, 5, id="chunks split a CRLF and a character"),
+    pytest.param(_LONG_TEXT, 8191, id="chunks just under a text read"),
+    pytest.param(_LONG_TEXT, 10_001, id="chunks over a text read"),
+])
 def test_streaming_reads_the_file_text_unchanged(tmp_path, text, chunk_size):
   (tmp_path / "data.csv").write_bytes(text.encode())
   gcs = f"{fake_gcs.new_prefix()}/input"
