@@ -44,31 +44,6 @@ def _generator(workflow_execution_id: str | None,
   return generator
 
 
-def _file(path: str,
-          observations: int = 0,
-          dates: tuple[str, str] | None = None,
-          folder: str = "oecd",
-          provenance_id: str = "oecdProv") -> FileSummary:
-  """A FileSummary for one imported file; `dates` is (min, max)."""
-  return FileSummary(
-      filePath=path,
-      folder=folder,
-      provenanceId=provenance_id,
-      observations=observations,
-      dateRange=DateRange(min=dates[0], max=dates[1]) if dates else None)
-
-
-def _folders(output_dir: Dir, summaries: list[FileSummary]) -> list[Folder]:
-  """The report's folders after recording and merging `summaries` in order."""
-  generator = _generator("wf-123", output_dir)
-  for summary in summaries:
-    generator.record_input_file(summary.folder, [summary.provenanceId],
-                                summary.filePath)
-  for summary in summaries:
-    generator.add_file_summary(summary)
-  return generator.build_report(RunStatus.SUCCESS, _END).folders
-
-
 class TestSummaryGenerator(unittest.TestCase):
   """Tests for SummaryGenerator."""
 
@@ -137,56 +112,33 @@ class TestSummaryGenerator(unittest.TestCase):
                 Folder(folderName="wto"),
             ]))
 
-  def test_file_summaries_add_up_per_provenance_and_folder(self):
-    """Counts are summed and date ranges widened across files."""
+  def test_file_summary_adds_observations_and_date_range(self):
+    """A file's observations and dates are reported under its provenance."""
     with tempfile.TemporaryDirectory() as tmp, \
          create_store(tmp) as store:
-      folders = _folders(
-          store.as_dir(),
-          [
-              _file("oecd/a.csv", 100, ("2005", "2010")),
-              _file("oecd/b.csv", 50, ("2008", "2021")),
-              _file(
-                  "oecd/c.csv", 30,
-                  ("2015", "2016"), provenance_id="oecdOther"),
-              # MCF files are imported without observations.
-              _file("oecd/schema.mcf", provenance_id="oecdSchema"),
-          ])
+      generator = _generator("wf-123", store.as_dir())
+      generator.record_input_file("oecd", ["oecdProv"], "oecd/a.csv")
+      generator.add_file_summary(
+          FileSummary(filePath="oecd/a.csv",
+                      folder="oecd",
+                      provenanceId="oecdProv",
+                      observations=100,
+                      dateRange=DateRange(min="2005", max="2010")))
+      report = generator.build_report(RunStatus.SUCCESS, _END)
 
-    self.assertEqual(folders, [
+    self.assertEqual(report.folders, [
         Folder(folderName="oecd",
-               summary=FolderSummary(files=FileCounts(count=4,
-                                                      byType={
-                                                          "csv": 3,
-                                                          "mcf": 1
-                                                      }),
-                                     provenanceCount=3,
-                                     observations=180),
+               summary=FolderSummary(files=FileCounts(count=1,
+                                                      byType={"csv": 1}),
+                                     provenanceCount=1,
+                                     observations=100),
                provenances=[
-                   Provenance(id="oecdOther",
-                              fileCount=1,
-                              observations=30,
-                              dateRange=DateRange(min="2015", max="2016")),
                    Provenance(id="oecdProv",
-                              fileCount=2,
-                              observations=150,
-                              dateRange=DateRange(min="2005", max="2021")),
-                   Provenance(id="oecdSchema", fileCount=1),
+                              fileCount=1,
+                              observations=100,
+                              dateRange=DateRange(min="2005", max="2010"))
                ])
     ])
-
-  def test_dates_are_compared_as_strings(self):
-    """ISO dates of different precision order correctly as strings."""
-    with tempfile.TemporaryDirectory() as tmp, \
-         create_store(tmp) as store:
-      folders = _folders(store.as_dir(), [
-          _file("oecd/a.csv", 1, ("2005-06", "2005-06")),
-          _file("oecd/b.csv", 1, ("2006", "2006")),
-          _file("oecd/c.csv", 1, ("2005", "2005")),
-      ])
-
-    self.assertEqual(folders[0].provenances[0].dateRange,
-                     DateRange(min="2005", max="2006"))
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""

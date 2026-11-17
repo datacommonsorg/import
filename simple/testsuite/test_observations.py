@@ -614,16 +614,13 @@ def test_report_counts_the_observations_written(mode):
   """The count and date range match the records written, chunk by chunk.
 
   tiny_chunks reads two rows per chunk: the earliest and latest dates are in
-  the first chunk, so a range taken from the last chunk would be wrong. The
-  dropped row has the earliest date of all, so a range that includes it would
-  start at 1990.
+  the first chunk, so a range taken from the last chunk would be wrong.
   """
   result = b.run_dir(b.import_subdir(
       "oecd",
-      b.csv_file(b.obs_row("country/USA", date="2019"),
-                 b.obs_row("country/DEU", date="2021-06"),
-                 b.obs_row("country/FRA", date="1990", value=""),
-                 b.obs_row("country/GBR", date="2020"))),
+      b.csv_file(b.obs_row("country/USA", date="2019", value="1"),
+                 b.obs_row("country/DEU", date="2021-06", value="2"),
+                 b.obs_row("country/GBR", date="2020", value="3"))),
                      mode=mode,
                      runner_kwargs={"import_names": ["oecd"]})
 

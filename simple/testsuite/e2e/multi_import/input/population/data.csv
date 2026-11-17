@@ -1,3 +1,6 @@
 entity,variable,date,value
+country/USA,Count_Person,2010,309000000
 country/USA,Count_Person,2020,331000000
+country/FRA,Count_Person,2015,66500000
 country/FRA,Count_Person,2020,67000000
+country/FRA,Count_Person,2023,68000000
