@@ -1,7 +1,7 @@
 # Preprocessor test suite
 
 Tests for the `simple/` preprocessor. Most of them check **what it outputs**:
-the JSON-LD records, the `report.json` summary and the ingestion-workflow
+the JSON-LD records, the ingestion report and the ingestion-workflow
 handshake. These run the real `stats.runner.Runner` hermetically, with an
 in-process GCS emulator standing in for the network, so nothing inside the
 preprocessor is mocked. Unit tests for self-contained helper modules live

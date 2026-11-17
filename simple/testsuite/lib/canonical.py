@@ -23,7 +23,6 @@ report and handshake.
 
     {
       "records": [("<import folder>", "nodes" | "observations", {record}), ...],
-      "report": {...},     # process/report.json, times and paths removed
       "ingestion_report": {...},  # preprocessor_reports/.../ingestion_report.json, times and paths removed
       "handshake": {...},  # ingestion-workflow record, or null
       "error": {...}       # exception raised by Runner.run(), or null
@@ -95,17 +94,6 @@ def group_by_folder(
     kinds = folders.setdefault(folder, {NODES: {}, OBSERVATIONS: {}})
     kinds[kind].setdefault(rec.get("@id"), []).append(rec)
   return folders
-
-
-def normalize_report(report: dict | None, path_tokens: dict[str, str]):
-  if report is None:
-    return None
-  out = {
-      k: v for k, v in report.items() if k not in ("startTime", "lastUpdate")
-  }
-  if "error" in out:
-    out["error"] = replace_paths(out["error"], path_tokens)
-  return out
 
 
 def normalize_ingestion_report(report: dict | None, tokens: dict[str, str]):
