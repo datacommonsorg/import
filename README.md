@@ -117,9 +117,10 @@ To measure coverage locally:
 
 ```bash
 PY_TEST_COVERAGE=1 ./run_test.sh -p
+JAVA_TEST_COVERAGE=1 mvn test
 ```
 
-This writes `simple/coverage.xml` and `pipeline/workflow/*-helper/coverage.xml`. Set `COVERAGE_BASE_BRANCH=master` to also print coverage of the lines you changed.
+This writes `simple/coverage.xml`, `pipeline/workflow/*-helper/coverage.xml` and `<module>/target/site/jacoco/jacoco.xml`. Set `COVERAGE_BASE_BRANCH=master` to also print coverage of the lines you changed.
 
 ### Coding Guidelines
 
