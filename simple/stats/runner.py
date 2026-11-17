@@ -230,7 +230,7 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
   """Logs each failure's traceback, then raises.
 
   A single failure is re-raised as is, so its type and message reach the
-  report and handshake unchanged. Several are raised together as one
+  handshake and the caller unchanged. Several are raised together as one
   `FileImportsFailedError` that names every failed file.
   """
   if not failures:
@@ -264,8 +264,7 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
   defines are returned for the coordinator to merge. The file's observation
   ids, if any, are saved to `obs_ids_path` (see `stats.obs_id_collisions`).
   The coordinator found the file, and its GCS object if any, so neither is
-  looked up again, and it writes the run's report: the worker's stays in
-  memory.
+  looked up again.
   """
   with _open_worker_store(input_dir_path) as input_store_obj, \
        _open_worker_store(args.output_dir_path) as output_store_obj:
