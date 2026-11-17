@@ -15,10 +15,10 @@
 import logging
 
 from stats.config import Config
+from stats.data import PreprocessorError
 from stats.data import ValidationErrorType
 from stats.nodes import Nodes
 from stats.util import has_namespace_prefix
-from stats.util import is_uri_or_namespace
 
 
 class MetadataValidator:
@@ -37,7 +37,7 @@ class MetadataValidator:
     """Performs all metadata validation checks.
 
     Raises:
-      ValueError: If any validation check fails.
+      PreprocessorError: If any validation check fails.
     """
     referenced_provenances = self._collect_referenced_provenances()
     if not referenced_provenances:
@@ -56,29 +56,12 @@ class MetadataValidator:
   def _collect_referenced_provenances(self) -> set[str]:
     """Extracts all referenced provenance DCIDs from config.json.
 
-    Every input file is strictly required to have a valid provenance DCID
-    starting with 'dcid:'.
+    The config model has checked that every entry names a valid one.
     """
-    referenced = set()
-    for entry in self.config.model.input_files:
-      prov = entry.provenance
-      if not prov:
-        ex = ValueError(
-            f"Metadata Validation Failed: Every input file in config.json "
-            f"must have a 'provenance' property. "
-            f"Found entry missing provenance: "
-            f"{entry.model_dump(by_alias=True, exclude_unset=True)}")
-        ex.error_type = ValidationErrorType.INVALID_CONFIGURATION
-        raise ex
-      if not is_uri_or_namespace(prov):
-        ex = ValueError(
-            f"Metadata Validation Failed: The 'provenance' property must be "
-            f"a valid DCID or URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL). "
-            f"Found invalid provenance: '{prov}'")
-        ex.error_type = ValidationErrorType.INVALID_CONFIGURATION
-        raise ex
-      referenced.add(self._clean_dcid(prov))
-    return referenced
+    return {
+        self._clean_dcid(entry.provenance)
+        for entry in self.config.model.input_files
+    }
 
   def _collect_defined_nodes(self) -> tuple[set[str], dict[str, str]]:
     """Gathers the Provenances that MCF files defined, and their Sources."""
@@ -96,13 +79,11 @@ class MetadataValidator:
     """Verifies all referenced provenances exist in the defined set."""
     missing = sorted(list(referenced - defined))
     if missing:
-      ex = ValueError(
+      raise PreprocessorError(
           f"Metadata Validation Failed: The following referenced provenances "
           f"are not defined in your MCF files: {missing}. "
-          f"Please define them in an MCF file (e.g., Node: dcid:YourProvenance)."
-      )
-      ex.error_type = ValidationErrorType.MISSING_PROVENANCE
-      raise ex
+          f"Please define them in an MCF file (e.g., Node: dcid:YourProvenance).",
+          ValidationErrorType.MISSING_PROVENANCE)
 
   def _validate_source_links(self, defined_provs: set[str],
                              links: dict[str, str]) -> None:
@@ -118,12 +99,11 @@ class MetadataValidator:
           f"  - Provenance '{p}' has no linked Source (source property is missing or empty)"
           for p in missing_sources
       ]
-      ex = ValueError(
+      raise PreprocessorError(
           "Metadata Validation Failed: Linked sources are missing for "
           "defined provenances:\n" + "\n".join(details) +
-          "\nPlease specify a source property on these Provenance nodes.")
-      ex.error_type = ValidationErrorType.MISSING_SOURCE
-      raise ex
+          "\nPlease specify a source property on these Provenance nodes.",
+          ValidationErrorType.MISSING_SOURCE)
 
   def _clean_dcid(self, val: str) -> str:
     """Normalizes a DCID value by ensuring it starts with a namespace prefix."""

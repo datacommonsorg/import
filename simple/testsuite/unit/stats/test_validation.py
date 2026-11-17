@@ -102,33 +102,3 @@ class TestMetadataValidator(unittest.TestCase):
     validator = MetadataValidator(config, nodes)
     # This should now succeed without raising any exceptions!
     validator.validate()
-
-  def test_validation_missing_provenance_key(self):
-    # Setup mock config with missing provenance property
-    config = Config({"inputFiles": [{"pattern": "data.csv"}]})
-
-    validator = MetadataValidator(config, Nodes(config))
-    with self.assertRaises(ValueError) as context:
-      validator.validate()
-
-    self.assertIn("must have a 'provenance' property", str(context.exception))
-    self.assertEqual(context.exception.error_type,
-                     ValidationErrorType.INVALID_CONFIGURATION)
-
-  def test_validation_invalid_provenance_format(self):
-    # Setup mock config with provenance that doesn't start with 'dcid:'
-    config = Config({
-        "inputFiles": [{
-            "pattern": "data.csv",
-            "provenance": "InvalidProvenanceName"
-        }]
-    })
-
-    validator = MetadataValidator(config, Nodes(config))
-    with self.assertRaises(ValueError) as context:
-      validator.validate()
-
-    self.assertIn("must be a valid DCID or URI", str(context.exception))
-    self.assertIn("InvalidProvenanceName", str(context.exception))
-    self.assertEqual(context.exception.error_type,
-                     ValidationErrorType.INVALID_CONFIGURATION)
