@@ -93,12 +93,16 @@ def test_a_worker_reads_each_input_file_once_and_writes_only_shards():
   assert kinds == {"range": csvs, "upload": csvs, "get": 1, "download": 1}
 
 
-def test_a_csv_larger_than_a_header_read_is_read_in_one_request():
+def test_a_csv_larger_than_a_header_read_is_read_in_one_request(monkeypatch):
+  # Header reads shrunk to 1 KiB, so that a small CSV spans several of them
+  # but still fits in one data chunk (8 MiB).
+  header_read_bytes = 1024
+  monkeypatch.setattr("stats.importer._HEADER_READ_CHUNK_BYTES",
+                      header_read_bytes)
   files = _imports("alpha")
-  # 1 MiB: several header reads (256 KiB), one data chunk (8 MiB).
-  rows = [b.obs_row(date=str(1000 + n % 1000)) for n in range(40_000)]
+  rows = [b.obs_row(date=str(1000 + n)) for n in range(100)]
   files["alpha/case.csv"] = b.csv_file(*rows)
-  assert len(files["alpha/case.csv"]) > 1024 * 1024
+  assert len(files["alpha/case.csv"]) > 3 * header_read_bytes
   requests = _run(files, ["alpha"])
 
   case_reads = [
