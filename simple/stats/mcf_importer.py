@@ -47,6 +47,7 @@ class McfImporter(Importer):
 
   def __init__(self, input_file: File, graph_writer: GraphWriter,
                nodes: Nodes) -> None:
+    super().__init__()
     self.input_file = input_file
     self.graph_writer = graph_writer
     self.nodes = nodes

@@ -21,9 +21,12 @@ Observation ids are content hashes, so these tests compare records without
 "@id"; the e2e expected.json files pin exact ids.
 """
 
+import json
 import logging
 
+import pytest
 from testsuite.lib import builders as b
+from testsuite.lib import run as runlib
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
 from testsuite.lib.builders import known_bug
@@ -616,3 +619,114 @@ def test_missing_required_mapping_fails():
                  "ValueError",
                  "CSV Header Validation Failed!",
                  handshake_error_types=("MISSING_REQUIRED_COLUMNS",))
+
+
+# --- Ingestion report ---------------------------------------------------------
+
+
+def _report_folders(result: b.Result) -> dict[str, dict]:
+  """The run's ingestion report folders, by folder name."""
+  return {
+      folder["folderName"]: folder
+      for folder in result.output["ingestion_report"]["folders"]
+  }
+
+
+@pytest.mark.parametrize("mode", runlib.ALL_MODES)
+def test_report_counts_the_observations_written(mode):
+  """The count and date range match the records written, chunk by chunk.
+
+  tiny_chunks reads two rows per chunk: the earliest and latest dates are in
+  the first chunk, so a range taken from the last chunk would be wrong.
+  """
+  result = b.run_dir(b.import_subdir(
+      "oecd",
+      b.csv_file(b.obs_row("country/USA", date="2019", value="1"),
+                 b.obs_row("country/DEU", date="2021-06", value="2"),
+                 b.obs_row("country/GBR", date="2020", value="3"))),
+                     mode=mode,
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  folder = _report_folders(result)["oecd"]
+  provenance = folder["provenances"][0]
+  assert provenance["observations"] == len(result.observations) == 3
+  assert provenance["dateRange"] == {"min": "2019", "max": "2021-06"}
+  assert folder["summary"]["observations"] == 3
+
+
+def test_report_sums_the_files_of_a_provenance_with_any_worker_count():
+  """Files are summed whichever worker process imports them.
+
+  One worker imports every file in turn, so counts must not leak between files.
+  """
+  files = {
+      **b.import_subdir(
+          "oecd",
+          b.csv_file(b.obs_row("country/USA", date="2005"),
+                     b.obs_row("country/FRA", date="2010"))),
+      "oecd/case2.csv":
+          b.csv_file(b.obs_row("country/DEU", date="2021")),
+  }
+  reports = [
+      b.run_dir(files,
+                runner_kwargs={
+                    "import_names": ["oecd"],
+                    "max_workers": workers
+                }).output["ingestion_report"] for workers in (1, 4)
+  ]
+
+  assert reports[0] == reports[1]
+  provenance = reports[0]["folders"][0]["provenances"][0]
+  assert provenance["observations"] == 3
+  assert provenance["dateRange"] == {"min": "2005", "max": "2021"}
+
+
+def test_report_counts_rows_with_the_same_observation_id_each_time():
+  """The count is nodes written, not distinct observations."""
+  row = b.obs_row("country/USA", date="2020")
+  result = b.run_dir(b.import_subdir("oecd", b.csv_file(row, row)),
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  provenance = _report_folders(result)["oecd"]["provenances"][0]
+  assert provenance["observations"] == 2
+
+
+def test_report_counts_rows_without_a_date_but_leaves_them_out_of_the_range():
+  result = b.run_dir(b.import_subdir(
+      "oecd",
+      b.csv_file(b.obs_row("country/USA", date=""),
+                 b.obs_row("country/FRA", date="2020"))),
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  provenance = _report_folders(result)["oecd"]["provenances"][0]
+  assert provenance["observations"] == 2
+  assert provenance["dateRange"] == {"min": "2020", "max": "2020"}
+
+
+def test_report_counts_each_file_under_its_configured_provenance():
+  """With two provenances in one folder, each file counts under its own."""
+  files = b.import_subdir(
+      "oecd", b.csv_file(b.obs_row("country/USA"), b.obs_row("country/FRA")))
+  config = json.loads(files["oecd/config.json"])
+  config["inputFiles"].append({
+      "pattern": "other.csv",
+      "provenance": "dcid:OtherProvenance",
+      "columnMappings": b.OBS_MAPPINGS
+  })
+  files.update({
+      "oecd/config.json":
+          json.dumps(config),
+      "oecd/other.mcf":
+          b.mcf_node("dcid:OtherProvenance",
+                     typeOf="dcs:Provenance",
+                     source=f"dcid:{b.SOURCE}"),
+      "oecd/other.csv":
+          b.csv_file(b.obs_row("country/DEU")),
+  })
+  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd"]})
+
+  counts = {
+      p["id"]: p["observations"]
+      for p in _report_folders(result)["oecd"]["provenances"]
+  }
+  assert counts == {b.PROVENANCE: 2, "OtherProvenance": 1}

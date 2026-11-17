@@ -14,8 +14,13 @@
         "folderName": "nested_data_dir",
         "provenances": [
           {
+            "dateRange": {
+              "max": "2020",
+              "min": "2020"
+            },
             "fileCount": 3,
             "id": "KitchenProvenance",
+            "observations": 2,
             "sourceId": "KitchenSource"
           }
         ],
@@ -27,6 +32,7 @@
             },
             "count": 3
           },
+          "observations": 2,
           "provenanceCount": 1
         }
       }
