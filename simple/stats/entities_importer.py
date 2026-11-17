@@ -97,9 +97,6 @@ class EntitiesImporter(Importer):
   def do_import(self) -> None:
     self.reporter.report_started()
     try:
-      errors = self.validate_headers()
-      if errors:
-        raise ValueError("\n".join(e.error_message for e in errors))
       self.provenance_id = self.nodes.provenance_id(self.input_file)
       self._read_csv()
       self._drop_ignored_columns()

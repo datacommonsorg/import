@@ -104,8 +104,6 @@ def write_output(root: str,
   report = BASE_REPORT if report is None else report
   with open(os.path.join(root, "process", "report.json"), "w") as f:
     json.dump(report, f)
-  with open(os.path.join(root, "process", "report_data.csv.json"), "w") as f:
-    json.dump({"importFiles": report["importFiles"]}, f)
   return root
 
 
@@ -247,8 +245,7 @@ def test_report_json_changed(tmp_path):
   report["status"] = "FAILURE"
   report["importFiles"][f"{INPUT_ROOT}/data.csv"]["status"] = "FAILURE"
   assert nonzero(compare(tmp_path,
-                         report=report)) == dict(report_json_changed=2,
-                                                 worker_reports_changed=1)
+                         report=report)) == dict(report_json_changed=2)
 
 
 def test_missing_output_on_one_side(tmp_path):

@@ -21,7 +21,7 @@ source of run-to-run noise belongs in this module.
 import re
 from typing import Any
 
-# Keys dropped, at any depth, from process/report.json and report_*.json.
+# Keys dropped, at any depth, from process/report.json.
 REPORT_TIMESTAMP_KEYS = frozenset({"startTime", "lastUpdate"})
 
 # The JSON-LD run directory is "<import name>_<YYYYmmdd_HHMMSS_ffffff>".

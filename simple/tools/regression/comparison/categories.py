@@ -53,8 +53,6 @@ CATEGORIES: tuple[Category, ...] = (
     # Reports.
     Category("report_json_changed", _F,
              "A field or importFiles entry of process/report.json differs."),
-    Category("worker_reports_changed", _F,
-             "A per-file process/report_*.json entry differs or is missing."),
     # Run directory and shards.
     Category("run_dir_name_changed", _F,
              "The JSON-LD run directory name (without timestamp) differs."),
