@@ -55,6 +55,15 @@ def _listed_prefix(request: gcs_requests.Request) -> str:
   return prefix.split("/input/", 1)[1]
 
 
+def test_opening_the_output_dir_lists_nothing_under_it():
+  requests = _run(_imports("alpha"), ["alpha"])
+
+  # The new output dir's marker is looked up, then written. Listing the dir
+  # would also list the shards of every earlier run into it.
+  kinds = sorted(r.kind for r in requests.of("init"))
+  assert kinds == ["get", "upload"], kinds
+
+
 def test_each_requested_import_is_listed_once():
   requests = _run(_imports("alpha", "beta", "gamma"), ["alpha", "beta"])
 

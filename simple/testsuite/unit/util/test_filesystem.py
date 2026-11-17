@@ -145,7 +145,7 @@ def fixture_input_dir(request, tmp_path) -> str:
 
 def _list(root: str, subdir: str, include_subdirs: bool) -> dict[str, str]:
   """The files `all_files` finds under `subdir`, as {path: content}."""
-  with create_store(root, mark_gcs_dirs=False) as store:
+  with create_store(root) as store:
     directory = store.as_dir().open_dir(subdir, create=False)
     return {f.path: f.read() for f in directory.all_files(include_subdirs)}
 
@@ -199,7 +199,7 @@ def test_streaming_reads_the_file_text_unchanged(tmp_path, text, chunk_size):
   gcs = f"{fake_gcs.new_prefix()}/input"
   fake_gcs.write_blob(f"{gcs}/data.csv", text)
   with create_store(str(tmp_path)) as local_store, \
-       create_store(gcs, mark_gcs_dirs=False) as gcs_store:
+       create_store(gcs) as gcs_store:
     [local_file] = local_store.as_dir().all_files()
     [gcs_file] = gcs_store.as_dir().all_files()
     assert _read(local_file) == text
@@ -218,7 +218,7 @@ def test_a_gzip_encoded_gcs_object_is_downloaded_whole():
   """
   gcs = f"{fake_gcs.new_prefix()}/input"
   fake_gcs.write_blob(f"{gcs}/data.csv", "a,b\n", content_encoding="gzip")
-  with create_store(gcs, mark_gcs_dirs=False) as store:
+  with create_store(gcs) as store:
     [file] = store.as_dir().all_files()
     whole = io.StringIO("whole object")
     with mock.patch.object(store.fs, "open", return_value=whole) as fs_open:
