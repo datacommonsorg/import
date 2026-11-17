@@ -450,7 +450,6 @@ class Runner:
 
       self.graph_writer.commit_and_close()
 
-      # Report done.
       self.reporter.report_done()
       self._write_report(RunStatus.SUCCESS)
 
