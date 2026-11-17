@@ -16,7 +16,6 @@ import logging
 
 from absl import app
 from absl import flags
-from freezegun import freeze_time
 from stats import constants
 from stats.logger import initialize_logger
 from stats.runner import Runner
@@ -39,16 +38,6 @@ flags.DEFINE_string(
     "now. Any value is accepted so existing callers keep working, but it has "
     "no effect. The flag will be removed once callers stop passing it.",
 )
-flags.DEFINE_bool(
-    "freeze_time",
-    False,
-    "Freeze time in generated reports. Useful for sample and test runs.",
-)
-flags.DEFINE_string(
-    "frozen_time",
-    constants.DEFAULT_FROZEN_TIME,
-    "If freeze_time is True, the time that the run is frozen at.",
-)
 flags.DEFINE_integer(
     "max_workers",
     None,
@@ -60,11 +49,8 @@ flags.DEFINE_integer(
     lower_bound=1,
 )
 
-# If running with time frozen, the packages to be ignored.
-# i.e. packages where time should not be frozen if it leads to errant behavior.
-_FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
-def _run():
+def main(_):
   initialize_logger()
   logging.info("Starting stats data importer job.")
 
@@ -75,15 +61,6 @@ def _run():
       max_workers=FLAGS.max_workers,
   ).run()
   logging.info("Runner finished successfully.")
-
-
-def main(_):
-  if FLAGS.freeze_time:
-    logging.info("Running with time frozen at: %s", FLAGS.frozen_time)
-    with freeze_time(FLAGS.frozen_time, ignore=_FREEZE_TIME_IGNORE_LIST):
-      _run()
-  else:
-    _run()
 
 
 if __name__ == "__main__":
