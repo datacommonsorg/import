@@ -20,7 +20,6 @@ from stats.data import Triple
 from stats.graph_writer import GraphWriter
 from stats.importer import Importer
 from stats.nodes import Nodes
-from stats.reporter import FileImportReporter
 from stats.util import is_uri_or_namespace
 from util.filesystem import File
 
@@ -47,68 +46,59 @@ class McfImporter(Importer):
     """
 
   def __init__(self, input_file: File, graph_writer: GraphWriter,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
+               nodes: Nodes) -> None:
     self.input_file = input_file
     self.graph_writer = graph_writer
-    self.reporter = reporter
     self.nodes = nodes
 
   def do_import(self) -> None:
-    self.reporter.report_started()
-    try:
-      # Pass 1: Resolve local ID mappings and identify metadata subject IDs
-      local2dcid = {}
-      metadata_subject_ids = set()
-      triples_list = list(mcf_to_triples(self.input_file.read_string_io()))
-      for subject_id, predicate, value, _ in triples_list:
-        if predicate == _DCID and value:
-          local2dcid[subject_id] = value
-        elif predicate == _TYPE_OF and strip_namespace(value) in [
-            _PROVENANCE, _SOURCE
-        ]:
-          metadata_subject_ids.add(subject_id)
-      # Compared by dcid, since blocks of one node may spell its id differently
-      # (e.g. "Node: l:src" with "dcid: X", and "Node: dcid:X").
-      metadata_ids = {local2dcid.get(s, s) for s in metadata_subject_ids}
+    # Pass 1: Resolve local ID mappings and identify metadata subject IDs
+    local2dcid = {}
+    metadata_subject_ids = set()
+    triples_list = list(mcf_to_triples(self.input_file.read_string_io()))
+    for subject_id, predicate, value, _ in triples_list:
+      if predicate == _DCID and value:
+        local2dcid[subject_id] = value
+      elif predicate == _TYPE_OF and strip_namespace(value) in [
+          _PROVENANCE, _SOURCE
+      ]:
+        metadata_subject_ids.add(subject_id)
+    # Compared by dcid, since blocks of one node may spell its id differently
+    # (e.g. "Node: l:src" with "dcid: X", and "Node: dcid:X").
+    metadata_ids = {local2dcid.get(s, s) for s in metadata_subject_ids}
 
-      # Pass 2: Map and stream triples to the graph writer in chunks
-      logging.info("Streaming MCF triple parsing and writes for %s...",
-                   self.input_file.full_path())
-      chunk = []
-      all_metadata_triples = []
+    # Pass 2: Map and stream triples to the graph writer in chunks
+    logging.info("Streaming MCF triple parsing and writes for %s...",
+                 self.input_file.full_path())
+    chunk = []
+    all_metadata_triples = []
 
-      for parser_triple in triples_list:
-        if parser_triple[1] == _DCID:
-          continue
+    for parser_triple in triples_list:
+      if parser_triple[1] == _DCID:
+        continue
 
-        triple = _to_triple(parser_triple, local2dcid)
+      triple = _to_triple(parser_triple, local2dcid)
 
-        # Metadata nodes are registered below and written once by Nodes, which
-        # also adds derived properties (e.g. a Source's domain).
-        if triple.subject_id in metadata_ids:
-          all_metadata_triples.append(triple)
-          continue
+      # Metadata nodes are registered below and written once by Nodes, which
+      # also adds derived properties (e.g. a Source's domain).
+      if triple.subject_id in metadata_ids:
+        all_metadata_triples.append(triple)
+        continue
 
-        # Only flush at subject boundaries to prevent splitting a subject's triples
-        if chunk and triple.subject_id != chunk[-1].subject_id and len(
-            chunk) >= 10000:
-          self.graph_writer.write_triples(chunk, self.input_file)
-          chunk = []
-        chunk.append(triple)
-
-      if chunk:
+      # Only flush at subject boundaries to prevent splitting a subject's triples
+      if chunk and triple.subject_id != chunk[-1].subject_id and len(
+          chunk) >= 10000:
         self.graph_writer.write_triples(chunk, self.input_file)
+        chunk = []
+      chunk.append(triple)
 
-      # Register all collected metadata nodes at the end
-      if all_metadata_triples:
-        import_folder = self.nodes.config.import_name(self.input_file)
-        _register_metadata_nodes(all_metadata_triples, self.nodes,
-                                 import_folder)
+    if chunk:
+      self.graph_writer.write_triples(chunk, self.input_file)
 
-      self.reporter.report_success()
-    except Exception as e:
-      self.reporter.report_failure(str(e))
-      raise e
+    # Register all collected metadata nodes at the end
+    if all_metadata_triples:
+      import_folder = self.nodes.config.import_name(self.input_file)
+      _register_metadata_nodes(all_metadata_triples, self.nodes, import_folder)
 
 
 def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:

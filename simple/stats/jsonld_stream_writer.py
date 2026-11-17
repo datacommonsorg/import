@@ -30,7 +30,6 @@ from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
 import pandas as pd
 import requests
-from stats import constants
 from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
@@ -265,33 +264,26 @@ class JsonLdStreamWriter(GraphWriter):
 
   def __init__(self,
                output_dir,
-               import_names,
+               import_names: list[str],
                nodes,
                jsonld_dir_name: Optional[str] = None) -> None:
     self.output_dir = output_dir
-    self.import_names = import_names
     self.nodes = nodes
     self.config = nodes.config
 
-    # Generate unique folder name based on import name and timestamp
-    import_name = None
-    if isinstance(import_names, list):
-      if import_names == [constants.ALL_IMPORTS]:
-        import_name = constants.ALL_IMPORTS
-      else:
-        import_name = "_".join(import_names)
-
-    self.import_name = import_name or "default_import_name"
-    if "/" in self.import_name:
-      self.import_name = self.import_name.replace("/", "_")
+    # The run's name, from its imports (e.g. ["oecd", "ilo"] -> "oecd_ilo", or
+    # ALL_IMPORTS): names its timestamped output folder below, and is the
+    # default folder for global triples (see _global_triples_import).
+    self.import_name = "_".join(import_names).replace("/", "_")
 
     if jsonld_dir_name:
-      unique_dir_name = jsonld_dir_name
+      # A worker's writer: the coordinator's writer created the run folder.
+      self.jsonld_dir = output_dir.open_dir("jsonld", create=False).open_dir(
+          jsonld_dir_name, create=False)
     else:
       timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-      unique_dir_name = f"{self.import_name}_{timestamp}"
-
-    self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(unique_dir_name)
+      self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(
+          f"{self.import_name}_{timestamp}")
 
     self.obs_shard_index = 0
     self.node_shard_index = 0

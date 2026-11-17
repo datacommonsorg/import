@@ -25,13 +25,11 @@ from stats.data import strip_namespace_series
 from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
-from stats.importer import duplicate_column_errors
-from stats.importer import duplicate_property_errors
 from stats.importer import Importer
+from stats.importer import mapping_errors
 from stats.importer import missing_column_mappings_error
 from stats.importer import read_csv_columns
 from stats.nodes import Nodes
-from stats.reporter import FileImportReporter
 from util.filesystem import File
 
 # Mapping from official DCID keys in config.json to internal importer columns.
@@ -101,36 +99,26 @@ class VariablePerRowImporter(Importer):
   """
 
   def __init__(self, input_file: File, graph_writer: GraphWriter,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
+               nodes: Nodes) -> None:
     self.input_file = input_file
     self.graph_writer = graph_writer
-    self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
     self.custom_dimensions = []
     self.column_mappings = {}
 
   def do_import(self) -> None:
-    self.reporter.report_started()
-    try:
-      errors = self.validate_headers()
-      if errors:
-        raise ValueError("\n".join(e.error_message for e in errors))
-      self._map_columns()
-      self._write_observations()
-      self.reporter.report_success()
-    except Exception as e:
-      self.reporter.report_failure(str(e))
-      raise e
+    self._map_columns()
+    self._write_observations()
 
   def validate_headers(self) -> list[FileValidationError]:
     mappings = self.get_column_mappings()
     if not mappings:
       return [missing_column_mappings_error(self.input_file.path)]
-    duplicates = (duplicate_property_errors(self.input_file.path, mappings) +
-                  duplicate_column_errors(self.input_file.path, mappings))
-    if duplicates:
-      return duplicates
+    errors = mapping_errors(self.input_file.path, mappings,
+                            self.config.ignore_columns(self.input_file))
+    if errors:
+      return errors
 
     column_mappings, custom_dimensions = self._parse_column_mappings()
     errors = self._validate_mappings(column_mappings, custom_dimensions)

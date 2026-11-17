@@ -38,9 +38,7 @@ public class EmbeddingContentTest {
             "123456789",
             "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}",
             "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}",
-            List.of("StatisticalVariable"),
-            "gemini-embedding-001",
-            "RETRIEVAL_DOCUMENT");
+            List.of("StatisticalVariable"));
 
     NodeEmbeddingRecord record = content.toNodeEmbeddingRecord(List.of(0.1, 0.2, 0.3));
     assertEquals("Count_Person", record.subjectId());
@@ -56,28 +54,12 @@ public class EmbeddingContentTest {
   @Test
   public void testNodeTypes_nullDefaultsToEmptyAndDefensiveCopy() {
     EmbeddingContent nullTypesContent =
-        new EmbeddingContent(
-            "Count_Person",
-            "base_text_embedding",
-            "123",
-            "{}",
-            "{}",
-            null,
-            "text-embedding-005",
-            "RETRIEVAL_QUERY");
+        new EmbeddingContent("Count_Person", "base_text_embedding", "123", "{}", "{}", null);
     assertTrue(nullTypesContent.nodeTypes().isEmpty());
 
     List<String> mutableTypes = new ArrayList<>(List.of("Topic"));
     EmbeddingContent copiedContent =
-        new EmbeddingContent(
-            "dc/topic/1",
-            "base_text_embedding",
-            "456",
-            "{}",
-            "{}",
-            mutableTypes,
-            "text-embedding-005",
-            "RETRIEVAL_QUERY");
+        new EmbeddingContent("dc/topic/1", "base_text_embedding", "456", "{}", "{}", mutableTypes);
     mutableTypes.add("Mutated");
     assertEquals(List.of("Topic"), copiedContent.nodeTypes());
     assertThrows(
