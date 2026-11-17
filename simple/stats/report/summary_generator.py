@@ -26,6 +26,7 @@ import os
 
 from stats import constants
 from stats.data import FileValidationError
+from stats.report.model.summary import DateRange
 from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileCounts
 from stats.report.model.summary import FileSummary
@@ -48,6 +49,11 @@ class _FolderStats:
   files_by_type: Counter = field(default_factory=Counter)
   # Number of input files per provenance ID.
   files_by_provenance: Counter = field(default_factory=Counter)
+  # StatVarObservation nodes written per provenance ID.
+  observations_by_provenance: Counter = field(default_factory=Counter)
+  # Observation date range per provenance ID. Only provenances with dated
+  # observations have an entry.
+  date_range_by_provenance: dict[str, DateRange] = field(default_factory=dict)
 
 
 class SummaryGenerator:
@@ -59,8 +65,9 @@ class SummaryGenerator:
   end of the run on success or failure, add_folders(), set_provenance_data()
   and write_to_json().
 
-  Worker processes can't update this object, so each returns a FileSummary
-  to the parent and Runner passes it to add_file_summary().
+  Worker processes can't update this object, so each returns its counts in an
+  ImportProcResult, and Runner builds a FileSummary from it for
+  add_file_summary().
 
   """
 
@@ -81,8 +88,7 @@ class SummaryGenerator:
     self._provenance_data: dict[str, dict] = {}
     # Counts per import folder, keyed by folder name.
     self._folders: dict[str, _FolderStats] = defaultdict(_FolderStats)
-    # TODO: Add containers for merged FileSummary counts, node counts and
-    # errors.
+    # TODO: Add containers for node counts and errors.
 
   def set_execution_metadata(self, start_time: str, output_dir: Dir) -> None:
     """Sets run metadata known at the start of the run.
@@ -137,13 +143,22 @@ class SummaryGenerator:
     self._provenance_data[provenance_id] = {"source_id": source_id}
 
   def add_file_summary(self, summary: FileSummary) -> None:
-    """Merges one file's counts, returned by the worker that imported it.
+    """Merges one file's counts into its folder and provenance totals.
+
+    Only sums, minimums and maximums are kept, so the totals are the same in
+    whatever order files are merged.
 
     Args:
-      summary: Observations, date range and nodes written for one file.
+      summary: Observations and their date range written for one file.
     """
-    # TODO: Add to per-folder and per-provenance totals: sum counts, keep the
-    # min and max date, and union node types.
+    stats = self._folders[summary.folder]
+    provenance_id = summary.provenanceId
+    stats.observations_by_provenance[provenance_id] += summary.observations
+    if summary.dateRange is not None:
+      current = stats.date_range_by_provenance.get(provenance_id)
+      stats.date_range_by_provenance[provenance_id] = (
+          summary.dateRange
+          if current is None else current.widen(summary.dateRange))
 
   def populate_node_info(self, folder: str, provenance: list[str],
                          counts_by_type: dict[str, int]) -> None:
@@ -197,7 +212,7 @@ class SummaryGenerator:
       stats = self._folders[name]
       folders.append(self._build_folder(name, stats))
 
-    # TODO: Add observation and node counts once they are recorded.
+    # TODO: Add node counts once they are recorded.
     return IngestionReport(run=metadata, folders=folders)
 
   def _build_folder(self, name: str, stats: _FolderStats) -> Folder:
@@ -207,13 +222,19 @@ class SummaryGenerator:
       source_id = self._provenance_data.get(provenance_id,
                                             {}).get("source_id") or None
       provenances.append(
-          Provenance(id=provenance_id,
-                     sourceId=source_id,
-                     fileCount=stats.files_by_provenance[provenance_id]))
+          Provenance(
+              id=provenance_id,
+              sourceId=source_id,
+              fileCount=stats.files_by_provenance[provenance_id],
+              observations=stats.observations_by_provenance[provenance_id],
+              dateRange=stats.date_range_by_provenance.get(provenance_id)))
 
     files = FileCounts(count=sum(stats.files_by_type.values()),
                        byType=dict(sorted(stats.files_by_type.items())))
-    summary = FolderSummary(files=files, provenanceCount=len(provenances))
+    summary = FolderSummary(files=files,
+                            provenanceCount=len(provenances),
+                            observations=sum(
+                                p.observations for p in provenances))
     return Folder(folderName=name, summary=summary, provenances=provenances)
 
   def _report_dir_name(self) -> str:

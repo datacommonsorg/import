@@ -14,8 +14,13 @@
         "folderName": "kitchen_sink",
         "provenances": [
           {
+            "dateRange": {
+              "max": "2021",
+              "min": "2020"
+            },
             "fileCount": 5,
             "id": "KitchenProvenance",
+            "observations": 8,
             "sourceId": "KitchenSource"
           }
         ],
@@ -27,6 +32,7 @@
             },
             "count": 5
           },
+          "observations": 8,
           "provenanceCount": 1
         }
       }

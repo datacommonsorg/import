@@ -22,6 +22,7 @@ from urllib.parse import urlparse
 import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
+from stats.report.model.summary import DateRange
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
@@ -208,6 +209,23 @@ class FileValidationError:
         "problemColumns": self.problem_columns,
         "errorMessage": self.error_message,
     }
+
+
+@dataclass
+class ImportCounts:
+  """Observations and their dates in one imported file."""
+
+  observations: int = 0
+  date_range: DateRange | None = None
+
+  def add(self, other: Self) -> Self:
+    """Returns the sum of both counts, with a date range covering both."""
+    if self.date_range is None or other.date_range is None:
+      date_range = self.date_range or other.date_range
+    else:
+      date_range = self.date_range.widen(other.date_range)
+    return ImportCounts(observations=self.observations + other.observations,
+                        date_range=date_range)
 
 
 class ImportType(StrEnum):
