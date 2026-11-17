@@ -177,9 +177,6 @@ def _run_runner(paths: _Paths, mode: Mode,
                 runner_kwargs: dict | None) -> dict | None:
   """
   Runs Runner; returns the exception it raised, as a dict, or None.
-
-  The writer caches custom namespace prefixes in a module global; every run
-  starts from a clean slate so runs cannot influence each other.
   """
   _check_workers_inherit_patches()
   env = {
@@ -188,7 +185,6 @@ def _run_runner(paths: _Paths, mode: Mode,
       **fake_gcs.env(),
   }
   with mock.patch.dict(os.environ, env), \
-       mock.patch("stats.jsonld_stream_writer._KNOWN_CUSTOM_PREFIXES", set()), \
        mode.patches():
     from stats.runner import Runner  # pylint: disable=import-outside-toplevel
     try:
@@ -205,11 +201,10 @@ def _run_runner(paths: _Paths, mode: Mode,
 
 
 def _read_output(paths: _Paths, error: dict | None) -> dict:
-  """Reads the run's records, report and handshake into canonical form."""
+  """Reads the run's records, handshake and ingestion report into canonical form."""
   fake_gcs.download_dir(paths.output, paths.local_out)
   handshake_text = fake_gcs.read_text(
       f"{paths.temp}/datacommons/ingestion_records/{WORKFLOW_ID}.json")
-  report = _read_json(os.path.join(paths.local_out, "process", "report.json"))
   ingestion_report = _read_json(
       os.path.join(paths.local_out, "preprocessor_reports", WORKFLOW_ID,
                    "ingestion_report.json"))
@@ -221,8 +216,6 @@ def _read_output(paths: _Paths, error: dict | None) -> dict:
   output = {
       "records":
           canonical.load_jsonld(os.path.join(paths.local_out, "jsonld")),
-      "report":
-          canonical.normalize_report(report, tokens),
       "handshake":
           canonical.normalize_handshake(
               json.loads(handshake_text) if handshake_text else None, tokens),

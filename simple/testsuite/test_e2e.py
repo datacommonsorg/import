@@ -22,8 +22,8 @@ Each folder under e2e/ is one dataset:
                            imports to run
   e2e/<name>/expected.json the canonical output (see lib/canonical.py):
                            every JSON-LD record per import folder, the
-                           report.json summary, the workflow handshake, the
-                           ingestion report and the error, if any
+                           workflow handshake, the ingestion report and the
+                           error, if any
 
 Every dataset runs in every execution mode (lib/run.py), and each aspect of
 the output is its own test, so a failure names the dataset, the mode and what
@@ -52,7 +52,7 @@ E2E_DIR = os.path.join(os.path.dirname(__file__), "e2e")
 DATASETS = sorted(
     os.path.basename(os.path.dirname(p))
     for p in glob.glob(os.path.join(E2E_DIR, "*", "run.json")))
-ASPECTS = ("records", "report", "handshake", "ingestion_report", "error")
+ASPECTS = ("records", "handshake", "ingestion_report", "error")
 
 # Known bugs, as xfails. Strict ones fail with XPASS once fixed, so the entry
 # must then be removed. Non-strict ones are for nondeterministic bugs.
@@ -124,7 +124,6 @@ def _write_expected(dataset: str) -> None:
   reference = _output(dataset, run.DEFAULT_MODE)
   expected = {
       "records": _records_view(reference["records"]),
-      "report": reference["report"],
       "handshake": reference["handshake"],
       "ingestion_report": reference["ingestion_report"],
       "error": reference["error"],

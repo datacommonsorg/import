@@ -21,9 +21,9 @@ from typing import Any
 from tools.regression.comparison import shards
 from tools.regression.comparison.categories import Findings
 from tools.regression.comparison.categories import sides
+from tools.regression.comparison.ingestion_report import compare_ingestion_reports
 from tools.regression.comparison.nodes import NodeComparer
 from tools.regression.comparison.observations import ObservationComparer
-from tools.regression.comparison.process_reports import compare_reports
 
 
 @dataclasses.dataclass(frozen=True)
@@ -52,7 +52,7 @@ def compare_outputs(baseline_dir: str,
     observations = ObservationComparer(findings, pool, f"{spill}/obs")
     nodes = NodeComparer(findings, pool, f"{spill}/nodes")
     inventory = shards.compare_inventory(*trees, findings, pool)
-    reports = compare_reports(baseline_dir, candidate_dir, findings)
+    reports = compare_ingestion_reports(baseline_dir, candidate_dir, findings)
     stats = {
         "inventory": inventory,
         "reports": reports,

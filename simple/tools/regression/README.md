@@ -127,7 +127,8 @@ side's code, output directory and log, then:
 - **Nodes** are matched by @id. All records of an @id, from any folder or
   shard, are merged into one set of values per property first, so splitting
   or duplicating a subject's records does not change its content.
-- **Reports:** `process/report.json`, without volatile fields.
+- **Ingestion report:** `preprocessor_reports/[<id>/]ingestion_report.json`:
+  the `run` block without volatile fields, and each folder's entry.
 - **Shards:** observation shards are matched by name. Node shards, whose
   names end in a random uid, are matched by content within their folder.
 
@@ -143,7 +144,7 @@ Informational ones change only the layout of the same graph, or the warnings.
 | `exit_status_changed` | failing | The exit status differs, or one side timed out. |
 | `error_lines_increased` | failing | The candidate logged more ERROR/CRITICAL lines or Python tracebacks. |
 | `warning_lines_changed` | informational | The number of WARNING lines differs. |
-| `report_json_changed` | failing | A field of `process/report.json` differs. |
+| `ingestion_report_changed` | failing | A field of the ingestion report's `run` block (status, mode, folder names) or a folder's entry (file counts, provenances) differs. |
 | `run_dir_name_changed` | failing | The `jsonld/<import name>` run directory, without its timestamp, differs. |
 | `jsonld_context_changed` | failing | The set of `@context` values in the shards differs. |
 | `shard_set_changed` | informational | An observation shard name exists on one side only, or a folder has a different number of node shards. |
@@ -162,9 +163,9 @@ Informational ones change only the layout of the same graph, or the warnings.
 | `node_records_changed` | informational | A node @id is written as a different number of records, for example when a duplicate record is removed or a subject is split over shards. |
 
 The comparison ignores only what is listed in
-[comparison/volatile.py](comparison/volatile.py): report timestamps
-(`startTime`, `lastUpdate`), the run directory's timestamp suffix, the random
-uid in node shard names.
+[comparison/volatile.py](comparison/volatile.py): the ingestion report's
+times and own path (`run.startTime`, `run.endTime`, `run.outputPath`), the run
+directory's timestamp suffix, and the random uid in node shard names.
 
 ## Thresholds and exit codes
 

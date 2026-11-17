@@ -345,8 +345,8 @@ def test_files_after_a_failed_one_still_run():
   A failure does not cancel the other files.
 
   Workers upload their output as they finish (leaving it behind is a known
-  gap), so the good files' observations show that they ran. The report does
-  not show file statuses; see _REPORT in test_e2e.py.
+  gap), so the good files' observations show that they ran. The ingestion
+  report has no per-file status, so this is the only way to see it.
   """
   result = b.run(
       {
