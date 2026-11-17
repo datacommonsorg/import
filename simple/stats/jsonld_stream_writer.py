@@ -23,7 +23,8 @@ import json
 import logging
 import os
 import tempfile
-from typing import Callable, Optional
+import types
+from typing import Any, Callable, Mapping, Optional
 import uuid
 
 from google.api_core.exceptions import GoogleAPICallError
@@ -46,12 +47,13 @@ DCID_URL = "https://datacommons.org/browser/"
 _CHUNK_SIZE = 10000
 _UPLOAD_CONCURRENCY = 4
 
-# Distinct values whose JSON-LD forms are cached, per process: enough for the
-# variables, places and properties of a large file. Each cache holds at most
-# a few tens of MB.
+# Distinct values whose JSON-LD forms are cached, per process and per cache:
+# enough for the variables, places and properties of a large file.
 _CACHE_SIZE = 1 << 16
 
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
+
+_NO_PROPS: Mapping[str, Any] = types.MappingProxyType({})
 
 
 def _rewrite_custom_ns_to_dcid(val: str) -> str:
@@ -130,32 +132,33 @@ def _prefix_dcid(key: str) -> str:
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
-def _decode_props(props: str) -> tuple[dict, str]:
+def _decode_props(props: str) -> tuple[Mapping[str, Any], str]:
   """The cached part of `_parse_props_json`."""
   parsed = json.loads(props)
   if not isinstance(parsed, dict) or not parsed:
-    return {}, props
-  return parsed, json.dumps(parsed, sort_keys=True)
+    return _NO_PROPS, props
+  # Read-only: rows with the same properties share it.
+  return types.MappingProxyType(parsed), json.dumps(parsed, sort_keys=True)
 
 
 def _parse_props_json(props: str, entity: str,
-                      variable: str) -> tuple[dict, str]:
+                      variable: str) -> tuple[Mapping[str, Any], str]:
   """Parses an observation's properties JSON for its node and its @id.
 
   Returns the properties, in their order in `props`, and their JSON with
   sorted keys, so that the @id doesn't depend on the order the config declares
   them in (or `props` itself if there are none). The properties are cached
-  and shared between rows, so don't change them.
+  and shared between rows, so they're read-only.
   """
   if not props:
-    return {}, props
+    return _NO_PROPS, props
   try:
     return _decode_props(props)
   except json.JSONDecodeError as e:
     logging.warning(
         "Failed to decode properties JSON for observation %s/%s: %s", entity,
         variable, e)
-    return {}, props
+    return _NO_PROPS, props
 
 
 def _build_observation_node(row: tuple) -> dict:

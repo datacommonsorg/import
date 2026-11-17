@@ -488,12 +488,14 @@ def test_each_observation_declares_only_its_own_dimensions():
   assert result.error is None, result.error
   declared = {
       r["dcid:observationDate"]:
-          str(r["dcid:variableMeasured"].get("dcid:observationProperties"))
+          r["dcid:variableMeasured"].get("dcid:observationProperties")
       for r in result.added
       if r.get("@type") == "dcid:StatVarObservation"
   }
-  assert "sex" in declared[2020], declared
-  assert "sex" not in declared[2021], declared
+  assert declared == {
+      2020: ["dcid:observationAbout", "dcid:sex"],
+      2021: ["dcid:observationAbout"],
+  }, declared
 
 
 def test_ignored_column_is_dropped():
