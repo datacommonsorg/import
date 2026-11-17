@@ -106,6 +106,16 @@ def upload_dir(local_dir: str, gcs_dir: str) -> None:
       bucket.blob(f"{prefix}/{rel}").upload_from_filename(path)
 
 
+def write_blob(gcs_path: str,
+               data: str | bytes,
+               content_encoding: str | None = None) -> None:
+  """Writes one object, e.g. a directory marker ("gs://.../dir/", "")."""
+  bucket = _client().bucket(BUCKET)
+  blob = bucket.blob(gcs_path.removeprefix(f"gs://{BUCKET}/"))
+  blob.content_encoding = content_encoding
+  blob.upload_from_string(data)
+
+
 def download_dir(gcs_dir: str, local_dir: str) -> None:
   """Copies every object under a gs:// directory to a local directory."""
   bucket = _client().bucket(BUCKET)

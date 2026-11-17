@@ -15,9 +15,10 @@
 Runs the real preprocessor (stats.runner.Runner) hermetically.
 
 Every test in the suite goes through run_preprocessor(): it takes an input
-directory (config.json plus data files), runs Runner in the requested mode
-and returns the canonical output (see canonical.py). Runner always writes to
-a fake GCS, as in the ingestion workflow; the output is read back from there.
+directory (one subdirectory per import, each with its config.json and data
+files), runs Runner in the requested mode and returns the canonical output
+(see canonical.py). Runner always writes to a fake GCS, as in the ingestion
+workflow; the output is read back from there.
 
 Modes change *how* the preprocessor runs, never *what* it must produce. Every
 mode imports files in worker processes, as in production:
@@ -246,17 +247,26 @@ def _read_json(path: str) -> Any:
     return json.load(f)
 
 
-def write_input_dir(files: dict[str, str | bytes], config: dict | None) -> str:
-  """Materializes {relative path: content} (+ config) in a temp dir."""
+def write_input_dir(files: dict[str, str | bytes],
+                    config: dict | None,
+                    import_name: str | None = None) -> str:
+  """
+  Materializes {relative path: content} (+ config) in a temp dir.
+
+  With import_name, they are written to that import's subdirectory of it.
+  """
   root = tempfile.mkdtemp(prefix="testsuite-input-")
+  import_dir = os.path.join(root, import_name) if import_name else root
+  os.makedirs(import_dir, exist_ok=True)
   for rel, content in files.items():
-    path = os.path.join(root, rel)
+    path = os.path.join(import_dir, rel)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     mode = "wb" if isinstance(content, bytes) else "w"
     text_args = {} if mode == "wb" else {"newline": "", "encoding": "utf-8"}
     with open(path, mode, **text_args) as f:
       f.write(content)
   if config is not None:
-    with open(os.path.join(root, "config.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(import_dir, "config.json"), "w",
+              encoding="utf-8") as f:
       json.dump(config, f, indent=2)
   return root

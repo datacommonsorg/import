@@ -31,10 +31,18 @@ def missing_column_mappings_error(file_path: str) -> FileValidationError:
       "to a property DCID, or list it in 'ignoreColumns'.")
 
 
+# Bytes fetched per request when reading a CSV header from GCS: enough for the
+# header and first row of almost every file in one request.
+_HEADER_READ_CHUNK_BYTES = 256 * 1024
+
+
 def read_csv_columns(input_file) -> set[str] | FileValidationError:
-  """Returns the header columns of a CSV file, or the error if it can't be read."""
+  """Returns the header columns of a CSV file, or the error if it can't be read.
+
+  Only the start of the file is read.
+  """
   try:
-    with input_file.open_stream() as stream:
+    with input_file.open_stream(chunk_size=_HEADER_READ_CHUNK_BYTES) as stream:
       return set(pd.read_csv(stream, nrows=0).columns)
   except Exception as e:
     return FileValidationError(
@@ -139,15 +147,47 @@ def duplicate_column_errors(
   ]
 
 
+def mapped_and_ignored_errors(
+    file_path: str, mappings: dict[str, str],
+    ignore_columns: list[str]) -> list[FileValidationError]:
+  """
+  Checks that no column is both mapped and listed in `ignoreColumns`.
+
+  A column is either imported or ignored; listing it in both says neither.
+  Reports every such column at once.
+  """
+  both = sorted(set(mappings.values()) & set(ignore_columns))
+  if not both:
+    return []
+  return [
+      FileValidationError(
+          file=file_path,
+          error_type=ValidationErrorType.INVALID_CONFIGURATION,
+          problem_columns=both,
+          error_message=
+          f"The CSV file '{file_path}' both maps and ignores column(s): {both}. Remove each from 'columnMappings' or from 'ignoreColumns'."
+      )
+  ]
+
+
+def mapping_errors(file_path: str, mappings: dict[str, str],
+                   ignore_columns: list[str]) -> list[FileValidationError]:
+  """
+  Returns the `columnMappings` errors that can be found without the header.
+
+  These are properties or columns mapped twice, and columns both mapped and
+  ignored.
+  """
+  return (duplicate_property_errors(file_path, mappings) +
+          duplicate_column_errors(file_path, mappings) +
+          mapped_and_ignored_errors(file_path, mappings, ignore_columns))
+
+
 class Importer:
   """The base class for all importers."""
 
   def do_import(self) -> None:
     pass
-
-  def validate_headers(self) -> list[FileValidationError]:
-    """Validates CSV headers and returns a list of validation errors (empty if valid)."""
-    return []
 
   def get_column_mappings(self) -> dict[str, str]:
     """Returns the column mappings for the input file."""

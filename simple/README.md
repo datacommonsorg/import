@@ -7,11 +7,14 @@ are consumed by the Data Commons ingestion pipeline (the "dcpbridge" workflow).
 ## Default usage
 
 ```shell
-python3 -m stats.main
+python3 -m stats.main --imports=<import>
 ```
 
-By default it reads input files from the `.data/input` folder and writes output
-to the `.data/output` folder.
+Each import is a subdirectory of the input directory with its own
+`config.json` (see [config.md](stats/config.md)). `--imports` is required: one
+import, several comma-separated ones, or `ALL_IMPORTS` for every subdirectory
+that has a `config.json`. By default it reads input files from the
+`.data/input` folder and writes output to the `.data/output` folder.
 
 ## Other options
 
@@ -29,7 +32,7 @@ All output is written under `--output_dir`, which can be a local path or a
 * `jsonld/<import_name>_<timestamp>/<import_name>/`: the generated JSON-LD
   shards. Node shards are named `node-<index>-<uid>.jsonld` and observation
   shards are named `observation-<sanitized_input_file>-<index>.jsonld`.
-* `process/report.json`: the import report, including per-file status.
+* `process/report.json`: the run's status (and error, if it failed).
 
 There is no database output. The importer streams shards to a local temporary
 directory as it runs and bulk uploads them to the output directory at the end
@@ -50,7 +53,7 @@ it with `upstream/master` on a real dataset using the
 [regression check tool](tools/regression/README.md):
 
 ```shell
-python3 -m tools.regression --input_dir=//path/to/input
+python3 -m tools.regression --input_dir=//path/to/input -- --imports=<import>
 ```
 
 It reports output differences (byte-level and semantic), wall and CPU time,

@@ -1,6 +1,8 @@
 # Importer Config
 
 The config parameters for the files to be imported should be specified in a `config.json` file.
+Each import is a subdirectory of the input directory with its own `config.json`,
+and every run names the imports it runs with `--imports`.
 
 ## Sample `config.json`
 
@@ -106,8 +108,8 @@ names, and no column heading is used as a DCID on its own.
 
 Every column in the CSV must be either mapped in `columnMappings` or listed in
 `ignoreColumns`. Otherwise the import fails with one error that lists all the
-unmapped columns. A CSV whose entry has no `columnMappings` fails the import as
-well.
+unmapped columns. A column can't be both mapped and listed in `ignoreColumns`.
+A CSV whose entry has no `columnMappings` fails the import as well.
 Each property may be mapped from only one column. Keys that differ only by
 namespace name the same property, so mapping both `dcid:unit` and `unit` fails
 the import too. Likewise, each column may be mapped to only one property.
@@ -119,8 +121,9 @@ have defined in MCF.
 
 For `"entities"` imports, `dcid:dcid` and `dcid:typeOf` are always required:
 the column mapped to `dcid:dcid` gives each row's DCID, and the column mapped to
-`dcid:typeOf` gives its type (class DCID), for example `Author`. Each other
-mapped column's values are written under its mapped DCID. For example:
+`dcid:typeOf` gives its type (class DCID), for example `Author`. A row with
+either value empty fails the import, with an error listing those rows. Each
+other mapped column's values are written under its mapped DCID. For example:
 
 ```json
 "columnMappings": {
@@ -163,7 +166,7 @@ custom dimension properties) applied as defaults to every row in the file.
 
 ## Subdirectories
 
-Files in subdirectories of the input directory are matched against the
+Files in subdirectories of an import's directory are matched against the
 `inputFiles` patterns like any other file, except those under an `archives/`
 directory, which are never imported.
 

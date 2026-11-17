@@ -19,6 +19,7 @@ from datetime import timezone
 import json
 import logging
 import os
+import posixpath
 import tempfile
 import traceback
 from typing import Callable, Optional
@@ -46,7 +47,6 @@ from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
-from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
@@ -54,11 +54,18 @@ from util.file_match import match
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
+from util.filesystem import GcsObject
 from util.filesystem import is_gcs_path
 from util.filesystem import join_path
 from util.filesystem import Store
 
 _ARCHIVES_DIR_NAME = "archives"
+# Every run names its imports: each is a subdirectory of the input dir with its
+# own config.json.
+_NO_IMPORTS_ERROR = (
+    "No imports to run. Pass --imports with the import subdirectories of the"
+    " input directory to import, e.g. --imports=oecd or --imports=oecd,ilo, or"
+    f" --imports={constants.ALL_IMPORTS} for all of them.")
 # Upper bound on the threads that validate CSV headers. Header validation reads
 # only the first rows of each file and spends its time waiting on storage (often
 # GCS), so it is bounded independently of the CPU count; 32 matches the GCS
@@ -68,6 +75,24 @@ _MAX_HEADER_VALIDATION_THREADS = 32
 # count above which no extra workers are added (see default_max_workers).
 _GCS_WORKERS_PER_CPU = 2
 _MAX_GCS_WORKERS = 32
+
+
+def _import_names_or_raise(names: list[str] | None) -> list[str]:
+  """Returns the run's imports, stripped and without blanks.
+
+  Each must name a subdirectory of the input dir, so names that resolve to the
+  input dir itself or outside it (".", "..", "../x", "/x") are rejected.
+  """
+  imports = [name.strip() for name in names or [] if name.strip()]
+  if not imports:
+    raise invalid_configuration(_NO_IMPORTS_ERROR)
+  for name in imports:
+    path = posixpath.normpath(name)
+    if path in (".", "..") or path.startswith("../") or posixpath.isabs(path):
+      raise invalid_configuration(
+          f"Invalid import {name!r}: an import is a subdirectory of the input"
+          " directory.")
+  return imports
 
 
 def default_max_workers(uses_gcs: bool) -> int:
@@ -103,14 +128,12 @@ def _create_importer_for_file(
     config: Config,
     input_file: File,
     graph_writer: GraphWriter,
-    reporter: FileImportReporter,
     nodes: Nodes,
 ) -> Importer:
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
         input_file=input_file,
         graph_writer=graph_writer,
-        reporter=reporter,
         nodes=nodes,
     )
 
@@ -122,7 +145,6 @@ def _create_importer_for_file(
       return VariablePerRowImporter(
           input_file=input_file,
           graph_writer=graph_writer,
-          reporter=reporter,
           nodes=nodes,
       )
 
@@ -130,7 +152,6 @@ def _create_importer_for_file(
       return EntitiesImporter(
           input_file=input_file,
           graph_writer=graph_writer,
-          reporter=reporter,
           nodes=nodes,
       )
 
@@ -160,8 +181,7 @@ class ImportProcResult:
 class _WorkerArgs:
   """Arguments that are the same for every worker process in a run."""
   output_dir_path: str
-  process_dir_path: str
-  import_names: list[str] | None
+  import_names: list[str]
   config: ImportConfig
   jsonld_dir_name: str
 
@@ -227,15 +247,16 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
 def _open_worker_store(path: str) -> Store:
   """Opens, in a worker process, a directory that the coordinator opened.
 
-  The coordinator's stores already wrote the GCS directory markers that the
-  worker needs. Marking again for every file sends the same marker objects
-  many concurrent writes, which GCS rejects with 429 errors.
+  Workers only read the input, which needs no GCS directory markers, and
+  write under output dirs whose markers the coordinator already wrote.
+  Marking again for every file sends the same marker objects many concurrent
+  writes, which GCS rejects with 429 errors.
   """
   return create_store(path, mark_gcs_dirs=False)
 
 
-def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
-                            args: _WorkerArgs,
+def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
+                            input_dir_path: str, args: _WorkerArgs,
                             obs_ids_path: str) -> ImportProcResult:
   """Imports one file in a worker process and returns its results.
 
@@ -243,29 +264,26 @@ def _run_single_import_proc(file_rel_path: str, input_dir_path: str,
   which comes from config. The Provenance and Source nodes that an MCF file
   defines are returned for the coordinator to merge. The file's observation
   ids, if any, are saved to `obs_ids_path` (see `stats.obs_id_collisions`).
+  The coordinator found the file, and its GCS object if any, so neither is
+  looked up again, and it writes the run's report: the worker's stays in
+  memory.
   """
   with _open_worker_store(input_dir_path) as input_store_obj, \
-       _open_worker_store(args.output_dir_path) as output_store_obj, \
-       _open_worker_store(args.process_dir_path) as process_store_obj:
-    input_dir = input_store_obj.as_dir()
-    output_store = output_store_obj.as_dir()
-    process_store = process_store_obj.as_dir()
-    input_store = input_dir.open_file(file_rel_path)
+       _open_worker_store(args.output_dir_path) as output_store_obj:
+    input_file = File(input_store_obj,
+                      file_rel_path,
+                      create_if_missing=False,
+                      exists=True,
+                      gcs_object=gcs_object)
 
     config = Config(args.config)
     nodes = Nodes(config=config)
-    graph_writer = JsonLdStreamWriter(output_store,
+    graph_writer = JsonLdStreamWriter(output_store_obj.as_dir(),
                                       args.import_names,
                                       nodes,
                                       jsonld_dir_name=args.jsonld_dir_name)
-
-    sanitized_path = input_store.full_path().replace("://",
-                                                     "_").replace("/", "_")
-    report_file = process_store.open_file(f"report_{sanitized_path}.json")
-    reporter = ImportReporter(report_file).get_file_reporter(input_store)
-
-    importer = _create_importer_for_file(config, input_store, graph_writer,
-                                         reporter, nodes)
+    importer = _create_importer_for_file(config, input_file, graph_writer,
+                                         nodes)
     importer.do_import()
     graph_writer.commit_and_close()
     if graph_writer.obs_hash_set:
@@ -298,6 +316,11 @@ def _parse_config_json(text: str, path: str) -> object:
     logging.error("Failed to parse JSON from %s: %s", path, e)
     e.error_type = ValidationErrorType.INVALID_CONFIGURATION
     raise
+
+
+def _is_archived(file: File) -> bool:
+  """Whether `file` is under an archives dir, whose files aren't imported."""
+  return _ARCHIVES_DIR_NAME in file.path.split("/")
 
 
 def _scope_input_file(entry: InputFileConfig, rel_dir: str) -> InputFileConfig:
@@ -357,6 +380,9 @@ class Runner:
     self.input_store: Store | None = None
     self.config: Config | None = None
     self.nodes: Nodes | None = None
+    # Every file under an input dir, by the dir's path relative to the input
+    # store ("" for its root), filled as _list_input_dir() lists each dir.
+    self._input_dir_files: dict[str, list[File]] = {}
     # Set while importing.
     self.graph_writer = None
     self.trigger_workflow_info = None
@@ -365,14 +391,19 @@ class Runner:
         os.getenv("WORKFLOW_EXECUTION_ID"))
 
   def _open_input_store(self, path: str) -> Store:
-    """Opens the input store, to be closed with the others when the run ends."""
-    self.input_store = create_store(path)
+    """Opens the input store, to be closed with the others when the run ends.
+
+    The input is only read, so no GCS directory markers are written into it.
+    """
+    self.input_store = create_store(path, mark_gcs_dirs=False)
     self.all_stores.append(self.input_store)
     return self.input_store
 
   def _load_config(self) -> None:
     """Opens the input store, and reads and validates the config."""
-    imports = self.import_names or []
+    imports = _import_names_or_raise(self.import_names)
+    # Reports and the writer name the run's folders after the cleaned names.
+    self.import_names = imports
 
     # Case A: Bulk Load (ALL_IMPORTS)
     if imports == [constants.ALL_IMPORTS]:
@@ -392,15 +423,10 @@ class Runner:
           f"{fspath.dirname(c.path)}/" for c in configs)
 
     # Case C: Single Import
-    elif imports:
+    else:
       import_dir = join_path(self.input_dir_path, imports[0])
       logging.info("Using import specific directory: %s", import_dir)
       input_store = self._open_input_store(import_dir)
-      self._read_config_in_dir(input_store.as_dir())
-
-    # Case D: Default action (config at root)
-    else:
-      input_store = self._open_input_store(self.input_dir_path)
       self._read_config_in_dir(input_store.as_dir())
 
     # The input dir is searched recursively, so it must not hold the output.
@@ -412,26 +438,20 @@ class Runner:
           is_gcs_path(store.root_path) for store in self.all_stores))
 
   def _start_summary(self, start_time: str) -> None:
-    self.summary_generator.set_execution_metadata(
-        start_time=start_time,
-        folder_names=self._report_folder_names(),
-        output_dir=self.output_dir)
+    self.summary_generator.set_execution_metadata(start_time=start_time,
+                                                  output_dir=self.output_dir)
 
   def run(self):
-    start_time = _utc_now()
-    summary_started = False
+    self._start_summary(_utc_now())
     try:
       self._load_config()
-      self._start_summary(start_time)
-      summary_started = True
 
       self._run_imports_and_export_jsonld()
 
       self.graph_writer.commit_and_close()
 
-      # Report done.
       self.reporter.report_done()
-      self.summary_generator.write_to_json(RunStatus.SUCCESS, _utc_now())
+      self._write_report(RunStatus.SUCCESS)
 
       # Close all file storage.
       for store in self.all_stores:
@@ -454,10 +474,7 @@ class Runner:
                                 error_message=str(e))
         ]
 
-      # The config failed to load: the summary starts with the folders known.
-      if not summary_started:
-        self._start_summary(start_time)
-      self.summary_generator.write_to_json(RunStatus.FAILURE, _utc_now())
+      self._write_report(RunStatus.FAILURE)
 
       for store in self.all_stores:
         try:
@@ -471,13 +488,50 @@ class Runner:
       )
       raise
 
+  def _record_input_files(self, files: list[File]) -> None:
+    """Records each matched input file in the ingestion report."""
+    for file in files:
+      self.summary_generator.record_input_file(
+          folder=self._input_folder_name(file),
+          provenance=[self.nodes.provenance_id(file)],
+          file_path=file.path)
+
+  def _input_folder_name(self, file: File) -> str:
+    """Returns the import an input file belongs to, for the report.
+
+    With several imports or ALL_IMPORTS, the import folder the file is under,
+    e.g. "health" for "health/data.csv" (with nested imports "a/" and "a/b/",
+    the longest matching one); otherwise the one import --imports named.
+    """
+    prefixes = [
+        prefix for prefix in self.active_import_prefixes or []
+        if file.path.startswith(prefix)
+    ]
+    if not prefixes:
+      return self.import_names[0]
+    return max(prefixes, key=len).rstrip("/")
+
   def _report_folder_names(self) -> list[str]:
-    """Returns the individual import folders in the case of bulk reports"""
+    """Returns the import folders this run was asked to import."""
     if self.import_names == [constants.ALL_IMPORTS]:
       # The folders found under the input dir, e.g. "folderA/" -> "folderA".
       return sorted(
           prefix.rstrip("/") for prefix in self.active_import_prefixes or [])
     return list(self.import_names or [])
+
+  def _record_provenance_sources(self) -> None:
+    """Records each known provenance's source in the ingestion report."""
+    for provenance in self.nodes.provenances.values():
+      self.summary_generator.set_provenance_data(provenance.id,
+                                                 provenance.source_id)
+
+  def _write_report(self, status: RunStatus) -> None:
+    """Writes the ingestion report with the run's final status."""
+    # Requested folders are listed even if no input files were found in them.
+    self.summary_generator.add_folders(self._report_folder_names())
+    if self.nodes:  # No provenances if the config failed to load.
+      self._record_provenance_sources()
+    self.summary_generator.write_to_json(status, _utc_now())
 
   def _handle_workflow_handoff(self) -> None:
     """Writes processed import metadata to a GCS handshake file for the ingestion workflow."""
@@ -551,15 +605,29 @@ class Runner:
 
     self.config = Config(ImportConfig(input_files=input_files))
 
-  def _find_configs_in_dir(self, directory: Dir) -> list:
-    """Finds all config.json files in a directory, excluding archives."""
-    configs = []
-    for file in directory.all_files(include_subdirs=True):
-      if _ARCHIVES_DIR_NAME in file.path.split("/"):
-        continue
-      if file.name() == constants.CONFIG_JSON_FILE_NAME:
-        configs.append(file)
-    return configs
+  def _list_input_dir(self, path: str) -> list[File]:
+    """Returns every file under input dir `path` ("" for the input root).
+
+    Each dir is listed once per run, and its listing reused.
+    """
+    directory = self.input_store.as_dir().open_dir(path, create=False)
+    if directory.path not in self._input_dir_files:
+      self._input_dir_files[directory.path] = directory.all_files(
+          include_subdirs=True)
+    return self._input_dir_files[directory.path]
+
+  def _find_configs_in_dir(self, path: str) -> list[File]:
+    """Finds all config.json files under input dir `path`, excluding archives.
+
+    Shallower configs come first, then by path, so that their patterns are
+    matched first; e.g. "a/config.json" before "a/b/config.json".
+    """
+    configs = [
+        file for file in self._list_input_dir(path)
+        if file.name() == constants.CONFIG_JSON_FILE_NAME and
+        not _is_archived(file)
+    ]
+    return sorted(configs, key=lambda f: (f.path.count("/"), f.path))
 
   def _read_configs_from_subdirs(self, base_dir: Dir) -> list:
     """Scans subdirectories for config.json files and merges them.
@@ -570,7 +638,7 @@ class Runner:
     Raises:
       FileNotFoundError: If no config.json files are found.
     """
-    configs = self._find_configs_in_dir(base_dir)
+    configs = self._find_configs_in_dir(base_dir.path)
     logging.info("Found %s config files in subdirectories.", len(configs))
     if not configs:
       raise FileNotFoundError(
@@ -581,37 +649,31 @@ class Runner:
 
   def _read_configs_from_list(self, base_dir: Dir,
                               import_names: list[str]) -> list:
-    """Reads configs for specific imports specified in a list and merges them.
-    
-    Args:
-      base_dir: The base directory containing the import subdirectories.
-      import_names: A list of subdirectory names to look for configs in.
-      
+    """Reads and merges the configs of the imports in `import_names`.
+
+    An import's config.json is the one at its root, or else those in its
+    subdirectories. Each import dir is listed once; finding input files reuses
+    the listing.
+
     Raises:
-      FileNotFoundError: If no config files are found for a requested import.
+      FileNotFoundError: If an import dir is missing or empty, or has no
+        config.json.
     """
     configs = []
     for name in import_names:
-      name = name.strip()
-      target_path = fspath.join(base_dir.path, name)
-      if not base_dir.fs().isdir(target_path):
-        raise FileNotFoundError(f"Import directory not found: {name}")
-      try:
-        imp_dir = base_dir.open_dir(name)
-        file = imp_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
-                                 create_if_missing=False)
-        configs.append(file)
-      except FileNotFoundError:
+      files = self._list_input_dir(name)
+      if not files:
+        raise FileNotFoundError(f"Import directory not found or empty: {name}")
+      root_config = fspath.join(name, constants.CONFIG_JSON_FILE_NAME)
+      found = [f for f in files if f.path == root_config]
+      if not found:
         logging.info(
             "Config file not found at root of %s. Scanning subdirectories.",
             name)
-        sub_configs = self._find_configs_in_dir(imp_dir)
-        if not sub_configs:
-          raise FileNotFoundError(f"No config files found for {name}")
-        configs.extend(sub_configs)
-      except ValueError as e:
-        logging.error("Invalid directory for import %s: %s", name, e)
-        raise e
+        found = self._find_configs_in_dir(name)
+      if not found:
+        raise FileNotFoundError(f"No config files found for {name}")
+      configs.extend(found)
 
     logging.info("Found %s config files from list.", len(configs))
     self._merge_configs(configs, base_dir)
@@ -619,7 +681,7 @@ class Runner:
 
   def _is_active_import_file(self, file: File) -> bool:
     """Returns True if `file` is not archived and belongs to an active import."""
-    if _ARCHIVES_DIR_NAME in file.path.split("/"):
+    if _is_archived(file):
       return False
     if not self.active_import_prefixes:
       return True
@@ -630,9 +692,23 @@ class Runner:
     """Returns True if `file` matches at least one `inputFiles` pattern."""
     return any(match(file, pattern) for pattern in self.config.patterns())
 
+  def _list_input_files(self) -> list[File]:
+    """Returns the files under the run's imports.
+
+    With several imports, only their dirs are listed, not the whole input dir.
+    """
+    if len(self.import_names) == 1:  # One import, or ALL_IMPORTS.
+      return self._list_input_dir("")
+    files_by_path = {}
+    for name in self.import_names:
+      # Nested imports, e.g. "a" and "a/b", list some files twice.
+      for file in self._list_input_dir(name):
+        files_by_path[file.path] = file
+    return list(files_by_path.values())
+
   def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
     """Discovers, filters, sorts, and returns matched CSV and MCF files."""
-    input_files = self.input_store.as_dir().all_files(include_subdirs=True)
+    input_files = self._list_input_files()
     csv_files: list[File] = []
     mcf_files: list[File] = []
 
@@ -668,7 +744,10 @@ class Runner:
       ]
 
   def _validate_all_headers(self, csv_files: list[File]) -> None:
-    """Validates all CSV headers upfront and raises ValueError if any validation fails."""
+    """Validates every CSV's headers before any file is imported.
+
+    Raises ValueError if any fail. Importers don't check headers again.
+    """
     if not csv_files:
       return
 
@@ -703,7 +782,6 @@ class Runner:
     """
     worker_args = _WorkerArgs(
         output_dir_path=self.output_dir.full_path(),
-        process_dir_path=self.process_dir.full_path(),
         import_names=self.import_names,
         config=self.config.model,
         jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
@@ -720,7 +798,8 @@ class Runner:
           max_workers=num_workers) as executor:
         futures = [
             executor.submit(_run_single_import_proc, file.path,
-                            file._store.root_path, worker_args, ids_path)
+                            file.gcs_object(), file.store_path(), worker_args,
+                            ids_path)
             for file, ids_path in zip(files, obs_ids_paths)
         ]
         _finish_imports(files, futures, merge=self._merge_worker_result)
@@ -749,6 +828,8 @@ class Runner:
   def _run_all_data_imports(self):
     """Finds the input files, validates CSV headers, and imports every file."""
     csv_files, mcf_files = self._find_and_filter_input_files()
+    # Before header validation, so failed runs still report their files.
+    self._record_input_files(csv_files + mcf_files)
 
     logging.info("Found %d CSV files to import", len(csv_files))
     logging.info("Found %d MCF files to import", len(mcf_files))
@@ -758,7 +839,7 @@ class Runner:
     # Validate all CSV headers upfront
     self._validate_all_headers(csv_files)
 
-    self.reporter.report_started(import_files=list(csv_files + mcf_files))
+    self.reporter.report_started()
 
     self._completed_files_count = 0
     self._total_files_count = len(csv_files) + len(mcf_files)
@@ -790,12 +871,10 @@ class Runner:
                  self._total_files_count, file_path)
 
   def _create_importer(self, input_file: File) -> Importer:
-    reporter = self.reporter.get_file_reporter(input_file)
     return _create_importer_for_file(
         self.config,
         input_file,
         self.graph_writer,
-        reporter,
         self.nodes,
     )
 

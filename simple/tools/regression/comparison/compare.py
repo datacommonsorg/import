@@ -27,24 +27,18 @@ from tools.regression.comparison.process_reports import compare_reports
 
 
 @dataclasses.dataclass(frozen=True)
-class SideOutput:
-  output_dir: str
-  input_root: str | None  # The --input_dir the side ran on, if any.
-
-
-@dataclasses.dataclass(frozen=True)
 class Comparison:
   findings: Findings
   stats: dict[str, Any]
 
 
-def compare_outputs(baseline: SideOutput,
-                    candidate: SideOutput,
+def compare_outputs(baseline_dir: str,
+                    candidate_dir: str,
                     scratch_dir: str,
                     workers: int | None = None,
                     max_samples: int = 5) -> Comparison:
   """
-  Compares every output file of two runs.
+  Compares every output file of two runs, given their output directories.
 
   The spill buckets go in a temporary subdirectory of scratch_dir; they need
   about 50 bytes per observation plus the node shard bytes, per side. workers
@@ -52,15 +46,13 @@ def compare_outputs(baseline: SideOutput,
   max_samples the number of samples kept per difference category.
   """
   findings = Findings(max_samples)
-  trees = [shards.load_output_tree(s.output_dir) for s in (baseline, candidate)]
+  trees = [shards.load_output_tree(d) for d in (baseline_dir, candidate_dir)]
   with concurrent.futures.ProcessPoolExecutor(workers) as pool, \
        tempfile.TemporaryDirectory(dir=scratch_dir, prefix="compare-") as spill:
     observations = ObservationComparer(findings, pool, f"{spill}/obs")
     nodes = NodeComparer(findings, pool, f"{spill}/nodes")
     inventory = shards.compare_inventory(*trees, findings, pool)
-    reports = compare_reports(baseline.output_dir, baseline.input_root,
-                              candidate.output_dir, candidate.input_root,
-                              findings)
+    reports = compare_reports(baseline_dir, candidate_dir, findings)
     stats = {
         "inventory": inventory,
         "reports": reports,

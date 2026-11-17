@@ -21,11 +21,12 @@ crafted inputs; this tool covers real datasets of any size.
 
 ```bash
 cd simple
-python3 -m tools.regression --input_dir=/path/to/input
+python3 -m tools.regression --input_dir=/path/to/input -- --imports=<import>
 ```
 
 This compares your working tree, uncommitted changes included, with
-`upstream/master` on `/path/to/input`. The last lines printed are the verdict
+`upstream/master` on the import `<import>` of `/path/to/input`. Arguments after
+`--` go to `stats.main` on both sides, which requires `--imports`. The last lines printed are the verdict
 and the path of the report:
 
 ```
@@ -46,27 +47,26 @@ python3 -m tools.regression --input_dir=/data/un_input -- --imports=global,unodc
 
 # A dataset on GCS, staged to local disk once (read-only rsync).
 python3 -m tools.regression --input_dir=gs://my-bucket/path/to/input \
-    --work_dir=/mnt/disk/ab1
+    --work_dir=/mnt/disk/ab1 -- --imports=<import>
 
 # Two refs, such as a branch against master.
 python3 -m tools.regression --input_dir=/data/in --baseline=upstream/master \
-    --candidate=origin/my-branch
+    --candidate=origin/my-branch -- --imports=<import>
 
 # Run the baseline once, keep its output, then iterate on the candidate.
-python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab1 --keep_outputs
+python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab1 \
+    --keep_outputs -- --imports=<import>
 python3 -m tools.regression --input_dir=/data/in --work_dir=/mnt/disk/ab2 \
-    --baseline_output=/mnt/disk/ab1/baseline/run-1/output
+    --baseline_output=/mnt/disk/ab1/baseline/run-1/output -- --imports=<import>
 
 # Timing: three runs per side, reporting medians.
-python3 -m tools.regression --input_dir=/data/in --repeats=3
+python3 -m tools.regression --input_dir=/data/in --repeats=3 -- --imports=<import>
 ```
 
 `--baseline_output` and `--candidate_output` accept any output directory. For
 one written by this tool (`<work_dir>/<side>/run-1/output`), the metrics are
 reused from the `run.json` files next to it; for any other, perf is not judged
 for that side. Passing both compares two outputs without running anything.
-Report paths are compared relative to each side's input root, so the outputs
-may come from different copies of the input.
 
 Run `python3 -m tools.regression --help` for every flag.
 
@@ -127,9 +127,7 @@ side's code, output directory and log, then:
 - **Nodes** are matched by @id. All records of an @id, from any folder or
   shard, are merged into one set of values per property first, so splitting
   or duplicating a subject's records does not change its content.
-- **Reports:** `process/report.json` and the per-file `report_*.json`,
-  without volatile fields. Per-file reports are matched by the input file
-  they describe.
+- **Reports:** `process/report.json`, without volatile fields.
 - **Shards:** observation shards are matched by name. Node shards, whose
   names end in a random uid, are matched by content within their folder.
 
@@ -145,8 +143,7 @@ Informational ones change only the layout of the same graph, or the warnings.
 | `exit_status_changed` | failing | The exit status differs, or one side timed out. |
 | `error_lines_increased` | failing | The candidate logged more ERROR/CRITICAL lines or Python tracebacks. |
 | `warning_lines_changed` | informational | The number of WARNING lines differs. |
-| `report_json_changed` | failing | A top-level field or an `importFiles` entry of `process/report.json` differs. |
-| `worker_reports_changed` | failing | A per-file `report_*.json` entry differs or exists on one side only. |
+| `report_json_changed` | failing | A field of `process/report.json` differs. |
 | `run_dir_name_changed` | failing | The `jsonld/<import name>` run directory, without its timestamp, differs. |
 | `jsonld_context_changed` | failing | The set of `@context` values in the shards differs. |
 | `shard_set_changed` | informational | An observation shard name exists on one side only, or a folder has a different number of node shards. |
@@ -167,7 +164,7 @@ Informational ones change only the layout of the same graph, or the warnings.
 The comparison ignores only what is listed in
 [comparison/volatile.py](comparison/volatile.py): report timestamps
 (`startTime`, `lastUpdate`), the run directory's timestamp suffix, the random
-uid in node shard names, and each side's input root in report paths.
+uid in node shard names.
 
 ## Thresholds and exit codes
 

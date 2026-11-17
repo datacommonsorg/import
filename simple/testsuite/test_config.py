@@ -130,7 +130,7 @@ def test_include_input_subdirs_is_ignored_with_a_warning(given, caplog):
       result.observations,
       [b.obs("country/USA", value=1),
        b.obs("country/FRA", value=2)])
-  assert _include_input_subdirs_warnings(caplog) == ["config.json"]
+  assert _include_input_subdirs_warnings(caplog) == [f"{b.IMPORT}/config.json"]
 
 
 def test_include_input_subdirs_warning_names_its_import_config(caplog):
@@ -207,6 +207,26 @@ def test_single_import_name_runs_only_that_subdirectory():
       },
       runner_kwargs={"import_names": ["oecd"]})
   b.assert_records(result.observations, [b.obs("country/USA", value=1)])
+  assert result.output["ingestion_report"]["run"]["folderNames"] == ["oecd"]
+  assert result.output["ingestion_report"]["folders"] == [{
+      "folderName":
+          "oecd",
+      "summary": {
+          "files": {
+              "count": 2,
+              "byType": {
+                  "csv": 1,
+                  "mcf": 1
+              }
+          },
+          "provenanceCount": 1
+      },
+      "provenances": [{
+          "id": b.PROVENANCE,
+          "sourceId": b.SOURCE,
+          "fileCount": 2
+      }],
+  }]
 
 
 def test_selected_import_names_run_only_those_subdirectories():
@@ -222,8 +242,59 @@ def test_selected_import_names_run_only_those_subdirectories():
       [b.obs("country/USA", value=1),
        b.obs("country/FRA", value=2)])
   assert result.output["ingestion_report"]["run"]["folderNames"] == [
-      "oecd", "ilo"
+      "ilo", "oecd"
   ]
+
+
+NESTED_IMPORTS = [
+    Case("single import",
+         given=["unitednations/ilo"],
+         expect=["unitednations/ilo"]),
+    Case("multiple imports",
+         given=["unitednations/ilo", "oecd/gender_wage_gap"],
+         expect=["oecd/gender_wage_gap", "unitednations/ilo"]),
+    Case("all imports",
+         given=["ALL_IMPORTS"],
+         expect=["oecd/gender_wage_gap", "unitednations/ilo"]),
+]
+
+
+@cases(*NESTED_IMPORTS)
+def test_nested_import_folder_is_reported_as_given(given, expect):
+  """The report names a nested import folder by its full path."""
+  result = b.run_dir(
+      {
+          **b.import_subdir("unitednations/ilo", _USA),
+          **b.import_subdir("oecd/gender_wage_gap", _FRA),
+      },
+      runner_kwargs={"import_names": given})
+  assert result.error is None, result.error
+  report = result.output["ingestion_report"]
+  assert report["run"]["folderNames"] == expect
+  assert [f["folderName"] for f in report["folders"]] == expect
+
+
+# Both configs match a/b/case.csv: the parent's "*/case*.csv" is scoped to
+# "a/*/case*.csv". (It doesn't match the parent's own a/case.csv.)
+_PARENT_AND_NESTED_IMPORTS = {
+    **b.import_subdir("a",
+                      csv_pattern="*/case*.csv",
+                      provenance="ParentProvenance",
+                      source="ParentSource"),
+    **b.import_subdir("a/b",
+                      provenance="NestedProvenance",
+                      source="NestedSource"),
+}
+
+
+@pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
+def test_a_parent_import_config_is_matched_before_a_nested_one(mode):
+  result = b.run_dir(_PARENT_AND_NESTED_IMPORTS,
+                     mode=mode,
+                     runner_kwargs={"import_names": ["ALL_IMPORTS"]})
+  assert result.error is None, result.error
+  provenances = [o["dcid:provenance"] for o in result.observations]
+  assert provenances == [b.ref("ParentProvenance")]
 
 
 # Beta comes first so that processing order would favour it.
@@ -402,6 +473,32 @@ def test_invalid_config(given, expect):
   b.assert_fails(result, expect.error_type, expect.message, expect.handshake)
 
 
+# A column is either imported or ignored, for every kind of CSV.
+MAPPED_AND_IGNORED = [
+    Case("observations",
+         given=(_USA,
+                b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["value", "date"])),
+         expect="['date', 'value']"),
+    Case("entities",
+         given=(b.csv_file(["author1", "Author"], header=["author_id", "type"]),
+                b.entities_config(mappings=b.entity_mappings(),
+                                  ignoreColumns=["author_id"])),
+         expect="['author_id']"),
+]
+
+
+@cases(*MAPPED_AND_IGNORED)
+def test_column_both_mapped_and_ignored_fails(given, expect):
+  csv_text, config = given
+  result = b.run_csv(csv_text, config)
+  b.assert_fails(result,
+                 "ValueError",
+                 "The CSV file 'case.csv' both maps and ignores column(s):"
+                 f" {expect}. Remove each from 'columnMappings' or from"
+                 " 'ignoreColumns'.",
+                 handshake_error_types=_INVALID)
+
+
 def test_every_config_problem_is_reported_at_once():
   """Unknown keys are grouped per object, then every other problem follows."""
   config = b.obs_config(b.OBS_MAPPINGS,
@@ -473,10 +570,51 @@ def test_csv_without_column_mappings_in_an_import_subdirectory_is_rejected():
 def test_missing_config_json_fails():
   result = b.run({"case.csv": _USA}, None)
   b.assert_fails(result, "FileNotFoundError",
-                 "File not found: <input>/config.json")
+                 f"File not found: <input>/{b.IMPORT}/config.json")
 
 
-def test_empty_input_directory_fails():
-  result = b.run_dir({})
-  b.assert_fails(result, "FileNotFoundError",
-                 "File not found: <input>/config.json")
+# An input dir whose only config.json is at its root, which is never an import.
+_ROOT_CONFIG_ONLY = {"config.json": json.dumps(b.obs_config(b.OBS_MAPPINGS))}
+
+
+@pytest.mark.parametrize("import_names", [[], [""], [" "]],
+                         ids=["no_names", "empty_name", "blank_name"])
+def test_a_run_without_imports_fails(import_names):
+  result = b.run_dir(_ROOT_CONFIG_ONLY,
+                     runner_kwargs={"import_names": import_names})
+  b.assert_fails(result,
+                 "ValueError",
+                 "No imports to run. Pass --imports with the import"
+                 " subdirectories of the input directory to import",
+                 handshake_error_types=_INVALID)
+
+
+@pytest.mark.parametrize("import_name", [".", "..", "../x", "/x"])
+def test_an_import_outside_a_subdirectory_of_the_input_dir_fails(import_name):
+  result = b.run_dir(_ROOT_CONFIG_ONLY,
+                     runner_kwargs={"import_names": [import_name]})
+  b.assert_fails(result,
+                 "ValueError",
+                 f"Invalid import {import_name!r}: an import is a subdirectory"
+                 " of the input directory.",
+                 handshake_error_types=_INVALID)
+
+
+_BETA_MISSING_OR_WITHOUT_CONFIG = [
+    ({}, "Import directory not found or empty: beta"),
+    ({
+        "beta/case.csv": _USA
+    }, "No config files found for beta"),
+]
+
+
+@pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
+@pytest.mark.parametrize("beta_files, message",
+                         _BETA_MISSING_OR_WITHOUT_CONFIG,
+                         ids=["missing", "without_config"])
+def test_a_requested_import_without_a_config_fails(beta_files, message, mode):
+  files = {**b.import_subdir("alpha"), **beta_files}
+  result = b.run_dir(files,
+                     mode=mode,
+                     runner_kwargs={"import_names": ["alpha", "beta"]})
+  b.assert_fails(result, "FileNotFoundError", message)

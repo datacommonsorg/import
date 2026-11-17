@@ -58,7 +58,6 @@ class SideRuns:
 
   code: str  # Human-readable description of the code that ran.
   output_dir: str
-  input_root: str | None
   metrics: tuple[RunMetrics, ...]
   log_path: str | None  # The log of run 1.
 
@@ -133,7 +132,6 @@ def run_sides(trees: dict[str, CodeTree], spec: RunSpec, work_dir: str,
       side:
           SideRuns(code=tree.describe(),
                    output_dir=os.path.join(first[side], _OUTPUT),
-                   input_root=spec.input_dir,
                    metrics=tuple(metrics[side]),
                    log_path=os.path.join(first[side], _LOG))
       for side, tree in trees.items()
@@ -146,21 +144,20 @@ def _run_number(run_json_path: str) -> int:
   return int(run_dir_name.removeprefix("run-"))
 
 
-def load_side(output_dir: str, default_input_root: str | None) -> SideRuns:
+def load_side(output_dir: str) -> SideRuns:
   """
   Describes an existing output, reusing its run.json files if it has any.
 
   For an output written by this tool (<side>/run-1/output), the run.json of
-  every run of that side provides the code description, input root and
-  metrics. Any other output directory is compared as is, without metrics.
+  every run of that side provides the code description and metrics. Any other
+  output directory is compared as is, without metrics.
   """
   output_dir = os.path.abspath(output_dir)
   if not os.path.isdir(output_dir):
     raise FileNotFoundError(f"Output directory {output_dir} does not exist")
   run_dir = os.path.dirname(output_dir)
   if not os.path.exists(os.path.join(run_dir, RUN_JSON)):
-    return SideRuns(f"existing output {output_dir}", output_dir,
-                    default_input_root, (), None)
+    return SideRuns(f"existing output {output_dir}", output_dir, (), None)
   side_dir = os.path.dirname(run_dir)
   runs = []
   for path in sorted(glob.glob(os.path.join(side_dir, "run-*", RUN_JSON)),
@@ -168,6 +165,5 @@ def load_side(output_dir: str, default_input_root: str | None) -> SideRuns:
     with open(path) as f:
       runs.append(json.load(f))
   return SideRuns(f"{runs[0]['code']} (reused {output_dir})", output_dir,
-                  runs[0]["input_dir"],
                   tuple(RunMetrics(**run["metrics"]) for run in runs),
                   os.path.join(run_dir, _LOG))
