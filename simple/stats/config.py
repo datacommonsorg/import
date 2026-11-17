@@ -44,9 +44,12 @@ _REMOVED_ENTRY_KEYS = {
     "idColumn": "Map a 'dcid:dcid' column in 'columnMappings' instead.",
 }
 
-# Our wording for pydantic messages that name our classes, by error type.
+# Our wording, in JSON terms, for pydantic messages in Python terms or naming
+# our classes, by error type.
 _PYDANTIC_MESSAGE_OVERRIDES = {
-    "model_type": "Input should be a valid dictionary"
+    "model_type": "Input should be a JSON object",
+    "dict_type": "Input should be a JSON object",
+    "list_type": "Input should be a JSON array",
 }
 
 
@@ -172,7 +175,9 @@ def _render_errors(error: ValidationError, data: Any) -> str:
       lines.append(str(e["ctx"]["error"]))
     else:
       message = _PYDANTIC_MESSAGE_OVERRIDES.get(e["type"], e["msg"])
-      lines.append(f"Invalid {_describe(loc, data)}: {message}")
+      # A file that isn't an object: Runner may prefix the file's own path.
+      where = _describe(loc, data) if loc else "top-level value"
+      lines.append(f"Invalid {where}: {message}")
   # Top-level keys first, then each inputFiles entry in order.
   key_lines = []
   for parent, keys in sorted(unknown_keys.items()):
@@ -210,7 +215,8 @@ def _describe(loc: tuple, data: Any) -> str:
     return "config.json"
   if len(loc) == 1:
     return f"'{loc[0]}' in config.json"
-  entry = _describe_entry(data["inputFiles"], loc[1])
+  # loc[0] is the key as written: "input_files" is also accepted.
+  entry = _describe_entry(data[loc[0]], loc[1])
   if len(loc) == 2:
     return entry
   field = ".".join(str(part) for part in loc[2:])
