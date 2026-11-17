@@ -891,7 +891,7 @@ class Runner:
         self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
-    MetadataValidator(self.config, self.graph_writer).validate()
+    MetadataValidator(self.config, self.nodes).validate()
 
     # Populate trigger workflow info if running under ingestion workflow and output is GCS
     output_path = self.graph_writer.jsonld_dir.full_path()
