@@ -219,12 +219,18 @@ def test_single_import_name_runs_only_that_subdirectory():
                   "mcf": 1
               }
           },
-          "provenanceCount": 1
+          "provenanceCount": 1,
+          "observations": 1
       },
       "provenances": [{
           "id": b.PROVENANCE,
           "sourceId": b.SOURCE,
-          "fileCount": 2
+          "fileCount": 2,
+          "observations": 1,
+          "dateRange": {
+              "min": "2020",
+              "max": "2020"
+          }
       }],
   }]
 
