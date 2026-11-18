@@ -13,8 +13,10 @@
 # limitations under the License.
 """Worker processes: pool sizing and what they write to GCS."""
 
+import concurrent.futures
 import os
 import shutil
+import types
 
 from google.cloud import storage
 from google.cloud.storage import Blob
@@ -241,3 +243,35 @@ def test_overlapping_input_and_output_dirs_are_rejected(input_dir, output_dir,
       runner._check_not_overlapping(input_store, output_store)
   else:
     runner._check_not_overlapping(input_store, output_store)
+
+
+def _done_future(result=None, error=None) -> concurrent.futures.Future:
+  future = concurrent.futures.Future()
+  if error:
+    future.set_exception(error)
+  else:
+    future.set_result(result)
+  return future
+
+
+def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
+  files = [types.SimpleNamespace(path=p) for p in ("a.csv", "b.csv", "c.csv")]
+  futures = [
+      _done_future(error=ValueError("cannot import a")),
+      _done_future("b"),
+      _done_future("c")
+  ]
+  merged = []
+
+  def merge(file, result):
+    if result == "b":
+      raise RuntimeError("cannot merge b")
+    merged.append(file.path)
+
+  with pytest.raises(runner.FileImportsFailedError) as raised:
+    runner._finish_imports(files, futures, merge)
+  assert [(f.file_path, str(f.error)) for f in raised.value.failures] == [
+      ("a.csv", "cannot import a"),
+      ("b.csv", "cannot merge b"),
+  ]
+  assert merged == ["c.csv"]

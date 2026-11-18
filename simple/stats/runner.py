@@ -193,7 +193,7 @@ class _WorkerArgs:
 
 @dataclass
 class _FileFailure:
-  """A file whose import raised, with the traceback text.
+  """A file whose import or merge raised, with the traceback text.
 
   `traceback` includes the worker process's remote traceback.
   """
@@ -218,21 +218,20 @@ def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
 
   Every file runs to completion even if others fail. Results are awaited in
   submission order, so passing each successful one to `merge`, with its file,
-  is deterministic; each is logged as "[i/N] Imported file". See
-  `_raise_for_failures` for what is raised.
+  is deterministic; each merged one is logged as "[i/N] Imported file". A
+  file whose import or merge raises is a failure. See `_raise_for_failures`
+  for what is raised.
   """
   failures: list[_FileFailure] = []
   imported = 0
   for file, future in zip(files, futures, strict=True):
     try:
-      result = future.result()
+      merge(file, future.result())
+      imported += 1
+      logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
     except Exception as e:
       failures.append(
           _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
-      continue
-    imported += 1
-    logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
-    merge(file, result)
   _raise_for_failures(failures)
 
 
