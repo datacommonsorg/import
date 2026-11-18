@@ -40,9 +40,10 @@ a `gs://` path), the run's result, including any errors, is also written to
 `$TEMP_LOCATION/datacommons/ingestion_records/<WORKFLOW_EXECUTION_ID>.json` for
 the workflow. Elsewhere, a failed run logs its error and exits non-zero.
 
-There is no database output. The importer streams shards to a local temporary
-directory as it runs and bulk uploads them to the output directory at the end
-of the run.
+There is no database output. Each worker serializes its shards in memory and
+writes them straight to the output directory as it imports (uploaded to GCS, or
+written to the final path on local disk), with a few shards in flight at a time.
+Nothing is staged in a local temporary directory.
 
 ## Environment variables
 
