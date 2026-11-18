@@ -306,7 +306,6 @@ class JsonLdStreamWriter(GraphWriter):
                nodes,
                jsonld_dir_name: Optional[str] = None) -> None:
     self.output_dir = output_dir
-    self.nodes = nodes
     self.config = nodes.config
 
     # The run's name, from its imports (e.g. ["oecd", "ilo"] -> "oecd_ilo", or

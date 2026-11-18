@@ -2,7 +2,7 @@
 
 This importer (also referred to as the "preprocessor") reads input CSV and MCF
 files and writes the resulting graph out as sharded JSON-LD files. Those shards
-are consumed by the Data Commons ingestion pipeline (the "dcpbridge" workflow).
+are consumed by the Data Commons ingestion pipeline (the DCP ingestion workflow).
 
 ## Default usage
 
