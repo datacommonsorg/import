@@ -199,12 +199,16 @@ class VariablePerRowImporter(Importer):
     provenance = self.nodes.provenance_id(self.input_file)
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
+    # Ignored columns are skipped when reading, so that one named like an
+    # internal column (e.g. "unit") can't end up in the observations.
+    ignored = set(self.config.ignore_columns(self.input_file))
 
     with self.input_file.open_stream() as stream:
       reader = pd.read_csv(stream,
                            na_values=constants.STANDARD_NA_VALUES,
                            chunksize=10000,
-                           dtype=str)
+                           dtype=str,
+                           usecols=lambda column: column not in ignored)
 
       for chunk_df in reader:
         if chunk_df.empty:
