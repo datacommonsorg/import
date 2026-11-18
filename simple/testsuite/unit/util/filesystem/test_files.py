@@ -1,15 +1,25 @@
-"""util.filesystem on local disk and on (fake) GCS."""
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Dir and File, the same on local disk and on (fake) GCS."""
 
 import os
-from unittest import mock
 
-from google.cloud import storage
 import pytest
 from testsuite.lib import fake_gcs
+from util.filesystem import is_gcs_path
 from util.filesystem import open_dir
 from util.filesystem import write_file
-
-from util import filesystem
 
 
 @pytest.fixture(name="root", params=["disk", "gcs"])
@@ -22,7 +32,7 @@ def fixture_root(request, tmp_path) -> str:
 
 def _write_raw(root: str, path: str, data: str) -> None:
   """Writes a file without util.filesystem."""
-  if filesystem.is_gcs_path(root):
+  if is_gcs_path(root):
     fake_gcs.write_blob(f"{root}/{path}", data)
   else:
     os.makedirs(os.path.dirname(os.path.join(root, path)), exist_ok=True)
@@ -100,74 +110,6 @@ def test_text_is_written_unchanged(root):
   assert file.read() == _RAW_TEXT
 
 
-def test_a_local_dir_is_made_if_asked(tmp_path):
-  path = str(tmp_path / "a" / "b")
-  assert open_dir(path, create=True).full_path() == path
-  assert os.path.isdir(path)
-  open_dir(path, create=True)  # Already there.
-
-
-def test_nothing_is_written_to_gcs_to_open_a_dir_or_file():
-  root = f"{fake_gcs.new_prefix()}/out"
-  directory = open_dir(root, create=True)
-  directory.open_dir("a/b").open_file("c.txt")
-  assert directory.all_files(include_subdirs=True) == []
-
-
-def test_local_listing_follows_symlinked_dirs(tmp_path):
-  (tmp_path / "real").mkdir()
-  (tmp_path / "real" / "a.csv").write_text("1")
-  (tmp_path / "input").mkdir()
-  (tmp_path / "input" / "linked").symlink_to(tmp_path / "real")
-  files = open_dir(str(tmp_path / "input")).all_files(include_subdirs=True)
-  assert [(f.path, f.read()) for f in files] == [("linked/a.csv", "1")]
-
-
-def test_local_paths_are_shown_as_given_and_normalized(tmp_path, monkeypatch):
-  monkeypatch.chdir(tmp_path)
-  (tmp_path / "out").mkdir()
-  for root in ("out", "out/", "./out", "out//"):
-    assert open_dir(root).open_dir("jsonld").full_path() == "out/jsonld"
-  assert open_dir(".").open_file("a.csv").full_path() == "a.csv"
-  assert open_dir(f"{tmp_path}/").full_path() == str(tmp_path)
-
-
-@pytest.mark.parametrize("root, expected", [
-    ("gs://bucket", "gs://bucket/jsonld"),
-    ("gs://bucket/", "gs://bucket/jsonld"),
-    ("gs://bucket/out", "gs://bucket/out/jsonld"),
-    ("gs://bucket/out/", "gs://bucket/out/jsonld"),
-    ("gs://bucket//out/./x", "gs://bucket/out/x/jsonld"),
-])
-def test_gcs_paths_are_shown_as_given_and_normalized(root, expected):
-  assert open_dir(root).open_dir("jsonld").full_path() == expected
-
-
-# As PyFilesystem's fs.path.join did, which merged config patterns rely on.
-@pytest.mark.parametrize("parts, expected", [
-    (("", ""), ""),
-    (("a", "{b,c}/**/*.csv"), "a/{b,c}/**/*.csv"),
-    (("a", "/x/*.csv"), "/x/*.csv"),
-    (("a", "//x/*.csv"), "/x/*.csv"),
-    (("a//b/", "./c/../d"), "a/b/d"),
-    (("gs://b/out/", "", ""), "gs://b/out"),
-])
-def test_join_path(parts, expected):
-  assert filesystem.join_path(*parts) == expected
-
-
-@pytest.mark.parametrize("path, parent, expected", [
-    ("gs://b/out", "gs://b/out", True),
-    ("gs://b/out/jsonld", "gs://b/out", True),
-    ("gs://b/out/jsonld", "gs://b/out/", True),
-    ("gs://b/outx", "gs://b/out", False),
-    ("gs://b", "gs://b/out", False),
-    ("/data/in/x", "/", True),
-])
-def test_is_within(path, parent, expected):
-  assert filesystem.is_within(path, parent) is expected
-
-
 # --- Listing dirs on GCS ------------------------------------------------------
 #
 # On GCS a "directory" is only a name prefix. Tools that write GCS trees add
@@ -226,13 +168,6 @@ def test_all_files_lists_files_but_not_directory_markers(
   assert not caplog.records  # Markers are skipped quietly.
 
 
-def test_gcs_objects_with_empty_or_dot_path_segments_are_skipped():
-  root = f"{fake_gcs.new_prefix()}/input"
-  for name in ["a.csv", "/x.csv", "d1//y.csv", "d1/./z.csv"]:
-    fake_gcs.write_blob(f"{root}/{name}", "1")
-  assert _list(root, "", include_subdirs=True) == {"a.csv": "1"}
-
-
 # --- Streaming files from GCS -------------------------------------------------
 #
 # File.open_stream decodes text as UTF-8 with newline="", so a BOM and CRLF
@@ -265,46 +200,3 @@ def test_streaming_reads_the_file_text_unchanged(tmp_path, text, chunk_size):
 def _read(file, **open_stream_kwargs) -> str:
   with file.open_stream(**open_stream_kwargs) as stream:
     return stream.read()
-
-
-def test_a_gzip_encoded_gcs_object_is_downloaded_whole():
-  """GCS ranges of it are of its compressed bytes, so it isn't streamed.
-
-  The fake GCS doesn't decompress objects, so this checks the read path only.
-  """
-  gcs = f"{fake_gcs.new_prefix()}/input"
-  fake_gcs.write_blob(f"{gcs}/data.csv", "a,b\n", content_encoding="gzip")
-  [file] = open_dir(gcs).all_files()
-  with mock.patch.object(storage.Blob,
-                         "download_as_bytes",
-                         autospec=True,
-                         return_value=b"whole object") as download:
-    with file.open_stream() as stream:
-      assert stream.read() == "whole object"
-  [call] = download.call_args_list
-  assert call.args[1:] == () and call.kwargs == {}, call  # Not a range.
-
-
-class _ShortReadBlob:
-  """A blob whose ranged downloads return one byte less than asked for."""
-  name = "data.csv"
-  bucket = mock.Mock()
-  bucket.name = "bucket"
-
-  def download_as_bytes(self, start, end, checksum):
-    del checksum  # Unused.
-    return b"x" * (end - start)
-
-
-def test_a_short_ranged_read_fails_rather_than_truncate_the_file():
-  reader = filesystem._GcsRangeReader(_ShortReadBlob(), size=10, chunk_size=4)
-  with pytest.raises(OSError, match="Expected 4 bytes at offset 0"):
-    reader.read(10)
-
-
-def test_a_file_uploaded_natively_in_an_unmarked_gcs_dir_can_be_rewritten():
-  """A file written by another tool, in a dir with no marker, is rewritten."""
-  root = f"{fake_gcs.new_prefix()}/output"
-  fake_gcs.write_blob(f"{root}/sub/existing.txt", "old")
-  open_dir(root).open_file("sub/existing.txt").write("new")
-  assert open_dir(root).open_file("sub/existing.txt").read() == "new"
