@@ -54,9 +54,11 @@ steps:
         pip install -q diff-cover==11.0.0 || exit 0
         shopt -s nullglob
         reports=(*/target/site/jacoco/jacoco.xml pipeline/*/target/site/jacoco/jacoco.xml)
-        python3 "$$d/print_jacoco_coverage.py" "$${reports[@]}"
+        python3 "$$d/print_jacoco_coverage.py" "$${reports[@]}" \
+          || echo "Module coverage not printed (report-only)"
         bash "$$d/report_changed_lines.sh" "$${reports[@]}" \
-          --src-roots */src/main/java pipeline/*/src/main/java
+          --src-roots */src/main/java pipeline/*/src/main/java \
+          || echo "Changed-line coverage not measured (report-only)"
     waitFor: ["format & test"]
 
   # Uploads the coverage that the tests wrote to Codacy, with each module's
