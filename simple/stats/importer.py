@@ -211,15 +211,15 @@ def count_nodes_from_triples(triples: list[Triple]) -> ImportCounts:
     if t.predicate != _TYPE_OF:
       continue
     # "dcid:X" and "X" name the same node.
-    node = t.subject_id.removeprefix("dcid:")
+    node_id = t.subject_id.removeprefix("dcid:")
     node_type = strip_namespace(t.object_id or t.object_value)
-    if (node, node_type) in seen:
+    if (node_id, node_type) in seen:
       continue
-    seen.add((node, node_type))
+    seen.add((node_id, node_type))
     if node_type == _STAT_VAR_OBSERVATION:
       observations += 1
     else:
-      typed_nodes.add(node)
+      typed_nodes.add(node_id)
       nodes_by_type[node_type] += 1
   return ImportCounts(
       observations=observations,

@@ -49,6 +49,7 @@ from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import FileSummary
+from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
 from stats.validation import MetadataValidator
@@ -864,8 +865,8 @@ class Runner:
                     provenanceId=provenance_id,
                     observations=res.counts.observations,
                     dateRange=res.counts.date_range,
-                    nodes=res.counts.nodes,
-                    nodesByType=dict(res.counts.nodes_by_type)))
+                    nodes=NodeCounts(count=res.counts.nodes,
+                                     byType=dict(res.counts.nodes_by_type))))
 
   def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
     """Merges a worker's processed imports and collision stats into the writer."""

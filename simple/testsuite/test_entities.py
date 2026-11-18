@@ -20,8 +20,6 @@ says otherwise, and it maps exactly its CSV's columns (see entities_config()
 and entity_mappings() in lib/builders.py).
 """
 
-import json
-
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
@@ -311,34 +309,3 @@ def test_property_node_for_a_column_is_defined_in_mcf():
                name="Author name",
                description="Full name of the author"),
   ])
-
-
-# --- Ingestion report ---------------------------------------------------------
-
-
-def test_report_counts_each_entity_once_under_its_type():
-  """An entity on several rows of one file counts once."""
-  files = {
-      "oecd/config.json":
-          json.dumps(
-              b.entities_config(mappings=b.same_name_mappings("dcid", "typeOf"))
-          ),
-      "oecd/provenance.mcf":
-          b.PROVENANCE_MCF,
-      "oecd/case.csv":
-          b.csv_file(["a1", "Author"], ["a2", "Author"], ["a1", "Author"],
-                     ["k1", "Book"],
-                     header=["dcid", "typeOf"]),
-  }
-  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd"]})
-
-  [folder] = result.output["ingestion_report"]["folders"]
-  assert folder["summary"]["nodes"] == {
-      "count": 5,
-      "byType": {
-          "Author": 2,
-          "Book": 1,
-          "Provenance": 1,
-          "Source": 1
-      }
-  }

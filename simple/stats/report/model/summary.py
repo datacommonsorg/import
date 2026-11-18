@@ -106,7 +106,7 @@ class Provenance(BaseModel):
                    "observations. Rows without a date count toward "
                    "observations but not toward dateRange."))
   nodes: NodeCounts = Field(default_factory=NodeCounts,
-                            description="Other nodes written")
+                            description="Typed nodes written")
   # TODO: Add provenance-level errors.
 
 
@@ -131,7 +131,7 @@ class FolderSummary(BaseModel):
       description="StatVarObservation nodes written, over all provenances")
   nodes: NodeCounts = Field(
       default_factory=NodeCounts,
-      description="Other nodes written, over all provenances")
+      description="Typed nodes written, over all provenances")
 
 
 class Folder(BaseModel):
@@ -169,6 +169,5 @@ class FileSummary(BaseModel):
                             description="StatVarObservation nodes written")
   dateRange: DateRange | None = Field(
       default=None, description="Observation dates covered, if any")
-  nodes: int = Field(default=0, description="Other nodes written")
-  nodesByType: dict[str, int] = Field(default_factory=dict,
-                                      description="Number of nodes per type")
+  nodes: NodeCounts = Field(default_factory=NodeCounts,
+                            description="Typed nodes written")

@@ -162,8 +162,8 @@ class SummaryGenerator:
     stats = self._folders[summary.folder]
     provenance_id = summary.provenanceId
     stats.observations_by_provenance[provenance_id] += summary.observations
-    stats.nodes_by_provenance[provenance_id] += summary.nodes
-    stats.node_types_by_provenance[provenance_id].update(summary.nodesByType)
+    stats.nodes_by_provenance[provenance_id] += summary.nodes.count
+    stats.node_types_by_provenance[provenance_id].update(summary.nodes.byType)
     if summary.dateRange is not None:
       current = stats.date_range_by_provenance.get(provenance_id)
       stats.date_range_by_provenance[provenance_id] = (

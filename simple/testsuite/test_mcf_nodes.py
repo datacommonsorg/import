@@ -370,7 +370,7 @@ def test_report_counts_nodes_by_type():
   assert provenance["dateRange"] == {"min": "2019", "max": "2020"}
 
 
-def test_report_counts_a_node_once_per_file_it_is_in():
+def test_report_counts_node_once_per_file():
   node = b.mcf_node("dcid:Count_X", typeOf="dcs:StatisticalVariable")
   result = b.run_dir(
       {
@@ -388,7 +388,7 @@ def test_report_counts_a_node_once_per_file_it_is_in():
   }
 
 
-def test_report_counts_a_node_in_a_file_only_if_typed_there():
+def test_report_skips_untyped_nodes():
   """A node's copy in a file without its type is not counted for that file."""
   result = b.run_dir(
       {
@@ -408,8 +408,11 @@ def test_report_counts_a_node_in_a_file_only_if_typed_there():
   }
 
 
-def test_report_counts_a_provenance_once_however_many_files_define_it():
-  """The Runner merges a provenance's definitions and writes it once."""
+def test_report_counts_provenance_and_source_once():
+  """Provenance and Source count once, however many files define them.
+
+  The Runner merges their definitions from every file and writes each once.
+  """
   result = b.run_dir(
       {
           **b.import_subdir("oecd"), "oecd/again.mcf": b.PROVENANCE_MCF
