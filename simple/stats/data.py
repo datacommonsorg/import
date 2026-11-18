@@ -189,11 +189,25 @@ class ValidationErrorType(StrEnum):
   GENERIC_ERROR = "GENERIC_ERROR"
 
 
-def invalid_configuration(message: str) -> ValueError:
+class PreprocessorError(ValueError):
+  """An input error, which Runner reports in the handshake as `error_type`.
+
+  `file_path` is the input file at fault, if any.
+  """
+
+  def __init__(
+      self,
+      message: str,
+      error_type: ValidationErrorType = ValidationErrorType.GENERIC_ERROR,
+      file_path: str = "") -> None:
+    super().__init__(message)
+    self.error_type = error_type
+    self.file_path = file_path
+
+
+def invalid_configuration(message: str) -> PreprocessorError:
   """Returns a config error, which Runner reports as INVALID_CONFIGURATION."""
-  error = ValueError(message)
-  error.error_type = ValidationErrorType.INVALID_CONFIGURATION
-  return error
+  return PreprocessorError(message, ValidationErrorType.INVALID_CONFIGURATION)
 
 
 @dataclass
@@ -292,7 +306,7 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
   """Validates that all values in the 'value' column are numeric or NaN.
 
   Raises:
-      ValueError: If any non-numeric value is found.
+      PreprocessorError: If any non-numeric value is found.
   """
   if constants.COLUMN_VALUE not in df.columns:
     return
@@ -311,9 +325,8 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
     return
   invalid_examples = df.loc[na_mask].loc[invalid_mask,
                                          constants.COLUMN_VALUE].unique()
-  ex = ValueError(
+  raise PreprocessorError(
       f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
       f"{list(invalid_examples)[:10]}. If these represent missing values, leave the"
-      f" cells empty or use one of: {constants.STANDARD_NA_VALUES}.")
-  ex.file_path = file_path
-  raise ex
+      f" cells empty or use one of: {constants.STANDARD_NA_VALUES}.",
+      file_path=file_path)

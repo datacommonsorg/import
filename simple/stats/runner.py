@@ -34,6 +34,7 @@ from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import ImportType
 from stats.data import invalid_configuration
+from stats.data import PreprocessorError
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import ValidationErrorType
@@ -251,17 +252,6 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
   raise FileImportsFailedError(failures)
 
 
-def _open_worker_store(path: str) -> Store:
-  """Opens, in a worker process, a directory that the coordinator opened.
-
-  Workers only read the input, which needs no GCS directory markers, and
-  write under output dirs whose markers the coordinator already wrote.
-  Marking again for every file sends the same marker objects many concurrent
-  writes, which GCS rejects with 429 errors.
-  """
-  return create_store(path, mark_gcs_dirs=False)
-
-
 def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
                             input_dir_path: str, args: _WorkerArgs,
                             obs_ids_path: str) -> ImportProcResult:
@@ -274,8 +264,8 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
   The coordinator found the file, and its GCS object if any, so neither is
   looked up again.
   """
-  with _open_worker_store(input_dir_path) as input_store_obj, \
-       _open_worker_store(args.output_dir_path) as output_store_obj:
+  with create_store(input_dir_path) as input_store_obj, \
+       create_store(args.output_dir_path) as output_store_obj:
     input_file = File(input_store_obj,
                       file_rel_path,
                       create_if_missing=False,
@@ -290,7 +280,11 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
                                       jsonld_dir_name=args.jsonld_dir_name)
     importer = _create_importer_for_file(config, input_file, graph_writer,
                                          nodes)
-    importer.do_import()
+    try:
+      importer.do_import()
+    except BaseException:
+      graph_writer.close_after_error()
+      raise
     graph_writer.commit_and_close()
     if graph_writer.obs_hash_set:
       save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
@@ -320,8 +314,18 @@ def _parse_config_json(text: str, path: str) -> object:
     return json.loads(text)
   except json.JSONDecodeError as e:
     logging.error("Failed to parse JSON from %s: %s", path, e)
-    e.error_type = ValidationErrorType.INVALID_CONFIGURATION
-    raise
+    raise invalid_configuration(str(e)) from e
+
+
+def _failure_error(e: Exception) -> FileValidationError:
+  """The handshake error for `e`: GENERIC_ERROR unless a PreprocessorError."""
+  if isinstance(e, PreprocessorError):
+    return FileValidationError(file=e.file_path,
+                               error_type=e.error_type,
+                               error_message=str(e))
+  return FileValidationError(file="",
+                             error_type=ValidationErrorType.GENERIC_ERROR,
+                             error_message=str(e))
 
 
 def _is_archived(file: File) -> bool:
@@ -394,11 +398,8 @@ class Runner:
         os.getenv("WORKFLOW_EXECUTION_ID"))
 
   def _open_input_store(self, path: str) -> Store:
-    """Opens the input store, to be closed with the others when the run ends.
-
-    The input is only read, so no GCS directory markers are written into it.
-    """
-    self.input_store = create_store(path, mark_gcs_dirs=False)
+    """Opens the input store, to be closed with the others when the run ends."""
+    self.input_store = create_store(path)
     self.all_stores.append(self.input_store)
     return self.input_store
 
@@ -467,13 +468,7 @@ class Runner:
       logging.exception("Error updating stats")
 
       if self._failure_errors is None:
-        self._failure_errors = [
-            FileValidationError(file=getattr(e, "file_path", ""),
-                                error_type=getattr(
-                                    e, "error_type",
-                                    ValidationErrorType.GENERIC_ERROR),
-                                error_message=str(e))
-        ]
+        self._failure_errors = [_failure_error(e)]
 
       self._write_report(RunStatus.FAILURE)
 
@@ -909,7 +904,7 @@ class Runner:
         self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
-    MetadataValidator(self.config, self.graph_writer).validate()
+    MetadataValidator(self.config, self.nodes).validate()
 
     # Populate trigger workflow info if running under ingestion workflow and output is GCS
     output_path = self.graph_writer.jsonld_dir.full_path()

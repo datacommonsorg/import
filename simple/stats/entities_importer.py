@@ -16,6 +16,7 @@ import logging
 
 import pandas as pd
 from stats.data import FileValidationError
+from stats.data import PreprocessorError
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
@@ -148,12 +149,11 @@ class EntitiesImporter(Importer):
                         f" row(s) {rows[:_MAX_LISTED_ROWS]}")
     if not problems:
       return
-    error = ValueError(
+    raise PreprocessorError(
         f"Empty value(s) in entities CSV file '{self.input_file.path}': " +
         "; ".join(problems) + ". Rows are numbered from 1, the first row after"
-        " the header. Every row needs a DCID and a type.")
-    error.file_path = self.input_file.path
-    raise error
+        " the header. Every row needs a DCID and a type.",
+        file_path=self.input_file.path)
 
   def _mapped_columns(self) -> pd.DataFrame:
     """Returns the mapped columns, renamed to their predicates."""

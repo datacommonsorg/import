@@ -98,7 +98,7 @@ def _open_fs(url: str, create: bool, strict: bool = True):
     url: A local path or URL. gs:// URLs are opened with `gcs_client()`.
     create: Whether to create the directory if it doesn't exist.
     strict: For gs:// URLs only: whether to check that the root directory's
-      marker blob exists (see `_fix_gcsfs_storage`).
+      marker blob exists.
   """
   if not is_gcs_path(url):
     return open_fs(url, create=create)
@@ -126,28 +126,20 @@ def join_path(base: str, *args: str) -> str:
 
 def create_store(path: str,
                  create_if_missing: bool = False,
-                 treat_as_file: bool = False,
-                 mark_gcs_dirs: bool = True) -> "Store":
+                 treat_as_file: bool = False) -> "Store":
   """Initializes a file store from a path or URL.
 
   IMPORTANT: Call close() on the returned store when finished with it.
   To automatically close, use the store as a context manager,
   e.g. `with create_store(path) as store:`
-
-  Args:
-    mark_gcs_dirs: For a GCS directory, lists everything under it and writes
-      the directory markers that are missing (see `_fix_gcsfs_storage`). Set
-      to False when the directory was already marked, or is only read: reads
-      and `Dir.all_files` don't need markers.
   """
-  return Store(path, create_if_missing, treat_as_file, mark_gcs_dirs)
+  return Store(path, create_if_missing, treat_as_file)
 
 
 class Store:
   """File storage location. May be local or remote, directory or file."""
 
-  def __init__(self, path: str, create_if_missing: bool, treat_as_file: bool,
-               mark_gcs_dirs: bool):
+  def __init__(self, path: str, create_if_missing: bool, treat_as_file: bool):
     # Path of the associated PyFilesystem FS.
     # For single-file stores, this is updated below to be the parent directory of the file.
     self.root_path = path
@@ -158,8 +150,6 @@ class Store:
         self.fs = _open_fs(self.root_path,
                            create=create_if_missing,
                            strict=False)
-        if mark_gcs_dirs and isinstance(self.fs, GCSFS):
-          _fix_gcsfs_storage(self.fs)
 
         self._wrapper: _StoreWrapper = Dir(self, path="/")
         self._isdir = True
@@ -346,14 +336,14 @@ class File(_StoreWrapper):
     self._gcs_object = gcs_object
     if exists:
       return
+    if create_if_missing:
+      # Even for an existing file: one uploaded natively can sit in a GCS dir
+      # without the marker that fs-gcsfs needs to write it again.
+      self.fs().makedirs(fspath.dirname(path), recreate=True)
     if not self.fs().exists(self.path):
-      if create_if_missing:
-        parent_dir_path = fspath.dirname(path)
-        self.fs().makedirs(parent_dir_path, recreate=True)
-        # Make empty file.
-        self.fs().touch(path)
-      else:
+      if not create_if_missing:
         raise FileNotFoundError(f"File not found: {self.full_path()}")
+      self.fs().touch(path)
 
   def name(self) -> str:
     """The file name, including any extension and without a leading slash."""
@@ -485,40 +475,3 @@ def _gcs_dir_prefix(fs: GCSFS, path: str) -> str:
   """Returns the GCS object name prefix of everything under dir `path`."""
   key = _gcs_key(fs, path)
   return f"{key}/" if key else ""
-
-
-def _fix_gcsfs_storage(fs: GCSFS) -> None:
-  """Utility function that walks the entire `root_path` and makes sure that all intermediate directories are correctly marked with empty blobs.
-
-  As GCS is no real file system but only a key-value store, there is also no concept of folders. S3FS and GCSFS overcome this limitation by adding
-  empty files with the name "<path>/" every time a directory is created, see https://fs-gcsfs.readthedocs.io/en/latest/#limitations.
-
-  This is the same as GCSFS.fix_storage() but with a fix for an infinite loop when root_path does not end with a slash.
-  """
-  names = [
-      blob.name
-      for blob in fs.bucket.list_blobs(prefix=fspath.forcedir(fs.root_path))
-  ]
-  marked_dirs = set()
-  all_dirs = set()
-
-  for name in names:
-    # If a blob ends with a slash, it's a directory marker
-    if name.endswith("/"):
-      marked_dirs.add(fspath.dirname(name))
-
-    name = fspath.dirname(name)
-    while name != fs.root_path:
-      all_dirs.add(name)
-      name = fspath.dirname(name)
-
-  if fspath.forcedir(fs.root_path) != "/":
-    all_dirs.add(fs.root_path)
-
-  unmarked_dirs = all_dirs.difference(marked_dirs)
-
-  if len(unmarked_dirs) > 0:
-    for unmarked_dir in unmarked_dirs:
-      dir_name = fspath.forcedir(unmarked_dir)
-      blob = fs.bucket.blob(dir_name)
-      blob.upload_from_string(b"")
