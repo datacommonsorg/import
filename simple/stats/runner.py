@@ -40,7 +40,6 @@ from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
-from stats.jsonld_stream_writer import collision_file_key
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
@@ -269,7 +268,7 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
   nodes = Nodes(config=config)
   graph_writer = JsonLdStreamWriter(open_dir(args.output_dir_path),
                                     args.import_names,
-                                    nodes,
+                                    config,
                                     jsonld_dir_name=args.jsonld_dir_name)
   importer = _create_importer_for_file(config, input_file, graph_writer, nodes)
   try:
@@ -804,7 +803,7 @@ class Runner:
         _raise_for_failures(failures)
       # Workers save ids only for files with observations.
       self._merge_cross_file_collisions([
-          (collision_file_key(file.path), ids_path)
+          (file.path, ids_path)
           for file, ids_path in zip(files, obs_ids_paths)
           if os.path.exists(ids_path)
       ])
@@ -900,22 +899,19 @@ class Runner:
         "Initializing JsonLdStreamWriter to stream JSON-LD directly to GCS/Disk"
     )
     self.graph_writer = JsonLdStreamWriter(self.output_dir, self.import_names,
-                                           self.nodes)
+                                           self.config)
 
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
 
     # Generate triples from nodes grouped by provenance directory and write directly
     for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
-      # Every triple is counted. "_global" (the generated StatVarGroups) is no
-      # folder's provenance, so its counts don't appear in the report.
+      # Every triple is counted. "" (no import: the generated StatVarGroups) is
+      # no folder's provenance, so its counts don't appear in the report.
       counts = count_nodes_from_triples(triples)
       self.summary_generator.add_runner_node_counts(prov_dir, counts.nodes,
                                                     counts.nodes_by_type)
-      if prov_dir == "_global":
-        self.graph_writer.write_triples(triples)
-      else:
-        self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
+      self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.nodes).validate()

@@ -132,19 +132,18 @@ class Nodes:
     return _clean_metadata_id(self.config.provenance_name(input_file))
 
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
+    """Returns the nodes' triples by import folder ("" for no import)."""
     result: dict[str, list[Triple]] = defaultdict(list)
     for source in self.sources.values():
       result[_provenance_dir(source.import_folder)].extend(source.triples())
     for provenance in self.provenances.values():
       result[_provenance_dir(provenance.id)].extend(provenance.triples())
-    result["_global"].extend(_ROOT_GROUP_TRIPLES)
+    result[""].extend(_ROOT_GROUP_TRIPLES)
     return {k: _dedupe_triples(triples) for k, triples in result.items()}
 
 
 def _provenance_dir(raw_id: str) -> str:
-  if not raw_id or raw_id == "_global":
-    return "_global"
-  return strip_namespace(raw_id)
+  return strip_namespace(raw_id) if raw_id else ""
 
 
 def _about(subject_id: str, triples: list[Triple] | None) -> list[Triple]:
