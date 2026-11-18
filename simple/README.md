@@ -32,11 +32,18 @@ All output is written under `--output_dir`, which can be a local path or a
 * `jsonld/<import_name>_<timestamp>/<import_name>/`: the generated JSON-LD
   shards. Node shards are named `node-<index>-<uid>.jsonld` and observation
   shards are named `observation-<sanitized_input_file>-<index>.jsonld`.
-* `process/report.json`: the run's status (and error, if it failed).
+* `preprocessor_reports/[<WORKFLOW_EXECUTION_ID>/]ingestion_report.json`: the
+  run's status and a summary of each import folder.
 
-There is no database output. The importer streams shards to a local temporary
-directory as it runs and bulk uploads them to the output directory at the end
-of the run.
+Under the ingestion workflow (`WORKFLOW_EXECUTION_ID` set and `TEMP_LOCATION`
+a `gs://` path), the run's result, including any errors, is also written to
+`$TEMP_LOCATION/datacommons/ingestion_records/<WORKFLOW_EXECUTION_ID>.json` for
+the workflow. Elsewhere, a failed run logs its error and exits non-zero.
+
+There is no database output. Each worker serializes its shards in memory and
+writes them straight to the output directory as it imports (uploaded to GCS, or
+written to the final path on local disk), with a few shards in flight at a time.
+Nothing is staged in a local temporary directory.
 
 ## Environment variables
 

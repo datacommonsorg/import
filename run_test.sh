@@ -79,8 +79,10 @@ function run_py_test {
   cd simple
   pip3 install -r requirements_test.txt -q
   pip3 install --no-deps -r requirements_nodeps.txt -q
+  # The workflow helpers' tests run with uv.
+  pip3 install uv -q
 
-  # With PY_TEST_COVERAGE set, the preprocessor tests also record coverage.
+  # With PY_TEST_COVERAGE set, the Python tests also record coverage.
   local cov=() cov_append=()
   if [[ -n "${PY_TEST_COVERAGE:-}" ]]; then
     pip3 install $COVERAGE_TOOLS -q
@@ -93,28 +95,49 @@ function run_py_test {
   python3 -m pytest kg_util/ -s "${cov[@]}"
 
   echo -e "#### Running preprocessor test suite"
-  python3 -m pytest testsuite/ -n auto "${cov_append[@]}"
+  # --durations lists the slowest tests, which bound the parallel run's time.
+  python3 -m pytest testsuite/ -n auto --durations=15 "${cov_append[@]}"
 
   echo -e "#### Running preprocessor regression tool tests"
   python3 -m pytest tools/ "${cov_append[@]}"
 
-  if [[ -n "${PY_TEST_COVERAGE:-}" ]]; then
-    (cd "${ROOT_DIR}" && report_coverage) \
-      || echo "#### Coverage report failed; ignoring (report only)"
-  fi
+  cd "${ROOT_DIR}"
 
   echo -e "#### Running ingestion helper tests"
-  cd "${ROOT_DIR}/pipeline/workflow/ingestion-helper"
-  pip3 install uv -q
-  uv run --python 3.12 pytest --ignore=aggregation/e2e_tests/
+  run_workflow_helper_tests ingestion-helper
 
   echo -e "#### Running aggregation helper unit tests"
-  cd "${ROOT_DIR}/pipeline/workflow/aggregation-helper"
-  # The e2e suite is too slow for CI.
-  uv run --python 3.12 pytest --ignore=aggregation/e2e_tests/
+  run_workflow_helper_tests aggregation-helper
 
-  cd "${ROOT_DIR}"
+  if [[ -n "${PY_TEST_COVERAGE:-}" ]]; then
+    report_coverage || echo "#### Coverage report failed; ignoring (report only)"
+  fi
   deactivate
+}
+
+# Runs the tests of the workflow helper in pipeline/workflow/$1 and returns
+# their exit status. With PY_TEST_COVERAGE set, also records their coverage and
+# writes its coverage.xml, without failing on report errors. Run from the repo
+# root.
+function run_workflow_helper_tests {
+  local dir="pipeline/workflow/$1" cov=() status=0
+  if [[ -n "${PY_TEST_COVERAGE:-}" ]]; then
+    rm -f "$dir/coverage.xml"
+    cov=(--cov --cov-report=term)
+  fi
+  # The aggregation e2e suite is too slow for CI.
+  (cd "$dir" \
+    && uv run --python 3.12 pytest --ignore=aggregation/e2e_tests/ "${cov[@]}") \
+    || status=$?
+  if [[ -n "${PY_TEST_COVERAGE:-}" ]]; then
+    # Like write_coverage_xml, but with the helper's Python 3.12, which can
+    # parse its code.
+    uv run --project "$dir" --python 3.12 python -m coverage xml -q \
+      --data-file="$dir/.coverage" --rcfile="$dir/pyproject.toml" \
+      -o "$dir/coverage.xml" \
+      || echo "#### Coverage report of $dir failed; ignoring (report only)"
+  fi
+  return "$status"
 }
 
 # Prints the ref that coverage compares with: COVERAGE_BASE if set, else
@@ -152,17 +175,18 @@ function package_coverage {
 
 # Reports, without failing, the coverage that run_py_test recorded with
 # PY_TEST_COVERAGE: coverage of each file in simple/, overall coverage of
-# COVERAGE_SUMMARY_PACKAGES, and coverage of the lines changed since
-# COVERAGE_BASE_BRANCH (via datacommonsorg/.github's report_changed_lines.sh).
-# Writes the summary to simple/coverage_summary.md and prints it. Run from the
-# repo root.
+# COVERAGE_SUMMARY_PACKAGES and of each workflow helper, and coverage of the
+# lines changed since COVERAGE_BASE_BRANCH (via datacommonsorg/.github's
+# report_changed_lines.sh). Writes the summary to simple/coverage_summary.md
+# and prints it. Run from the repo root.
 function report_coverage {
-  local summary=simple/coverage_summary.md pkg diff_report script
+  local summary=simple/coverage_summary.md pkg report diff_report script
+  local reports=(simple/coverage.xml)
   echo -e "#### Coverage of simple/"
   (cd simple && python3 -m coverage report) || return 1
   write_coverage_xml simple simple/.coveragerc || return 1
   {
-    echo "## Preprocessor coverage"
+    echo "## Python coverage"
     echo
     echo "| Package | Line coverage |"
     echo "|---|---|"
@@ -170,13 +194,18 @@ function report_coverage {
       echo "| simple/$pkg | $(package_coverage "$pkg/*") |"
     done
     echo "| simple/ (all) | $(package_coverage "*") |"
+    for report in pipeline/workflow/*-helper/coverage.xml; do
+      [[ -f "$report" ]] || continue
+      reports+=("$report")
+      echo "| $(dirname "$report") | $(coverage_percent "$report") |"
+    done
     echo
   } > "$summary"
   diff_report=$(mktemp)
   script=$(mktemp)
   if curl -fsSL --retry 3 -o "$script" \
     "$SHARED_COVERAGE_SCRIPTS_URL/report_changed_lines.sh"; then
-    if bash "$script" simple/coverage.xml --format="markdown:$diff_report"; then
+    if bash "$script" "${reports[@]}" --format="markdown:$diff_report"; then
       cat "$diff_report" >> "$summary"
     else
       echo "Changed-line coverage not measured: report script failed"
@@ -270,9 +299,10 @@ function help {
   echo "-l              Run lint test"
   echo "-p              Run python tests"
   echo
-  echo "Env: PY_TEST_COVERAGE=1 makes -p also report coverage of simple/, without"
-  echo "failing. With COVERAGE_BASE_BRANCH=<branch>, it also reports coverage of"
-  echo "the lines changed since that branch of COVERAGE_REMOTE (default origin)."
+  echo "Env: PY_TEST_COVERAGE=1 makes -p also report coverage of simple/ and of"
+  echo "the workflow helpers, without failing. With COVERAGE_BASE_BRANCH=<branch>,"
+  echo "it also reports coverage of the lines changed since that branch of"
+  echo "COVERAGE_REMOTE (default origin)."
   exit 1
 }
 

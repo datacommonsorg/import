@@ -27,6 +27,7 @@
         <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
         <mockito.version>3.7.7</mockito.version>
         <slf4j.version>2.0.13</slf4j.version>
+        <jacoco.version>0.8.16</jacoco.version>
     </properties>
 
     <!-- List the sub-dirs so that they all get included in an IntelliJ project -->
@@ -247,6 +248,47 @@
     </build>
 
     <profiles>
+        <profile>
+            <!-- Records test coverage with JaCoCo: `JAVA_TEST_COVERAGE=1 mvn test`
+                 writes <module>/target/site/jacoco/jacoco.xml. -->
+            <id>coverage</id>
+            <activation>
+                <property>
+                    <name>env.JAVA_TEST_COVERAGE</name>
+                    <value>1</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.version}</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <excludes>
+                                        <!-- Generated from util/src/main/proto -->
+                                        <exclude>org/datacommons/proto/**</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>git-worktree</id>
             <build>

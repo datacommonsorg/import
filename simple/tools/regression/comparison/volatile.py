@@ -20,8 +20,9 @@ source of run-to-run noise belongs in this module.
 
 import re
 
-# Keys dropped from process/report.json.
-REPORT_TIMESTAMP_KEYS = frozenset({"startTime", "lastUpdate"})
+# Fields dropped from the ingestion report's `run` block: its times, and the
+# report's own path, which is under each side's output dir.
+RUN_METADATA_VOLATILE_KEYS = frozenset({"startTime", "endTime", "outputPath"})
 
 # The JSON-LD run directory is "<import name>_<YYYYmmdd_HHMMSS_ffffff>".
 _RUN_DIR_TIMESTAMP = re.compile(r"_\d{8}_\d{6}_\d{6}$")
@@ -35,10 +36,11 @@ def stable_run_dir_name(name: str) -> str:
   return _RUN_DIR_TIMESTAMP.sub("", name)
 
 
-def strip_report_timestamps(report: dict) -> dict:
-  """Returns a copy of report.json without REPORT_TIMESTAMP_KEYS."""
+def strip_run_metadata(run: dict) -> dict:
+  """Returns a copy of the ingestion report's `run` block without
+  RUN_METADATA_VOLATILE_KEYS."""
   return {
       key: value
-      for key, value in report.items()
-      if key not in REPORT_TIMESTAMP_KEYS
+      for key, value in run.items()
+      if key not in RUN_METADATA_VOLATILE_KEYS
   }
