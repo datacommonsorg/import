@@ -315,3 +315,74 @@ def test_value_of_65535_characters_is_accepted():
 def test_value_of_65536_characters_fails():
   result = b.run_mcf(b.mcf_node("dcid:Big", name=f'"{"x" * 2**16}"'))
   b.assert_fails(result, "ValueError", "too long")
+
+
+# --- Ingestion report ---------------------------------------------------------
+
+# Written by the Runner for import_subdir()'s provenance.mcf.
+_METADATA_TYPES = {"Provenance": 1, "Source": 1}
+
+
+def _report_provenance(result: b.Result) -> dict:
+  """The only provenance of the run's only report folder."""
+  [folder] = result.output["ingestion_report"]["folders"]
+  [provenance] = folder["provenances"]
+  return provenance
+
+
+def test_report_counts_nodes_by_type():
+  """Each node counts once per file, under each type, or under untyped.
+
+  A StatVarObservation in MCF counts as an observation instead, with its date.
+  The generated root StatVarGroups are not counted.
+  """
+  schema = b.mcf(
+      b.mcf_node("dcid:Count_X", typeOf="dcs:StatisticalVariable"),
+      b.mcf_node("dcid:prop1", typeOf="dcs:Property"),
+      b.mcf_node("dcid:region1", typeOf="dcs:City, dcs:AdministrativeArea2"),
+      b.mcf_node("dcid:Count_X", typeOf=None, description='"Again"'),
+      b.mcf_node("dcid:extra", typeOf=None, description='"No type"'),
+      b.mcf_node("dcid:obs1",
+                 typeOf="dcs:StatVarObservation",
+                 variableMeasured="dcid:Count_X",
+                 observationAbout="dcid:country/USA",
+                 observationDate='"2019"',
+                 value="5"))
+  result = b.run_dir({
+      **b.import_subdir("oecd"), "oecd/schema.mcf": schema
+  },
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  provenance = _report_provenance(result)
+  assert provenance["nodes"] == {
+      "count": 6,
+      "byType": {
+          "AdministrativeArea2": 1,
+          "City": 1,
+          "Property": 1,
+          "StatisticalVariable": 1,
+          "untyped": 1,
+          **_METADATA_TYPES
+      }
+  }
+  # One from case.csv, one from schema.mcf.
+  assert provenance["observations"] == 2
+  assert provenance["dateRange"] == {"min": "2019", "max": "2020"}
+
+
+def test_report_counts_a_node_once_per_file_it_is_in():
+  node = b.mcf_node("dcid:Count_X", typeOf="dcs:StatisticalVariable")
+  result = b.run_dir(
+      {
+          **b.import_subdir("oecd"), "oecd/a.mcf": node,
+          "oecd/b.mcf": node
+      },
+      runner_kwargs={"import_names": ["oecd"]})
+
+  assert _report_provenance(result)["nodes"] == {
+      "count": 4,
+      "byType": {
+          "StatisticalVariable": 2,
+          **_METADATA_TYPES
+      }
+  }

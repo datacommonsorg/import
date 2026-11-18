@@ -25,6 +25,10 @@
             "dateRange": null,
             "fileCount": 2,
             "id": "KitchenProvenance",
+            "nodes": {
+              "byType": {},
+              "count": 0
+            },
             "observations": 0,
             "sourceId": null
           }
@@ -36,6 +40,10 @@
               "mcf": 1
             },
             "count": 2
+          },
+          "nodes": {
+            "byType": {},
+            "count": 0
           },
           "observations": 0,
           "provenanceCount": 1

@@ -199,6 +199,16 @@ def test_empty_config_writes_no_provenance_or_source():
   ], [])
 
 
+# The nodes of import_subdir()'s provenance.mcf, written by the Runner.
+_PROVENANCE_AND_SOURCE_NODES = {
+    "count": 2,
+    "byType": {
+        "Provenance": 1,
+        "Source": 1
+    }
+}
+
+
 def test_single_import_name_runs_only_that_subdirectory():
   result = b.run_dir(
       {
@@ -220,7 +230,8 @@ def test_single_import_name_runs_only_that_subdirectory():
               }
           },
           "provenanceCount": 1,
-          "observations": 1
+          "observations": 1,
+          "nodes": _PROVENANCE_AND_SOURCE_NODES,
       },
       "provenances": [{
           "id": b.PROVENANCE,
@@ -230,7 +241,8 @@ def test_single_import_name_runs_only_that_subdirectory():
           "dateRange": {
               "min": "2020",
               "max": "2020"
-          }
+          },
+          "nodes": _PROVENANCE_AND_SOURCE_NODES,
       }],
   }]
 

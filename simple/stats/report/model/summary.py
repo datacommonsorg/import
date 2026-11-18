@@ -80,6 +80,17 @@ class DateRange(BaseModel):
     return DateRange(min=min(self.min, other.min), max=max(self.max, other.max))
 
 
+class NodeCounts(BaseModel):
+  """Nodes written, other than StatVarObservations, and their types."""
+
+  count: int = Field(default=0, description="Number of nodes written")
+  byType: dict[str, int] = Field(
+      default_factory=dict,
+      description=("Number of nodes per type. A node with several types "
+                   "counts under each, and one without a type under "
+                   "'untyped'."))
+
+
 class Provenance(BaseModel):
   """One entry in `folders[].provenances[]`."""
 
@@ -95,7 +106,9 @@ class Provenance(BaseModel):
       description=("Observation dates covered, or null without dated "
                    "observations. Rows without a date count toward "
                    "observations but not toward dateRange."))
-  # TODO: Add node counts by type and provenance-level errors.
+  nodes: NodeCounts = Field(default_factory=NodeCounts,
+                            description="Other nodes written")
+  # TODO: Add provenance-level errors.
 
 
 class FileCounts(BaseModel):
@@ -117,7 +130,9 @@ class FolderSummary(BaseModel):
   observations: int = Field(
       default=0,
       description="StatVarObservation nodes written, over all provenances")
-  # TODO: Add node counts by type.
+  nodes: NodeCounts = Field(
+      default_factory=NodeCounts,
+      description="Other nodes written, over all provenances")
 
 
 class Folder(BaseModel):
@@ -155,4 +170,6 @@ class FileSummary(BaseModel):
                             description="StatVarObservation nodes written")
   dateRange: DateRange | None = Field(
       default=None, description="Observation dates covered, if any")
-  # TODO: Add nodesByType.
+  nodes: int = Field(default=0, description="Other nodes written")
+  nodesByType: dict[str, int] = Field(default_factory=dict,
+                                      description="Number of nodes per type")

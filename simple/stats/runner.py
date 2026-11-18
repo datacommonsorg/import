@@ -39,6 +39,7 @@ from stats.data import Source
 from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
+from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.jsonld_stream_writer import collision_file_key
 from stats.jsonld_stream_writer import JsonLdStreamWriter
@@ -867,7 +868,9 @@ class Runner:
                     folder=folder,
                     provenanceId=provenance_id,
                     observations=res.counts.observations,
-                    dateRange=res.counts.date_range))
+                    dateRange=res.counts.date_range,
+                    nodes=res.counts.nodes,
+                    nodesByType=dict(res.counts.nodes_by_type)))
 
   def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
     """Merges a worker's processed imports and collision stats into the writer."""
@@ -896,8 +899,13 @@ class Runner:
     # Generate triples from nodes grouped by provenance directory and write directly
     for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
       if prov_dir == "_global":
+        # Not counted in the report: these are the generated root
+        # StatVarGroups, which come from no input file.
         self.graph_writer.write_triples(triples)
       else:
+        counts = count_nodes_from_triples(triples)
+        self.summary_generator.add_node_counts(prov_dir, counts.nodes,
+                                               counts.nodes_by_type)
         self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing

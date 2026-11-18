@@ -25,6 +25,7 @@ from stats.report.model.summary import FileSummary
 from stats.report.model.summary import Folder
 from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import Provenance
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
@@ -139,6 +140,64 @@ class TestSummaryGenerator(unittest.TestCase):
                               dateRange=DateRange(min="2005", max="2010"))
                ])
     ])
+
+  def test_node_counts_add_up_per_provenance_and_folder(self):
+    """File and Runner node counts are summed per provenance, then per folder.
+
+    Runner nodes go to every folder whose files use their provenance.
+    """
+    with tempfile.TemporaryDirectory() as tmp, \
+         create_store(tmp) as store:
+      generator = _generator("wf-123", store.as_dir())
+      generator.record_input_file("oecd", ["oecdProv"], "oecd/a.mcf")
+      generator.record_input_file("oecd", ["oecdOther"], "oecd/b.mcf")
+      generator.record_input_file("ilo", ["iloProv"], "ilo/c.mcf")
+      for path, provenance_id, by_type in [
+          ("oecd/a.mcf", "oecdProv", {
+              "StatisticalVariable": 2
+          }),
+          ("oecd/b.mcf", "oecdOther", {
+              "StatisticalVariable": 1,
+              "untyped": 1
+          }),
+      ]:
+        generator.add_file_summary(
+            FileSummary(filePath=path,
+                        folder="oecd",
+                        provenanceId=provenance_id,
+                        nodes=sum(by_type.values()),
+                        nodesByType=by_type))
+      generator.add_node_counts("oecdProv", 2, {"Provenance": 1, "Source": 1})
+      folders = generator.build_report(RunStatus.SUCCESS, _END).folders
+
+    self.assertEqual(
+        [(f.folderName, f.summary.nodes, [(p.id, p.nodes)
+                                          for p in f.provenances])
+         for f in folders], [
+             ("ilo", NodeCounts(), [("iloProv", NodeCounts())]),
+             ("oecd",
+              NodeCounts(count=6,
+                         byType={
+                             "Provenance": 1,
+                             "Source": 1,
+                             "StatisticalVariable": 3,
+                             "untyped": 1
+                         }), [
+                             ("oecdOther",
+                              NodeCounts(count=2,
+                                         byType={
+                                             "StatisticalVariable": 1,
+                                             "untyped": 1
+                                         })),
+                             ("oecdProv",
+                              NodeCounts(count=4,
+                                         byType={
+                                             "Provenance": 1,
+                                             "Source": 1,
+                                             "StatisticalVariable": 2
+                                         })),
+                         ]),
+         ])
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""

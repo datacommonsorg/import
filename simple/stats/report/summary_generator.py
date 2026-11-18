@@ -33,6 +33,7 @@ from stats.report.model.summary import FileSummary
 from stats.report.model.summary import Folder
 from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import Provenance
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
@@ -54,14 +55,19 @@ class _FolderStats:
   # Observation date range per provenance ID. Only provenances with dated
   # observations have an entry.
   date_range_by_provenance: dict[str, DateRange] = field(default_factory=dict)
+  # Other nodes written per provenance ID.
+  nodes_by_provenance: Counter = field(default_factory=Counter)
+  # Provenance ID -> number of its nodes per type.
+  node_types_by_provenance: dict[str, Counter] = field(
+      default_factory=lambda: defaultdict(Counter))
 
 
 class SummaryGenerator:
   """Collects stats during a preprocessor run and writes the ingestion report.
 
   Runner calls, in order: set_execution_metadata(), record_input_file() per
-  matched file, add_file_summary() per imported file, populate_node_info()
-  after worker results are merged, record_failure() on failure, and, at the
+  matched file, add_file_summary() per imported file, add_node_counts() for
+  the nodes it writes itself after worker results are merged, record_failure() on failure, and, at the
   end of the run on success or failure, add_folders(), set_provenance_data()
   and write_to_json().
 
@@ -88,7 +94,7 @@ class SummaryGenerator:
     self._provenance_data: dict[str, dict] = {}
     # Counts per import folder, keyed by folder name.
     self._folders: dict[str, _FolderStats] = defaultdict(_FolderStats)
-    # TODO: Add containers for node counts and errors.
+    # TODO: Add a container for errors.
 
   def set_execution_metadata(self, start_time: str, output_dir: Dir) -> None:
     """Sets run metadata known at the start of the run.
@@ -149,32 +155,36 @@ class SummaryGenerator:
     whatever order files are merged.
 
     Args:
-      summary: Observations and their date range written for one file.
+      summary: Observations, their date range and other nodes written for one
+        file.
     """
     stats = self._folders[summary.folder]
     provenance_id = summary.provenanceId
     stats.observations_by_provenance[provenance_id] += summary.observations
+    stats.nodes_by_provenance[provenance_id] += summary.nodes
+    stats.node_types_by_provenance[provenance_id].update(summary.nodesByType)
     if summary.dateRange is not None:
       current = stats.date_range_by_provenance.get(provenance_id)
       stats.date_range_by_provenance[provenance_id] = (
           summary.dateRange
           if current is None else current.widen(summary.dateRange))
 
-  def populate_node_info(self, folder: str, provenance: list[str],
-                         counts_by_type: dict[str, int]) -> None:
-    """Adds counts for nodes written by the parent process.
+  def add_node_counts(self, provenance_id: str, nodes: int,
+                      nodes_by_type: dict[str, int]) -> None:
+    """Adds nodes that the Runner writes itself, such as Provenance and Source.
 
-    Nodes from user files are counted in the workers and arrive through
-    add_file_summary(). This function covers nodes the parent writes after
-    merging worker results: generated provenance, source and StatVarGroup
-    nodes. Counts are stored per file and per provenance.
+    They come from no single file, so only their provenance is known: they are
+    added to that provenance in every folder whose input files use it.
 
     Args:
-      folder: Import folder the nodes belong to.
-      provenance: list of provenances the nodes belong to.
-      counts_by_type: Number of nodes per typeOf value.
+      provenance_id: ID of the provenance the nodes belong to.
+      nodes: Number of nodes.
+      nodes_by_type: Number of nodes per type.
     """
-    # TODO: Add to the node counts for each provenance in each folder.
+    for stats in self._folders.values():
+      if provenance_id in stats.files_by_provenance:
+        stats.nodes_by_provenance[provenance_id] += nodes
+        stats.node_types_by_provenance[provenance_id].update(nodes_by_type)
 
   def record_failure(self, error: FileValidationError) -> None:
     """Records a run-level error.
@@ -212,7 +222,6 @@ class SummaryGenerator:
       stats = self._folders[name]
       folders.append(self._build_folder(name, stats))
 
-    # TODO: Add node counts once they are recorded.
     return IngestionReport(run=metadata, folders=folders)
 
   def _build_folder(self, name: str, stats: _FolderStats) -> Folder:
@@ -227,14 +236,21 @@ class SummaryGenerator:
               sourceId=source_id,
               fileCount=stats.files_by_provenance[provenance_id],
               observations=stats.observations_by_provenance[provenance_id],
-              dateRange=stats.date_range_by_provenance.get(provenance_id)))
+              dateRange=stats.date_range_by_provenance.get(provenance_id),
+              nodes=_node_counts(
+                  stats.nodes_by_provenance[provenance_id],
+                  stats.node_types_by_provenance[provenance_id])))
 
     files = FileCounts(count=sum(stats.files_by_type.values()),
                        byType=dict(sorted(stats.files_by_type.items())))
-    summary = FolderSummary(files=files,
-                            provenanceCount=len(provenances),
-                            observations=sum(
-                                p.observations for p in provenances))
+    node_types = Counter()
+    for p in provenances:
+      node_types.update(p.nodes.byType)
+    summary = FolderSummary(
+        files=files,
+        provenanceCount=len(provenances),
+        observations=sum(p.observations for p in provenances),
+        nodes=_node_counts(sum(p.nodes.count for p in provenances), node_types))
     return Folder(folderName=name, summary=summary, provenances=provenances)
 
   def _report_dir_name(self) -> str:
@@ -271,3 +287,8 @@ class SummaryGenerator:
     except Exception:  # The report must never fail the run.
       logging.exception("Failed to write the ingestion report.")
       return None
+
+
+def _node_counts(count: int, by_type: Counter) -> NodeCounts:
+  """Returns the report's node counts, with types sorted by name."""
+  return NodeCounts(count=count, byType=dict(sorted(by_type.items())))

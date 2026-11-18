@@ -24,6 +24,13 @@
             },
             "fileCount": 2,
             "id": "healthProvenance",
+            "nodes": {
+              "byType": {
+                "Provenance": 1,
+                "Source": 1
+              },
+              "count": 2
+            },
             "observations": 4,
             "sourceId": "healthSource"
           }
@@ -33,6 +40,13 @@
             "byType": {
               "csv": 1,
               "mcf": 1
+            },
+            "count": 2
+          },
+          "nodes": {
+            "byType": {
+              "Provenance": 1,
+              "Source": 1
             },
             "count": 2
           },
@@ -50,6 +64,13 @@
             },
             "fileCount": 2,
             "id": "populationProvenance",
+            "nodes": {
+              "byType": {
+                "Provenance": 1,
+                "Source": 1
+              },
+              "count": 2
+            },
             "observations": 5,
             "sourceId": "populationSource"
           }
@@ -59,6 +80,13 @@
             "byType": {
               "csv": 1,
               "mcf": 1
+            },
+            "count": 2
+          },
+          "nodes": {
+            "byType": {
+              "Provenance": 1,
+              "Source": 1
             },
             "count": 2
           },

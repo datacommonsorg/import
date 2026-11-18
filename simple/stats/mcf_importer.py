@@ -18,6 +18,7 @@ from kg_util.mcf_parser import mcf_to_triples
 from stats.data import strip_namespace
 from stats.data import Triple
 from stats.graph_writer import GraphWriter
+from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.util import is_uri_or_namespace
@@ -71,7 +72,7 @@ class McfImporter(Importer):
     # Pass 2: Map and stream triples to the graph writer in chunks
     logging.info("Streaming MCF triple parsing and writes for %s...",
                  self.input_file.full_path())
-    chunk = []
+    triples = []
     all_metadata_triples = []
 
     for parser_triple in triples_list:
@@ -85,7 +86,13 @@ class McfImporter(Importer):
       if triple.subject_id in metadata_ids:
         all_metadata_triples.append(triple)
         continue
+      triples.append(triple)
 
+    # Counted for the whole file, so a node split across chunks counts once.
+    self.counts = self.counts.add(count_nodes_from_triples(triples))
+
+    chunk = []
+    for triple in triples:
       # Only flush at subject boundaries to prevent splitting a subject's triples
       if chunk and triple.subject_id != chunk[-1].subject_id and len(
           chunk) >= 10000:
