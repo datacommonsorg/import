@@ -900,8 +900,8 @@ class Runner:
         self.graph_writer.write_triples(triples)
       else:
         counts = count_nodes_from_triples(triples)
-        self.summary_generator.add_node_counts(prov_dir, counts.nodes,
-                                               counts.nodes_by_type)
+        self.summary_generator.add_runner_node_counts(prov_dir, counts.nodes,
+                                                      counts.nodes_by_type)
         self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing

@@ -67,10 +67,10 @@ class SummaryGenerator:
   """Collects stats during a preprocessor run and writes the ingestion report.
 
   Runner calls, in order: set_execution_metadata(), record_input_file() per
-  matched file, add_file_summary() per imported file, add_node_counts() for
-  the nodes it writes itself after worker results are merged, record_failure()
-  on failure, and, at the end of the run on success or failure, add_folders(),
-  set_provenance_data() and write_to_json().
+  matched file, add_file_summary() per imported file,
+  add_runner_node_counts() for the nodes it writes itself after worker results
+  are merged, record_failure() on failure, and, at the end of the run on
+  success or failure, add_folders(), set_provenance_data() and write_to_json().
 
   Worker processes can't update this object, so each returns its counts in an
   ImportProcResult, and Runner builds a FileSummary from it for
@@ -170,8 +170,8 @@ class SummaryGenerator:
           summary.dateRange
           if current is None else current.widen(summary.dateRange))
 
-  def add_node_counts(self, provenance_id: str, nodes: int,
-                      nodes_by_type: dict[str, int]) -> None:
+  def add_runner_node_counts(self, provenance_id: str, nodes: int,
+                             nodes_by_type: dict[str, int]) -> None:
     """Adds nodes that the Runner writes itself, such as Provenance and Source.
 
     They come from no single file, so only their provenance is known: they are

@@ -148,7 +148,10 @@ class TestSummaryGenerator(unittest.TestCase):
       generator = _generator("wf-123", store.as_dir())
       generator.record_input_file("oecd", ["sharedProv"], "oecd/a.mcf")
       generator.record_input_file("ilo", ["sharedProv"], "ilo/b.mcf")
-      generator.add_node_counts("sharedProv", 2, {"Provenance": 1, "Source": 1})
+      generator.add_runner_node_counts("sharedProv", 2, {
+          "Provenance": 1,
+          "Source": 1
+      })
       folders = generator.build_report(RunStatus.SUCCESS, _END).folders
 
     expected = NodeCounts(count=2, byType={"Provenance": 1, "Source": 1})
