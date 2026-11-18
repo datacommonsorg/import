@@ -21,12 +21,11 @@ import functools
 import hashlib
 import json
 import logging
-import os
-import tempfile
 import types
 from typing import Any, Callable, Mapping, Optional
 import uuid
 
+import fs.path as fspath
 from google.api_core.exceptions import GoogleAPICallError
 from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
@@ -37,15 +36,19 @@ from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
 from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
-from util.filesystem import create_store
 from util.filesystem import File
 from util.filesystem import gcs_client
+from util.filesystem import is_gcs_path
 
 DCID_URL = "https://datacommons.org/browser/"
 
 # Configuration Constants
 _CHUNK_SIZE = 10000
 _UPLOAD_CONCURRENCY = 4
+# Shards serialized but not yet written, per writer, at most: bounds memory
+# while writes overlap with building the next shards.
+_MAX_PENDING_SHARDS = 2 * _UPLOAD_CONCURRENCY
+_SHARD_CONTENT_TYPE = "application/ld+json"
 
 # Distinct values whose JSON-LD forms are cached, per process and per cache:
 # enough for the variables, places and properties of a large file.
@@ -214,12 +217,12 @@ def _build_observation_node(row: tuple) -> dict:
   return obs_obj
 
 
-def _write_observation_shard(chunk,
-                             shard_index: Optional[int] = None,
-                             jsonld_dir_path: Optional[str] = None,
-                             ns_map: Optional[dict[str, str]] = None,
-                             track_hash_fn: Optional[Callable] = None,
-                             file_name: str = ""):
+def _observation_shard(chunk,
+                       shard_index: int,
+                       ns_map: dict[str, str],
+                       track_hash_fn: Optional[Callable] = None,
+                       file_name: str = "") -> tuple[str, str]:
+  """Returns the name and JSON text of the observation shard of `chunk`."""
   graph_list = []
   chunk_hashes = []
   for row in chunk:
@@ -239,10 +242,7 @@ def _write_observation_shard(chunk,
     shard_name = f"observation-{sanitized_stem}-{shard_index:05d}.jsonld"
   else:
     shard_name = f"observation-{shard_index:05d}.jsonld"
-  with create_store(jsonld_dir_path) as store:
-    output_dir = store.as_dir()
-    output_dir.open_file(shard_name).write(_to_json(compacted_jsonld))
-  logging.info(f"Saved JSON-LD shard to {shard_name}")
+  return shard_name, _to_json(compacted_jsonld)
 
 
 def _append_unique_value(subject_dict: dict, key: str, val: object) -> None:
@@ -261,8 +261,9 @@ def _append_unique_value(subject_dict: dict, key: str, val: object) -> None:
 # TODO(gmechali): When parallelizing node shard exports (MCF and Entities CSV files),
 # include the sanitized file_name in the shard name (e.g., node-{sanitized_stem}-{shard_index:05d}.jsonld)
 # to prevent shard filename collisions across parallel workers, similar to observation shards.
-def _write_node_shard(args):
-  chunk, shard_index, jsonld_dir_path, ns_map = args
+def _node_shard(chunk, shard_index: int, ns_map: dict[str,
+                                                      str]) -> tuple[str, str]:
+  """Returns the name and JSON text of the node shard of `chunk`."""
   subjects = {}
 
   for row in chunk:
@@ -290,10 +291,7 @@ def _write_node_shard(args):
   # TODO(gmechali): When parallelizing node shard exports, include file_name in shard_name
   unique_id = uuid.uuid4().hex[:12]
   shard_name = f"node-{shard_index:05d}-{unique_id}.jsonld"
-  with create_store(jsonld_dir_path) as store:
-    output_dir = store.as_dir()
-    output_dir.open_file(shard_name).write(_to_json(compacted_jsonld))
-  logging.info(f"Saved JSON-LD shard to {shard_name}")
+  return shard_name, _to_json(compacted_jsonld)
 
 
 class JsonLdStreamWriter(GraphWriter):
@@ -328,8 +326,15 @@ class JsonLdStreamWriter(GraphWriter):
     self.obs_shard_index = 0
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
-    self._temp_dir_obj = tempfile.TemporaryDirectory()
-    self.temp_local_dir = self._temp_dir_obj.name
+    # Shards are written in the background, straight to jsonld_dir (see
+    # _write_shard). The threads are started on first use, so that each forked
+    # worker process starts its own.
+    jsonld_path = self.jsonld_dir.full_path()
+    self._gcs_jsonld_path = jsonld_path if is_gcs_path(jsonld_path) else None
+    self._shard_writer: concurrent.futures.ThreadPoolExecutor | None = None
+    self._pending_shards: list[concurrent.futures.Future] = []
+    # Import folders made under a local jsonld_dir (GCS has no folders).
+    self._local_folders: set[str] = set()
     self._triples = defaultdict(list)
     self._processed_imports = set()
     self._node_streaming_started = set()
@@ -385,24 +390,23 @@ class JsonLdStreamWriter(GraphWriter):
           file_samples.get(f_name,
                            [])[:max(0, MAX_SAMPLES_PER_FILE - len(samples))])
 
-  def _write_observations_df_to_disk(self,
-                                     df: pd.DataFrame,
-                                     import_name: str,
-                                     file_name: str = ""):
+  def _write_observation_shards(self,
+                                df: pd.DataFrame,
+                                import_name: str,
+                                file_name: str = ""):
     dir_name = import_name.replace("/", "_")
-    import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
     n = len(df)
     for i in range(0, n, _CHUNK_SIZE):
       chunk_df = df.iloc[i:i + _CHUNK_SIZE]
       chunk_records = chunk_df.to_records(index=False).tolist()
       shard_index = self.obs_shard_index
       self.obs_shard_index += 1
-      _write_observation_shard(chunk_records,
-                               shard_index,
-                               import_temp_dir,
-                               self.ns_map,
-                               track_hash_fn=self.track_observation_hash,
-                               file_name=file_name)
+      name, text = _observation_shard(chunk_records,
+                                      shard_index,
+                                      self.ns_map,
+                                      track_hash_fn=self.track_observation_hash,
+                                      file_name=file_name)
+      self._write_shard(dir_name, name, text)
 
   def write_observations(self, observations_df: pd.DataFrame, input_file: File):
     if observations_df.empty:
@@ -411,23 +415,19 @@ class JsonLdStreamWriter(GraphWriter):
 
     import_name = self.config.import_name(input_file)
     file_name = input_file.path if input_file else ""
-    self._init_import_export_dir(import_name)
-    self._write_observations_df_to_disk(observations_df,
-                                        import_name,
-                                        file_name=file_name)
+    self._add_processed_import(import_name)
+    self._write_observation_shards(observations_df,
+                                   import_name,
+                                   file_name=file_name)
 
-  def _init_import_export_dir(self, import_name: str):
-    dir_name = import_name.replace("/", "_")
-    import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
-    os.makedirs(import_temp_dir, exist_ok=True)
+  def _add_processed_import(self, import_name: str):
     self._processed_imports.add(import_name)
     if import_name not in self._node_streaming_started:
       logging.info("Streaming node/observation export for %s...", import_name)
       self._node_streaming_started.add(import_name)
 
-  def _write_triples_to_disk(self, triples: list[Triple], import_name: str):
+  def _write_node_shards(self, triples: list[Triple], import_name: str):
     dir_name = import_name.replace("/", "_")
-    import_temp_dir = os.path.join(self.temp_local_dir, dir_name)
     i = 0
     n = len(triples)
     while i < n:
@@ -443,8 +443,8 @@ class JsonLdStreamWriter(GraphWriter):
           chunk.append(triples[i])
           i += 1
 
-      _write_node_shard(
-          (chunk, self.node_shard_index, import_temp_dir, self.ns_map))
+      name, text = _node_shard(chunk, self.node_shard_index, self.ns_map)
+      self._write_shard(dir_name, name, text)
       self.node_shard_index += 1
 
   def write_triples(self,
@@ -461,8 +461,8 @@ class JsonLdStreamWriter(GraphWriter):
       self._triples["_global"].extend(triples)
       return
 
-    self._init_import_export_dir(provenance_dir)
-    self._write_triples_to_disk(triples, provenance_dir)
+    self._add_processed_import(provenance_dir)
+    self._write_node_shards(triples, provenance_dir)
 
   def import_folders(self) -> list[str]:
     """Returns the sorted imports whose folders this writer writes.
@@ -487,15 +487,10 @@ class JsonLdStreamWriter(GraphWriter):
     global_triples = self._triples.pop("_global", [])
     if global_triples:
       target_import = self._global_triples_import()
-      self._init_import_export_dir(target_import)
-      self._write_triples_to_disk(global_triples, target_import)
+      self._add_processed_import(target_import)
+      self._write_node_shards(global_triples, target_import)
 
-    has_local_files = any(os.scandir(self.temp_local_dir)) if os.path.exists(
-        self.temp_local_dir) else False
-    if has_local_files:
-      logging.info(
-          "Finalizing JSON-LD local export and bulk uploading shards...")
-      self._upload_shards(self.temp_local_dir)
+    self._finish_shard_writes()
 
     if self.obs_collision_count > 0:
       summary_lines = [
@@ -507,97 +502,67 @@ class JsonLdStreamWriter(GraphWriter):
           summary_lines.append(f"    - {sample}")
       logging.warning("\n".join(summary_lines))
 
-    # Clean up local temporary directory
-    try:
-      self._temp_dir_obj.cleanup()
-      logging.info("Cleaned up local temporary directory: %s",
-                   self.temp_local_dir)
-    except Exception as e:
-      logging.warning("Failed to clean up local temporary directory %s: %s",
-                      self.temp_local_dir, e)
+  def close_after_error(self) -> None:
+    """Waits for the shards in flight, ignoring errors, after a failed import.
 
-  def _upload_shards(self, temp_local_dir: str):
-    """Uploads files in temp_local_dir to jsonld_dir, optimizing for GCS via native SDK."""
-    files_to_upload = []
-    for root, _, filenames in os.walk(temp_local_dir):
-      for filename in filenames:
-        abs_path = os.path.join(root, filename)
-        rel_path = os.path.relpath(abs_path, temp_local_dir)
-        files_to_upload.append(rel_path)
+    So that nothing is still being written once the failure is reported.
+    """
+    self._finish_shard_writes(raise_errors=False)
 
-    if not files_to_upload:
-      return
+  def _write_shard(self, folder: str, name: str, text: str) -> None:
+    """Writes shard `text` to jsonld_dir/folder/name, in the background.
 
-    target_path = self.jsonld_dir.full_path()
-    logging.info(
-        "Bulk uploading %d JSON-LD shards to target directory %s in parallel",
-        len(files_to_upload), target_path)
-
-    if target_path.startswith("gs://"):
-      self._upload_shards_gcs(temp_local_dir, files_to_upload, target_path)
+    At most _MAX_PENDING_SHARDS are in flight: a write error is raised here or
+    by commit_and_close.
+    """
+    if self._shard_writer is None:
+      self._shard_writer = concurrent.futures.ThreadPoolExecutor(
+          max_workers=_UPLOAD_CONCURRENCY)
+    while len(self._pending_shards) >= _MAX_PENDING_SHARDS:
+      self._pending_shards.pop(0).result()
+    rel_path = f"{folder}/{name}"
+    if self._gcs_jsonld_path:
+      write = functools.partial(_upload_gcs_shard, self._gcs_jsonld_path,
+                                rel_path, text)
     else:
-      self._upload_shards_local(temp_local_dir, files_to_upload)
+      if folder not in self._local_folders:
+        # recreate=True: another worker may make it at the same time.
+        self.jsonld_dir.fs().makedirs(fspath.join(self.jsonld_dir.path, folder),
+                                      recreate=True)
+        self._local_folders.add(folder)
+      write = functools.partial(self._write_local_shard, rel_path, text)
+    self._pending_shards.append(self._shard_writer.submit(write))
 
-    logging.info("Bulk upload of JSON-LD shards completed successfully.")
+  def _write_local_shard(self, rel_path: str, text: str) -> None:
+    self.jsonld_dir.open_file(rel_path).write(text)
 
-  def _upload_shards_gcs(self, temp_local_dir: str, files: list[str],
-                         target_path: str):
-    """Performs concurrent GCS uploads using native google-cloud-storage client."""
-    # Parse bucket and blob prefix
-    parts = target_path[5:].split("/", 1)
-    bucket_name = parts[0]
-    blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
-
-    bucket = gcs_client().bucket(bucket_name)
-
-    gcs_retry = Retry(
-        initial=1.0,
-        maximum=10.0,
-        multiplier=2.0,
-        deadline=120.0,
-        predicate=lambda e: isinstance(e,
-                                       (TooManyRequests, GoogleAPICallError,
-                                        requests.exceptions.RequestException)))
-
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=_UPLOAD_CONCURRENCY) as executor:
-      list(
-          executor.map(
-              lambda rel_path: _upload_single_gcs_blob(
-                  temp_local_dir, rel_path, blob_prefix, bucket, gcs_retry),
-              files))
-
-  def _upload_shards_local(self, temp_local_dir: str, files: list[str]):
-    """Performs concurrent local file copy (for test environments)."""
-    target_store = self.jsonld_dir
-
-    parent_dirs = set(os.path.dirname(f) for f in files if os.path.dirname(f))
-    for d in sorted(parent_dirs):
-      try:
-        target_store.open_dir(d)
-      except Exception:
-        pass
-
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=_UPLOAD_CONCURRENCY) as executor:
-      list(
-          executor.map(
-              lambda rel_path: _copy_single_local_shard(
-                  temp_local_dir, rel_path, target_store), files))
+  def _finish_shard_writes(self, raise_errors: bool = True) -> None:
+    """Waits for the shards in flight; raises the first error if asked to."""
+    try:
+      for future in self._pending_shards:
+        error = future.exception()
+        if error and raise_errors:
+          raise error
+    finally:
+      self._pending_shards = []
+      if self._shard_writer is not None:
+        self._shard_writer.shutdown(wait=True)
+        self._shard_writer = None
 
 
-def _upload_single_gcs_blob(temp_local_dir: str, rel_path: str,
-                            blob_prefix: str, bucket, gcs_retry: Retry) -> None:
-  """Uploads a single local shard file (`rel_path`) to a GCS bucket."""
-  local_file_path = os.path.join(temp_local_dir, rel_path)
+_GCS_RETRY = Retry(
+    initial=1.0,
+    maximum=10.0,
+    multiplier=2.0,
+    deadline=120.0,
+    predicate=lambda e: isinstance(e, (TooManyRequests, GoogleAPICallError,
+                                       requests.exceptions.RequestException)))
+
+
+def _upload_gcs_shard(jsonld_path: str, rel_path: str, text: str) -> None:
+  """Uploads shard `text` to `jsonld_path`/`rel_path`, a gs:// path."""
+  bucket_name, _, blob_prefix = jsonld_path[len("gs://"):].partition("/")
+  blob_prefix = blob_prefix.rstrip("/")
   blob_key = f"{blob_prefix}/{rel_path}" if blob_prefix else rel_path
-  bucket.blob(blob_key).upload_from_filename(local_file_path, retry=gcs_retry)
-
-
-def _copy_single_local_shard(temp_local_dir: str, rel_path: str,
-                             target_store) -> None:
-  """Copies a single local shard file (`rel_path`) into `target_store`."""
-  local_file_path = os.path.join(temp_local_dir, rel_path)
-  with open(local_file_path, "r") as f:
-    content = f.read()
-  target_store.open_file(rel_path).write(content)
+  gcs_client().bucket(bucket_name).blob(blob_key).upload_from_string(
+      text, content_type=_SHARD_CONTENT_TYPE, retry=_GCS_RETRY)
