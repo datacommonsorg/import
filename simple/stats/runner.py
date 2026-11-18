@@ -899,8 +899,8 @@ class Runner:
     # Generate triples from nodes grouped by provenance directory and write directly
     for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
       if prov_dir == "_global":
-        # Not counted in the report: these are the generated root
-        # StatVarGroups, which come from no input file.
+        # Not counted in the report: these are the generated StatVarGroups,
+        # which come from no input file.
         self.graph_writer.write_triples(triples)
       else:
         counts = count_nodes_from_triples(triples)

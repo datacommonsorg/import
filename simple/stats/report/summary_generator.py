@@ -55,10 +55,11 @@ class _FolderStats:
   # Observation date range per provenance ID. Only provenances with dated
   # observations have an entry.
   date_range_by_provenance: dict[str, DateRange] = field(default_factory=dict)
-  # Other nodes written per provenance ID.
-  nodes_by_provenance: Counter = field(default_factory=Counter)
-  # Provenance ID -> number of its nodes per type.
-  node_types_by_provenance: dict[str, Counter] = field(
+  # Provenance ID -> number of typed nodes written, e.g. {"oecdProv": 6}.
+  nodes_by_provenance: Counter[str] = field(default_factory=Counter)
+  # Provenance ID -> number of its nodes per type, e.g.
+  # {"oecdProv": {"StatisticalVariable": 2, "Property": 4}}.
+  node_types_by_provenance: dict[str, Counter[str]] = field(
       default_factory=lambda: defaultdict(Counter))
 
 
@@ -67,9 +68,9 @@ class SummaryGenerator:
 
   Runner calls, in order: set_execution_metadata(), record_input_file() per
   matched file, add_file_summary() per imported file, add_node_counts() for
-  the nodes it writes itself after worker results are merged, record_failure() on failure, and, at the
-  end of the run on success or failure, add_folders(), set_provenance_data()
-  and write_to_json().
+  the nodes it writes itself after worker results are merged, record_failure()
+  on failure, and, at the end of the run on success or failure, add_folders(),
+  set_provenance_data() and write_to_json().
 
   Worker processes can't update this object, so each returns its counts in an
   ImportProcResult, and Runner builds a FileSummary from it for
@@ -289,6 +290,6 @@ class SummaryGenerator:
       return None
 
 
-def _node_counts(count: int, by_type: Counter) -> NodeCounts:
+def _node_counts(count: int, by_type: Counter[str]) -> NodeCounts:
   """Returns the report's node counts, with types sorted by name."""
   return NodeCounts(count=count, byType=dict(sorted(by_type.items())))
