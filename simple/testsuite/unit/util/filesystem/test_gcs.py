@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ def _list(root: str) -> dict[str, str]:
 
 def test_nothing_is_written_to_gcs_to_open_a_dir_or_file():
   root = f"{fake_gcs.new_prefix()}/out"
+  fake_gcs.env()  # Starts the fake GCS, which nothing else here writes to.
   directory = open_dir(root, create=True)
   directory.open_dir("a/b").open_file("c.txt")
   assert directory.all_files(include_subdirs=True) == []

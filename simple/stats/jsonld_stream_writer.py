@@ -25,11 +25,7 @@ import types
 from typing import Any, Callable, Mapping, Optional
 import uuid
 
-from google.api_core.exceptions import GoogleAPICallError
-from google.api_core.exceptions import TooManyRequests
-from google.api_core.retry import Retry
 import pandas as pd
-import requests
 from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
@@ -37,6 +33,7 @@ from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import File
 from util.filesystem import gcs_client
+from util.filesystem import GCS_RETRY
 from util.filesystem import is_gcs_path
 
 DCID_URL = "https://datacommons.org/browser/"
@@ -547,19 +544,10 @@ class JsonLdStreamWriter(GraphWriter):
         self._shard_writer = None
 
 
-_GCS_RETRY = Retry(
-    initial=1.0,
-    maximum=10.0,
-    multiplier=2.0,
-    deadline=120.0,
-    predicate=lambda e: isinstance(e, (TooManyRequests, GoogleAPICallError,
-                                       requests.exceptions.RequestException)))
-
-
 def _upload_gcs_shard(jsonld_path: str, rel_path: str, text: str) -> None:
   """Uploads shard `text` to `jsonld_path`/`rel_path`, a gs:// path."""
   bucket_name, _, blob_prefix = jsonld_path[len("gs://"):].partition("/")
   blob_prefix = blob_prefix.rstrip("/")
   blob_key = f"{blob_prefix}/{rel_path}" if blob_prefix else rel_path
   gcs_client().bucket(bucket_name).blob(blob_key).upload_from_string(
-      text, content_type=_SHARD_CONTENT_TYPE, retry=_GCS_RETRY)
+      text, content_type=_SHARD_CONTENT_TYPE, retry=GCS_RETRY)

@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ from util.filesystem.files import File
 from util.filesystem.files import open_dir
 from util.filesystem.files import write_file
 from util.filesystem.gcs import gcs_client
+from util.filesystem.gcs import GCS_RETRY
 from util.filesystem.gcs import GcsObject
 from util.filesystem.paths import is_gcs_path
 from util.filesystem.paths import is_within

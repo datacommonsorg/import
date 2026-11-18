@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,22 +44,27 @@ def write_file(path: str, text: str) -> None:
   open_dir(parent or ".", create=True).open_file(name).write(text)
 
 
-class Dir:
-  """A dir, by its path relative to the root dir that open_dir() opened."""
+class _Entry:
+  """A dir or file, by its path relative to the root dir open_dir() opened."""
 
   def __init__(self, root: "LocalStorage | GcsStorage", path: str):
     self._root = root
-    self.path = normpath(path).lstrip("/")  # "" for the root.
+    self.path = normpath(path).lstrip("/")  # "" for the root dir.
 
   def __str__(self) -> str:
     return self.full_path()
 
   def name(self) -> str:
+    """The last part of the path, e.g. a file name with its extension."""
     return posixpath.basename(self.path)
 
   def store_path(self) -> str:
     """The path or URL that open_dir() opened the root with."""
     return self._root.path
+
+
+class Dir(_Entry):
+  """A dir under the root dir that open_dir() opened."""
 
   def full_path(self, sub_path: str = "") -> str:
     """The path or URL of this dir, or of `sub_path` under it if given."""
@@ -91,8 +96,8 @@ class Dir:
     ]
 
 
-class File:
-  """A file, by its path relative to the root dir that open_dir() opened.
+class File(_Entry):
+  """A file under the root dir that open_dir() opened.
 
   `gcs_object`, its GCS object as listed, lets open_stream() read it in
   ranges, and fail if the object was replaced since rather than mix versions.
@@ -102,20 +107,8 @@ class File:
                root: "LocalStorage | GcsStorage",
                path: str,
                gcs_object: "GcsObject | None" = None):
-    self._root = root
-    self.path = normpath(path).lstrip("/")
+    super().__init__(root, path)
     self._gcs_object = gcs_object
-
-  def __str__(self) -> str:
-    return self.full_path()
-
-  def name(self) -> str:
-    """The file name, including any extension and without a leading slash."""
-    return posixpath.basename(self.path)
-
-  def store_path(self) -> str:
-    """The path or URL that open_dir() opened the root with."""
-    return self._root.path
 
   def full_path(self) -> str:
     return join_path(self._root.path, self.path)
@@ -140,7 +133,9 @@ class File:
     """
     return self._open(self._gcs_object, chunk_size)
 
-  def _open(self, gcs_object, chunk_size=GCS_STREAM_CHUNK_BYTES):
+  def _open(self,
+            gcs_object: "GcsObject | None",
+            chunk_size: int = GCS_STREAM_CHUNK_BYTES) -> io.TextIOWrapper:
     try:
       raw = self._root.open(self.path, gcs_object, chunk_size)
     except FileNotFoundError as e:

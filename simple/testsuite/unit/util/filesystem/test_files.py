@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ def fixture_root(request, tmp_path) -> str:
   """An empty dir on local disk or on fake GCS; returns its path or URL."""
   if request.param == "disk":
     return str(tmp_path)
+  fake_gcs.env()  # Starts the fake GCS before the first read or write.
   return f"{fake_gcs.new_prefix()}/root"
 
 

@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,12 @@ import logging
 import mimetypes
 import os
 
+from google.api_core.exceptions import GoogleAPICallError
 from google.api_core.exceptions import NotFound
+from google.api_core.exceptions import TooManyRequests
+from google.api_core.retry import Retry as ApiRetry
 from google.cloud import storage
+import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from util.filesystem.paths import GCS_PATH_PREFIX
@@ -35,6 +39,17 @@ _GZIP = "gzip"
 # Bytes fetched per request when a GCS file is streamed (see File.open_stream).
 GCS_STREAM_CHUNK_BYTES = 8 * 1024 * 1024
 
+# Retries of uploads that failed with 429, 5xx or a connection error, for up
+# to 2 minutes. Downloads and listings get the library's default retries,
+# which retry the same errors with the same deadline.
+GCS_RETRY = ApiRetry(
+    initial=1.0,
+    maximum=10.0,
+    multiplier=2.0,
+    deadline=120.0,
+    predicate=lambda e: isinstance(e, (TooManyRequests, GoogleAPICallError,
+                                       requests.exceptions.RequestException)))
+
 # This process's GCS client and the pid it was created in (see gcs_client()).
 _gcs_client: storage.Client | None = None
 _gcs_client_pid: int | None = None
@@ -46,7 +61,9 @@ def gcs_client() -> storage.Client:
   Creating a client looks up credentials and opens new connections, so every
   GCS read and write in a process shares one. A forked child creates its
   own, since the connections of its parent's client can't be shared.
-  Requests that fail with 429 or 5xx are retried.
+  Requests that fail with 429 or 5xx are retried here first. If they still
+  fail, the last response is returned rather than raised, so that the
+  library's own retries (with a deadline, see GCS_RETRY) see the 429 or 5xx.
   """
   global _gcs_client, _gcs_client_pid
   if _gcs_client is not None and _gcs_client_pid == os.getpid():
@@ -56,7 +73,8 @@ def gcs_client() -> storage.Client:
   retry = Retry(total=5,
                 status_forcelist=[429, 502, 503, 504],
                 backoff_factor=0.5,
-                allowed_methods=False)
+                allowed_methods=False,
+                raise_on_status=False)
   adapter = HTTPAdapter(pool_connections=_GCS_HTTP_POOL_SIZE,
                         pool_maxsize=_GCS_HTTP_POOL_SIZE,
                         max_retries=retry)
@@ -78,9 +96,11 @@ class GcsStorage:
   def _key(self, path: str) -> str:
     return f"{self._prefix}/{path}".strip("/")
 
+  def _bucket(self) -> storage.Bucket:
+    return gcs_client().bucket(self._bucket_name)
+
   def _blob(self, path: str, generation: int | None = None) -> storage.Blob:
-    return gcs_client().bucket(self._bucket_name).blob(self._key(path),
-                                                       generation=generation)
+    return self._bucket().blob(self._key(path), generation=generation)
 
   def makedirs(self, path: str) -> None:
     del path  # GCS has no dirs.
@@ -89,8 +109,8 @@ class GcsStorage:
     key = self._key(path)
     prefix = f"{key}/" if key else ""
     files = []
-    for blob in gcs_client().bucket(self._bucket_name).list_blobs(
-        prefix=prefix, delimiter=None if recursive else "/"):
+    for blob in self._bucket().list_blobs(prefix=prefix,
+                                          delimiter=None if recursive else "/"):
       rel_path = blob.name[len(prefix):]
       if not rel_path or rel_path.endswith("/"):
         continue  # A dir marker.
@@ -121,7 +141,10 @@ class GcsStorage:
     content_type, encoding = mimetypes.guess_type(path)
     if not content_type or encoding:
       content_type = "application/octet-stream"
-    self._blob(path).upload_from_string(data, content_type=content_type)
+    # Retried like shards: rewriting the same bytes is harmless.
+    self._blob(path).upload_from_string(data,
+                                        content_type=content_type,
+                                        retry=GCS_RETRY)
 
 
 @dataclasses.dataclass(frozen=True)
