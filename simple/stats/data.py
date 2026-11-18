@@ -28,13 +28,11 @@ from stats.report.model.summary import ValidationErrorType
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
-_PREDICATE_SPECIALIZATION_OF = "specializationOf"
 _PREDICATE_URL = "url"
 _PREDICATE_SOURCE = "source"
 _PREDICATE_DOMAIN = "domain"
 _PREDICATE_INCLUDED_IN = "includedIn"
 
-STAT_VAR_GROUP = "StatVarGroup"
 _SOURCE = "Source"
 _PROVENANCE = "Provenance"
 
@@ -50,25 +48,6 @@ class Triple:
 
 
 @dataclass
-class StatVarGroup:
-  id: str
-  name: str
-  parent_id: str
-
-  def triples(self) -> list[Triple]:
-    triples: list[Triple] = [
-        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STAT_VAR_GROUP),
-        Triple(self.id, _PREDICATE_NAME, object_value=self.name),
-    ]
-    if self.parent_id:
-      triples.append(
-          Triple(self.id,
-                 _PREDICATE_SPECIALIZATION_OF,
-                 object_id=self.parent_id))
-    return triples
-
-
-@dataclass
 class Provenance:
   id: str
   source_id: str
@@ -77,7 +56,6 @@ class Provenance:
   # MCF triples about this node that no field above holds (other predicates,
   # other types, extra values), with `id` as their subject.
   custom_triples: list[Triple] = field(default_factory=list)
-  provenance_id: str = ""
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
@@ -96,7 +74,6 @@ class Source:
   id: str
   name: str
   url: str = ""
-  domain: str = field(init=False)
   # MCF triples about this node that no field above holds (other predicates,
   # other types, extra values), with `id` as their subject.
   custom_triples: list[Triple] = field(default_factory=list)
@@ -104,8 +81,9 @@ class Source:
   # after provenances, see Config.import_name), or "" for the global folder.
   import_folder: str = ""
 
-  def __post_init__(self):
-    self.domain = urlparse(self.url).netloc
+  @property
+  def domain(self) -> str:
+    return urlparse(self.url).netloc
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []

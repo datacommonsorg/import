@@ -18,15 +18,23 @@ from dataclasses import replace
 from stats.config import Config
 from stats.data import Provenance
 from stats.data import Source
-from stats.data import StatVarGroup
 from stats.data import strip_namespace
 from stats.data import Triple
-import stats.schema_constants as sc
 from util.filesystem import File
+
+# Every run writes the global root StatVarGroup and the custom root under it,
+# so that StatVarGroup hierarchies defined in MCF have their roots in Spanner.
+_ROOT_GROUP_TRIPLES = (
+    Triple("dc/g/Root", "typeOf", object_id="StatVarGroup"),
+    Triple("dc/g/Root", "name", object_value="Data Commons Variables"),
+    Triple("c/g/Root", "typeOf", object_id="StatVarGroup"),
+    Triple("c/g/Root", "name", object_value="Custom Variables"),
+    Triple("c/g/Root", "specializationOf", object_id="dc/g/Root"),
+)
 
 
 class Nodes:
-  """Provenance, Source and StatVarGroup nodes of a run.
+  """Provenance and Source nodes of a run.
 
   Not thread-safe: the coordinator and each worker process have their own;
   workers' nodes are merged into the coordinator's with `merge_metadata`.
@@ -34,16 +42,9 @@ class Nodes:
 
   def __init__(self, config: Config) -> None:
     self.config = config
-    # Dictionary of SVGs from SVG id to SVG
-    self.groups: dict[str, StatVarGroup] = {}
-    # dict from provenance ID (and name) to Provenance
+    # Provenances and Sources by id.
     self.provenances: dict[str, Provenance] = {}
-    # dict from source ID (and name) to Source
     self.sources: dict[str, Source] = {}
-    # Always ensure the global root StatVarGroup (dc/g/Root) and the custom
-    # root under it (c/g/Root) exist, so manually defined StatVarGroup
-    # hierarchies in MCF have their root Nodes in Spanner.
-    self._default_custom_group()
 
   def register_provenance(
       self,
@@ -64,13 +65,9 @@ class Nodes:
     if not prov:
       prov = Provenance(id=clean_id, source_id="", name="")
       self.provenances[clean_id] = prov
-    if name:
-      prov.name = prov.name or name
-      self.provenances[name] = prov
-    prov.name = prov.name or clean_id
+    prov.name = prov.name or name or clean_id
     prov.url = prov.url or url
     prov.source_id = prov.source_id or clean_source_id
-    prov.provenance_id = prov.provenance_id or clean_id
     _extend_unique(prov.custom_triples, _about(clean_id, custom_triples))
     return prov
 
@@ -92,13 +89,9 @@ class Nodes:
     if not src:
       src = Source(id=clean_id, name=name or clean_id, url=url)
       self.sources[clean_id] = src
-    if name:
-      if src.name == clean_id:
-        src.name = name
-      self.sources[name] = src
-    if url and not src.url:
-      src.url = url
-      src.domain = src.domain or Source(id="", name="", url=url).domain
+    if name and src.name == clean_id:
+      src.name = name
+    src.url = src.url or url
     _extend_unique(src.custom_triples, _about(clean_id, custom_triples))
     if import_folder and (not src.import_folder or
                           import_folder < src.import_folder):
@@ -138,29 +131,13 @@ class Nodes:
     """
     return _clean_metadata_id(self.config.provenance_name(input_file))
 
-  def _ensure_root_group(self) -> StatVarGroup:
-    if sc.ROOT_SVG_ID not in self.groups:
-      self.groups[sc.ROOT_SVG_ID] = StatVarGroup(sc.ROOT_SVG_ID,
-                                                 sc.ROOT_SVG_NAME, "")
-    return self.groups[sc.ROOT_SVG_ID]
-
-  def _default_custom_group(self) -> StatVarGroup:
-    self._ensure_root_group()
-    if sc.DEFAULT_CUSTOM_ROOT_SVG_ID not in self.groups:
-      self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = StatVarGroup(
-          sc.DEFAULT_CUSTOM_ROOT_SVG_ID, sc.DEFAULT_CUSTOM_ROOT_SVG_NAME,
-          sc.ROOT_SVG_ID)
-    return self.groups[sc.DEFAULT_CUSTOM_ROOT_SVG_ID]
-
   def triples_by_provenance_dir(self) -> dict[str, list[Triple]]:
     result: dict[str, list[Triple]] = defaultdict(list)
     for source in self.sources.values():
       result[_provenance_dir(source.import_folder)].extend(source.triples())
     for provenance in self.provenances.values():
-      prov_id = provenance.provenance_id or provenance.id
-      result[_provenance_dir(prov_id)].extend(provenance.triples())
-    for group in self.groups.values():
-      result["_global"].extend(group.triples())
+      result[_provenance_dir(provenance.id)].extend(provenance.triples())
+    result["_global"].extend(_ROOT_GROUP_TRIPLES)
     return {k: _dedupe_triples(triples) for k, triples in result.items()}
 
 
