@@ -1,112 +1,159 @@
-import io
+"""util.filesystem on local disk and on (fake) GCS."""
+
 import os
-import tempfile
-import unittest
 from unittest import mock
 
+from google.cloud import storage
 import pytest
 from testsuite.lib import fake_gcs
-from util.filesystem import create_store
+from util.filesystem import open_dir
+from util.filesystem import write_file
 
 from util import filesystem
 
 
-class TestFilesystem(unittest.TestCase):
+@pytest.fixture(name="root", params=["disk", "gcs"])
+def fixture_root(request, tmp_path) -> str:
+  """An empty dir on local disk or on fake GCS; returns its path or URL."""
+  if request.param == "disk":
+    return str(tmp_path)
+  return f"{fake_gcs.new_prefix()}/root"
 
-  def test_create_store_dir_new(self):
-    with create_store("mem://", create_if_missing=True) as store:
-      self.assertTrue(store.isdir())
-      self.assertEqual(store.full_path(), "mem://")
-      self.assertEqual(store.as_dir().full_path(), "mem://")
 
-  def test_create_store_file_new(self):
-    with create_store("mem://foo.txt",
-                      create_if_missing=True,
-                      treat_as_file=True) as store:
-      self.assertFalse(store.isdir())
-      self.assertEqual(store.full_path(), "mem://foo.txt")
-      self.assertEqual(store.as_file().full_path(), "mem://foo.txt")
+def _write_raw(root: str, path: str, data: str) -> None:
+  """Writes a file without util.filesystem."""
+  if filesystem.is_gcs_path(root):
+    fake_gcs.write_blob(f"{root}/{path}", data)
+  else:
+    os.makedirs(os.path.dirname(os.path.join(root, path)), exist_ok=True)
+    with open(os.path.join(root, path), "wb") as f:
+      f.write(data.encode())
 
-    # Create subdir as well
-    with create_store("mem://path/to/foo.txt",
-                      create_if_missing=True,
-                      treat_as_file=True) as store:
-      self.assertFalse(store.isdir())
-      self.assertEqual(store.full_path(), "mem://path/to/foo.txt")
-      self.assertEqual(store.as_file().full_path(), "mem://path/to/foo.txt")
 
-  # Test that without create_if_missing, file opening fails
-  def test_missing_file(self):
-    with create_store("mem://") as store:
-      with self.assertRaises(FileNotFoundError):
-        store.as_dir().open_file("nonexistent.txt", create_if_missing=False)
+def test_dirs_and_files_have_full_paths_under_the_root(root):
+  directory = open_dir(root)
+  assert directory.full_path() == root
+  assert directory.path == ""
+  subdir = directory.open_dir("dir1/dir2")
+  assert subdir.full_path() == f"{root}/dir1/dir2"
+  assert subdir.name() == "dir2"
+  file = subdir.open_file("dir3/foo.txt")
+  assert file.path == "dir1/dir2/dir3/foo.txt"
+  assert file.name() == "foo.txt"
+  assert file.full_path() == f"{root}/dir1/dir2/dir3/foo.txt"
+  assert file.store_path() == root
 
-  def test_create_store_defaults_to_dir(self):
-    with create_store("mem://bar", create_if_missing=True) as store:
-      self.assertTrue(store.isdir())
-      self.assertEqual(store.full_path(), "mem://bar")
 
-  # Test create_store for a file that already exists
-  def test_create_store_file_existing(self):
-    with tempfile.TemporaryDirectory() as temp_dir:
-      # Create a file "foo.txt" in temp_dir
-      file_path = os.path.join(temp_dir, "foo.txt")
-      with open(file_path, "w") as f:
-        f.write("hello")
+def test_a_written_file_reads_back(root):
+  file = open_dir(root).open_file("dir/foo.txt")
+  file.write("hello")
+  assert file.read() == "hello"
+  assert file.read_string_io().read() == "hello"
+  with file.open_stream() as stream:
+    assert stream.read() == "hello"
+  file.write("again")
+  assert open_dir(root).open_file("dir/foo.txt").read() == "again"
 
-      # treat_as_file=True
-      with create_store(file_path, create_if_missing=False,
-                        treat_as_file=True) as store:
-        self.assertFalse(store.isdir())
-        self.assertEqual(store.full_path(), file_path)
-        self.assertEqual(store.as_file().full_path(), file_path)
 
-      # No treat_as_file param
-      with create_store(file_path, create_if_missing=False) as store:
-        self.assertFalse(store.isdir())
-        self.assertEqual(store.full_path(), file_path)
-        self.assertEqual(store.as_file().full_path(), file_path)
+def test_write_file_writes_at_a_path_or_url(root):
+  write_file(f"{root}/path/to/foo.txt", "hello")
+  assert open_dir(root).open_file("path/to/foo.txt").read() == "hello"
 
-  # Test create_store for a directory that already exists
-  def test_create_store_dir_existing(self):
-    with tempfile.TemporaryDirectory() as temp_dir:
-      with create_store(str(temp_dir), create_if_missing=False) as store:
-        self.assertEqual(store.full_path(), str(temp_dir))
-        self.assertTrue(store.isdir())
-        self.assertEqual(store.as_dir().full_path(), str(temp_dir))
 
-  # Test read and write methods on File
-  def test_file(self):
-    with create_store("mem://dir/foo.txt",
-                      create_if_missing=True,
-                      treat_as_file=True) as store:
-      file = store.as_file()
-      file.write("hello")
-      self.assertEqual(file.read(), "hello")
-      with file.read_string_io() as f_stringio:
-        self.assertEqual(f_stringio.read(), "hello")
+def test_all_files_lists_the_files_written(root):
+  directory = open_dir(root)
+  subdir = directory.open_dir("dir1/dir2")
+  subdir.open_file("dir3/foo.txt").write("")
+  directory.open_file("bar.txt").write("")
+  subdir.open_file("baz.txt").write("")
+  assert sorted(f.full_path() for f in directory.all_files(True)) == [
+      f"{root}/bar.txt", f"{root}/dir1/dir2/baz.txt",
+      f"{root}/dir1/dir2/dir3/foo.txt"
+  ]
+  assert [f.full_path() for f in directory.all_files()] == [f"{root}/bar.txt"]
 
-  def test_dir(self):
-    # Test open_dir and open_file methods on Dir
-    with create_store("mem://") as store:
-      dir = store.as_dir()
-      subdir = dir.open_dir("dir1/dir2")
-      self.assertEqual(subdir.full_path(), "mem://dir1/dir2")
-      file = subdir.open_file("dir3/foo.txt")
-      self.assertEqual(file.full_path(), "mem://dir1/dir2/dir3/foo.txt")
-      dir.open_file("bar.txt")
-      subdir.open_file("baz.txt")
-      all_file_paths_including_subdirs = [
-          file.full_path() for file in dir.all_files(include_subdirs=True)
-      ]
-      self.assertListEqual(all_file_paths_including_subdirs, [
-          "mem://bar.txt", "mem://dir1/dir2/baz.txt",
-          "mem://dir1/dir2/dir3/foo.txt"
-      ])
-      all_file_paths_excluding_subdirs = [
-          file.full_path() for file in dir.all_files()
-      ]
-      self.assertListEqual(all_file_paths_excluding_subdirs, ["mem://bar.txt"])
+
+def test_a_missing_file_is_not_found(root):
+  file = open_dir(root).open_file("nonexistent.txt")
+  message = f"File not found: {root}/nonexistent.txt"
+  with pytest.raises(FileNotFoundError, match=message):
+    file.read()
+  with pytest.raises(FileNotFoundError, match=message):
+    file.open_stream()
+
+
+# A BOM, CRLF line ends, a quoted line break and multibyte characters.
+_RAW_TEXT = "\ufeffa,b\r\n\"x\r\ny\",\u00e9\u4e2d\r\n"
+
+
+def test_text_is_read_unchanged(root):
+  _write_raw(root, "data.csv", _RAW_TEXT)
+  file = open_dir(root).open_file("data.csv")
+  assert file.read() == _RAW_TEXT
+  with file.open_stream() as stream:
+    assert stream.read() == _RAW_TEXT
+
+
+def test_text_is_written_unchanged(root):
+  open_dir(root).open_file("data.csv").write(_RAW_TEXT)
+  [file] = open_dir(root).all_files()
+  assert file.read() == _RAW_TEXT
+
+
+def test_a_local_dir_is_made_if_asked(tmp_path):
+  path = str(tmp_path / "a" / "b")
+  assert open_dir(path, create=True).full_path() == path
+  assert os.path.isdir(path)
+  open_dir(path, create=True)  # Already there.
+
+
+def test_nothing_is_written_to_gcs_to_open_a_dir_or_file():
+  root = f"{fake_gcs.new_prefix()}/out"
+  directory = open_dir(root, create=True)
+  directory.open_dir("a/b").open_file("c.txt")
+  assert directory.all_files(include_subdirs=True) == []
+
+
+def test_local_listing_follows_symlinked_dirs(tmp_path):
+  (tmp_path / "real").mkdir()
+  (tmp_path / "real" / "a.csv").write_text("1")
+  (tmp_path / "input").mkdir()
+  (tmp_path / "input" / "linked").symlink_to(tmp_path / "real")
+  files = open_dir(str(tmp_path / "input")).all_files(include_subdirs=True)
+  assert [(f.path, f.read()) for f in files] == [("linked/a.csv", "1")]
+
+
+def test_local_paths_are_shown_as_given_and_normalized(tmp_path, monkeypatch):
+  monkeypatch.chdir(tmp_path)
+  (tmp_path / "out").mkdir()
+  for root in ("out", "out/", "./out", "out//"):
+    assert open_dir(root).open_dir("jsonld").full_path() == "out/jsonld"
+  assert open_dir(".").open_file("a.csv").full_path() == "a.csv"
+  assert open_dir(f"{tmp_path}/").full_path() == str(tmp_path)
+
+
+@pytest.mark.parametrize("root, expected", [
+    ("gs://bucket", "gs://bucket/jsonld"),
+    ("gs://bucket/", "gs://bucket/jsonld"),
+    ("gs://bucket/out", "gs://bucket/out/jsonld"),
+    ("gs://bucket/out/", "gs://bucket/out/jsonld"),
+    ("gs://bucket//out/./x", "gs://bucket/out/x/jsonld"),
+])
+def test_gcs_paths_are_shown_as_given_and_normalized(root, expected):
+  assert open_dir(root).open_dir("jsonld").full_path() == expected
+
+
+# As PyFilesystem's fs.path.join did, which merged config patterns rely on.
+@pytest.mark.parametrize("parts, expected", [
+    (("", ""), ""),
+    (("a", "{b,c}/**/*.csv"), "a/{b,c}/**/*.csv"),
+    (("a", "/x/*.csv"), "/x/*.csv"),
+    (("a", "//x/*.csv"), "/x/*.csv"),
+    (("a//b/", "./c/../d"), "a/b/d"),
+    (("gs://b/out/", "", ""), "gs://b/out"),
+])
+def test_join_path(parts, expected):
+  assert filesystem.join_path(*parts) == expected
 
 
 # --- Listing dirs on GCS ------------------------------------------------------
@@ -145,9 +192,8 @@ def fixture_input_dir(request, tmp_path) -> str:
 
 def _list(root: str, subdir: str, include_subdirs: bool) -> dict[str, str]:
   """The files `all_files` finds under `subdir`, as {path: content}."""
-  with create_store(root) as store:
-    directory = store.as_dir().open_dir(subdir, create=False)
-    return {f.path: f.read() for f in directory.all_files(include_subdirs)}
+  directory = open_dir(root).open_dir(subdir, create=False)
+  return {f.path: f.read() for f in directory.all_files(include_subdirs)}
 
 
 @pytest.mark.parametrize("subdir, include_subdirs, expected", [
@@ -177,8 +223,8 @@ def test_gcs_objects_with_empty_or_dot_path_segments_are_skipped():
 
 # --- Streaming files from GCS -------------------------------------------------
 #
-# File.open_stream decodes text as fs.open(path, "r") does (utf-8,
-# newline=""), so a BOM and CRLF line ends come through unchanged.
+# File.open_stream decodes text as UTF-8 with newline="", so a BOM and CRLF
+# line ends come through unchanged.
 
 # Text with a quoted line break and multibyte characters, after a BOM.
 _ROW = "\"x\r\ny\",\u00e9\u4e2d\r\n"
@@ -198,12 +244,10 @@ def test_streaming_reads_the_file_text_unchanged(tmp_path, text, chunk_size):
   (tmp_path / "data.csv").write_bytes(text.encode())
   gcs = f"{fake_gcs.new_prefix()}/input"
   fake_gcs.write_blob(f"{gcs}/data.csv", text)
-  with create_store(str(tmp_path)) as local_store, \
-       create_store(gcs) as gcs_store:
-    [local_file] = local_store.as_dir().all_files()
-    [gcs_file] = gcs_store.as_dir().all_files()
-    assert _read(local_file) == text
-    assert _read(gcs_file, chunk_size=chunk_size) == text
+  [local_file] = open_dir(str(tmp_path)).all_files()
+  [gcs_file] = open_dir(gcs).all_files()
+  assert _read(local_file) == text
+  assert _read(gcs_file, chunk_size=chunk_size) == text
 
 
 def _read(file, **open_stream_kwargs) -> str:
@@ -218,12 +262,15 @@ def test_a_gzip_encoded_gcs_object_is_downloaded_whole():
   """
   gcs = f"{fake_gcs.new_prefix()}/input"
   fake_gcs.write_blob(f"{gcs}/data.csv", "a,b\n", content_encoding="gzip")
-  with create_store(gcs) as store:
-    [file] = store.as_dir().all_files()
-    whole = io.StringIO("whole object")
-    with mock.patch.object(store.fs, "open", return_value=whole) as fs_open:
-      assert file.open_stream() is whole
-    fs_open.assert_called_once_with("data.csv", "r")
+  [file] = open_dir(gcs).all_files()
+  with mock.patch.object(storage.Blob,
+                         "download_as_bytes",
+                         autospec=True,
+                         return_value=b"whole object") as download:
+    with file.open_stream() as stream:
+      assert stream.read() == "whole object"
+  [call] = download.call_args_list
+  assert call.args[1:] == () and call.kwargs == {}, call  # Not a range.
 
 
 class _ShortReadBlob:
@@ -244,10 +291,8 @@ def test_a_short_ranged_read_fails_rather_than_truncate_the_file():
 
 
 def test_a_file_uploaded_natively_in_an_unmarked_gcs_dir_can_be_rewritten():
-  """fs-gcsfs needs the parent dir's marker to write, which a native upload
-  (e.g. a shard) doesn't create."""
+  """A file written by another tool, in a dir with no marker, is rewritten."""
   root = f"{fake_gcs.new_prefix()}/output"
   fake_gcs.write_blob(f"{root}/sub/existing.txt", "old")
-  with create_store(root) as store:
-    store.as_dir().open_file("sub/existing.txt").write("new")
-    assert store.as_dir().open_file("sub/existing.txt").read() == "new"
+  open_dir(root).open_file("sub/existing.txt").write("new")
+  assert open_dir(root).open_file("sub/existing.txt").read() == "new"

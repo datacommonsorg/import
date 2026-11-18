@@ -24,7 +24,6 @@ import tempfile
 import traceback
 from typing import Callable, Optional
 
-import fs.path as fspath
 from stats import constants
 from stats.config import Config
 from stats.config import ImportConfig
@@ -55,13 +54,13 @@ from stats.report.summary_generator import SummaryGenerator
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
-from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
 from util.filesystem import GcsObject
 from util.filesystem import is_gcs_path
 from util.filesystem import join_path
-from util.filesystem import Store
+from util.filesystem import open_dir
+from util.filesystem import write_file
 
 _ARCHIVES_DIR_NAME = "archives"
 # Every run names its imports: each is a subdirectory of the input dir with its
@@ -265,39 +264,33 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
   The coordinator found the file, and its GCS object if any, so neither is
   looked up again.
   """
-  with create_store(input_dir_path) as input_store_obj, \
-       create_store(args.output_dir_path) as output_store_obj:
-    input_file = File(input_store_obj,
-                      file_rel_path,
-                      create_if_missing=False,
-                      exists=True,
-                      gcs_object=gcs_object)
+  input_file = open_dir(input_dir_path).open_file(file_rel_path,
+                                                  gcs_object=gcs_object)
 
-    config = Config(args.config)
-    nodes = Nodes(config=config)
-    graph_writer = JsonLdStreamWriter(output_store_obj.as_dir(),
-                                      args.import_names,
-                                      nodes,
-                                      jsonld_dir_name=args.jsonld_dir_name)
-    importer = _create_importer_for_file(config, input_file, graph_writer,
-                                         nodes)
-    try:
-      importer.do_import()
-    except BaseException:
-      graph_writer.close_after_error()
-      raise
-    graph_writer.commit_and_close()
-    if graph_writer.obs_hash_set:
-      save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
+  config = Config(args.config)
+  nodes = Nodes(config=config)
+  graph_writer = JsonLdStreamWriter(open_dir(args.output_dir_path),
+                                    args.import_names,
+                                    nodes,
+                                    jsonld_dir_name=args.jsonld_dir_name)
+  importer = _create_importer_for_file(config, input_file, graph_writer, nodes)
+  try:
+    importer.do_import()
+  except BaseException:
+    graph_writer.close_after_error()
+    raise
+  graph_writer.commit_and_close()
+  if graph_writer.obs_hash_set:
+    save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
 
-    return ImportProcResult(
-        file_collision_counts=dict(graph_writer.file_collision_counts),
-        file_sample_collisions=dict(graph_writer.file_sample_collisions),
-        sources=dict(nodes.sources),
-        provenances=dict(nodes.provenances),
-        processed_imports=set(graph_writer._processed_imports),
-        counts=importer.counts,
-    )
+  return ImportProcResult(
+      file_collision_counts=dict(graph_writer.file_collision_counts),
+      file_sample_collisions=dict(graph_writer.file_sample_collisions),
+      sources=dict(nodes.sources),
+      provenances=dict(nodes.provenances),
+      processed_imports=set(graph_writer._processed_imports),
+      counts=importer.counts,
+  )
 
 
 def _read_config_file(file: File) -> ImportConfig:
@@ -336,8 +329,7 @@ def _is_archived(file: File) -> bool:
 
 def _scope_input_file(entry: InputFileConfig, rel_dir: str) -> InputFileConfig:
   """Prefixes the entry's `pattern` with `rel_dir`."""
-  return entry.model_copy(
-      update={"pattern": fspath.join(rel_dir, entry.pattern)})
+  return entry.model_copy(update={"pattern": join_path(rel_dir, entry.pattern)})
 
 
 class Runner:
@@ -350,7 +342,7 @@ class Runner:
       import_names: Optional[list[str]] = None,
       max_workers: Optional[int] = None,
   ) -> None:
-    """Sets up the output store; run() reads the config and input stores.
+    """Sets up the output dir; run() reads the config and the input dir.
 
     Args:
       max_workers: The maximum number of worker processes that import files
@@ -369,25 +361,19 @@ class Runner:
     self.import_names = import_names
     self.active_import_prefixes = None
 
-    # File systems, both input and output. Must be closed when run finishes.
-    self.all_stores: list[Store] = []
-
     # Output directories. Set up before the config is read so that a bad
     # config is reported like any other failure.
-    output_store = create_store(output_dir_path, create_if_missing=True)
-    self.output_store = output_store
-    self.all_stores.append(output_store)
-    self.output_dir = output_store.as_dir()
+    self.output_dir = open_dir(output_dir_path, create=True)
 
     # If None, _load_config() sets the default, which depends on whether any
-    # input or output store is on GCS.
+    # input or output dir is on GCS.
     self.max_workers: int | None = max_workers
     # Set by _load_config().
-    self.input_store: Store | None = None
+    self.input_dir: Dir | None = None
     self.config: Config | None = None
     self.nodes: Nodes | None = None
     # Every file under an input dir, by the dir's path relative to the input
-    # store ("" for its root), filled as _list_input_dir() lists each dir.
+    # root ("" for the root), filled as _list_input_dir() lists each dir.
     self._input_dir_files: dict[str, list[File]] = {}
     # Set while importing.
     self.graph_writer = None
@@ -398,14 +384,12 @@ class Runner:
     self.summary_generator = SummaryGenerator(
         os.getenv("WORKFLOW_EXECUTION_ID"))
 
-  def _open_input_store(self, path: str) -> Store:
-    """Opens the input store, to be closed with the others when the run ends."""
-    self.input_store = create_store(path)
-    self.all_stores.append(self.input_store)
-    return self.input_store
+  def _open_input_dir(self, path: str) -> Dir:
+    self.input_dir = open_dir(path)
+    return self.input_dir
 
   def _load_config(self) -> None:
-    """Opens the input store, and reads and validates the config."""
+    """Opens the input dir, and reads and validates the config."""
     imports = _import_names_or_raise(self.import_names)
     # Reports and the writer name the run's folders after the cleaned names.
     self.import_names = imports
@@ -414,33 +398,33 @@ class Runner:
     if imports == [constants.ALL_IMPORTS]:
       logging.info("Running bulk load for all imports under: %s",
                    self.input_dir_path)
-      input_store = self._open_input_store(self.input_dir_path)
-      configs = self._read_configs_from_subdirs(input_store.as_dir())
+      input_dir = self._open_input_dir(self.input_dir_path)
+      configs = self._read_configs_from_subdirs(input_dir)
       self.active_import_prefixes = set(
-          f"{fspath.dirname(c.path)}/" for c in configs)
+          f"{posixpath.dirname(c.path)}/" for c in configs)
 
     # Case B: Combined Load for specific imports (len > 1)
     elif len(imports) > 1:
       logging.info("Running combined load for specific imports: %s", imports)
-      input_store = self._open_input_store(self.input_dir_path)
-      configs = self._read_configs_from_list(input_store.as_dir(), imports)
+      self._open_input_dir(self.input_dir_path)
+      configs = self._read_configs_from_list(imports)
       self.active_import_prefixes = set(
-          f"{fspath.dirname(c.path)}/" for c in configs)
+          f"{posixpath.dirname(c.path)}/" for c in configs)
 
     # Case C: Single Import
     else:
       import_dir = join_path(self.input_dir_path, imports[0])
       logging.info("Using import specific directory: %s", import_dir)
-      input_store = self._open_input_store(import_dir)
-      self._read_config_in_dir(input_store.as_dir())
+      self._read_config_in_dir(self._open_input_dir(import_dir))
 
     # The input dir is searched recursively, so it must not hold the output.
-    _check_not_overlapping(self.input_store, self.output_store)
+    _check_not_overlapping(self.input_dir, self.output_dir)
 
     self.nodes = Nodes(self.config)
     if self.max_workers is None:
       self.max_workers = default_max_workers(uses_gcs=any(
-          is_gcs_path(store.root_path) for store in self.all_stores))
+          is_gcs_path(d.store_path())
+          for d in (self.input_dir, self.output_dir)))
 
   def _start_summary(self, start_time: str) -> None:
     self.summary_generator.set_execution_metadata(start_time=start_time,
@@ -457,11 +441,6 @@ class Runner:
 
       self._write_report(RunStatus.SUCCESS)
 
-      # Close all file storage.
-      for store in self.all_stores:
-        store.close()
-      logging.info("File storage closed.")
-
       # Hand off processed import metadata to workflow or GCS
       self._handle_workflow_handoff()
 
@@ -472,12 +451,6 @@ class Runner:
         self._failure_errors = [_failure_error(e)]
 
       self._write_report(RunStatus.FAILURE)
-
-      for store in self.all_stores:
-        try:
-          store.close()
-        except Exception:
-          pass
 
       handshake_path = self._handle_workflow_handoff()
       if handshake_path:
@@ -570,10 +543,7 @@ class Runner:
     logging.info(
         "WORKFLOW_EXECUTION_ID set. Writing preprocessor result to GCS handshake path: %s",
         output_json_path)
-    with create_store(output_json_path,
-                      create_if_missing=True,
-                      treat_as_file=True) as store:
-      store.as_file().write(json.dumps(handshake_payload, indent=2))
+    write_file(output_json_path, json.dumps(handshake_payload, indent=2))
 
     if self._failure_errors is None:
       logging.info("Successfully wrote preprocessor result to GCS.")
@@ -581,24 +551,23 @@ class Runner:
 
   def _read_config_in_dir(self, input_dir: Dir) -> None:
     """Reads and validates the `config.json` at the root of `input_dir`."""
-    file = input_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
-                               create_if_missing=False)
+    file = input_dir.open_file(constants.CONFIG_JSON_FILE_NAME)
     raw_config = file.read()
     config_data = (_parse_config_json(raw_config, file.full_path())
                    if raw_config else {})
     self.config = Config(parse_config(config_data, file.full_path()))
 
-  def _merge_configs(self, configs: list, base_dir: Dir):
+  def _merge_configs(self, configs: list):
     """Merges multiple config.json files into a single configuration.
 
     Args:
-      configs: A list of File objects representing the config.json files to merge.
-      base_dir: The base directory used to calculate relative paths for input files.
+      configs: A list of File objects representing the config.json files to
+        merge. Each one's patterns are scoped to its dir.
     """
     input_files = []
     for file in configs:
       config = _read_config_file(file)
-      rel_dir = fspath.relativefrom(base_dir.path, fspath.dirname(file.path))
+      rel_dir = posixpath.dirname(file.path)
       logging.info("Merging config from import directory: %s", rel_dir)
       input_files.extend(
           _scope_input_file(entry, rel_dir) for entry in config.input_files)
@@ -610,7 +579,7 @@ class Runner:
 
     Each dir is listed once per run, and its listing reused.
     """
-    directory = self.input_store.as_dir().open_dir(path, create=False)
+    directory = self.input_dir.open_dir(path, create=False)
     if directory.path not in self._input_dir_files:
       self._input_dir_files[directory.path] = directory.all_files(
           include_subdirs=True)
@@ -644,11 +613,10 @@ class Runner:
       raise FileNotFoundError(
           f"No config.json files found in subdirectories of {base_dir.full_path()}"
       )
-    self._merge_configs(configs, base_dir)
+    self._merge_configs(configs)
     return configs
 
-  def _read_configs_from_list(self, base_dir: Dir,
-                              import_names: list[str]) -> list:
+  def _read_configs_from_list(self, import_names: list[str]) -> list:
     """Reads and merges the configs of the imports in `import_names`.
 
     An import's config.json is the one at its root, or else those in its
@@ -664,7 +632,7 @@ class Runner:
       files = self._list_input_dir(name)
       if not files:
         raise FileNotFoundError(f"Import directory not found or empty: {name}")
-      root_config = fspath.join(name, constants.CONFIG_JSON_FILE_NAME)
+      root_config = join_path(name, constants.CONFIG_JSON_FILE_NAME)
       found = [f for f in files if f.path == root_config]
       if not found:
         logging.info(
@@ -676,7 +644,7 @@ class Runner:
       configs.extend(found)
 
     logging.info("Found %s config files from list.", len(configs))
-    self._merge_configs(configs, base_dir)
+    self._merge_configs(configs)
     return configs
 
   def _is_active_import_file(self, file: File) -> bool:
@@ -927,13 +895,16 @@ def _utc_now() -> str:
   return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _check_not_overlapping(input_store: Store, output_store: Store):
-  input_path = input_store.full_path()
-  output_path = output_store.full_path()
+def _is_within(path: str, parent: str) -> bool:
+  """Whether normalized `path` is `parent` or under it."""
+  return path == parent or path.startswith(parent.rstrip("/") + "/")
+
+
+def _check_not_overlapping(input_dir: Dir, output_dir: Dir):
+  input_path = input_dir.full_path()
+  output_path = output_dir.full_path()
 
   # Check if paths are the same or if one is a parent of the other.
-  if (fspath.normpath(input_path) == fspath.normpath(output_path) or
-      fspath.isparent(input_path, output_path) or
-      fspath.isparent(output_path, input_path)):
+  if _is_within(input_path, output_path) or _is_within(output_path, input_path):
     raise ValueError(
         f"Input path ({input_path}) overlaps with output dir ({output_path})")

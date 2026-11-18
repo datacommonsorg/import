@@ -25,7 +25,6 @@ import types
 from typing import Any, Callable, Mapping, Optional
 import uuid
 
-import fs.path as fspath
 from google.api_core.exceptions import GoogleAPICallError
 from google.api_core.exceptions import TooManyRequests
 from google.api_core.retry import Retry
@@ -525,9 +524,8 @@ class JsonLdStreamWriter(GraphWriter):
                                 rel_path, text)
     else:
       if folder not in self._local_folders:
-        # recreate=True: another worker may make it at the same time.
-        self.jsonld_dir.fs().makedirs(fspath.join(self.jsonld_dir.path, folder),
-                                      recreate=True)
+        # Another worker may make it at the same time, which open_dir allows.
+        self.jsonld_dir.open_dir(folder)
         self._local_folders.add(folder)
       write = functools.partial(self._write_local_shard, rel_path, text)
     self._pending_shards.append(self._shard_writer.submit(write))
