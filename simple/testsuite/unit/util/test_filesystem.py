@@ -241,3 +241,13 @@ def test_a_short_ranged_read_fails_rather_than_truncate_the_file():
   reader = filesystem._GcsRangeReader(_ShortReadBlob(), size=10, chunk_size=4)
   with pytest.raises(OSError, match="Expected 4 bytes at offset 0"):
     reader.read(10)
+
+
+def test_a_file_uploaded_natively_in_an_unmarked_gcs_dir_can_be_rewritten():
+  """fs-gcsfs needs the parent dir's marker to write, which a native upload
+  (e.g. a shard) doesn't create."""
+  root = f"{fake_gcs.new_prefix()}/output"
+  fake_gcs.write_blob(f"{root}/sub/existing.txt", "old")
+  with create_store(root) as store:
+    store.as_dir().open_file("sub/existing.txt").write("new")
+    assert store.as_dir().open_file("sub/existing.txt").read() == "new"

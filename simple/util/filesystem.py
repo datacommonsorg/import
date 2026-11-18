@@ -336,14 +336,14 @@ class File(_StoreWrapper):
     self._gcs_object = gcs_object
     if exists:
       return
+    if create_if_missing:
+      # Even for an existing file: one uploaded natively can sit in a GCS dir
+      # without the marker that fs-gcsfs needs to write it again.
+      self.fs().makedirs(fspath.dirname(path), recreate=True)
     if not self.fs().exists(self.path):
-      if create_if_missing:
-        parent_dir_path = fspath.dirname(path)
-        self.fs().makedirs(parent_dir_path, recreate=True)
-        # Make empty file.
-        self.fs().touch(path)
-      else:
+      if not create_if_missing:
         raise FileNotFoundError(f"File not found: {self.full_path()}")
+      self.fs().touch(path)
 
   def name(self) -> str:
     """The file name, including any extension and without a leading slash."""
