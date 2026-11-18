@@ -1,21 +1,36 @@
 package org.datacommons.ingestion.util;
 
+import static java.util.stream.Collectors.toMap;
+import static org.datacommons.ingestion.util.GraphTestUtils.PROVENANCE;
+import static org.datacommons.ingestion.util.GraphTestUtils.bytesLeaf;
+import static org.datacommons.ingestion.util.GraphTestUtils.edge;
+import static org.datacommons.ingestion.util.GraphTestUtils.leaf;
+import static org.datacommons.ingestion.util.GraphTestUtils.ref;
+import static org.datacommons.ingestion.util.GraphTestUtils.subjectNode;
+import static org.datacommons.ingestion.util.GraphTestUtils.text;
+import static org.datacommons.ingestion.util.GraphTestUtils.values;
 import static org.junit.Assert.assertEquals;
 
-import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
-import com.google.common.collect.ImmutableList;
-import java.util.Comparator;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.MetricNameFilter;
+import org.apache.beam.sdk.metrics.MetricQueryResults;
+import org.apache.beam.sdk.metrics.MetricResult;
 import org.apache.beam.sdk.metrics.Metrics;
+import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
+import org.datacommons.ingestion.data.ExpandedNode;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
@@ -26,8 +41,8 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
-import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -35,6 +50,13 @@ import org.mockito.Mockito;
 public class GraphReaderTest {
 
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
+
+  private Counter noTypeCounter;
+
+  @Before
+  public void setUp() {
+    noTypeCounter = Mockito.mock(Counter.class);
+  }
 
   @Test
   public void testToTimeSeries() {
@@ -404,168 +426,178 @@ public class GraphReaderTest {
     Mockito.verify(mockContext, Mockito.times(1)).output(Mockito.any(TimeSeries.class));
   }
 
-  @Test
-  public void testGraphToNodesAndEdges_success() {
-    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
-    String geoJson =
-        "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],      "
-            + " [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } ";
-    McfGraph graph =
-        McfGraph.newBuilder()
-            .setType(McfType.INSTANCE_MCF)
-            .putNodes(
-                "dcid0",
-                PropertyValues.newBuilder()
-                    .putPvs(
-                        "name",
-                        McfGraph.Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setType(ValueType.TEXT)
-                                    .setValue("Node Zero"))
-                            .build())
-                    .putPvs(
-                        "dcid",
-                        McfGraph.Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder().setType(ValueType.TEXT).setValue("dcid0"))
-                            .build())
-                    .putPvs(
-                        "typeOf",
-                        McfGraph.Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setType(ValueType.RESOLVED_REF)
-                                    .setValue("Class"))
-                            .build())
-                    .putPvs(
-                        "geoJsonCoordinates",
-                        McfGraph.Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder().setType(ValueType.TEXT).setValue(geoJson))
-                            .build())
-                    .build())
-            .putNodes(
-                "dcid_obs", // Should be skipped as observation
-                PropertyValues.newBuilder()
-                    .putPvs(
-                        "typeOf",
-                        McfGraph.Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setType(ValueType.RESOLVED_REF)
-                                    .setValue("StatVarObservation"))
-                            .build())
-                    .build())
-            .putNodes(
-                "dcid2", // Node with no name or types
-                PropertyValues.newBuilder().build())
-            .build();
+  private Map<Node, Set<Edge>> extract(McfGraph graph) {
+    return GraphReader.extractExpandedNodesFromGraph(graph, PROVENANCE, noTypeCounter).stream()
+        .collect(toMap(ExpandedNode::getNode, n -> ImmutableSet.copyOf(n.getEdges())));
+  }
 
-    Comparator<KV<Node, List<Edge>>> kvComparator =
-        Comparator.comparing(kv -> kv.getKey().getSubjectId());
-    Comparator<Edge> edgeComparator =
-        Comparator.comparing(Edge::getSubjectId)
-            .thenComparing(Edge::getPredicate)
-            .thenComparing(Edge::getObjectId);
-
-    ImmutableList<KV<Node, List<Edge>>> actual =
-        ImmutableList.sortedCopyOf(
-            kvComparator,
-            GraphReader.graphToNodesAndEdges(
-                graph, "dc/base/Test", mockMcfNodesWithoutTypeCounter));
-
-    Node expectedDcid0 =
-        Node.builder()
-            .subjectId("dcid0")
-            .value("dcid0")
-            .name("Node Zero")
-            .types(ImmutableList.of("Class"))
-            .build();
-    ImmutableList<Edge> expectedDcid0Edges =
-        ImmutableList.of(
-            Edge.builder()
-                .subjectId("dcid0")
-                .predicate("name")
-                .objectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
-                .provenance("dc/base/Test")
-                .build(),
-            Edge.builder()
-                .subjectId("dcid0")
-                .predicate("typeOf")
-                .objectId("Class")
-                .provenance("dc/base/Test")
-                .build(),
-            Edge.builder()
-                .subjectId("dcid0")
-                .predicate("geoJsonCoordinates")
-                .objectId("{   \"type\": \"Pol:EvbccRWWGibzhA4ntdF1bboIUsn4ThUiAZe3TV4hmB8=")
-                .provenance("dc/base/Test")
-                .build());
-    Node expectedDcid2 =
-        Node.builder()
-            .subjectId("dcid2")
-            .value("dcid2")
-            .name("dcid2")
-            .types(ImmutableList.of("Thing"))
-            .build();
-    Node expectedNameLeaf =
-        Node.builder()
-            .subjectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
-            .value("Node Zero")
-            .build();
-    Node expectedGeoLeaf =
-        Node.builder()
-            .subjectId("{   \"type\": \"Pol:EvbccRWWGibzhA4ntdF1bboIUsn4ThUiAZe3TV4hmB8=")
-            .bytes(ByteArray.copyFrom(PipelineUtils.compressString(geoJson)))
-            .build();
-
-    ImmutableList<KV<Node, List<Edge>>> expected =
-        ImmutableList.sortedCopyOf(
-            kvComparator,
-            ImmutableList.of(
-                KV.of(expectedDcid0, expectedDcid0Edges),
-                KV.of(expectedDcid2, ImmutableList.of()),
-                KV.of(expectedNameLeaf, ImmutableList.of()),
-                KV.of(expectedGeoLeaf, ImmutableList.of())));
-
-    assertEquals(actual.size(), expected.size());
-    for (int i = 0; i < expected.size(); i++) {
-      assertEquals(actual.get(i).getKey(), expected.get(i).getKey());
-      ImmutableList<Edge> actEdges =
-          ImmutableList.sortedCopyOf(edgeComparator, actual.get(i).getValue());
-      ImmutableList<Edge> expEdges =
-          ImmutableList.sortedCopyOf(edgeComparator, expected.get(i).getValue());
-      assertEquals(actEdges, expEdges);
-    }
-
-    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(1)).inc();
+  private static long getCounterValue(PipelineResult result, String counterName) {
+    MetricQueryResults metrics =
+        result
+            .metrics()
+            .queryMetrics(
+                MetricsFilter.builder()
+                    .addNameFilter(MetricNameFilter.named(GraphReaderTest.class, counterName))
+                    .build());
+    List<MetricResult<Long>> counters = Lists.newArrayList(metrics.getCounters());
+    assertEquals(1, counters.size());
+    return counters.get(0).getCommitted();
   }
 
   @Test
-  public void testGraphToNodesAndEdgesPCollectionAndMutations_success() {
+  public void extractExpandedNodesFromGraph_skipsObservations() {
     McfGraph graph =
         McfGraph.newBuilder()
-            .setType(McfType.INSTANCE_MCF)
+            .putNodes(
+                "obs1",
+                PropertyValues.newBuilder()
+                    .putPvs("typeOf", values(ref("StatVarObservation")))
+                    .build())
+            .build();
+
+    assertEquals(Map.of(), extract(graph));
+  }
+
+  @Test
+  public void extractExpandedNodesFromGraph_textValue_createsLeafNodeAndEdge() {
+    McfGraph graph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "city1",
+                PropertyValues.newBuilder()
+                    .putPvs("typeOf", values(ref("City")))
+                    .putPvs("name", values(text("Springfield")))
+                    .build())
+            .build();
+
+    assertEquals(
+        Map.of(
+            subjectNode("city1", "Springfield", "City"),
+            Set.of(
+                edge("city1", "typeOf", "City"),
+                edge("city1", "name", leaf("Springfield").getSubjectId())),
+            leaf("Springfield"),
+            Set.of()),
+        extract(graph));
+  }
+
+  @Test
+  public void extractExpandedNodesFromGraph_bytesPredicate_createsCompressedLeafNode() {
+    String geoJson = "{\"type\": \"Polygon\", \"coordinates\": [[[9, 7], [9, 6.5], [9, 7]]]}";
+    McfGraph graph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "place1",
+                PropertyValues.newBuilder()
+                    .putPvs("typeOf", values(ref("Place")))
+                    .putPvs("geoJsonCoordinates", values(text(geoJson)))
+                    .build())
+            .build();
+
+    assertEquals(
+        Map.of(
+            subjectNode("place1", "place1", "Place"),
+            Set.of(
+                edge("place1", "typeOf", "Place"),
+                edge("place1", "geoJsonCoordinates", bytesLeaf(geoJson).getSubjectId())),
+            bytesLeaf(geoJson),
+            Set.of()),
+        extract(graph));
+  }
+
+  @Test
+  public void extractExpandedNodesFromGraph_referenceValue_createsEdgeWithoutLeafNode() {
+    McfGraph graph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "city1",
+                PropertyValues.newBuilder()
+                    .putPvs("typeOf", values(ref("City")))
+                    .putPvs("containedInPlace", values(ref("dcid:geoId/06")))
+                    .build())
+            .build();
+
+    assertEquals(
+        Map.of(
+            subjectNode("city1", "city1", "City"),
+            Set.of(edge("city1", "typeOf", "City"), edge("city1", "containedInPlace", "geoId/06"))),
+        extract(graph));
+  }
+
+  @Test
+  public void extractExpandedNodesFromGraph_excludesDcidProperty() {
+    McfGraph graph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "l:nodeKey",
+                PropertyValues.newBuilder()
+                    .putPvs("dcid", values(text("dcid0")))
+                    .putPvs("typeOf", values(ref("Class")))
+                    .build())
+            .build();
+
+    assertEquals(
+        Map.of(subjectNode("dcid0", "dcid0", "Class"), Set.of(edge("dcid0", "typeOf", "Class"))),
+        extract(graph));
+  }
+
+  @Test
+  public void extractExpandedNodesFromGraph_nodeWithoutType_defaultsToThingAndIncrementsCounter() {
+    McfGraph graph =
+        McfGraph.newBuilder().putNodes("dcid2", PropertyValues.newBuilder().build()).build();
+
+    assertEquals(Map.of(subjectNode("dcid2", "dcid2", "Thing"), Set.of()), extract(graph));
+    Mockito.verify(noTypeCounter, Mockito.times(1)).inc();
+  }
+
+  @Test
+  public void extractExpandedNodesFromGraph_nodeWithoutDcidOrName_fallsBackToKey() {
+    McfGraph graph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "dcid:node1",
+                PropertyValues.newBuilder().putPvs("typeOf", values(ref("Class"))).build())
+            .build();
+
+    assertEquals(
+        Map.of(subjectNode("node1", "node1", "Class"), Set.of(edge("node1", "typeOf", "Class"))),
+        extract(graph));
+  }
+
+  @Test
+  public void extractExpandedNodesFromGraph_oversizedValue_dropsLeafNodeAndEdge() {
+    String oversized = "a".repeat(SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE + 1);
+    McfGraph graph =
+        McfGraph.newBuilder()
             .putNodes(
                 "dcid0",
                 PropertyValues.newBuilder()
-                    .putPvs(
-                        "name",
-                        McfGraph.Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setType(ValueType.TEXT)
-                                    .setValue("Node Zero"))
-                            .build())
-                    .putPvs(
-                        "typeOf",
-                        McfGraph.Values.newBuilder()
-                            .addTypedValues(
-                                TypedValue.newBuilder()
-                                    .setType(ValueType.RESOLVED_REF)
-                                    .setValue("Class"))
-                            .build())
+                    .putPvs("typeOf", values(ref("Class")))
+                    .putPvs("name", values(text("Node Zero")))
+                    .putPvs("description", values(text(oversized)))
+                    .build())
+            .build();
+
+    assertEquals(
+        Map.of(
+            subjectNode("dcid0", "Node Zero", "Class"),
+            Set.of(
+                edge("dcid0", "typeOf", "Class"),
+                edge("dcid0", "name", leaf("Node Zero").getSubjectId())),
+            leaf("Node Zero"),
+            Set.of()),
+        extract(graph));
+  }
+
+  @Test
+  public void extractExpandedNodesFromGraph_pipelineAndMutations() {
+    McfGraph graph =
+        McfGraph.newBuilder()
+            .putNodes(
+                "dcid0",
+                PropertyValues.newBuilder()
+                    .putPvs("name", values(text("Node Zero")))
+                    .putPvs("typeOf", values(ref("Class")))
                     .build())
             .build();
 
@@ -580,49 +612,27 @@ public class GraphReaderTest {
     Counter edgeCounter = Metrics.counter(GraphReaderTest.class, "edges");
 
     PCollection<McfGraph> inputGraph = pipeline.apply("CreateGraph", Create.of(graph));
-    PCollection<KV<Node, List<Edge>>> nodesAndEdges =
-        GraphReader.graphToNodesAndEdges("test", inputGraph, "dc/base/Test", invalidTypeCounter);
+    PCollection<ExpandedNode> expandedNodes =
+        GraphReader.extractExpandedNodesFromGraph(
+            "test", inputGraph, PROVENANCE, invalidTypeCounter);
     PCollection<Mutation> nodeMutations =
-        GraphReader.nodesToMutations("test", nodesAndEdges, spannerClient, nodeCounter);
+        GraphReader.nodesToMutations("test", expandedNodes, spannerClient, nodeCounter);
     PCollection<Mutation> edgeMutations =
-        GraphReader.edgesToMutations("test", nodesAndEdges, spannerClient, edgeCounter);
-
-    Node expectedSubjectNode =
-        Node.builder()
-            .subjectId("dcid0")
-            .value("dcid0")
-            .name("Node Zero")
-            .types(ImmutableList.of("Class"))
-            .build();
-    Node expectedLeafNode =
-        Node.builder()
-            .subjectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
-            .value("Node Zero")
-            .build();
-    Edge expectedNameEdge =
-        Edge.builder()
-            .subjectId("dcid0")
-            .predicate("name")
-            .objectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
-            .provenance("dc/base/Test")
-            .build();
-    Edge expectedTypeEdge =
-        Edge.builder()
-            .subjectId("dcid0")
-            .predicate("typeOf")
-            .objectId("Class")
-            .provenance("dc/base/Test")
-            .build();
+        GraphReader.edgesToMutations("test", expandedNodes, spannerClient, edgeCounter);
 
     PAssert.that(nodeMutations)
         .containsInAnyOrder(
-            spannerClient.toNodeMutation(expectedSubjectNode),
-            spannerClient.toNodeMutation(expectedLeafNode));
+            spannerClient.toNodeMutation(subjectNode("dcid0", "Node Zero", "Class")),
+            spannerClient.toNodeMutation(leaf("Node Zero")));
     PAssert.that(edgeMutations)
         .containsInAnyOrder(
-            spannerClient.toEdgeMutation(expectedNameEdge),
-            spannerClient.toEdgeMutation(expectedTypeEdge));
+            spannerClient.toEdgeMutation(edge("dcid0", "name", leaf("Node Zero").getSubjectId())),
+            spannerClient.toEdgeMutation(edge("dcid0", "typeOf", "Class")));
 
-    pipeline.run().waitUntilFinish();
+    PipelineResult result = pipeline.run();
+    result.waitUntilFinish();
+
+    assertEquals(2L, getCounterValue(result, "nodes"));
+    assertEquals(2L, getCounterValue(result, "edges"));
   }
 }

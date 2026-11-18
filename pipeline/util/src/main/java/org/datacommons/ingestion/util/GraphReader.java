@@ -20,6 +20,7 @@ import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
+import org.datacommons.ingestion.data.ExpandedNode;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
@@ -393,24 +394,20 @@ public class GraphReader implements Serializable {
     return Observation.builder().seriesKey(seriesKey).date(obs.getDate()).value(value).build();
   }
 
-  public static ImmutableList<KV<Node, List<Edge>>> graphToNodesAndEdges(
-      McfGraph graph, String provenance, Counter mcfNodesWithoutTypeCounter) {
-    if (graph == null || graph.getNodesMap().isEmpty()) {
-      return ImmutableList.of();
-    }
+  public static ImmutableList<ExpandedNode> extractExpandedNodesFromGraph(
+      McfGraph graph, String provenance, Counter nodesWithoutTypeCounter) {
     return graph.getNodesMap().entrySet().stream()
         .filter(nodeEntry -> !GraphUtils.isObservation(nodeEntry.getValue()))
         .flatMap(
             nodeEntry ->
-                extractSingleNodeAndEdges(nodeEntry, provenance, mcfNodesWithoutTypeCounter)
-                    .stream())
+                extractExpandedNodes(nodeEntry, provenance, nodesWithoutTypeCounter).stream())
         .collect(ImmutableList.toImmutableList());
   }
 
-  static ImmutableList<KV<Node, List<Edge>>> extractSingleNodeAndEdges(
+  static ImmutableList<ExpandedNode> extractExpandedNodes(
       Map.Entry<String, PropertyValues> nodeEntry,
       String provenance,
-      Counter mcfNodesWithoutTypeCounter) {
+      Counter nodesWithoutTypeCounter) {
     PropertyValues pvs = nodeEntry.getValue();
     Map<String, McfGraph.Values> pv = pvs.getPvsMap();
     String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
@@ -420,7 +417,7 @@ public class GraphReader implements Serializable {
     if (types.isEmpty()) {
       types = ImmutableList.of(PipelineUtils.TYPE_THING);
       LOGGER.info("Found MCF node with no type: {}", nodeEntry.getKey());
-      mcfNodesWithoutTypeCounter.inc();
+      nodesWithoutTypeCounter.inc();
     }
     String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name());
     Node subjectNode =
@@ -446,15 +443,15 @@ public class GraphReader implements Serializable {
     ImmutableList<Edge> subjectEdges =
         edgesAndLeafNodes.stream().map(KV::getKey).collect(ImmutableList.toImmutableList());
 
-    ImmutableList<KV<Node, List<Edge>>> leafEntries =
+    ImmutableList<ExpandedNode> leafEntries =
         edgesAndLeafNodes.stream()
             .map(KV::getValue)
             .filter(Objects::nonNull)
-            .map(leafNode -> KV.<Node, List<Edge>>of(leafNode, ImmutableList.of()))
+            .map(leafNode -> ExpandedNode.builder().node(leafNode).build())
             .collect(ImmutableList.toImmutableList());
 
-    return ImmutableList.<KV<Node, List<Edge>>>builder()
-        .add(KV.of(subjectNode, subjectEdges))
+    return ImmutableList.<ExpandedNode>builder()
+        .add(ExpandedNode.builder().node(subjectNode).edges(subjectEdges).build())
         .addAll(leafEntries)
         .build();
   }
@@ -507,19 +504,19 @@ public class GraphReader implements Serializable {
     return leafNode.build();
   }
 
-  public static PCollection<KV<Node, List<Edge>>> graphToNodesAndEdges(
+  public static PCollection<ExpandedNode> extractExpandedNodesFromGraph(
       String importName,
       PCollection<McfGraph> graph,
       String provenance,
-      Counter mcfNodesWithoutTypeCounter) {
+      Counter nodesWithoutTypeCounter) {
     return graph.apply(
-        "GraphToNodesAndEdges-" + importName,
+        "ExtractExpandedNodesFromGraph-" + importName,
         ParDo.of(
-            new DoFn<McfGraph, KV<Node, List<Edge>>>() {
+            new DoFn<McfGraph, ExpandedNode>() {
               @ProcessElement
               public void processElement(
-                  @Element McfGraph element, OutputReceiver<KV<Node, List<Edge>>> receiver) {
-                graphToNodesAndEdges(element, provenance, mcfNodesWithoutTypeCounter)
+                  @Element McfGraph element, OutputReceiver<ExpandedNode> receiver) {
+                extractExpandedNodesFromGraph(element, provenance, nodesWithoutTypeCounter)
                     .forEach(receiver::output);
               }
             }));
@@ -527,17 +524,17 @@ public class GraphReader implements Serializable {
 
   public static PCollection<Mutation> nodesToMutations(
       String importName,
-      PCollection<KV<Node, List<Edge>>> nodesAndEdges,
+      PCollection<ExpandedNode> expandedNodes,
       SpannerClient spannerClient,
       Counter nodeCounter) {
-    return nodesAndEdges.apply(
+    return expandedNodes.apply(
         "ExtractNodeMutations-" + importName,
         ParDo.of(
-            new DoFn<KV<Node, List<Edge>>, Mutation>() {
+            new DoFn<ExpandedNode, Mutation>() {
               @ProcessElement
               public void processElement(
-                  @Element KV<Node, List<Edge>> element, OutputReceiver<Mutation> receiver) {
-                receiver.output(spannerClient.toNodeMutation(element.getKey()));
+                  @Element ExpandedNode element, OutputReceiver<Mutation> receiver) {
+                receiver.output(spannerClient.toNodeMutation(element.getNode()));
                 nodeCounter.inc();
               }
             }));
@@ -545,21 +542,19 @@ public class GraphReader implements Serializable {
 
   public static PCollection<Mutation> edgesToMutations(
       String importName,
-      PCollection<KV<Node, List<Edge>>> nodesAndEdges,
+      PCollection<ExpandedNode> expandedNodes,
       SpannerClient spannerClient,
       Counter edgeCounter) {
-    return nodesAndEdges.apply(
+    return expandedNodes.apply(
         "ExtractEdgeMutations-" + importName,
         ParDo.of(
-            new DoFn<KV<Node, List<Edge>>, Mutation>() {
+            new DoFn<ExpandedNode, Mutation>() {
               @ProcessElement
               public void processElement(
-                  @Element KV<Node, List<Edge>> element, OutputReceiver<Mutation> receiver) {
-                List<Edge> edges = element.getValue();
-                if (edges != null && !edges.isEmpty()) {
-                  edges.forEach(edge -> receiver.output(spannerClient.toEdgeMutation(edge)));
-                  edgeCounter.inc(edges.size());
-                }
+                  @Element ExpandedNode element, OutputReceiver<Mutation> receiver) {
+                List<Edge> edges = element.getEdges();
+                edges.forEach(edge -> receiver.output(spannerClient.toEdgeMutation(edge)));
+                edgeCounter.inc(edges.size());
               }
             }));
   }
