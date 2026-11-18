@@ -158,7 +158,7 @@ class TestSummaryGenerator(unittest.TestCase):
           }),
           ("oecd/b.mcf", "oecdOther", {
               "StatisticalVariable": 1,
-              "untyped": 1
+              "Property": 1
           }),
       ]:
         generator.add_file_summary(
@@ -181,13 +181,13 @@ class TestSummaryGenerator(unittest.TestCase):
                              "Provenance": 1,
                              "Source": 1,
                              "StatisticalVariable": 3,
-                             "untyped": 1
+                             "Property": 1
                          }), [
                              ("oecdOther",
                               NodeCounts(count=2,
                                          byType={
                                              "StatisticalVariable": 1,
-                                             "untyped": 1
+                                             "Property": 1
                                          })),
                              ("oecdProv",
                               NodeCounts(count=4,
@@ -198,6 +198,20 @@ class TestSummaryGenerator(unittest.TestCase):
                                          })),
                          ]),
          ])
+
+  def test_runner_nodes_go_to_every_folder_using_their_provenance(self):
+    """Runner nodes count in every folder whose files use their provenance."""
+    with tempfile.TemporaryDirectory() as tmp, \
+         create_store(tmp) as store:
+      generator = _generator("wf-123", store.as_dir())
+      generator.record_input_file("oecd", ["sharedProv"], "oecd/a.mcf")
+      generator.record_input_file("ilo", ["sharedProv"], "ilo/b.mcf")
+      generator.add_node_counts("sharedProv", 2, {"Provenance": 1, "Source": 1})
+      folders = generator.build_report(RunStatus.SUCCESS, _END).folders
+
+    expected = NodeCounts(count=2, byType={"Provenance": 1, "Source": 1})
+    self.assertEqual([(f.folderName, f.provenances[0].nodes) for f in folders],
+                     [("ilo", expected), ("oecd", expected)])
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""

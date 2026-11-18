@@ -331,10 +331,11 @@ def _report_provenance(result: b.Result) -> dict:
 
 
 def test_report_counts_nodes_by_type():
-  """Each node counts once per file, under each type, or under untyped.
+  """Each typed node counts once per file, under each of its types.
 
-  A StatVarObservation in MCF counts as an observation instead, with its date.
-  The generated root StatVarGroups are not counted.
+  A node without a type is not counted. A StatVarObservation in MCF counts as
+  an observation instead, with its date. The generated root StatVarGroups are
+  not counted.
   """
   schema = b.mcf(
       b.mcf_node("dcid:Count_X", typeOf="dcs:StatisticalVariable"),
@@ -355,13 +356,12 @@ def test_report_counts_nodes_by_type():
 
   provenance = _report_provenance(result)
   assert provenance["nodes"] == {
-      "count": 6,
+      "count": 5,
       "byType": {
           "AdministrativeArea2": 1,
           "City": 1,
           "Property": 1,
           "StatisticalVariable": 1,
-          "untyped": 1,
           **_METADATA_TYPES
       }
   }
@@ -385,4 +385,38 @@ def test_report_counts_a_node_once_per_file_it_is_in():
           "StatisticalVariable": 2,
           **_METADATA_TYPES
       }
+  }
+
+
+def test_report_counts_a_node_in_a_file_only_if_typed_there():
+  """A node's copy in a file without its type is not counted for that file."""
+  result = b.run_dir(
+      {
+          **b.import_subdir("oecd"), "oecd/a.mcf":
+              b.mcf_node("dcid:Count_X", typeOf="dcs:StatisticalVariable"),
+          "oecd/b.mcf":
+              b.mcf_node("dcid:Count_X", typeOf=None, description='"More"')
+      },
+      runner_kwargs={"import_names": ["oecd"]})
+
+  assert _report_provenance(result)["nodes"] == {
+      "count": 3,
+      "byType": {
+          "StatisticalVariable": 1,
+          **_METADATA_TYPES
+      }
+  }
+
+
+def test_report_counts_a_provenance_once_however_many_files_define_it():
+  """The Runner merges a provenance's definitions and writes it once."""
+  result = b.run_dir(
+      {
+          **b.import_subdir("oecd"), "oecd/again.mcf": b.PROVENANCE_MCF
+      },
+      runner_kwargs={"import_names": ["oecd"]})
+
+  assert _report_provenance(result)["nodes"] == {
+      "count": 2,
+      "byType": _METADATA_TYPES
   }

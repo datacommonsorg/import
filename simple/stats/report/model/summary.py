@@ -87,8 +87,7 @@ class NodeCounts(BaseModel):
   byType: dict[str, int] = Field(
       default_factory=dict,
       description=("Number of nodes per type. A node with several types "
-                   "counts under each, and one without a type under "
-                   "'untyped'."))
+                   "counts under each."))
 
 
 class Provenance(BaseModel):

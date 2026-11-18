@@ -216,16 +216,15 @@ class FileValidationError:
 class ImportCounts:
   """Observations, their dates and other nodes in one imported file.
 
-  `nodes` counts every node written except StatVarObservations, once per
-  appearance; `nodes_by_type` counts them per type, under each of a node's
-  types, or under UNTYPED for a node written without one.
+  `nodes` counts the typed nodes written, except StatVarObservations, once
+  per file; `nodes_by_type` counts them under each of their types.
   """
 
   observations: int = 0
   date_range: DateRange | None = None
   nodes: int = 0
   # Node type -> number of nodes of that type, e.g.
-  # {"StatisticalVariable": 2, "Property": 4, "untyped": 1}.
+  # {"StatisticalVariable": 2, "Property": 4}.
   nodes_by_type: dict[str, int] = field(default_factory=Counter)
 
   def add(self, other: Self) -> Self:

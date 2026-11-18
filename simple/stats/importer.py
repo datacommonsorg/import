@@ -187,49 +187,44 @@ def mapping_errors(file_path: str, mappings: dict[str, str],
           mapped_and_ignored_errors(file_path, mappings, ignore_columns))
 
 
-# Type that nodes written without a typeOf are counted under in the report.
-UNTYPED = "untyped"
-
 _TYPE_OF = "typeOf"
 _STAT_VAR_OBSERVATION = "StatVarObservation"
 _OBSERVATION_DATE = "observationDate"
 
 
 def count_nodes_from_triples(triples: list[Triple]) -> ImportCounts:
-  """Counts the distinct nodes in `triples`, one imported file's triples.
+  """Counts the typed nodes in `triples`, one imported file's triples.
 
-  A node's triples are combined wherever they appear in the file, so a node
-  counts once per file. A node typed StatVarObservation counts as an
-  observation, with its observationDate. Any other node counts as one node,
-  under each of its types, or under UNTYPED if it has none.
+  Each node counts once per file, under each of its types, however its triples
+  are split in the file. A node without a type is not counted. A node typed
+  StatVarObservation counts as an observation instead; observationDate values
+  give the date range.
   """
-  nodes_triples: dict[str, list[Triple]] = collections.defaultdict(list)
-  for triple in triples:
-    # "dcid:X" and "X" name the same node.
-    nodes_triples[triple.subject_id.removeprefix("dcid:")].append(triple)
-
+  seen: set[tuple[str, str]] = set()  # (node ID, type) pairs already counted
+  typed_nodes: set[str] = set()
+  nodes_by_type: collections.Counter[str] = collections.Counter()
   observations = 0
   dates: list[str] = []
-  nodes = 0
-  nodes_by_type: collections.Counter[str] = collections.Counter()
-  for node_triples in nodes_triples.values():
-    types = {
-        strip_namespace(t.object_id or t.object_value)
-        for t in node_triples
-        if t.predicate == _TYPE_OF
-    }
-    if _STAT_VAR_OBSERVATION in types:
-      observations += 1
-      dates.extend(t.object_value
-                   for t in node_triples
-                   if t.predicate == _OBSERVATION_DATE)
+  for t in triples:
+    if t.predicate == _OBSERVATION_DATE:
+      dates.append(t.object_value)
+    if t.predicate != _TYPE_OF:
       continue
-    nodes += 1
-    nodes_by_type.update(types or {UNTYPED})
+    # "dcid:X" and "X" name the same node.
+    node = t.subject_id.removeprefix("dcid:")
+    node_type = strip_namespace(t.object_id or t.object_value)
+    if (node, node_type) in seen:
+      continue
+    seen.add((node, node_type))
+    if node_type == _STAT_VAR_OBSERVATION:
+      observations += 1
+    else:
+      typed_nodes.add(node)
+      nodes_by_type[node_type] += 1
   return ImportCounts(
       observations=observations,
       date_range=DateRange(min=min(dates), max=max(dates)) if dates else None,
-      nodes=nodes,
+      nodes=len(typed_nodes),
       nodes_by_type=nodes_by_type)
 
 
