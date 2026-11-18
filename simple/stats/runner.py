@@ -285,27 +285,22 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
       file_sample_collisions=dict(graph_writer.file_sample_collisions),
       sources=dict(nodes.sources),
       provenances=dict(nodes.provenances),
-      processed_imports=set(graph_writer._processed_imports),
+      processed_imports=graph_writer.processed_imports(),
       counts=importer.counts,
   )
 
 
 def _read_config_file(file: File) -> ImportConfig:
-  """Reads and validates a `config.json` file."""
-  config_data = _parse_config_json(file.read(), file.full_path())
+  """Reads and validates a `config.json` file.
+
+  Invalid JSON (e.g. an empty file) and invalid config are reported as
+  INVALID_CONFIGURATION, prefixed with the file's path.
+  """
+  text = file.read()
   try:
-    return parse_config(config_data, file.full_path())
-  except ValueError as e:
+    return parse_config(json.loads(text), file.full_path())
+  except ValueError as e:  # Including json.JSONDecodeError.
     raise invalid_configuration(f"{file.full_path()}: {e}") from e
-
-
-def _parse_config_json(text: str, path: str) -> object:
-  """Parses config.json text; a JSON error is reported as INVALID_CONFIGURATION."""
-  try:
-    return json.loads(text)
-  except json.JSONDecodeError as e:
-    logging.error("Failed to parse JSON from %s: %s", path, e)
-    raise invalid_configuration(str(e)) from e
 
 
 def _failure_error(e: BaseException,
@@ -378,7 +373,6 @@ class Runner:
     self._input_dir_files: dict[str, list[File]] = {}
     # Set while importing.
     self.graph_writer = None
-    self.trigger_workflow_info = None
     # The errors for the FAILURE handshake, set when the run fails.
     self._failure_errors: list[FileValidationError] | None = None
     # Errors in input files, each with its file, so the report can put them
@@ -419,7 +413,9 @@ class Runner:
     else:
       import_dir = join_path(self.input_dir_path, imports[0])
       logging.info("Using import specific directory: %s", import_dir)
-      self._read_config_in_dir(self._open_input_dir(import_dir))
+      config_file = self._open_input_dir(import_dir).open_file(
+          constants.CONFIG_JSON_FILE_NAME)
+      self.config = Config(_read_config_file(config_file))
 
     # The input dir is searched recursively, so it must not hold the output.
     _check_not_overlapping(self.input_dir, self.output_dir)
@@ -430,12 +426,9 @@ class Runner:
           is_gcs_path(d.store_path())
           for d in (self.input_dir, self.output_dir)))
 
-  def _start_summary(self, start_time: str) -> None:
-    self.summary_generator.set_execution_metadata(start_time=start_time,
-                                                  output_dir=self.output_dir)
-
   def run(self):
-    self._start_summary(_utc_now())
+    self.summary_generator.set_execution_metadata(start_time=_utc_now(),
+                                                  output_dir=self.output_dir)
     try:
       self._load_config()
 
@@ -523,10 +516,15 @@ class Runner:
 
     Returns the handshake's path, or None if none was written.
     """
-    if not self.trigger_workflow_info and self._failure_errors is None:
-      return None
-
     workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
+    if self._failure_errors is not None:
+      errors_dict = [err.to_dict() for err in self._failure_errors]
+      handshake_payload = {"status": "FAILURE", "errors": errors_dict}
+    elif workflow_id and is_gcs_path(self.graph_writer.jsonld_dir.full_path()):
+      handshake_payload = {"importList": json.dumps(self._import_list())}
+    else:
+      return None  # A successful run outside the workflow, or to local disk.
+
     temp_location = os.getenv("TEMP_LOCATION", "")
 
     if not workflow_id:
@@ -539,14 +537,6 @@ class Runner:
           temp_location)
       return None
 
-    if self._failure_errors is not None:
-      errors_dict = [err.to_dict() for err in self._failure_errors]
-      handshake_payload = {"status": "FAILURE", "errors": errors_dict}
-    else:
-      handshake_payload = {
-          "importList": json.dumps(self.trigger_workflow_info),
-      }
-
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
     logging.info(
         "WORKFLOW_EXECUTION_ID set. Writing preprocessor result to GCS handshake path: %s",
@@ -557,13 +547,13 @@ class Runner:
       logging.info("Successfully wrote preprocessor result to GCS.")
     return output_json_path
 
-  def _read_config_in_dir(self, input_dir: Dir) -> None:
-    """Reads and validates the `config.json` at the root of `input_dir`."""
-    file = input_dir.open_file(constants.CONFIG_JSON_FILE_NAME)
-    raw_config = file.read()
-    config_data = (_parse_config_json(raw_config, file.full_path())
-                   if raw_config else {})
-    self.config = Config(parse_config(config_data, file.full_path()))
+  def _import_list(self) -> list[dict[str, str]]:
+    """The imports and their JSON-LD shards, for the ingestion workflow."""
+    jsonld_path = self.graph_writer.jsonld_dir.full_path().rstrip("/")
+    return [{
+        "importName": name,
+        "graphPath": f"{jsonld_path}/{name.replace('/', '_')}/**/*.jsonld"
+    } for name in self.graph_writer.import_folders()]
 
   def _merge_configs(self, configs: list):
     """Merges multiple config.json files into a single configuration.
@@ -707,7 +697,8 @@ class Runner:
                                     file: File) -> list[FileValidationError]:
     """Validates headers for a single CSV file and returns any errors found."""
     try:
-      return self._create_importer(file).validate_headers()
+      return _create_importer_for_file(self.config, file, self.graph_writer,
+                                       self.nodes).validate_headers()
     except Exception as e:
       return [
           FileValidationError(
@@ -858,7 +849,9 @@ class Runner:
   def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` for `file`."""
     self.nodes.merge_metadata(res.provenances, res.sources)
-    self._merge_worker_writer_state(res)
+    self.graph_writer.merge_worker(res.processed_imports,
+                                   res.file_collision_counts,
+                                   res.file_sample_collisions)
     self._record_file_summary(file, res)
 
   def _record_file_summary(self, file: File, res: ImportProcResult) -> None:
@@ -875,20 +868,6 @@ class Runner:
                     dateRange=res.counts.date_range,
                     nodes=NodeCounts(count=res.counts.nodes,
                                      byType=dict(res.counts.nodes_by_type))))
-
-  def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
-    """Merges a worker's processed imports and collision stats into the writer."""
-    self.graph_writer._processed_imports.update(res.processed_imports)
-    self.graph_writer.merge_collisions(res.file_collision_counts,
-                                       res.file_sample_collisions)
-
-  def _create_importer(self, input_file: File) -> Importer:
-    return _create_importer_for_file(
-        self.config,
-        input_file,
-        self.graph_writer,
-        self.nodes,
-    )
 
   def _run_imports_and_export_jsonld(self):
     self.graph_writer = JsonLdStreamWriter(self.output_dir, self.import_names,
@@ -908,16 +887,6 @@ class Runner:
 
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.nodes).validate()
-
-    # Populate trigger workflow info if running under ingestion workflow and output is GCS
-    output_path = self.graph_writer.jsonld_dir.full_path()
-    if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      import_list = []
-      for imp in self.graph_writer.import_folders():
-        sanitized_imp = imp.replace("/", "_")
-        gcs_pattern = f"{output_path.rstrip('/')}/{sanitized_imp}/**/*.jsonld"
-        import_list.append({"importName": imp, "graphPath": gcs_pattern})
-      self.trigger_workflow_info = import_list
 
 
 def _utc_now() -> str:

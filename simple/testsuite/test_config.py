@@ -405,8 +405,8 @@ INVALID_CONFIGS = [
          },
          expect=b.Fails(
              "PreprocessorError",
-             "Unknown key(s) in config.json: ['unknownTopLevelKey']",
-             _INVALID)),
+             f"<input>/{b.IMPORT}/config.json: Unknown key(s) in config.json:"
+             " ['unknownTopLevelKey']", _INVALID)),
     Case("legacy sources key is rejected",
          given={
              **b.obs_config(b.OBS_MAPPINGS),
@@ -606,9 +606,9 @@ INVALID_CONFIG_FILES = [
              **b.import_subdir("oecd", _USA),
              "ilo/config.json": "{not json",
          },
-         expect=b.Fails("PreprocessorError",
-                        "Expecting property name enclosed in double quotes",
-                        _INVALID)),
+         expect=b.Fails(
+             "PreprocessorError", "<input>/ilo/config.json: Expecting property"
+             " name enclosed in double quotes", _INVALID)),
     Case("subdirectory config that is not a JSON object",
          given={
              **b.import_subdir("oecd", _USA),
@@ -648,6 +648,14 @@ def test_missing_config_json_fails():
   result = b.run({"case.csv": _USA}, None)
   b.assert_fails(result, "FileNotFoundError",
                  f"File not found: <input>/{b.IMPORT}/config.json")
+
+
+def test_empty_config_json_fails():
+  result = b.run({"case.csv": _USA, "config.json": ""}, None)
+  b.assert_fails(result,
+                 "PreprocessorError",
+                 f"<input>/{b.IMPORT}/config.json: Expecting value: line 1",
+                 handshake_error_types=_INVALID)
 
 
 # An input dir whose only config.json is at its root, which is never an import.

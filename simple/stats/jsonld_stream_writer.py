@@ -319,7 +319,9 @@ class JsonLdStreamWriter(GraphWriter):
     # Triples of no import (e.g. the root StatVarGroups), written to the folder
     # of _global_triples_import at commit_and_close.
     self._global_triples: list[Triple] = []
-    self._processed_imports = set()
+    # The imports with shards from this writer or, on the coordinator, from
+    # the workers' writers merged into it (see merge_worker).
+    self._processed_imports: set[str] = set()
     self.obs_hash_set: set[int] = set()
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
@@ -345,6 +347,16 @@ class JsonLdStreamWriter(GraphWriter):
       )
       if len(self.file_sample_collisions[file_name]) < MAX_SAMPLES_PER_FILE:
         self.file_sample_collisions[file_name].append(sample_info)
+
+  def processed_imports(self) -> set[str]:
+    """Returns the imports with shards from this writer (see __init__)."""
+    return set(self._processed_imports)
+
+  def merge_worker(self, imports: set[str], file_counts: dict[str, int],
+                   file_samples: dict[str, list[str]]) -> None:
+    """Adds a worker's writer state: its processed imports and collisions."""
+    self._processed_imports.update(imports)
+    self.merge_collisions(file_counts, file_samples)
 
   def merge_collisions(self, file_counts: dict[str, int],
                        file_samples: dict[str, list[str]]) -> None:
