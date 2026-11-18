@@ -295,6 +295,17 @@ def test_collisions_across_files_are_summarized(caplog):
   assert sample.endswith(" also produced by 'case_x.csv'"), sample
 
 
+def test_collisions_are_summarized_even_if_the_run_fails(caplog):
+  """Without provenance.mcf, metadata validation fails after the imports."""
+  files = {"case.csv": b.csv_file(b.obs_row(value="1"), b.obs_row(value="2"))}
+  with caplog.at_level(logging.WARNING):
+    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
+  assert result.error["type"] == "PreprocessorError", result.error
+  header, *_ = _collision_summary(caplog)
+  assert header == (f"{_COLLISION_SUMMARY} Total of 1 observation @id"
+                    " collisions detected across 1 file(s):")
+
+
 def test_files_with_the_same_name_in_two_imports_are_summarized_apart(caplog):
   duplicate_rows = b.csv_file(b.obs_row(value="1"), b.obs_row(value="2"))
   files = {

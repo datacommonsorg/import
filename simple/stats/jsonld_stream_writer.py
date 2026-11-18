@@ -329,7 +329,7 @@ class JsonLdStreamWriter(GraphWriter):
       chunk_items: list[tuple[str, str, str, str, str]],
       file_name: str,
   ) -> None:
-    """Tracks observation hashes for a shard chunk and logs any collisions.
+    """Tracks observation hashes for a shard chunk and records any collisions.
 
     Only collisions with observations that this writer saw are found: a worker
     sees one file. See `stats.obs_id_collisions` for collisions between files.
@@ -345,13 +345,6 @@ class JsonLdStreamWriter(GraphWriter):
       )
       if len(self.file_sample_collisions[file_name]) < MAX_SAMPLES_PER_FILE:
         self.file_sample_collisions[file_name].append(sample_info)
-        logging.warning(
-            "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
-            file_name, sample_info)
-      elif self.file_collision_counts[file_name] % 1000 == 0:
-        logging.warning(
-            "Detected %d observation @id collisions so far across processed datasets.",
-            self.file_collision_counts[file_name])
 
   def merge_collisions(self, file_counts: dict[str, int],
                        file_samples: dict[str, list[str]]) -> None:
@@ -461,16 +454,23 @@ class JsonLdStreamWriter(GraphWriter):
 
     self._finish_shard_writes()
 
+  def log_collision_summary(self) -> None:
+    """Logs the observation @id collisions of every file, if any.
+
+    The coordinator calls this once its writer holds the collisions of every
+    file (see `merge_collisions`).
+    """
     total_collisions = sum(self.file_collision_counts.values())
-    if total_collisions > 0:
-      summary_lines = [
-          f"Observation @ID Collision Summary: Total of {total_collisions} observation @id collisions detected across {len(self.file_collision_counts)} file(s):"
-      ]
-      for f_name, count in self.file_collision_counts.items():
-        summary_lines.append(f"  File '{f_name}': {count} collision(s)")
-        for sample in self.file_sample_collisions[f_name]:
-          summary_lines.append(f"    - {sample}")
-      logging.warning("\n".join(summary_lines))
+    if not total_collisions:
+      return
+    summary_lines = [
+        f"Observation @ID Collision Summary: Total of {total_collisions} observation @id collisions detected across {len(self.file_collision_counts)} file(s):"
+    ]
+    for f_name, count in self.file_collision_counts.items():
+      summary_lines.append(f"  File '{f_name}': {count} collision(s)")
+      for sample in self.file_sample_collisions[f_name]:
+        summary_lines.append(f"    - {sample}")
+    logging.warning("\n".join(summary_lines))
 
   def close_after_error(self) -> None:
     """Waits for the shards in flight, ignoring errors, after a failed import.

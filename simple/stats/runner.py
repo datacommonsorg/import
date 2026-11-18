@@ -465,6 +465,9 @@ class Runner:
       else:
         logging.error("Preprocessor execution failed!")
       raise
+    finally:
+      if self.graph_writer:  # Collisions are logged even if the run failed.
+        self.graph_writer.log_collision_summary()
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
@@ -689,9 +692,6 @@ class Runner:
       if not self._is_active_import_file(file):
         continue
       if not self._matches_config_pattern(file):
-        logging.info(
-            "Ignoring file '%s' as it does not match any pattern in config.json",
-            file.path)
         continue
       if match(file, "*.csv"):
         csv_files.append(file)
@@ -829,10 +829,8 @@ class Runner:
     # Before header validation, so failed runs still report their files.
     self._record_input_files(csv_files + mcf_files)
 
-    logging.info("Found %d CSV files to import", len(csv_files))
-    logging.info("Found %d MCF files to import", len(mcf_files))
-    logging.info("Matched files to process: %s",
-                 [f.full_path() for f in csv_files + mcf_files])
+    logging.info("Found %d CSV and %d MCF files to import", len(csv_files),
+                 len(mcf_files))
 
     # Validate all CSV headers upfront
     self._validate_all_headers(csv_files)
@@ -841,8 +839,6 @@ class Runner:
     files = mcf_files + csv_files
     if not files:
       return
-    logging.info("Importing %d files (%d MCF, %d CSV)...", len(files),
-                 len(mcf_files), len(csv_files))
     self._run_multiprocess_imports(files)
 
   def _record_report_errors(self) -> None:
@@ -895,9 +891,6 @@ class Runner:
     )
 
   def _run_imports_and_export_jsonld(self):
-    logging.info(
-        "Initializing JsonLdStreamWriter to stream JSON-LD directly to GCS/Disk"
-    )
     self.graph_writer = JsonLdStreamWriter(self.output_dir, self.import_names,
                                            self.config)
 
@@ -925,10 +918,6 @@ class Runner:
         gcs_pattern = f"{output_path.rstrip('/')}/{sanitized_imp}/**/*.jsonld"
         import_list.append({"importName": imp, "graphPath": gcs_pattern})
       self.trigger_workflow_info = import_list
-    else:
-      logging.info(
-          "Not running under ingestion workflow or output is local. Skipping handshake info."
-      )
 
 
 def _utc_now() -> str:
