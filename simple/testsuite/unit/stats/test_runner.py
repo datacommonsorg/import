@@ -11,17 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Worker processes: pool sizing and what they write to GCS."""
+"""Worker processes: pool sizing, what they write to GCS, and interrupts."""
 
 import concurrent.futures
+import json
 import os
 import shutil
+import time
 import types
 
 from google.cloud import storage
 from google.cloud.storage import Blob
 import pytest
+from stats import constants
 from stats import runner
+from stats.report.summary_generator import SummaryGenerator
 from testsuite.lib import builders as b
 from testsuite.lib import fake_gcs
 from testsuite.lib import run as runlib
@@ -275,3 +279,62 @@ def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
       ("b.csv", "cannot merge b"),
   ]
   assert merged == ["c.csv"]
+
+
+_SLOW_IMPORT_SECONDS = 1
+_real_run_single_import_proc = runner._run_single_import_proc
+
+
+def _slow_import_proc(*args):
+  """A worker's import that takes at least _SLOW_IMPORT_SECONDS.
+
+  Module-level so that the worker processes can unpickle it.
+  """
+  time.sleep(_SLOW_IMPORT_SECONDS)
+  return _real_run_single_import_proc(*args)
+
+
+def test_an_interrupted_run_fails_promptly_and_reports_the_failure(monkeypatch):
+  """
+  Ctrl-C cancels the files not yet started and reports the failure.
+
+  The interrupt is raised while the first result is merged, as Ctrl-C would
+  be while the coordinator waits. Waiting for every file would take
+  `all_files_seconds`.
+  """
+  monkeypatch.setattr(runner, "_run_single_import_proc", _slow_import_proc)
+
+  def interrupt(generator, summary):
+    raise KeyboardInterrupt
+
+  monkeypatch.setattr(SummaryGenerator, "add_file_summary", interrupt)
+  prefixes = _record_new_gcs_prefixes(monkeypatch)
+  files = {"provenance.mcf": b.PROVENANCE_MCF}
+  for i in range(29):
+    files[f"case_{i:02d}.csv"] = b.csv_file(b.obs_row(f"country/C{i}"))
+  workers = 2
+  all_files_seconds = len(files) / workers * _SLOW_IMPORT_SECONDS
+
+  start = time.monotonic()
+  with pytest.raises(KeyboardInterrupt):
+    b.run_dir(files,
+              b.obs_config(b.OBS_MAPPINGS),
+              runner_kwargs={"max_workers": workers})
+  assert time.monotonic() - start < all_files_seconds / 2
+
+  [root] = prefixes
+  report = fake_gcs.read_text(
+      f"{root}/output/{constants.INGESTION_REPORTS_DIR_NAME}/"
+      f"{runlib.WORKFLOW_ID}/{constants.INGESTION_REPORT_FILE_NAME}")
+  assert json.loads(report)["run"]["status"] == "FAILURE"
+  handshake = fake_gcs.read_text(runlib.handshake_path(root))
+  assert json.loads(handshake) == {
+      "status":
+          "FAILURE",
+      "errors": [{
+          "file": "",
+          "errorType": "GENERIC_ERROR",
+          "problemColumns": [],
+          "errorMessage": "KeyboardInterrupt",
+      }],
+  }
