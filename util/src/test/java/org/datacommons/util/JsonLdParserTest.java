@@ -1,8 +1,10 @@
 package org.datacommons.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.github.jsonldjava.utils.JsonUtils;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -149,5 +151,31 @@ public class JsonLdParserTest {
     }
     assertTrue(foundDest);
     assertTrue(foundSource);
+  }
+
+  @Test
+  public void testCompactShard_ParsesLikeIndentedShard() throws Exception {
+    // The Python preprocessor writes shards without whitespace, as
+    // json.dumps(doc, separators=(",", ":")).
+    String compact =
+        "{\"@context\":{\"dcid\":\"https://datacommons.org/browser/\","
+            + "\"schema\":\"https://schema.org/\"},\"@graph\":[{\"@id\":\"dcid:obs_1\","
+            + "\"@type\":\"dcid:StatVarObservation\","
+            + "\"dcid:variableMeasured\":{\"@id\":\"dcid:Count_Person\"},"
+            + "\"dcid:observationDate\":2020,\"dcid:value\":331.5,"
+            + "\"dcid:observationAbout\":{\"@id\":\"dcid:country/USA\"},"
+            + "\"dcid:provenance\":{\"@id\":\"dcid:dc/base/Census\"}}]}";
+    String indented = JsonUtils.toPrettyString(JsonUtils.fromString(compact));
+
+    McfGraph fromCompact = parse(compact);
+
+    assertEquals(parse(indented), fromCompact);
+    McfGraph.PropertyValues node = fromCompact.getNodesMap().get("obs_1");
+    assertNotNull(node);
+    assertEquals("331.5", node.getPvsMap().get("value").getTypedValues(0).getValue());
+  }
+
+  private static McfGraph parse(String jsonLd) throws Exception {
+    return JsonLdParser.parse(new ByteArrayInputStream(jsonLd.getBytes(StandardCharsets.UTF_8)));
   }
 }

@@ -289,7 +289,11 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
                                       jsonld_dir_name=args.jsonld_dir_name)
     importer = _create_importer_for_file(config, input_file, graph_writer,
                                          nodes)
-    importer.do_import()
+    try:
+      importer.do_import()
+    except BaseException:
+      graph_writer.close_after_error()
+      raise
     graph_writer.commit_and_close()
     if graph_writer.obs_hash_set:
       save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
