@@ -134,14 +134,9 @@ class Nodes:
     referenced provenance is defined.
 
     Raises:
-      ValueError: If config names no provenance.
+      ValueError: If no `inputFiles` entry matches `input_file`.
     """
-    prov_name = self.config.provenance_name(input_file)
-    if not prov_name:
-      raise ValueError(
-          f"A provenance is absolutely required for file '{input_file.path}'. "
-          f"Please specify the 'provenance' property in your config.json.")
-    return _clean_metadata_id(prov_name)
+    return _clean_metadata_id(self.config.provenance_name(input_file))
 
   def _ensure_root_group(self) -> StatVarGroup:
     if sc.ROOT_SVG_ID not in self.groups:

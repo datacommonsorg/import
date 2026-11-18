@@ -94,7 +94,7 @@ def test_rows_without_a_dcid_or_type_fail_before_anything_is_written():
                  header=["author_id", "type", "author_name"]),
       b.entities_config(mappings=b.entity_mappings("author_name")))
   b.assert_fails(
-      result, "ValueError",
+      result, "PreprocessorError",
       "Empty value(s) in entities CSV file 'case.csv': column 'author_id'"
       " (mapped to 'dcid:dcid') at row(s) [2]; column 'type' (mapped to"
       " 'dcid:typeOf') at row(s) [3, 4]. Rows are numbered from 1, the first"

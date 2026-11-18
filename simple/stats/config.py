@@ -19,13 +19,16 @@ from typing import Any
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 from pydantic import ValidationError
 from pydantic.alias_generators import to_camel
+from pydantic_core import PydanticCustomError
 from stats.data import ImportType
 from stats.data import invalid_configuration
 from stats.data import strip_namespace
+from stats.util import is_uri_or_namespace
 from util.file_match import match
 from util.file_match import validate_pattern
 from util.filesystem import File
@@ -70,7 +73,8 @@ class InputFileConfig(_ConfigModel):
   """One `inputFiles` entry: the files it applies to and their parameters."""
 
   pattern: str = ""
-  provenance: str = ""
+  # Validated even when missing, so that a missing one is reported.
+  provenance: str = Field(default="", validate_default=True)
   import_type: ImportType = ImportType.OBSERVATIONS
   column_mappings: dict[str, str] = {}
   ignore_columns: list[str] = []
@@ -89,6 +93,20 @@ class InputFileConfig(_ConfigModel):
   def _check_pattern(cls, pattern: str) -> str:
     validate_pattern(pattern)
     return pattern
+
+  @field_validator("provenance")
+  @classmethod
+  def _check_provenance(cls, provenance: str) -> str:
+    if not provenance.strip():
+      raise PydanticCustomError(
+          "provenance", "Must be set to the DCID or URI of the files'"
+          " Provenance, e.g. 'dcid:FrogCensusBureau'")
+    if not is_uri_or_namespace(provenance):
+      raise PydanticCustomError(
+          "provenance", "Must be a DCID or URI, e.g."
+          " 'dcid:FrogCensusBureau', 'custom:WHO' or a URL. Got: '{provenance}'",
+          {"provenance": provenance})
+    return provenance
 
   @field_validator("import_type", mode="before")
   @classmethod
@@ -268,7 +286,17 @@ class Config:
     return self._entry(input_file).ignore_columns
 
   def provenance_name(self, input_file: File) -> str:
-    return self._entry(input_file).provenance
+    """The provenance of the entry for `input_file`.
+
+    Raises:
+      ValueError: If no entry matches `input_file`. Runner only imports files
+        that one matches, and every entry has a provenance.
+    """
+    entry = self.for_file(input_file)
+    if entry is None:
+      raise ValueError(f"No 'inputFiles' entry matches file"
+                       f" '{input_file.path}', so it has no provenance.")
+    return entry.provenance
 
   def observation_properties(self,
                              input_file: File) -> dict[str, str | int | float]:
@@ -276,12 +304,7 @@ class Config:
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""
-    prov_id = self.provenance_name(input_file)
-    if prov_id:
-      return strip_namespace(prov_id)
-    raise ValueError(
-        f"Could not determine import name: missing 'provenance' configuration for file '{input_file.path}'."
-    )
+    return strip_namespace(self.provenance_name(input_file))
 
   def for_file(self, input_file: File) -> InputFileConfig | None:
     """ Looks up the config for a given file.

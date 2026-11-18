@@ -34,6 +34,7 @@ from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import ImportType
 from stats.data import invalid_configuration
+from stats.data import PreprocessorError
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import ValidationErrorType
@@ -312,8 +313,18 @@ def _parse_config_json(text: str, path: str) -> object:
     return json.loads(text)
   except json.JSONDecodeError as e:
     logging.error("Failed to parse JSON from %s: %s", path, e)
-    e.error_type = ValidationErrorType.INVALID_CONFIGURATION
-    raise
+    raise invalid_configuration(str(e)) from e
+
+
+def _failure_error(e: Exception) -> FileValidationError:
+  """The handshake error for `e`: GENERIC_ERROR unless a PreprocessorError."""
+  if isinstance(e, PreprocessorError):
+    return FileValidationError(file=e.file_path,
+                               error_type=e.error_type,
+                               error_message=str(e))
+  return FileValidationError(file="",
+                             error_type=ValidationErrorType.GENERIC_ERROR,
+                             error_message=str(e))
 
 
 def _is_archived(file: File) -> bool:
@@ -456,13 +467,7 @@ class Runner:
       logging.exception("Error updating stats")
 
       if self._failure_errors is None:
-        self._failure_errors = [
-            FileValidationError(file=getattr(e, "file_path", ""),
-                                error_type=getattr(
-                                    e, "error_type",
-                                    ValidationErrorType.GENERIC_ERROR),
-                                error_message=str(e))
-        ]
+        self._failure_errors = [_failure_error(e)]
 
       self._write_report(RunStatus.FAILURE)
 

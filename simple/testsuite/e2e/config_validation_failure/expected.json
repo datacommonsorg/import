@@ -1,7 +1,7 @@
 {
   "error": {
     "message": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
-    "type": "ValueError"
+    "type": "PreprocessorError"
   },
   "handshake": {
     "errors": [
