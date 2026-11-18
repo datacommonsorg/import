@@ -207,6 +207,16 @@ def test_ignored_column_does_not_need_a_mapping():
                    [b.entity("author1", author_name="Jane Doe")])
 
 
+def test_ignored_column_missing_from_the_csv_is_fine():
+  result = b.run_csv(
+      b.csv_file(["author1", "Author", "Jane Doe"],
+                 header=["author_id", "type", "author_name"]),
+      b.entities_config(mappings=b.entity_mappings("author_name"),
+                        ignoreColumns=["notes"]))
+  b.assert_records(result.of_type("Author"),
+                   [b.entity("author1", author_name="Jane Doe")])
+
+
 def test_csv_without_column_mappings_fails():
   result = b.run_csv(
       b.csv_file(["author1", "Author", "Jane Doe"],
