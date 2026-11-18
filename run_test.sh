@@ -79,6 +79,8 @@ function run_py_test {
   cd simple
   pip3 install -r requirements_test.txt -q
   pip3 install --no-deps -r requirements_nodeps.txt -q
+  # The workflow helpers' tests run with uv.
+  pip3 install uv -q
 
   # With PY_TEST_COVERAGE set, the Python tests also record coverage.
   local cov=() cov_append=()
@@ -100,7 +102,6 @@ function run_py_test {
   python3 -m pytest tools/ "${cov_append[@]}"
 
   cd "${ROOT_DIR}"
-  pip3 install uv -q
 
   echo -e "#### Running ingestion helper tests"
   run_workflow_helper_tests ingestion-helper
@@ -114,18 +115,20 @@ function run_py_test {
   deactivate
 }
 
-# Runs the tests of the workflow helper in pipeline/workflow/$1. With
-# PY_TEST_COVERAGE set, also records their coverage and writes its
-# coverage.xml, without failing on report errors. Run from the repo root.
+# Runs the tests of the workflow helper in pipeline/workflow/$1 and returns
+# their exit status. With PY_TEST_COVERAGE set, also records their coverage and
+# writes its coverage.xml, without failing on report errors. Run from the repo
+# root.
 function run_workflow_helper_tests {
-  local dir="pipeline/workflow/$1" cov=()
+  local dir="pipeline/workflow/$1" cov=() status=0
   if [[ -n "${PY_TEST_COVERAGE:-}" ]]; then
     rm -f "$dir/coverage.xml"
     cov=(--cov --cov-report=term)
   fi
   # The aggregation e2e suite is too slow for CI.
   (cd "$dir" \
-    && uv run --python 3.12 pytest --ignore=aggregation/e2e_tests/ "${cov[@]}")
+    && uv run --python 3.12 pytest --ignore=aggregation/e2e_tests/ "${cov[@]}") \
+    || status=$?
   if [[ -n "${PY_TEST_COVERAGE:-}" ]]; then
     # Like write_coverage_xml, but with the helper's Python 3.12, which can
     # parse its code.
@@ -134,6 +137,7 @@ function run_workflow_helper_tests {
       -o "$dir/coverage.xml" \
       || echo "#### Coverage report of $dir failed; ignoring (report only)"
   fi
+  return "$status"
 }
 
 # Prints the ref that coverage compares with: COVERAGE_BASE if set, else
