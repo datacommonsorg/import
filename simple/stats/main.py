@@ -31,13 +31,6 @@ flags.DEFINE_list(
     "Required. The imports to run: one or more comma-separated subdirectories"
     f" of input_dir, each with its own config.json, or {constants.ALL_IMPORTS}"
     " for every subdirectory that has one.")
-flags.DEFINE_string(
-    "mode",
-    "",
-    "Deprecated and ignored. The importer only runs the dcpbridge workflow "
-    "now. Any value is accepted so existing callers keep working, but it has "
-    "no effect. The flag will be removed once callers stop passing it.",
-)
 flags.DEFINE_integer(
     "max_workers",
     None,
