@@ -58,6 +58,7 @@ from util.filesystem import Dir
 from util.filesystem import File
 from util.filesystem import GcsObject
 from util.filesystem import is_gcs_path
+from util.filesystem import is_within
 from util.filesystem import join_path
 from util.filesystem import open_dir
 from util.filesystem import write_file
@@ -895,16 +896,11 @@ def _utc_now() -> str:
   return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _is_within(path: str, parent: str) -> bool:
-  """Whether normalized `path` is `parent` or under it."""
-  return path == parent or path.startswith(parent.rstrip("/") + "/")
-
-
 def _check_not_overlapping(input_dir: Dir, output_dir: Dir):
   input_path = input_dir.full_path()
   output_path = output_dir.full_path()
 
   # Check if paths are the same or if one is a parent of the other.
-  if _is_within(input_path, output_path) or _is_within(output_path, input_path):
+  if is_within(input_path, output_path) or is_within(output_path, input_path):
     raise ValueError(
         f"Input path ({input_path}) overlaps with output dir ({output_path})")

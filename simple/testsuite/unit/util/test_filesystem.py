@@ -156,6 +156,18 @@ def test_join_path(parts, expected):
   assert filesystem.join_path(*parts) == expected
 
 
+@pytest.mark.parametrize("path, parent, expected", [
+    ("gs://b/out", "gs://b/out", True),
+    ("gs://b/out/jsonld", "gs://b/out", True),
+    ("gs://b/out/jsonld", "gs://b/out/", True),
+    ("gs://b/outx", "gs://b/out", False),
+    ("gs://b", "gs://b/out", False),
+    ("/data/in/x", "/", True),
+])
+def test_is_within(path, parent, expected):
+  assert filesystem.is_within(path, parent) is expected
+
+
 # --- Listing dirs on GCS ------------------------------------------------------
 #
 # On GCS a "directory" is only a name prefix. Tools that write GCS trees add

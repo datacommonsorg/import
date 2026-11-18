@@ -104,6 +104,11 @@ def join_path(base: str, *parts: str) -> str:
   return scheme + sep + _normpath(posixpath.join(rest, *parts))
 
 
+def is_within(path: str, parent: str) -> bool:
+  """Whether `path` is `parent` or under it; both normalized (see join_path)."""
+  return path == parent or path.startswith(parent.rstrip("/") + "/")
+
+
 def open_dir(path: str, create: bool = False) -> "Dir":
   """Returns the dir at a local path or gs:// URL.
 
