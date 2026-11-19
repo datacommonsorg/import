@@ -45,6 +45,7 @@ from stats.importer import Importer
 from stats.jsonld_stream_writer import collision_file_key
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
+from stats import pp_rules  # PROTOTYPE
 from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
@@ -180,6 +181,7 @@ class ImportProcResult:
   provenances: dict[str, Provenance]
   processed_imports: set[str]
   counts: ImportCounts
+  rules_partial: dict | None = None  # PROTOTYPE
 
 
 @dataclass(frozen=True)
@@ -281,6 +283,7 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
                                       jsonld_dir_name=args.jsonld_dir_name)
     importer = _create_importer_for_file(config, input_file, graph_writer,
                                          nodes)
+    pp_rules.take_partial()  # PROTOTYPE: fresh accumulator per file
     try:
       importer.do_import()
     except BaseException:
@@ -297,6 +300,7 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
         provenances=dict(nodes.provenances),
         processed_imports=set(graph_writer._processed_imports),
         counts=importer.counts,
+        rules_partial=pp_rules.take_partial(),  # PROTOTYPE
     )
 
 
@@ -850,6 +854,8 @@ class Runner:
   def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` for `file`."""
     self.nodes.merge_metadata(res.provenances, res.sources)
+    if res.rules_partial is not None:  # PROTOTYPE
+      pp_rules.current().merge(res.rules_partial)
     self._merge_worker_writer_state(res)
     self._record_file_summary(file, res)
 
@@ -899,10 +905,13 @@ class Runner:
       counts = count_nodes_from_triples(triples)
       self.summary_generator.add_runner_node_counts(prov_dir, counts.nodes,
                                                     counts.nodes_by_type)
+      pp_rules.current().check_triples(triples, f"<nodes:{prov_dir}>")
       if prov_dir == "_global":
         self.graph_writer.write_triples(triples)
       else:
         self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
+
+    pp_rules.report(pp_rules.current())  # PROTOTYPE
 
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.nodes).validate()
