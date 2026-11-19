@@ -15,6 +15,7 @@
 import logging
 
 from kg_util.mcf_parser import mcf_to_triples
+from stats import pp_rules  # PROTOTYPE
 from stats.data import strip_namespace
 from stats.data import Triple
 from stats.graph_writer import GraphWriter
@@ -94,12 +95,14 @@ class McfImporter(Importer):
       if chunk and triple.subject_id != chunk[-1].subject_id and len(
           chunk) >= 10000:
         self.counts = self.counts.add(count_nodes_from_triples(chunk, seen))
+        pp_rules.current().check_triples(chunk, self.input_file.path)  # PROTOTYPE
         self.graph_writer.write_triples(chunk, self.input_file)
         chunk = []
       chunk.append(triple)
 
     if chunk:
       self.counts = self.counts.add(count_nodes_from_triples(chunk, seen))
+      pp_rules.current().check_triples(chunk, self.input_file.path)  # PROTOTYPE
       self.graph_writer.write_triples(chunk, self.input_file)
 
     # Register all collected metadata nodes at the end

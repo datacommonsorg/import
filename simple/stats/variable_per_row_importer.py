@@ -15,6 +15,7 @@
 import json
 
 import pandas as pd
+from stats import pp_rules  # PROTOTYPE
 from stats import constants
 from stats import schema_constants as sc
 from stats.data import FileValidationError
@@ -211,13 +212,18 @@ class VariablePerRowImporter(Importer):
           continue
         observations_df = (self._apply_column_mappings(chunk_df).pipe(
             _apply_property_defaults, obs_props).pipe(
-                self._serialize_custom_dimensions,
-                obs_props.properties).pipe(_format_numeric_values).pipe(
-                    filter_invalid_observation_values).pipe(
-                        self._ensure_entity_column).pipe(
-                            _strip_namespaces, provenance))
+                # PROTOTYPE: before custom dimensions are serialized and
+                # before empty values are dropped.
+                pp_rules.current().check_observations, self.input_file.path,
+                self.custom_dimensions).pipe(
+                    self._serialize_custom_dimensions,
+                    obs_props.properties).pipe(_format_numeric_values).pipe(
+                        filter_invalid_observation_values).pipe(
+                            self._ensure_entity_column).pipe(
+                                _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.counts = self.counts.add(self.count_observations(observations_df))
+        pp_rules.current().collect_obs_refs(observations_df)  # PROTOTYPE
         self.graph_writer.write_observations(observations_df, self.input_file)
 
   def _apply_column_mappings(self, df: pd.DataFrame) -> pd.DataFrame:
