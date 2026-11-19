@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import concurrent.futures
+import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
 from datetime import timezone
@@ -213,13 +214,15 @@ class FileImportsFailedError(Exception):
 
 
 def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
-                    merge: Callable[[File, ImportProcResult], None]) -> None:
+                    merge: Callable[[File, ImportProcResult], None],
+                    on_failure: Callable[[File, Exception], None]) -> None:
   """Waits for every file, then raises if any of them failed.
 
   Every file runs to completion even if others fail. Results are awaited in
   submission order, so passing each successful one to `merge`, with its file,
-  is deterministic; each is logged as "[i/N] Imported file". See
-  `_raise_for_failures` for what is raised.
+  is deterministic; each is logged as "[i/N] Imported file". Each failed file
+  is passed to `on_failure` with its error. See `_raise_for_failures` for what
+  is raised.
   """
   failures: list[_FileFailure] = []
   imported = 0
@@ -229,6 +232,7 @@ def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
     except Exception as e:
       failures.append(
           _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
+      on_failure(file, e)
       continue
     imported += 1
     logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
@@ -394,6 +398,9 @@ class Runner:
     self.trigger_workflow_info = None
     # The errors for the FAILURE handshake, set when the run fails.
     self._failure_errors: list[FileValidationError] | None = None
+    # Errors in input files, each with its file, for the report. The handshake
+    # reports several import failures as one error, without their files.
+    self._file_errors: list[tuple[File, FileValidationError]] = []
 
     self.summary_generator = SummaryGenerator(
         os.getenv("WORKFLOW_EXECUTION_ID"))
@@ -471,6 +478,7 @@ class Runner:
       if self._failure_errors is None:
         self._failure_errors = [_failure_error(e)]
 
+      self._record_report_errors()
       self._write_report(RunStatus.FAILURE)
 
       for store in self.all_stores:
@@ -761,8 +769,11 @@ class Runner:
     all_errors = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(
         _MAX_HEADER_VALIDATION_THREADS, len(csv_files))) as executor:
-      for errors in executor.map(self._validate_single_file_headers, csv_files):
+      for file, errors in zip(
+          csv_files, executor.map(self._validate_single_file_headers,
+                                  csv_files)):
         all_errors.extend(errors)
+        self._file_errors.extend((file, error) for error in errors)
 
     if all_errors:
       self._failure_errors = all_errors
@@ -802,7 +813,10 @@ class Runner:
                             ids_path)
             for file, ids_path in zip(files, obs_ids_paths)
         ]
-        _finish_imports(files, futures, merge=self._merge_worker_result)
+        _finish_imports(files,
+                        futures,
+                        merge=self._merge_worker_result,
+                        on_failure=self._record_file_failure)
       # Workers save ids only for files with observations.
       self._merge_cross_file_collisions([
           (collision_file_key(file.path), ids_path)
@@ -846,6 +860,25 @@ class Runner:
     logging.info("Importing %d files (%d MCF, %d CSV)...", len(files),
                  len(mcf_files), len(csv_files))
     self._run_multiprocess_imports(files)
+
+  def _record_file_failure(self, file: File, e: Exception) -> None:
+    """Keeps the error of an input file that failed to import, for the report."""
+    self._file_errors.append(
+        (file, dataclasses.replace(_failure_error(e), file=file.path)))
+
+  def _record_report_errors(self) -> None:
+    """Passes the errors that failed the run to the report.
+
+    Input file errors go under their file's provenance; any other error, e.g.
+    a config or metadata error, is reported for the whole run.
+    """
+    if not self._file_errors:
+      for error in self._failure_errors:
+        self.summary_generator.record_failure(error)
+      return
+    for file, error in self._file_errors:
+      folder, provenance_id = self._report_folder_and_provenance(file)
+      self.summary_generator.record_failure(error, folder, provenance_id)
 
   def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` for `file`."""

@@ -17,12 +17,23 @@
     "status": "FAILURE"
   },
   "ingestion_report": {
+    "errors": [],
     "folders": [
       {
         "folderName": "header_validation_failure",
         "provenances": [
           {
             "dateRange": null,
+            "errors": [
+              {
+                "errorMessage": "The CSV file 'data.csv' contains unmapped columns: ['notes']. Please map them in 'columnMappings' or list them in 'ignoreColumns' in config.json.",
+                "errorType": "UNMAPPED_COLUMNS",
+                "file": "data.csv",
+                "problemColumns": [
+                  "notes"
+                ]
+              }
+            ],
             "fileCount": 2,
             "id": "KitchenProvenance",
             "nodes": {

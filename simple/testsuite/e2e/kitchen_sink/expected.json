@@ -9,6 +9,7 @@
     ]
   },
   "ingestion_report": {
+    "errors": [],
     "folders": [
       {
         "folderName": "kitchen_sink",
@@ -18,6 +19,7 @@
               "max": "2021",
               "min": "2020"
             },
+            "errors": [],
             "fileCount": 5,
             "id": "KitchenProvenance",
             "nodes": {

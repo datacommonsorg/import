@@ -243,6 +243,7 @@ def test_single_import_name_runs_only_that_subdirectory():
               "max": "2020"
           },
           "nodes": _PROVENANCE_AND_SOURCE_NODES,
+          "errors": [],
       }],
   }]
 
