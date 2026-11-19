@@ -52,6 +52,7 @@ from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import FileSummary
 from stats.report.model.summary import NodeCounts
+from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
@@ -448,8 +449,10 @@ class Runner:
     # under the file's folder and provenance.
     self._file_errors: list[tuple[File, FileValidationError]] = []
 
+    # Both are set by the ingestion workflow; local runs use the defaults.
     self.summary_generator = SummaryGenerator(
-        os.getenv("WORKFLOW_EXECUTION_ID"))
+        os.getenv("WORKFLOW_EXECUTION_ID"),
+        RunMode(os.getenv("INGESTION_MODE") or RunMode.INGEST))
 
   def _open_input_dir(self, path: str) -> Dir:
     self.input_dir = open_dir(path)
