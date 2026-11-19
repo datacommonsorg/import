@@ -528,7 +528,7 @@ public class GraphReader implements Serializable {
       SpannerClient spannerClient,
       Counter nodeCounter) {
     return expandedNodes.apply(
-        "ExtractNodeMutations-" + importName,
+        "GenerateNodeMutations-" + importName,
         ParDo.of(
             new DoFn<ExpandedNode, Mutation>() {
               @ProcessElement
@@ -546,7 +546,7 @@ public class GraphReader implements Serializable {
       SpannerClient spannerClient,
       Counter edgeCounter) {
     return expandedNodes.apply(
-        "ExtractEdgeMutations-" + importName,
+        "GenerateEdgeMutations-" + importName,
         ParDo.of(
             new DoFn<ExpandedNode, Mutation>() {
               @ProcessElement

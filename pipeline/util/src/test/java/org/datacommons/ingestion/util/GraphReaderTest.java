@@ -426,7 +426,7 @@ public class GraphReaderTest {
     Mockito.verify(mockContext, Mockito.times(1)).output(Mockito.any(TimeSeries.class));
   }
 
-  private Map<Node, Set<Edge>> extract(McfGraph graph) {
+  private Map<Node, Set<Edge>> transformAndExtractExpandedNodesFromGraph(McfGraph graph) {
     return GraphReader.extractExpandedNodesFromGraph(graph, PROVENANCE, noTypeCounter).stream()
         .collect(toMap(ExpandedNode::getNode, n -> ImmutableSet.copyOf(n.getEdges())));
   }
@@ -455,7 +455,7 @@ public class GraphReaderTest {
                     .build())
             .build();
 
-    assertEquals(Map.of(), extract(graph));
+    assertEquals(Map.of(), transformAndExtractExpandedNodesFromGraph(graph));
   }
 
   @Test
@@ -478,7 +478,7 @@ public class GraphReaderTest {
                 edge("city1", "name", leaf("Springfield").getSubjectId())),
             leaf("Springfield"),
             Set.of()),
-        extract(graph));
+        transformAndExtractExpandedNodesFromGraph(graph));
   }
 
   @Test
@@ -502,7 +502,7 @@ public class GraphReaderTest {
                 edge("place1", "geoJsonCoordinates", bytesLeaf(geoJson).getSubjectId())),
             bytesLeaf(geoJson),
             Set.of()),
-        extract(graph));
+        transformAndExtractExpandedNodesFromGraph(graph));
   }
 
   @Test
@@ -521,7 +521,7 @@ public class GraphReaderTest {
         Map.of(
             subjectNode("city1", "city1", "City"),
             Set.of(edge("city1", "typeOf", "City"), edge("city1", "containedInPlace", "geoId/06"))),
-        extract(graph));
+        transformAndExtractExpandedNodesFromGraph(graph));
   }
 
   @Test
@@ -538,7 +538,7 @@ public class GraphReaderTest {
 
     assertEquals(
         Map.of(subjectNode("dcid0", "dcid0", "Class"), Set.of(edge("dcid0", "typeOf", "Class"))),
-        extract(graph));
+        transformAndExtractExpandedNodesFromGraph(graph));
   }
 
   @Test
@@ -546,7 +546,9 @@ public class GraphReaderTest {
     McfGraph graph =
         McfGraph.newBuilder().putNodes("dcid2", PropertyValues.newBuilder().build()).build();
 
-    assertEquals(Map.of(subjectNode("dcid2", "dcid2", "Thing"), Set.of()), extract(graph));
+    assertEquals(
+        Map.of(subjectNode("dcid2", "dcid2", "Thing"), Set.of()),
+        transformAndExtractExpandedNodesFromGraph(graph));
     Mockito.verify(noTypeCounter, Mockito.times(1)).inc();
   }
 
@@ -561,7 +563,7 @@ public class GraphReaderTest {
 
     assertEquals(
         Map.of(subjectNode("node1", "node1", "Class"), Set.of(edge("node1", "typeOf", "Class"))),
-        extract(graph));
+        transformAndExtractExpandedNodesFromGraph(graph));
   }
 
   @Test
@@ -586,7 +588,7 @@ public class GraphReaderTest {
                 edge("dcid0", "name", leaf("Node Zero").getSubjectId())),
             leaf("Node Zero"),
             Set.of()),
-        extract(graph));
+        transformAndExtractExpandedNodesFromGraph(graph));
   }
 
   @Test
