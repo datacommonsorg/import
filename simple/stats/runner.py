@@ -48,6 +48,7 @@ from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import FileSummary
+from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
 from stats.validation import MetadataValidator
@@ -393,8 +394,10 @@ class Runner:
     # The errors for the FAILURE handshake, set when the run fails.
     self._failure_errors: list[FileValidationError] | None = None
 
+    # Both are set by the ingestion workflow; local runs use the defaults.
     self.summary_generator = SummaryGenerator(
-        os.getenv("WORKFLOW_EXECUTION_ID"))
+        os.getenv("WORKFLOW_EXECUTION_ID"),
+        RunMode(os.getenv("INGESTION_MODE") or RunMode.INGEST))
 
   def _open_input_store(self, path: str) -> Store:
     """Opens the input store, to be closed with the others when the run ends."""
