@@ -219,7 +219,7 @@ def count_nodes_from_triples(
     if t.predicate != _TYPE_OF:
       continue
     # "dcid:X" and "X" name the same node.
-    node_id = t.subject_id.removeprefix("dcid:")
+    node_id = strip_namespace(t.subject_id)
     node_type = strip_namespace(t.object_id or t.object_value)
     if (node_id, node_type) in seen:
       continue
