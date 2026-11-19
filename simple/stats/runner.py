@@ -40,6 +40,7 @@ from stats.data import Source
 from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
+from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.jsonld_stream_writer import collision_file_key
 from stats.jsonld_stream_writer import JsonLdStreamWriter
@@ -48,6 +49,7 @@ from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import FileSummary
+from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import RunStatus
 from stats.report.summary_generator import SummaryGenerator
 from stats.validation import MetadataValidator
@@ -862,7 +864,9 @@ class Runner:
                     folder=folder,
                     provenanceId=provenance_id,
                     observations=res.counts.observations,
-                    dateRange=res.counts.date_range))
+                    dateRange=res.counts.date_range,
+                    nodes=NodeCounts(count=res.counts.nodes,
+                                     byType=dict(res.counts.nodes_by_type))))
 
   def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
     """Merges a worker's processed imports and collision stats into the writer."""
@@ -890,6 +894,11 @@ class Runner:
 
     # Generate triples from nodes grouped by provenance directory and write directly
     for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
+      # Every triple is counted. "_global" (the generated StatVarGroups) is no
+      # folder's provenance, so its counts don't appear in the report.
+      counts = count_nodes_from_triples(triples)
+      self.summary_generator.add_runner_node_counts(prov_dir, counts.nodes,
+                                                    counts.nodes_by_type)
       if prov_dir == "_global":
         self.graph_writer.write_triples(triples)
       else:

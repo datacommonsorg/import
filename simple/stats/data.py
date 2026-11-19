@@ -13,6 +13,7 @@
 # limitations under the License.
 """This file includes data model classes used across the simple importer."""
 
+from collections import Counter
 from dataclasses import dataclass
 from dataclasses import field
 from enum import StrEnum
@@ -227,19 +228,34 @@ class FileValidationError:
 
 @dataclass
 class ImportCounts:
-  """Observations and their dates in one imported file."""
+  """Observations, their dates and other nodes in one imported file.
+
+  `nodes` counts the (node, type) pairs written, except StatVarObservations,
+  once per file; `nodes_by_type` counts them per type, so `nodes` is its sum.
+  """
 
   observations: int = 0
   date_range: DateRange | None = None
+  nodes: int = 0
+  # Node type -> number of nodes of that type, e.g.
+  # {"StatisticalVariable": 2, "Property": 4}.
+  nodes_by_type: dict[str, int] = field(default_factory=Counter)
 
   def add(self, other: Self) -> Self:
-    """Returns the sum of both counts, with a date range covering both."""
+    """Returns both counts combined.
+
+    Observations and nodes are summed, node counts are summed per type, and
+    the date range covers both.
+    """
     if self.date_range is None or other.date_range is None:
       date_range = self.date_range or other.date_range
     else:
       date_range = self.date_range.widen(other.date_range)
+    nodes_by_type = Counter(self.nodes_by_type) + Counter(other.nodes_by_type)
     return ImportCounts(observations=self.observations + other.observations,
-                        date_range=date_range)
+                        date_range=date_range,
+                        nodes=self.nodes + other.nodes,
+                        nodes_by_type=nodes_by_type)
 
 
 class ImportType(StrEnum):

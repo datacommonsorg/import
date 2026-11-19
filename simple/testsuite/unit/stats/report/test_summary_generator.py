@@ -25,6 +25,7 @@ from stats.report.model.summary import FileSummary
 from stats.report.model.summary import Folder
 from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import Provenance
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
@@ -139,6 +140,23 @@ class TestSummaryGenerator(unittest.TestCase):
                               dateRange=DateRange(min="2005", max="2010"))
                ])
     ])
+
+  def test_shared_provenance_counts_in_each_folder(self):
+    """A shared provenance's Provenance and Source count in each folder."""
+    with tempfile.TemporaryDirectory() as tmp, \
+         create_store(tmp) as store:
+      generator = _generator("wf-123", store.as_dir())
+      generator.record_input_file("oecd", ["sharedProv"], "oecd/a.mcf")
+      generator.record_input_file("ilo", ["sharedProv"], "ilo/b.mcf")
+      generator.add_runner_node_counts("sharedProv", 2, {
+          "Provenance": 1,
+          "Source": 1
+      })
+      folders = generator.build_report(RunStatus.SUCCESS, _END).folders
+
+    expected = NodeCounts(count=2, byType={"Provenance": 1, "Source": 1})
+    self.assertEqual([(f.folderName, f.provenances[0].nodes) for f in folders],
+                     [("ilo", expected), ("oecd", expected)])
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""

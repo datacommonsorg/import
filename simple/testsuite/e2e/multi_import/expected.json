@@ -3,6 +3,10 @@
   "handshake": {
     "importList": [
       {
+        "graphPath": "<output>/jsonld/<run>/censusProvenance/**/*.jsonld",
+        "importName": "censusProvenance"
+      },
+      {
         "graphPath": "<output>/jsonld/<run>/healthProvenance/**/*.jsonld",
         "importName": "healthProvenance"
       },
@@ -24,6 +28,13 @@
             },
             "fileCount": 2,
             "id": "healthProvenance",
+            "nodes": {
+              "byType": {
+                "Provenance": 1,
+                "Source": 1
+              },
+              "count": 2
+            },
             "observations": 4,
             "sourceId": "healthSource"
           }
@@ -36,6 +47,13 @@
             },
             "count": 2
           },
+          "nodes": {
+            "byType": {
+              "Provenance": 1,
+              "Source": 1
+            },
+            "count": 2
+          },
           "observations": 4,
           "provenanceCount": 1
         }
@@ -45,11 +63,36 @@
         "provenances": [
           {
             "dateRange": {
+              "max": "2020",
+              "min": "2010"
+            },
+            "fileCount": 2,
+            "id": "censusProvenance",
+            "nodes": {
+              "byType": {
+                "Provenance": 1,
+                "Source": 1,
+                "StatisticalVariable": 1
+              },
+              "count": 3
+            },
+            "observations": 2,
+            "sourceId": "censusSource"
+          },
+          {
+            "dateRange": {
               "max": "2023",
               "min": "2010"
             },
             "fileCount": 2,
             "id": "populationProvenance",
+            "nodes": {
+              "byType": {
+                "Provenance": 1,
+                "Source": 1
+              },
+              "count": 2
+            },
             "observations": 5,
             "sourceId": "populationSource"
           }
@@ -57,13 +100,21 @@
         "summary": {
           "files": {
             "byType": {
-              "csv": 1,
-              "mcf": 1
+              "csv": 2,
+              "mcf": 2
             },
-            "count": 2
+            "count": 4
           },
-          "observations": 5,
-          "provenanceCount": 1
+          "nodes": {
+            "byType": {
+              "Provenance": 2,
+              "Source": 2,
+              "StatisticalVariable": 1
+            },
+            "count": 5
+          },
+          "observations": 7,
+          "provenanceCount": 2
         }
       }
     ],
@@ -80,8 +131,22 @@
   },
   "records": {
     "folders": {
-      "healthProvenance": {
+      "censusProvenance": {
         "nodes": {
+          "dcid:Count_Household": {
+            "@id": "dcid:Count_Household",
+            "@type": "dcid:StatisticalVariable",
+            "dcid:measuredProperty": {
+              "@id": "dcid:count"
+            },
+            "dcid:name": "Number of households",
+            "dcid:populationType": {
+              "@id": "dcid:Household"
+            },
+            "dcid:statType": {
+              "@id": "dcid:measuredValue"
+            }
+          },
           "dcid:c/g/Root": {
             "@id": "dcid:c/g/Root",
             "@type": "dcid:StatVarGroup",
@@ -90,11 +155,69 @@
               "@id": "dcid:dc/g/Root"
             }
           },
+          "dcid:censusProvenance": {
+            "@id": "dcid:censusProvenance",
+            "@type": "dcid:Provenance",
+            "dcid:name": "census provenance",
+            "dcid:source": {
+              "@id": "dcid:censusSource"
+            },
+            "dcid:url": "https://census.example.org/data"
+          },
+          "dcid:censusSource": {
+            "@id": "dcid:censusSource",
+            "@type": "dcid:Source",
+            "dcid:domain": "census.example.org",
+            "dcid:name": "census source",
+            "dcid:url": "https://census.example.org"
+          },
           "dcid:dc/g/Root": {
             "@id": "dcid:dc/g/Root",
             "@type": "dcid:StatVarGroup",
             "dcid:name": "Data Commons Variables"
+          }
+        },
+        "observations": {
+          "dcid:obs_20581c3dcd9658b14b8f9a611e72a470e61b4061ff37045cf4295c683c211226": {
+            "@id": "dcid:obs_20581c3dcd9658b14b8f9a611e72a470e61b4061ff37045cf4295c683c211226",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2010,
+            "dcid:provenance": {
+              "@id": "dcid:censusProvenance"
+            },
+            "dcid:value": 117000000,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Household",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
           },
+          "dcid:obs_adc0ee0d8a0c73b387dfc76bf01a8851b045b5643e47caa0543105ea6f97e98d": {
+            "@id": "dcid:obs_adc0ee0d8a0c73b387dfc76bf01a8851b045b5643e47caa0543105ea6f97e98d",
+            "@type": "dcid:StatVarObservation",
+            "dcid:observationAbout": {
+              "@id": "dcid:country/USA"
+            },
+            "dcid:observationDate": 2020,
+            "dcid:provenance": {
+              "@id": "dcid:censusProvenance"
+            },
+            "dcid:value": 128000000,
+            "dcid:variableMeasured": {
+              "@id": "dcid:Count_Household",
+              "dcid:observationProperties": [
+                "dcid:observationAbout"
+              ]
+            }
+          }
+        }
+      },
+      "healthProvenance": {
+        "nodes": {
           "dcid:healthProvenance": {
             "@id": "dcid:healthProvenance",
             "@type": "dcid:Provenance",

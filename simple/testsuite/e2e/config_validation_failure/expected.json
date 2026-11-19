@@ -24,6 +24,10 @@
             "byType": {},
             "count": 0
           },
+          "nodes": {
+            "byType": {},
+            "count": 0
+          },
           "observations": 0,
           "provenanceCount": 0
         }
@@ -33,6 +37,10 @@
         "provenances": [],
         "summary": {
           "files": {
+            "byType": {},
+            "count": 0
+          },
+          "nodes": {
             "byType": {},
             "count": 0
           },

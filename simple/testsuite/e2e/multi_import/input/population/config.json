@@ -1,7 +1,11 @@
 {
   "inputFiles": [
-    {"pattern": "*.mcf", "provenance": "dcid:populationProvenance"},
+    {"pattern": "provenance.mcf", "provenance": "dcid:populationProvenance"},
     {"pattern": "data.csv", "provenance": "dcid:populationProvenance",
+     "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable",
+                        "dcid:observationDate": "date", "dcid:value": "value"}},
+    {"pattern": "census.mcf", "provenance": "dcid:censusProvenance"},
+    {"pattern": "census.csv", "provenance": "dcid:censusProvenance",
      "columnMappings": {"dcid:observationAbout": "entity", "dcid:variableMeasured": "variable",
                         "dcid:observationDate": "date", "dcid:value": "value"}}
   ]
