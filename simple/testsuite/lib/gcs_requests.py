@@ -37,6 +37,7 @@ import requests as http
 # Runner methods whose requests are tagged with a phase. A request that
 # none of them sends (e.g. the test staging its input) isn't recorded.
 PHASES = {
+    "__init__": "init",
     "_load_config": "load_config",
     "_find_and_filter_input_files": "find_input_files",
     "_validate_all_headers": "validate_headers",

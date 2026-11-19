@@ -27,13 +27,6 @@ if [[ $OUTPUT_DIR == "" ]]; then
     exit 1
 fi
 
-if [[ $DATA_RUN_MODE != "" && $DATA_RUN_MODE != "dcpbridge" ]]; then
-    echo "DATA_RUN_MODE must be either empty or 'dcpbridge'"
-    exit 1
-fi
-DATA_RUN_MODE="dcpbridge"
-echo "DATA_RUN_MODE=$DATA_RUN_MODE"
-
 echo "INPUT_DIR=$INPUT_DIR"
 echo "OUTPUT_DIR=$OUTPUT_DIR"
 
@@ -53,7 +46,6 @@ cd $WORKSPACE_DIR/import/simple
 python3 -m stats.main \
     --input_dir=$INPUT_DIR \
     --output_dir=$DC_OUTPUT_DIR \
-    --mode=$DATA_RUN_MODE \
     "$@"
 
 echo "Data loading complete."
