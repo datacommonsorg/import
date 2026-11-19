@@ -230,8 +230,8 @@ class FileValidationError:
 class ImportCounts:
   """Observations, their dates and other nodes in one imported file.
 
-  `nodes` counts the typed nodes written, except StatVarObservations, once
-  per file; `nodes_by_type` counts them under each of their types.
+  `nodes` counts the (node, type) pairs written, except StatVarObservations,
+  once per file; `nodes_by_type` counts them per type, so `nodes` is its sum.
   """
 
   observations: int = 0

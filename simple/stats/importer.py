@@ -192,16 +192,24 @@ _STAT_VAR_OBSERVATION = "StatVarObservation"
 _OBSERVATION_DATE = "observationDate"
 
 
-def count_nodes_from_triples(triples: list[Triple]) -> ImportCounts:
-  """Counts the typed nodes in `triples`, one imported file's triples.
+def count_nodes_from_triples(
+    triples: list[Triple],
+    seen: set[tuple[str, str]] | None = None) -> ImportCounts:
+  """Counts the (node, type) pairs in `triples` that `seen` hasn't counted yet.
 
-  Each node counts once per file, under each of its types, however its triples
-  are split in the file. A node without a type is not counted. A node typed
-  StatVarObservation counts as an observation instead; observationDate values
-  give the date range.
+  A node counts once per type, so a node with two types counts twice; a node
+  without a type is not counted. A node typed StatVarObservation counts as an
+  observation instead; observationDate values give the date range.
+
+  Args:
+    triples: Triples of one file, or one chunk of them.
+    seen: (node ID, type) pairs already counted, updated in place. Pass the
+      same set for every chunk of a file so a pair counts once per file. If
+      None, a new empty set is used: `triples` is treated as a whole file and
+      nothing is carried over between calls.
   """
-  seen: set[tuple[str, str]] = set()  # (node ID, type) pairs already counted
-  typed_nodes: set[str] = set()
+  seen = set() if seen is None else seen
+  nodes = 0
   nodes_by_type: collections.Counter[str] = collections.Counter()
   observations = 0
   dates: list[str] = []
@@ -219,12 +227,12 @@ def count_nodes_from_triples(triples: list[Triple]) -> ImportCounts:
     if node_type == _STAT_VAR_OBSERVATION:
       observations += 1
     else:
-      typed_nodes.add(node_id)
+      nodes += 1
       nodes_by_type[node_type] += 1
   return ImportCounts(
       observations=observations,
       date_range=DateRange(min=min(dates), max=max(dates)) if dates else None,
-      nodes=len(typed_nodes),
+      nodes=nodes,
       nodes_by_type=nodes_by_type)
 
 

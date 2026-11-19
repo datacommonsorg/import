@@ -83,7 +83,11 @@ class DateRange(BaseModel):
 class NodeCounts(BaseModel):
   """Typed nodes written, other than StatVarObservations, and their types."""
 
-  count: int = Field(default=0, description="Number of nodes written")
+  count: int = Field(
+      default=0,
+      description=("Number of (node, type) pairs written, so a node with "
+                   "several types counts once per type; equals the sum of "
+                   "byType"))
   byType: dict[str, int] = Field(
       default_factory=dict,
       description=("Number of nodes per type. A node with several types "

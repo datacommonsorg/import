@@ -331,7 +331,7 @@ def _report_provenance(result: b.Result) -> dict:
 
 
 def test_report_counts_nodes_by_type():
-  """Each typed node counts once per file, under each of its types.
+  """Each typed node counts once per file per type.
 
   A node without a type is not counted. A StatVarObservation in MCF counts as
   an observation instead, with its date. The generated root StatVarGroups are
@@ -358,7 +358,7 @@ def test_report_counts_nodes_by_type():
 
   provenance = _report_provenance(result)
   assert provenance["nodes"] == {
-      "count": 5,
+      "count": 6,
       "byType": {
           "AdministrativeArea2": 1,
           "City": 1,
