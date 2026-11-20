@@ -17,12 +17,10 @@ import logging
 from kg_util.mcf_parser import mcf_to_triples
 from stats.data import strip_namespace
 from stats.data import Triple
-from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.util import is_uri_or_namespace
-from util.filesystem import File
 
 _ID = 'ID'
 _DCID = 'dcid'
@@ -45,13 +43,6 @@ class McfImporter(Importer):
 
   The MCF nodes are parsed and inserted as triples via the GraphWriter.
     """
-
-  def __init__(self, input_file: File, graph_writer: GraphWriter,
-               nodes: Nodes) -> None:
-    super().__init__()
-    self.input_file = input_file
-    self.graph_writer = graph_writer
-    self.nodes = nodes
 
   def do_import(self) -> None:
     # Pass 1: Resolve local ID mappings and identify metadata subject IDs

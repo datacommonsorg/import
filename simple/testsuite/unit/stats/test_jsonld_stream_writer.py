@@ -18,7 +18,6 @@ import os
 from stats.config import Config
 from stats.data import Triple
 from stats.jsonld_stream_writer import JsonLdStreamWriter
-from stats.nodes import Nodes
 from util.filesystem import open_dir
 
 
@@ -32,8 +31,7 @@ def test_shards_go_into_a_folder_that_another_worker_just_made(
       real_makedirs(name, exist_ok=True)
     return real_makedirs(name, mode, exist_ok)
 
-  writer = JsonLdStreamWriter(open_dir(str(tmp_path)), ["run"],
-                              Nodes(Config({})))
+  writer = JsonLdStreamWriter(open_dir(str(tmp_path)), ["run"], Config({}))
   monkeypatch.setattr(os, "makedirs", makedirs_after_another_worker)
   writer.write_triples([Triple("a", "typeOf", object_id="Thing")],
                        provenance_dir="prov")

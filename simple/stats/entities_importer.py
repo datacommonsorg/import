@@ -83,11 +83,7 @@ class EntitiesImporter(Importer):
 
   def __init__(self, input_file: File, graph_writer: GraphWriter,
                nodes: Nodes) -> None:
-    super().__init__()
-    self.input_file = input_file
-    self.graph_writer = graph_writer
-    self.nodes = nodes
-    self.config = nodes.config
+    super().__init__(input_file, graph_writer, nodes)
     self.ignore_columns = self.config.ignore_columns(self.input_file)
     self.provenance_id = ""
     # Map from CSV column name to the predicate its values are written under.
@@ -98,7 +94,6 @@ class EntitiesImporter(Importer):
   def do_import(self) -> None:
     self.provenance_id = self.nodes.provenance_id(self.input_file)
     self._read_csv()
-    self._drop_ignored_columns()
     self._check_required_values()
     self._write_row_entity_triples()
 
@@ -131,10 +126,6 @@ class EntitiesImporter(Importer):
     # Convert to best possible dtypes (i.e. keep ints as ints even when some values are NaN)
     self.df = self.df.convert_dtypes()
 
-  def _drop_ignored_columns(self):
-    if self.ignore_columns:
-      self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
-
   def _check_required_values(self) -> None:
     """Raises ValueError if a row has no DCID or type, before any is written."""
     column_by_property = {
@@ -156,7 +147,10 @@ class EntitiesImporter(Importer):
         file_path=self.input_file.path)
 
   def _mapped_columns(self) -> pd.DataFrame:
-    """Returns the mapped columns, renamed to their predicates."""
+    """Returns the mapped columns, renamed to their predicates.
+
+    Ignored columns, which are never mapped, are left out.
+    """
     mapped = [col for col in self.df.columns if col in self.reverse_mappings]
     return self.df[mapped].rename(columns=self.reverse_mappings)
 

@@ -16,30 +16,15 @@ import logging
 import os
 import sys
 
-# Get the log level from the environment variable, defaulting to INFO if not set
-log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=log_level)
-
 
 def initialize_logger():
+  """Logs to stdout, replacing any existing handlers.
+
+  The level is $LOG_LEVEL (INFO by default), and each message is prefixed with
+  its time, level, file and line.
   """
-    Initialize the root logger with a standard configuration.
-
-    The logger is configured to:
-    - Log to stdout
-    - Use log_level as the logging level
-    - Format messages with timestamp, level, filename, line number and message
-    - Remove any existing handlers first
-
-    """
-  # Remove handlers from root logger
-  for handler in logging.root.handlers:
-    logging.root.removeHandler(handler)
-
-  logger = logging.getLogger()
-  logger.setLevel(log_level)
-  handler = logging.StreamHandler(sys.stdout)
-  formatter = logging.Formatter(
-      "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s")
-  handler.setFormatter(formatter)
-  logger.addHandler(handler)
+  logging.basicConfig(
+      level=os.environ.get("LOG_LEVEL", "INFO").upper(),
+      format="[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s",
+      stream=sys.stdout,
+      force=True)

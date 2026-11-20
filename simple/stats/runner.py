@@ -40,7 +40,6 @@ from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
-from stats.jsonld_stream_writer import collision_file_key
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
@@ -269,7 +268,7 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
   nodes = Nodes(config=config)
   graph_writer = JsonLdStreamWriter(open_dir(args.output_dir_path),
                                     args.import_names,
-                                    nodes,
+                                    config,
                                     jsonld_dir_name=args.jsonld_dir_name)
   importer = _create_importer_for_file(config, input_file, graph_writer, nodes)
   try:
@@ -286,27 +285,22 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
       file_sample_collisions=dict(graph_writer.file_sample_collisions),
       sources=dict(nodes.sources),
       provenances=dict(nodes.provenances),
-      processed_imports=set(graph_writer._processed_imports),
+      processed_imports=graph_writer.processed_imports(),
       counts=importer.counts,
   )
 
 
 def _read_config_file(file: File) -> ImportConfig:
-  """Reads and validates a `config.json` file."""
-  config_data = _parse_config_json(file.read(), file.full_path())
+  """Reads and validates a `config.json` file.
+
+  Invalid JSON (e.g. an empty file) and invalid config are reported as
+  INVALID_CONFIGURATION, prefixed with the file's path.
+  """
+  text = file.read()
   try:
-    return parse_config(config_data, file.full_path())
-  except ValueError as e:
+    return parse_config(json.loads(text), file.full_path())
+  except ValueError as e:  # Including json.JSONDecodeError.
     raise invalid_configuration(f"{file.full_path()}: {e}") from e
-
-
-def _parse_config_json(text: str, path: str) -> object:
-  """Parses config.json text; a JSON error is reported as INVALID_CONFIGURATION."""
-  try:
-    return json.loads(text)
-  except json.JSONDecodeError as e:
-    logging.error("Failed to parse JSON from %s: %s", path, e)
-    raise invalid_configuration(str(e)) from e
 
 
 def _failure_error(e: BaseException,
@@ -379,7 +373,6 @@ class Runner:
     self._input_dir_files: dict[str, list[File]] = {}
     # Set while importing.
     self.graph_writer = None
-    self.trigger_workflow_info = None
     # The errors for the FAILURE handshake, set when the run fails.
     self._failure_errors: list[FileValidationError] | None = None
     # Errors in input files, each with its file, so the report can put them
@@ -420,7 +413,9 @@ class Runner:
     else:
       import_dir = join_path(self.input_dir_path, imports[0])
       logging.info("Using import specific directory: %s", import_dir)
-      self._read_config_in_dir(self._open_input_dir(import_dir))
+      config_file = self._open_input_dir(import_dir).open_file(
+          constants.CONFIG_JSON_FILE_NAME)
+      self.config = Config(_read_config_file(config_file))
 
     # The input dir is searched recursively, so it must not hold the output.
     _check_not_overlapping(self.input_dir, self.output_dir)
@@ -431,12 +426,9 @@ class Runner:
           is_gcs_path(d.store_path())
           for d in (self.input_dir, self.output_dir)))
 
-  def _start_summary(self, start_time: str) -> None:
-    self.summary_generator.set_execution_metadata(start_time=start_time,
-                                                  output_dir=self.output_dir)
-
   def run(self):
-    self._start_summary(_utc_now())
+    self.summary_generator.set_execution_metadata(start_time=_utc_now(),
+                                                  output_dir=self.output_dir)
     try:
       self._load_config()
 
@@ -466,6 +458,9 @@ class Runner:
       else:
         logging.error("Preprocessor execution failed!")
       raise
+    finally:
+      if self.graph_writer:  # Collisions are logged even if the run failed.
+        self.graph_writer.log_collision_summary()
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
@@ -521,10 +516,15 @@ class Runner:
 
     Returns the handshake's path, or None if none was written.
     """
-    if not self.trigger_workflow_info and self._failure_errors is None:
-      return None
-
     workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
+    if self._failure_errors is not None:
+      errors_dict = [err.to_dict() for err in self._failure_errors]
+      handshake_payload = {"status": "FAILURE", "errors": errors_dict}
+    elif workflow_id and is_gcs_path(self.graph_writer.jsonld_dir.full_path()):
+      handshake_payload = {"importList": json.dumps(self._import_list())}
+    else:
+      return None  # A successful run outside the workflow, or to local disk.
+
     temp_location = os.getenv("TEMP_LOCATION", "")
 
     if not workflow_id:
@@ -537,14 +537,6 @@ class Runner:
           temp_location)
       return None
 
-    if self._failure_errors is not None:
-      errors_dict = [err.to_dict() for err in self._failure_errors]
-      handshake_payload = {"status": "FAILURE", "errors": errors_dict}
-    else:
-      handshake_payload = {
-          "importList": json.dumps(self.trigger_workflow_info),
-      }
-
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
     logging.info(
         "WORKFLOW_EXECUTION_ID set. Writing preprocessor result to GCS handshake path: %s",
@@ -555,13 +547,13 @@ class Runner:
       logging.info("Successfully wrote preprocessor result to GCS.")
     return output_json_path
 
-  def _read_config_in_dir(self, input_dir: Dir) -> None:
-    """Reads and validates the `config.json` at the root of `input_dir`."""
-    file = input_dir.open_file(constants.CONFIG_JSON_FILE_NAME)
-    raw_config = file.read()
-    config_data = (_parse_config_json(raw_config, file.full_path())
-                   if raw_config else {})
-    self.config = Config(parse_config(config_data, file.full_path()))
+  def _import_list(self) -> list[dict[str, str]]:
+    """The imports and their JSON-LD shards, for the ingestion workflow."""
+    jsonld_path = self.graph_writer.jsonld_dir.full_path().rstrip("/")
+    return [{
+        "importName": name,
+        "graphPath": f"{jsonld_path}/{name.replace('/', '_')}/**/*.jsonld"
+    } for name in self.graph_writer.import_folders()]
 
   def _merge_configs(self, configs: list):
     """Merges multiple config.json files into a single configuration.
@@ -690,9 +682,6 @@ class Runner:
       if not self._is_active_import_file(file):
         continue
       if not self._matches_config_pattern(file):
-        logging.info(
-            "Ignoring file '%s' as it does not match any pattern in config.json",
-            file.path)
         continue
       if match(file, "*.csv"):
         csv_files.append(file)
@@ -708,7 +697,8 @@ class Runner:
                                     file: File) -> list[FileValidationError]:
     """Validates headers for a single CSV file and returns any errors found."""
     try:
-      return self._create_importer(file).validate_headers()
+      return _create_importer_for_file(self.config, file, self.graph_writer,
+                                       self.nodes).validate_headers()
     except Exception as e:
       return [
           FileValidationError(
@@ -804,7 +794,7 @@ class Runner:
         _raise_for_failures(failures)
       # Workers save ids only for files with observations.
       self._merge_cross_file_collisions([
-          (collision_file_key(file.path), ids_path)
+          (file.path, ids_path)
           for file, ids_path in zip(files, obs_ids_paths)
           if os.path.exists(ids_path)
       ])
@@ -830,10 +820,8 @@ class Runner:
     # Before header validation, so failed runs still report their files.
     self._record_input_files(csv_files + mcf_files)
 
-    logging.info("Found %d CSV files to import", len(csv_files))
-    logging.info("Found %d MCF files to import", len(mcf_files))
-    logging.info("Matched files to process: %s",
-                 [f.full_path() for f in csv_files + mcf_files])
+    logging.info("Found %d CSV and %d MCF files to import", len(csv_files),
+                 len(mcf_files))
 
     # Validate all CSV headers upfront
     self._validate_all_headers(csv_files)
@@ -842,8 +830,6 @@ class Runner:
     files = mcf_files + csv_files
     if not files:
       return
-    logging.info("Importing %d files (%d MCF, %d CSV)...", len(files),
-                 len(mcf_files), len(csv_files))
     self._run_multiprocess_imports(files)
 
   def _record_report_errors(self) -> None:
@@ -863,7 +849,9 @@ class Runner:
   def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` for `file`."""
     self.nodes.merge_metadata(res.provenances, res.sources)
-    self._merge_worker_writer_state(res)
+    self.graph_writer.merge_worker(res.processed_imports,
+                                   res.file_collision_counts,
+                                   res.file_sample_collisions)
     self._record_file_summary(file, res)
 
   def _record_file_summary(self, file: File, res: ImportProcResult) -> None:
@@ -881,58 +869,24 @@ class Runner:
                     nodes=NodeCounts(count=res.counts.nodes,
                                      byType=dict(res.counts.nodes_by_type))))
 
-  def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
-    """Merges a worker's processed imports and collision stats into the writer."""
-    self.graph_writer._processed_imports.update(res.processed_imports)
-    self.graph_writer.merge_collisions(res.file_collision_counts,
-                                       res.file_sample_collisions)
-
-  def _create_importer(self, input_file: File) -> Importer:
-    return _create_importer_for_file(
-        self.config,
-        input_file,
-        self.graph_writer,
-        self.nodes,
-    )
-
   def _run_imports_and_export_jsonld(self):
-    logging.info(
-        "Initializing JsonLdStreamWriter to stream JSON-LD directly to GCS/Disk"
-    )
     self.graph_writer = JsonLdStreamWriter(self.output_dir, self.import_names,
-                                           self.nodes)
+                                           self.config)
 
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
 
     # Generate triples from nodes grouped by provenance directory and write directly
     for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
-      # Every triple is counted. "_global" (the generated StatVarGroups) is no
-      # folder's provenance, so its counts don't appear in the report.
+      # Every triple is counted. "" (no import: the generated StatVarGroups) is
+      # no folder's provenance, so its counts don't appear in the report.
       counts = count_nodes_from_triples(triples)
       self.summary_generator.add_runner_node_counts(prov_dir, counts.nodes,
                                                     counts.nodes_by_type)
-      if prov_dir == "_global":
-        self.graph_writer.write_triples(triples)
-      else:
-        self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
+      self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.nodes).validate()
-
-    # Populate trigger workflow info if running under ingestion workflow and output is GCS
-    output_path = self.graph_writer.jsonld_dir.full_path()
-    if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      import_list = []
-      for imp in self.graph_writer.import_folders():
-        sanitized_imp = imp.replace("/", "_")
-        gcs_pattern = f"{output_path.rstrip('/')}/{sanitized_imp}/**/*.jsonld"
-        import_list.append({"importName": imp, "graphPath": gcs_pattern})
-      self.trigger_workflow_info = import_list
-    else:
-      logging.info(
-          "Not running under ingestion workflow or output is local. Skipping handshake info."
-      )
 
 
 def _utc_now() -> str:

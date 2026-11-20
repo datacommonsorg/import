@@ -53,9 +53,9 @@ def save_obs_ids(obs_ids: Collection[int], path: str) -> None:
 class CrossFileCollisions:
   """Collisions between files, each counted for the later of the two files.
 
-  `file_counts` and `file_samples` are keyed like the writer's per-file
-  collision stats. A sample names the 64-bit id prefix and an earlier file
-  that produced the same id.
+  `file_counts` and `file_samples` are keyed by input file path, like the
+  writer's per-file collision stats. A sample names the 64-bit id prefix and
+  an earlier file that produced the same id.
   """
   file_counts: dict[str, int] = field(default_factory=dict)
   file_samples: dict[str, list[str]] = field(default_factory=dict)
@@ -70,8 +70,8 @@ def find_cross_file_collisions(
   """Finds the ids that more than one file produced.
 
   Args:
-    files: (file key, path written by `save_obs_ids`) for every file that
-      produced observations, in import order.
+    files: (input file path, path written by `save_obs_ids`) for every file
+      that produced observations, in import order.
 
   An id that k files produce is k - 1 collisions, one for each file but the
   first. With the collisions that each worker counts within its file, the

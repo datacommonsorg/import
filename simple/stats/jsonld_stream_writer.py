@@ -26,11 +26,13 @@ from typing import Any, Callable, Mapping, Optional
 import uuid
 
 import pandas as pd
+from stats.config import Config
 from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
 from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
+from util.filesystem import Dir
 from util.filesystem import File
 from util.filesystem import gcs_client
 from util.filesystem import GCS_RETRY
@@ -124,15 +126,6 @@ def _parse_numeric(val):
 MAX_SAMPLES_PER_FILE = 3
 
 
-def collision_file_key(file_path: str) -> str:
-  """Returns the key under which collisions of `file_path` are summarized.
-
-  The path relative to the input directory, so that files with the same name in
-  different import folders are told apart.
-  """
-  return file_path or "unknown"
-
-
 def _prefix_dcid(key: str) -> str:
   """Ensures `key` has a `dcid:` prefix unless it is already a URI or prefixed."""
   if key.startswith(("dcid:", "http://", "https://")):
@@ -213,31 +206,28 @@ def _build_observation_node(row: tuple) -> dict:
   return obs_obj
 
 
-def _observation_shard(chunk,
-                       shard_index: int,
-                       ns_map: dict[str, str],
-                       track_hash_fn: Optional[Callable] = None,
-                       file_name: str = "") -> tuple[str, str]:
-  """Returns the name and JSON text of the observation shard of `chunk`."""
+def _observation_shard(chunk, shard_index: int, ns_map: dict[str, str],
+                       track_hash_fn: Callable,
+                       file_name: str) -> tuple[str, str]:
+  """Returns the name and JSON text of the observation shard of `chunk`.
+
+  `file_name` is the path of the input file, relative to the input directory.
+  """
   graph_list = []
   chunk_hashes = []
   for row in chunk:
     obs_obj = _build_observation_node(row)
-    if track_hash_fn:
-      entity, variable, date, _, provenance, *_ = row
-      obs_hash = obs_obj["@id"].removeprefix("dcid:obs_")
-      chunk_hashes.append((obs_hash, entity, variable, date, provenance))
+    entity, variable, date, _, provenance, *_ = row
+    obs_hash = obs_obj["@id"].removeprefix("dcid:obs_")
+    chunk_hashes.append((obs_hash, entity, variable, date, provenance))
     graph_list.append(obs_obj)
 
-  if track_hash_fn and chunk_hashes:
-    track_hash_fn(chunk_hashes, file_name=file_name)
+  if chunk_hashes:
+    track_hash_fn(chunk_hashes, file_name)
 
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
-  if file_name:
-    sanitized_stem = file_name.replace("/", "_").rsplit(".", 1)[0]
-    shard_name = f"observation-{sanitized_stem}-{shard_index:05d}.jsonld"
-  else:
-    shard_name = f"observation-{shard_index:05d}.jsonld"
+  sanitized_stem = file_name.replace("/", "_").rsplit(".", 1)[0]
+  shard_name = f"observation-{sanitized_stem}-{shard_index:05d}.jsonld"
   return shard_name, _to_json(compacted_jsonld)
 
 
@@ -254,9 +244,6 @@ def _append_unique_value(subject_dict: dict, key: str, val: object) -> None:
     subject_dict[key] = [existing, val]
 
 
-# TODO(gmechali): When parallelizing node shard exports (MCF and Entities CSV files),
-# include the sanitized file_name in the shard name (e.g., node-{sanitized_stem}-{shard_index:05d}.jsonld)
-# to prevent shard filename collisions across parallel workers, similar to observation shards.
 def _node_shard(chunk, shard_index: int, ns_map: dict[str,
                                                       str]) -> tuple[str, str]:
   """Returns the name and JSON text of the node shard of `chunk`."""
@@ -284,7 +271,7 @@ def _node_shard(chunk, shard_index: int, ns_map: dict[str,
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
-  # TODO(gmechali): When parallelizing node shard exports, include file_name in shard_name
+  # Every worker numbers its node shards from 0: the uuid tells them apart.
   unique_id = uuid.uuid4().hex[:12]
   shard_name = f"node-{shard_index:05d}-{unique_id}.jsonld"
   return shard_name, _to_json(compacted_jsonld)
@@ -297,12 +284,11 @@ class JsonLdStreamWriter(GraphWriter):
   """
 
   def __init__(self,
-               output_dir,
+               output_dir: Dir,
                import_names: list[str],
-               nodes,
+               config: Config,
                jsonld_dir_name: Optional[str] = None) -> None:
-    self.output_dir = output_dir
-    self.config = nodes.config
+    self.config = config
 
     # The run's name, from its imports (e.g. ["oecd", "ilo"] -> "oecd_ilo", or
     # ALL_IMPORTS): names its timestamped output folder below, and is the
@@ -330,65 +316,65 @@ class JsonLdStreamWriter(GraphWriter):
     self._pending_shards: list[concurrent.futures.Future] = []
     # Import folders made under a local jsonld_dir (GCS has no folders).
     self._local_folders: set[str] = set()
-    self._triples = defaultdict(list)
-    self._processed_imports = set()
-    self._node_streaming_started = set()
+    # Triples of no import (e.g. the root StatVarGroups), written to the folder
+    # of _global_triples_import at commit_and_close.
+    self._global_triples: list[Triple] = []
+    # The imports with shards from this writer or, on the coordinator, from
+    # the workers' writers merged into it (see merge_worker).
+    self._processed_imports: set[str] = set()
     self.obs_hash_set: set[int] = set()
-    self.obs_collision_count: int = 0
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
   def track_observation_hash(
       self,
       chunk_items: list[tuple[str, str, str, str, str]],
-      file_name: str = "",
+      file_name: str,
   ) -> None:
-    """Tracks observation hashes for a shard chunk and logs any collisions.
+    """Tracks observation hashes for a shard chunk and records any collisions.
 
     Only collisions with observations that this writer saw are found: a worker
     sees one file. See `stats.obs_id_collisions` for collisions between files.
     """
-    file_key = collision_file_key(file_name)
     for obs_hash, ent, var, dt, prov in chunk_items:
       hash_int = int(obs_hash[:16], 16)
       if hash_int not in self.obs_hash_set:
         self.obs_hash_set.add(hash_int)
         continue
-      self.obs_collision_count += 1
-      self.file_collision_counts[file_key] += 1
+      self.file_collision_counts[file_name] += 1
       sample_info = (
           f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
       )
-      if len(self.file_sample_collisions[file_key]) < MAX_SAMPLES_PER_FILE:
-        self.file_sample_collisions[file_key].append(sample_info)
-        logging.warning(
-            "Observation @id collision in '%s'! Duplicate metadata key produces identical %s",
-            file_key, sample_info)
-      elif self.obs_collision_count % 1000 == 0:
-        logging.warning(
-            "Detected %d observation @id collisions so far across processed datasets.",
-            self.obs_collision_count)
+      if len(self.file_sample_collisions[file_name]) < MAX_SAMPLES_PER_FILE:
+        self.file_sample_collisions[file_name].append(sample_info)
+
+  def processed_imports(self) -> set[str]:
+    """Returns the imports with shards from this writer (see __init__)."""
+    return set(self._processed_imports)
+
+  def merge_worker(self, imports: set[str], file_counts: dict[str, int],
+                   file_samples: dict[str, list[str]]) -> None:
+    """Adds a worker's writer state: its processed imports and collisions."""
+    self._processed_imports.update(imports)
+    self.merge_collisions(file_counts, file_samples)
 
   def merge_collisions(self, file_counts: dict[str, int],
                        file_samples: dict[str, list[str]]) -> None:
     """Adds collisions found elsewhere to this writer's end-of-run summary.
 
     Args:
-      file_counts: collision count per file key (see `collision_file_key`).
-      file_samples: sample descriptions per file key.
+      file_counts: collision count per input file path.
+      file_samples: sample descriptions per input file path.
     """
     for f_name, count in file_counts.items():
-      self.obs_collision_count += count
       self.file_collision_counts[f_name] += count
       samples = self.file_sample_collisions[f_name]
       samples.extend(
           file_samples.get(f_name,
                            [])[:max(0, MAX_SAMPLES_PER_FILE - len(samples))])
 
-  def _write_observation_shards(self,
-                                df: pd.DataFrame,
-                                import_name: str,
-                                file_name: str = ""):
+  def _write_observation_shards(self, df: pd.DataFrame, import_name: str,
+                                file_name: str):
     dir_name = import_name.replace("/", "_")
     n = len(df)
     for i in range(0, n, _CHUNK_SIZE):
@@ -409,17 +395,10 @@ class JsonLdStreamWriter(GraphWriter):
     validate_numeric_values(observations_df, input_file.path)
 
     import_name = self.config.import_name(input_file)
-    file_name = input_file.path if input_file else ""
-    self._add_processed_import(import_name)
+    self._processed_imports.add(import_name)
     self._write_observation_shards(observations_df,
                                    import_name,
-                                   file_name=file_name)
-
-  def _add_processed_import(self, import_name: str):
-    self._processed_imports.add(import_name)
-    if import_name not in self._node_streaming_started:
-      logging.info("Streaming node/observation export for %s...", import_name)
-      self._node_streaming_started.add(import_name)
+                                   file_name=input_file.path)
 
   def _write_node_shards(self, triples: list[Triple], import_name: str):
     dir_name = import_name.replace("/", "_")
@@ -453,10 +432,10 @@ class JsonLdStreamWriter(GraphWriter):
       provenance_dir = self.config.import_name(input_file)
 
     if not provenance_dir:
-      self._triples["_global"].extend(triples)
+      self._global_triples.extend(triples)
       return
 
-    self._add_processed_import(provenance_dir)
+    self._processed_imports.add(provenance_dir)
     self._write_node_shards(triples, provenance_dir)
 
   def import_folders(self) -> list[str]:
@@ -479,23 +458,31 @@ class JsonLdStreamWriter(GraphWriter):
     return min(self._processed_imports)
 
   def commit_and_close(self):
-    global_triples = self._triples.pop("_global", [])
-    if global_triples:
+    if self._global_triples:
       target_import = self._global_triples_import()
-      self._add_processed_import(target_import)
-      self._write_node_shards(global_triples, target_import)
+      self._processed_imports.add(target_import)
+      self._write_node_shards(self._global_triples, target_import)
+      self._global_triples = []
 
     self._finish_shard_writes()
 
-    if self.obs_collision_count > 0:
-      summary_lines = [
-          f"Observation @ID Collision Summary: Total of {self.obs_collision_count} observation @id collisions detected across {len(self.file_collision_counts)} file(s):"
-      ]
-      for f_name, count in self.file_collision_counts.items():
-        summary_lines.append(f"  File '{f_name}': {count} collision(s)")
-        for sample in self.file_sample_collisions[f_name]:
-          summary_lines.append(f"    - {sample}")
-      logging.warning("\n".join(summary_lines))
+  def log_collision_summary(self) -> None:
+    """Logs the observation @id collisions of every file, if any.
+
+    The coordinator calls this once its writer holds the collisions of every
+    file (see `merge_collisions`).
+    """
+    total_collisions = sum(self.file_collision_counts.values())
+    if not total_collisions:
+      return
+    summary_lines = [
+        f"Observation @ID Collision Summary: Total of {total_collisions} observation @id collisions detected across {len(self.file_collision_counts)} file(s):"
+    ]
+    for f_name, count in self.file_collision_counts.items():
+      summary_lines.append(f"  File '{f_name}': {count} collision(s)")
+      for sample in self.file_sample_collisions[f_name]:
+        summary_lines.append(f"    - {sample}")
+    logging.warning("\n".join(summary_lines))
 
   def close_after_error(self) -> None:
     """Waits for the shards in flight, ignoring errors, after a failed import.
