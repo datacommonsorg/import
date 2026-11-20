@@ -359,7 +359,7 @@ def test_optional_observation_columns():
       b.obs(variable="Amount_Debt",
             value="12.5",
             unit=b.ref("USDollar"),
-            scalingFactor=100,
+            scalingFactor="100",
             measurementMethod=b.ref("CensusACS"),
             observationPeriod="P1Y")
   ])
@@ -371,7 +371,7 @@ OBSERVATION_PROPERTIES = [
          expect={"unit": b.ref("USDollar")}),
     Case("scalingFactor",
          given={"scalingFactor": "100"},
-         expect={"scalingFactor": 100}),
+         expect={"scalingFactor": "100"}),
     Case("measurementMethod",
          given={"measurementMethod": "CensusACS"},
          expect={"measurementMethod": b.ref("CensusACS")}),
@@ -395,6 +395,23 @@ def test_custom_observation_property_from_config_is_a_dimension():
       b.obs_config(b.OBS_MAPPINGS, observationProperties={"sex": "Female"}))
   b.assert_records(result.observations, [b.obs(sex="Female")])
   assert result.dimensions("Count_Person") == ["sex", "observationAbout"]
+
+
+def test_observation_period_and_scaling_factor_are_trimmed():
+  """Like values, they're written as given; a blank cell sets nothing."""
+  result = b.run_csv(
+      b.csv_file(b.obs_row("country/USA") + [" P1Y ", " 100 "],
+                 b.obs_row("country/FRA") + ["  ", "  "],
+                 header=b.OBS_HEADER + ["period", "scaling"]),
+      b.obs_config({
+          **b.OBS_MAPPINGS,
+          "dcid:observationPeriod": "period",
+          "dcid:scalingFactor": "scaling",
+      }))
+  b.assert_records(result.observations, [
+      b.obs("country/USA", observationPeriod="P1Y", scalingFactor="100"),
+      b.obs("country/FRA"),
+  ])
 
 
 def test_column_value_overrides_observation_property_from_config():

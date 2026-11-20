@@ -158,8 +158,8 @@ def test_prefixed_values_are_references_and_others_are_literals():
 
 
 VALUES = [
-    Case("integer", given="12", expect=12),
-    Case("decimal", given="3.5", expect=3.5),
+    Case("integer", given="12", expect="12"),
+    Case("decimal", given="3.5", expect="3.5"),
     Case("text", given="Jane Doe", expect="Jane Doe"),
 ]
 

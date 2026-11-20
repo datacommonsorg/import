@@ -29,19 +29,17 @@ from testsuite.lib.builders import known_bug
 # in JSON-LD. To pin a new rule, add a case.
 
 VALUES = [
-    # Numbers
-    Case("integer", given="42", expect=42),
-    Case("negative integer", given="-3", expect=-3),
-    Case("decimal", given="0.25", expect=0.25),
-    Case("decimal with trailing zero", given="2.0", expect=2.0),
-    Case("leading zeros are dropped", given="007", expect=7),
-    Case("exponent stays a string", given="1e5", expect="1e5"),
-    Case("inf stays a string", given="inf", expect="inf"),
-    Case("quoted number stays a string",
+    # Numbers are written as given, so that their significant figures are kept.
+    Case("integer", given="42", expect="42"),
+    Case("negative integer", given="-3", expect="-3"),
+    Case("decimal", given="0.25", expect="0.25"),
+    Case("trailing zeros are kept", given="2.0", expect="2.0"),
+    Case("leading zeros are kept", given="007", expect="007"),
+    Case("exponent is kept", given="1e5", expect="1e5"),
+    Case("inf is kept", given="inf", expect="inf"),
+    Case("quoted number keeps its leading zeros",
          given='"00123"',
-         expect="00123",
-         bug="quoted values that look numeric become numbers, so \"00123\""
-         " loses its leading zeros"),
+         expect="00123"),
     # Other literals
     Case("boolean is a string", given="true", expect="true"),
     Case("quoted string", given='"Thing One"', expect="Thing One"),
@@ -171,8 +169,8 @@ NODES = [
                      name="Paris",
                      containedInPlace=[b.ref("Earth"),
                                        b.ref("country/FRA")],
-                     latitude=48.8566,
-                     population=2102650)),
+                     latitude="48.8566",
+                     population="2102650")),
     # Observations can be written as MCF nodes too. The node states its own
     # provenance and carries the dimension values; which properties are
     # dimensions is declared on the variable (see "statistical variable with
@@ -187,8 +185,8 @@ NODES = [
          expect=dict(types="StatVarObservation",
                      observationAbout=b.ref("country/USA"),
                      variableMeasured=b.ref("Count_Person"),
-                     observationDate=2020,
-                     value=100,
+                     observationDate="2020",
+                     value="100",
                      provenance=b.ref(b.PROVENANCE))),
     Case("observation with all standard properties",
          given=dict(typeOf="dcs:StatVarObservation",
@@ -205,9 +203,9 @@ NODES = [
                      observationAbout=b.ref("geoId/06"),
                      variableMeasured=b.ref("Median_Income"),
                      observationDate="2021-06",
-                     value=5.5,
+                     value="5.5",
                      unit=b.ref("USDollar"),
-                     scalingFactor=100,
+                     scalingFactor="100",
                      measurementMethod=b.ref("CensusACS"),
                      observationPeriod="P1Y",
                      provenance=b.ref(b.PROVENANCE))),
@@ -223,8 +221,8 @@ NODES = [
                      observationAbout=b.ref("country/USA"),
                      destination=b.ref("country/FRA"),
                      variableMeasured=b.ref("Count_Trip"),
-                     observationDate=2020,
-                     value=7,
+                     observationDate="2020",
+                     value="7",
                      provenance=b.ref(b.PROVENANCE))),
     Case("custom property",
          given={

@@ -185,7 +185,7 @@ def test_every_mcf_triple_of_a_metadata_node_is_kept():
                name=["Source A", "Source B"],
                url=["https://a.example.org", "https://b.example.org"],
                domain="a.example.org",
-               established=1990),
+               established="1990"),
       b.record("OtherProvenance3", ["Dataset", "Provenance"],
                name="Other Provenance",
                source=b.ref("OtherSource3"),
