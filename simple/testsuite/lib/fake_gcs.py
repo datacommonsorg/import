@@ -16,8 +16,8 @@ An in-process fake GCS, so gs:// paths run the real GCS code paths.
 
 Uses the gcp-storage-emulator package (an HTTP implementation of the GCS JSON
 API) and points google-cloud-storage at it via STORAGE_EMULATOR_HOST. The
-preprocessor's fs_gcsfs stores, google.cloud.storage uploads and handshake
-writes therefore all go through the same client code as in production.
+preprocessor's GCS reads and writes therefore all go through the same client
+code as in production.
 
 One emulator serves the whole test session; each run gets its own prefix.
 """

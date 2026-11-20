@@ -2,15 +2,15 @@ import tempfile
 import unittest
 
 from util.file_match import match
-from util.filesystem import create_store
+from util.filesystem import open_dir
 
 
 class TestFileMatch(unittest.TestCase):
 
   def test_match_nested_dir(self):
 
-    store = create_store("temp://")
-    file = store.as_dir().open_file("path/to/foo.csv")
+    # Files are only paths: making them doesn't access GCS.
+    file = open_dir("gs://bucket").open_file("path/to/foo.csv")
 
     def yes(pattern: str) -> None:
       self.assertTrue(match(file, pattern))
@@ -22,8 +22,7 @@ class TestFileMatch(unittest.TestCase):
       with self.assertRaises(ValueError):
         match(file, pattern)
 
-    # File path: temp://path/to/foo.csv
-    # Absolute path: /<generated>/path/to/foo.csv
+    # File path: gs://bucket/path/to/foo.csv
 
     # No slashes: match file name
     yes("foo.csv")
@@ -36,11 +35,11 @@ class TestFileMatch(unittest.TestCase):
     no("*.mcf")
 
     # With protocol: match protocol and full path
-    yes("temp://path/to/**/*")
-    yes("temp://**/foo.csv")
-    yes("temp://**/*")
-    no("temp://foo.csv")
-    no("gs://**/*")
+    yes("gs://bucket/path/to/**/*")
+    yes("gs://**/foo.csv")
+    yes("gs://**/*")
+    no("gs://foo.csv")
+    no("temp://**/*")
 
     # Leading single slash: partial match not allowed, match relative to input dir
     no("/foo.csv")
@@ -64,21 +63,8 @@ class TestFileMatch(unittest.TestCase):
     no("/*/**/*/*/foo.csv")
     no("/**/*/*/*/foo.csv")
 
-    # Leading double slash - partial match not allowed, match absolute path
-    abs_root = store.as_dir().syspath()
-    self.assertTrue(abs_root.startswith("/"))
-    self.assertFalse(abs_root.startswith("//"))
-    self.assertTrue(abs_root.endswith("/"))
-    no("//path/to/foo.csv")
-    yes(f"/{abs_root}path/to/foo.csv")
-    no("//to/foo.csv"
-      )  # Leading slash means the match must be from the abs root
-    no("//*/foo.csv")  # Single wildcard is a single level of nesting
-    no("//*/*/*/foo.csv")  # Wrong depth with single wildcards
-    yes("//**/foo.csv")  # Double wildcard can be multiple levels of dirs
-
-    no("temp://*.csv")  # Single wildcard is a single level of nesting
-    no("gs://**.csv")  # Wrong protocol
+    no("gs://*.csv")  # Single wildcard is a single level of nesting
+    no("temp://**.csv")  # Wrong protocol
 
     yes("path/to/foo.csv")
     yes("to/foo.csv")  # Partial match allowed
@@ -91,16 +77,36 @@ class TestFileMatch(unittest.TestCase):
     yes("**/foo.csv")
 
     # Double wildcards don't make sense in the name portion of a pattern.
-    err("temp://**.csv")  # Use "temp://**/*.csv" instead
+    err("gs://**.csv")  # Use "gs://**/*.csv" instead
     err("**.csv")  # Use "*.csv" instead
     err("//**/to/**.csv")
+
+  def test_match_absolute_path(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      file = open_dir(temp_dir).open_file("path/to/foo.csv")
+
+      def yes(pattern: str) -> None:
+        self.assertTrue(match(file, pattern))
+
+      def no(pattern: str) -> None:
+        self.assertFalse(match(file, pattern))
+
+      # Leading double slash - partial match not allowed, match absolute path
+      self.assertTrue(temp_dir.startswith("/"))
+      self.assertFalse(temp_dir.startswith("//"))
+      no("//path/to/foo.csv")
+      yes(f"/{temp_dir}/path/to/foo.csv")
+      no("//to/foo.csv"
+        )  # Leading slash means the match must be from the abs root
+      no("//*/foo.csv")  # Single wildcard is a single level of nesting
+      no("//*/*/*/foo.csv")  # Wrong depth with single wildcards
+      yes("//**/foo.csv")  # Double wildcard can be multiple levels of dirs
 
   def test_os_abs_path(self):
     with tempfile.TemporaryDirectory() as temp_dir:
       self.assertTrue((str(temp_dir)).startswith("/"))
       self.assertFalse((str(temp_dir)).startswith("//"))
-      store = create_store(temp_dir)
-      file = store.as_dir().open_file("path/to/foo.csv")
+      file = open_dir(temp_dir).open_file("path/to/foo.csv")
 
       def yes(pattern: str) -> None:
         self.assertTrue(match(file, pattern))
@@ -116,8 +122,7 @@ class TestFileMatch(unittest.TestCase):
 
   def test_match_in_input_dir(self):
 
-    store = create_store("temp://")
-    file = store.as_dir().open_file("foo.csv")
+    file = open_dir("gs://bucket").open_file("foo.csv")
 
     def yes(pattern: str) -> None:
       self.assertTrue(match(file, pattern))
@@ -129,7 +134,7 @@ class TestFileMatch(unittest.TestCase):
       with self.assertRaises(ValueError):
         match(file, pattern)
 
-    # File path: temp://foo.csv
+    # File path: gs://bucket/foo.csv
 
     yes("foo.csv")
     yes("foo*.csv")  # Wildcard can be no characters
@@ -147,42 +152,42 @@ class TestFileMatch(unittest.TestCase):
     yes("/**/*")
 
     no("/to/foo.csv")  # Extra dir
-    yes("temp://**/foo.csv")
-    no("gs://**/foo.csv")
-    yes("temp://foo.csv")
-    yes("temp://*.csv")
+    yes("gs://**/foo.csv")
+    no("temp://**/foo.csv")
+    yes("gs://bucket/foo.csv")
+    yes("gs://bucket/*.csv")
 
     err("**.csv")
     err("/**.csv")
-    err("temp://**.csv")
+    err("gs://**.csv")
 
   def test_alternation_matching(self):
-    store = create_store("temp://")
+    root = open_dir("gs://bucket")
 
     # Test filename matching with standard brace expansion
-    f1 = store.as_dir().open_file("trade.csv")
+    f1 = root.open_file("trade.csv")
     self.assertTrue(match(f1, "{trade.csv,trade.mcf}"))
     self.assertTrue(match(f1, "{trade.csv,other.mcf}"))
     self.assertFalse(match(f1, "{other.csv,trade.mcf}"))
 
     # Verify that it does not suffer from anchor splitting
-    f1_extra = store.as_dir().open_file("trade.csv_extra")
+    f1_extra = root.open_file("trade.csv_extra")
     self.assertFalse(match(f1_extra, "{trade.csv,trade.mcf}"))
 
-    f1_prefix = store.as_dir().open_file("extra_trade.mcf")
+    f1_prefix = root.open_file("extra_trade.mcf")
     self.assertFalse(match(f1_prefix, "{trade.csv,trade.mcf}"))
 
     # Test directory matching with standard brace expansion
-    f2 = store.as_dir().open_file("dirA/trade.csv")
+    f2 = root.open_file("dirA/trade.csv")
     self.assertTrue(match(f2, "{dirA,dirB}/trade.csv"))
     self.assertTrue(match(f2, "{dirA,dirB}/*"))
 
-    f3 = store.as_dir().open_file("dirC/trade.csv")
+    f3 = root.open_file("dirC/trade.csv")
     self.assertFalse(match(f3, "{dirA,dirB}/trade.csv"))
 
     # Test mixed path-depth top-level brace expansion (e.g. root CSV or nested MCF)
-    f4 = store.as_dir().open_file("match_events.csv")
-    f5 = store.as_dir().open_file("test1/input/schema.mcf")
+    f4 = root.open_file("match_events.csv")
+    f5 = root.open_file("test1/input/schema.mcf")
     self.assertTrue(match(f4, "{match_events.csv,**/schema.mcf}"))
     self.assertTrue(match(f5, "{match_events.csv,**/schema.mcf}"))
     self.assertFalse(match(f1, "{match_events.csv,**/schema.mcf}"))
