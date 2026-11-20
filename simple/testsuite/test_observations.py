@@ -37,8 +37,8 @@ def test_basic_rows():
       b.csv_file(b.obs_row("country/USA", "Count_Person", "2020", "331000000"),
                  b.obs_row("country/FRA", "Median_Age_Person", "2020", "42.3")))
   b.assert_records(result.observations, [
-      b.obs("country/USA", "Count_Person", 2020, 331000000),
-      b.obs("country/FRA", "Median_Age_Person", 2020, 42.3),
+      b.obs("country/USA", "Count_Person", "2020", "331000000"),
+      b.obs("country/FRA", "Median_Age_Person", "2020", "42.3"),
   ])
 
 
@@ -52,22 +52,27 @@ def test_physical_column_names_are_mapped():
           "dcid:observationDate": "year",
           "dcid:value": "amount",
       }))
-  b.assert_records(result.observations, [b.obs(date=2021, value=332000000)])
+  b.assert_records(result.observations, [b.obs(date="2021", value="332000000")])
 
 
 # --- Cells --------------------------------------------------------------------
 
 DROPPED = None  # The row produces no observation.
 
+# Values are written as given, so that their significant figures are kept.
 VALUES = [
-    Case("integer", given="7", expect=7),
-    Case("negative decimal", given="-3.5", expect=-3.5),
-    Case("leading zeros are dropped", given="007", expect=7),
-    Case("decimal with trailing zero", given="2.0", expect=2.0),
-    Case("exponent is a number",
-         given="1e5",
-         expect=100000,
-         bug="1e5 is emitted as the JSON string \"1e5\""),
+    Case("integer", given="7", expect="7"),
+    Case("negative decimal", given="-3.5", expect="-3.5"),
+    Case("trailing zeros are kept", given="12.50", expect="12.50"),
+    Case("small decimal keeps every digit",
+         given="0.0000001230",
+         expect="0.0000001230"),
+    Case("large integer keeps every digit",
+         given="100000000000000001",
+         expect="100000000000000001"),
+    Case("leading zeros are kept", given="007", expect="007"),
+    Case("exponent is kept", given="1e5", expect="1e5"),
+    Case("surrounding whitespace is trimmed", given=" 2.0 ", expect="2.0"),
     Case("empty cell drops the row", given="", expect=DROPPED),
     Case("NA drops the row", given="NA", expect=DROPPED),
     Case("null drops the row", given="null", expect=DROPPED),
@@ -145,7 +150,7 @@ def test_variable(given, expect):
 
 
 DATES = [
-    Case("year is a number", given="2020", expect=2020),
+    Case("year", given="2020", expect="2020"),
     Case("year-month is a string", given="2020-06", expect="2020-06"),
     Case("full date is a string", given="2020-06-15", expect="2020-06-15"),
 ]
@@ -188,7 +193,7 @@ def _ids(result) -> set[str]:
 def test_rows_with_the_same_key_keep_both_values_under_one_id():
   """The collision is only logged; both records are written."""
   result = b.run_csv(b.csv_file(b.obs_row(value="1"), b.obs_row(value="2")))
-  b.assert_records(result.observations, [b.obs(value=1), b.obs(value=2)])
+  b.assert_records(result.observations, [b.obs(value="1"), b.obs(value="2")])
   assert len(_ids(result)) == 1
 
 
@@ -352,7 +357,7 @@ def test_optional_observation_columns():
       }))
   b.assert_records(result.observations, [
       b.obs(variable="Amount_Debt",
-            value=12.5,
+            value="12.5",
             unit=b.ref("USDollar"),
             scalingFactor=100,
             measurementMethod=b.ref("CensusACS"),
@@ -403,8 +408,8 @@ def test_column_value_overrides_observation_property_from_config():
       },
                    observationProperties={"unit": "USDollar"}))
   b.assert_records(result.observations, [
-      b.obs(value=1, unit=b.ref("Euro")),
-      b.obs(value=2, unit=b.ref("USDollar")),
+      b.obs(value="1", unit=b.ref("Euro")),
+      b.obs(value="2", unit=b.ref("USDollar")),
   ])
 
 
@@ -419,7 +424,7 @@ def test_second_entity_dimension():
           "dcid:destination": "destination",
       }))
   b.assert_records(result.observations, [
-      b.obs(variable="Count_Trip", value=10, destination=b.ref("country/FRA"))
+      b.obs(variable="Count_Trip", value="10", destination=b.ref("country/FRA"))
   ])
   assert result.dimensions("Count_Trip") == ["observationAbout", "destination"]
 
@@ -479,7 +484,7 @@ def test_observation_properties_order():
           }))
   b.assert_records(result.observations, [
       b.obs(variable="Count_Trip",
-            value=10,
+            value="10",
             sex="Female",
             age="Years25To34",
             destination=b.ref("country/FRA"))
@@ -507,8 +512,8 @@ def test_each_observation_declares_only_its_own_dimensions():
       if r.get("@type") == "dcid:StatVarObservation"
   }
   assert declared == {
-      2020: ["dcid:observationAbout", "dcid:age"],
-      2021: ["dcid:observationAbout"],
+      "2020": ["dcid:observationAbout", "dcid:age"],
+      "2021": ["dcid:observationAbout"],
   }, declared
 
 

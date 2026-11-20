@@ -104,11 +104,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 1,
+            "dcid:value": "1",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [
@@ -122,11 +122,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 2,
+            "dcid:value": "2",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [

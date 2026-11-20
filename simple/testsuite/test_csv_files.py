@@ -37,9 +37,9 @@ _OBS_ROWS = [
     b.obs_row("country/DEU", value="3") + ["plain"],
 ]
 _OBS_EXPECTED = [
-    b.obs("country/USA", value=1),
-    b.obs("country/FRA", value=2),
-    b.obs("country/DEU", value=3),
+    b.obs("country/USA", value="1"),
+    b.obs("country/FRA", value="2"),
+    b.obs("country/DEU", value="3"),
 ]
 
 OBSERVATION_FORMATS = [

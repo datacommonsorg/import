@@ -114,6 +114,18 @@ def _ref(val) -> dict | None:
   return dict(ref) if ref is not None else None
 
 
+def _text(val) -> str | None:
+  """The cell `val` as written, without surrounding whitespace; None if empty.
+
+  Observation values and dates are written as text rather than parsed as
+  numbers, so that "12.50" keeps its significant figures and "2020" stays as
+  given.
+  """
+  if val is None or pd.isna(val):
+    return None
+  return str(val).strip() or None
+
+
 def _parse_numeric(val):
   if val is None or val == "" or pd.isna(val):
     return None
@@ -179,8 +191,8 @@ def _build_observation_node(row: tuple) -> dict:
       "@id": f"dcid:obs_{obs_hash}",
       "@type": "dcid:StatVarObservation",
       "dcid:variableMeasured": var_obj,
-      "dcid:observationDate": _parse_numeric(date),
-      "dcid:value": _parse_numeric(value),
+      "dcid:observationDate": _text(date),
+      "dcid:value": _text(value),
   }
   entity_ref = _ref(entity)
   if entity_ref:

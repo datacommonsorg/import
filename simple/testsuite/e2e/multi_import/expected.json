@@ -188,11 +188,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2010,
+            "dcid:observationDate": "2010",
             "dcid:provenance": {
               "@id": "dcid:censusProvenance"
             },
-            "dcid:value": 117000000,
+            "dcid:value": "117000000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Household",
               "dcid:observationProperties": [
@@ -206,11 +206,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:censusProvenance"
             },
-            "dcid:value": 128000000,
+            "dcid:value": "128000000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Household",
               "dcid:observationProperties": [
@@ -246,11 +246,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2018,
+            "dcid:observationDate": "2018",
             "dcid:provenance": {
               "@id": "dcid:healthProvenance"
             },
-            "dcid:value": 40.1,
+            "dcid:value": "40.1",
             "dcid:variableMeasured": {
               "@id": "dcid:Prevalence_Obesity",
               "dcid:observationProperties": [
@@ -264,11 +264,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:healthProvenance"
             },
-            "dcid:value": 41.9,
+            "dcid:value": "41.9",
             "dcid:variableMeasured": {
               "@id": "dcid:Prevalence_Obesity",
               "dcid:observationProperties": [
@@ -282,11 +282,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2019,
+            "dcid:observationDate": "2019",
             "dcid:provenance": {
               "@id": "dcid:healthProvenance"
             },
-            "dcid:value": 17.0,
+            "dcid:value": "17.0",
             "dcid:variableMeasured": {
               "@id": "dcid:Prevalence_Obesity",
               "dcid:observationProperties": [
@@ -304,7 +304,7 @@
             "dcid:provenance": {
               "@id": "dcid:healthProvenance"
             },
-            "dcid:value": 42.4,
+            "dcid:value": "42.4",
             "dcid:variableMeasured": {
               "@id": "dcid:Prevalence_Obesity",
               "dcid:observationProperties": [
@@ -340,11 +340,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2023,
+            "dcid:observationDate": "2023",
             "dcid:provenance": {
               "@id": "dcid:populationProvenance"
             },
-            "dcid:value": 68000000,
+            "dcid:value": "68000000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [
@@ -358,11 +358,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:populationProvenance"
             },
-            "dcid:value": 67000000,
+            "dcid:value": "67000000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [
@@ -376,11 +376,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:populationProvenance"
             },
-            "dcid:value": 331000000,
+            "dcid:value": "331000000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [
@@ -394,11 +394,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2015,
+            "dcid:observationDate": "2015",
             "dcid:provenance": {
               "@id": "dcid:populationProvenance"
             },
-            "dcid:value": 66500000,
+            "dcid:value": "66500000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [
@@ -412,11 +412,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2010,
+            "dcid:observationDate": "2010",
             "dcid:provenance": {
               "@id": "dcid:populationProvenance"
             },
-            "dcid:value": 309000000,
+            "dcid:value": "309000000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [
