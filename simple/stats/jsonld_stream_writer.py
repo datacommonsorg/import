@@ -25,11 +25,14 @@ import types
 from typing import Any, Callable, Mapping, Optional
 import uuid
 
+import numpy as np
 import pandas as pd
 from stats.config import Config
 from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
+from stats.obs_id_collisions import MAX_SAMPLES_PER_FILE
+from stats.obs_id_collisions import ObsIds
 from stats.util import is_entity_reference
 from stats.util import is_uri_or_namespace
 from util.filesystem import Dir
@@ -120,10 +123,6 @@ def _parse_numeric(val):
     return int(val)
   except ValueError:
     return str(val)
-
-
-# Collision samples kept per file for the end-of-run summary.
-MAX_SAMPLES_PER_FILE = 3
 
 
 def _prefix_dcid(key: str) -> str:
@@ -322,7 +321,7 @@ class JsonLdStreamWriter(GraphWriter):
     # The imports with shards from this writer or, on the coordinator, from
     # the workers' writers merged into it (see merge_worker).
     self._processed_imports: set[str] = set()
-    self.obs_hash_set: set[int] = set()
+    self.obs_ids = ObsIds()
     self.file_collision_counts: dict[str, int] = defaultdict(int)
     self.file_sample_collisions: dict[str, list[str]] = defaultdict(list)
 
@@ -336,11 +335,11 @@ class JsonLdStreamWriter(GraphWriter):
     Only collisions with observations that this writer saw are found: a worker
     sees one file. See `stats.obs_id_collisions` for collisions between files.
     """
-    for obs_hash, ent, var, dt, prov in chunk_items:
-      hash_int = int(obs_hash[:16], 16)
-      if hash_int not in self.obs_hash_set:
-        self.obs_hash_set.add(hash_int)
-        continue
+    ids = np.fromiter((int(item[0][:16], 16) for item in chunk_items),
+                      dtype=np.uint64,
+                      count=len(chunk_items))
+    for i in np.flatnonzero(self.obs_ids.add(ids)).tolist():
+      obs_hash, ent, var, dt, prov = chunk_items[i]
       self.file_collision_counts[file_name] += 1
       sample_info = (
           f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"

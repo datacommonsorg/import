@@ -277,8 +277,8 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
     graph_writer.close_after_error()
     raise
   graph_writer.commit_and_close()
-  if graph_writer.obs_hash_set:
-    save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
+  if len(graph_writer.obs_ids):
+    save_obs_ids(graph_writer.obs_ids.sorted(), obs_ids_path)
 
   return ImportProcResult(
       file_collision_counts=dict(graph_writer.file_collision_counts),
