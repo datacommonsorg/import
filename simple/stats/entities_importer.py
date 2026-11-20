@@ -20,7 +20,6 @@ from stats.data import PreprocessorError
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
-from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
 from stats.importer import count_nodes_from_triples
@@ -29,6 +28,7 @@ from stats.importer import mapping_errors
 from stats.importer import missing_column_mappings_error
 from stats.importer import read_csv_columns
 from stats.nodes import Nodes
+from stats.report.model.summary import ValidationErrorType
 from stats.util import has_namespace_prefix
 from util.filesystem import File
 

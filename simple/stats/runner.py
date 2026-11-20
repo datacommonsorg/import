@@ -37,7 +37,6 @@ from stats.data import invalid_configuration
 from stats.data import PreprocessorError
 from stats.data import Provenance
 from stats.data import Source
-from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
@@ -51,6 +50,7 @@ from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import FileSummary
 from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import RunStatus
+from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter

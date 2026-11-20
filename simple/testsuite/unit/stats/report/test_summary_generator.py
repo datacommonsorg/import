@@ -19,7 +19,6 @@ import unittest
 from unittest import mock
 
 from stats.data import FileValidationError
-from stats.data import ValidationErrorType
 from stats.report.model.summary import DateRange
 from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileCounts
@@ -32,6 +31,7 @@ from stats.report.model.summary import Provenance
 from stats.report.model.summary import ReportError
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
+from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
 from util.filesystem import Dir
 from util.filesystem import open_dir
