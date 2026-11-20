@@ -55,17 +55,18 @@ class Nodes:
       custom_triples: list[Triple] | None = None) -> Provenance:
     """Registers a Provenance, or fills in the missing fields of a known one.
 
-    `name`, `url` and `source_id` keep their first non-empty value; custom
-    triples are unioned.
+    `name` defaults to the id until a registration gives one; `name`, `url` and
+    `source_id` then keep their first value. Custom triples are unioned.
     """
     clean_id = _clean_metadata_id(id)
     clean_source_id = _clean_metadata_id(source_id) if source_id else ""
 
     prov = self.provenances.get(clean_id)
     if not prov:
-      prov = Provenance(id=clean_id, source_id="", name="")
+      prov = Provenance(id=clean_id, source_id="", name=clean_id)
       self.provenances[clean_id] = prov
-    prov.name = prov.name or name or clean_id
+    if name and prov.name == clean_id:
+      prov.name = name
     prov.url = prov.url or url
     prov.source_id = prov.source_id or clean_source_id
     _extend_unique(prov.custom_triples, _about(clean_id, custom_triples))
