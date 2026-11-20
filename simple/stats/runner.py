@@ -193,7 +193,7 @@ class _WorkerArgs:
 
 @dataclass
 class _FileFailure:
-  """A file whose import raised, with the traceback text.
+  """A file whose import or merge raised, with the traceback text.
 
   `traceback` includes the worker process's remote traceback.
   """
@@ -212,39 +212,36 @@ class FileImportsFailedError(Exception):
     super().__init__(f"{len(failures)} files failed to import:\n{details}")
 
 
-def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
-                    merge: Callable[[File, ImportProcResult], None]) -> None:
-  """Waits for every file, then raises if any of them failed.
+def _finish_imports(
+    files: list[File], futures: list[concurrent.futures.Future],
+    merge: Callable[[File, ImportProcResult], None]) -> list[_FileFailure]:
+  """Waits for every file, and returns those that failed.
 
   Every file runs to completion even if others fail. Results are awaited in
   submission order, so passing each successful one to `merge`, with its file,
-  is deterministic; each is logged as "[i/N] Imported file". See
-  `_raise_for_failures` for what is raised.
+  is deterministic; each merged one is logged as "[i/N] Imported file". A
+  file whose import or merge raises is a failure.
   """
   failures: list[_FileFailure] = []
   imported = 0
   for file, future in zip(files, futures, strict=True):
     try:
-      result = future.result()
+      merge(file, future.result())
+      imported += 1
+      logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
     except Exception as e:
       failures.append(
           _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
-      continue
-    imported += 1
-    logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
-    merge(file, result)
-  _raise_for_failures(failures)
+  return failures
 
 
 def _raise_for_failures(failures: list[_FileFailure]) -> None:
   """Logs each failure's traceback, then raises.
 
   A single failure is re-raised as is, so its type and message reach the
-  handshake and the caller unchanged. Several are raised together as one
-  `FileImportsFailedError` that names every failed file.
+  caller unchanged. Several are raised together as one `FileImportsFailedError`
+  that names every failed file.
   """
-  if not failures:
-    return
   for failure in failures:
     logging.error("Failed to import %s:\n%s", failure.file_path,
                   failure.traceback)
@@ -312,15 +309,19 @@ def _parse_config_json(text: str, path: str) -> object:
     raise invalid_configuration(str(e)) from e
 
 
-def _failure_error(e: Exception) -> FileValidationError:
-  """The handshake error for `e`: GENERIC_ERROR unless a PreprocessorError."""
+def _failure_error(e: BaseException,
+                   file_path: str = "") -> FileValidationError:
+  """The handshake error for `e`: GENERIC_ERROR unless a PreprocessorError.
+
+  `file_path` is the file whose import raised `e`, if known.
+  """
   if isinstance(e, PreprocessorError):
-    return FileValidationError(file=e.file_path,
+    return FileValidationError(file=e.file_path or file_path,
                                error_type=e.error_type,
                                error_message=str(e))
-  return FileValidationError(file="",
+  return FileValidationError(file=file_path,
                              error_type=ValidationErrorType.GENERIC_ERROR,
-                             error_message=str(e))
+                             error_message=str(e) or type(e).__name__)
 
 
 def _is_archived(file: File) -> bool:
@@ -445,7 +446,7 @@ class Runner:
       # Hand off processed import metadata to workflow or GCS
       self._handle_workflow_handoff()
 
-    except Exception as e:
+    except (Exception, KeyboardInterrupt) as e:  # A Ctrl-C fails the run too.
       logging.exception("Error updating stats")
 
       if self._failure_errors is None:
@@ -759,19 +760,37 @@ class Runner:
     logging.info("Importing %d files with %d worker processes", len(files),
                  num_workers)
     # Workers run on this machine, so they can save ids to a local directory.
-    with tempfile.TemporaryDirectory(prefix="obs-ids-") as obs_ids_dir:
+    # A failed run doesn't wait for the files in progress, which may still save
+    # ids while the directory is removed.
+    with tempfile.TemporaryDirectory(prefix="obs-ids-",
+                                     ignore_cleanup_errors=True) as obs_ids_dir:
       obs_ids_paths = [
           os.path.join(obs_ids_dir, f"{i:06d}.npy") for i in range(len(files))
       ]
-      with concurrent.futures.ProcessPoolExecutor(
-          max_workers=num_workers) as executor:
+      executor = concurrent.futures.ProcessPoolExecutor(max_workers=num_workers)
+      try:
         futures = [
             executor.submit(_run_single_import_proc, file.path,
                             file.gcs_object(), file.store_path(), worker_args,
                             ids_path)
             for file, ids_path in zip(files, obs_ids_paths)
         ]
-        _finish_imports(files, futures, merge=self._merge_worker_result)
+        failures = _finish_imports(files,
+                                   futures,
+                                   merge=self._merge_worker_result)
+      except BaseException:
+        # E.g. Ctrl-C: files not yet started are cancelled, and the run fails
+        # without waiting for the ones in progress. (Not a `with` block: its
+        # exit would wait for them, and reset cancel_futures.)
+        executor.shutdown(wait=False, cancel_futures=True)
+        raise
+      executor.shutdown()
+      if failures:
+        # The handshake has an error per failed file, with its path.
+        self._failure_errors = [
+            _failure_error(f.error, f.file_path) for f in failures
+        ]
+        _raise_for_failures(failures)
       # Workers save ids only for files with observations.
       self._merge_cross_file_collisions([
           (collision_file_key(file.path), ids_path)

@@ -362,6 +362,15 @@ def test_files_after_a_failed_one_still_run():
   assert _observed_places(result) == {"dcid:country/A", "dcid:country/C"}
 
 
+def test_a_failed_file_is_named_in_the_handshake():
+  result = b.run({"bad.mcf": "typeOf: dcs:Thing\nNode: dcid:T1\n"},
+                 b.obs_config(b.OBS_MAPPINGS))
+  assert result.error["type"] == "AssertionError"
+  errors = result.output["handshake"]["errors"]
+  assert [(e["file"], e["errorType"]) for e in errors] == [("bad.mcf",
+                                                            "GENERIC_ERROR")]
+
+
 def test_failed_mcf_and_csv_files_are_reported_together():
   result = b.run(
       {
@@ -374,6 +383,15 @@ def test_failed_mcf_and_csv_files_are_reported_together():
       "3 files failed to import:\n  bad1.mcf: AssertionError:")
   assert "\n  bad2.mcf: AssertionError:" in result.error["message"]
   assert f"\n  case_bad.csv: {_BAD_VALUE}" in result.error["message"]
+  # The handshake has one error per failed file.
+  errors = result.output["handshake"]["errors"]
+  assert [(e["file"], e["errorType"]) for e in errors] == [
+      ("bad1.mcf", "GENERIC_ERROR"),
+      ("bad2.mcf", "GENERIC_ERROR"),
+      ("case_bad.csv", "GENERIC_ERROR"),
+  ]
+  assert errors[0]["errorMessage"].startswith("Line 1: Prop-Values before")
+  assert errors[2]["errorMessage"].startswith("Invalid non-numeric value(s)")
 
 
 # --- Validation ---------------------------------------------------------------
