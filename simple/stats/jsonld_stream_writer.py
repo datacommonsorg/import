@@ -338,14 +338,17 @@ class JsonLdStreamWriter(GraphWriter):
     ids = np.fromiter((int(item[0][:16], 16) for item in chunk_items),
                       dtype=np.uint64,
                       count=len(chunk_items))
-    for i in np.flatnonzero(self.obs_ids.add(ids)).tolist():
+    collisions = np.flatnonzero(self.obs_ids.add(ids))
+    if not len(collisions):
+      return
+    self.file_collision_counts[file_name] += len(collisions)
+    # Only the samples still missing are formatted, however many collisions.
+    samples = self.file_sample_collisions[file_name]
+    for i in collisions[:max(0, MAX_SAMPLES_PER_FILE - len(samples))].tolist():
       obs_hash, ent, var, dt, prov = chunk_items[i]
-      self.file_collision_counts[file_name] += 1
-      sample_info = (
+      samples.append(
           f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
       )
-      if len(self.file_sample_collisions[file_name]) < MAX_SAMPLES_PER_FILE:
-        self.file_sample_collisions[file_name].append(sample_info)
 
   def processed_imports(self) -> set[str]:
     """Returns the imports with shards from this writer (see __init__)."""
