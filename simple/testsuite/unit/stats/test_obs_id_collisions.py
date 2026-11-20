@@ -17,6 +17,7 @@ import os
 import random
 from unittest import mock
 
+import numpy as np
 import pytest
 from stats import obs_id_collisions
 from stats.obs_id_collisions import find_cross_file_collisions
@@ -29,7 +30,7 @@ def _files(tmp_path, *id_sets: set[int]) -> list[tuple[str, str]]:
   files = []
   for i, ids in enumerate(id_sets):
     path = os.path.join(tmp_path, f"{i}.npy")
-    save_obs_ids(ids, path)
+    save_obs_ids(np.array(sorted(ids), dtype=np.uint64), path)
     files.append((f"f{i}.csv", path))
   return files
 
@@ -86,3 +87,20 @@ def test_bucketing_does_not_change_the_result(tmp_path, bucket_size):
   with mock.patch.object(obs_id_collisions, "_BUCKET_SIZE", bucket_size):
     result = find_cross_file_collisions(_files(tmp_path, *id_sets))
   assert result.file_counts == {"f1.csv": 50, "f2.csv": 50}
+
+
+@pytest.mark.parametrize("chunk_size", [1, 7, 1000])
+def test_obs_ids_find_the_same_repeats_as_a_set(chunk_size):
+  """Every id after its first is a repeat, within a chunk or across chunks."""
+  rng = random.Random(chunk_size)
+  ids = [rng.choice([rng.getrandbits(64), _MAX_ID, 0, 5]) for _ in range(5000)]
+  obs_ids, seen, expected, actual = obs_id_collisions.ObsIds(), set(), [], []
+  for start in range(0, len(ids), chunk_size):
+    chunk = ids[start:start + chunk_size]
+    actual.extend(obs_ids.add(np.array(chunk, dtype=np.uint64)).tolist())
+    for obs_id in chunk:
+      expected.append(obs_id in seen)
+      seen.add(obs_id)
+  assert actual == expected
+  assert len(obs_ids) == len(seen)
+  assert obs_ids.sorted().tolist() == sorted(seen)
