@@ -58,10 +58,9 @@ def _listed_prefix(request: gcs_requests.Request) -> str:
 def test_opening_the_output_dir_lists_nothing_under_it():
   requests = _run(_imports("alpha"), ["alpha"])
 
-  # The new output dir's marker is looked up, then written. Listing the dir
-  # would also list the shards of every earlier run into it.
-  kinds = sorted(r.kind for r in requests.of("init"))
-  assert kinds == ["get", "upload"], kinds
+  # GCS has no directories to make or mark. Listing the dir would also list
+  # the shards of every earlier run into it.
+  assert not requests.of("init")
 
 
 def test_each_requested_import_is_listed_once():
@@ -71,7 +70,7 @@ def test_each_requested_import_is_listed_once():
   lists = requests.of("load_config", "list")
   assert sorted(_listed_prefix(r) for r in lists) == ["alpha/", "beta/"]
   assert not requests.of("find_input_files")
-  # Opening the input store used to write its missing directory markers.
+  # Nothing writes directory markers into the input.
   assert not requests.of("load_config", "upload")
 
 
@@ -79,9 +78,9 @@ def test_a_bulk_load_lists_the_input_dir_once():
   requests = _run(_imports("alpha", "beta", "gamma"), ["ALL_IMPORTS"])
 
   assert not requests.of("find_input_files")
-  # One listing, then each config.json is read: a metadata get and a download.
+  # One listing, then each config.json is read in one download.
   kinds = sorted(r.kind for r in requests.of("load_config"))
-  assert kinds == ["download"] * 3 + ["get"] * 3 + ["list"], kinds
+  assert kinds == ["download"] * 3 + ["list"], kinds
 
 
 def test_a_csv_header_check_is_one_ranged_read():
@@ -97,9 +96,9 @@ def test_a_worker_reads_each_input_file_once_and_writes_only_shards():
 
   kinds = collections.Counter(r.kind for r in requests.of(gcs_requests.WORKER))
   # Per CSV: one ranged read and one observation shard upload. The MCF file
-  # is read whole: a metadata get and a download.
+  # is read whole, in one download.
   csvs = 1 + _CSVS_PER_IMPORT
-  assert kinds == {"range": csvs, "upload": csvs, "get": 1, "download": 1}
+  assert kinds == {"range": csvs, "upload": csvs, "download": 1}
 
 
 def test_a_csv_larger_than_a_header_read_is_read_in_one_request(monkeypatch):

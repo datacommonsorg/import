@@ -217,7 +217,7 @@ class VariablePerRowImporter(Importer):
                         self._ensure_entity_column).pipe(
                             _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
-        self.counts = self.counts.add(self.count_nodes(observations_df))
+        self.counts = self.counts.add(self.count_observations(observations_df))
         self.graph_writer.write_observations(observations_df, self.input_file)
 
   def _apply_column_mappings(self, df: pd.DataFrame) -> pd.DataFrame:

@@ -20,6 +20,18 @@
             },
             "fileCount": 5,
             "id": "KitchenProvenance",
+            "nodes": {
+              "byType": {
+                "AdministrativeArea": 1,
+                "Author": 2,
+                "Class": 1,
+                "Property": 4,
+                "Provenance": 1,
+                "Source": 1,
+                "StatisticalVariable": 2
+              },
+              "count": 12
+            },
             "observations": 8,
             "sourceId": "KitchenSource"
           }
@@ -31,6 +43,18 @@
               "mcf": 2
             },
             "count": 5
+          },
+          "nodes": {
+            "byType": {
+              "AdministrativeArea": 1,
+              "Author": 2,
+              "Class": 1,
+              "Property": 4,
+              "Provenance": 1,
+              "Source": 1,
+              "StatisticalVariable": 2
+            },
+            "count": 12
           },
           "observations": 8,
           "provenanceCount": 1

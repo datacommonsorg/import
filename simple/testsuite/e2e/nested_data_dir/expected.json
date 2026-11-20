@@ -20,6 +20,13 @@
             },
             "fileCount": 3,
             "id": "KitchenProvenance",
+            "nodes": {
+              "byType": {
+                "Provenance": 1,
+                "Source": 1
+              },
+              "count": 2
+            },
             "observations": 2,
             "sourceId": "KitchenSource"
           }
@@ -31,6 +38,13 @@
               "mcf": 1
             },
             "count": 3
+          },
+          "nodes": {
+            "byType": {
+              "Provenance": 1,
+              "Source": 1
+            },
+            "count": 2
           },
           "observations": 2,
           "provenanceCount": 1

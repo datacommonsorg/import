@@ -15,30 +15,29 @@
 
 import os
 
-from fs.osfs import OSFS
 from stats.config import Config
 from stats.data import Triple
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.nodes import Nodes
-from util.filesystem import create_store
+from util.filesystem import open_dir
 
 
 def test_shards_go_into_a_folder_that_another_worker_just_made(
     tmp_path, monkeypatch):
   """Workers make the folders of their shards, maybe at the same time."""
-  real_makedir = OSFS.makedir
+  real_makedirs = os.makedirs
 
-  def makedir_after_another_worker(fs, path, permissions=None, recreate=False):
-    if path.rstrip("/").endswith("/prov"):
-      os.makedirs(fs.getsyspath(path), exist_ok=True)
-    return real_makedir(fs, path, permissions, recreate)
+  def makedirs_after_another_worker(name, mode=0o777, exist_ok=False):
+    if str(name).rstrip("/").endswith("/prov"):
+      real_makedirs(name, exist_ok=True)
+    return real_makedirs(name, mode, exist_ok)
 
-  monkeypatch.setattr(OSFS, "makedir", makedir_after_another_worker)
-  with create_store(str(tmp_path)) as store:
-    writer = JsonLdStreamWriter(store.as_dir(), ["run"], Nodes(Config({})))
-    writer.write_triples([Triple("a", "typeOf", object_id="Thing")],
-                         provenance_dir="prov")
-    writer.commit_and_close()
+  writer = JsonLdStreamWriter(open_dir(str(tmp_path)), ["run"],
+                              Nodes(Config({})))
+  monkeypatch.setattr(os, "makedirs", makedirs_after_another_worker)
+  writer.write_triples([Triple("a", "typeOf", object_id="Thing")],
+                       provenance_dir="prov")
+  writer.commit_and_close()
 
   [shard] = tmp_path.glob("jsonld/run_*/prov/node-*.jsonld")
   assert '"@id":"dcid:a"' in shard.read_text()

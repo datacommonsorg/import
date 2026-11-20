@@ -23,6 +23,7 @@ from stats.data import Triple
 from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
+from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.importer import mapping_errors
 from stats.importer import missing_column_mappings_error
@@ -189,4 +190,5 @@ class EntitiesImporter(Importer):
                              prop_object_ids=prop_object_ids)
       triples.extend(row_entity.triples())
 
+    self.counts = self.counts.add(count_nodes_from_triples(triples))
     self.graph_writer.write_triples(triples, self.input_file)

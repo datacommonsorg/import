@@ -19,6 +19,7 @@ from stats import constants
 from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import strip_namespace
+from stats.data import Triple
 from stats.data import ValidationErrorType
 from stats.report.model.summary import DateRange
 
@@ -186,23 +187,72 @@ def mapping_errors(file_path: str, mappings: dict[str, str],
           mapped_and_ignored_errors(file_path, mappings, ignore_columns))
 
 
+_TYPE_OF = "typeOf"
+_STAT_VAR_OBSERVATION = "StatVarObservation"
+_OBSERVATION_DATE = "observationDate"
+
+
+def count_nodes_from_triples(
+    triples: list[Triple],
+    seen: set[tuple[str, str]] | None = None) -> ImportCounts:
+  """Counts the (node, type) pairs in `triples` that `seen` hasn't counted yet.
+
+  A node counts once per type, so a node with two types counts twice; a node
+  without a type is not counted. A node typed StatVarObservation counts as an
+  observation instead; observationDate values give the date range.
+
+  Args:
+    triples: Triples of one file, or one chunk of them.
+    seen: (node ID, type) pairs already counted, updated in place. Pass the
+      same set for every chunk of a file so a pair counts once per file. If
+      None, a new empty set is used: `triples` is treated as a whole file and
+      nothing is carried over between calls.
+  """
+  seen = set() if seen is None else seen
+  nodes = 0
+  nodes_by_type: collections.Counter[str] = collections.Counter()
+  observations = 0
+  dates: list[str] = []
+  for t in triples:
+    if t.predicate == _OBSERVATION_DATE:
+      dates.append(t.object_value)
+    if t.predicate != _TYPE_OF:
+      continue
+    # "dcid:X" and "X" name the same node.
+    node_id = strip_namespace(t.subject_id)
+    node_type = strip_namespace(t.object_id or t.object_value)
+    if (node_id, node_type) in seen:
+      continue
+    seen.add((node_id, node_type))
+    if node_type == _STAT_VAR_OBSERVATION:
+      observations += 1
+    else:
+      nodes += 1
+      nodes_by_type[node_type] += 1
+  return ImportCounts(
+      observations=observations,
+      date_range=DateRange(min=min(dates), max=max(dates)) if dates else None,
+      nodes=nodes,
+      nodes_by_type=nodes_by_type)
+
+
 class Importer:
   """The base class for all importers."""
 
   def __init__(self) -> None:
     # The file's counts so far, for the ingestion report. Each importer adds
-    # the nodes it is about to write with count_nodes().
+    # what it is about to write with count_observations() or
+    # count_nodes_from_triples().
     self.counts = ImportCounts()
 
-  def count_nodes(self, nodes_df: pd.DataFrame) -> ImportCounts:
-    """Counts a chunk of nodes about to be written, one row per node.
+  def count_observations(self, observations_df: pd.DataFrame) -> ImportCounts:
+    """Counts a chunk of observation rows about to be written.
 
-    Only observation rows are counted for now: every row becomes one
-    StatVarObservation node. Rows without a date are counted but don't affect
-    the date range.
+    Every row becomes one StatVarObservation node. Rows without a date are
+    counted but don't affect the date range.
     """
-    dates = nodes_df[constants.COLUMN_DATE].dropna()
-    return ImportCounts(observations=len(nodes_df),
+    dates = observations_df[constants.COLUMN_DATE].dropna()
+    return ImportCounts(observations=len(observations_df),
                         date_range=DateRange(min=dates.min(), max=dates.max())
                         if not dates.empty else None)
 
