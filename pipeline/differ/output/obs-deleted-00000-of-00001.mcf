@@ -1,0 +1,23 @@
+Node: dc/o/m262b8yp4lz1f
+dcid: "dc/o/m262b8yp4lz1f"
+keyString: "observationAbout=country/USAvariableMeasured=InterestRate_TreasuryBill_3MonthobservationDate=2025-01-31value=4.31unit=PercentmeasurementMethod=ConstantMaturityRate"
+measurementMethod: dcid:ConstantMaturityRate
+observationAbout: dcid:country/USA
+observationDate: "2025-01-31"
+typeOf: dcid:StatVarObservation
+unit: "Percent"
+value: 4.31
+variableMeasured: dcid:InterestRate_TreasuryBill_3Month
+
+Node: dc/o/xc3615qy692z7
+dcid: "dc/o/xc3615qy692z7"
+keyString: "observationAbout=country/USAvariableMeasured=InterestRate_TreasuryBill_3MonthobservationDate=2025-01-30value=4.30unit=PercentmeasurementMethod=ConstantMaturityRate"
+measurementMethod: dcid:ConstantMaturityRate
+observationAbout: dcid:country/USA
+observationDate: "2025-01-30"
+typeOf: dcid:StatVarObservation
+unit: "Percent"
+value: 4.3
+variableMeasured: dcid:InterestRate_TreasuryBill_3Month
+
+
