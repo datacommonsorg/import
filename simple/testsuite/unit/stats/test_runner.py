@@ -23,6 +23,7 @@ from stats import runner
 from testsuite.lib import builders as b
 from testsuite.lib import fake_gcs
 from testsuite.lib import run as runlib
+from util.filesystem import open_dir
 
 
 def _set_cpus(monkeypatch, affinity: set[int] | None, cpu_count: int) -> None:
@@ -74,7 +75,7 @@ def test_runner_defaults_workers_by_where_it_reads_and_writes(
     r = runner.Runner(input_dir_path=input_dir,
                       output_dir_path=output_dir,
                       import_names=[b.IMPORT])
-    r._load_config()  # Opens the input store.
+    r._load_config()  # Opens the input dir.
     assert r.max_workers == expected
   finally:
     shutil.rmtree(local_input_dir, ignore_errors=True)
@@ -144,26 +145,66 @@ def _import_two_csvs_in_one_worker() -> None:
   assert result.output["error"] is None
 
 
-def test_import_workers_write_no_gcs_directory_markers(tmp_path, monkeypatch):
-  """Only the coordinator writes GCS directory markers, never the workers.
+def test_a_run_writes_no_gcs_directory_markers(tmp_path, monkeypatch):
+  """No process writes "dir/" marker objects: GCS has no directories.
 
-  Workers marking directories for every file rewrite the same marker objects
-  until GCS rejects them with 429 errors. Here the worker would mark the
-  folder of the shards it uploaded for the first CSV.
+  Workers marking directories for every file used to rewrite the same marker
+  objects until GCS rejected them with 429 errors.
   """
   log_path = tmp_path / "marker_writes.txt"
-  _record_calls(monkeypatch, log_path, Blob, "upload_from_string",
-                lambda blob: blob.name if blob.name.endswith("/") else None)
+  for method_name in ("upload_from_string", "upload_from_file"):
+    _record_calls(monkeypatch, log_path, Blob, method_name,
+                  lambda blob: blob.name if blob.name.endswith("/") else None)
+  prefixes = _record_new_gcs_prefixes(monkeypatch)
 
   _import_two_csvs_in_one_worker()
 
-  marker_writes = _read_calls(log_path)
-  assert marker_writes, "the coordinator should still mark its directories"
-  assert [name for by_worker, name in marker_writes if by_worker] == []
+  assert _read_calls(log_path) == []
+  [root] = prefixes
+  names = [blob.name for blob in _list_blobs(root)]
+  assert any(name.endswith(".jsonld") for name in names), names
+  assert [name for name in names if name.endswith("/")] == []
+
+
+def test_the_handshake_and_report_are_written_as_json(monkeypatch):
+  """Cloud Workflows parses the handshake it reads only if it is JSON."""
+  prefixes = _record_new_gcs_prefixes(monkeypatch)
+
+  _import_two_csvs_in_one_worker()
+
+  [root] = prefixes
+  content_types = {
+      blob.name.rsplit("/", 1)[1]: blob.content_type
+      for blob in _list_blobs(root)
+      if blob.name.endswith(".json") and "/input/" not in blob.name
+  }
+  assert content_types == {
+      f"{runlib.WORKFLOW_ID}.json": "application/json",
+      "ingestion_report.json": "application/json",
+  }
+
+
+def _record_new_gcs_prefixes(monkeypatch) -> list[str]:
+  """Records the gs:// prefix of each run that the test harness starts."""
+  prefixes = []
+  real_new_prefix = fake_gcs.new_prefix
+
+  def recording_new_prefix() -> str:
+    prefixes.append(real_new_prefix())
+    return prefixes[-1]
+
+  monkeypatch.setattr(fake_gcs, "new_prefix", recording_new_prefix)
+  return prefixes
+
+
+def _list_blobs(gcs_dir: str) -> list[Blob]:
+  bucket_prefix = f"gs://{fake_gcs.BUCKET}/"
+  return list(storage.Client().bucket(fake_gcs.BUCKET).list_blobs(
+      prefix=gcs_dir.removeprefix(bucket_prefix) + "/"))
 
 
 def test_import_workers_create_one_gcs_client_each(tmp_path, monkeypatch):
-  """A worker reuses one GCS client for every file, store and upload."""
+  """A worker reuses one GCS client for every read and upload."""
   log_path = tmp_path / "clients.txt"
   _record_calls(monkeypatch, log_path, storage.Client, "__init__",
                 lambda client: "client")
@@ -172,3 +213,31 @@ def test_import_workers_create_one_gcs_client_each(tmp_path, monkeypatch):
 
   worker_clients = [c for by_worker, c in _read_calls(log_path) if by_worker]
   assert worker_clients == ["client"]
+
+
+# Local paths are compared as absolute paths: "." is the current dir.
+@pytest.mark.parametrize("input_dir, output_dir, overlaps", [
+    (".", "out", True),
+    ("", "out", True),
+    ("data", "{cwd}/data/out", True),
+    ("data", "data/out", True),
+    ("~/in", "{home}/in/out", True),
+    (".", "{tmp}/elsewhere", False),
+    ("in", "out", False),
+    ("gs://b/in", "gs://b/in/out", True),
+    ("gs://b/in", "gs://b/out", False),
+])
+def test_overlapping_input_and_output_dirs_are_rejected(input_dir, output_dir,
+                                                        overlaps, tmp_path,
+                                                        monkeypatch):
+  cwd = tmp_path / "cwd"
+  cwd.mkdir()
+  monkeypatch.chdir(cwd)
+  monkeypatch.setenv("HOME", str(tmp_path / "home"))
+  output_dir = output_dir.format(cwd=cwd, tmp=tmp_path, home=tmp_path / "home")
+  input_store, output_store = open_dir(input_dir), open_dir(output_dir)
+  if overlaps:
+    with pytest.raises(ValueError, match="overlaps"):
+      runner._check_not_overlapping(input_store, output_store)
+  else:
+    runner._check_not_overlapping(input_store, output_store)

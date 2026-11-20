@@ -22,7 +22,7 @@ python3 -m pytest testsuite/test_e2e.py --update-expected -n 0  # rewrite expect
 |---|---|---|
 | Small tests, one file per input type or shared concern (below) | One small input in, exact records (or an exact error) out | Written in the test, with `lib/builders.py` |
 | `test_e2e.py` + `e2e/<dataset>/` | A realistic multi-file import, in every execution mode | `expected.json`, reviewed |
-| `unit/`, mirroring the module path (e.g. `unit/util/test_filesystem.py` for `util/filesystem.py`) | One self-contained module (filesystem, file matching, validation, report generation) called directly | Asserted in the test |
+| `unit/`, mirroring the module path (e.g. `unit/util/filesystem/test_gcs.py` for `util/filesystem/gcs.py`) | One self-contained module (filesystem, file matching, validation, report generation) called directly | Asserted in the test |
 
 Prefer an output-level test. Add a unit test only for a module that has
 behavior of its own that is awkward to reach through the runner, such as
