@@ -200,11 +200,15 @@ def _run_runner(paths: _Paths, mode: Mode,
   return None
 
 
+def handshake_path(gcs_root: str) -> str:
+  """Where a run under `gcs_root` writes its workflow handshake."""
+  return f"{gcs_root}/temp/datacommons/ingestion_records/{WORKFLOW_ID}.json"
+
+
 def _read_output(paths: _Paths, error: dict | None) -> dict:
   """Reads the run's records, handshake and ingestion report into canonical form."""
   fake_gcs.download_dir(paths.output, paths.local_out)
-  handshake_text = fake_gcs.read_text(
-      f"{paths.temp}/datacommons/ingestion_records/{WORKFLOW_ID}.json")
+  handshake_text = fake_gcs.read_text(handshake_path(paths.gcs_root))
   ingestion_report = _read_json(
       os.path.join(paths.local_out, "preprocessor_reports", WORKFLOW_ID,
                    "ingestion_report.json"))

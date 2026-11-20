@@ -501,10 +501,17 @@ def test_each_observation_declares_only_its_own_dimensions():
   }, declared
 
 
-def test_ignored_column_is_dropped():
+# Ignored columns are dropped, even those named like an internal column. An
+# ignored "entity" column would only change the observation id, which these
+# tests don't compare.
+@pytest.mark.parametrize("column", [
+    "notes", "unit", "scaling_factor", "measurement_method",
+    "observation_period"
+])
+def test_ignored_column_is_dropped(column):
   result = b.run_csv(
-      b.csv_file(b.obs_row() + ["anything"], header=b.OBS_HEADER + ["notes"]),
-      b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]))
+      b.csv_file(b.obs_row() + ["USDollar"], header=b.OBS_HEADER + [column]),
+      b.obs_config(b.OBS_MAPPINGS, ignoreColumns=[column]))
   b.assert_records(result.observations, [b.obs()])
 
 
