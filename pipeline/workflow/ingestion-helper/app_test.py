@@ -90,7 +90,7 @@ class TestMain(unittest.TestCase):
 
         # Mock transaction for generate_embeddings_partitioned
         transactions = []
-        def run_in_transaction_side_effect(func):
+        def run_in_transaction_side_effect(func, **_kwargs):
             mock_transaction = MagicMock()
             mock_transaction.execute_update.return_value = 2
             transactions.append(mock_transaction)
