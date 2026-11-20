@@ -169,9 +169,8 @@ class TestSummaryGenerator(unittest.TestCase):
         file="",
         error_type=ValidationErrorType.INVALID_CONFIGURATION,
         error_message="Bad config")
-    with tempfile.TemporaryDirectory() as tmp, \
-         create_store(tmp) as store:
-      generator = _generator("wf-123", store.as_dir())
+    with tempfile.TemporaryDirectory() as tmp:
+      generator = _generator("wf-123", open_dir(tmp))
       generator.record_input_file("oecd", ["oecdProv"], "a.csv")
       generator.record_failure(file_error, "oecd", "oecdProv")
       generator.record_failure(config_error)
