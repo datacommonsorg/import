@@ -28,6 +28,11 @@ mode imports files in worker processes, as in production:
   tiny_chunks   input on local disk, with shard and CSV chunk sizes shrunk to
                 1-2 so that every chunk/shard boundary is crossed even by tiny
                 inputs.
+  split         input on local disk, with the split size shrunk to 1 byte, so
+                that every observation CSV of more than one row is imported in
+                parts (one per worker at most; see stats/csv_split.py).
+  gcs_split     split, with the input on (fake) GCS: parts are read in ranged
+                requests.
 
 Patches are applied in the test process; worker processes inherit them only if
 forked, so runs fail unless the start method is fork.
@@ -72,6 +77,12 @@ def _tiny_chunks() -> Iterator[None]:
     yield
 
 
+@contextlib.contextmanager
+def _split() -> Iterator[None]:
+  with mock.patch("stats.csv_split.SPLIT_CSV_BYTES", 1):
+    yield
+
+
 @dataclasses.dataclass(frozen=True)
 class Mode:
   name: str
@@ -84,6 +95,8 @@ MODES = {
         Mode("disk_input"),
         Mode("gcs_input", gcs_input=True),
         Mode("tiny_chunks", patches=_tiny_chunks),
+        Mode("split", patches=_split),
+        Mode("gcs_split", gcs_input=True, patches=_split),
     ]
 }
 ALL_MODES = tuple(MODES)

@@ -47,6 +47,9 @@ Execution modes (`lib/run.py`):
 - `gcs_input`: input on (fake) GCS, as the ingestion workflow runs it.
 - `tiny_chunks`: with chunk and shard sizes shrunk so that every boundary is
   crossed even by tiny inputs.
+- `split`: with the split size shrunk so that every observation CSV of more
+  than one row is imported in parts; `gcs_split` too, with the input on
+  (fake) GCS.
 
 Modes patch the preprocessor in the test process, and worker processes see
 those patches only if forked. Runs therefore fail unless the multiprocessing

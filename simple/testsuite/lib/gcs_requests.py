@@ -41,6 +41,7 @@ PHASES = {
     "_load_config": "load_config",
     "_find_and_filter_input_files": "find_input_files",
     "_validate_all_headers": "validate_headers",
+    "_plan_split_files": "plan_splits",
 }
 WORKER = "worker"
 

@@ -77,6 +77,30 @@ def test_files_with_the_same_key_are_summed(tmp_path):
   assert len(result.file_samples["same.csv"]) == 2
 
 
+def test_ids_of_several_parts_of_a_file_are_its_own_collisions(tmp_path):
+  """As if the file were imported whole: an id in k parts is k - 1 collisions.
+
+  Parts of a file are consecutive entries with its path.
+  """
+  files = _files(tmp_path, {1, 2}, {2, 3}, {2, 3, 4}, {3, 5})
+  files = [("a.csv", files[0][1]), ("a.csv", files[1][1]),
+           ("a.csv", files[2][1]), ("b.csv", files[3][1])]
+  result = find_cross_file_collisions(files)
+  # Id 2 is in three parts of a.csv, id 3 in two; b.csv repeats id 3.
+  assert result.file_counts == {"a.csv": 3, "b.csv": 1}
+  assert result.file_samples == {
+      "a.csv": [
+          "@id='dcid:obs_0000000000000002...' also produced by another part of"
+          " the file",
+          "@id='dcid:obs_0000000000000002...' also produced by another part of"
+          " the file",
+          "@id='dcid:obs_0000000000000003...' also produced by another part of"
+          " the file",
+      ],
+      "b.csv": ["@id='dcid:obs_0000000000000003...' also produced by 'a.csv'"],
+  }
+
+
 @pytest.mark.parametrize("bucket_size", [1, 3, 1000])
 def test_bucketing_does_not_change_the_result(tmp_path, bucket_size):
   rng = random.Random(0)
