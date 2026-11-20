@@ -161,7 +161,7 @@ class TestSummaryGenerator(unittest.TestCase):
     self.assertEqual([(f.folderName, f.provenances[0].nodes) for f in folders],
                      [("ilo", expected), ("oecd", expected)])
 
-  def test_errors_go_under_their_file_provenance_or_the_run(self):
+  def test_errors_go_to_provenance_or_run(self):
     """An error with a folder and provenance goes there; others go to the run."""
     file_error = FileValidationError(
         file="a.csv",
