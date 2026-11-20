@@ -14,6 +14,9 @@ public class Edge implements Serializable {
   private String objectId;
   private String provenance;
 
+  // Default constructor for AvroCoder
+  private Edge() {}
+
   // Private constructor to enforce use of Builder
   private Edge(Builder builder) {
     this.subjectId = builder.subjectId;

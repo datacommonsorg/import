@@ -2,8 +2,11 @@ package org.datacommons.ingestion.data;
 
 import com.google.cloud.ByteArray;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import org.apache.avro.reflect.Nullable;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 
@@ -16,17 +19,20 @@ public class Node implements Serializable {
 
   private String subjectId;
   private String value;
-  private ByteArray bytes;
+  @Nullable private byte[] bytes;
   private String name;
   private List<String> types;
+
+  // Default constructor for AvroCoder
+  private Node() {}
 
   // Private constructor to enforce use of Builder
   private Node(Builder builder) {
     this.subjectId = builder.subjectId;
     this.value = builder.value;
-    this.bytes = builder.bytes;
+    this.bytes = builder.bytes != null ? builder.bytes.toByteArray() : null;
     this.name = builder.name;
-    this.types = builder.types;
+    this.types = builder.types != null ? new ArrayList<>(builder.types) : new ArrayList<>();
   }
 
   public static Builder builder() {
@@ -42,7 +48,7 @@ public class Node implements Serializable {
   }
 
   public ByteArray getBytes() {
-    return bytes;
+    return bytes != null ? ByteArray.copyFrom(bytes) : null;
   }
 
   public String getName() {
@@ -60,7 +66,7 @@ public class Node implements Serializable {
     Node node = (Node) o;
     return Objects.equals(subjectId, node.subjectId)
         && Objects.equals(value, node.value)
-        && Objects.equals(bytes, node.bytes)
+        && Arrays.equals(bytes, node.bytes)
         && Objects.equals(name, node.name)
         && Objects.equals(types, node.types);
   }
@@ -74,7 +80,7 @@ public class Node implements Serializable {
   public String toString() {
     return String.format(
         "Node{subjectId='%s', value='%s', bytes='%s', name='%s', types=%s}",
-        subjectId, value, bytes, name, types);
+        subjectId, value, getBytes(), name, types);
   }
 
   public static class Builder {
