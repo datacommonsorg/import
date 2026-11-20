@@ -239,8 +239,8 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
   """Logs each failure's traceback, then raises.
 
   A single failure is re-raised as is, so its type and message reach the
-  handshake and the caller unchanged. Several are raised together as one
-  `FileImportsFailedError` that names every failed file.
+  caller unchanged. Several are raised together as one `FileImportsFailedError`
+  that names every failed file.
   """
   for failure in failures:
     logging.error("Failed to import %s:\n%s", failure.file_path,
