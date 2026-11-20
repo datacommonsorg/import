@@ -30,6 +30,9 @@ calculations:
       - "Place"
       - "FARS_CrashNodes"
       - "CycloneNOAA_Entities"
+      - "NCES_PublicSchool"
+      - "NCES_PrivateSchool"
+      - "NCES_SchoolDistrict"
 
   # Generates summary statistics in the KeyValueStore table
   - name: "Global: KeyValueStore Provenance & Lineage Summary"
