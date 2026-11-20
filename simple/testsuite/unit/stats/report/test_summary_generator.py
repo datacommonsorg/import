@@ -141,9 +141,8 @@ class TestSummaryGenerator(unittest.TestCase):
 
   def test_shared_provenance_counts_in_each_folder(self):
     """A shared provenance's Provenance and Source count in each folder."""
-    with tempfile.TemporaryDirectory() as tmp, \
-         create_store(tmp) as store:
-      generator = _generator("wf-123", store.as_dir())
+    with tempfile.TemporaryDirectory() as tmp:
+      generator = _generator("wf-123", open_dir(tmp))
       generator.record_input_file("oecd", ["sharedProv"], "oecd/a.mcf")
       generator.record_input_file("ilo", ["sharedProv"], "ilo/b.mcf")
       generator.add_runner_node_counts("sharedProv", 2, {
