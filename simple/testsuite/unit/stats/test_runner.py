@@ -272,9 +272,8 @@ def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
       raise RuntimeError("cannot merge b")
     merged.append(file.path)
 
-  with pytest.raises(runner.FileImportsFailedError) as raised:
-    runner._finish_imports(files, futures, merge)
-  assert [(f.file_path, str(f.error)) for f in raised.value.failures] == [
+  failures = runner._finish_imports(files, futures, merge)
+  assert [(f.file_path, str(f.error)) for f in failures] == [
       ("a.csv", "cannot import a"),
       ("b.csv", "cannot merge b"),
   ]
