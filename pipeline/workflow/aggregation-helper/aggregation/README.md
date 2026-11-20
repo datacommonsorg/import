@@ -5,7 +5,7 @@ This module orchestrates the execution of Data Commons aggregations through BigQ
 ## Core Concepts
 
 *   **Sequential Stages**: Aggregations are executed sequentially by their `stage` number (e.g., Stage 1 steps are guaranteed to complete before Stage 2 steps begin). This is useful when later steps depend on the output of earlier ones.
-*   **Parallel Execution**: All aggregation steps configured in the same stage are executed in parallel to maximize performance.
+*   **Step Order Within a Stage**: For each import, the steps in a stage run one after another, ordered by calculation type priority (`CALCULATION_TYPE_PRIORITY` in `common.py`). The BigQuery jobs of a single step run in parallel, and different imports run in parallel (up to `max_parallel_imports`).
 *   **Per-Import Isolation**: Aggregations run independently for each active import dataset.
 
 ---
@@ -16,7 +16,7 @@ The aggregation pipeline is configured via YAML files in the `configs/` director
 
 ### Common Configuration Fields
 Every calculation step supports these common fields:
-*   `type` (string, Required): The type of calculation step (e.g. `PLACE_AGGREGATION`, `STAT_VAR_AGGREGATION`, `LINKED_EDGES`).
+*   `type` (string, Required): The type of calculation step (e.g. `PLACE_AGGREGATION`, `STAT_VAR_AGGREGATION`, `LINKED_CONTAINED_IN_PLACE`).
 *   `stage` (integer, Optional, default: 1): The sequential stage number. Steps in lower stages are guaranteed to finish before higher stages start.
 *   `input_imports` (list of strings, Required): The list of import names this step applies to. Use `["*"]` (wildcard) to apply the step to **all** active imports.
 *   `output_import` (string, Optional): The output import dataset name to write aggregated observations under.
@@ -65,8 +65,15 @@ Aggregates raw statistical variables into a summarized ancestor variable.
               - Count_Person_Female
     ```
 
-#### 3. Common Aggregations (`LINKED_EDGES`, `PROVENANCE_SUMMARY`, `STAT_VAR_GROUPS`, `NODE_PROPERTIES`)
-Common graph structure, lineage, UI group hierarchy rollups, and node properties defined in `common.yaml` (for DCP where `LINKED_EDGES` applies to `*`) and `base_dc/common.yaml` (for Base Data Commons where `LINKED_EDGES` and `NODE_PROPERTIES` apply to `Schema` and `Place`).
+#### 3. Common Aggregations
+Common graph structure, lineage, UI group hierarchy rollups, and node properties, defined in `common.yaml` (DCP) and `base_dc/common.yaml` (Base Data Commons).
+*   **Types**:
+    *   `LINKED_MEMBER`
+    *   `LINKED_MEMBER_OF`
+    *   `LINKED_CONTAINED_IN_PLACE`
+    *   `PROVENANCE_SUMMARY`
+    *   `STAT_VAR_GROUPS`
+    *   `NODE_PROPERTIES`
 *   **Example**:
     ```yaml
     - type: NODE_PROPERTIES

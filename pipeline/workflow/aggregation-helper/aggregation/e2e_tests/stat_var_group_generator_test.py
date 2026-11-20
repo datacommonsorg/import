@@ -852,7 +852,9 @@ class StatVarGroupGeneratorIntegrationTest(AggregationIntegrationTestBase):
         self._run_stat_var_groups()
 
         res = self.run_orchestrator(
-            calculations=[{"name": "Linked Edges", "type": "LINKED_EDGES", "stage": 1, "input_imports": ["*"]}],
+            # LINKED_MEMBER_OF is the linked edge type that shares a predicate
+            # (linkedMemberOf) with STAT_VAR_GROUPS.
+            calculations=[{"name": "Linked MemberOf", "type": "LINKED_MEMBER_OF", "stage": 1, "input_imports": ["*"]}],
             active_imports=["TestImport2"],
         )
         self.assertTrue(res.success)

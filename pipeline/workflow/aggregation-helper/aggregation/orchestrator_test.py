@@ -19,10 +19,12 @@ import tempfile
 import textwrap
 import unittest
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from aggregation.common import CALCULATION_TYPE_PRIORITY
+from aggregation.linked_edge_generator import LINKED_EDGE_OUTPUTS
 from aggregation.orchestrator import (
+    LINKED_EDGE_CALCULATION_TYPES,
     AggregationOrchestrator,
     CalculationType,
     OrchestratorConfig,
@@ -319,19 +321,77 @@ class TestOrchestratorExecution(unittest.TestCase):
         mock_place_gen,
         mock_executor_cls,
     ):
-        """Verifies _delete_existing_data dispatches to delete_linked_edges and delete_stat_var_group_edges separately."""
+        """Verifies each linked edge type deletes only its own predicates, separately from StatVarGroup edges."""
         self.orchestrator.calculations = [
-            {"type": "LINKED_EDGES", "input_imports": ["*"]},
+            {"type": "LINKED_CONTAINED_IN_PLACE", "input_imports": ["*"]},
+            {"type": "LINKED_MEMBER_OF", "input_imports": ["*"]},
+            {"type": "LINKED_MEMBER", "input_imports": ["*"]},
             {"type": "STAT_VAR_GROUPS", "input_imports": ["schema"]},
         ]
         self.orchestrator._delete_previous_aggregations(
             ["schema", "TestImport"], dry_run=False
         )
 
-        self.mock_deleter.return_value.delete_linked_edges.assert_called_once_with(
-            ["TestImport", "schema"]
+        deleter = self.mock_deleter.return_value
+        self.assertEqual(
+            deleter.delete_linked_edges.call_args_list,
+            [
+                call(
+                    ["TestImport", "schema"],
+                    ("linkedContainedInPlace",),
+                    ("containedInPlace",),
+                ),
+                call(["TestImport", "schema"], ("linkedMember",), ()),
+                call(["TestImport", "schema"], ("linkedMemberOf",), ()),
+            ],
         )
-        self.mock_deleter.return_value.delete_stat_var_group_edges.assert_called_once()
+        deleter.delete_stat_var_group_edges.assert_called_once()
+
+    def test_delete_linked_edges_only_for_types_listing_the_import(
+        self,
+        mock_entity_gen,
+        mock_calc_gen,
+        mock_sv_agg,
+        mock_place_gen,
+        mock_executor_cls,
+    ):
+        """Verifies an import triggers deletes only for the linked edge types that list it."""
+        self.orchestrator.calculations = [
+            {"type": "LINKED_CONTAINED_IN_PLACE", "input_imports": ["Place", "FARS"]},
+            {"type": "LINKED_MEMBER_OF", "input_imports": ["Schema"]},
+            {"type": "LINKED_MEMBER", "input_imports": ["Schema"]},
+        ]
+        self.orchestrator._delete_previous_aggregations(["Place"], dry_run=False)
+
+        self.mock_deleter.return_value.delete_linked_edges.assert_called_once_with(
+            ["Place"], ("linkedContainedInPlace",), ("containedInPlace",)
+        )
+
+    @patch("aggregation.orchestrator.LinkedEdgeGenerator")
+    def test_each_linked_type_runs_its_own_query_for_its_imports(
+        self,
+        mock_linked_gen,
+        mock_entity_gen,
+        mock_calc_gen,
+        mock_sv_agg,
+        mock_place_gen,
+        mock_executor_cls,
+    ):
+        self.orchestrator.calculations = [
+            {"type": "LINKED_CONTAINED_IN_PLACE", "input_imports": ["Place"], "stage": 0},
+            {"type": "LINKED_MEMBER_OF", "input_imports": ["Schema"], "stage": 0},
+            {"type": "LINKED_MEMBER", "input_imports": ["Schema"], "stage": 0},
+        ]
+        self.orchestrator.executor = MagicMock()
+        self.orchestrator.executor.get_jobs_status.return_value = {"status": "DONE"}
+
+        result = self.orchestrator.run(active_imports=["Place", "Schema"], dry_run=False)
+
+        self.assertTrue(result.success)
+        generator = mock_linked_gen.return_value
+        generator.run_linked_contained_in_place.assert_called_once_with(["Place"])
+        generator.run_linked_member_of.assert_called_once_with(["Schema"])
+        generator.run_linked_member.assert_called_once_with(["Schema"])
 
     def test_delete_previous_aggregations_provenance_summary(
         self,
@@ -386,14 +446,21 @@ class TestOrchestratorExecution(unittest.TestCase):
                 "input_imports": ["ImportA"],
                 "output_import": "ImportA_AggState",
             },
-            {"type": "LINKED_EDGES", "input_imports": ["*"]},
+            {"type": "LINKED_CONTAINED_IN_PLACE", "input_imports": ["*"]},
+            {"type": "LINKED_MEMBER", "input_imports": ["schema"]},
             {"type": "PROVENANCE_SUMMARY", "input_imports": ["*"]},
             {"type": "STAT_VAR_GROUPS", "input_imports": ["schema"]},
         ]
         plan = self.orchestrator._build_deletion_plan(["ImportA", "schema"])
         self.assertFalse(plan.is_empty)
         self.assertEqual(plan.aggregated_imports, ["ImportA_AggState"])
-        self.assertEqual(plan.linked_edge_imports, ["ImportA", "schema"])
+        self.assertEqual(
+            plan.linked_edge_imports,
+            {
+                CalculationType.LINKED_CONTAINED_IN_PLACE: ["ImportA", "schema"],
+                CalculationType.LINKED_MEMBER: ["schema"],
+            },
+        )
         self.assertEqual(plan.provenance_summary_imports, ["ImportA", "schema"])
         self.assertTrue(plan.delete_stat_var_groups)
 
@@ -595,7 +662,16 @@ ORDERING_CONFIG_YAML = textwrap.dedent("""\
         input_imports: ["*"]
         stage: 0
 
-      - type: LINKED_EDGES
+      # Listed out of priority order on purpose: priority, not YAML order, decides.
+      - type: LINKED_CONTAINED_IN_PLACE
+        input_imports: ["*"]
+        stage: 0
+
+      - type: LINKED_MEMBER_OF
+        input_imports: ["*"]
+        stage: 0
+
+      - type: LINKED_MEMBER
         input_imports: ["*"]
         stage: 0
 
@@ -641,7 +717,9 @@ class TestOrchestratorOrdering(unittest.TestCase):
         types_in_order = [calc["type"] for calc in self.orchestrator.calculations]
         expected_order = [
             "STAT_VAR_GROUPS",
-            "LINKED_EDGES",
+            "LINKED_MEMBER",
+            "LINKED_MEMBER_OF",
+            "LINKED_CONTAINED_IN_PLACE",
             "PROVENANCE_SUMMARY",
             "NODE_PROPERTIES",
             "PLACE_AGGREGATION",
@@ -783,6 +861,13 @@ class TestOrchestratorNodeProperties(unittest.TestCase):
 
 class TestConfigSanity(unittest.TestCase):
     """Sanity checks for calculation configurations and metadata."""
+
+    def test_linked_edge_outputs_cover_all_linked_edge_types(self):
+        """Ensures every linked edge type declares the predicates it writes (and deletes)."""
+        self.assertSetEqual(
+            {t.value for t in LINKED_EDGE_CALCULATION_TYPES},
+            set(LINKED_EDGE_OUTPUTS),
+        )
 
     def test_all_calculation_types_have_priority(self):
         """Ensures all CalculationType enum members have a priority defined in CALCULATION_TYPE_PRIORITY."""

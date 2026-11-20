@@ -3,15 +3,30 @@
 # workflow will be hardcoded to pass this file path explicitly.
 
 calculations:
-  # Generates linkedContainedInPlace, linkedMemberOf, etc.
-  # Every import that contributes containedInPlace edges must be listed here: the
-  # LinkedEdge table (and the linkedContainedInPlace rows in Edge) only ever hold
-  # rows for imports that went through this step.
-  - name: "Global: ContainedInPlace & MemberOf Graph Linked Edges"
-    type: LINKED_EDGES
+  # Generates linkedMember edges (variable -> ancestor topic).
+  - name: "Global: Linked Member Edges"
+    type: LINKED_MEMBER
     stage: 0
     input_imports:
       - "Schema"
+
+  # Generates linkedMemberOf edges (node -> ancestor group).
+  # STAT_VAR_GROUPS also writes linkedMemberOf rows for Schema. Keep both listing
+  # the same imports so they always run together.
+  - name: "Global: Linked MemberOf Edges"
+    type: LINKED_MEMBER_OF
+    stage: 0
+    input_imports:
+      - "Schema"
+
+  # Generates linkedContainedInPlace edges and LinkedEdge rows.
+  # Every import whose entities need linked containment rows must be listed here: the
+  # LinkedEdge table (and the linkedContainedInPlace rows in Edge) only ever hold
+  # rows for imports that went through this step.
+  - name: "Global: Linked ContainedInPlace Edges"
+    type: LINKED_CONTAINED_IN_PLACE
+    stage: 0
+    input_imports:
       - "Place"
       - "FARS_CrashNodes"
       - "CycloneNOAA_Entities"
