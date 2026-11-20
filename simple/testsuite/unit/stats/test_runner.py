@@ -23,6 +23,7 @@ from stats import runner
 from testsuite.lib import builders as b
 from testsuite.lib import fake_gcs
 from testsuite.lib import run as runlib
+from util.filesystem import open_dir
 
 
 def _set_cpus(monkeypatch, affinity: set[int] | None, cpu_count: int) -> None:
@@ -212,3 +213,31 @@ def test_import_workers_create_one_gcs_client_each(tmp_path, monkeypatch):
 
   worker_clients = [c for by_worker, c in _read_calls(log_path) if by_worker]
   assert worker_clients == ["client"]
+
+
+# Local paths are compared as absolute paths: "." is the current dir.
+@pytest.mark.parametrize("input_dir, output_dir, overlaps", [
+    (".", "out", True),
+    ("", "out", True),
+    ("data", "{cwd}/data/out", True),
+    ("data", "data/out", True),
+    ("~/in", "{home}/in/out", True),
+    (".", "{tmp}/elsewhere", False),
+    ("in", "out", False),
+    ("gs://b/in", "gs://b/in/out", True),
+    ("gs://b/in", "gs://b/out", False),
+])
+def test_overlapping_input_and_output_dirs_are_rejected(input_dir, output_dir,
+                                                        overlaps, tmp_path,
+                                                        monkeypatch):
+  cwd = tmp_path / "cwd"
+  cwd.mkdir()
+  monkeypatch.chdir(cwd)
+  monkeypatch.setenv("HOME", str(tmp_path / "home"))
+  output_dir = output_dir.format(cwd=cwd, tmp=tmp_path, home=tmp_path / "home")
+  input_store, output_store = open_dir(input_dir), open_dir(output_dir)
+  if overlaps:
+    with pytest.raises(ValueError, match="overlaps"):
+      runner._check_not_overlapping(input_store, output_store)
+  else:
+    runner._check_not_overlapping(input_store, output_store)

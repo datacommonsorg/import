@@ -47,5 +47,10 @@ def join_path(base: str, *parts: str) -> str:
 
 
 def is_within(path: str, parent: str) -> bool:
-  """Whether `path` is `parent` or under it; both normalized (see join_path)."""
+  """Whether `path` is `parent` or under it; both normalized (see join_path).
+
+  "" is the current dir: relative paths that don't go up are under it.
+  """
+  if not parent:
+    return not (path.startswith(("/", "../")) or path == ".." or "://" in path)
   return path == parent or path.startswith(parent.rstrip("/") + "/")

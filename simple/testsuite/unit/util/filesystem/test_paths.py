@@ -31,6 +31,7 @@ def test_join_path(parts, expected):
   assert join_path(*parts) == expected
 
 
+# A parent "" is the current dir.
 @pytest.mark.parametrize("path, parent, expected", [
     ("gs://b/out", "gs://b/out", True),
     ("gs://b/out/jsonld", "gs://b/out", True),
@@ -38,6 +39,12 @@ def test_join_path(parts, expected):
     ("gs://b/outx", "gs://b/out", False),
     ("gs://b", "gs://b/out", False),
     ("/data/in/x", "/", True),
+    ("", "", True),
+    ("out", "", True),
+    ("/tmp/out", "", False),
+    ("../out", "", False),
+    ("..", "", False),
+    ("gs://b/out", "", False),
 ])
 def test_is_within(path, parent, expected):
   assert is_within(path, parent) is expected

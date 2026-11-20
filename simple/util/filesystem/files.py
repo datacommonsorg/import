@@ -40,7 +40,7 @@ def open_dir(path: str, create: bool = False) -> "Dir":
 
 def write_file(path: str, text: str) -> None:
   """Writes `text` to the file at a local path or gs:// URL."""
-  parent, _, name = path.rpartition("/")
+  parent, name = posixpath.split(path)  # "/" stays the parent of "/foo".
   open_dir(parent or ".", create=True).open_file(name).write(text)
 
 

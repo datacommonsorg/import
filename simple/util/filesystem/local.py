@@ -25,7 +25,7 @@ class LocalStorage:
   def __init__(self, path: str):
     self.path = path
     # "~" and $VARS are expanded to access files, not in the paths shown.
-    self._os_root = os.path.expanduser(os.path.expandvars(path))
+    self._os_root = os.path.expanduser(os.path.expandvars(path)) or "."
 
   def _os_path(self, path: str) -> str:
     return os.path.join(self._os_root, path)

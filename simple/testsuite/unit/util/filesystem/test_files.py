@@ -14,9 +14,11 @@
 """Dir and File, the same on local disk and on (fake) GCS."""
 
 import os
+from unittest import mock
 
 import pytest
 from testsuite.lib import fake_gcs
+from util.filesystem import files
 from util.filesystem import is_gcs_path
 from util.filesystem import open_dir
 from util.filesystem import write_file
@@ -69,6 +71,14 @@ def test_a_written_file_reads_back(root):
 def test_write_file_writes_at_a_path_or_url(root):
   write_file(f"{root}/path/to/foo.txt", "hello")
   assert open_dir(root).open_file("path/to/foo.txt").read() == "hello"
+
+
+def test_write_file_keeps_the_root_dir_of_a_root_level_path(monkeypatch):
+  open_dir_mock = mock.MagicMock()
+  monkeypatch.setattr(files, "open_dir", open_dir_mock)
+  write_file("/foo.json", "{}")
+  open_dir_mock.assert_called_once_with("/", create=True)
+  open_dir_mock.return_value.open_file.assert_called_once_with("foo.json")
 
 
 def test_all_files_lists_the_files_written(root):

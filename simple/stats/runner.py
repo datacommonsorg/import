@@ -896,11 +896,20 @@ def _utc_now() -> str:
   return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _comparable_path(directory: Dir) -> str:
+  """The dir's URL on GCS; its absolute path, with ~ and $VARS expanded, on
+  local disk, where the paths shown keep them as given."""
+  path = directory.full_path()
+  if is_gcs_path(path):
+    return path
+  return os.path.abspath(os.path.expanduser(os.path.expandvars(path or ".")))
+
+
 def _check_not_overlapping(input_dir: Dir, output_dir: Dir):
-  input_path = input_dir.full_path()
-  output_path = output_dir.full_path()
+  input_path = _comparable_path(input_dir)
+  output_path = _comparable_path(output_dir)
 
   # Check if paths are the same or if one is a parent of the other.
   if is_within(input_path, output_path) or is_within(output_path, input_path):
-    raise ValueError(
-        f"Input path ({input_path}) overlaps with output dir ({output_path})")
+    raise ValueError(f"Input path ({input_dir.full_path()}) overlaps with"
+                     f" output dir ({output_dir.full_path()})")

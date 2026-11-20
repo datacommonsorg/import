@@ -41,3 +41,9 @@ def test_local_paths_are_shown_as_given_and_normalized(tmp_path, monkeypatch):
     assert open_dir(root).open_dir("jsonld").full_path() == "out/jsonld"
   assert open_dir(".").open_file("a.csv").full_path() == "a.csv"
   assert open_dir(f"{tmp_path}/").full_path() == str(tmp_path)
+
+
+def test_an_empty_local_path_is_the_current_dir(tmp_path, monkeypatch):
+  monkeypatch.chdir(tmp_path)
+  open_dir("", create=True).open_file("a.txt").write("x")
+  assert (tmp_path / "a.txt").read_text() == "x"
