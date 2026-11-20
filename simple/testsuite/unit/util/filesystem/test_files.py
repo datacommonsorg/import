@@ -211,3 +211,41 @@ def test_streaming_reads_the_file_text_unchanged(tmp_path, text, chunk_size):
 def _read(file, **open_stream_kwargs) -> str:
   with file.open_stream(**open_stream_kwargs) as stream:
     return stream.read()
+
+
+@pytest.mark.parametrize("chunk_size", [7, 10_001])
+def test_a_part_stream_reads_the_header_then_the_part(root, chunk_size):
+  text = "\ufeffh1,h2\r\n" + "".join(f"{i},\u00e9\r\n" for i in range(3000))
+  _write_raw(root, "data.csv", text)
+  data = text.encode()
+  header_end, start, end = 10, data.index(b"\n1000,") + 1, len(data) - 5
+  expected = (data[:header_end] + data[start:end]).decode()
+  [file] = open_dir(root).all_files()
+  assert file.can_read_ranges()
+  assert file.size() == len(data)
+  assert file.read_bytes(start, start + 6) == data[start:start + 6]
+  with file.open_part_stream(header_end, start, end, chunk_size) as stream:
+    assert stream.read() == expected
+  # A part right after the header is read as one range.
+  with file.open_part_stream(header_end, header_end, end) as stream:
+    assert stream.read() == data[:end].decode()
+
+
+def test_a_part_stream_past_the_end_of_the_file_fails(root):
+  _write_raw(root, "data.csv", "h\n1\n")
+  [file] = open_dir(root).all_files()
+  # [0, 2) and [2, 5) are read as one range.
+  with pytest.raises(OSError,
+                     match="Expected 5 bytes at offset 0 of .*, got 4"):
+    with file.open_part_stream(2, 2, 5) as stream:
+      stream.read()
+
+
+def test_a_deleted_file_is_gone_and_deleting_it_again_is_ignored(root):
+  _write_raw(root, "folder/a.jsonld", "{}")
+  _write_raw(root, "folder/b.jsonld", "{}")
+  file = open_dir(root).open_file("folder/a.jsonld")
+  file.delete()
+  file.delete()
+  assert [f.path for f in open_dir(root).all_files(include_subdirs=True)
+         ] == ["folder/b.jsonld"]

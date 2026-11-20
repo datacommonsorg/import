@@ -19,7 +19,7 @@ from google.cloud import storage
 import pytest
 from testsuite.lib import fake_gcs
 from util.filesystem import open_dir
-from util.filesystem.gcs import GcsRangeReader
+from util.filesystem.ranges import RangesReader
 
 
 def _list(root: str) -> dict[str, str]:
@@ -71,21 +71,30 @@ def test_a_gzip_encoded_gcs_object_is_downloaded_whole():
   assert call.args[1:] == () and call.kwargs == {}, call  # Not a range.
 
 
-class _ShortReadBlob:
-  """A blob whose ranged downloads return one byte less than asked for."""
-  name = "data.csv"
-  bucket = mock.Mock()
-  bucket.name = "bucket"
-
-  def download_as_bytes(self, start, end, checksum):
-    del checksum  # Unused.
-    return b"x" * (end - start)
-
-
 def test_a_short_ranged_read_fails_rather_than_truncate_the_file():
-  reader = GcsRangeReader(_ShortReadBlob(), size=10, chunk_size=4)
-  with pytest.raises(OSError, match="Expected 4 bytes at offset 0"):
+
+  def short_fetch(start: int, end: int) -> bytes:
+    return b"x" * (end - start - 1)
+
+  reader = RangesReader(short_fetch, [(0, 10)],
+                        chunk_size=4,
+                        name="gs://bucket/data.csv")
+  with pytest.raises(OSError, match="Expected 4 bytes at offset 0 of gs://"):
     reader.read(10)
+
+
+def test_a_gzip_encoded_gcs_object_has_no_byte_ranges_to_read():
+  """So a large one is imported whole, not in parts."""
+  gcs = f"{fake_gcs.new_prefix()}/input"
+  fake_gcs.write_blob(f"{gcs}/data.csv", "a,b\n", content_encoding="gzip")
+  fake_gcs.write_blob(f"{gcs}/plain.csv", "a,b\n")
+  data, plain = sorted(open_dir(gcs).all_files(), key=lambda f: f.path)
+  assert not data.can_read_ranges()
+  with pytest.raises(ValueError, match="Can't read byte ranges"):
+    data.read_bytes(0, 1)
+  assert plain.can_read_ranges()
+  assert open_dir(gcs).open_file("plain.csv").size() is None  # Not listed.
+  assert not open_dir(gcs).open_file("plain.csv").can_read_ranges()
 
 
 def test_a_file_uploaded_natively_in_an_unmarked_gcs_dir_can_be_rewritten():

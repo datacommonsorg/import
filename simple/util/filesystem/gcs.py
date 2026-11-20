@@ -29,6 +29,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from util.filesystem.paths import GCS_PATH_PREFIX
 from util.filesystem.paths import normpath
+from util.filesystem.ranges import RangesReader
 
 # HTTP connections that the GCS client keeps open: enough for the threads that
 # validate CSV headers (runner._MAX_HEADER_VALIDATION_THREADS).
@@ -124,16 +125,53 @@ class GcsStorage:
     return files
 
   def open(self, path: str, gcs_object: "GcsObject | None", chunk_size: int):
-    if gcs_object and gcs_object.content_encoding != _GZIP:
-      blob = self._blob(path, generation=gcs_object.generation)
-      return GcsRangeReader(blob, gcs_object.size, chunk_size)
-    # Unlisted, there is no size or generation to read ranges of; and ranges
-    # of a gzip-encoded object are of its compressed bytes. Either way the
-    # object is downloaded whole (and decompressed).
+    if self.can_read_ranges(gcs_object):
+      return self.open_ranges(path, gcs_object, [(0, gcs_object.size)],
+                              chunk_size)
+    # See can_read_ranges: the object is downloaded whole (and decompressed).
     try:
       return io.BytesIO(self._blob(path).download_as_bytes())
     except NotFound as e:
       raise FileNotFoundError(path) from e
+
+  def can_read_ranges(self, gcs_object: "GcsObject | None") -> bool:
+    """Whether byte ranges of the object can be read.
+
+    Unlisted, there is no size or generation to read ranges of; and ranges of
+    a gzip-encoded object are of its compressed bytes.
+    """
+    return gcs_object is not None and gcs_object.content_encoding != _GZIP
+
+  def size(self, path: str, gcs_object: "GcsObject | None") -> int | None:
+    del path  # Only a listed object's size is known without a request.
+    return gcs_object.size if gcs_object else None
+
+  def read_range(self, path: str, gcs_object: "GcsObject | None", start: int,
+                 end: int) -> bytes:
+    """Returns bytes [start, end) of the object, in one ranged request."""
+    if not self.can_read_ranges(gcs_object):
+      raise ValueError(f"Can't read byte ranges of {self._key(path)}")
+    if start >= end:
+      return b""
+    blob = self._blob(path, generation=gcs_object.generation)
+    # Checksums are of whole objects, so they can't validate a range.
+    return blob.download_as_bytes(start=start, end=end - 1, checksum=None)
+
+  def open_ranges(self, path: str, gcs_object: "GcsObject | None",
+                  ranges: "list[tuple[int, int]]",
+                  chunk_size: int) -> RangesReader:
+    """Opens `ranges` of the object as one stream, read in ranged requests."""
+    return RangesReader(
+        lambda start, end: self.read_range(path, gcs_object, start, end),
+        ranges, chunk_size, f"{GCS_PATH_PREFIX}{self._bucket_name}/"
+        f"{self._key(path)}")
+
+  def delete(self, path: str) -> None:
+    """Deletes the object; one already gone is ignored."""
+    try:
+      self._blob(path).delete()
+    except NotFound:
+      pass
 
   def write(self, path: str, data: bytes) -> None:
     # Typed by name, as fs-gcsfs did: Cloud Workflows parses the JSON
@@ -159,52 +197,3 @@ class GcsObject:
     return cls(size=blob.size,
                generation=blob.generation,
                content_encoding=blob.content_encoding)
-
-
-class GcsRangeReader(io.RawIOBase):
-  """Reads a GCS object of known size in ranged requests of `chunk_size`.
-
-  Reads return as many bytes as asked for until the end, like a local file's.
-  Reading at the end sends no request.
-  """
-
-  def __init__(self, blob: storage.Blob, size: int, chunk_size: int) -> None:
-    super().__init__()
-    self._blob = blob
-    self._size = size
-    self._chunk_size = chunk_size
-    self._chunk = b""  # The last bytes fetched, from offset _pos - len.
-    self._chunk_pos = 0  # Bytes of _chunk already read.
-    self._pos = 0  # Offset of the end of _chunk.
-
-  def readable(self) -> bool:
-    return True
-
-  def readinto(self, buffer) -> int:
-    view = memoryview(buffer).cast("B")
-    filled = 0
-    while filled < len(view):
-      if self._chunk_pos == len(self._chunk) and not self._fetch_chunk():
-        break
-      n = min(len(view) - filled, len(self._chunk) - self._chunk_pos)
-      view[filled:filled + n] = self._chunk[self._chunk_pos:self._chunk_pos + n]
-      filled += n
-      self._chunk_pos += n
-    return filled
-
-  def _fetch_chunk(self) -> bool:
-    """Fetches the next chunk; returns False at the end of the object."""
-    if self._pos >= self._size:
-      return False
-    end = min(self._pos + self._chunk_size, self._size)
-    # Checksums are of whole objects, so they can't validate a range.
-    data = self._blob.download_as_bytes(start=self._pos,
-                                        end=end - 1,
-                                        checksum=None)
-    if len(data) != end - self._pos:
-      raise OSError(f"Expected {end - self._pos} bytes at offset {self._pos} of"
-                    f" gs://{self._blob.bucket.name}/{self._blob.name}, got"
-                    f" {len(data)}")
-    self._chunk, self._chunk_pos = data, 0
-    self._pos += len(data)
-    return True
