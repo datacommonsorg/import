@@ -28,6 +28,7 @@ The report has three levels:
 """
 
 from enum import Enum
+from enum import StrEnum
 from typing import Self
 
 from pydantic import BaseModel
@@ -94,6 +95,26 @@ class NodeCounts(BaseModel):
                    "counts under each."))
 
 
+class ValidationErrorType(StrEnum):
+  UNMAPPED_COLUMNS = "UNMAPPED_COLUMNS"
+  MISSING_REQUIRED_COLUMNS = "MISSING_REQUIRED_COLUMNS"
+  INVALID_CONFIGURATION = "INVALID_CONFIGURATION"
+  MISSING_SOURCE = "MISSING_SOURCE"
+  MISSING_PROVENANCE = "MISSING_PROVENANCE"
+  GENERIC_ERROR = "GENERIC_ERROR"
+
+
+class ReportError(BaseModel):
+  """One error that failed the run, with the same fields as the handshake's."""
+
+  file: str = Field(default="",
+                    description="Input file at fault, or empty if unknown")
+  errorType: ValidationErrorType = Field(description="Error type")
+  problemColumns: list[str] = Field(default_factory=list,
+                                    description="CSV columns at fault, if any")
+  errorMessage: str = Field(default="", description="What went wrong")
+
+
 class Provenance(BaseModel):
   """One entry in `folders[].provenances[]`."""
 
@@ -111,7 +132,9 @@ class Provenance(BaseModel):
                    "observations but not toward dateRange."))
   nodes: NodeCounts = Field(default_factory=NodeCounts,
                             description="Typed nodes written")
-  # TODO: Add provenance-level errors.
+  errors: list[ReportError] = Field(
+      default_factory=list,
+      description="Errors in this provenance's input files that failed the run")
 
 
 class FileCounts(BaseModel):
@@ -155,7 +178,10 @@ class IngestionReport(BaseModel):
       description="Metadata for each preprocessor run")
   folders: list[Folder] = Field(default_factory=list,
                                 description="One entry per import folder")
-  # TODO: Add error field in the ingestion report.
+  errors: list[ReportError] = Field(
+      default_factory=list,
+      description=("Errors that failed the run and belong to no input file, "
+                   "e.g. config or metadata errors"))
 
 
 class FileSummary(BaseModel):

@@ -24,6 +24,7 @@ import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
 from stats.report.model.summary import DateRange
+from stats.report.model.summary import ValidationErrorType
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
@@ -178,15 +179,6 @@ class RowEntity:
       else:
         triples.append(Triple(self.id, prop, object_id=object_id))
     return triples
-
-
-class ValidationErrorType(StrEnum):
-  UNMAPPED_COLUMNS = "UNMAPPED_COLUMNS"
-  MISSING_REQUIRED_COLUMNS = "MISSING_REQUIRED_COLUMNS"
-  INVALID_CONFIGURATION = "INVALID_CONFIGURATION"
-  MISSING_SOURCE = "MISSING_SOURCE"
-  MISSING_PROVENANCE = "MISSING_PROVENANCE"
-  GENERIC_ERROR = "GENERIC_ERROR"
 
 
 class PreprocessorError(ValueError):

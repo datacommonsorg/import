@@ -20,8 +20,8 @@ from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import strip_namespace
 from stats.data import Triple
-from stats.data import ValidationErrorType
 from stats.report.model.summary import DateRange
+from stats.report.model.summary import ValidationErrorType
 
 
 def missing_column_mappings_error(file_path: str) -> FileValidationError:

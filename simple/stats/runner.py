@@ -36,7 +36,6 @@ from stats.data import invalid_configuration
 from stats.data import PreprocessorError
 from stats.data import Provenance
 from stats.data import Source
-from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
@@ -50,6 +49,7 @@ from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import FileSummary
 from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import RunStatus
+from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
@@ -382,6 +382,9 @@ class Runner:
     self.trigger_workflow_info = None
     # The errors for the FAILURE handshake, set when the run fails.
     self._failure_errors: list[FileValidationError] | None = None
+    # Errors in input files, each with its file, so the report can put them
+    # under the file's folder and provenance.
+    self._file_errors: list[tuple[File, FileValidationError]] = []
 
     self.summary_generator = SummaryGenerator(
         os.getenv("WORKFLOW_EXECUTION_ID"))
@@ -452,6 +455,7 @@ class Runner:
       if self._failure_errors is None:
         self._failure_errors = [_failure_error(e)]
 
+      self._record_report_errors()
       self._write_report(RunStatus.FAILURE)
 
       handshake_path = self._handle_workflow_handoff()
@@ -731,8 +735,11 @@ class Runner:
     all_errors = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(
         _MAX_HEADER_VALIDATION_THREADS, len(csv_files))) as executor:
-      for errors in executor.map(self._validate_single_file_headers, csv_files):
+      for file, errors in zip(
+          csv_files, executor.map(self._validate_single_file_headers,
+                                  csv_files)):
         all_errors.extend(errors)
+        self._file_errors.extend((file, error) for error in errors)
 
     if all_errors:
       self._failure_errors = all_errors
@@ -790,6 +797,10 @@ class Runner:
         self._failure_errors = [
             _failure_error(f.error, f.file_path) for f in failures
         ]
+        files_by_path = {file.path: file for file in files}
+        self._file_errors.extend(
+            (files_by_path[f.file_path], error)
+            for f, error in zip(failures, self._failure_errors))
         _raise_for_failures(failures)
       # Workers save ids only for files with observations.
       self._merge_cross_file_collisions([
@@ -834,6 +845,20 @@ class Runner:
     logging.info("Importing %d files (%d MCF, %d CSV)...", len(files),
                  len(mcf_files), len(csv_files))
     self._run_multiprocess_imports(files)
+
+  def _record_report_errors(self) -> None:
+    """Passes the errors that failed the run to the report.
+
+    Input file errors go under their file's provenance; any other error, e.g.
+    a config or metadata error, is reported for the whole run.
+    """
+    if not self._file_errors:
+      for error in self._failure_errors:
+        self.summary_generator.record_failure(error)
+      return
+    for file, error in self._file_errors:
+      folder, provenance_id = self._report_folder_and_provenance(file)
+      self.summary_generator.record_failure(error, folder, provenance_id)
 
   def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` for `file`."""

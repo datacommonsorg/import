@@ -15,6 +15,14 @@
     "status": "FAILURE"
   },
   "ingestion_report": {
+    "errors": [
+      {
+        "errorMessage": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
+        "errorType": "INVALID_CONFIGURATION",
+        "file": "",
+        "problemColumns": []
+      }
+    ],
     "folders": [
       {
         "folderName": "health",

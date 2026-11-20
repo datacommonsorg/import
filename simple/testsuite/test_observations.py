@@ -737,3 +737,36 @@ def test_report_counts_each_file_under_its_configured_provenance():
       for p in _report_folders(result)["oecd"]["provenances"]
   }
   assert counts == {b.PROVENANCE: 2, "OtherProvenance": 1}
+
+
+def test_report_lists_each_failed_file_under_its_provenance():
+  """Every file that fails to import is reported under its own provenance."""
+  files = b.import_subdir("oecd", b.csv_file(b.obs_row(value="abc")))
+  config = json.loads(files["oecd/config.json"])
+  config["inputFiles"].append({
+      "pattern": "other.csv",
+      "provenance": "dcid:OtherProvenance",
+      "columnMappings": b.OBS_MAPPINGS
+  })
+  files.update({
+      "oecd/config.json":
+          json.dumps(config),
+      "oecd/other.mcf":
+          b.mcf_node("dcid:OtherProvenance",
+                     typeOf="dcs:Provenance",
+                     source=f"dcid:{b.SOURCE}"),
+      "oecd/other.csv":
+          b.csv_file(b.obs_row(value="xyz")),
+  })
+  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd"]})
+
+  report = result.output["ingestion_report"]
+  assert report["errors"] == []
+  errors = {
+      p["id"]: [(e["file"], e["errorType"]) for e in p["errors"]]
+      for p in _report_folders(result)["oecd"]["provenances"]
+  }
+  assert errors == {
+      b.PROVENANCE: [("case.csv", "GENERIC_ERROR")],
+      "OtherProvenance": [("other.csv", "GENERIC_ERROR")],
+  }
