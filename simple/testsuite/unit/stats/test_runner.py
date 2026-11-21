@@ -15,6 +15,7 @@
 
 import concurrent.futures
 import json
+import logging
 import os
 import shutil
 import time
@@ -87,9 +88,9 @@ def test_runner_defaults_workers_by_where_it_reads_and_writes(
     shutil.rmtree(local_input_dir, ignore_errors=True)
 
 
-def test_num_import_workers_never_exceeds_the_files():
-  assert runner.num_import_workers(max_workers=8, num_files=3) == 3
-  assert runner.num_import_workers(max_workers=2, num_files=3) == 2
+def test_num_import_workers_never_exceeds_the_tasks():
+  assert runner.num_import_workers(max_workers=8, num_tasks=3) == 3
+  assert runner.num_import_workers(max_workers=2, num_tasks=3) == 2
 
 
 @pytest.mark.parametrize("max_workers", [0, -1])
@@ -261,23 +262,56 @@ def _done_future(result=None, error=None) -> concurrent.futures.Future:
 def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
   files = [types.SimpleNamespace(path=p) for p in ("a.csv", "b.csv", "c.csv")]
   futures = [
-      _done_future(error=ValueError("cannot import a")),
-      _done_future("b"),
-      _done_future("c")
+      [_done_future(error=ValueError("cannot import a"))],
+      [_done_future("b")],
+      [_done_future("c")],
   ]
   merged = []
 
-  def merge(file, result):
-    if result == "b":
+  def merge(file, results):
+    if results == ["b"]:
       raise RuntimeError("cannot merge b")
     merged.append(file.path)
 
-  failures = runner._finish_imports(files, futures, merge)
+  failures = runner._finish_imports(files, futures, merge, _no_import_whole)
   assert [(f.file_path, str(f.error)) for f in failures] == [
       ("a.csv", "cannot import a"),
       ("b.csv", "cannot merge b"),
   ]
   assert merged == ["c.csv"]
+
+
+def _no_import_whole(file, results):
+  raise AssertionError(f"{file.path} imported whole: {results}")
+
+
+def test_a_split_file_is_merged_once_with_the_results_of_all_its_parts(caplog):
+  files = [types.SimpleNamespace(path=p) for p in ("a.csv", "b.csv")]
+  futures = [[_done_future("a0"), _done_future("a1")], [_done_future("b")]]
+  merged = []
+
+  with caplog.at_level(logging.INFO):
+    failures = runner._finish_imports(
+        files, futures, lambda file, results: merged.append(
+            (file.path, results)), _no_import_whole)
+  assert not failures
+  assert merged == [("a.csv", ["a0", "a1"]), ("b.csv", ["b"])]
+  # Logged once per file, not per part.
+  assert [r.getMessage() for r in caplog.records if "Imported" in r.message
+         ] == ["[1/2] Imported file: a.csv", "[2/2] Imported file: b.csv"]
+
+
+def test_tasks_are_submitted_largest_first_and_returned_in_order():
+  submitted = []
+
+  def submit(i):
+    submitted.append(i)
+    return f"future {i}"
+
+  assert runner._submit_largest_first([5, 20, 5, 10], submit) == [
+      "future 0", "future 1", "future 2", "future 3"
+  ]
+  assert submitted == [1, 3, 0, 2]  # Ties in task order.
 
 
 _SLOW_IMPORT_SECONDS = 1

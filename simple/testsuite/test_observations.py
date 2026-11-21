@@ -21,6 +21,7 @@ Observation ids are content hashes, so these tests compare records without
 "@id"; the e2e expected.json files pin exact ids.
 """
 
+import collections
 import json
 import logging
 
@@ -242,7 +243,16 @@ def _collision_summary(caplog) -> list[str]:
   return summaries[0].splitlines()
 
 
-def test_collisions_of_every_file_are_summarized(caplog):
+# Split modes import each file of these tests in parts (one row each, with 8
+# workers), so a file's duplicate rows are in different parts: the summary
+# must be the same.
+_COLLISION_MODES = pytest.mark.parametrize("mode",
+                                           ["disk_input", "split", "gcs_split"])
+_COLLISION_RUNNER_KWARGS = {"max_workers": 8}
+
+
+@_COLLISION_MODES
+def test_collisions_of_every_file_are_summarized(caplog, mode):
   """
   The end-of-run summary counts the collisions of every file.
 
@@ -262,7 +272,10 @@ def test_collisions_of_every_file_are_summarized(caplog):
                      b.obs_row("country/Y", value="2")),
   }
   with caplog.at_level(logging.WARNING):
-    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
+    result = b.run_dir(files,
+                       b.obs_config(b.OBS_MAPPINGS),
+                       mode=mode,
+                       runner_kwargs=_COLLISION_RUNNER_KWARGS)
   assert result.error is None, result.error
   header, *details = _collision_summary(caplog)
   assert header == (f"{_COLLISION_SUMMARY} Total of 2 observation @id"
@@ -275,7 +288,8 @@ def test_collisions_of_every_file_are_summarized(caplog):
   assert len(samples) == 2, details
 
 
-def test_collisions_across_files_are_summarized(caplog):
+@_COLLISION_MODES
+def test_collisions_across_files_are_summarized(caplog, mode):
   """
   Two files that produce the same observation id collide.
 
@@ -290,7 +304,10 @@ def test_collisions_across_files_are_summarized(caplog):
       "case_y.csv": b.csv_file(row, b.obs_row("country/Y", value="1")),
   }
   with caplog.at_level(logging.WARNING):
-    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
+    result = b.run_dir(files,
+                       b.obs_config(b.OBS_MAPPINGS),
+                       mode=mode,
+                       runner_kwargs=_COLLISION_RUNNER_KWARGS)
   assert result.error is None, result.error
   header, file_line, sample = _collision_summary(caplog)
   assert header == (f"{_COLLISION_SUMMARY} Total of 1 observation @id"
@@ -298,6 +315,67 @@ def test_collisions_across_files_are_summarized(caplog):
   assert file_line == "  File 'case_y.csv': 1 collision(s)"
   assert sample.startswith("    - @id='dcid:obs_"), sample
   assert sample.endswith(" also produced by 'case_x.csv'"), sample
+
+
+def _file_collisions(caplog) -> tuple[str, list[str], dict[str, int]]:
+  """The summary's header, file lines, and samples per file."""
+  header, *details = _collision_summary(caplog)
+  files = [line for line in details if line.startswith("  File ")]
+  samples, file = collections.Counter(), None
+  for line in details:
+    if line.startswith("  File "):
+      file = line
+    else:
+      samples[file] += 1
+  return header, files, dict(samples)
+
+
+@pytest.mark.parametrize("mode", ["split", "gcs_split"])
+def test_a_split_file_counts_its_collisions_as_if_imported_whole(caplog, mode):
+  """Duplicates in different parts are the file's own collisions.
+
+  case_x.csv repeats one key in three rows (2 collisions), two of them in one
+  part with 4 workers. case_y.csv repeats a key of case_x.csv (1 collision
+  between files), and one of its own (1).
+  """
+  key = b.obs_row("country/X", value="1")
+  files = {
+      "provenance.mcf":
+          b.PROVENANCE_MCF,
+      "case_x.csv":
+          b.csv_file(key, b.obs_row("country/A"), b.obs_row("country/B"),
+                     b.obs_row("country/X", value="2"),
+                     b.obs_row("country/X", value="3"), b.obs_row("country/C")),
+      "case_y.csv":
+          b.csv_file(b.obs_row("country/D"), key, b.obs_row("country/E"),
+                     b.obs_row("country/D", value="2")),
+  }
+  summaries = []
+  for run_mode in ("disk_input", mode):
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+      result = b.run_dir(files,
+                         b.obs_config(b.OBS_MAPPINGS),
+                         mode=run_mode,
+                         runner_kwargs={"max_workers": 4})
+    assert result.error is None, result.error
+    summaries.append(_file_collisions(caplog))
+    split = any(r.getMessage().startswith("Splitting") for r in caplog.records)
+    assert split == (run_mode == mode)
+  # The same counts, for the same files, in the same order.
+  assert summaries[1][:2] == summaries[0][:2] == (
+      f"{_COLLISION_SUMMARY} Total of 4 observation @id collisions detected"
+      " across 2 file(s):", [
+          "  File 'case_x.csv': 2 collision(s)",
+          "  File 'case_y.csv': 2 collision(s)"
+      ])
+  # A sample for each collision (up to the cap): those between parts name only
+  # the id, as those between files do.
+  assert summaries[1][2] == summaries[0][2]
+  samples = [line for line in _collision_summary(caplog) if "part" in line]
+  assert samples and all(
+      line.endswith("also produced by another part of the file")
+      for line in samples), samples
 
 
 def test_collisions_are_summarized_even_if_the_run_fails(caplog):

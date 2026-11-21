@@ -17,7 +17,9 @@ Each file is imported in its own worker process, whose `JsonLdStreamWriter`
 finds the collisions within that file only. To find collisions between files,
 each worker saves the ids of its file (`save_obs_ids`) and the coordinator
 compares the saved ids of every file once all files are imported
-(`find_cross_file_collisions`).
+(`find_cross_file_collisions`). A large CSV may be imported in parts, each in
+its own worker (see `stats.csv_split`): each part saves its ids, and
+collisions between the parts of a file are counted as the file's own.
 
 An id is the first 64 bits of the observation's sha256 hash, as in
 `JsonLdStreamWriter.track_observation_hash`.
@@ -108,7 +110,8 @@ class CrossFileCollisions:
 
   `file_counts` and `file_samples` are keyed by input file path, like the
   writer's per-file collision stats. A sample names the 64-bit id prefix and
-  an earlier file that produced the same id.
+  an earlier file that produced the same id, or says that another part of the
+  same file did.
   """
   file_counts: dict[str, int] = field(default_factory=dict)
   file_samples: dict[str, list[str]] = field(default_factory=dict)
@@ -124,11 +127,15 @@ def find_cross_file_collisions(
 
   Args:
     files: (input file path, path written by `save_obs_ids`) for every file
-      that produced observations, in import order.
+      that produced observations, in import order. A file imported in parts
+      has an entry per part with observations, one after the other.
 
   An id that k files produce is k - 1 collisions, one for each file but the
   first. With the collisions that each worker counts within its file, the
-  total is the number of observations minus the number of distinct ids.
+  total is the number of observations minus the number of distinct ids. The
+  same goes for the parts of a file: an id that k of its parts produce is
+  k - 1 collisions of the file, so its count is the same as if it were
+  imported whole.
 
   Example: if a.csv, b.csv and c.csv all produce id X, b.csv gets one
   collision with a.csv, and c.csv one with b.csv.
@@ -157,8 +164,12 @@ def find_cross_file_collisions(
       needed = max(0, MAX_SAMPLES_PER_FILE - len(samples))
       for obs_id, prev in zip(ids[mine][:needed].tolist(),
                               prev_owners[mine][:needed].tolist()):
-        samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
-                       f" '{files[prev][0]}'")
+        if files[prev][0] == key:
+          samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
+                         " another part of the file")
+        else:
+          samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
+                         f" '{files[prev][0]}'")
   return result
 
 

@@ -16,6 +16,7 @@ import json
 
 import pandas as pd
 from stats import constants
+from stats.csv_split import FilePart
 from stats.data import FileValidationError
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
@@ -83,9 +84,18 @@ class VariablePerRowImporter(Importer):
   All entity DCIDs are expected to arrive pre-resolved in the CSV.
   """
 
-  def __init__(self, input_file: File, graph_writer: GraphWriter,
-               nodes: Nodes) -> None:
+  def __init__(self,
+               input_file: File,
+               graph_writer: GraphWriter,
+               nodes: Nodes,
+               part: FilePart | None = None) -> None:
+    """
+    Args:
+      part: The part of `input_file` to import (see `stats.csv_split`), or
+        None to import all of it.
+    """
     super().__init__(input_file, graph_writer, nodes)
+    self.part = part
     # Validated by validate_headers, which the runner calls before do_import.
     self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
 
@@ -177,7 +187,7 @@ class VariablePerRowImporter(Importer):
     # column (e.g. "unit") can't end up in the observations.
     mapped = list(self.column_mappings.values())
 
-    with self.input_file.open_stream() as stream:
+    with self._open_rows() as stream:
       reader = pd.read_csv(stream,
                            na_values=constants.STANDARD_NA_VALUES,
                            chunksize=10000,
@@ -197,6 +207,13 @@ class VariablePerRowImporter(Importer):
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.counts = self.counts.add(self.count_observations(observations_df))
         self.graph_writer.write_observations(observations_df, self.input_file)
+
+  def _open_rows(self):
+    """Opens a text stream of the CSV header and the rows to import."""
+    if self.part is None:
+      return self.input_file.open_stream()
+    return self.input_file.open_part_stream(self.part.header_end,
+                                            self.part.start, self.part.end)
 
   def _apply_column_mappings(self, df: pd.DataFrame) -> pd.DataFrame:
     """Rename physical CSV columns to logical column names."""
