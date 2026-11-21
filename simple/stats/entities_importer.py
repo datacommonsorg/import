@@ -116,15 +116,10 @@ class EntitiesImporter(Importer):
                                   set(self.ignore_columns))
 
   def _read_csv(self) -> None:
-    # Read CSVs with the following behaviors:
-    # - Strip leading whitespaces
-    # - Treat comma as a thousands separator
     self.df = pd.read_csv(self.input_file.read_string_io(),
                           skipinitialspace=True,
-                          thousands=",")
+                          dtype=str)
     logging.info("Read %s rows.", self.df.index.size)
-    # Convert to best possible dtypes (i.e. keep ints as ints even when some values are NaN)
-    self.df = self.df.convert_dtypes()
 
   def _check_required_values(self) -> None:
     """Raises ValueError if a row has no DCID or type, before any is written."""
