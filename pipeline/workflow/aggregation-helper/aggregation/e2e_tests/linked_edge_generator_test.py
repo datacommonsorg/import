@@ -75,7 +75,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         calculations = [
             {
                 "name": "Linked Edges ContainedInPlace",
-                "type": "LINKED_EDGES",
+                "type": "LINKED_CONTAINED_IN_PLACE",
                 "stage": 1,
                 "input_imports": [import_name]
             }
@@ -118,7 +118,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         Place owns:   geoId/06075 (County) -> geoId/06 (State) -> country/USA (Country)
         FARS owns:    crash/1 (VehicleCrashIncident) -> geoId/06075
-        Running LINKED_EDGES for FARS alone must emit crash/1 -> {06075, 06, USA} under
+        Running LINKED_CONTAINED_IN_PLACE for FARS alone must emit crash/1 -> {06075, 06, USA} under
         FARS' generated provenance, and must not emit or delete anything for Place.
         """
         place_import = 'Place'
@@ -144,7 +144,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         calculations = [
             {
                 "name": "Linked Edges ContainedInPlace",
-                "type": "LINKED_EDGES",
+                "type": "LINKED_CONTAINED_IN_PLACE",
                 "stage": 1,
                 "input_imports": [place_import, fars_import]
             }
@@ -200,7 +200,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         calculations = [
             {
                 "name": "Linked Edges MemberOf",
-                "type": "LINKED_EDGES",
+                "type": "LINKED_MEMBER_OF",
                 "stage": 1,
                 "input_imports": [import_name]
             }
@@ -246,7 +246,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         calculations = [
             {
                 "name": "Linked Edges Member",
-                "type": "LINKED_EDGES",
+                "type": "LINKED_MEMBER",
                 "stage": 1,
                 "input_imports": [import_name]
             }
@@ -289,7 +289,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         calculations = [
             {
                 "name": "Linked Edges Cycle",
-                "type": "LINKED_EDGES",
+                "type": "LINKED_CONTAINED_IN_PLACE",
                 "stage": 1,
                 "input_imports": [import_name]
             }
@@ -346,7 +346,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         calculations = [
             {
                 "name": "Linked Edges Idempotency",
-                "type": "LINKED_EDGES",
+                "type": "LINKED_CONTAINED_IN_PLACE",
                 "stage": 1,
                 "input_imports": [import_name]
             }
@@ -391,7 +391,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         calculations = [
             {
                 "name": "Linked Edges Multiple Imports",
-                "type": "LINKED_EDGES",
+                "type": "LINKED_CONTAINED_IN_PLACE",
                 "stage": 1,
                 "input_imports": [import_a, import_b]
             }
@@ -410,6 +410,53 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
             res_b_linked_edge = list(snapshot.execute_sql(f"SELECT ancestor FROM LinkedEdge WHERE provenance = '{prov_b}' AND predicate = 'containedInPlace'"))
             self.assertEqual(len(res_a_linked_edge), 3, "ImportA should have 3 scoped linked edges in LinkedEdge table.")
             self.assertEqual(len(res_b_linked_edge), 3, "ImportB should have 3 scoped linked edges in LinkedEdge table.")
+
+    def test_one_type_keeps_other_types_rows(self):
+        """Re-running one linked edge type replaces only its own rows for the import.
+
+        The import already has linkedMember and linkedMemberOf rows (written by the
+        other two types) and a stale linkedContainedInPlace row, all under the same
+        generated provenance. Running only LINKED_CONTAINED_IN_PLACE must replace the
+        stale containment row and leave the other two rows alone.
+        """
+        import_name = 'Mixed_Import_Test'
+
+        self.add_node('geoId/06075', 'San Francisco County', types=['County'])
+        self.add_node('TestVariable', 'Test Variable', types=['StatisticalVariable'])
+        self.add_node('Instance_A', 'Instance A', types=['Class_B'])
+
+        self.add_edge('geoId/06075', 'containedInPlace', 'geoId/06', import_name)
+        # Rows from earlier runs, all under the import's generated provenance.
+        self.add_edge('TestVariable', 'linkedMember', 'dc/topic/TestTopic', f'generated/{import_name}')
+        self.add_edge('Instance_A', 'linkedMemberOf', 'Class_B', f'generated/{import_name}')
+        self.add_edge('geoId/06075', 'linkedContainedInPlace', 'geoId/Stale', f'generated/{import_name}')
+
+        self.flush_to_spanner()
+
+        calculations = [
+            {
+                "name": "Linked Edges ContainedInPlace Only",
+                "type": "LINKED_CONTAINED_IN_PLACE",
+                "stage": 1,
+                "input_imports": [import_name]
+            }
+        ]
+        res = self.run_orchestrator(calculations=calculations, active_imports=[import_name])
+        self.assertTrue(res.success)
+
+        generated = get_provenance_name(f'generated/{import_name}', self.is_base_dc)
+        with self.database.snapshot() as snapshot:
+            rows = list(snapshot.execute_sql(f"""
+                SELECT subject_id, predicate, object_id
+                FROM Edge
+                WHERE provenance = '{generated}'
+                ORDER BY predicate, subject_id, object_id
+            """))
+        self.assertEqual([tuple(r) for r in rows], [
+            ('geoId/06075', 'linkedContainedInPlace', 'geoId/06'),
+            ('TestVariable', 'linkedMember', 'dc/topic/TestTopic'),
+            ('Instance_A', 'linkedMemberOf', 'Class_B'),
+        ])
 
     def test_topic_and_svpg_list_edges(self):
         """Tests materialization of relevantVariableList and memberList edges and literal nodes."""
@@ -489,7 +536,7 @@ class LinkedEdgeGeneratorIntegrationTest(AggregationIntegrationTestBase):
         calculations = [
             {
                 "name": "Linked Edges Without Topic Lists",
-                "type": "LINKED_EDGES",
+                "type": "LINKED_MEMBER",
                 "stage": 1,
                 "input_imports": [import_name],
                 "generate_topic_list_edges": False

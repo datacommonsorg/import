@@ -16,7 +16,7 @@
 
 import concurrent.futures
 import logging
-from typing import List
+from typing import List, Sequence
 from google.cloud import spanner
 
 from .common import (
@@ -29,6 +29,19 @@ from .common import (
 # Default timeout for partitioned DML streaming RPCs (6 hours = 21600 seconds),
 # matching Cloud Run Job / Workflow execution limits.
 DEFAULT_DELETION_TIMEOUT_SECONDS = 21600.0
+
+
+def _sql_string_list(values: Sequence[str]) -> str:
+    """Formats internal predicate names as a SQL list of string literals.
+
+    E.g. ('linkedMember', 'linkedMemberOf') -> "'linkedMember', 'linkedMemberOf'".
+    Only plain alphanumeric names are accepted, so the values can be inlined in
+    the SQL safely (as the other predicate filters in this file are).
+    """
+    for value in values:
+        if not value.isalnum():
+            raise ValueError(f"Unexpected predicate name: {value!r}")
+    return ", ".join(f"'{value}'" for value in values)
 
 
 class AggregationDeleter:
@@ -233,18 +246,56 @@ class AggregationDeleter:
         logging.info(f"Deleted {rows} StatVarGroup edges across all provenances.")
         return rows
 
-    def delete_linked_edges(self, imports_to_delete: List[str]) -> int:
-        """Deletes generated linked relationship edges for the specified imports from Spanner."""
+    def delete_linked_edges(
+        self,
+        imports_to_delete: List[str],
+        edge_predicates: Sequence[str],
+        linked_edge_predicates: Sequence[str] = (),
+    ) -> int:
+        """Deletes generated linked edges with the given predicates for the specified imports.
+
+        Rows must match both an import's generated provenance and one of the
+        predicates, so each linked edge calculation type deletes only the rows it
+        writes and leaves the other types' rows alone.
+
+        Args:
+            imports_to_delete: Import names (without the dc/base/ prefix).
+            edge_predicates: Predicates to delete from the Edge table.
+            linked_edge_predicates: Predicates to delete from the LinkedEdge table.
+
+        Returns:
+            Number of rows deleted.
+        """
         if not imports_to_delete:
             return 0
+        logging.info(
+            f"Deleting generated linked edges for imports {imports_to_delete}: "
+            f"Edge predicates {list(edge_predicates)}, "
+            f"LinkedEdge predicates {list(linked_edge_predicates)}"
+        )
         provenance_names = [
             get_provenance_name(f"generated/{name}", self.is_base_dc)
             for name in imports_to_delete
         ]
-        delete_queries = [
-            ("Edge", "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances)", ""),
-            ("LinkedEdge", "DELETE FROM LinkedEdge WHERE provenance IN UNNEST(@provenances)", "")
-        ]
+        delete_queries = []
+        if edge_predicates:
+            delete_queries.append(
+                (
+                    "Edge",
+                    "DELETE FROM Edge WHERE provenance IN UNNEST(@provenances) "
+                    f"AND predicate IN ({_sql_string_list(edge_predicates)})",
+                    f" ({', '.join(edge_predicates)})",
+                )
+            )
+        if linked_edge_predicates:
+            delete_queries.append(
+                (
+                    "LinkedEdge",
+                    "DELETE FROM LinkedEdge WHERE provenance IN UNNEST(@provenances) "
+                    f"AND predicate IN ({_sql_string_list(linked_edge_predicates)})",
+                    f" ({', '.join(linked_edge_predicates)})",
+                )
+            )
         params = {"provenances": provenance_names}
         param_types = {
             "provenances": spanner.param_types.Array(spanner.param_types.STRING)

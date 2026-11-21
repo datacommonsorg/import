@@ -1,7 +1,21 @@
 calculations:
-  # Generates linkedContainedInPlace, linkedMemberOf, etc.
-  - name: "Global: ContainedInPlace & MemberOf Graph Linked Edges"
-    type: LINKED_EDGES
+  # Generates linkedMember edges (variable -> ancestor topic).
+  - name: "Global: Linked Member Edges"
+    type: LINKED_MEMBER
+    stage: 0
+    input_imports:
+      - "*"
+
+  # Generates linkedMemberOf edges (node -> ancestor group).
+  - name: "Global: Linked MemberOf Edges"
+    type: LINKED_MEMBER_OF
+    stage: 0
+    input_imports:
+      - "*"
+
+  # Generates linkedContainedInPlace edges and LinkedEdge rows.
+  - name: "Global: Linked ContainedInPlace Edges"
+    type: LINKED_CONTAINED_IN_PLACE
     stage: 0
     input_imports:
       - "*"

@@ -326,16 +326,17 @@ class TestValidatorErrorsAndFileSystem(unittest.TestCase):
         self.assertIn("JSON Schema file not found", str(ctx.exception))
 
     def test_validate_production_configs(self):
-        """Verifies that all production aggregation config YAML files in configs/ pass validation."""
+        """Verifies that all production aggregation config YAML files in configs/ and configs/base_dc/ pass validation."""
         configs_dir = os.path.join(os.path.dirname(__file__), "configs")
         yaml_files = [
-            os.path.join(configs_dir, f)
-            for f in os.listdir(configs_dir)
+            os.path.join(directory, f)
+            for directory in (configs_dir, os.path.join(configs_dir, "base_dc"))
+            for f in os.listdir(directory)
             if f.endswith(".yaml") or f.endswith(".yml")
         ]
         self.assertGreater(len(yaml_files), 0, "No production config YAML files found to test.")
         for config_file in yaml_files:
-            with self.subTest(config_file=os.path.basename(config_file)):
+            with self.subTest(config_file=os.path.relpath(config_file, configs_dir)):
                 calculations = validate_config(config_file, self.schema_path)
                 self.assertIsInstance(calculations, list)
                 self.assertGreater(len(calculations), 0)

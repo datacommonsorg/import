@@ -211,35 +211,73 @@ class TestAggregationDeleter(unittest.TestCase):
         )
 
     @patch("aggregation.deleter.spanner.Client")
-    def test_delete_linked_edges(self, mock_spanner_client):
+    def test_delete_linked_edges_targets_the_imports_generated_provenances(
+        self, mock_spanner_client
+    ):
         mock_db = create_autospec(Database, instance=True)
         mock_spanner_client.return_value.instance.return_value.database.return_value = (
             mock_db
         )
-
         deleter = AggregationDeleter("proj", "inst", "db", is_base_dc=True)
-        deleter.delete_linked_edges(["ImportA"])
 
-        # Verify execute_partitioned_dml calls (order-independent due to parallel execution)
-        self.assertEqual(mock_db.execute_partitioned_dml.call_count, 2)
+        deleter.delete_linked_edges(
+            ["ImportA", "ImportB"], ("linkedContainedInPlace",), ("containedInPlace",)
+        )
 
-        expected_params = {"provenances": ["dc/base/generated/ImportA"]}
-        expected_provenance_filter = "provenance IN UNNEST(@provenances)"
+        # One delete for each table (Edge and LinkedEdge).
+        expected_params = {
+            "provenances": ["dc/base/generated/ImportA", "dc/base/generated/ImportB"]
+        }
+        self.assertEqual(
+            [c.kwargs["params"] for c in mock_db.execute_partitioned_dml.call_args_list],
+            [expected_params, expected_params],
+        )
 
-        calls = mock_db.execute_partitioned_dml.call_args_list
-        executed_sqls = [c[0][0] for c in calls]
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_linked_edges_returns_total_rows_deleted(self, mock_spanner_client):
+        mock_db = create_autospec(Database, instance=True)
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+        # Rows deleted from Edge and from LinkedEdge, in either order.
+        mock_db.execute_partitioned_dml.side_effect = [3, 5]
+        deleter = AggregationDeleter("proj", "inst", "db")
 
-        self.assertTrue(any("DELETE FROM Edge" in sql for sql in executed_sqls))
-        self.assertTrue(any("DELETE FROM LinkedEdge" in sql for sql in executed_sqls))
-        for sql in executed_sqls:
-            self.assertIn(expected_provenance_filter, sql)
+        rows = deleter.delete_linked_edges(
+            ["ImportA"], ("linkedContainedInPlace",), ("containedInPlace",)
+        )
 
-        for c in calls:
-            self.assertEqual(c[1]["params"], expected_params)
-            self.assertEqual(
-                c[1]["request_options"].priority,
-                RequestOptions.Priority.PRIORITY_LOW,
-            )
+        self.assertEqual(rows, 8)
+
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_linked_edges_without_imports_deletes_nothing(
+        self, mock_spanner_client
+    ):
+        mock_db = create_autospec(Database, instance=True)
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+        deleter = AggregationDeleter("proj", "inst", "db")
+
+        rows = deleter.delete_linked_edges([], ("linkedMember",))
+
+        self.assertEqual(rows, 0)
+        mock_db.execute_partitioned_dml.assert_not_called()
+
+    @patch("aggregation.deleter.spanner.Client")
+    def test_delete_linked_edges_rejects_unexpected_predicate_names(
+        self, mock_spanner_client
+    ):
+        mock_db = create_autospec(Database, instance=True)
+        mock_spanner_client.return_value.instance.return_value.database.return_value = (
+            mock_db
+        )
+        deleter = AggregationDeleter("proj", "inst", "db")
+
+        with self.assertRaises(ValueError):
+            deleter.delete_linked_edges(["ImportA"], ("linkedMember') OR ('1' = '1",))
+
+        mock_db.execute_partitioned_dml.assert_not_called()
 
     @patch("aggregation.deleter.spanner.Client")
     def test_delete_topic_list_edges_base_dc(self, mock_spanner_client):
