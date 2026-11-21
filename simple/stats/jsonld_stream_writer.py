@@ -114,15 +114,16 @@ def _ref(val) -> dict | None:
   return dict(ref) if ref is not None else None
 
 
-def _parse_numeric(val):
-  if val is None or val == "" or pd.isna(val):
+def _text(val) -> str | None:
+  """The literal `val` as written, without surrounding whitespace; None if empty.
+
+  Literals are written as text rather than parsed as numbers, so that "12.50"
+  keeps its significant figures and "007" its leading zeros. The loader stores
+  every literal as text anyway.
+  """
+  if val is None or pd.isna(val):
     return None
-  try:
-    if "." in str(val):
-      return float(val)
-    return int(val)
-  except ValueError:
-    return str(val)
+  return str(val).strip() or None
 
 
 def _prefix_dcid(key: str) -> str:
@@ -179,8 +180,8 @@ def _build_observation_node(row: tuple) -> dict:
       "@id": f"dcid:obs_{obs_hash}",
       "@type": "dcid:StatVarObservation",
       "dcid:variableMeasured": var_obj,
-      "dcid:observationDate": _parse_numeric(date),
-      "dcid:value": _parse_numeric(value),
+      "dcid:observationDate": _text(date),
+      "dcid:value": _text(value),
   }
   entity_ref = _ref(entity)
   if entity_ref:
@@ -189,11 +190,11 @@ def _build_observation_node(row: tuple) -> dict:
     obs_obj["dcid:provenance"] = _ref(provenance)
   if unit:
     obs_obj["dcid:unit"] = _ref(unit)
-  if scaling_factor:
-    obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
+  if scaling_factor := _text(scaling_factor):
+    obs_obj["dcid:scalingFactor"] = scaling_factor
   if mmethod:
     obs_obj["dcid:measurementMethod"] = _ref(mmethod)
-  if period:
+  if period := _text(period):
     obs_obj["dcid:observationPeriod"] = period
 
   for k, v in props_dict.items():
@@ -201,7 +202,7 @@ def _build_observation_node(row: tuple) -> dict:
     if is_entity_reference(v):
       obs_obj[prop_key] = _ref(v)
     else:
-      obs_obj[prop_key] = _parse_numeric(v)
+      obs_obj[prop_key] = _text(v)
   return obs_obj
 
 
@@ -261,7 +262,7 @@ def _node_shard(chunk, shard_index: int, ns_map: dict[str,
     pred_key = "@type" if pred == "typeOf" else (
         pred if is_uri_or_namespace(pred) else f"dcid:{pred}")
     val = (_uri_ref(_rewrite_custom_ns_to_dcid(row.object_id))
-           if row.object_id else _parse_numeric(row.object_value))
+           if row.object_id else _text(row.object_value))
     if pred_key == "@type":
       val = val["@id"] if isinstance(val, dict) and "@id" in val else str(val)
     _append_unique_value(subjects[sub_id], pred_key, val)
