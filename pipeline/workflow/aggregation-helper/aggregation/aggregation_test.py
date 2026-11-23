@@ -27,7 +27,7 @@ from google.cloud.spanner_v1.snapshot import Snapshot
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aggregation import BigQueryExecutor
-from aggregation import LinkedEdgeGenerator, LinkedEdgeConfig
+from aggregation import LinkedEdgeGenerator
 from aggregation import MaterializedEdgeGenerator, MaterializedEdgeConfig
 from aggregation import StatVarGroupGenerator
 from aggregation import ProvenanceSummaryGenerator, ProvenanceSummaryConfig
@@ -351,29 +351,17 @@ class TestLinkedEdgeGenerator(unittest.TestCase):
         self.mock_executor.connection_id = "test-conn"
         self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
 
-    def test_run_all_empty(self):
+    def test_queries_submit_no_job_without_imports(self):
         generator = LinkedEdgeGenerator(self.mock_executor)
-        jobs = generator.run_all(LinkedEdgeConfig(import_names=[]))
-        self.assertEqual(jobs, [])
+
+        jobs = [
+            generator.run_linked_contained_in_place([]),
+            generator.run_linked_member_of([]),
+            generator.run_linked_member([]),
+        ]
+
+        self.assertEqual(jobs, [None, None, None])
         self.mock_executor.execute.assert_not_called()
-
-    def test_run_all(self):
-        generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)
-
-        mock_job = MagicMock()
-        self.mock_executor.execute.return_value = mock_job
-
-        jobs = generator.run_all(LinkedEdgeConfig(import_names=["import1", "import2"]))
-
-        self.assertEqual(len(jobs), 3)  # Runs the 3 scoped linked edge queries
-        self.assertEqual(self.mock_executor.execute.call_count, 3)
-
-        # Verify queries contain connection id and spanner destination uri
-        calls = self.mock_executor.execute.call_args_list
-        for call in calls:
-            query = call[0][0]
-            self.assertIn("test-conn", query)
-            self.assertIn("spanner-uri", query)
 
     def test_run_linked_member(self):
         generator = LinkedEdgeGenerator(self.mock_executor, is_base_dc=True)

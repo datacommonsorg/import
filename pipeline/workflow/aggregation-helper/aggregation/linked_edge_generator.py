@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from google.cloud import bigquery
 
@@ -27,11 +26,24 @@ from .common import (
 )
 
 
-@dataclass
-class LinkedEdgeConfig:
-    """Configuration for linked edge generation."""
+@dataclass(frozen=True)
+class LinkedEdgeOutputs:
+    """Predicates that one linked edge calculation type writes, per Spanner table."""
 
-    import_names: Optional[List[str]] = None
+    edge_predicates: Tuple[str, ...]
+    linked_edge_predicates: Tuple[str, ...] = ()
+
+
+# The predicates each linked edge type writes. Before a type re-runs, these are
+# the rows it deletes, so keep this in sync with the queries below.
+LINKED_EDGE_OUTPUTS: Dict[str, LinkedEdgeOutputs] = {
+    "LINKED_CONTAINED_IN_PLACE": LinkedEdgeOutputs(
+        edge_predicates=("linkedContainedInPlace",),
+        linked_edge_predicates=("containedInPlace",),
+    ),
+    "LINKED_MEMBER_OF": LinkedEdgeOutputs(edge_predicates=("linkedMemberOf",)),
+    "LINKED_MEMBER": LinkedEdgeOutputs(edge_predicates=("linkedMember",)),
+}
 
 
 class LinkedEdgeGenerator:
@@ -41,23 +53,6 @@ class LinkedEdgeGenerator:
         """Initializes the LinkedEdgeGenerator with the executor."""
         self.executor = executor
         self.is_base_dc = is_base_dc
-
-    def run_all(self, config: LinkedEdgeConfig) -> List[bigquery.job.QueryJob]:
-        """Runs all global aggregations asynchronously and returns their jobs."""
-        import_names = config.import_names
-
-        if not import_names:
-            logging.info("No imports specified. Skipping global aggregations.")
-            return []
-
-        logging.info(f"Running global aggregations for imports: {import_names}")
-
-        jobs = [
-            self.run_linked_contained_in_place(import_names),
-            self.run_linked_member_of(import_names),
-            self.run_linked_member(import_names),
-        ]
-        return [job for job in jobs if job]
 
     def run_linked_member_of(
         self, import_names: List[str] = None
@@ -131,7 +126,7 @@ class LinkedEdgeGenerator:
           NewEdges
         """
         labels, job_id_prefix = build_bq_job_tags(
-            self.is_base_dc, "linked_edges", import_names[0]
+            self.is_base_dc, "linked_member_of", import_names[0]
         )
         return self.executor.execute(
             query, labels=labels, job_id_prefix=job_id_prefix
@@ -249,7 +244,7 @@ class LinkedEdgeGenerator:
         ON N.subject_id = T.subject_id;
         """
         labels, job_id_prefix = build_bq_job_tags(
-            self.is_base_dc, "linked_edges", import_names[0]
+            self.is_base_dc, "linked_contained_in_place", import_names[0]
         )
         return self.executor.execute(
             query, labels=labels, job_id_prefix=job_id_prefix
@@ -358,7 +353,7 @@ class LinkedEdgeGenerator:
           NewEdges
         """
         labels, job_id_prefix = build_bq_job_tags(
-            self.is_base_dc, "linked_edges", import_names[0]
+            self.is_base_dc, "linked_member", import_names[0]
         )
         return self.executor.execute(
             query, labels=labels, job_id_prefix=job_id_prefix

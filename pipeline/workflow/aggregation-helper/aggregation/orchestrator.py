@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional
 
 from .bq_executor import BigQueryExecutor
 from .embedding_generator import EmbeddingGenerator, EmbeddingGenerationConfig
-from .linked_edge_generator import LinkedEdgeGenerator, LinkedEdgeConfig
+from .linked_edge_generator import LINKED_EDGE_OUTPUTS, LinkedEdgeGenerator
 from .materialized_edge_generator import (
     MaterializedEdgeGenerator,
     MaterializedEdgeConfig,
@@ -99,7 +99,9 @@ class CalculationType(str, Enum):
     STAT_VAR_AGGREGATION = "STAT_VAR_AGGREGATION"
     ENTITY_AGGREGATION = "ENTITY_AGGREGATION"
     STAT_VAR_CALCULATION = "STAT_VAR_CALCULATION"
-    LINKED_EDGES = "LINKED_EDGES"
+    LINKED_CONTAINED_IN_PLACE = "LINKED_CONTAINED_IN_PLACE"
+    LINKED_MEMBER_OF = "LINKED_MEMBER_OF"
+    LINKED_MEMBER = "LINKED_MEMBER"
     PROVENANCE_SUMMARY = "PROVENANCE_SUMMARY"
     STAT_VAR_GROUPS = "STAT_VAR_GROUPS"
     STAT_VAR_SERIES_AGGREGATION = "STAT_VAR_SERIES_AGGREGATION"
@@ -115,8 +117,12 @@ GLOBAL_CALCULATION_TYPES = {
 }
 
 
-SCOPED_GRAPH_CALCULATION_TYPES = {
-    CalculationType.LINKED_EDGES,
+# Linked edge closures. Each type deletes only the predicates it writes
+# (LINKED_EDGE_OUTPUTS), under the generated provenance of the imports it lists.
+LINKED_EDGE_CALCULATION_TYPES = {
+    CalculationType.LINKED_CONTAINED_IN_PLACE,
+    CalculationType.LINKED_MEMBER_OF,
+    CalculationType.LINKED_MEMBER,
 }
 
 
@@ -125,7 +131,10 @@ class DeletionPlan:
     """Encapsulates resolved import names and global flags scheduled for pre-aggregation deletion."""
 
     aggregated_imports: List[str] = field(default_factory=list)
-    linked_edge_imports: List[str] = field(default_factory=list)
+    # Imports whose generated linked edges to delete, per linked edge calculation type.
+    linked_edge_imports: Dict[CalculationType, List[str]] = field(
+        default_factory=dict
+    )
     provenance_summary_imports: List[str] = field(default_factory=list)
     delete_stat_var_groups: bool = False
     delete_topic_lists: bool = False
@@ -419,7 +428,7 @@ class AggregationOrchestrator:
     def _build_deletion_plan(self, imports: List[str]) -> DeletionPlan:
         """Resolves deletion requirements based on active imports and configured calculation steps."""
         to_delete = set()
-        linked_to_delete = set()
+        linked_to_delete: Dict[CalculationType, set] = {}
         prov_summaries_to_delete = set()
         delete_stat_var_groups = False
 
@@ -431,8 +440,9 @@ class AggregationOrchestrator:
                 output = calc.get(_OUTPUT_IMPORT_KEY)
                 if output:
                     to_delete.add(output)
-                if calc.get("type") in SCOPED_GRAPH_CALCULATION_TYPES:
-                    linked_to_delete.add(single_import)
+                if calc.get("type") in LINKED_EDGE_CALCULATION_TYPES:
+                    linked_type = CalculationType(calc.get("type"))
+                    linked_to_delete.setdefault(linked_type, set()).add(single_import)
                 if calc.get("type") == CalculationType.PROVENANCE_SUMMARY:
                     prov_summaries_to_delete.add(single_import)
                 if calc.get("type") == CalculationType.STAT_VAR_GROUPS:
@@ -454,7 +464,12 @@ class AggregationOrchestrator:
 
         return DeletionPlan(
             aggregated_imports=sorted(list(to_delete)),
-            linked_edge_imports=sorted(list(linked_to_delete)),
+            linked_edge_imports={
+                linked_type: sorted(linked_imports)
+                for linked_type, linked_imports in sorted(
+                    linked_to_delete.items(), key=lambda item: item[0].value
+                )
+            },
             provenance_summary_imports=sorted(list(prov_summaries_to_delete)),
             delete_stat_var_groups=delete_stat_var_groups,
             delete_topic_lists=should_delete_topic_lists,
@@ -480,9 +495,9 @@ class AggregationOrchestrator:
                 logging.info(
                     f"[Dry Run] Would delete aggregated data for imports: {plan.aggregated_imports}"
                 )
-            if plan.linked_edge_imports:
+            for linked_type, linked_imports in plan.linked_edge_imports.items():
                 logging.info(
-                    f"[Dry Run] Would delete linked relationship edges for imports: {plan.linked_edge_imports}"
+                    f"[Dry Run] Would delete {linked_type.value} linked edges for imports: {linked_imports}"
                 )
             if plan.provenance_summary_imports:
                 logging.info(
@@ -499,8 +514,13 @@ class AggregationOrchestrator:
         else:
             if plan.aggregated_imports:
                 self.deleter.delete_aggregated_data(plan.aggregated_imports)
-            if plan.linked_edge_imports:
-                self.deleter.delete_linked_edges(plan.linked_edge_imports)
+            for linked_type, linked_imports in plan.linked_edge_imports.items():
+                outputs = LINKED_EDGE_OUTPUTS[linked_type.value]
+                self.deleter.delete_linked_edges(
+                    linked_imports,
+                    outputs.edge_predicates,
+                    outputs.linked_edge_predicates,
+                )
             if plan.provenance_summary_imports:
                 self.deleter.delete_provenance_summaries(
                     plan.provenance_summary_imports
@@ -595,7 +615,7 @@ class AggregationOrchestrator:
             return self._trigger_entity(calc, applicable_imports)
         elif step_type == CalculationType.STAT_VAR_CALCULATION:
             return self._trigger_stat_var_calculation(calc, applicable_imports)
-        elif step_type == CalculationType.LINKED_EDGES:
+        elif step_type in LINKED_EDGE_CALCULATION_TYPES:
             return self._trigger_linked_edges(calc, applicable_imports)
         elif step_type == CalculationType.PROVENANCE_SUMMARY:
             return self._trigger_provenance_summary(calc, applicable_imports)
@@ -742,11 +762,19 @@ class AggregationOrchestrator:
     def _trigger_linked_edges(
         self, config: Dict[str, Any], applicable_imports: List[str]
     ) -> List[Any]:
-        """Triggers linked edge aggregations."""
-        logging.info(f"  -> Linked Edges Aggregation for imports {applicable_imports}")
+        """Triggers the linked edge query for one linked edge calculation type."""
+        linked_type = CalculationType(config.get("type"))
+        logging.info(
+            f"  -> Linked Edges ({linked_type.value}) for imports {applicable_imports}"
+        )
         generator = LinkedEdgeGenerator(self.executor, self.is_base_dc)
-        edge_config = LinkedEdgeConfig(import_names=applicable_imports)
-        return generator.run_all(config=edge_config)
+        run_query = {
+            CalculationType.LINKED_CONTAINED_IN_PLACE: generator.run_linked_contained_in_place,
+            CalculationType.LINKED_MEMBER_OF: generator.run_linked_member_of,
+            CalculationType.LINKED_MEMBER: generator.run_linked_member,
+        }[linked_type]
+        job = run_query(applicable_imports)
+        return [job] if job else []
 
     def _trigger_provenance_summary(
         self, config: Dict[str, Any], applicable_imports: List[str]
