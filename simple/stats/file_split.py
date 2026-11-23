@@ -73,9 +73,15 @@ def num_parts(size: int, max_parts: int, split_bytes: int) -> int:
   return max(1, min(max_parts, size // min_part_bytes))
 
 
-def _is_splittable(file: File, config: Config) -> bool:
-  return (file.path.lower().endswith(".mcf") or
-          config.import_type(file) == ImportType.OBSERVATIONS)
+def _is_mcf(file: File) -> bool:
+  return file.path.lower().endswith(".mcf")
+
+
+def _can_split(file: File, config: Config, csv_stems: set[str]) -> bool:
+  if _is_mcf(file):
+    return True
+  return (config.import_type(file) == ImportType.OBSERVATIONS and
+          not part_shards_could_collide(file.path, csv_stems))
 
 
 def plan_splits(files: list[File],
@@ -84,13 +90,12 @@ def plan_splits(files: list[File],
                 split_bytes: int | None = None) -> dict[str, list[FilePart]]:
   """Returns byte-range parts for each large observation CSV or MCF, by path."""
   threshold = split_bytes or SPLIT_FILE_BYTES
-  stems = {file_shard_stem(f.path) for f in files}
+  csv_stems = {file_shard_stem(f.path) for f in files if not _is_mcf(f)}
   candidates = [
       (f, parts)
       for f in files
       if (parts := num_parts(f.size() or 0, max_workers, threshold)) > 1 and
-      _is_splittable(f, config) and
-      not part_shards_could_collide(f.path, stems)
+      _can_split(f, config, csv_stems)
   ]
   if not candidates:
     return {}
@@ -159,8 +164,7 @@ def _plan_file_or_none(file: File, parts: int) -> list[FilePart] | None:
   size = file.size()
   if parts < 2 or size is None or not file.can_read_ranges():
     return None
-  planner = (plan_mcf_parts
-             if file.path.lower().endswith(".mcf") else plan_csv_parts)
+  planner = plan_mcf_parts if _is_mcf(file) else plan_csv_parts
   try:
     return planner(file.read_bytes, size, parts)
   except Exception:  # pylint: disable=broad-except
@@ -211,23 +215,10 @@ def _after_first_newline(read: ReadRange, start: int, end: int,
 def _first_mcf_node_offset(read: ReadRange, size: int,
                            window_bytes: int) -> int | None:
   """Returns the byte offset of the first `Node:` line, or None."""
-  length = window_bytes
-  while True:
-    end = min(length, size)
-    data = read(0, end)
-    nl = data.find(b"\n")
-    if nl >= 0 or end == size:
-      first_line = data[:nl] if nl >= 0 else data
-      if _MCF_NODE_LINE_RE.match(first_line.removeprefix(_UTF8_BOM)):
-        return 0
-      if nl < 0:
-        return None
-      if (match := _MCF_NEXT_NODE_RE.search(data, nl)) is not None:
-        return match.start() + 1
-      if end == size:
-        return None
-      return _find_mcf_node_after(read, data.rfind(b"\n"), size, window_bytes)
-    length *= 2
+  head = read(0, min(max(window_bytes, 64), size)).removeprefix(_UTF8_BOM)
+  if _MCF_NODE_LINE_RE.match(head):
+    return 0
+  return _find_mcf_node_after(read, 0, size, window_bytes)
 
 
 def _find_mcf_node_after(read: ReadRange, start: int, end: int,

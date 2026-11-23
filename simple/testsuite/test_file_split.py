@@ -30,6 +30,48 @@ def _assert_same_output(actual: b.Result, expected: b.Result) -> None:
     assert actual.output[key] == expected.output[key], key
 
 
+def _run_split_and_unsplit(
+    files: dict[str, str | bytes],
+    config: dict | None = None,
+    *,
+    mode: str = "disk_input",
+    import_names: list[str] | None = None,
+    caplog=None,
+) -> tuple[b.Result, b.Result]:
+  """Runs the same input unsplit and split (1-byte threshold); asserts parity."""
+  base_kwargs = {"max_workers": 4}
+  if import_names:
+    base_kwargs["import_names"] = import_names
+  unsplit = b.run_dir(files,
+                      config,
+                      mode=mode,
+                      runner_kwargs={
+                          **base_kwargs,
+                          "split_file_bytes": 10**9,
+                      })
+  if caplog is not None:
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+      split = b.run_dir(files,
+                        config,
+                        mode=mode,
+                        runner_kwargs={
+                            **base_kwargs,
+                            "split_file_bytes": 1,
+                        })
+  else:
+    split = b.run_dir(files,
+                      config,
+                      mode=mode,
+                      runner_kwargs={
+                          **base_kwargs,
+                          "split_file_bytes": 1,
+                      })
+  assert split.error is None, split.error
+  _assert_same_output(split, unsplit)
+  return split, unsplit
+
+
 def _plan_csv(data: bytes, parts: int = 4) -> list[file_split.FilePart] | None:
   return file_split.plan_csv_parts(lambda s, e: data[s:e], len(data), parts)
 
@@ -52,12 +94,10 @@ def test_num_parts_and_plan_csv_parts():
       f"country/C{i},Count_Person,2020,{i}\n".encode() for i in range(20))
   parts = _plan_csv(data, parts=4)
   assert parts is not None and len(parts) == 4
-  # Parts tile [header_end, len(data)) contiguously with no gaps or overlaps.
   assert parts[0].start == parts[0].header_end
   assert parts[-1].end == len(data)
   assert all(a.end == b_.start for a, b_ in zip(parts, parts[1:]))
 
-  # Files that must not be split return None.
   for unsplit in [
       b"",
       b"a,b\n",
@@ -72,29 +112,10 @@ def test_num_parts_and_plan_csv_parts():
 def test_split_matches_unsplit_records_report_and_collisions(mode, caplog):
   """Split output, report, handshake and cross-part collisions match unsplit."""
   rows = [b.obs_row(f"country/C{i}", value=str(i)) for i in range(12)]
-  # Duplicate key far apart so the two rows land in different parts.
   rows.append(b.obs_row("country/C0", value="99"))
   files = b.import_subdir("oecd", b.csv_file(*rows))
 
-  unsplit = b.run_dir(files,
-                      mode=mode,
-                      runner_kwargs={
-                          "import_names": ["oecd"],
-                          "max_workers": 4,
-                          "split_file_bytes": 10**9,
-                      })
-  caplog.clear()
-  with caplog.at_level(logging.WARNING):
-    split = b.run_dir(files,
-                      mode=mode,
-                      runner_kwargs={
-                          "import_names": ["oecd"],
-                          "max_workers": 4,
-                          "split_file_bytes": 1,
-                      })
-
-  assert split.error is None, split.error
-  assert split.output == unsplit.output
+  _run_split_and_unsplit(files, mode=mode, import_names=["oecd"], caplog=caplog)
   summaries = [
       r.getMessage()
       for r in caplog.records
@@ -106,35 +127,22 @@ def test_split_matches_unsplit_records_report_and_collisions(mode, caplog):
 
 
 def test_split_falls_back_to_whole_file_when_part_fails(caplog):
-  """A split inside a quoted newline deletes partial shards and imports whole."""
+  """A split inside a quoted newline deletes only its own partial shards."""
   header = b.OBS_HEADER + ["notes"]
   rows = [b.obs_row(f"country/C{i}", value=str(i)) + ["ok"] for i in range(6)]
-  # Quoted newlines spanning the middle of the file force a split boundary
-  # inside the quoted field so that part fails while other parts write shards.
   rows[3][-1] = "\n".join(f"line{j}" for j in range(40))
+  # Same stem "case" as case.csv: fallback must not delete case.mcf's shards.
+  mcf_nodes = "\n".join(
+      f'Node: dcid:SameStem{i}\ntypeOf: dcs:Thing\nname: "Node {i}"\n'
+      for i in range(8))
   files = {
       "case.csv": b.csv_file(*rows, header=header),
+      "case.mcf": mcf_nodes,
       "provenance.mcf": b.PROVENANCE_MCF,
   }
   config = b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"])
 
-  unsplit = b.run_dir(files,
-                      config,
-                      runner_kwargs={
-                          "max_workers": 4,
-                          "split_file_bytes": 10**9,
-                      })
-  caplog.clear()
-  with caplog.at_level(logging.WARNING):
-    split = b.run_dir(files,
-                      config,
-                      runner_kwargs={
-                          "max_workers": 4,
-                          "split_file_bytes": 1,
-                      })
-
-  assert split.error is None, split.error
-  _assert_same_output(split, unsplit)
+  _run_split_and_unsplit(files, config, caplog=caplog)
   assert any(
       "failed to import, so the file is imported whole" in r.getMessage()
       for r in caplog.records)
@@ -151,21 +159,7 @@ def test_file_whose_part_shards_could_collide_is_not_split():
       "oecd/case-p000.csv":
           b.csv_file(b.obs_row("country/Z", value="42")),
   }
-  unsplit = b.run_dir(files,
-                      runner_kwargs={
-                          "import_names": ["oecd"],
-                          "max_workers": 4,
-                          "split_file_bytes": 10**9,
-                      })
-  split = b.run_dir(files,
-                    runner_kwargs={
-                        "import_names": ["oecd"],
-                        "max_workers": 4,
-                        "split_file_bytes": 1,
-                    })
-
-  assert split.error is None, split.error
-  assert split.output == unsplit.output
+  _run_split_and_unsplit(files, import_names=["oecd"])
 
 
 def test_plan_mcf_parts():
@@ -173,7 +167,6 @@ def test_plan_mcf_parts():
       f'Node: dcid:N{i}\ntypeOf: dcs:Thing\nname: "Item {i}"\n'.encode()
       for i in range(12))
 
-  # Normal multi-node MCF (and with UTF-8 BOM): header_end == 0.
   for data in (nodes, b"\xef\xbb\xbf" + nodes):
     parts = _plan_mcf(data, parts=4)
     assert parts is not None and len(parts) == 4
@@ -183,7 +176,6 @@ def test_plan_mcf_parts():
     assert all(a.end == b_.start for a, b_ in zip(parts, parts[1:]))
     assert all(data[p.start:].startswith(b"Node:") for p in parts[1:])
 
-  # Leading Context:/namespace: block becomes [0, header_end) for every part.
   ctx = b'Context:\nnamespace: "ex=https://example.org/ns/"\n\n'
   data_ctx = ctx + nodes
   parts_ctx = _plan_mcf(data_ctx, parts=4)
@@ -194,11 +186,9 @@ def test_plan_mcf_parts():
   assert all(a.end == b_.start for a, b_ in zip(parts_ctx, parts_ctx[1:]))
   assert all(data_ctx[p.start:].startswith(b"Node:") for p in parts_ctx)
 
-  # Small windows where `\nNode:` straddles window edges match full-window plan.
   for window_bytes in (7, 16):
     assert _plan_mcf(data_ctx, parts=4, window_bytes=window_bytes) == parts_ctx
 
-  # Single-node, header-only, or empty MCFs must not be split.
   for unsplit in [
       b"",
       b"# comment only\n",
@@ -217,23 +207,7 @@ def test_mcf_split_matches_unsplit_records_report_and_metadata(mode):
                     f"related: ex:Ref{i}\n" for i in range(16))
   files = {"nodes.mcf": ctx + b.PROVENANCE_MCF + "\n" + nodes}
 
-  unsplit = b.run_dir(files,
-                      b.MCF_CONFIG,
-                      mode=mode,
-                      runner_kwargs={
-                          "max_workers": 4,
-                          "split_file_bytes": 10**9,
-                      })
-  split = b.run_dir(files,
-                    b.MCF_CONFIG,
-                    mode=mode,
-                    runner_kwargs={
-                        "max_workers": 4,
-                        "split_file_bytes": 1,
-                    })
-
-  assert split.error is None, split.error
-  _assert_same_output(split, unsplit)
+  split, _ = _run_split_and_unsplit(files, b.MCF_CONFIG, mode=mode)
   assert any("https://example.org/ns/Ref0" in str(r) for r in split.records)
 
 
@@ -251,23 +225,7 @@ def test_mcf_split_falls_back_to_whole_file_when_part_fails(caplog):
       "nodes.mcf": "\n".join([early, local_def, middle, local_dcid]),
   }
 
-  unsplit = b.run_dir(files,
-                      b.MCF_CONFIG,
-                      runner_kwargs={
-                          "max_workers": 4,
-                          "split_file_bytes": 10**9,
-                      })
-  caplog.clear()
-  with caplog.at_level(logging.WARNING):
-    split = b.run_dir(files,
-                      b.MCF_CONFIG,
-                      runner_kwargs={
-                          "max_workers": 4,
-                          "split_file_bytes": 1,
-                      })
-
-  assert split.error is None, split.error
-  _assert_same_output(split, unsplit)
+  _run_split_and_unsplit(files, b.MCF_CONFIG, caplog=caplog)
   assert any(
       "failed to import, so the file is imported whole" in r.getMessage()
       for r in caplog.records)

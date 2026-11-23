@@ -240,15 +240,15 @@ def part_shards_could_collide(file_path: str, stems: set[str]) -> bool:
       if other.startswith(prefix))
 
 
-def _is_part_shard(name: str, stem: str) -> bool:
-  """Whether `name` is an observation or node shard of a part of `stem`."""
-  for prefix, suffix_re in (
-      (f"observation-{stem}-", _OBS_PART_SUFFIX_RE),
-      (f"node-{stem}-", _NODE_PART_SUFFIX_RE),
-  ):
-    if name.startswith(prefix) and suffix_re.fullmatch(name[len(prefix):]):
-      return True
-  return False
+def _is_part_shard(name: str, file_path: str) -> bool:
+  """Whether `name` is a shard written for a part of `file_path`."""
+  stem = file_shard_stem(file_path)
+  if file_path.lower().endswith(".mcf"):
+    prefix, suffix_re = f"node-{stem}-", _NODE_PART_SUFFIX_RE
+  else:
+    prefix, suffix_re = f"observation-{stem}-", _OBS_PART_SUFFIX_RE
+  return name.startswith(prefix) and bool(
+      suffix_re.fullmatch(name[len(prefix):]))
 
 
 def _observation_shard(chunk,
@@ -572,13 +572,12 @@ class JsonLdStreamWriter(GraphWriter):
     self._finish_shard_writes(raise_errors=False)
 
   def delete_part_shards(self, input_file: File) -> None:
-    """Deletes the observation and node shards of every part of `input_file`."""
+    """Deletes the shards of every part of `input_file`."""
     folder = self.config.import_name(input_file).replace("/", "_")
-    stem = file_shard_stem(input_file.path)
     shards = [
         shard
         for shard in self.jsonld_dir.open_dir(folder, create=False).all_files()
-        if _is_part_shard(shard.name(), stem)
+        if _is_part_shard(shard.name(), input_file.path)
     ]
     if not shards:
       return
