@@ -21,6 +21,7 @@ whose `dcid:` is in another block), the runner deletes partial shards and falls
 back to importing the file whole.
 """
 
+import collections
 import concurrent.futures
 import dataclasses
 import io
@@ -77,10 +78,16 @@ def _is_mcf(file: File) -> bool:
   return file.path.lower().endswith(".mcf")
 
 
-def _can_split(file: File, config: Config, obs_stems: set[str]) -> bool:
-  if _is_mcf(file) or config.import_type(file) != ImportType.OBSERVATIONS:
-    return True
-  return not part_shards_could_collide(file.path, obs_stems)
+def _is_obs_csv(file: File, config: Config) -> bool:
+  return not _is_mcf(file) and config.import_type(
+      file) == ImportType.OBSERVATIONS
+
+
+def _can_split(file: File, stem_counts: collections.Counter[str]) -> bool:
+  stem = file_shard_stem(file.path)
+  if stem_counts[stem] > 1:
+    return False
+  return not part_shards_could_collide(file.path, set(stem_counts))
 
 
 def plan_splits(files: list[File],
@@ -89,16 +96,15 @@ def plan_splits(files: list[File],
                 split_bytes: int | None = None) -> dict[str, list[FilePart]]:
   """Returns byte-range parts for each large input file, by path."""
   threshold = split_bytes or SPLIT_FILE_BYTES
-  obs_stems = {
-      file_shard_stem(f.path)
-      for f in files
-      if not _is_mcf(f) and config.import_type(f) == ImportType.OBSERVATIONS
-  }
+  obs_stems = collections.Counter(
+      file_shard_stem(f.path) for f in files if _is_obs_csv(f, config))
+  node_stems = collections.Counter(
+      file_shard_stem(f.path) for f in files if not _is_obs_csv(f, config))
   candidates = [
       (f, parts)
       for f in files
       if (parts := num_parts(f.size() or 0, max_workers, threshold)) > 1 and
-      _can_split(f, config, obs_stems)
+      _can_split(f, obs_stems if _is_obs_csv(f, config) else node_stems)
   ]
   if not candidates:
     return {}
@@ -218,7 +224,7 @@ def _after_first_newline(read: ReadRange, start: int, end: int,
 def _first_mcf_node_offset(read: ReadRange, size: int,
                            window_bytes: int) -> int | None:
   """Returns the byte offset of the first `Node:` line, or None."""
-  head = read(0, min(max(window_bytes, 64), size)).removeprefix(_UTF8_BOM)
+  head = read(0, min(max(window_bytes, 64), size))
   if _MCF_NODE_LINE_RE.match(head):
     return 0
   return _find_mcf_node_after(read, 0, size, window_bytes)

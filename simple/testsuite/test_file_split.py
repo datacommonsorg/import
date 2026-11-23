@@ -167,14 +167,13 @@ def test_plan_mcf_parts():
       f'Node: dcid:N{i}\ntypeOf: dcs:Thing\nname: "Item {i}"\n'.encode()
       for i in range(12))
 
-  for data in (nodes, b"\xef\xbb\xbf" + nodes):
-    parts = _plan_mcf(data, parts=4)
-    assert parts is not None and len(parts) == 4
-    assert all(p.header_end == 0 for p in parts)
-    assert parts[0].start == 0
-    assert parts[-1].end == len(data)
-    assert all(a.end == b_.start for a, b_ in zip(parts, parts[1:]))
-    assert all(data[p.start:].startswith(b"Node:") for p in parts[1:])
+  parts = _plan_mcf(nodes, parts=4)
+  assert parts is not None and len(parts) == 4
+  assert all(p.header_end == 0 for p in parts)
+  assert parts[0].start == 0
+  assert parts[-1].end == len(nodes)
+  assert all(a.end == b_.start for a, b_ in zip(parts, parts[1:]))
+  assert all(nodes[p.start:].startswith(b"Node:") for p in parts[1:])
 
   ctx = b'Context:\nnamespace: "ex=https://example.org/ns/"\n\n'
   data_ctx = ctx + nodes
@@ -211,15 +210,16 @@ def test_mcf_split_matches_unsplit_records_report_and_metadata(mode):
   assert any("https://example.org/ns/Ref0" in str(r) for r in split.records)
 
 
-def test_mcf_split_falls_back_to_whole_file_when_part_fails(caplog):
+@pytest.mark.parametrize("subject", ["LocalSplitNode", "l:LocalSplitNode"])
+def test_mcf_split_falls_back_to_whole_file_when_part_fails(caplog, subject):
   """A node's dcid in a later part triggers fallback and cleans partial shards."""
   early = "\n".join(
       f'Node: dcid:Early{i}\ntypeOf: dcs:Thing\nname: "Early {i}"\n'
       for i in range(4))
-  local_def = 'Node: LocalSplitNode\ntypeOf: dcs:Thing\nname: "Split"\n'
+  local_def = f'Node: {subject}\ntypeOf: dcs:Thing\nname: "Split"\n'
   middle = "\n".join(f'Node: dcid:Mid{i}\ntypeOf: dcs:Thing\nname: "Mid {i}"\n'
                      for i in range(12))
-  local_dcid = 'Node: LocalSplitNode\ndcid: "ResolvedSplitNode"\n'
+  local_dcid = f'Node: {subject}\ndcid: "ResolvedSplitNode"\n'
   files = {
       "provenance.mcf": b.PROVENANCE_MCF,
       "nodes.mcf": "\n".join([early, local_def, middle, local_dcid]),

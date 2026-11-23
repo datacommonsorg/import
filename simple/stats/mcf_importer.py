@@ -133,9 +133,11 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   # Resolve the subject ID using the map, fallback to original if not mapped
   resolved_subject = local2dcid.get(subject_id, subject_id)
 
-  # If it was not mapped AND it doesn't start with a valid namespace or URI, it's an error!
-  if resolved_subject == subject_id and not is_uri_or_namespace(
-      resolved_subject):
+  # If it was not mapped AND it's an unresolved `l:` local id or lacks a valid
+  # namespace/URI, fail so a split part can fall back to whole-file import.
+  if resolved_subject == subject_id and (
+      resolved_subject.startswith("l:") or
+      not is_uri_or_namespace(resolved_subject)):
     raise ValueError(f"dcid not specified for node: {subject_id}")
 
   if value_type == _ID:
