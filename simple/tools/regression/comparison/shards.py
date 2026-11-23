@@ -16,9 +16,11 @@ Shard discovery and byte-level inventory of one preprocessor output.
 
 An output directory holds `preprocessor_reports/` and
 `jsonld/<run dir>/<folder>/*.jsonld`.
-Observation shard names are deterministic and are matched by name. Node shard
-names end in a random uid, so node shards are matched by content within their
-folder.
+Observation shard names are deterministic and are matched by name. The shards
+of a file that was imported in parts are named after the part, e.g.
+observation-data-p001-00000.jsonld: when either side split the file, its
+shards are compared as one, by their records. Node shard names end in a random
+uid, so node shards are matched by content within their folder.
 """
 
 from collections import Counter
@@ -26,7 +28,9 @@ import concurrent.futures
 import dataclasses
 import glob
 import hashlib
+import json
 import os
+import re
 from typing import Any
 
 from tools.regression.comparison import volatile
@@ -37,6 +41,9 @@ OBSERVATION = "observation"
 NODE = "node"
 _KINDS = (OBSERVATION, NODE)
 _HASH_CHUNK_BYTES = 1 << 20
+# The end of an observation shard name after its input file: the part tag of a
+# split file, if any, and the shard index.
+_OBS_SHARD_SUFFIX = re.compile(r"(-p\d{3,})?-\d{5}\.jsonld$")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -136,9 +143,17 @@ def _total_bytes(tree: OutputTree) -> int:
 def _compare_observation_shards(baseline: OutputTree, candidate: OutputTree,
                                 sha: dict[str, str],
                                 findings: Findings) -> dict[str, int]:
-  """Matches observation shards by name, then compares their bytes."""
+  """Matches observation shards by name, then compares their bytes.
+
+  The shards of a file that either side split into parts are compared by
+  their records instead (see `_compare_split_files`).
+  """
   base = {s.rel_path: s.path for s in baseline.of_kind(OBSERVATION)}
   cand = {s.rel_path: s.path for s in candidate.of_kind(OBSERVATION)}
+  split = _split_files(base) | _split_files(cand)
+  split_identical = _compare_split_files(split, base, cand, findings)
+  base = {p: path for p, path in base.items() if _input_file(p) not in split}
+  cand = {p: path for p, path in cand.items() if _input_file(p) not in split}
   for rel_path in sorted(base.keys() ^ cand.keys()):
     only_in = "baseline" if rel_path in base else "candidate"
     findings.add("shard_set_changed",
@@ -152,7 +167,53 @@ def _compare_observation_shards(baseline: OutputTree, candidate: OutputTree,
       "candidate": len(cand),
       "same_name": len(common),
       "byte_identical": len(common) - len(changed),
+      "split_files": len(split),
+      "split_files_with_identical_records": split_identical,
   }
+
+
+def _input_file(rel_path: str) -> str:
+  """The folder and input file of an observation shard, e.g. "f/obs-data"."""
+  return _OBS_SHARD_SUFFIX.sub("", rel_path)
+
+
+def _split_files(shards: dict[str, str]) -> set[str]:
+  """The input files whose shards are those of parts."""
+  return {
+      _input_file(rel_path)
+      for rel_path in shards
+      if _OBS_SHARD_SUFFIX.search(rel_path).group(1)
+  }
+
+
+def _compare_split_files(split: set[str], base: dict[str, str],
+                         cand: dict[str, str], findings: Findings) -> int:
+  """Compares the records of each split file; returns how many are equal."""
+  identical = 0
+  for input_file in sorted(split):
+    records = [
+        _record_digests(path
+                        for rel_path, path in shards.items()
+                        if _input_file(rel_path) == input_file)
+        for shards in (base, cand)
+    ]
+    if records[0] == records[1]:
+      identical += 1
+    else:
+      findings.add("shard_bytes_changed",
+                   sample={"split_file_shards": input_file})
+  return identical
+
+
+def _record_digests(paths) -> Counter:
+  """The multiset of the records of the shards at `paths`, as digests."""
+  digests: Counter = Counter()
+  for path in paths:
+    with open(path, encoding="utf-8") as f:
+      for record in json.load(f).get("@graph", []):
+        text = json.dumps(record, sort_keys=True).encode("utf-8")
+        digests[hashlib.sha256(text).hexdigest()] += 1
+  return digests
 
 
 def _compare_node_shards(baseline: OutputTree, candidate: OutputTree,
