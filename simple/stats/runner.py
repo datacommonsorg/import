@@ -21,6 +21,8 @@ import logging
 import os
 import posixpath
 import tempfile
+import threading
+import time
 import traceback
 from typing import Callable, Optional
 
@@ -856,6 +858,27 @@ class Runner:
         return executor.submit(_run_single_import_proc, _ImportTask.of(file),
                                worker_args)
 
+      progress_lock = threading.Lock()
+      completed_tasks = 0
+      last_logged_count = 0
+      last_logged_time = time.monotonic()
+      progress_step = max(1, num_tasks // 20)
+
+      def _on_task_done(future: concurrent.futures.Future) -> None:
+        nonlocal completed_tasks, last_logged_count, last_logged_time
+        if future.cancelled() or num_tasks <= 1:
+          return
+        with progress_lock:
+          completed_tasks += 1
+          now = time.monotonic()
+          if (completed_tasks == num_tasks or
+              completed_tasks - last_logged_count >= progress_step or
+              now - last_logged_time >= 30.0):
+            last_logged_count = completed_tasks
+            last_logged_time = now
+            logging.info("Completed %d/%d tasks (%.0f%%)", completed_tasks,
+                         num_tasks, 100.0 * completed_tasks / num_tasks)
+
       try:
         # Submit largest tasks first so a huge file doesn't run alone at the end.
         indexed_tasks = [(fi, ti, task)
@@ -867,8 +890,9 @@ class Runner:
         for fi, ti, task in sorted(indexed_tasks,
                                    key=lambda x: x[2].size,
                                    reverse=True):
-          futures_by_file[fi][ti] = executor.submit(_run_single_import_proc,
-                                                    task, worker_args)
+          fut = executor.submit(_run_single_import_proc, task, worker_args)
+          fut.add_done_callback(_on_task_done)
+          futures_by_file[fi][ti] = fut
         failures = _finish_imports(files,
                                    futures_by_file,
                                    merge=merge,
