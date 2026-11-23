@@ -88,8 +88,8 @@ def test_runner_defaults_workers_by_where_it_reads_and_writes(
 
 
 def test_num_import_workers_never_exceeds_the_files():
-  assert runner.num_import_workers(max_workers=8, num_files=3) == 3
-  assert runner.num_import_workers(max_workers=2, num_files=3) == 2
+  assert runner.num_import_workers(max_workers=8, num_tasks=3) == 3
+  assert runner.num_import_workers(max_workers=2, num_tasks=3) == 2
 
 
 @pytest.mark.parametrize("max_workers", [0, -1])
@@ -261,14 +261,14 @@ def _done_future(result=None, error=None) -> concurrent.futures.Future:
 def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
   files = [types.SimpleNamespace(path=p) for p in ("a.csv", "b.csv", "c.csv")]
   futures = [
-      _done_future(error=ValueError("cannot import a")),
-      _done_future("b"),
-      _done_future("c")
+      [_done_future(error=ValueError("cannot import a"))],
+      [_done_future("b")],
+      [_done_future("c")],
   ]
   merged = []
 
-  def merge(file, result):
-    if result == "b":
+  def merge(file, results):
+    if results == ["b"]:
       raise RuntimeError("cannot merge b")
     merged.append(file.path)
 

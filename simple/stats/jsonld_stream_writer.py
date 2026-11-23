@@ -21,6 +21,7 @@ import functools
 import hashlib
 import json
 import logging
+import re
 import types
 from typing import Any, Callable, Mapping, Optional
 import uuid
@@ -206,12 +207,46 @@ def _build_observation_node(row: tuple) -> dict:
   return obs_obj
 
 
-def _observation_shard(chunk, shard_index: int, ns_map: dict[str, str],
+_PART_TAG_RE = re.compile(r"p\d{3,}")
+
+
+def observation_shard_stem(file_path: str) -> str:
+  """The part of an input file's observation shard names that names the file.
+
+  E.g. "a/data.csv" writes "observation-a_data-00000.jsonld": its stem is
+  "a_data".
+  """
+  return file_path.replace("/", "_").rsplit(".", 1)[0]
+
+
+def part_shard_tag(part_index: int) -> str:
+  """Shard name tag for part `part_index` of a split file, e.g. 'p001'."""
+  return f"p{part_index:03d}"
+
+
+def part_shards_could_collide(file_path: str, stems: set[str]) -> bool:
+  """Whether split shards of `file_path` could collide with another file's.
+
+  A split file writes "observation-<stem>-p001-00000.jsonld", which another
+  file named "<stem>-p001.csv" would also write; skip splitting such files.
+  """
+  prefix = f"{observation_shard_stem(file_path)}-"
+  return any(
+      _PART_TAG_RE.fullmatch(other[len(prefix):])
+      for other in stems
+      if other.startswith(prefix))
+
+
+def _observation_shard(chunk,
+                       shard_index: int,
+                       ns_map: dict[str, str],
                        track_hash_fn: Callable,
-                       file_name: str) -> tuple[str, str]:
+                       file_name: str,
+                       shard_tag: str = "") -> tuple[str, str]:
   """Returns the name and JSON text of the observation shard of `chunk`.
 
   `file_name` is the path of the input file, relative to the input directory.
+  `shard_tag`, if any, follows the file in the name (see JsonLdStreamWriter).
   """
   graph_list = []
   chunk_hashes = []
@@ -226,8 +261,9 @@ def _observation_shard(chunk, shard_index: int, ns_map: dict[str, str],
     track_hash_fn(chunk_hashes, file_name)
 
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
-  sanitized_stem = file_name.replace("/", "_").rsplit(".", 1)[0]
-  shard_name = f"observation-{sanitized_stem}-{shard_index:05d}.jsonld"
+  tag = f"-{shard_tag}" if shard_tag else ""
+  shard_name = (f"observation-{observation_shard_stem(file_name)}{tag}"
+                f"-{shard_index:05d}.jsonld")
   return shard_name, _to_json(compacted_jsonld)
 
 
@@ -287,7 +323,16 @@ class JsonLdStreamWriter(GraphWriter):
                output_dir: Dir,
                import_names: list[str],
                config: Config,
-               jsonld_dir_name: Optional[str] = None) -> None:
+               jsonld_dir_name: Optional[str] = None,
+               obs_shard_tag: str = "") -> None:
+    """
+    Args:
+      jsonld_dir_name: For a worker's writer, the run folder that the
+        coordinator's writer created.
+      obs_shard_tag: Added to the names of observation shards, to tell apart
+        the shards of the parts of a split file, e.g. "p001" in
+        "observation-data-p001-00000.jsonld".
+    """
     self.config = config
 
     # The run's name, from its imports (e.g. ["oecd", "ilo"] -> "oecd_ilo", or
@@ -305,6 +350,7 @@ class JsonLdStreamWriter(GraphWriter):
           f"{self.import_name}_{timestamp}")
 
     self.obs_shard_index = 0
+    self.obs_shard_tag = obs_shard_tag
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
     # Shards are written in the background, straight to jsonld_dir (see
@@ -389,7 +435,8 @@ class JsonLdStreamWriter(GraphWriter):
                                       shard_index,
                                       self.ns_map,
                                       track_hash_fn=self.track_observation_hash,
-                                      file_name=file_name)
+                                      file_name=file_name,
+                                      shard_tag=self.obs_shard_tag)
       self._write_shard(dir_name, name, text)
 
   def write_observations(self, observations_df: pd.DataFrame, input_file: File):
@@ -493,6 +540,17 @@ class JsonLdStreamWriter(GraphWriter):
     So that nothing is still being written once the failure is reported.
     """
     self._finish_shard_writes(raise_errors=False)
+
+  def delete_part_shards(self, input_file: File) -> None:
+    """Deletes the observation shards of every part of `input_file`."""
+    folder = self.config.import_name(input_file).replace("/", "_")
+    prefix = f"observation-{observation_shard_stem(input_file.path)}-"
+    for shard in self.jsonld_dir.open_dir(folder, create=False).all_files():
+      name = shard.name()
+      if name.startswith(prefix) and name.endswith(".jsonld"):
+        tag = name[len(prefix):-len(".jsonld")].rsplit("-", 1)[0]
+        if _PART_TAG_RE.fullmatch(tag):
+          shard.delete()
 
   def _write_shard(self, folder: str, name: str, text: str) -> None:
     """Writes shard `text` to jsonld_dir/folder/name, in the background.

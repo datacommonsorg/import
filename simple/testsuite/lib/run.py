@@ -68,6 +68,7 @@ def _read_csv_tiny_chunks(*args, **kwargs):
 @contextlib.contextmanager
 def _tiny_chunks() -> Iterator[None]:
   with mock.patch("stats.jsonld_stream_writer._CHUNK_SIZE", 1), \
+       mock.patch("stats.csv_split.SPLIT_CSV_BYTES", 1), \
        mock.patch.object(pd, "read_csv", _read_csv_tiny_chunks):
     yield
 
