@@ -28,6 +28,7 @@ import uuid
 
 import numpy as np
 import pandas as pd
+from stats import constants
 from stats.config import Config
 from stats.data import ImportType
 from stats.data import Triple
@@ -76,7 +77,7 @@ _OTHER_STD_OBS_KEYS = frozenset({
     "dcid:observationPeriod",
 })
 
-_json_dumps = json.dumps
+_UNSET = object()
 
 
 def _to_json(doc: dict) -> str:
@@ -152,19 +153,26 @@ def _prefix_dcid(key: str) -> str:
   return f"dcid:{key}"
 
 
+def _has_value(val) -> bool:
+  """Returns whether `val` is a non-empty, non-NA value (safe for pd.NA/NaN)."""
+  if type(val) is str:
+    return bool(val)
+  return val is not None and not pd.isna(val)
+
+
 @functools.lru_cache(maxsize=_CACHE_SIZE)
 def _cached_ref_json(val: str) -> str | None:
   ref = _cached_ref(val)
   if ref is None:
     return None
-  return f'{{"@id":{_json_dumps(ref["@id"])}}}'
+  return f'{{"@id":{json.dumps(ref["@id"])}}}'
 
 
 def _ref_json(val) -> str | None:
   if type(val) is str:
     return _cached_ref_json(val)
   ref = _ref(val)
-  return f'{{"@id":{_json_dumps(ref["@id"])}}}' if ref is not None else None
+  return f'{{"@id":{json.dumps(ref["@id"])}}}' if ref is not None else None
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
@@ -173,22 +181,45 @@ def _cached_var_json(variable: str, obs_props_suffix: str) -> str:
   if ref is None:
     return "null"
   if obs_props_suffix:
-    return f'{{"@id":{_json_dumps(ref["@id"])}{obs_props_suffix}}}'
-  return f'{{"@id":{_json_dumps(ref["@id"])}}}'
+    return f'{{"@id":{json.dumps(ref["@id"])}{obs_props_suffix}}}'
+  return f'{{"@id":{json.dumps(ref["@id"])}}}'
+
+
+def _var_json(variable, obs_props_suffix: str) -> str:
+  if type(variable) is str:
+    return _cached_var_json(variable, obs_props_suffix)
+  ref = _ref(variable)
+  if ref is None:
+    return "null"
+  if obs_props_suffix:
+    return f'{{"@id":{json.dumps(ref["@id"])}{obs_props_suffix}}}'
+  return f'{{"@id":{json.dumps(ref["@id"])}}}'
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
 def _cached_text_json(val: str) -> str:
   s = val.strip()
-  return _json_dumps(s) if s else "null"
+  return json.dumps(s) if s else "null"
+
+
+def _optional_text_json(val) -> str | None:
+  """Serializes `val` as a JSON string if non-empty, else returns None."""
+  if type(val) is str:
+    s = val.strip()
+    return json.dumps(s) if s else None
+  t = _text(val)
+  return json.dumps(t) if t is not None else None
 
 
 def _text_json(val) -> str:
-  if type(val) is str:
-    s = val.strip()
-    return _json_dumps(s) if s else "null"
-  t = _text(val)
-  return _json_dumps(t) if t is not None else "null"
+  return _optional_text_json(val) or "null"
+
+
+def _obs_hash_base(entity, variable, date, provenance, unit, mmethod, period):
+  """Returns a SHA-256 hasher seeded with an observation's fixed @id fields."""
+  return hashlib.sha256(
+      f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_".
+      encode("utf-8"))
 
 
 class _CompiledProps(NamedTuple):
@@ -224,7 +255,7 @@ def _compile_props_cached(props: str) -> _CompiledProps:
       has_other_std = True
     val_json = (_ref_json(v) or
                 "null") if is_entity_reference(v) else _text_json(v)
-    parts.append(f",{_json_dumps(prop_key)}:{val_json}")
+    parts.append(f",{json.dumps(prop_key)}:{val_json}")
   return _CompiledProps(
       id_props_bytes=id_props_bytes,
       obs_props_suffix=obs_props_suffix,
@@ -237,7 +268,7 @@ def _compile_props_cached(props: str) -> _CompiledProps:
 
 def _compile_props(props, entity, variable) -> _CompiledProps:
   """Compiles custom properties JSON, logging and falling back on bad JSON."""
-  if not props:
+  if not _has_value(props):
     return _EMPTY_COMPILED_PROPS
   try:
     return _compile_props_cached(props)
@@ -253,22 +284,16 @@ def _format_optional_fields(provenance, unit, scaling_factor, mmethod,
                             period) -> str:
   """Serializes the optional fixed observation fields into a JSON fragment."""
   parts = []
-  if provenance:
+  if _has_value(provenance):
     parts.append(f',"dcid:provenance":{_ref_json(provenance) or "null"}')
-  if unit:
+  if _has_value(unit):
     parts.append(f',"dcid:unit":{_ref_json(unit) or "null"}')
-  if type(scaling_factor) is str:
-    if sf := scaling_factor.strip():
-      parts.append(f',"dcid:scalingFactor":{_json_dumps(sf)}')
-  elif sf := _text(scaling_factor):
-    parts.append(f',"dcid:scalingFactor":{_json_dumps(sf)}')
-  if mmethod:
+  if sf := _optional_text_json(scaling_factor):
+    parts.append(f',"dcid:scalingFactor":{sf}')
+  if _has_value(mmethod):
     parts.append(f',"dcid:measurementMethod":{_ref_json(mmethod) or "null"}')
-  if type(period) is str:
-    if p := period.strip():
-      parts.append(f',"dcid:observationPeriod":{_json_dumps(p)}')
-  elif p := _text(period):
-    parts.append(f',"dcid:observationPeriod":{_json_dumps(p)}')
+  if p := _optional_text_json(period):
+    parts.append(f',"dcid:observationPeriod":{p}')
   return "".join(parts)
 
 
@@ -371,17 +396,15 @@ def _observation_shard(chunk,
   """
   node_strs = []
   prefix_buf = bytearray()
-  sha256 = hashlib.sha256
   compile_props = _compile_props
-  cached_var_json = _cached_var_json
   cached_text_json = _cached_text_json
-  json_dumps = _json_dumps
+  json_dumps = json.dumps
 
   prev_hash_key = None
   base_hasher = None
   prev_tail_key = None
   tail_json = ""
-  prev_date = _NO_PROPS
+  prev_date = _UNSET
   date_json = "null"
   prev_var_key = None
   var_json = "null"
@@ -391,14 +414,13 @@ def _observation_shard(chunk,
      period, props) = row
 
     compiled = (compile_props(props, entity, variable)
-                if props else _EMPTY_COMPILED_PROPS)
+                if _has_value(props) else _EMPTY_COMPILED_PROPS)
 
     hash_key = (entity, variable, date, provenance, unit, mmethod, period)
     if hash_key != prev_hash_key:
       prev_hash_key = hash_key
-      base_hasher = sha256(
-          f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_".
-          encode("utf-8"))
+      base_hasher = _obs_hash_base(entity, variable, date, provenance, unit,
+                                   mmethod, period)
     h = base_hasher.copy()
     if compiled.id_props_bytes:
       h.update(compiled.id_props_bytes)
@@ -406,7 +428,8 @@ def _observation_shard(chunk,
     prefix_buf.extend(digest[:8])
     obs_hash = digest.hex()
 
-    if compiled.has_other_std or (compiled.has_about and entity):
+    has_entity = _has_value(entity)
+    if compiled.has_other_std or (compiled.has_about and has_entity):
       node_strs.append(
           _build_conflicting_observation_json(row, obs_hash, compiled.parsed))
       continue
@@ -414,17 +437,7 @@ def _observation_shard(chunk,
     var_key = (variable, compiled.obs_props_suffix)
     if var_key != prev_var_key:
       prev_var_key = var_key
-      if type(variable) is str:
-        var_json = cached_var_json(variable, compiled.obs_props_suffix)
-      else:
-        vref = _ref(variable)
-        if vref is None:
-          var_json = "null"
-        elif compiled.obs_props_suffix:
-          var_json = (
-              f'{{"@id":{json_dumps(vref["@id"])}{compiled.obs_props_suffix}}}')
-        else:
-          var_json = f'{{"@id":{json_dumps(vref["@id"])}}}'
+      var_json = _var_json(variable, compiled.obs_props_suffix)
 
     if date != prev_date:
       prev_date = date
@@ -437,7 +450,7 @@ def _observation_shard(chunk,
     else:
       val_json = _text_json(value)
 
-    if entity:
+    if has_entity:
       eref = _ref_json(entity)
       entity_json = f',"dcid:observationAbout":{eref}' if eref else ""
     else:
@@ -599,10 +612,9 @@ class JsonLdStreamWriter(GraphWriter):
     samples = self.file_sample_collisions[file_name]
     for i in collisions[:max(0, MAX_SAMPLES_PER_FILE - len(samples))].tolist():
       ent, var, dt, _, prov, unit, _, mmethod, period, props = chunk_rows[i]
-      compiled = _compile_props(props, ent,
-                                var) if props else _EMPTY_COMPILED_PROPS
-      h = hashlib.sha256(
-          f"{ent}_{var}_{dt}_{prov}_{unit}_{mmethod}_{period}_".encode("utf-8"))
+      compiled = (_compile_props(props, ent, var)
+                  if _has_value(props) else _EMPTY_COMPILED_PROPS)
+      h = _obs_hash_base(ent, var, dt, prov, unit, mmethod, period)
       if compiled.id_props_bytes:
         h.update(compiled.id_props_bytes)
       samples.append(
@@ -638,7 +650,7 @@ class JsonLdStreamWriter(GraphWriter):
                                 file_name: str):
     dir_name = import_name.replace("/", "_")
     n = len(df)
-    col_lists = [df[c].tolist() for c in df.columns]
+    col_lists = [df[c].tolist() for c in constants.OBSERVATION_COLUMNS]
     for i in range(0, n, _CHUNK_SIZE):
       if i == 0 and n <= _CHUNK_SIZE:
         chunk_records = list(zip(*col_lists))

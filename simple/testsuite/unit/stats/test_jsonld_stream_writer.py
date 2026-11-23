@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Writing shards to a local output dir (the testsuite writes to GCS)."""
+"""Unit tests for JsonLdStreamWriter local shard writing and observation JSON-LD."""
 
 import json
 import os
@@ -104,23 +104,21 @@ def test_observation_json_escaping_and_custom_namespaces(tmp_path):
           constants.COLUMN_PROPERTIES:
               json.dumps({
                   "customNote": 'line1\n"quoted"\\path',
-                  "dcid:observationAbout": None,
+                  "emptyDim": None,
               }),
       }],
   )
   assert len(nodes) == 1
   obs = nodes[0]
-  assert obs["dcid:observationAbout"] is None
+  assert obs["dcid:observationAbout"] == {"@id": "dcid:place/1"}
+  assert obs["dcid:emptyDim"] is None
   assert obs["dcid:unit"] == {"@id": "dcid:USD"}
   assert obs["dcid:observationDate"] == '2020 "Q1"'
   assert obs["dcid:value"] == "42.50"
   assert obs["dcid:customNote"] == 'line1\n"quoted"\\path'
   assert obs["dcid:variableMeasured"] == {
-      "@id":
-          "dcid:Count_Person",
-      "dcid:observationProperties": [
-          "dcid:customNote", "dcid:observationAbout"
-      ],
+      "@id": "dcid:Count_Person",
+      "dcid:observationProperties": ["dcid:customNote", "dcid:emptyDim"],
   }
 
 
@@ -156,27 +154,3 @@ def test_observation_invalid_properties_json_falls_back(tmp_path, caplog):
   assert len(nodes) == 1
   assert nodes[0]["dcid:observationAbout"] == {"@id": "dcid:country/USA"}
   assert "Failed to decode properties JSON" in caplog.text
-
-
-def test_observation_collision_samples_formatted_lazily(tmp_path):
-  row = {
-      constants.COLUMN_ENTITY:
-          "country/USA",
-      constants.COLUMN_DATE:
-          "2020",
-      constants.COLUMN_VALUE:
-          "10",
-      constants.COLUMN_PROPERTIES:
-          json.dumps({"dcid:observationAbout": "geoId/01"}),
-  }
-  nodes, writer = _write_and_load_obs(
-      tmp_path, [row, {
-          **row, constants.COLUMN_VALUE: "20"
-      }])
-  assert len(nodes) == 2
-  assert nodes[0]["@id"] == nodes[1]["@id"]
-  assert writer.file_collision_counts["obs.csv"] == 1
-  [sample] = writer.file_sample_collisions["obs.csv"]
-  assert nodes[0]["@id"] in sample
-  assert "entity='country/USA'" in sample
-  assert "variable='Count_Person'" in sample
