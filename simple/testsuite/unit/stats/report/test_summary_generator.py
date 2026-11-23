@@ -18,6 +18,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+from stats.data import FileValidationError
 from stats.report.model.summary import DateRange
 from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileCounts
@@ -25,12 +26,15 @@ from stats.report.model.summary import FileSummary
 from stats.report.model.summary import Folder
 from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
+from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import Provenance
+from stats.report.model.summary import ReportError
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
+from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
-from util.filesystem import create_store
 from util.filesystem import Dir
+from util.filesystem import open_dir
 
 _START = "2026-10-29T00:00:00Z"
 _END = "2026-10-29T00:05:00Z"
@@ -64,9 +68,8 @@ class TestSummaryGenerator(unittest.TestCase):
 
   def test_build_report_fills_run_metadata_and_folders(self):
     """Recorded files become per-folder and per-provenance counts, sorted."""
-    with tempfile.TemporaryDirectory() as tmp, \
-         create_store(tmp) as store:
-      generator = _generator("wf-123", store.as_dir())
+    with tempfile.TemporaryDirectory() as tmp:
+      generator = _generator("wf-123", open_dir(tmp))
       # A nested import folder keeps its full name.
       generator.record_input_file("unitednations/ilo", ["iloProv"],
                                   "unitednations/ilo/b.csv")
@@ -114,9 +117,8 @@ class TestSummaryGenerator(unittest.TestCase):
 
   def test_file_summary_adds_observations_and_date_range(self):
     """A file's observations and dates are reported under its provenance."""
-    with tempfile.TemporaryDirectory() as tmp, \
-         create_store(tmp) as store:
-      generator = _generator("wf-123", store.as_dir())
+    with tempfile.TemporaryDirectory() as tmp:
+      generator = _generator("wf-123", open_dir(tmp))
       generator.record_input_file("oecd", ["oecdProv"], "oecd/a.csv")
       generator.add_file_summary(
           FileSummary(filePath="oecd/a.csv",
@@ -140,11 +142,48 @@ class TestSummaryGenerator(unittest.TestCase):
                ])
     ])
 
+  def test_shared_provenance_counts_in_each_folder(self):
+    """A shared provenance's Provenance and Source count in each folder."""
+    with tempfile.TemporaryDirectory() as tmp:
+      generator = _generator("wf-123", open_dir(tmp))
+      generator.record_input_file("oecd", ["sharedProv"], "oecd/a.mcf")
+      generator.record_input_file("ilo", ["sharedProv"], "ilo/b.mcf")
+      generator.add_runner_node_counts("sharedProv", 2, {
+          "Provenance": 1,
+          "Source": 1
+      })
+      folders = generator.build_report(RunStatus.SUCCESS, _END).folders
+
+    expected = NodeCounts(count=2, byType={"Provenance": 1, "Source": 1})
+    self.assertEqual([(f.folderName, f.provenances[0].nodes) for f in folders],
+                     [("ilo", expected), ("oecd", expected)])
+
+  def test_errors_go_to_provenance_or_run(self):
+    """An error with a folder and provenance goes there; others go to the run."""
+    file_error = FileValidationError(
+        file="a.csv",
+        error_type=ValidationErrorType.UNMAPPED_COLUMNS,
+        problem_columns=["notes"],
+        error_message="Unmapped columns")
+    config_error = FileValidationError(
+        file="",
+        error_type=ValidationErrorType.INVALID_CONFIGURATION,
+        error_message="Bad config")
+    with tempfile.TemporaryDirectory() as tmp:
+      generator = _generator("wf-123", open_dir(tmp))
+      generator.record_input_file("oecd", ["oecdProv"], "a.csv")
+      generator.record_failure(file_error, "oecd", "oecdProv")
+      generator.record_failure(config_error)
+      report = generator.build_report(RunStatus.FAILURE, _END)
+
+    self.assertEqual(report.folders[0].provenances[0].errors,
+                     [ReportError(**file_error.to_dict())])
+    self.assertEqual(report.errors, [ReportError(**config_error.to_dict())])
+
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""
-    with tempfile.TemporaryDirectory() as tmp, \
-         create_store(tmp) as store:
-      _generator(None, store.as_dir()).write_to_json(RunStatus.SUCCESS, _END)
+    with tempfile.TemporaryDirectory() as tmp:
+      _generator(None, open_dir(tmp)).write_to_json(RunStatus.SUCCESS, _END)
 
       self.assertTrue(
           os.path.exists(

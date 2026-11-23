@@ -26,14 +26,13 @@ RUN apt-get update && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy simple importer requirements.
-COPY requirements.txt requirements_nodeps.txt ./import/simple/
+COPY requirements.txt ./import/simple/
 
 ARG PIP_DISABLE_PIP_VERSION_CHECK=1
 ARG PIP_NO_CACHE_DIR=1
 ARG PIP_ROOT_USER_ACTION=ignore
 
 RUN pip3 install -r ./import/simple/requirements.txt \
-    && pip3 install --no-deps -r ./import/simple/requirements_nodeps.txt \
     && pip3 uninstall -y pip setuptools wheel \
     && rm -rf /usr/local/lib/python3.*/ensurepip/_bundled
 
@@ -43,7 +42,6 @@ RUN pip3 install -r ./import/simple/requirements.txt \
 COPY stats/ ./import/simple/stats/
 COPY util/ ./import/simple/util/
 COPY kg_util/ ./import/simple/kg_util/
-COPY pkg_resources.py ./import/simple/
 
 # Copy executable script.
 COPY run.sh .

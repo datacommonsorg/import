@@ -94,7 +94,7 @@ def test_rows_without_a_dcid_or_type_fail_before_anything_is_written():
                  header=["author_id", "type", "author_name"]),
       b.entities_config(mappings=b.entity_mappings("author_name")))
   b.assert_fails(
-      result, "ValueError",
+      result, "PreprocessorError",
       "Empty value(s) in entities CSV file 'case.csv': column 'author_id'"
       " (mapped to 'dcid:dcid') at row(s) [2]; column 'type' (mapped to"
       " 'dcid:typeOf') at row(s) [3, 4]. Rows are numbered from 1, the first"
@@ -158,8 +158,10 @@ def test_prefixed_values_are_references_and_others_are_literals():
 
 
 VALUES = [
-    Case("integer", given="12", expect=12),
-    Case("decimal", given="3.5", expect=3.5),
+    Case("integer", given="12", expect="12"),
+    Case("decimal", given="3.5", expect="3.5"),
+    Case("trailing zeros are kept", given="12.50", expect="12.50"),
+    Case("leading zeros are kept", given="007", expect="007"),
     Case("text", given="Jane Doe", expect="Jane Doe"),
 ]
 
@@ -201,6 +203,16 @@ def test_ignored_column_does_not_need_a_mapping():
   result = b.run_csv(
       b.csv_file(["author1", "Author", "Jane Doe", "anything"],
                  header=["author_id", "type", "author_name", "notes"]),
+      b.entities_config(mappings=b.entity_mappings("author_name"),
+                        ignoreColumns=["notes"]))
+  b.assert_records(result.of_type("Author"),
+                   [b.entity("author1", author_name="Jane Doe")])
+
+
+def test_ignored_column_missing_from_the_csv_is_fine():
+  result = b.run_csv(
+      b.csv_file(["author1", "Author", "Jane Doe"],
+                 header=["author_id", "type", "author_name"]),
       b.entities_config(mappings=b.entity_mappings("author_name"),
                         ignoreColumns=["notes"]))
   b.assert_records(result.of_type("Author"),

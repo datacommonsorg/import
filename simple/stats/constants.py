@@ -18,7 +18,6 @@ import os
 DEFAULT_DATA_DIR = ".data"
 DEFAULT_INPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "input")
 DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
-DEFAULT_FROZEN_TIME = "2023-01-01"
 
 CONFIG_JSON_FILE_NAME = "config.json"
 ALL_IMPORTS = "ALL_IMPORTS"
@@ -43,6 +42,15 @@ COLUMN_SCALING_FACTOR = "scaling_factor"
 COLUMN_MEASUREMENT_METHOD = "measurement_method"
 COLUMN_OBSERVATION_PERIOD = "observation_period"
 COLUMN_PROPERTIES = "properties"
+
+# The standard observation properties, which have first class support in our
+# APIs and FE, and the column of each.
+STANDARD_PROPERTY_COLUMNS = {
+    "unit": COLUMN_UNIT,
+    "scalingFactor": COLUMN_SCALING_FACTOR,
+    "measurementMethod": COLUMN_MEASUREMENT_METHOD,
+    "observationPeriod": COLUMN_OBSERVATION_PERIOD,
+}
 
 # Standard observation column ordering used by the graph writer.
 OBSERVATION_COLUMNS = [

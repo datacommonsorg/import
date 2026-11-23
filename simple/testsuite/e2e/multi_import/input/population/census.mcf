@@ -1,0 +1,17 @@
+Node: dcid:censusSource
+typeOf: dcs:Source
+name: "census source"
+url: "https://census.example.org"
+
+Node: dcid:censusProvenance
+typeOf: dcs:Provenance
+name: "census provenance"
+source: dcid:censusSource
+url: "https://census.example.org/data"
+
+Node: dcid:Count_Household
+typeOf: dcs:StatisticalVariable
+name: "Number of households"
+populationType: dcs:Household
+measuredProperty: dcs:count
+statType: dcs:measuredValue

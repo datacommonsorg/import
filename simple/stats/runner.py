@@ -24,7 +24,6 @@ import tempfile
 import traceback
 from typing import Callable, Optional
 
-import fs.path as fspath
 from stats import constants
 from stats.config import Config
 from stats.config import ImportConfig
@@ -34,31 +33,34 @@ from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import ImportType
 from stats.data import invalid_configuration
+from stats.data import PreprocessorError
 from stats.data import Provenance
 from stats.data import Source
-from stats.data import ValidationErrorType
 from stats.entities_importer import EntitiesImporter
 from stats.graph_writer import GraphWriter
+from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
-from stats.jsonld_stream_writer import collision_file_key
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
 from stats.report.model.summary import FileSummary
+from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import RunStatus
+from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
 from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
-from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
 from util.filesystem import GcsObject
 from util.filesystem import is_gcs_path
+from util.filesystem import is_within
 from util.filesystem import join_path
-from util.filesystem import Store
+from util.filesystem import open_dir
+from util.filesystem import write_file
 
 _ARCHIVES_DIR_NAME = "archives"
 # Every run names its imports: each is a subdirectory of the input dir with its
@@ -70,7 +72,7 @@ _NO_IMPORTS_ERROR = (
 # Upper bound on the threads that validate CSV headers. Header validation reads
 # only the first rows of each file and spends its time waiting on storage (often
 # GCS), so it is bounded independently of the CPU count; 32 matches the GCS
-# client's connection pool (filesystem._GCS_HTTP_POOL_SIZE).
+# client's connection pool (util/filesystem/gcs.py).
 _MAX_HEADER_VALIDATION_THREADS = 32
 # Default worker processes per CPU for runs that read or write GCS, and the
 # count above which no extra workers are added (see default_max_workers).
@@ -190,7 +192,7 @@ class _WorkerArgs:
 
 @dataclass
 class _FileFailure:
-  """A file whose import raised, with the traceback text.
+  """A file whose import or merge raised, with the traceback text.
 
   `traceback` includes the worker process's remote traceback.
   """
@@ -209,56 +211,42 @@ class FileImportsFailedError(Exception):
     super().__init__(f"{len(failures)} files failed to import:\n{details}")
 
 
-def _finish_imports(files: list[File], futures: list[concurrent.futures.Future],
-                    merge: Callable[[File, ImportProcResult], None]) -> None:
-  """Waits for every file, then raises if any of them failed.
+def _finish_imports(
+    files: list[File], futures: list[concurrent.futures.Future],
+    merge: Callable[[File, ImportProcResult], None]) -> list[_FileFailure]:
+  """Waits for every file, and returns those that failed.
 
   Every file runs to completion even if others fail. Results are awaited in
   submission order, so passing each successful one to `merge`, with its file,
-  is deterministic; each is logged as "[i/N] Imported file". See
-  `_raise_for_failures` for what is raised.
+  is deterministic; each merged one is logged as "[i/N] Imported file". A
+  file whose import or merge raises is a failure.
   """
   failures: list[_FileFailure] = []
   imported = 0
   for file, future in zip(files, futures, strict=True):
     try:
-      result = future.result()
+      merge(file, future.result())
+      imported += 1
+      logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
     except Exception as e:
       failures.append(
           _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
-      continue
-    imported += 1
-    logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
-    merge(file, result)
-  _raise_for_failures(failures)
+  return failures
 
 
 def _raise_for_failures(failures: list[_FileFailure]) -> None:
   """Logs each failure's traceback, then raises.
 
   A single failure is re-raised as is, so its type and message reach the
-  handshake and the caller unchanged. Several are raised together as one
-  `FileImportsFailedError` that names every failed file.
+  caller unchanged. Several are raised together as one `FileImportsFailedError`
+  that names every failed file.
   """
-  if not failures:
-    return
   for failure in failures:
     logging.error("Failed to import %s:\n%s", failure.file_path,
                   failure.traceback)
   if len(failures) == 1:
     raise failures[0].error
   raise FileImportsFailedError(failures)
-
-
-def _open_worker_store(path: str) -> Store:
-  """Opens, in a worker process, a directory that the coordinator opened.
-
-  Workers only read the input, which needs no GCS directory markers, and
-  write under output dirs whose markers the coordinator already wrote.
-  Marking again for every file sends the same marker objects many concurrent
-  writes, which GCS rejects with 429 errors.
-  """
-  return create_store(path, mark_gcs_dirs=False)
 
 
 def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
@@ -273,58 +261,61 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
   The coordinator found the file, and its GCS object if any, so neither is
   looked up again.
   """
-  with _open_worker_store(input_dir_path) as input_store_obj, \
-       _open_worker_store(args.output_dir_path) as output_store_obj:
-    input_file = File(input_store_obj,
-                      file_rel_path,
-                      create_if_missing=False,
-                      exists=True,
-                      gcs_object=gcs_object)
+  input_file = open_dir(input_dir_path).open_file(file_rel_path,
+                                                  gcs_object=gcs_object)
 
-    config = Config(args.config)
-    nodes = Nodes(config=config)
-    graph_writer = JsonLdStreamWriter(output_store_obj.as_dir(),
-                                      args.import_names,
-                                      nodes,
-                                      jsonld_dir_name=args.jsonld_dir_name)
-    importer = _create_importer_for_file(config, input_file, graph_writer,
-                                         nodes)
-    try:
-      importer.do_import()
-    except BaseException:
-      graph_writer.close_after_error()
-      raise
-    graph_writer.commit_and_close()
-    if graph_writer.obs_hash_set:
-      save_obs_ids(graph_writer.obs_hash_set, obs_ids_path)
+  config = Config(args.config)
+  nodes = Nodes(config=config)
+  graph_writer = JsonLdStreamWriter(open_dir(args.output_dir_path),
+                                    args.import_names,
+                                    config,
+                                    jsonld_dir_name=args.jsonld_dir_name)
+  importer = _create_importer_for_file(config, input_file, graph_writer, nodes)
+  try:
+    importer.do_import()
+  except BaseException:
+    graph_writer.close_after_error()
+    raise
+  graph_writer.commit_and_close()
+  if len(graph_writer.obs_ids):
+    save_obs_ids(graph_writer.obs_ids.sorted(), obs_ids_path)
 
-    return ImportProcResult(
-        file_collision_counts=dict(graph_writer.file_collision_counts),
-        file_sample_collisions=dict(graph_writer.file_sample_collisions),
-        sources=dict(nodes.sources),
-        provenances=dict(nodes.provenances),
-        processed_imports=set(graph_writer._processed_imports),
-        counts=importer.counts,
-    )
+  return ImportProcResult(
+      file_collision_counts=dict(graph_writer.file_collision_counts),
+      file_sample_collisions=dict(graph_writer.file_sample_collisions),
+      sources=dict(nodes.sources),
+      provenances=dict(nodes.provenances),
+      processed_imports=graph_writer.processed_imports(),
+      counts=importer.counts,
+  )
 
 
 def _read_config_file(file: File) -> ImportConfig:
-  """Reads and validates a `config.json` file."""
-  config_data = _parse_config_json(file.read(), file.full_path())
+  """Reads and validates a `config.json` file.
+
+  Invalid JSON (e.g. an empty file) and invalid config are reported as
+  INVALID_CONFIGURATION, prefixed with the file's path.
+  """
+  text = file.read()
   try:
-    return parse_config(config_data, file.full_path())
-  except ValueError as e:
+    return parse_config(json.loads(text), file.full_path())
+  except ValueError as e:  # Including json.JSONDecodeError.
     raise invalid_configuration(f"{file.full_path()}: {e}") from e
 
 
-def _parse_config_json(text: str, path: str) -> object:
-  """Parses config.json text; a JSON error is reported as INVALID_CONFIGURATION."""
-  try:
-    return json.loads(text)
-  except json.JSONDecodeError as e:
-    logging.error("Failed to parse JSON from %s: %s", path, e)
-    e.error_type = ValidationErrorType.INVALID_CONFIGURATION
-    raise
+def _failure_error(e: BaseException,
+                   file_path: str = "") -> FileValidationError:
+  """The handshake error for `e`: GENERIC_ERROR unless a PreprocessorError.
+
+  `file_path` is the file whose import raised `e`, if known.
+  """
+  if isinstance(e, PreprocessorError):
+    return FileValidationError(file=e.file_path or file_path,
+                               error_type=e.error_type,
+                               error_message=str(e))
+  return FileValidationError(file=file_path,
+                             error_type=ValidationErrorType.GENERIC_ERROR,
+                             error_message=str(e) or type(e).__name__)
 
 
 def _is_archived(file: File) -> bool:
@@ -334,8 +325,7 @@ def _is_archived(file: File) -> bool:
 
 def _scope_input_file(entry: InputFileConfig, rel_dir: str) -> InputFileConfig:
   """Prefixes the entry's `pattern` with `rel_dir`."""
-  return entry.model_copy(
-      update={"pattern": fspath.join(rel_dir, entry.pattern)})
+  return entry.model_copy(update={"pattern": join_path(rel_dir, entry.pattern)})
 
 
 class Runner:
@@ -348,7 +338,7 @@ class Runner:
       import_names: Optional[list[str]] = None,
       max_workers: Optional[int] = None,
   ) -> None:
-    """Sets up the output store; run() reads the config and input stores.
+    """Sets up the output dir; run() reads the config and the input dir.
 
     Args:
       max_workers: The maximum number of worker processes that import files
@@ -367,46 +357,37 @@ class Runner:
     self.import_names = import_names
     self.active_import_prefixes = None
 
-    # File systems, both input and output. Must be closed when run finishes.
-    self.all_stores: list[Store] = []
-
     # Output directories. Set up before the config is read so that a bad
     # config is reported like any other failure.
-    output_store = create_store(output_dir_path, create_if_missing=True)
-    self.output_store = output_store
-    self.all_stores.append(output_store)
-    self.output_dir = output_store.as_dir()
+    self.output_dir = open_dir(output_dir_path, create=True)
 
     # If None, _load_config() sets the default, which depends on whether any
-    # input or output store is on GCS.
+    # input or output dir is on GCS.
     self.max_workers: int | None = max_workers
     # Set by _load_config().
-    self.input_store: Store | None = None
+    self.input_dir: Dir | None = None
     self.config: Config | None = None
     self.nodes: Nodes | None = None
     # Every file under an input dir, by the dir's path relative to the input
-    # store ("" for its root), filled as _list_input_dir() lists each dir.
+    # root ("" for the root), filled as _list_input_dir() lists each dir.
     self._input_dir_files: dict[str, list[File]] = {}
     # Set while importing.
     self.graph_writer = None
-    self.trigger_workflow_info = None
     # The errors for the FAILURE handshake, set when the run fails.
     self._failure_errors: list[FileValidationError] | None = None
+    # Errors in input files, each with its file, so the report can put them
+    # under the file's folder and provenance.
+    self._file_errors: list[tuple[File, FileValidationError]] = []
 
     self.summary_generator = SummaryGenerator(
         os.getenv("WORKFLOW_EXECUTION_ID"))
 
-  def _open_input_store(self, path: str) -> Store:
-    """Opens the input store, to be closed with the others when the run ends.
-
-    The input is only read, so no GCS directory markers are written into it.
-    """
-    self.input_store = create_store(path, mark_gcs_dirs=False)
-    self.all_stores.append(self.input_store)
-    return self.input_store
+  def _open_input_dir(self, path: str) -> Dir:
+    self.input_dir = open_dir(path)
+    return self.input_dir
 
   def _load_config(self) -> None:
-    """Opens the input store, and reads and validates the config."""
+    """Opens the input dir, and reads and validates the config."""
     imports = _import_names_or_raise(self.import_names)
     # Reports and the writer name the run's folders after the cleaned names.
     self.import_names = imports
@@ -415,40 +396,39 @@ class Runner:
     if imports == [constants.ALL_IMPORTS]:
       logging.info("Running bulk load for all imports under: %s",
                    self.input_dir_path)
-      input_store = self._open_input_store(self.input_dir_path)
-      configs = self._read_configs_from_subdirs(input_store.as_dir())
+      input_dir = self._open_input_dir(self.input_dir_path)
+      configs = self._read_configs_from_subdirs(input_dir)
       self.active_import_prefixes = set(
-          f"{fspath.dirname(c.path)}/" for c in configs)
+          f"{posixpath.dirname(c.path)}/" for c in configs)
 
     # Case B: Combined Load for specific imports (len > 1)
     elif len(imports) > 1:
       logging.info("Running combined load for specific imports: %s", imports)
-      input_store = self._open_input_store(self.input_dir_path)
-      configs = self._read_configs_from_list(input_store.as_dir(), imports)
+      self._open_input_dir(self.input_dir_path)
+      configs = self._read_configs_from_list(imports)
       self.active_import_prefixes = set(
-          f"{fspath.dirname(c.path)}/" for c in configs)
+          f"{posixpath.dirname(c.path)}/" for c in configs)
 
     # Case C: Single Import
     else:
       import_dir = join_path(self.input_dir_path, imports[0])
       logging.info("Using import specific directory: %s", import_dir)
-      input_store = self._open_input_store(import_dir)
-      self._read_config_in_dir(input_store.as_dir())
+      config_file = self._open_input_dir(import_dir).open_file(
+          constants.CONFIG_JSON_FILE_NAME)
+      self.config = Config(_read_config_file(config_file))
 
     # The input dir is searched recursively, so it must not hold the output.
-    _check_not_overlapping(self.input_store, self.output_store)
+    _check_not_overlapping(self.input_dir, self.output_dir)
 
     self.nodes = Nodes(self.config)
     if self.max_workers is None:
       self.max_workers = default_max_workers(uses_gcs=any(
-          is_gcs_path(store.root_path) for store in self.all_stores))
-
-  def _start_summary(self, start_time: str) -> None:
-    self.summary_generator.set_execution_metadata(start_time=start_time,
-                                                  output_dir=self.output_dir)
+          is_gcs_path(d.store_path())
+          for d in (self.input_dir, self.output_dir)))
 
   def run(self):
-    self._start_summary(_utc_now())
+    self.summary_generator.set_execution_metadata(start_time=_utc_now(),
+                                                  output_dir=self.output_dir)
     try:
       self._load_config()
 
@@ -458,33 +438,17 @@ class Runner:
 
       self._write_report(RunStatus.SUCCESS)
 
-      # Close all file storage.
-      for store in self.all_stores:
-        store.close()
-      logging.info("File storage closed.")
-
       # Hand off processed import metadata to workflow or GCS
       self._handle_workflow_handoff()
 
-    except Exception as e:
+    except (Exception, KeyboardInterrupt) as e:  # A Ctrl-C fails the run too.
       logging.exception("Error updating stats")
 
       if self._failure_errors is None:
-        self._failure_errors = [
-            FileValidationError(file=getattr(e, "file_path", ""),
-                                error_type=getattr(
-                                    e, "error_type",
-                                    ValidationErrorType.GENERIC_ERROR),
-                                error_message=str(e))
-        ]
+        self._failure_errors = [_failure_error(e)]
 
+      self._record_report_errors()
       self._write_report(RunStatus.FAILURE)
-
-      for store in self.all_stores:
-        try:
-          store.close()
-        except Exception:
-          pass
 
       handshake_path = self._handle_workflow_handoff()
       if handshake_path:
@@ -494,6 +458,9 @@ class Runner:
       else:
         logging.error("Preprocessor execution failed!")
       raise
+    finally:
+      if self.graph_writer:  # Collisions are logged even if the run failed.
+        self.graph_writer.log_collision_summary()
 
   def _record_input_files(self, files: list[File]) -> None:
     """Records each matched input file in the ingestion report."""
@@ -549,10 +516,15 @@ class Runner:
 
     Returns the handshake's path, or None if none was written.
     """
-    if not self.trigger_workflow_info and self._failure_errors is None:
-      return None
-
     workflow_id = os.getenv("WORKFLOW_EXECUTION_ID")
+    if self._failure_errors is not None:
+      errors_dict = [err.to_dict() for err in self._failure_errors]
+      handshake_payload = {"status": "FAILURE", "errors": errors_dict}
+    elif workflow_id and is_gcs_path(self.graph_writer.jsonld_dir.full_path()):
+      handshake_payload = {"importList": json.dumps(self._import_list())}
+    else:
+      return None  # A successful run outside the workflow, or to local disk.
+
     temp_location = os.getenv("TEMP_LOCATION", "")
 
     if not workflow_id:
@@ -565,47 +537,35 @@ class Runner:
           temp_location)
       return None
 
-    if self._failure_errors is not None:
-      errors_dict = [err.to_dict() for err in self._failure_errors]
-      handshake_payload = {"status": "FAILURE", "errors": errors_dict}
-    else:
-      handshake_payload = {
-          "importList": json.dumps(self.trigger_workflow_info),
-      }
-
     output_json_path = f"{temp_location.rstrip('/')}/datacommons/ingestion_records/{workflow_id}.json"
     logging.info(
         "WORKFLOW_EXECUTION_ID set. Writing preprocessor result to GCS handshake path: %s",
         output_json_path)
-    with create_store(output_json_path,
-                      create_if_missing=True,
-                      treat_as_file=True) as store:
-      store.as_file().write(json.dumps(handshake_payload, indent=2))
+    write_file(output_json_path, json.dumps(handshake_payload, indent=2))
 
     if self._failure_errors is None:
       logging.info("Successfully wrote preprocessor result to GCS.")
     return output_json_path
 
-  def _read_config_in_dir(self, input_dir: Dir) -> None:
-    """Reads and validates the `config.json` at the root of `input_dir`."""
-    file = input_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
-                               create_if_missing=False)
-    raw_config = file.read()
-    config_data = (_parse_config_json(raw_config, file.full_path())
-                   if raw_config else {})
-    self.config = Config(parse_config(config_data, file.full_path()))
+  def _import_list(self) -> list[dict[str, str]]:
+    """The imports and their JSON-LD shards, for the ingestion workflow."""
+    jsonld_path = self.graph_writer.jsonld_dir.full_path().rstrip("/")
+    return [{
+        "importName": name,
+        "graphPath": f"{jsonld_path}/{name.replace('/', '_')}/**/*.jsonld"
+    } for name in self.graph_writer.import_folders()]
 
-  def _merge_configs(self, configs: list, base_dir: Dir):
+  def _merge_configs(self, configs: list):
     """Merges multiple config.json files into a single configuration.
 
     Args:
-      configs: A list of File objects representing the config.json files to merge.
-      base_dir: The base directory used to calculate relative paths for input files.
+      configs: A list of File objects representing the config.json files to
+        merge. Each one's patterns are scoped to its dir.
     """
     input_files = []
     for file in configs:
       config = _read_config_file(file)
-      rel_dir = fspath.relativefrom(base_dir.path, fspath.dirname(file.path))
+      rel_dir = posixpath.dirname(file.path)
       logging.info("Merging config from import directory: %s", rel_dir)
       input_files.extend(
           _scope_input_file(entry, rel_dir) for entry in config.input_files)
@@ -617,7 +577,7 @@ class Runner:
 
     Each dir is listed once per run, and its listing reused.
     """
-    directory = self.input_store.as_dir().open_dir(path, create=False)
+    directory = self.input_dir.open_dir(path, create=False)
     if directory.path not in self._input_dir_files:
       self._input_dir_files[directory.path] = directory.all_files(
           include_subdirs=True)
@@ -651,11 +611,10 @@ class Runner:
       raise FileNotFoundError(
           f"No config.json files found in subdirectories of {base_dir.full_path()}"
       )
-    self._merge_configs(configs, base_dir)
+    self._merge_configs(configs)
     return configs
 
-  def _read_configs_from_list(self, base_dir: Dir,
-                              import_names: list[str]) -> list:
+  def _read_configs_from_list(self, import_names: list[str]) -> list:
     """Reads and merges the configs of the imports in `import_names`.
 
     An import's config.json is the one at its root, or else those in its
@@ -671,7 +630,7 @@ class Runner:
       files = self._list_input_dir(name)
       if not files:
         raise FileNotFoundError(f"Import directory not found or empty: {name}")
-      root_config = fspath.join(name, constants.CONFIG_JSON_FILE_NAME)
+      root_config = join_path(name, constants.CONFIG_JSON_FILE_NAME)
       found = [f for f in files if f.path == root_config]
       if not found:
         logging.info(
@@ -683,7 +642,7 @@ class Runner:
       configs.extend(found)
 
     logging.info("Found %s config files from list.", len(configs))
-    self._merge_configs(configs, base_dir)
+    self._merge_configs(configs)
     return configs
 
   def _is_active_import_file(self, file: File) -> bool:
@@ -723,9 +682,6 @@ class Runner:
       if not self._is_active_import_file(file):
         continue
       if not self._matches_config_pattern(file):
-        logging.info(
-            "Ignoring file '%s' as it does not match any pattern in config.json",
-            file.path)
         continue
       if match(file, "*.csv"):
         csv_files.append(file)
@@ -741,7 +697,8 @@ class Runner:
                                     file: File) -> list[FileValidationError]:
     """Validates headers for a single CSV file and returns any errors found."""
     try:
-      return self._create_importer(file).validate_headers()
+      return _create_importer_for_file(self.config, file, self.graph_writer,
+                                       self.nodes).validate_headers()
     except Exception as e:
       return [
           FileValidationError(
@@ -768,8 +725,11 @@ class Runner:
     all_errors = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(
         _MAX_HEADER_VALIDATION_THREADS, len(csv_files))) as executor:
-      for errors in executor.map(self._validate_single_file_headers, csv_files):
+      for file, errors in zip(
+          csv_files, executor.map(self._validate_single_file_headers,
+                                  csv_files)):
         all_errors.extend(errors)
+        self._file_errors.extend((file, error) for error in errors)
 
     if all_errors:
       self._failure_errors = all_errors
@@ -797,22 +757,44 @@ class Runner:
     logging.info("Importing %d files with %d worker processes", len(files),
                  num_workers)
     # Workers run on this machine, so they can save ids to a local directory.
-    with tempfile.TemporaryDirectory(prefix="obs-ids-") as obs_ids_dir:
+    # A failed run doesn't wait for the files in progress, which may still save
+    # ids while the directory is removed.
+    with tempfile.TemporaryDirectory(prefix="obs-ids-",
+                                     ignore_cleanup_errors=True) as obs_ids_dir:
       obs_ids_paths = [
           os.path.join(obs_ids_dir, f"{i:06d}.npy") for i in range(len(files))
       ]
-      with concurrent.futures.ProcessPoolExecutor(
-          max_workers=num_workers) as executor:
+      executor = concurrent.futures.ProcessPoolExecutor(max_workers=num_workers)
+      try:
         futures = [
             executor.submit(_run_single_import_proc, file.path,
                             file.gcs_object(), file.store_path(), worker_args,
                             ids_path)
             for file, ids_path in zip(files, obs_ids_paths)
         ]
-        _finish_imports(files, futures, merge=self._merge_worker_result)
+        failures = _finish_imports(files,
+                                   futures,
+                                   merge=self._merge_worker_result)
+      except BaseException:
+        # E.g. Ctrl-C: files not yet started are cancelled, and the run fails
+        # without waiting for the ones in progress. (Not a `with` block: its
+        # exit would wait for them, and reset cancel_futures.)
+        executor.shutdown(wait=False, cancel_futures=True)
+        raise
+      executor.shutdown()
+      if failures:
+        # The handshake has an error per failed file, with its path.
+        self._failure_errors = [
+            _failure_error(f.error, f.file_path) for f in failures
+        ]
+        files_by_path = {file.path: file for file in files}
+        self._file_errors.extend(
+            (files_by_path[f.file_path], error)
+            for f, error in zip(failures, self._failure_errors))
+        _raise_for_failures(failures)
       # Workers save ids only for files with observations.
       self._merge_cross_file_collisions([
-          (collision_file_key(file.path), ids_path)
+          (file.path, ids_path)
           for file, ids_path in zip(files, obs_ids_paths)
           if os.path.exists(ids_path)
       ])
@@ -838,10 +820,8 @@ class Runner:
     # Before header validation, so failed runs still report their files.
     self._record_input_files(csv_files + mcf_files)
 
-    logging.info("Found %d CSV files to import", len(csv_files))
-    logging.info("Found %d MCF files to import", len(mcf_files))
-    logging.info("Matched files to process: %s",
-                 [f.full_path() for f in csv_files + mcf_files])
+    logging.info("Found %d CSV and %d MCF files to import", len(csv_files),
+                 len(mcf_files))
 
     # Validate all CSV headers upfront
     self._validate_all_headers(csv_files)
@@ -850,14 +830,28 @@ class Runner:
     files = mcf_files + csv_files
     if not files:
       return
-    logging.info("Importing %d files (%d MCF, %d CSV)...", len(files),
-                 len(mcf_files), len(csv_files))
     self._run_multiprocess_imports(files)
+
+  def _record_report_errors(self) -> None:
+    """Passes the errors that failed the run to the report.
+
+    Input file errors go under their file's provenance; any other error, e.g.
+    a config or metadata error, is reported for the whole run.
+    """
+    if not self._file_errors:
+      for error in self._failure_errors:
+        self.summary_generator.record_failure(error)
+      return
+    for file, error in self._file_errors:
+      folder, provenance_id = self._report_folder_and_provenance(file)
+      self.summary_generator.record_failure(error, folder, provenance_id)
 
   def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
     """Merges a worker process's `ImportProcResult` for `file`."""
     self.nodes.merge_metadata(res.provenances, res.sources)
-    self._merge_worker_writer_state(res)
+    self.graph_writer.merge_worker(res.processed_imports,
+                                   res.file_collision_counts,
+                                   res.file_sample_collisions)
     self._record_file_summary(file, res)
 
   def _record_file_summary(self, file: File, res: ImportProcResult) -> None:
@@ -871,55 +865,28 @@ class Runner:
                     folder=folder,
                     provenanceId=provenance_id,
                     observations=res.counts.observations,
-                    dateRange=res.counts.date_range))
-
-  def _merge_worker_writer_state(self, res: ImportProcResult) -> None:
-    """Merges a worker's processed imports and collision stats into the writer."""
-    self.graph_writer._processed_imports.update(res.processed_imports)
-    self.graph_writer.merge_collisions(res.file_collision_counts,
-                                       res.file_sample_collisions)
-
-  def _create_importer(self, input_file: File) -> Importer:
-    return _create_importer_for_file(
-        self.config,
-        input_file,
-        self.graph_writer,
-        self.nodes,
-    )
+                    dateRange=res.counts.date_range,
+                    nodes=NodeCounts(count=res.counts.nodes,
+                                     byType=dict(res.counts.nodes_by_type))))
 
   def _run_imports_and_export_jsonld(self):
-    logging.info(
-        "Initializing JsonLdStreamWriter to stream JSON-LD directly to GCS/Disk"
-    )
     self.graph_writer = JsonLdStreamWriter(self.output_dir, self.import_names,
-                                           self.nodes)
+                                           self.config)
 
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
 
     # Generate triples from nodes grouped by provenance directory and write directly
     for prov_dir, triples in self.nodes.triples_by_provenance_dir().items():
-      if prov_dir == "_global":
-        self.graph_writer.write_triples(triples)
-      else:
-        self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
+      # Every triple is counted. "" (no import: the generated StatVarGroups) is
+      # no folder's provenance, so its counts don't appear in the report.
+      counts = count_nodes_from_triples(triples)
+      self.summary_generator.add_runner_node_counts(prov_dir, counts.nodes,
+                                                    counts.nodes_by_type)
+      self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
 
     # Perform strict metadata validation before committing and closing
-    MetadataValidator(self.config, self.graph_writer).validate()
-
-    # Populate trigger workflow info if running under ingestion workflow and output is GCS
-    output_path = self.graph_writer.jsonld_dir.full_path()
-    if os.getenv("WORKFLOW_EXECUTION_ID") and output_path.startswith("gs://"):
-      import_list = []
-      for imp in self.graph_writer.import_folders():
-        sanitized_imp = imp.replace("/", "_")
-        gcs_pattern = f"{output_path.rstrip('/')}/{sanitized_imp}/**/*.jsonld"
-        import_list.append({"importName": imp, "graphPath": gcs_pattern})
-      self.trigger_workflow_info = import_list
-    else:
-      logging.info(
-          "Not running under ingestion workflow or output is local. Skipping handshake info."
-      )
+    MetadataValidator(self.config, self.nodes).validate()
 
 
 def _utc_now() -> str:
@@ -927,13 +894,20 @@ def _utc_now() -> str:
   return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _check_not_overlapping(input_store: Store, output_store: Store):
-  input_path = input_store.full_path()
-  output_path = output_store.full_path()
+def _comparable_path(directory: Dir) -> str:
+  """The dir's URL on GCS; its absolute path, with ~ and $VARS expanded, on
+  local disk, where the paths shown keep them as given."""
+  path = directory.full_path()
+  if is_gcs_path(path):
+    return path
+  return os.path.abspath(os.path.expanduser(os.path.expandvars(path or ".")))
+
+
+def _check_not_overlapping(input_dir: Dir, output_dir: Dir):
+  input_path = _comparable_path(input_dir)
+  output_path = _comparable_path(output_dir)
 
   # Check if paths are the same or if one is a parent of the other.
-  if (fspath.normpath(input_path) == fspath.normpath(output_path) or
-      fspath.isparent(input_path, output_path) or
-      fspath.isparent(output_path, input_path)):
-    raise ValueError(
-        f"Input path ({input_path}) overlaps with output dir ({output_path})")
+  if is_within(input_path, output_path) or is_within(output_path, input_path):
+    raise ValueError(f"Input path ({input_dir.full_path()}) overlaps with"
+                     f" output dir ({output_dir.full_path()})")

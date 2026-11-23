@@ -37,8 +37,8 @@ def test_basic_rows():
       b.csv_file(b.obs_row("country/USA", "Count_Person", "2020", "331000000"),
                  b.obs_row("country/FRA", "Median_Age_Person", "2020", "42.3")))
   b.assert_records(result.observations, [
-      b.obs("country/USA", "Count_Person", 2020, 331000000),
-      b.obs("country/FRA", "Median_Age_Person", 2020, 42.3),
+      b.obs("country/USA", "Count_Person", "2020", "331000000"),
+      b.obs("country/FRA", "Median_Age_Person", "2020", "42.3"),
   ])
 
 
@@ -52,22 +52,27 @@ def test_physical_column_names_are_mapped():
           "dcid:observationDate": "year",
           "dcid:value": "amount",
       }))
-  b.assert_records(result.observations, [b.obs(date=2021, value=332000000)])
+  b.assert_records(result.observations, [b.obs(date="2021", value="332000000")])
 
 
 # --- Cells --------------------------------------------------------------------
 
 DROPPED = None  # The row produces no observation.
 
+# Values are written as given, so that their significant figures are kept.
 VALUES = [
-    Case("integer", given="7", expect=7),
-    Case("negative decimal", given="-3.5", expect=-3.5),
-    Case("leading zeros are dropped", given="007", expect=7),
-    Case("decimal with trailing zero", given="2.0", expect=2.0),
-    Case("exponent is a number",
-         given="1e5",
-         expect=100000,
-         bug="1e5 is emitted as the JSON string \"1e5\""),
+    Case("integer", given="7", expect="7"),
+    Case("negative decimal", given="-3.5", expect="-3.5"),
+    Case("trailing zeros are kept", given="12.50", expect="12.50"),
+    Case("small decimal keeps every digit",
+         given="0.0000001230",
+         expect="0.0000001230"),
+    Case("large integer keeps every digit",
+         given="100000000000000001",
+         expect="100000000000000001"),
+    Case("leading zeros are kept", given="007", expect="007"),
+    Case("exponent is kept", given="1e5", expect="1e5"),
+    Case("surrounding whitespace is trimmed", given=" 2.0 ", expect="2.0"),
     Case("empty cell drops the row", given="", expect=DROPPED),
     Case("NA drops the row", given="NA", expect=DROPPED),
     Case("null drops the row", given="null", expect=DROPPED),
@@ -145,7 +150,7 @@ def test_variable(given, expect):
 
 
 DATES = [
-    Case("year is a number", given="2020", expect=2020),
+    Case("year", given="2020", expect="2020"),
     Case("year-month is a string", given="2020-06", expect="2020-06"),
     Case("full date is a string", given="2020-06-15", expect="2020-06-15"),
 ]
@@ -160,7 +165,7 @@ def test_date(given, expect):
 def test_non_numeric_value_fails():
   result = b.run_csv(b.csv_file(b.obs_row(value="lots")))
   b.assert_fails(
-      result, "ValueError",
+      result, "PreprocessorError",
       "Invalid non-numeric value(s) found in observation values of file"
       " 'case.csv': ['lots']. If these represent missing values, leave the"
       " cells empty or use one of: ['-', 'nil', 'n/a', 'na', 'none', 'null',"
@@ -173,7 +178,7 @@ def test_non_numeric_values_are_listed_ten_at_most():
           *[b.obs_row(f"country/C{i}", value=f"a{i}") for i in range(1, 13)]))
   listed = ", ".join(f"'a{i}'" for i in range(1, 11))
   b.assert_fails(
-      result, "ValueError",
+      result, "PreprocessorError",
       f"Invalid non-numeric value(s) found in observation values of file"
       f" 'case.csv': [{listed}]. If these represent missing values")
 
@@ -188,7 +193,7 @@ def _ids(result) -> set[str]:
 def test_rows_with_the_same_key_keep_both_values_under_one_id():
   """The collision is only logged; both records are written."""
   result = b.run_csv(b.csv_file(b.obs_row(value="1"), b.obs_row(value="2")))
-  b.assert_records(result.observations, [b.obs(value=1), b.obs(value=2)])
+  b.assert_records(result.observations, [b.obs(value="1"), b.obs(value="2")])
   assert len(_ids(result)) == 1
 
 
@@ -295,6 +300,17 @@ def test_collisions_across_files_are_summarized(caplog):
   assert sample.endswith(" also produced by 'case_x.csv'"), sample
 
 
+def test_collisions_are_summarized_even_if_the_run_fails(caplog):
+  """Without provenance.mcf, metadata validation fails after the imports."""
+  files = {"case.csv": b.csv_file(b.obs_row(value="1"), b.obs_row(value="2"))}
+  with caplog.at_level(logging.WARNING):
+    result = b.run_dir(files, b.obs_config(b.OBS_MAPPINGS))
+  assert result.error["type"] == "PreprocessorError", result.error
+  header, *_ = _collision_summary(caplog)
+  assert header == (f"{_COLLISION_SUMMARY} Total of 1 observation @id"
+                    " collisions detected across 1 file(s):")
+
+
 def test_files_with_the_same_name_in_two_imports_are_summarized_apart(caplog):
   duplicate_rows = b.csv_file(b.obs_row(value="1"), b.obs_row(value="2"))
   files = {
@@ -341,9 +357,9 @@ def test_optional_observation_columns():
       }))
   b.assert_records(result.observations, [
       b.obs(variable="Amount_Debt",
-            value=12.5,
+            value="12.5",
             unit=b.ref("USDollar"),
-            scalingFactor=100,
+            scalingFactor="100",
             measurementMethod=b.ref("CensusACS"),
             observationPeriod="P1Y")
   ])
@@ -355,7 +371,7 @@ OBSERVATION_PROPERTIES = [
          expect={"unit": b.ref("USDollar")}),
     Case("scalingFactor",
          given={"scalingFactor": "100"},
-         expect={"scalingFactor": 100}),
+         expect={"scalingFactor": "100"}),
     Case("measurementMethod",
          given={"measurementMethod": "CensusACS"},
          expect={"measurementMethod": b.ref("CensusACS")}),
@@ -381,6 +397,23 @@ def test_custom_observation_property_from_config_is_a_dimension():
   assert result.dimensions("Count_Person") == ["sex", "observationAbout"]
 
 
+def test_observation_period_and_scaling_factor_are_trimmed():
+  """Like values, they're written as given; a blank cell sets nothing."""
+  result = b.run_csv(
+      b.csv_file(b.obs_row("country/USA") + [" P1Y ", " 100 "],
+                 b.obs_row("country/FRA") + ["  ", "  "],
+                 header=b.OBS_HEADER + ["period", "scaling"]),
+      b.obs_config({
+          **b.OBS_MAPPINGS,
+          "dcid:observationPeriod": "period",
+          "dcid:scalingFactor": "scaling",
+      }))
+  b.assert_records(result.observations, [
+      b.obs("country/USA", observationPeriod="P1Y", scalingFactor="100"),
+      b.obs("country/FRA"),
+  ])
+
+
 def test_column_value_overrides_observation_property_from_config():
   """The config value only fills rows whose cell is empty."""
   result = b.run_csv(
@@ -392,8 +425,8 @@ def test_column_value_overrides_observation_property_from_config():
       },
                    observationProperties={"unit": "USDollar"}))
   b.assert_records(result.observations, [
-      b.obs(value=1, unit=b.ref("Euro")),
-      b.obs(value=2, unit=b.ref("USDollar")),
+      b.obs(value="1", unit=b.ref("Euro")),
+      b.obs(value="2", unit=b.ref("USDollar")),
   ])
 
 
@@ -408,7 +441,7 @@ def test_second_entity_dimension():
           "dcid:destination": "destination",
       }))
   b.assert_records(result.observations, [
-      b.obs(variable="Count_Trip", value=10, destination=b.ref("country/FRA"))
+      b.obs(variable="Count_Trip", value="10", destination=b.ref("country/FRA"))
   ])
   assert result.dimensions("Count_Trip") == ["observationAbout", "destination"]
 
@@ -468,7 +501,7 @@ def test_observation_properties_order():
           }))
   b.assert_records(result.observations, [
       b.obs(variable="Count_Trip",
-            value=10,
+            value="10",
             sex="Female",
             age="Years25To34",
             destination=b.ref("country/FRA"))
@@ -496,15 +529,22 @@ def test_each_observation_declares_only_its_own_dimensions():
       if r.get("@type") == "dcid:StatVarObservation"
   }
   assert declared == {
-      2020: ["dcid:observationAbout", "dcid:age"],
-      2021: ["dcid:observationAbout"],
+      "2020": ["dcid:observationAbout", "dcid:age"],
+      "2021": ["dcid:observationAbout"],
   }, declared
 
 
-def test_ignored_column_is_dropped():
+# Ignored columns are dropped, even those named like an internal column. An
+# ignored "entity" column would only change the observation id, which these
+# tests don't compare.
+@pytest.mark.parametrize("column", [
+    "notes", "unit", "scaling_factor", "measurement_method",
+    "observation_period"
+])
+def test_ignored_column_is_dropped(column):
   result = b.run_csv(
-      b.csv_file(b.obs_row() + ["anything"], header=b.OBS_HEADER + ["notes"]),
-      b.obs_config(b.OBS_MAPPINGS, ignoreColumns=["notes"]))
+      b.csv_file(b.obs_row() + ["USDollar"], header=b.OBS_HEADER + [column]),
+      b.obs_config(b.OBS_MAPPINGS, ignoreColumns=[column]))
   b.assert_records(result.observations, [b.obs()])
 
 
@@ -730,3 +770,36 @@ def test_report_counts_each_file_under_its_configured_provenance():
       for p in _report_folders(result)["oecd"]["provenances"]
   }
   assert counts == {b.PROVENANCE: 2, "OtherProvenance": 1}
+
+
+def test_report_lists_each_failed_file_under_its_provenance():
+  """Every file that fails to import is reported under its own provenance."""
+  files = b.import_subdir("oecd", b.csv_file(b.obs_row(value="abc")))
+  config = json.loads(files["oecd/config.json"])
+  config["inputFiles"].append({
+      "pattern": "other.csv",
+      "provenance": "dcid:OtherProvenance",
+      "columnMappings": b.OBS_MAPPINGS
+  })
+  files.update({
+      "oecd/config.json":
+          json.dumps(config),
+      "oecd/other.mcf":
+          b.mcf_node("dcid:OtherProvenance",
+                     typeOf="dcs:Provenance",
+                     source=f"dcid:{b.SOURCE}"),
+      "oecd/other.csv":
+          b.csv_file(b.obs_row(value="xyz")),
+  })
+  result = b.run_dir(files, runner_kwargs={"import_names": ["oecd"]})
+
+  report = result.output["ingestion_report"]
+  assert report["errors"] == []
+  errors = {
+      p["id"]: [(e["file"], e["errorType"]) for e in p["errors"]]
+      for p in _report_folders(result)["oecd"]["provenances"]
+  }
+  assert errors == {
+      b.PROVENANCE: [("case.csv", "GENERIC_ERROR")],
+      "OtherProvenance": [("other.csv", "GENERIC_ERROR")],
+  }

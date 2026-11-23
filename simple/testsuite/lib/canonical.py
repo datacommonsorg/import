@@ -97,7 +97,11 @@ def group_by_folder(
 
 
 def normalize_ingestion_report(report: dict | None, tokens: dict[str, str]):
-  """The ingestion report without its timestamps, which change every run."""
+  """The ingestion report without its timestamps, which change every run.
+
+  Paths are replaced with tokens everywhere, e.g. in outputPath and in error
+  messages.
+  """
   if report is None:
     return None
   run = {
@@ -105,9 +109,7 @@ def normalize_ingestion_report(report: dict | None, tokens: dict[str, str]):
       for k, v in report.get("run", {}).items()
       if k not in ("startTime", "endTime")
   }
-  if "outputPath" in run:
-    run["outputPath"] = replace_paths(run["outputPath"], tokens)
-  return {**report, "run": run}
+  return json.loads(replace_paths(json.dumps({**report, "run": run}), tokens))
 
 
 def normalize_handshake(handshake: dict | None, path_tokens: dict[str, str]):

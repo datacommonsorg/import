@@ -17,11 +17,10 @@ import logging
 from kg_util.mcf_parser import mcf_to_triples
 from stats.data import strip_namespace
 from stats.data import Triple
-from stats.graph_writer import GraphWriter
+from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.util import is_uri_or_namespace
-from util.filesystem import File
 
 _ID = 'ID'
 _DCID = 'dcid'
@@ -45,13 +44,6 @@ class McfImporter(Importer):
   The MCF nodes are parsed and inserted as triples via the GraphWriter.
     """
 
-  def __init__(self, input_file: File, graph_writer: GraphWriter,
-               nodes: Nodes) -> None:
-    super().__init__()
-    self.input_file = input_file
-    self.graph_writer = graph_writer
-    self.nodes = nodes
-
   def do_import(self) -> None:
     # Pass 1: Resolve local ID mappings and identify metadata subject IDs
     local2dcid = {}
@@ -73,6 +65,9 @@ class McfImporter(Importer):
                  self.input_file.full_path())
     chunk = []
     all_metadata_triples = []
+    # (node ID, type) pairs counted so far, shared by every chunk of this
+    # file so a pair counts once per file.
+    seen = set()
 
     for parser_triple in triples_list:
       if parser_triple[1] == _DCID:
@@ -89,11 +84,13 @@ class McfImporter(Importer):
       # Only flush at subject boundaries to prevent splitting a subject's triples
       if chunk and triple.subject_id != chunk[-1].subject_id and len(
           chunk) >= 10000:
+        self.counts = self.counts.add(count_nodes_from_triples(chunk, seen))
         self.graph_writer.write_triples(chunk, self.input_file)
         chunk = []
       chunk.append(triple)
 
     if chunk:
+      self.counts = self.counts.add(count_nodes_from_triples(chunk, seen))
       self.graph_writer.write_triples(chunk, self.input_file)
 
     # Register all collected metadata nodes at the end

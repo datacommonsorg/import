@@ -16,17 +16,19 @@ import logging
 
 import pandas as pd
 from stats.data import FileValidationError
+from stats.data import PreprocessorError
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
-from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
+from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.importer import mapping_errors
 from stats.importer import missing_column_mappings_error
 from stats.importer import read_csv_columns
 from stats.nodes import Nodes
+from stats.report.model.summary import ValidationErrorType
 from stats.util import has_namespace_prefix
 from util.filesystem import File
 
@@ -81,11 +83,7 @@ class EntitiesImporter(Importer):
 
   def __init__(self, input_file: File, graph_writer: GraphWriter,
                nodes: Nodes) -> None:
-    super().__init__()
-    self.input_file = input_file
-    self.graph_writer = graph_writer
-    self.nodes = nodes
-    self.config = nodes.config
+    super().__init__(input_file, graph_writer, nodes)
     self.ignore_columns = self.config.ignore_columns(self.input_file)
     self.provenance_id = ""
     # Map from CSV column name to the predicate its values are written under.
@@ -96,7 +94,6 @@ class EntitiesImporter(Importer):
   def do_import(self) -> None:
     self.provenance_id = self.nodes.provenance_id(self.input_file)
     self._read_csv()
-    self._drop_ignored_columns()
     self._check_required_values()
     self._write_row_entity_triples()
 
@@ -119,19 +116,10 @@ class EntitiesImporter(Importer):
                                   set(self.ignore_columns))
 
   def _read_csv(self) -> None:
-    # Read CSVs with the following behaviors:
-    # - Strip leading whitespaces
-    # - Treat comma as a thousands separator
     self.df = pd.read_csv(self.input_file.read_string_io(),
                           skipinitialspace=True,
-                          thousands=",")
+                          dtype=str)
     logging.info("Read %s rows.", self.df.index.size)
-    # Convert to best possible dtypes (i.e. keep ints as ints even when some values are NaN)
-    self.df = self.df.convert_dtypes()
-
-  def _drop_ignored_columns(self):
-    if self.ignore_columns:
-      self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
 
   def _check_required_values(self) -> None:
     """Raises ValueError if a row has no DCID or type, before any is written."""
@@ -147,15 +135,17 @@ class EntitiesImporter(Importer):
                         f" row(s) {rows[:_MAX_LISTED_ROWS]}")
     if not problems:
       return
-    error = ValueError(
+    raise PreprocessorError(
         f"Empty value(s) in entities CSV file '{self.input_file.path}': " +
         "; ".join(problems) + ". Rows are numbered from 1, the first row after"
-        " the header. Every row needs a DCID and a type.")
-    error.file_path = self.input_file.path
-    raise error
+        " the header. Every row needs a DCID and a type.",
+        file_path=self.input_file.path)
 
   def _mapped_columns(self) -> pd.DataFrame:
-    """Returns the mapped columns, renamed to their predicates."""
+    """Returns the mapped columns, renamed to their predicates.
+
+    Ignored columns, which are never mapped, are left out.
+    """
     mapped = [col for col in self.df.columns if col in self.reverse_mappings]
     return self.df[mapped].rename(columns=self.reverse_mappings)
 
@@ -189,4 +179,5 @@ class EntitiesImporter(Importer):
                              prop_object_ids=prop_object_ids)
       triples.extend(row_entity.triples())
 
+    self.counts = self.counts.add(count_nodes_from_triples(triples))
     self.graph_writer.write_triples(triples, self.input_file)

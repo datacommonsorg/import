@@ -28,6 +28,7 @@ The report has three levels:
 """
 
 from enum import Enum
+from enum import StrEnum
 from typing import Self
 
 from pydantic import BaseModel
@@ -80,6 +81,40 @@ class DateRange(BaseModel):
     return DateRange(min=min(self.min, other.min), max=max(self.max, other.max))
 
 
+class NodeCounts(BaseModel):
+  """Typed nodes written, other than StatVarObservations, and their types."""
+
+  count: int = Field(
+      default=0,
+      description=("Number of (node, type) pairs written, so a node with "
+                   "several types counts once per type; equals the sum of "
+                   "byType"))
+  byType: dict[str, int] = Field(
+      default_factory=dict,
+      description=("Number of nodes per type. A node with several types "
+                   "counts under each."))
+
+
+class ValidationErrorType(StrEnum):
+  UNMAPPED_COLUMNS = "UNMAPPED_COLUMNS"
+  MISSING_REQUIRED_COLUMNS = "MISSING_REQUIRED_COLUMNS"
+  INVALID_CONFIGURATION = "INVALID_CONFIGURATION"
+  MISSING_SOURCE = "MISSING_SOURCE"
+  MISSING_PROVENANCE = "MISSING_PROVENANCE"
+  GENERIC_ERROR = "GENERIC_ERROR"
+
+
+class ReportError(BaseModel):
+  """One error that failed the run, with the same fields as the handshake's."""
+
+  file: str = Field(default="",
+                    description="Input file at fault, or empty if unknown")
+  errorType: ValidationErrorType = Field(description="Error type")
+  problemColumns: list[str] = Field(default_factory=list,
+                                    description="CSV columns at fault, if any")
+  errorMessage: str = Field(default="", description="What went wrong")
+
+
 class Provenance(BaseModel):
   """One entry in `folders[].provenances[]`."""
 
@@ -95,7 +130,11 @@ class Provenance(BaseModel):
       description=("Observation dates covered, or null without dated "
                    "observations. Rows without a date count toward "
                    "observations but not toward dateRange."))
-  # TODO: Add node counts by type and provenance-level errors.
+  nodes: NodeCounts = Field(default_factory=NodeCounts,
+                            description="Typed nodes written")
+  errors: list[ReportError] = Field(
+      default_factory=list,
+      description="Errors in this provenance's input files that failed the run")
 
 
 class FileCounts(BaseModel):
@@ -117,7 +156,9 @@ class FolderSummary(BaseModel):
   observations: int = Field(
       default=0,
       description="StatVarObservation nodes written, over all provenances")
-  # TODO: Add node counts by type.
+  nodes: NodeCounts = Field(
+      default_factory=NodeCounts,
+      description="Typed nodes written, over all provenances")
 
 
 class Folder(BaseModel):
@@ -137,7 +178,10 @@ class IngestionReport(BaseModel):
       description="Metadata for each preprocessor run")
   folders: list[Folder] = Field(default_factory=list,
                                 description="One entry per import folder")
-  # TODO: Add error field in the ingestion report.
+  errors: list[ReportError] = Field(
+      default_factory=list,
+      description=("Errors that failed the run and belong to no input file, "
+                   "e.g. config or metadata errors"))
 
 
 class FileSummary(BaseModel):
@@ -155,4 +199,5 @@ class FileSummary(BaseModel):
                             description="StatVarObservation nodes written")
   dateRange: DateRange | None = Field(
       default=None, description="Observation dates covered, if any")
-  # TODO: Add nodesByType.
+  nodes: NodeCounts = Field(default_factory=NodeCounts,
+                            description="Typed nodes written")

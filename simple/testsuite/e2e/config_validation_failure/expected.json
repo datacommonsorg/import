@@ -1,7 +1,7 @@
 {
   "error": {
     "message": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
-    "type": "ValueError"
+    "type": "PreprocessorError"
   },
   "handshake": {
     "errors": [
@@ -15,12 +15,24 @@
     "status": "FAILURE"
   },
   "ingestion_report": {
+    "errors": [
+      {
+        "errorMessage": "<input>/population/config.json: Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys are: ['inputFiles']",
+        "errorType": "INVALID_CONFIGURATION",
+        "file": "",
+        "problemColumns": []
+      }
+    ],
     "folders": [
       {
         "folderName": "health",
         "provenances": [],
         "summary": {
           "files": {
+            "byType": {},
+            "count": 0
+          },
+          "nodes": {
             "byType": {},
             "count": 0
           },
@@ -33,6 +45,10 @@
         "provenances": [],
         "summary": {
           "files": {
+            "byType": {},
+            "count": 0
+          },
+          "nodes": {
             "byType": {},
             "count": 0
           },

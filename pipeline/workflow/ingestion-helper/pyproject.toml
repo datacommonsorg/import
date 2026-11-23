@@ -50,11 +50,21 @@ bypass-selection = true
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-cov==7.1.0",
     "httpx",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+# Coverage of the helper's code, measured by `PY_TEST_COVERAGE=1 ./run_test.sh -p`.
+[tool.coverage.run]
+source = ["."]
+omit = ["*_test.py"]
+
+[tool.coverage.report]
+skip_empty = true
+precision = 1
 
 [[tool.uv.index]]
 name = "pypi"

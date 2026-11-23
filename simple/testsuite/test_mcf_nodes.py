@@ -29,19 +29,17 @@ from testsuite.lib.builders import known_bug
 # in JSON-LD. To pin a new rule, add a case.
 
 VALUES = [
-    # Numbers
-    Case("integer", given="42", expect=42),
-    Case("negative integer", given="-3", expect=-3),
-    Case("decimal", given="0.25", expect=0.25),
-    Case("decimal with trailing zero", given="2.0", expect=2.0),
-    Case("leading zeros are dropped", given="007", expect=7),
-    Case("exponent stays a string", given="1e5", expect="1e5"),
-    Case("inf stays a string", given="inf", expect="inf"),
-    Case("quoted number stays a string",
+    # Numbers are written as given, so that their significant figures are kept.
+    Case("integer", given="42", expect="42"),
+    Case("negative integer", given="-3", expect="-3"),
+    Case("decimal", given="0.25", expect="0.25"),
+    Case("trailing zeros are kept", given="2.0", expect="2.0"),
+    Case("leading zeros are kept", given="007", expect="007"),
+    Case("exponent is kept", given="1e5", expect="1e5"),
+    Case("inf is kept", given="inf", expect="inf"),
+    Case("quoted number keeps its leading zeros",
          given='"00123"',
-         expect="00123",
-         bug="quoted values that look numeric become numbers, so \"00123\""
-         " loses its leading zeros"),
+         expect="00123"),
     # Other literals
     Case("boolean is a string", given="true", expect="true"),
     Case("quoted string", given='"Thing One"', expect="Thing One"),
@@ -171,8 +169,8 @@ NODES = [
                      name="Paris",
                      containedInPlace=[b.ref("Earth"),
                                        b.ref("country/FRA")],
-                     latitude=48.8566,
-                     population=2102650)),
+                     latitude="48.8566",
+                     population="2102650")),
     # Observations can be written as MCF nodes too. The node states its own
     # provenance and carries the dimension values; which properties are
     # dimensions is declared on the variable (see "statistical variable with
@@ -187,8 +185,8 @@ NODES = [
          expect=dict(types="StatVarObservation",
                      observationAbout=b.ref("country/USA"),
                      variableMeasured=b.ref("Count_Person"),
-                     observationDate=2020,
-                     value=100,
+                     observationDate="2020",
+                     value="100",
                      provenance=b.ref(b.PROVENANCE))),
     Case("observation with all standard properties",
          given=dict(typeOf="dcs:StatVarObservation",
@@ -205,9 +203,9 @@ NODES = [
                      observationAbout=b.ref("geoId/06"),
                      variableMeasured=b.ref("Median_Income"),
                      observationDate="2021-06",
-                     value=5.5,
+                     value="5.5",
                      unit=b.ref("USDollar"),
-                     scalingFactor=100,
+                     scalingFactor="100",
                      measurementMethod=b.ref("CensusACS"),
                      observationPeriod="P1Y",
                      provenance=b.ref(b.PROVENANCE))),
@@ -223,8 +221,8 @@ NODES = [
                      observationAbout=b.ref("country/USA"),
                      destination=b.ref("country/FRA"),
                      variableMeasured=b.ref("Count_Trip"),
-                     observationDate=2020,
-                     value=7,
+                     observationDate="2020",
+                     value="7",
                      provenance=b.ref(b.PROVENANCE))),
     Case("custom property",
          given={
@@ -315,3 +313,113 @@ def test_value_of_65535_characters_is_accepted():
 def test_value_of_65536_characters_fails():
   result = b.run_mcf(b.mcf_node("dcid:Big", name=f'"{"x" * 2**16}"'))
   b.assert_fails(result, "ValueError", "too long")
+
+
+# --- Ingestion report ---------------------------------------------------------
+
+# Written by the Runner for import_subdir()'s provenance.mcf.
+_METADATA_TYPES = {"Provenance": 1, "Source": 1}
+
+
+def _report_provenance(result: b.Result) -> dict:
+  """The only provenance of the run's only report folder."""
+  [folder] = result.output["ingestion_report"]["folders"]
+  [provenance] = folder["provenances"]
+  return provenance
+
+
+def test_report_counts_nodes_by_type():
+  """Each typed node counts once per file per type.
+
+  A node without a type is not counted. A StatVarObservation in MCF counts as
+  an observation instead, with its date. The generated root StatVarGroups are
+  not counted.
+  """
+  schema = b.mcf(
+      b.mcf_node("dcid:Count_X", typeOf="dcs:StatisticalVariable"),
+      b.mcf_node("dcid:prop1", typeOf="dcs:Property"),
+      b.mcf_node("dcid:region1", typeOf="dcs:City, dcs:AdministrativeArea2"),
+      b.mcf_node("dcid:Count_X",
+                 typeOf="dcs:StatisticalVariable",
+                 description='"Again"'),
+      b.mcf_node("dcid:extra", typeOf=None, description='"No type"'),
+      b.mcf_node("dcid:obs1",
+                 typeOf="dcs:StatVarObservation",
+                 variableMeasured="dcid:Count_X",
+                 observationAbout="dcid:country/USA",
+                 observationDate='"2019"',
+                 value="5"))
+  result = b.run_dir({
+      **b.import_subdir("oecd"), "oecd/schema.mcf": schema
+  },
+                     runner_kwargs={"import_names": ["oecd"]})
+
+  provenance = _report_provenance(result)
+  assert provenance["nodes"] == {
+      "count": 6,
+      "byType": {
+          "AdministrativeArea2": 1,
+          "City": 1,
+          "Property": 1,
+          "StatisticalVariable": 1,
+          **_METADATA_TYPES
+      }
+  }
+  # One from case.csv, one from schema.mcf.
+  assert provenance["observations"] == 2
+  assert provenance["dateRange"] == {"min": "2019", "max": "2020"}
+
+
+def test_report_counts_node_once_per_file():
+  node = b.mcf_node("dcid:Count_X", typeOf="dcs:StatisticalVariable")
+  result = b.run_dir(
+      {
+          **b.import_subdir("oecd"), "oecd/a.mcf": node,
+          "oecd/b.mcf": node
+      },
+      runner_kwargs={"import_names": ["oecd"]})
+
+  assert _report_provenance(result)["nodes"] == {
+      "count": 4,
+      "byType": {
+          "StatisticalVariable": 2,
+          **_METADATA_TYPES
+      }
+  }
+
+
+def test_report_skips_untyped_nodes():
+  """A node's copy in a file without its type is not counted for that file."""
+  result = b.run_dir(
+      {
+          **b.import_subdir("oecd"), "oecd/a.mcf":
+              b.mcf_node("dcid:Count_X", typeOf="dcs:StatisticalVariable"),
+          "oecd/b.mcf":
+              b.mcf_node("dcid:Count_X", typeOf=None, description='"More"')
+      },
+      runner_kwargs={"import_names": ["oecd"]})
+
+  assert _report_provenance(result)["nodes"] == {
+      "count": 3,
+      "byType": {
+          "StatisticalVariable": 1,
+          **_METADATA_TYPES
+      }
+  }
+
+
+def test_report_counts_provenance_and_source_once():
+  """Provenance and Source count once, however many files define them.
+
+  The Runner merges their definitions from every file and writes each once.
+  """
+  result = b.run_dir(
+      {
+          **b.import_subdir("oecd"), "oecd/again.mcf": b.PROVENANCE_MCF
+      },
+      runner_kwargs={"import_names": ["oecd"]})
+
+  assert _report_provenance(result)["nodes"] == {
+      "count": 2,
+      "byType": _METADATA_TYPES
+  }

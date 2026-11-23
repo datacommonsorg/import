@@ -230,14 +230,6 @@ Outputs are always written to local disk, so upload time is not measured.
 - **Hangs:** `--timeout_minutes` kills a stuck run; it is reported as RUN
   FAILED (and `exit_status_changed` when only one side timed out).
 
-## Caveat: `--freeze_time`
-
-Do not pass `--freeze_time=True` (it is not passed by default). On
-`upstream/master` it hangs the preprocessor: the main process
-spins while every pool worker waits on a futex, probably because freezegun's
-frozen clock breaks the process pool's timeouts. The comparison already
-ignores report and run directory timestamps, so the flag is not needed.
-
 ## Tests
 
 ```bash

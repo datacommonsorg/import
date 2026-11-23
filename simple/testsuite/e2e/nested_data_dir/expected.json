@@ -9,6 +9,7 @@
     ]
   },
   "ingestion_report": {
+    "errors": [],
     "folders": [
       {
         "folderName": "nested_data_dir",
@@ -18,8 +19,16 @@
               "max": "2020",
               "min": "2020"
             },
+            "errors": [],
             "fileCount": 3,
             "id": "KitchenProvenance",
+            "nodes": {
+              "byType": {
+                "Provenance": 1,
+                "Source": 1
+              },
+              "count": 2
+            },
             "observations": 2,
             "sourceId": "KitchenSource"
           }
@@ -31,6 +40,13 @@
               "mcf": 1
             },
             "count": 3
+          },
+          "nodes": {
+            "byType": {
+              "Provenance": 1,
+              "Source": 1
+            },
+            "count": 2
           },
           "observations": 2,
           "provenanceCount": 1
@@ -88,11 +104,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 1,
+            "dcid:value": "1",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [
@@ -106,11 +122,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 2,
+            "dcid:value": "2",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person",
               "dcid:observationProperties": [

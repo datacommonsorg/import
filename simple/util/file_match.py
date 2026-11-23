@@ -15,7 +15,6 @@
 import functools
 import re
 
-import fs.path as fspath
 from util.filesystem import File
 
 
@@ -42,10 +41,7 @@ def match(f: File, pattern: str) -> bool:
     if protocol:
       target = f.full_path().split("://", 1)[1]
     elif original_pattern.startswith("//"):
-      if "://" in f.full_path() and f.syspath() is not None:
-        target = fspath.relpath(f.syspath())
-      else:
-        target = fspath.relpath(f.full_path())
+      target = f.full_path().lstrip("/")
     else:
       target = "/" + f.path.lstrip("/")
   else:

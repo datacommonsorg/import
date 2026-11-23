@@ -82,7 +82,7 @@ PATTERNS = [
 def test_input_files_pattern_matching(given, expect):
   result = b.run(_PATTERN_FILES, b.obs_config(b.OBS_MAPPINGS, pattern=given))
   b.assert_records(result.observations,
-                   [b.obs(about, value=val) for about, val in expect])
+                   [b.obs(about, value=str(val)) for about, val in expect])
 
 
 _NESTED_FILES = {
@@ -96,8 +96,8 @@ def test_files_in_subdirectories_are_imported_except_archives():
   result = b.run(_NESTED_FILES, b.obs_config(b.OBS_MAPPINGS))
   b.assert_records(
       result.observations,
-      [b.obs("country/USA", value=1),
-       b.obs("country/FRA", value=2)])
+      [b.obs("country/USA", value="1"),
+       b.obs("country/FRA", value="2")])
 
 
 # includeInputSubdirs is deprecated: any value is accepted, with a warning
@@ -128,8 +128,8 @@ def test_include_input_subdirs_is_ignored_with_a_warning(given, caplog):
     })
   b.assert_records(
       result.observations,
-      [b.obs("country/USA", value=1),
-       b.obs("country/FRA", value=2)])
+      [b.obs("country/USA", value="1"),
+       b.obs("country/FRA", value="2")])
   assert _include_input_subdirs_warnings(caplog) == [f"{b.IMPORT}/config.json"]
 
 
@@ -180,7 +180,7 @@ def test_input_files_entry_for_a_file(given, expect):
               "not,a,csv\n",
       }, config)
   b.assert_records(result.observations,
-                   [b.obs(about, value=val) for about, val in expect])
+                   [b.obs(about, value=str(val)) for about, val in expect])
 
 
 def test_empty_config_writes_no_provenance_or_source():
@@ -199,6 +199,16 @@ def test_empty_config_writes_no_provenance_or_source():
   ], [])
 
 
+# The nodes of import_subdir()'s provenance.mcf, written by the Runner.
+_PROVENANCE_AND_SOURCE_NODES = {
+    "count": 2,
+    "byType": {
+        "Provenance": 1,
+        "Source": 1
+    }
+}
+
+
 def test_single_import_name_runs_only_that_subdirectory():
   result = b.run_dir(
       {
@@ -206,7 +216,7 @@ def test_single_import_name_runs_only_that_subdirectory():
           **b.import_subdir("ilo", _FRA),
       },
       runner_kwargs={"import_names": ["oecd"]})
-  b.assert_records(result.observations, [b.obs("country/USA", value=1)])
+  b.assert_records(result.observations, [b.obs("country/USA", value="1")])
   assert result.output["ingestion_report"]["run"]["folderNames"] == ["oecd"]
   assert result.output["ingestion_report"]["folders"] == [{
       "folderName":
@@ -220,7 +230,8 @@ def test_single_import_name_runs_only_that_subdirectory():
               }
           },
           "provenanceCount": 1,
-          "observations": 1
+          "observations": 1,
+          "nodes": _PROVENANCE_AND_SOURCE_NODES,
       },
       "provenances": [{
           "id": b.PROVENANCE,
@@ -230,7 +241,9 @@ def test_single_import_name_runs_only_that_subdirectory():
           "dateRange": {
               "min": "2020",
               "max": "2020"
-          }
+          },
+          "nodes": _PROVENANCE_AND_SOURCE_NODES,
+          "errors": [],
       }],
   }]
 
@@ -245,8 +258,8 @@ def test_selected_import_names_run_only_those_subdirectories():
       runner_kwargs={"import_names": ["oecd", "ilo"]})
   b.assert_records(
       result.observations,
-      [b.obs("country/USA", value=1),
-       b.obs("country/FRA", value=2)])
+      [b.obs("country/USA", value="1"),
+       b.obs("country/FRA", value="2")])
   assert result.output["ingestion_report"]["run"]["folderNames"] == [
       "ilo", "oecd"
   ]
@@ -327,6 +340,11 @@ _BAD_IMPORT_TYPE = (
     "Invalid 'importType' in 'inputFiles' entry for 'case*.csv':"
     " Input should be 'observations' or 'entities'")
 
+_NO_PROVENANCE = (
+    "Invalid 'provenance' in 'inputFiles' entry for 'case*.csv': Must be set"
+    " to the DCID or URI of the files' Provenance, e.g."
+    " 'dcid:FrogCensusBureau'")
+
 INVALID_CONFIGS = [
     Case(
         "inputFiles given as a map",
@@ -336,19 +354,20 @@ INVALID_CONFIGS = [
             }
         }},
         expect=b.Fails(
-            "ValueError", "Invalid 'inputFiles' in config.json: Input should"
+            "PreprocessorError",
+            "Invalid 'inputFiles' in config.json: Input should"
             " be a JSON array", _INVALID)),
     Case("inputFiles entry that is not an object",
          given={"inputFiles": ["case*.csv"]},
          expect=b.Fails(
-             "ValueError", "Invalid 'inputFiles' entry at index 0: Input"
+             "PreprocessorError", "Invalid 'inputFiles' entry at index 0: Input"
              " should be a JSON object", _INVALID)),
     Case("inputFiles entry without a pattern",
          given={"inputFiles": [{
              "provenance": f"dcid:{b.PROVENANCE}"
          }]},
          expect=b.Fails(
-             "ValueError", "Invalid entry in 'inputFiles': must specify"
+             "PreprocessorError", "Invalid entry in 'inputFiles': must specify"
              " a 'pattern'.", _INVALID)),
     Case("inputFiles entry whose pattern is not a string",
          given={
@@ -358,23 +377,42 @@ INVALID_CONFIGS = [
              }]
          },
          expect=b.Fails(
-             "ValueError", "Invalid 'pattern' in 'inputFiles' entry at index"
+             "PreprocessorError",
+             "Invalid 'pattern' in 'inputFiles' entry at index"
              " 0: Input should be a valid string", _INVALID)),
+    Case("inputFiles entry without a provenance",
+         given={
+             "inputFiles": [{
+                 "pattern": "case*.csv",
+                 "columnMappings": b.OBS_MAPPINGS
+             }]
+         },
+         expect=b.Fails("PreprocessorError", _NO_PROVENANCE, _INVALID)),
+    Case("blank provenance",
+         given=b.obs_config(b.OBS_MAPPINGS, provenance=" "),
+         expect=b.Fails("PreprocessorError", _NO_PROVENANCE, _INVALID)),
+    Case("provenance without a namespace prefix",
+         given=b.obs_config(b.OBS_MAPPINGS, provenance=b.PROVENANCE),
+         expect=b.Fails(
+             "PreprocessorError", "Invalid 'provenance' in 'inputFiles' entry"
+             " for 'case*.csv': Must be a DCID or URI, e.g."
+             " 'dcid:FrogCensusBureau', 'custom:WHO' or a URL. Got:"
+             f" '{b.PROVENANCE}'", _INVALID)),
     Case("unknown top-level key",
          given={
              **b.obs_config(b.OBS_MAPPINGS),
              "unknownTopLevelKey": True,
          },
          expect=b.Fails(
-             "ValueError",
-             "Unknown key(s) in config.json: ['unknownTopLevelKey']",
-             _INVALID)),
+             "PreprocessorError",
+             f"<input>/{b.IMPORT}/config.json: Unknown key(s) in config.json:"
+             " ['unknownTopLevelKey']", _INVALID)),
     Case("legacy sources key is rejected",
          given={
              **b.obs_config(b.OBS_MAPPINGS),
              "sources": {},
          },
-         expect=b.Fails("ValueError",
+         expect=b.Fails("PreprocessorError",
                         "Unknown key(s) in config.json: ['sources']",
                         _INVALID)),
     Case("legacy variables key is rejected",
@@ -382,7 +420,7 @@ INVALID_CONFIGS = [
              **b.obs_config(b.OBS_MAPPINGS),
              "variables": {},
          },
-         expect=b.Fails("ValueError",
+         expect=b.Fails("PreprocessorError",
                         "Unknown key(s) in config.json: ['variables']",
                         _INVALID)),
     Case("legacy events key is rejected",
@@ -390,20 +428,20 @@ INVALID_CONFIGS = [
              **b.obs_config(b.OBS_MAPPINGS),
              "events": {},
          },
-         expect=b.Fails("ValueError",
+         expect=b.Fails("PreprocessorError",
                         "Unknown key(s) in config.json: ['events']", _INVALID)),
     Case("legacy customIdNamespace key is rejected",
          given={
              **b.obs_config(b.OBS_MAPPINGS),
              "customIdNamespace": "custom",
          },
-         expect=b.Fails("ValueError",
+         expect=b.Fails("PreprocessorError",
                         "Unknown key(s) in config.json: ['customIdNamespace']",
                         _INVALID)),
     Case("unknown inputFiles key",
          given=b.obs_config(b.OBS_MAPPINGS, unknownFileKey="val"),
          expect=b.Fails(
-             "ValueError",
+             "PreprocessorError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['unknownFileKey']", _INVALID)),
     Case("non-string columnMappings value",
@@ -411,19 +449,20 @@ INVALID_CONFIGS = [
              **b.OBS_MAPPINGS, "dcid:value": 1
          }),
          expect=b.Fails(
-             "ValueError", "Invalid 'columnMappings.dcid:value' in 'inputFiles'"
+             "PreprocessorError",
+             "Invalid 'columnMappings.dcid:value' in 'inputFiles'"
              " entry for 'case*.csv': Input should be a valid string",
              _INVALID)),
     Case("legacy importProxyEntities key is rejected",
          given=b.obs_config(b.OBS_MAPPINGS, importProxyEntities=True),
          expect=b.Fails(
-             "ValueError",
+             "PreprocessorError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['importProxyEntities']", _INVALID)),
     Case("legacy entityType key is rejected",
          given=b.obs_config(b.OBS_MAPPINGS, entityType="Country"),
          expect=b.Fails(
-             "ValueError",
+             "PreprocessorError",
              "Unknown key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['entityType']", _INVALID)),
     Case("removed reference column keys are rejected with how to migrate",
@@ -431,7 +470,7 @@ INVALID_CONFIGS = [
                                  columnsToResolve=["author_country"],
                                  referenceColumns=["author_country"]),
          expect=b.Fails(
-             "ValueError",
+             "PreprocessorError",
              "Removed key(s) in 'inputFiles' entry for 'case*.csv':"
              " ['columnsToResolve', 'referenceColumns']. Write each"
              " reference as a cell value with a 'dcid:' prefix instead, e.g."
@@ -443,35 +482,38 @@ INVALID_CONFIGS = [
                  ["inputFiles"]
          },
          expect=b.Fails(
-             "ValueError", "Invalid 'ignoreColumns' in 'inputFiles' entry for"
+             "PreprocessorError",
+             "Invalid 'ignoreColumns' in 'inputFiles' entry for"
              " 'case*.csv': Input should be a JSON array", _INVALID)),
     Case("unsupported importType",
          given=b.obs_config(b.OBS_MAPPINGS, importType="Observations"),
-         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
+         expect=b.Fails("PreprocessorError", _BAD_IMPORT_TYPE, _INVALID)),
     Case("events importType is not supported",
          given=b.obs_config(b.OBS_MAPPINGS, importType="events"),
-         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
+         expect=b.Fails("PreprocessorError", _BAD_IMPORT_TYPE, _INVALID)),
     Case("non-string importType",
          given=b.obs_config(b.OBS_MAPPINGS, importType=["observations"]),
-         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
+         expect=b.Fails("PreprocessorError", _BAD_IMPORT_TYPE, _INVALID)),
     Case("empty list importType",
          given=b.obs_config(b.OBS_MAPPINGS, importType=[]),
-         expect=b.Fails("ValueError", _BAD_IMPORT_TYPE, _INVALID)),
+         expect=b.Fails("PreprocessorError", _BAD_IMPORT_TYPE, _INVALID)),
     Case("double wildcard in filename pattern",
          given=b.obs_config(b.OBS_MAPPINGS, pattern="**.csv"),
          expect=b.Fails(
-             "ValueError",
+             "PreprocessorError",
              "Adjacent double wildcards in the name portion of a pattern are"
              " not supported", _INVALID)),
     Case("ignoreColumns that is not a list",
          given=b.obs_config(b.OBS_MAPPINGS, ignoreColumns="notes"),
          expect=b.Fails(
-             "ValueError", "Invalid 'ignoreColumns' in 'inputFiles' entry for"
+             "PreprocessorError",
+             "Invalid 'ignoreColumns' in 'inputFiles' entry for"
              " 'case*.csv': Input should be a JSON array", _INVALID)),
     Case("columnMappings that is not an object",
          given=b.obs_config(list(b.OBS_MAPPINGS)),
          expect=b.Fails(
-             "ValueError", "Invalid 'columnMappings' in 'inputFiles' entry for"
+             "PreprocessorError",
+             "Invalid 'columnMappings' in 'inputFiles' entry for"
              " 'case*.csv': Input should be a JSON object", _INVALID)),
     Case("duplicate pattern",
          given={
@@ -481,7 +523,7 @@ INVALID_CONFIGS = [
              ]
          },
          expect=b.Fails(
-             "ValueError", "Duplicate pattern(s) in 'inputFiles':"
+             "PreprocessorError", "Duplicate pattern(s) in 'inputFiles':"
              " ['case*.csv']. Each pattern can only have one entry.",
              _INVALID)),
     Case(
@@ -491,7 +533,7 @@ INVALID_CONFIGS = [
                                 rowEntityType="Author",
                                 idColumn="author_id"),
         expect=b.Fails(
-            "ValueError",
+            "PreprocessorError",
             "Removed key(s) in 'inputFiles' entry for 'case*.csv':"
             " ['idColumn', 'rowEntityType']. Map a 'dcid:dcid' column in"
             " 'columnMappings' instead. Map a 'dcid:typeOf' column in"
@@ -541,7 +583,7 @@ def test_every_config_problem_is_reported_at_once():
                         unknownFileKey=True)
   result = b.run_csv(_USA, {**config, "unknownTopLevelKey": True})
   b.assert_fails(
-      result, "ValueError", "Found 4 problems in config.json:\n"
+      result, "PreprocessorError", "Found 4 problems in config.json:\n"
       "- Unknown key(s) in config.json: ['unknownTopLevelKey']. Allowed keys"
       " are: [", _INVALID)
   for problem in [
@@ -564,16 +606,16 @@ INVALID_CONFIG_FILES = [
              **b.import_subdir("oecd", _USA),
              "ilo/config.json": "{not json",
          },
-         expect=b.Fails("JSONDecodeError",
-                        "Expecting property name enclosed in double quotes",
-                        _INVALID)),
+         expect=b.Fails(
+             "PreprocessorError", "<input>/ilo/config.json: Expecting property"
+             " name enclosed in double quotes", _INVALID)),
     Case("subdirectory config that is not a JSON object",
          given={
              **b.import_subdir("oecd", _USA),
              "ilo/config.json": "[]",
          },
          expect=b.Fails(
-             "ValueError",
+             "PreprocessorError",
              "<input>/ilo/config.json: Invalid top-level value: Input should be"
              " a JSON object", _INVALID)),
 ]
@@ -608,6 +650,14 @@ def test_missing_config_json_fails():
                  f"File not found: <input>/{b.IMPORT}/config.json")
 
 
+def test_empty_config_json_fails():
+  result = b.run({"case.csv": _USA, "config.json": ""}, None)
+  b.assert_fails(result,
+                 "PreprocessorError",
+                 f"<input>/{b.IMPORT}/config.json: Expecting value: line 1",
+                 handshake_error_types=_INVALID)
+
+
 # An input dir whose only config.json is at its root, which is never an import.
 _ROOT_CONFIG_ONLY = {"config.json": json.dumps(b.obs_config(b.OBS_MAPPINGS))}
 
@@ -618,7 +668,7 @@ def test_a_run_without_imports_fails(import_names):
   result = b.run_dir(_ROOT_CONFIG_ONLY,
                      runner_kwargs={"import_names": import_names})
   b.assert_fails(result,
-                 "ValueError",
+                 "PreprocessorError",
                  "No imports to run. Pass --imports with the import"
                  " subdirectories of the input directory to import",
                  handshake_error_types=_INVALID)
@@ -629,7 +679,7 @@ def test_an_import_outside_a_subdirectory_of_the_input_dir_fails(import_name):
   result = b.run_dir(_ROOT_CONFIG_ONLY,
                      runner_kwargs={"import_names": [import_name]})
   b.assert_fails(result,
-                 "ValueError",
+                 "PreprocessorError",
                  f"Invalid import {import_name!r}: an import is a subdirectory"
                  " of the input directory.",
                  handshake_error_types=_INVALID)

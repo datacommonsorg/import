@@ -1,8 +1,7 @@
 #!/bin/bash
 # Script to process stats using simple stats loader.
 # Defaults
-MODE="dcpbridge"
-OUTPUT_DIR=".data/output_$MODE"
+OUTPUT_DIR=".data/output"
 USAGE="Script to process stats with simple importer.
 Usage: $(basename $0) [Options]
 Options:
@@ -10,7 +9,6 @@ Options:
   -n <imports>    Imports to run: comma-separated subdirectories of the input
                     directory, or ALL_IMPORTS
   -o <dir>        Output folder for stats importer. Default: $OUTPUT_DIR
-  -m <dcpbridge>  Mode of operation for simple importer. Default: $MODE
   -j <jar>        DC Import java jar file.
                     Download latest from https://github.com/datacommonsorg/import/releases/
   -r <steps>      Steps to run. Can be one or more from:
@@ -52,7 +50,6 @@ function parse_options {
       -i) shift; INPUT_DIR=$(readlink -f "$1");;
       -n) shift; IMPORTS="$1";;
       -o) shift; OUTPUT_DIR="$1";;
-      -m) shift; MODE="$1";;
       -j) shift; DC_IMPORT_JAR="$1";;
       -r) shift; RUN_STEPS="$1";;
       -e) shift; ENV_FILE=$1; source $ENV_FILE;;
@@ -73,7 +70,6 @@ function setup_python {
   then
     echo_log "Installing Python requirements from $SIMPLE_DIR/requirements.txt"
     pip3 install -r $SIMPLE_DIR/requirements.txt >> $LOG 2>&1
-    pip3 install --no-deps -r $SIMPLE_DIR/requirements_nodeps.txt >> $LOG 2>&1
     PYTHON_REQUIREMENTS_INSTALLED=true
   fi
 }
@@ -150,7 +146,6 @@ function simple_import {
 
   # Build options for simple importer
   local importer_options="--input_dir=$INPUT_DIR --imports=$IMPORTS"
-  [[ -n "$MODE" ]] && importer_options="$importer_options --mode=$MODE"
   [[ -n "$OUTPUT_DIR" ]] && importer_options="$importer_options --output_dir=$OUTPUT_DIR"
   mkdir -p $OUTPUT_DIR
   OUTPUT_DIR=$(readlink -f $OUTPUT_DIR)

@@ -13,6 +13,7 @@
 # limitations under the License.
 """This file includes data model classes used across the simple importer."""
 
+from collections import Counter
 from dataclasses import dataclass
 from dataclasses import field
 from enum import StrEnum
@@ -21,18 +22,16 @@ from urllib.parse import urlparse
 
 import pandas as pd
 from stats import constants
-from stats import schema_constants as sc
 from stats.report.model.summary import DateRange
+from stats.report.model.summary import ValidationErrorType
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
-_PREDICATE_SPECIALIZATION_OF = "specializationOf"
 _PREDICATE_URL = "url"
 _PREDICATE_SOURCE = "source"
 _PREDICATE_DOMAIN = "domain"
 _PREDICATE_INCLUDED_IN = "includedIn"
 
-STAT_VAR_GROUP = "StatVarGroup"
 _SOURCE = "Source"
 _PROVENANCE = "Provenance"
 
@@ -48,25 +47,6 @@ class Triple:
 
 
 @dataclass
-class StatVarGroup:
-  id: str
-  name: str
-  parent_id: str
-
-  def triples(self) -> list[Triple]:
-    triples: list[Triple] = [
-        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STAT_VAR_GROUP),
-        Triple(self.id, _PREDICATE_NAME, object_value=self.name),
-    ]
-    if self.parent_id:
-      triples.append(
-          Triple(self.id,
-                 _PREDICATE_SPECIALIZATION_OF,
-                 object_id=self.parent_id))
-    return triples
-
-
-@dataclass
 class Provenance:
   id: str
   source_id: str
@@ -75,7 +55,6 @@ class Provenance:
   # MCF triples about this node that no field above holds (other predicates,
   # other types, extra values), with `id` as their subject.
   custom_triples: list[Triple] = field(default_factory=list)
-  provenance_id: str = ""
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
@@ -94,7 +73,6 @@ class Source:
   id: str
   name: str
   url: str = ""
-  domain: str = field(init=False)
   # MCF triples about this node that no field above holds (other predicates,
   # other types, extra values), with `id` as their subject.
   custom_triples: list[Triple] = field(default_factory=list)
@@ -102,8 +80,9 @@ class Source:
   # after provenances, see Config.import_name), or "" for the global folder.
   import_folder: str = ""
 
-  def __post_init__(self):
-    self.domain = urlparse(self.url).netloc
+  @property
+  def domain(self) -> str:
+    return urlparse(self.url).netloc
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
@@ -129,28 +108,23 @@ def _has_predicate(triples: list[Triple], predicate: str) -> bool:
 
 @dataclass
 class ObservationProperties:
-  unit: str = ""
-  scaling_factor: str = ""
-  measurement_method: str = ""
-  observation_period: str = ""
-  # All custom properties other than the standard ones above go in this field.
+  """The observationProperties of an inputFiles entry."""
+  # The standard properties' values, by column (e.g. "scaling_factor" for
+  # scalingFactor; see constants.STANDARD_PROPERTY_COLUMNS).
+  standard: dict[str, str] = field(default_factory=dict)
+  # The other (custom) properties' values, by property.
   properties: dict[str, str] = field(default_factory=dict)
 
   @classmethod
   def new(cls: Self, all_properties: dict[str, str] | None = None) -> Self:
-    if all_properties is None:
-      all_properties = {}
-    unit = all_properties.get(sc.PREDICATE_UNIT, "")
-    scaling_factor = all_properties.get(sc.PREDICATE_SCALING_FACTOR, "")
-    measurement_method = all_properties.get(sc.PREDICATE_MEASUREMENT_METHOD, "")
-    observation_period = all_properties.get(sc.PREDICATE_OBSERVATION_PERIOD, "")
-    custom_properties = {
-        p: v
-        for p, v in all_properties.items()
-        if p not in sc.STANDARD_OBSERVATION_PROPERTIES
-    }
-    return cls(unit, scaling_factor, measurement_method, observation_period,
-               custom_properties)
+    props = cls()
+    for prop, value in (all_properties or {}).items():
+      column = constants.STANDARD_PROPERTY_COLUMNS.get(prop)
+      if column:
+        props.standard[column] = value
+      else:
+        props.properties[prop] = value
+    return props
 
 
 @dataclass
@@ -179,20 +153,25 @@ class RowEntity:
     return triples
 
 
-class ValidationErrorType(StrEnum):
-  UNMAPPED_COLUMNS = "UNMAPPED_COLUMNS"
-  MISSING_REQUIRED_COLUMNS = "MISSING_REQUIRED_COLUMNS"
-  INVALID_CONFIGURATION = "INVALID_CONFIGURATION"
-  MISSING_SOURCE = "MISSING_SOURCE"
-  MISSING_PROVENANCE = "MISSING_PROVENANCE"
-  GENERIC_ERROR = "GENERIC_ERROR"
+class PreprocessorError(ValueError):
+  """An input error, which Runner reports in the handshake as `error_type`.
+
+  `file_path` is the input file at fault, if any.
+  """
+
+  def __init__(
+      self,
+      message: str,
+      error_type: ValidationErrorType = ValidationErrorType.GENERIC_ERROR,
+      file_path: str = "") -> None:
+    super().__init__(message)
+    self.error_type = error_type
+    self.file_path = file_path
 
 
-def invalid_configuration(message: str) -> ValueError:
+def invalid_configuration(message: str) -> PreprocessorError:
   """Returns a config error, which Runner reports as INVALID_CONFIGURATION."""
-  error = ValueError(message)
-  error.error_type = ValidationErrorType.INVALID_CONFIGURATION
-  return error
+  return PreprocessorError(message, ValidationErrorType.INVALID_CONFIGURATION)
 
 
 @dataclass
@@ -213,19 +192,34 @@ class FileValidationError:
 
 @dataclass
 class ImportCounts:
-  """Observations and their dates in one imported file."""
+  """Observations, their dates and other nodes in one imported file.
+
+  `nodes` counts the (node, type) pairs written, except StatVarObservations,
+  once per file; `nodes_by_type` counts them per type, so `nodes` is its sum.
+  """
 
   observations: int = 0
   date_range: DateRange | None = None
+  nodes: int = 0
+  # Node type -> number of nodes of that type, e.g.
+  # {"StatisticalVariable": 2, "Property": 4}.
+  nodes_by_type: dict[str, int] = field(default_factory=Counter)
 
   def add(self, other: Self) -> Self:
-    """Returns the sum of both counts, with a date range covering both."""
+    """Returns both counts combined.
+
+    Observations and nodes are summed, node counts are summed per type, and
+    the date range covers both.
+    """
     if self.date_range is None or other.date_range is None:
       date_range = self.date_range or other.date_range
     else:
       date_range = self.date_range.widen(other.date_range)
+    nodes_by_type = Counter(self.nodes_by_type) + Counter(other.nodes_by_type)
     return ImportCounts(observations=self.observations + other.observations,
-                        date_range=date_range)
+                        date_range=date_range,
+                        nodes=self.nodes + other.nodes,
+                        nodes_by_type=nodes_by_type)
 
 
 class ImportType(StrEnum):
@@ -254,32 +248,20 @@ def strip_namespace_series(series: pd.Series) -> pd.Series:
 
 
 def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
-  """Filter out rows with invalid observation values.
+  """Drops the rows without a value.
 
-  Removes rows where the value is:
-  - NaN/None
-  - The string "<NA>"
-  - Empty string
-
-  Args:
-      df: DataFrame with a 'value' column
-
-  Returns:
-      Filtered DataFrame with only valid observation values
+  Runs after `_format_numeric_values`, which turns missing values (including
+  pandas NA strings such as "<NA>") into "".
   """
-  return df[(df[constants.COLUMN_VALUE].notna()) &
-            (df[constants.COLUMN_VALUE] != "<NA>") &
-            (df[constants.COLUMN_VALUE] != "")].copy()
+  return df[df[constants.COLUMN_VALUE] != ""].copy()
 
 
 def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
   """Validates that all values in the 'value' column are numeric or NaN.
 
   Raises:
-      ValueError: If any non-numeric value is found.
+      PreprocessorError: If any non-numeric value is found.
   """
-  if constants.COLUMN_VALUE not in df.columns:
-    return
   # Convert values to numeric, coercion will map invalid strings to NaN
   converted = pd.to_numeric(df[constants.COLUMN_VALUE], errors='coerce')
   # Only perform expensive string operations on non-numeric candidates
@@ -295,9 +277,8 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
     return
   invalid_examples = df.loc[na_mask].loc[invalid_mask,
                                          constants.COLUMN_VALUE].unique()
-  ex = ValueError(
+  raise PreprocessorError(
       f"Invalid non-numeric value(s) found in observation values of file '{file_path}': "
       f"{list(invalid_examples)[:10]}. If these represent missing values, leave the"
-      f" cells empty or use one of: {constants.STANDARD_NA_VALUES}.")
-  ex.file_path = file_path
-  raise ex
+      f" cells empty or use one of: {constants.STANDARD_NA_VALUES}.",
+      file_path=file_path)

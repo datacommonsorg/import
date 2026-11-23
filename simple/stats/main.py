@@ -16,7 +16,6 @@ import logging
 
 from absl import app
 from absl import flags
-from freezegun import freeze_time
 from stats import constants
 from stats.logger import initialize_logger
 from stats.runner import Runner
@@ -32,23 +31,6 @@ flags.DEFINE_list(
     "Required. The imports to run: one or more comma-separated subdirectories"
     f" of input_dir, each with its own config.json, or {constants.ALL_IMPORTS}"
     " for every subdirectory that has one.")
-flags.DEFINE_string(
-    "mode",
-    "",
-    "Deprecated and ignored. The importer only runs the dcpbridge workflow "
-    "now. Any value is accepted so existing callers keep working, but it has "
-    "no effect. The flag will be removed once callers stop passing it.",
-)
-flags.DEFINE_bool(
-    "freeze_time",
-    False,
-    "Freeze time in generated reports. Useful for sample and test runs.",
-)
-flags.DEFINE_string(
-    "frozen_time",
-    constants.DEFAULT_FROZEN_TIME,
-    "If freeze_time is True, the time that the run is frozen at.",
-)
 flags.DEFINE_integer(
     "max_workers",
     None,
@@ -60,37 +42,9 @@ flags.DEFINE_integer(
     lower_bound=1,
 )
 
-# If running with time frozen, the packages to be ignored.
-# i.e. packages where time should not be frozen if it leads to errant behavior.
-_FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
-# Values --mode used to accept. Passing one of these now does nothing, so we
-# warn rather than silently proceeding as if the caller got what it asked for.
-_REMOVED_RUN_MODES = frozenset(["customdc", "maindc", "schemaupdate"])
-
-
-def _warn_if_mode_is_set():
-  """Logs a deprecation warning for --mode, which is accepted but ignored."""
-  mode = (FLAGS.mode or "").strip()
-  if not mode or mode == "dcpbridge":
-    return
-  if mode in _REMOVED_RUN_MODES:
-    logging.warning(
-        "--mode=%s is no longer supported and is being ignored. This importer "
-        "only runs the dcpbridge workflow. The run will continue as dcpbridge, "
-        "which does NOT do what %s used to do. Remove the flag from the "
-        "caller.", mode, mode)
-  else:
-    logging.warning(
-        "Unrecognized --mode=%s. The flag is deprecated and "
-        "ignored; running the dcpbridge workflow.", mode)
-
-
-def _run():
+def main(_):
   initialize_logger()
-
-  _warn_if_mode_is_set()
-
   logging.info("Starting stats data importer job.")
 
   Runner(
@@ -100,15 +54,6 @@ def _run():
       max_workers=FLAGS.max_workers,
   ).run()
   logging.info("Runner finished successfully.")
-
-
-def main(_):
-  if FLAGS.freeze_time:
-    logging.info("Running with time frozen at: %s", FLAGS.frozen_time)
-    with freeze_time(FLAGS.frozen_time, ignore=_FREEZE_TIME_IGNORE_LIST):
-      _run()
-  else:
-    _run()
 
 
 if __name__ == "__main__":
