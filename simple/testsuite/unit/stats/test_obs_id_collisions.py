@@ -89,6 +89,21 @@ def test_bucketing_does_not_change_the_result(tmp_path, bucket_size):
   assert result.file_counts == {"f1.csv": 50, "f2.csv": 50}
 
 
+def test_parallel_matches_serial_counts_and_samples(tmp_path):
+  rng = random.Random(42)
+  shared = {rng.getrandbits(64) for _ in range(20)}
+  id_sets = [
+      {rng.getrandbits(64) for _ in range(300)} | shared for _ in range(4)
+  ]
+  files = _files(tmp_path, *id_sets)
+  with mock.patch.object(obs_id_collisions, "_BUCKET_SIZE", 50):
+    with mock.patch.object(obs_id_collisions, "_MAX_BUCKET_WORKERS", 1):
+      serial = find_cross_file_collisions(files)
+    with mock.patch.object(obs_id_collisions, "_MAX_BUCKET_WORKERS", 4):
+      parallel = find_cross_file_collisions(files)
+  assert parallel == serial
+
+
 @pytest.mark.parametrize("chunk_size", [1, 7, 1000])
 def test_obs_ids_find_the_same_repeats_as_a_set(chunk_size):
   """Every id after its first is a repeat, within a chunk or across chunks."""
