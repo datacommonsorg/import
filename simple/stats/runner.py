@@ -394,7 +394,7 @@ class Runner:
       output_dir_path: str,
       import_names: Optional[list[str]] = None,
       max_workers: Optional[int] = None,
-      split_csv_bytes: Optional[int] = None,
+      split_file_bytes: Optional[int] = None,
   ) -> None:
     """Sets up the output dir; run() reads the config and the input dir.
 
@@ -402,15 +402,15 @@ class Runner:
       max_workers: The maximum number of worker processes that import files
         concurrently. Defaults to `default_max_workers()`. Lower it to reduce
         peak memory, since each worker holds the data of the file it imports.
-      split_csv_bytes: Observation CSVs larger than this are imported in
-        parts, in parallel (see `csv_split.num_parts`). Defaults to
-        `csv_split.SPLIT_CSV_BYTES`.
+      split_file_bytes: Files larger than this are imported in parts, in
+        parallel (currently observation CSVs; see `csv_split.num_parts`).
+        Defaults to `csv_split.SPLIT_CSV_BYTES`.
     """
     if max_workers is not None and max_workers < 1:
       raise ValueError(f"max_workers must be at least 1, got {max_workers}")
-    if split_csv_bytes is not None and split_csv_bytes < 1:
+    if split_file_bytes is not None and split_file_bytes < 1:
       raise ValueError(
-          f"split_csv_bytes must be at least 1, got {split_csv_bytes}")
+          f"split_file_bytes must be at least 1, got {split_file_bytes}")
 
     if not input_dir_path:
       raise ValueError("input_dir must be specified")
@@ -428,7 +428,7 @@ class Runner:
     # If None, _load_config() sets the default, which depends on whether any
     # input or output dir is on GCS.
     self.max_workers: int | None = max_workers
-    self.split_csv_bytes = split_csv_bytes
+    self.split_file_bytes = split_file_bytes
     # Set by _load_config().
     self.input_dir: Dir | None = None
     self.config: Config | None = None
@@ -937,7 +937,7 @@ class Runner:
       return
     parts_by_path = csv_split.plan_splits(csv_files, self.config,
                                           self.max_workers,
-                                          self.split_csv_bytes)
+                                          self.split_file_bytes)
     self._run_multiprocess_imports(files, parts_by_path)
 
   def _record_report_errors(self) -> None:

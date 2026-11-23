@@ -62,7 +62,7 @@ def test_split_matches_unsplit_records_report_and_collisions(mode, caplog):
                       runner_kwargs={
                           "import_names": ["oecd"],
                           "max_workers": 4,
-                          "split_csv_bytes": 10**9,
+                          "split_file_bytes": 10**9,
                       })
   caplog.clear()
   with caplog.at_level(logging.WARNING):
@@ -71,7 +71,7 @@ def test_split_matches_unsplit_records_report_and_collisions(mode, caplog):
                       runner_kwargs={
                           "import_names": ["oecd"],
                           "max_workers": 4,
-                          "split_csv_bytes": 1,
+                          "split_file_bytes": 1,
                       })
 
   assert split.error is None, split.error
@@ -103,7 +103,7 @@ def test_split_falls_back_to_whole_file_when_part_fails(caplog):
                       config,
                       runner_kwargs={
                           "max_workers": 4,
-                          "split_csv_bytes": 10**9,
+                          "split_file_bytes": 10**9,
                       })
   caplog.clear()
   with caplog.at_level(logging.WARNING):
@@ -111,7 +111,7 @@ def test_split_falls_back_to_whole_file_when_part_fails(caplog):
                       config,
                       runner_kwargs={
                           "max_workers": 4,
-                          "split_csv_bytes": 1,
+                          "split_file_bytes": 1,
                       })
 
   assert split.error is None, split.error
@@ -136,13 +136,13 @@ def test_file_whose_part_shards_could_collide_is_not_split():
                       runner_kwargs={
                           "import_names": ["oecd"],
                           "max_workers": 4,
-                          "split_csv_bytes": 10**9,
+                          "split_file_bytes": 10**9,
                       })
   split = b.run_dir(files,
                     runner_kwargs={
                         "import_names": ["oecd"],
                         "max_workers": 4,
-                        "split_csv_bytes": 1,
+                        "split_file_bytes": 1,
                     })
 
   assert split.error is None, split.error

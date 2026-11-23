@@ -42,11 +42,11 @@ flags.DEFINE_integer(
     lower_bound=1,
 )
 flags.DEFINE_integer(
-    "split_csv_bytes",
+    "split_file_bytes",
     None,
-    "Observation CSVs larger than this many bytes are imported in parts, in "
-    "parallel: up to one part per worker, each at least a quarter of this "
-    "size. Defaults to 256 MiB; see csv_split.num_parts.",
+    "Files larger than this many bytes are imported in parts, in parallel "
+    "(currently observation CSVs): up to one part per worker, each at least a "
+    "quarter of this size. Defaults to 256 MiB; see csv_split.num_parts.",
     lower_bound=1,
 )
 
@@ -60,7 +60,7 @@ def main(_):
       output_dir_path=FLAGS.output_dir,
       import_names=FLAGS.imports,
       max_workers=FLAGS.max_workers,
-      split_csv_bytes=FLAGS.split_csv_bytes,
+      split_file_bytes=FLAGS.split_file_bytes,
   ).run()
   logging.info("Runner finished successfully.")
 
