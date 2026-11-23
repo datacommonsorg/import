@@ -214,13 +214,22 @@ _NODE_PART_SUFFIX_RE = re.compile(r"p\d{3,}-\d{5,}-[0-9a-f]+\.jsonld")
 
 
 def file_shard_stem(file_path: str) -> str:
-  """The part of an input file's shard names that names the file.
+  """The part of an observation CSV's shard names that names the file.
 
-  E.g. "a/data.csv" writes "observation-a_data-00000.jsonld" and a split
-  "a/nodes.mcf" writes "node-a_nodes-p001-00000-<uuid>.jsonld": their stems
-  are "a_data" and "a_nodes".
+  E.g. "a/data.csv" writes "observation-a_data-00000.jsonld": its stem is
+  "a_data".
   """
   return file_path.replace("/", "_").rsplit(".", 1)[0]
+
+
+def node_part_stem(file_path: str) -> str:
+  """Shard name stem for a split node file, keeping its extension.
+
+  E.g. "a/case.mcf" -> "a_case_mcf" and "a/case.csv" -> "a_case_csv", so a
+  split MCF and a split entity CSV with the same base name both split without
+  colliding on fallback cleanup.
+  """
+  return file_path.replace("/", "_").replace(".", "_")
 
 
 def part_shard_tag(part_index: int) -> str:
@@ -327,7 +336,7 @@ def _node_shard(chunk,
   # Every worker numbers its node shards from 0: the uuid tells them apart.
   unique_id = uuid.uuid4().hex[:12]
   if shard_tag and file_name:
-    prefix = f"node-{file_shard_stem(file_name)}-{shard_tag}"
+    prefix = f"node-{node_part_stem(file_name)}-{shard_tag}"
   else:
     prefix = "node"
   shard_name = f"{prefix}-{shard_index:05d}-{unique_id}.jsonld"
@@ -574,9 +583,10 @@ class JsonLdStreamWriter(GraphWriter):
   def delete_part_shards(self, input_file: File) -> None:
     """Deletes the shards of every part of `input_file`."""
     folder = self.config.import_name(input_file).replace("/", "_")
-    stem = file_shard_stem(input_file.path)
     is_obs = (not input_file.path.lower().endswith(".mcf") and
               self.config.import_type(input_file) == ImportType.OBSERVATIONS)
+    stem = (file_shard_stem(input_file.path)
+            if is_obs else node_part_stem(input_file.path))
     shards = [
         shard
         for shard in self.jsonld_dir.open_dir(folder, create=False).all_files()

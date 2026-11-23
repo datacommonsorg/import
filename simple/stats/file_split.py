@@ -33,6 +33,7 @@ import pandas as pd
 from stats.config import Config
 from stats.data import ImportType
 from stats.jsonld_stream_writer import file_shard_stem
+from stats.jsonld_stream_writer import node_part_stem
 from stats.jsonld_stream_writer import part_shards_could_collide
 from util.filesystem import File
 
@@ -83,8 +84,8 @@ def _is_obs_csv(file: File, config: Config) -> bool:
       file) == ImportType.OBSERVATIONS
 
 
-def _can_split(file: File, stem_counts: collections.Counter[str]) -> bool:
-  stem = file_shard_stem(file.path)
+def _can_split(file: File, stem: str,
+               stem_counts: collections.Counter[str]) -> bool:
   if stem_counts[stem] > 1:
     return False
   return not part_shards_could_collide(file.path, set(stem_counts))
@@ -99,12 +100,13 @@ def plan_splits(files: list[File],
   obs_stems = collections.Counter(
       file_shard_stem(f.path) for f in files if _is_obs_csv(f, config))
   node_stems = collections.Counter(
-      file_shard_stem(f.path) for f in files if not _is_obs_csv(f, config))
+      node_part_stem(f.path) for f in files if not _is_obs_csv(f, config))
   candidates = [
       (f, parts)
       for f in files
       if (parts := num_parts(f.size() or 0, max_workers, threshold)) > 1 and
-      _can_split(f, obs_stems if _is_obs_csv(f, config) else node_stems)
+      (_can_split(f, file_shard_stem(f.path), obs_stems) if _is_obs_csv(
+          f, config) else _can_split(f, node_part_stem(f.path), node_stems))
   ]
   if not candidates:
     return {}
