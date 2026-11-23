@@ -23,7 +23,7 @@ import json
 import logging
 import re
 import types
-from typing import Any, Callable, Mapping, Optional
+from typing import Any, Callable, Mapping, NamedTuple, Optional
 import uuid
 
 import numpy as np
@@ -54,12 +54,29 @@ _MAX_PENDING_SHARDS = 2 * _UPLOAD_CONCURRENCY
 _SHARD_CONTENT_TYPE = "application/ld+json"
 
 # Distinct values whose JSON-LD forms are cached, per process and per cache:
-# enough for the variables, places and properties of a large file.
-_CACHE_SIZE = 1 << 16
+# enough for census-tract-scale places (~72-85k) without thrashing.
+_CACHE_SIZE = 1 << 17
 
 _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
 _NO_PROPS: Mapping[str, Any] = types.MappingProxyType({})
+
+# Fixed observation keys other than dcid:observationAbout (checked separately
+# because observationAbout only conflicts when the entity column is also set).
+_OTHER_STD_OBS_KEYS = frozenset({
+    "@id",
+    "@type",
+    "dcid:variableMeasured",
+    "dcid:observationDate",
+    "dcid:value",
+    "dcid:provenance",
+    "dcid:unit",
+    "dcid:scalingFactor",
+    "dcid:measurementMethod",
+    "dcid:observationPeriod",
+})
+
+_json_dumps = json.dumps
 
 
 def _to_json(doc: dict) -> str:
@@ -136,48 +153,134 @@ def _prefix_dcid(key: str) -> str:
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
-def _decode_props(props: str) -> tuple[Mapping[str, Any], str]:
-  """The cached part of `_parse_props_json`."""
+def _cached_ref_json(val: str) -> str | None:
+  ref = _cached_ref(val)
+  if ref is None:
+    return None
+  return f'{{"@id":{_json_dumps(ref["@id"])}}}'
+
+
+def _ref_json(val) -> str | None:
+  if type(val) is str:
+    return _cached_ref_json(val)
+  ref = _ref(val)
+  return f'{{"@id":{_json_dumps(ref["@id"])}}}' if ref is not None else None
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def _cached_var_json(variable: str, obs_props_suffix: str) -> str:
+  ref = _cached_ref(variable)
+  if ref is None:
+    return "null"
+  if obs_props_suffix:
+    return f'{{"@id":{_json_dumps(ref["@id"])}{obs_props_suffix}}}'
+  return f'{{"@id":{_json_dumps(ref["@id"])}}}'
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def _cached_text_json(val: str) -> str:
+  s = val.strip()
+  return _json_dumps(s) if s else "null"
+
+
+def _text_json(val) -> str:
+  if type(val) is str:
+    s = val.strip()
+    return _json_dumps(s) if s else "null"
+  t = _text(val)
+  return _json_dumps(t) if t is not None else "null"
+
+
+class _CompiledProps(NamedTuple):
+  """Pre-serialized custom properties for an observation row."""
+  id_props_bytes: bytes
+  obs_props_suffix: str
+  fields_json: str
+  parsed: Mapping[str, Any]
+  has_about: bool
+  has_other_std: bool
+
+
+_EMPTY_COMPILED_PROPS = _CompiledProps(b"", "", "", _NO_PROPS, False, False)
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def _compile_props_cached(props: str) -> _CompiledProps:
+  """Parses and pre-serializes a distinct custom-properties JSON string."""
   parsed = json.loads(props)
   if not isinstance(parsed, dict) or not parsed:
-    return _NO_PROPS, props
-  # Read-only: rows with the same properties share it.
-  return types.MappingProxyType(parsed), json.dumps(parsed, sort_keys=True)
+    return _CompiledProps(props.encode("utf-8"), "", "", _NO_PROPS, False,
+                          False)
+  id_props_bytes = json.dumps(parsed, sort_keys=True).encode("utf-8")
+  prefixed_keys = [_prefix_dcid(k) for k in parsed.keys()]
+  obs_props_suffix = f',"dcid:observationProperties":{_to_json(prefixed_keys)}'
+  parts = []
+  has_about = False
+  has_other_std = False
+  for prop_key, v in zip(prefixed_keys, parsed.values()):
+    if prop_key == "dcid:observationAbout":
+      has_about = True
+    elif prop_key in _OTHER_STD_OBS_KEYS:
+      has_other_std = True
+    val_json = (_ref_json(v) or
+                "null") if is_entity_reference(v) else _text_json(v)
+    parts.append(f",{_json_dumps(prop_key)}:{val_json}")
+  return _CompiledProps(
+      id_props_bytes=id_props_bytes,
+      obs_props_suffix=obs_props_suffix,
+      fields_json="".join(parts),
+      parsed=types.MappingProxyType(parsed),
+      has_about=has_about,
+      has_other_std=has_other_std,
+  )
 
 
-def _parse_props_json(props: str, entity: str,
-                      variable: str) -> tuple[Mapping[str, Any], str]:
-  """Parses an observation's properties JSON for its node and its @id.
-
-  Returns the properties, in their order in `props`, and their JSON with
-  sorted keys, so that the @id doesn't depend on the order the config declares
-  them in (or `props` itself if there are none). The properties are cached
-  and shared between rows, so they're read-only.
-  """
+def _compile_props(props, entity, variable) -> _CompiledProps:
+  """Compiles custom properties JSON, logging and falling back on bad JSON."""
   if not props:
-    return _NO_PROPS, props
+    return _EMPTY_COMPILED_PROPS
   try:
-    return _decode_props(props)
+    return _compile_props_cached(props)
   except json.JSONDecodeError as e:
     logging.warning(
         "Failed to decode properties JSON for observation %s/%s: %s", entity,
         variable, e)
-    return _NO_PROPS, props
+    return _CompiledProps(
+        str(props).encode("utf-8"), "", "", _NO_PROPS, False, False)
 
 
-def _build_observation_node(row: tuple) -> dict:
-  """Builds a single `dcid:StatVarObservation` JSON-LD node dict from a row."""
-  entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-  props_dict, id_props = _parse_props_json(props, entity, variable)
-  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_{id_props}"
-  obs_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
+def _format_optional_fields(provenance, unit, scaling_factor, mmethod,
+                            period) -> str:
+  """Serializes the optional fixed observation fields into a JSON fragment."""
+  parts = []
+  if provenance:
+    parts.append(f',"dcid:provenance":{_ref_json(provenance) or "null"}')
+  if unit:
+    parts.append(f',"dcid:unit":{_ref_json(unit) or "null"}')
+  if type(scaling_factor) is str:
+    if sf := scaling_factor.strip():
+      parts.append(f',"dcid:scalingFactor":{_json_dumps(sf)}')
+  elif sf := _text(scaling_factor):
+    parts.append(f',"dcid:scalingFactor":{_json_dumps(sf)}')
+  if mmethod:
+    parts.append(f',"dcid:measurementMethod":{_ref_json(mmethod) or "null"}')
+  if type(period) is str:
+    if p := period.strip():
+      parts.append(f',"dcid:observationPeriod":{_json_dumps(p)}')
+  elif p := _text(period):
+    parts.append(f',"dcid:observationPeriod":{_json_dumps(p)}')
+  return "".join(parts)
 
+
+def _build_conflicting_observation_json(row: tuple, obs_hash: str,
+                                        parsed_props: Mapping[str, Any]) -> str:
+  """Dict-based fallback when custom properties overwrite a standard key."""
+  entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, _ = row
   var_obj = _ref(variable)
-  if props_dict and var_obj:
+  if parsed_props and var_obj:
     var_obj["dcid:observationProperties"] = [
-        _prefix_dcid(k) for k in props_dict.keys()
+        _prefix_dcid(k) for k in parsed_props.keys()
     ]
-
   obs_obj = {
       "@id": f"dcid:obs_{obs_hash}",
       "@type": "dcid:StatVarObservation",
@@ -185,27 +288,22 @@ def _build_observation_node(row: tuple) -> dict:
       "dcid:observationDate": _text(date),
       "dcid:value": _text(value),
   }
-  entity_ref = _ref(entity)
-  if entity_ref:
+  if entity_ref := _ref(entity):
     obs_obj["dcid:observationAbout"] = entity_ref
   if provenance:
     obs_obj["dcid:provenance"] = _ref(provenance)
   if unit:
     obs_obj["dcid:unit"] = _ref(unit)
-  if scaling_factor := _text(scaling_factor):
-    obs_obj["dcid:scalingFactor"] = scaling_factor
+  if sf := _text(scaling_factor):
+    obs_obj["dcid:scalingFactor"] = sf
   if mmethod:
     obs_obj["dcid:measurementMethod"] = _ref(mmethod)
-  if period := _text(period):
-    obs_obj["dcid:observationPeriod"] = period
-
-  for k, v in props_dict.items():
+  if p := _text(period):
+    obs_obj["dcid:observationPeriod"] = p
+  for k, v in parsed_props.items():
     prop_key = _prefix_dcid(k)
-    if is_entity_reference(v):
-      obs_obj[prop_key] = _ref(v)
-    else:
-      obs_obj[prop_key] = _text(v)
-  return obs_obj
+    obs_obj[prop_key] = _ref(v) if is_entity_reference(v) else _text(v)
+  return _to_json(obs_obj)
 
 
 _PART_TAG_RE = re.compile(r"p\d{3,}")
@@ -271,23 +369,103 @@ def _observation_shard(chunk,
   `file_name` is the path of the input file, relative to the input directory.
   `shard_tag`, if any, follows the file in the name (see JsonLdStreamWriter).
   """
-  graph_list = []
-  chunk_hashes = []
+  node_strs = []
+  prefix_buf = bytearray()
+  sha256 = hashlib.sha256
+  compile_props = _compile_props
+  cached_var_json = _cached_var_json
+  cached_text_json = _cached_text_json
+  json_dumps = _json_dumps
+
+  prev_hash_key = None
+  base_hasher = None
+  prev_tail_key = None
+  tail_json = ""
+  prev_date = _NO_PROPS
+  date_json = "null"
+  prev_var_key = None
+  var_json = "null"
+
   for row in chunk:
-    obs_obj = _build_observation_node(row)
-    entity, variable, date, _, provenance, *_ = row
-    obs_hash = obs_obj["@id"].removeprefix("dcid:obs_")
-    chunk_hashes.append((obs_hash, entity, variable, date, provenance))
-    graph_list.append(obs_obj)
+    (entity, variable, date, value, provenance, unit, scaling_factor, mmethod,
+     period, props) = row
 
-  if chunk_hashes:
-    track_hash_fn(chunk_hashes, file_name)
+    compiled = (compile_props(props, entity, variable)
+                if props else _EMPTY_COMPILED_PROPS)
 
-  compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
+    hash_key = (entity, variable, date, provenance, unit, mmethod, period)
+    if hash_key != prev_hash_key:
+      prev_hash_key = hash_key
+      base_hasher = sha256(
+          f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}_".
+          encode("utf-8"))
+    h = base_hasher.copy()
+    if compiled.id_props_bytes:
+      h.update(compiled.id_props_bytes)
+    digest = h.digest()
+    prefix_buf.extend(digest[:8])
+    obs_hash = digest.hex()
+
+    if compiled.has_other_std or (compiled.has_about and entity):
+      node_strs.append(
+          _build_conflicting_observation_json(row, obs_hash, compiled.parsed))
+      continue
+
+    var_key = (variable, compiled.obs_props_suffix)
+    if var_key != prev_var_key:
+      prev_var_key = var_key
+      if type(variable) is str:
+        var_json = cached_var_json(variable, compiled.obs_props_suffix)
+      else:
+        vref = _ref(variable)
+        if vref is None:
+          var_json = "null"
+        elif compiled.obs_props_suffix:
+          var_json = (
+              f'{{"@id":{json_dumps(vref["@id"])}{compiled.obs_props_suffix}}}')
+        else:
+          var_json = f'{{"@id":{json_dumps(vref["@id"])}}}'
+
+    if date != prev_date:
+      prev_date = date
+      date_json = (cached_text_json(date)
+                   if type(date) is str else _text_json(date))
+
+    if type(value) is str:
+      sv = value.strip()
+      val_json = json_dumps(sv) if sv else "null"
+    else:
+      val_json = _text_json(value)
+
+    if entity:
+      eref = _ref_json(entity)
+      entity_json = f',"dcid:observationAbout":{eref}' if eref else ""
+    else:
+      entity_json = ""
+
+    tail_key = (provenance, unit, scaling_factor, mmethod, period)
+    if tail_key != prev_tail_key:
+      prev_tail_key = tail_key
+      tail_json = _format_optional_fields(provenance, unit, scaling_factor,
+                                          mmethod, period)
+
+    node_strs.append(f'{{"@id":"dcid:obs_{obs_hash}",'
+                     f'"@type":"dcid:StatVarObservation",'
+                     f'"dcid:variableMeasured":{var_json},'
+                     f'"dcid:observationDate":{date_json},'
+                     f'"dcid:value":{val_json}'
+                     f'{entity_json}{tail_json}{compiled.fields_json}}}')
+
+  if prefix_buf:
+    ids = np.frombuffer(prefix_buf, dtype=">u8").astype(np.uint64, copy=False)
+    track_hash_fn(ids, chunk, file_name)
+
   tag = f"-{shard_tag}" if shard_tag else ""
   shard_name = (f"observation-{file_shard_stem(file_name)}{tag}"
                 f"-{shard_index:05d}.jsonld")
-  return shard_name, _to_json(compacted_jsonld)
+  shard_text = (
+      f'{{"@context":{_to_json(ns_map)},"@graph":[{",".join(node_strs)}]}}')
+  return shard_name, shard_text
 
 
 def _append_unique_value(subject_dict: dict, key: str, val: object) -> None:
@@ -404,17 +582,15 @@ class JsonLdStreamWriter(GraphWriter):
 
   def track_observation_hash(
       self,
-      chunk_items: list[tuple[str, str, str, str, str]],
+      ids: np.ndarray,
+      chunk_rows: list[tuple],
       file_name: str,
   ) -> None:
-    """Tracks observation hashes for a shard chunk and records any collisions.
+    """Tracks 64-bit observation id prefixes and records any collisions.
 
     Only collisions with observations that this writer saw are found: a worker
     sees one file. See `stats.obs_id_collisions` for collisions between files.
     """
-    ids = np.fromiter((int(item[0][:16], 16) for item in chunk_items),
-                      dtype=np.uint64,
-                      count=len(chunk_items))
     collisions = np.flatnonzero(self.obs_ids.add(ids))
     if not len(collisions):
       return
@@ -422,9 +598,15 @@ class JsonLdStreamWriter(GraphWriter):
     # Only the samples still missing are formatted, however many collisions.
     samples = self.file_sample_collisions[file_name]
     for i in collisions[:max(0, MAX_SAMPLES_PER_FILE - len(samples))].tolist():
-      obs_hash, ent, var, dt, prov = chunk_items[i]
+      ent, var, dt, _, prov, unit, _, mmethod, period, props = chunk_rows[i]
+      compiled = _compile_props(props, ent,
+                                var) if props else _EMPTY_COMPILED_PROPS
+      h = hashlib.sha256(
+          f"{ent}_{var}_{dt}_{prov}_{unit}_{mmethod}_{period}_".encode("utf-8"))
+      if compiled.id_props_bytes:
+        h.update(compiled.id_props_bytes)
       samples.append(
-          f"@id='dcid:obs_{obs_hash}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
+          f"@id='dcid:obs_{h.hexdigest()}' [entity='{ent}', variable='{var}', date='{dt}', provenance='{prov}']"
       )
 
   def processed_imports(self) -> set[str]:
@@ -456,9 +638,13 @@ class JsonLdStreamWriter(GraphWriter):
                                 file_name: str):
     dir_name = import_name.replace("/", "_")
     n = len(df)
+    col_lists = [df[c].tolist() for c in df.columns]
     for i in range(0, n, _CHUNK_SIZE):
-      chunk_df = df.iloc[i:i + _CHUNK_SIZE]
-      chunk_records = chunk_df.to_records(index=False).tolist()
+      if i == 0 and n <= _CHUNK_SIZE:
+        chunk_records = list(zip(*col_lists))
+      else:
+        end = i + _CHUNK_SIZE
+        chunk_records = list(zip(*(c[i:end] for c in col_lists)))
       shard_index = self.obs_shard_index
       self.obs_shard_index += 1
       name, text = _observation_shard(chunk_records,
