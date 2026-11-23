@@ -146,3 +146,42 @@ class File(_Entry):
   def write(self, content: str) -> None:
     """Writes the file's text, making its dir on local disk."""
     self._root.write(self.path, content.encode("utf-8"))
+
+  def delete(self) -> None:
+    """Deletes the file; a missing file is ignored."""
+    self._root.delete(self.path)
+
+  def size(self) -> int | None:
+    """The file's size in bytes; None on GCS if it wasn't listed."""
+    return self._root.size(self.path, self._gcs_object)
+
+  def can_read_ranges(self) -> bool:
+    """Whether byte ranges of the file can be read (`read_bytes`).
+
+    On GCS that needs the listed object, for its size and generation, and not
+    gzip-encoded: ranges of those are of its compressed bytes.
+    """
+    return self._root.can_read_ranges(self._gcs_object)
+
+  def read_bytes(self, start: int, end: int) -> bytes:
+    """Returns bytes [start, end) of the file, fewer if it ends before.
+
+    One ranged request on GCS. Raises ValueError unless `can_read_ranges`.
+    """
+    return self._root.read_range(self.path, self._gcs_object, start, end)
+
+  def open_part_stream(self,
+                       header_end: int,
+                       start: int,
+                       end: int,
+                       chunk_size: int = GCS_STREAM_CHUNK_BYTES):
+    """Returns a text stream of bytes [0, header_end), then [start, end).
+
+    E.g. a part of a CSV file: its header, then its rows (see
+    `stats.csv_split`). Read and decoded as `open_stream` reads and decodes
+    the whole file. Reading raises ValueError unless `can_read_ranges`.
+    """
+    raw = self._root.open_ranges(self.path, self._gcs_object, [(0, header_end),
+                                                               (start, end)],
+                                 chunk_size)
+    return io.TextIOWrapper(raw, encoding="utf-8", newline="")

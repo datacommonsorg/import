@@ -17,6 +17,7 @@ import os
 import posixpath
 
 from util.filesystem.paths import join_path
+from util.filesystem.ranges import RangesReader
 
 
 class LocalStorage:
@@ -52,6 +53,35 @@ class LocalStorage:
   def open(self, path: str, gcs_object, chunk_size):
     del gcs_object, chunk_size  # GCS only.
     return open(self._os_path(path), "rb")
+
+  def can_read_ranges(self, gcs_object) -> bool:
+    del gcs_object  # GCS only.
+    return True
+
+  def size(self, path: str, gcs_object) -> int:
+    del gcs_object  # GCS only.
+    return os.path.getsize(self._os_path(path))
+
+  def read_range(self, path: str, gcs_object, start: int, end: int) -> bytes:
+    """Returns bytes [start, end) of the file, fewer if it ends before."""
+    del gcs_object  # GCS only.
+    with open(self._os_path(path), "rb") as f:
+      f.seek(start)
+      return f.read(max(0, end - start))
+
+  def open_ranges(self, path: str, gcs_object, ranges: "list[tuple[int, int]]",
+                  chunk_size: int) -> RangesReader:
+    """Opens `ranges` of the file as one stream, read `chunk_size` at a time."""
+    return RangesReader(
+        lambda start, end: self.read_range(path, gcs_object, start, end),
+        ranges, chunk_size, self._os_path(path))
+
+  def delete(self, path: str) -> None:
+    """Deletes the file; one already gone is ignored."""
+    try:
+      os.remove(self._os_path(path))
+    except FileNotFoundError:
+      pass
 
   def write(self, path: str, data: bytes) -> None:
     self.makedirs(posixpath.dirname(path))

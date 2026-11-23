@@ -19,7 +19,7 @@ from google.cloud import storage
 import pytest
 from testsuite.lib import fake_gcs
 from util.filesystem import open_dir
-from util.filesystem.gcs import GcsRangeReader
+from util.filesystem.ranges import RangesReader
 
 
 def _list(root: str) -> dict[str, str]:
@@ -71,19 +71,10 @@ def test_a_gzip_encoded_gcs_object_is_downloaded_whole():
   assert call.args[1:] == () and call.kwargs == {}, call  # Not a range.
 
 
-class _ShortReadBlob:
-  """A blob whose ranged downloads return one byte less than asked for."""
-  name = "data.csv"
-  bucket = mock.Mock()
-  bucket.name = "bucket"
-
-  def download_as_bytes(self, start, end, checksum):
-    del checksum  # Unused.
-    return b"x" * (end - start)
-
-
 def test_a_short_ranged_read_fails_rather_than_truncate_the_file():
-  reader = GcsRangeReader(_ShortReadBlob(), size=10, chunk_size=4)
+  reader = RangesReader(lambda s, e: b"x" * (e - s - 1), [(0, 10)],
+                        chunk_size=4,
+                        name="gs://bucket/data.csv")
   with pytest.raises(OSError, match="Expected 4 bytes at offset 0"):
     reader.read(10)
 
