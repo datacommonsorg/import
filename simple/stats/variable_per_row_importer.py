@@ -16,12 +16,12 @@ import json
 
 import pandas as pd
 from stats import constants
-from stats.csv_split import FilePart
 from stats.data import FileValidationError
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
 from stats.data import strip_namespace
 from stats.data import strip_namespace_series
+from stats.file_split import FilePart
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
 from stats.importer import Importer
@@ -91,7 +91,7 @@ class VariablePerRowImporter(Importer):
                part: FilePart | None = None) -> None:
     """
     Args:
-      part: The part of `input_file` to import (see `stats.csv_split`), or
+      part: The part of `input_file` to import (see `stats.file_split`), or
         None to import all of it.
     """
     super().__init__(input_file, graph_writer, nodes)

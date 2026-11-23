@@ -11,27 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for splitting large observation CSVs across worker processes."""
+"""Tests for splitting large observation CSVs and MCF files across workers."""
 
 import logging
 
 import pytest
-from stats import csv_split
+from stats import file_split
 from testsuite.lib import builders as b
 
 
-def _plan(data: bytes, parts: int = 4) -> list[csv_split.FilePart] | None:
-  return csv_split.plan_parts(lambda s, e: data[s:e], len(data), parts)
+def _plan_csv(data: bytes, parts: int = 4) -> list[file_split.FilePart] | None:
+  return file_split.plan_csv_parts(lambda s, e: data[s:e], len(data), parts)
 
 
-def test_num_parts_and_plan_parts():
-  assert csv_split.num_parts(100, max_parts=8, split_bytes=100) == 1
-  assert csv_split.num_parts(101, max_parts=8, split_bytes=100) == 4
-  assert csv_split.num_parts(1000, max_parts=8, split_bytes=100) == 8
+def test_num_parts_and_plan_csv_parts():
+  assert file_split.num_parts(100, max_parts=8, split_bytes=100) == 1
+  assert file_split.num_parts(101, max_parts=8, split_bytes=100) == 4
+  assert file_split.num_parts(1000, max_parts=8, split_bytes=100) == 8
 
   data = b"about,variable,date,value\n" + b"".join(
       f"country/C{i},Count_Person,2020,{i}\n".encode() for i in range(20))
-  parts = _plan(data, parts=4)
+  parts = _plan_csv(data, parts=4)
   assert parts is not None and len(parts) == 4
   # Parts tile [header_end, len(data)) contiguously with no gaps or overlaps.
   assert parts[0].start == parts[0].header_end
@@ -46,7 +46,7 @@ def test_num_parts_and_plan_parts():
       b'"col\n1",b\n1,2\n3,4\n',  # multi-line header
       b"a,b\n1,2,extra\n3,4,extra\n",  # implicit index
   ]:
-    assert _plan(unsplit) is None, unsplit
+    assert _plan_csv(unsplit) is None, unsplit
 
 
 @pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])

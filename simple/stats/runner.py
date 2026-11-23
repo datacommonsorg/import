@@ -25,12 +25,11 @@ import traceback
 from typing import Callable, Optional
 
 from stats import constants
-from stats import csv_split
+from stats import file_split
 from stats.config import Config
 from stats.config import ImportConfig
 from stats.config import InputFileConfig
 from stats.config import parse_config
-from stats.csv_split import FilePart
 from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import ImportType
@@ -39,6 +38,7 @@ from stats.data import PreprocessorError
 from stats.data import Provenance
 from stats.data import Source
 from stats.entities_importer import EntitiesImporter
+from stats.file_split import FilePart
 from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
@@ -137,12 +137,13 @@ def _create_importer_for_file(
     nodes: Nodes,
     part: FilePart | None = None,
 ) -> Importer:
-  """Returns the importer of `input_file`, or of its `part` (observations)."""
+  """Returns the importer of `input_file`, or of its `part` (observations or MCF)."""
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
         input_file=input_file,
         graph_writer=graph_writer,
         nodes=nodes,
+        part=part,
     )
 
   import_type = config.import_type(input_file)
@@ -321,7 +322,7 @@ def _run_single_import_proc(task: _ImportTask,
       args.import_names,
       config,
       jsonld_dir_name=args.jsonld_dir_name,
-      obs_shard_tag=part_shard_tag(task.part.index) if task.part else "")
+      shard_tag=part_shard_tag(task.part.index) if task.part else "")
   importer = _create_importer_for_file(config, input_file, graph_writer, nodes,
                                        task.part)
   try:
@@ -403,8 +404,8 @@ class Runner:
         concurrently. Defaults to `default_max_workers()`. Lower it to reduce
         peak memory, since each worker holds the data of the file it imports.
       split_file_bytes: Files larger than this are imported in parts, in
-        parallel (currently observation CSVs; see `csv_split.num_parts`).
-        Defaults to `csv_split.SPLIT_CSV_BYTES`.
+        parallel (observation CSVs and MCF files; see `file_split.num_parts`).
+        Defaults to `file_split.SPLIT_FILE_BYTES`.
     """
     if max_workers is not None and max_workers < 1:
       raise ValueError(f"max_workers must be at least 1, got {max_workers}")
@@ -935,9 +936,8 @@ class Runner:
     files = mcf_files + csv_files
     if not files:
       return
-    parts_by_path = csv_split.plan_splits(csv_files, self.config,
-                                          self.max_workers,
-                                          self.split_file_bytes)
+    parts_by_path = file_split.plan_splits(files, self.config, self.max_workers,
+                                           self.split_file_bytes)
     self._run_multiprocess_imports(files, parts_by_path)
 
   def _record_report_errors(self) -> None:
