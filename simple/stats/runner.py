@@ -25,10 +25,12 @@ import traceback
 from typing import Callable, Optional
 
 from stats import constants
+from stats import csv_split
 from stats.config import Config
 from stats.config import ImportConfig
 from stats.config import InputFileConfig
 from stats.config import parse_config
+from stats.csv_split import FilePart
 from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import ImportType
@@ -41,6 +43,7 @@ from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.jsonld_stream_writer import JsonLdStreamWriter
+from stats.jsonld_stream_writer import part_shard_tag
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
@@ -122,9 +125,9 @@ def default_max_workers(uses_gcs: bool) -> int:
   return max(cpus, min(_GCS_WORKERS_PER_CPU * cpus, _MAX_GCS_WORKERS))
 
 
-def num_import_workers(max_workers: int, num_files: int) -> int:
-  """Returns how many worker processes to start: never more than the files."""
-  return min(max_workers, num_files)
+def num_import_workers(max_workers: int, num_tasks: int) -> int:
+  """Returns how many worker processes to start: never more than the tasks."""
+  return min(max_workers, num_tasks)
 
 
 def _create_importer_for_file(
@@ -132,7 +135,9 @@ def _create_importer_for_file(
     input_file: File,
     graph_writer: GraphWriter,
     nodes: Nodes,
+    part: FilePart | None = None,
 ) -> Importer:
+  """Returns the importer of `input_file`, or of its `part` (observations)."""
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
         input_file=input_file,
@@ -149,6 +154,7 @@ def _create_importer_for_file(
           input_file=input_file,
           graph_writer=graph_writer,
           nodes=nodes,
+          part=part,
       )
 
     case ImportType.ENTITIES:
@@ -165,13 +171,15 @@ def _create_importer_for_file(
 
 @dataclass
 class ImportProcResult:
-  """What a worker process sends back to the coordinator for one file.
+  """What a worker process sends back to the coordinator for one task.
 
+  A task is a file, or a part of a split file (see `_ImportTask`).
   `sources` and `provenances` are all of the worker's nodes, keyed as in
   `Nodes`; the coordinator merges them with `Nodes.merge_metadata`. The
   collision fields mirror the worker's `JsonLdStreamWriter` stats, which cover
-  collisions within the file only. `counts` are the importer's counts of the
-  nodes it wrote, for the ingestion report.
+  collisions within the task only. `counts` are the importer's counts of the
+  nodes it wrote, for the ingestion report. `obs_ids_path` is where the
+  task's observation ids were saved, or None if it had none.
   """
   file_collision_counts: dict[str, int]
   file_sample_collisions: dict[str, list[str]]
@@ -179,6 +187,7 @@ class ImportProcResult:
   provenances: dict[str, Provenance]
   processed_imports: set[str]
   counts: ImportCounts
+  obs_ids_path: str | None
 
 
 @dataclass(frozen=True)
@@ -188,6 +197,26 @@ class _WorkerArgs:
   import_names: list[str]
   config: ImportConfig
   jsonld_dir_name: str
+  # The local dir where workers save observation ids for the coordinator.
+  obs_ids_dir: str
+
+
+@dataclass(frozen=True)
+class _ImportTask:
+  """What a worker process imports: a file, or one part of a split file.
+
+  `size` is the bytes the task reads.
+  """
+  file_rel_path: str
+  gcs_object: GcsObject | None
+  input_dir_path: str
+  size: int
+  part: FilePart | None = None  # None for the whole file.
+
+  @classmethod
+  def of(cls, file: File, part: FilePart | None = None) -> "_ImportTask":
+    size = part.size if part else (file.size() or 0)
+    return cls(file.path, file.gcs_object(), file.store_path(), size, part)
 
 
 @dataclass
@@ -212,26 +241,48 @@ class FileImportsFailedError(Exception):
 
 
 def _finish_imports(
-    files: list[File], futures: list[concurrent.futures.Future],
-    merge: Callable[[File, ImportProcResult], None]) -> list[_FileFailure]:
-  """Waits for every file, and returns those that failed.
-
-  Every file runs to completion even if others fail. Results are awaited in
-  submission order, so passing each successful one to `merge`, with its file,
-  is deterministic; each merged one is logged as "[i/N] Imported file". A
-  file whose import or merge raises is a failure.
-  """
+    files: list[File],
+    futures_by_file: list[list[concurrent.futures.Future]],
+    merge: Callable[[File, list[ImportProcResult]], None],
+    import_whole: Callable[[File, list[ImportProcResult]],
+                           concurrent.futures.Future] | None = None,
+) -> list[_FileFailure]:
+  """Waits for every file in order, falling back to whole-file import on part errors."""
   failures: list[_FileFailure] = []
   imported = 0
-  for file, future in zip(files, futures, strict=True):
+  for file, futures in zip(files, futures_by_file, strict=True):
     try:
-      merge(file, future.result())
+      merge(file, _file_results(file, futures, import_whole))
       imported += 1
       logging.info("[%d/%d] Imported file: %s", imported, len(files), file.path)
     except Exception as e:
       failures.append(
           _FileFailure(file.path, e, "".join(traceback.format_exception(e))))
   return failures
+
+
+def _file_results(
+    file: File,
+    futures: list[concurrent.futures.Future],
+    import_whole: Callable[[File, list[ImportProcResult]],
+                           concurrent.futures.Future] | None,
+) -> list[ImportProcResult]:
+  """Returns the results of a file's tasks, or retries whole if any part failed."""
+  if len(futures) == 1:
+    return [futures[0].result()]
+  results, errors = [], []
+  for future in futures:
+    try:
+      results.append(future.result())
+    except Exception as e:  # pylint: disable=broad-except
+      errors.append(e)
+  if not errors:
+    return results
+  logging.warning(
+      "%d of the %d parts of %s failed to import, so the file is imported"
+      " whole. The first error: %s: %s", len(errors), len(futures), file.path,
+      type(errors[0]).__name__, errors[0])
+  return [import_whole(file, results).result()]
 
 
 def _raise_for_failures(failures: list[_FileFailure]) -> None:
@@ -249,35 +300,40 @@ def _raise_for_failures(failures: list[_FileFailure]) -> None:
   raise FileImportsFailedError(failures)
 
 
-def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
-                            input_dir_path: str, args: _WorkerArgs,
-                            obs_ids_path: str) -> ImportProcResult:
-  """Imports one file in a worker process and returns its results.
+def _run_single_import_proc(task: _ImportTask,
+                            args: _WorkerArgs) -> ImportProcResult:
+  """Imports one file, or part of one, in a worker process; returns its results.
 
   The worker starts from an empty `Nodes`: a CSV needs only its provenance id,
   which comes from config. The Provenance and Source nodes that an MCF file
-  defines are returned for the coordinator to merge. The file's observation
-  ids, if any, are saved to `obs_ids_path` (see `stats.obs_id_collisions`).
-  The coordinator found the file, and its GCS object if any, so neither is
-  looked up again.
+  defines are returned for the coordinator to merge. The task's observation
+  ids, if any, are saved to a new file in `args.obs_ids_dir` (see
+  `stats.obs_id_collisions`). The coordinator found the file, and its GCS
+  object if any, so neither is looked up again.
   """
-  input_file = open_dir(input_dir_path).open_file(file_rel_path,
-                                                  gcs_object=gcs_object)
+  input_file = open_dir(task.input_dir_path).open_file(
+      task.file_rel_path, gcs_object=task.gcs_object)
 
   config = Config(args.config)
   nodes = Nodes(config=config)
-  graph_writer = JsonLdStreamWriter(open_dir(args.output_dir_path),
-                                    args.import_names,
-                                    config,
-                                    jsonld_dir_name=args.jsonld_dir_name)
-  importer = _create_importer_for_file(config, input_file, graph_writer, nodes)
+  graph_writer = JsonLdStreamWriter(
+      open_dir(args.output_dir_path),
+      args.import_names,
+      config,
+      jsonld_dir_name=args.jsonld_dir_name,
+      obs_shard_tag=part_shard_tag(task.part.index) if task.part else "")
+  importer = _create_importer_for_file(config, input_file, graph_writer, nodes,
+                                       task.part)
   try:
     importer.do_import()
   except BaseException:
     graph_writer.close_after_error()
     raise
   graph_writer.commit_and_close()
+  obs_ids_path = None
   if len(graph_writer.obs_ids):
+    fd, obs_ids_path = tempfile.mkstemp(suffix=".npy", dir=args.obs_ids_dir)
+    os.close(fd)
     save_obs_ids(graph_writer.obs_ids.sorted(), obs_ids_path)
 
   return ImportProcResult(
@@ -287,6 +343,7 @@ def _run_single_import_proc(file_rel_path: str, gcs_object: GcsObject | None,
       provenances=dict(nodes.provenances),
       processed_imports=graph_writer.processed_imports(),
       counts=importer.counts,
+      obs_ids_path=obs_ids_path,
   )
 
 
@@ -337,6 +394,7 @@ class Runner:
       output_dir_path: str,
       import_names: Optional[list[str]] = None,
       max_workers: Optional[int] = None,
+      split_file_bytes: Optional[int] = None,
   ) -> None:
     """Sets up the output dir; run() reads the config and the input dir.
 
@@ -344,9 +402,15 @@ class Runner:
       max_workers: The maximum number of worker processes that import files
         concurrently. Defaults to `default_max_workers()`. Lower it to reduce
         peak memory, since each worker holds the data of the file it imports.
+      split_file_bytes: Files larger than this are imported in parts, in
+        parallel (currently observation CSVs; see `csv_split.num_parts`).
+        Defaults to `csv_split.SPLIT_CSV_BYTES`.
     """
     if max_workers is not None and max_workers < 1:
       raise ValueError(f"max_workers must be at least 1, got {max_workers}")
+    if split_file_bytes is not None and split_file_bytes < 1:
+      raise ValueError(
+          f"split_file_bytes must be at least 1, got {split_file_bytes}")
 
     if not input_dir_path:
       raise ValueError("input_dir must be specified")
@@ -364,6 +428,7 @@ class Runner:
     # If None, _load_config() sets the default, which depends on whether any
     # input or output dir is on GCS.
     self.max_workers: int | None = max_workers
+    self.split_file_bytes = split_file_bytes
     # Set by _load_config().
     self.input_dir: Dir | None = None
     self.config: Config | None = None
@@ -741,40 +806,71 @@ class Runner:
           "\n".join(formatted_errors))
       raise ValueError(consolidated_msg)
 
-  def _run_multiprocess_imports(self, files: list[File]) -> None:
+  def _run_multiprocess_imports(
+      self, files: list[File], parts_by_path: dict[str,
+                                                   list[FilePart]]) -> None:
     """Imports `files` in worker processes and merges each result.
 
-    See `_finish_imports` for the merge order and for failures. Once every
-    file is merged, looks for observation ids that several files produced.
+    A file in `parts_by_path` is imported in those parts, in parallel. Tasks
+    are submitted largest first. See `_finish_imports` for the merge order and
+    for failures. Once every file is merged, looks for observation ids that
+    several files produced.
     """
-    worker_args = _WorkerArgs(
-        output_dir_path=self.output_dir.full_path(),
-        import_names=self.import_names,
-        config=self.config.model,
-        jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
-    )
-    num_workers = num_import_workers(self.max_workers, len(files))
-    logging.info("Importing %d files with %d worker processes", len(files),
-                 num_workers)
+    tasks_by_file = [[
+        _ImportTask.of(file, part) for part in parts_by_path.get(file.path, [])
+    ] or [_ImportTask.of(file)] for file in files]
+    num_tasks = sum(len(t) for t in tasks_by_file)
+    num_workers = num_import_workers(self.max_workers, num_tasks)
+    logging.info("Importing %d files in %d tasks with %d worker processes",
+                 len(files), num_tasks, num_workers)
     # Workers run on this machine, so they can save ids to a local directory.
     # A failed run doesn't wait for the files in progress, which may still save
     # ids while the directory is removed.
     with tempfile.TemporaryDirectory(prefix="obs-ids-",
                                      ignore_cleanup_errors=True) as obs_ids_dir:
-      obs_ids_paths = [
-          os.path.join(obs_ids_dir, f"{i:06d}.npy") for i in range(len(files))
-      ]
+      worker_args = _WorkerArgs(
+          output_dir_path=self.output_dir.full_path(),
+          import_names=self.import_names,
+          config=self.config.model,
+          jsonld_dir_name=self.graph_writer.jsonld_dir.name(),
+          obs_ids_dir=obs_ids_dir,
+      )
+      # (input file path, ids path) of every task with observations, in file
+      # and then part order.
+      obs_ids_files: list[tuple[str, str]] = []
+
+      def merge(file: File, results: list[ImportProcResult]) -> None:
+        self._merge_file_results(file, results)
+        obs_ids_files.extend((file.path, res.obs_ids_path)
+                             for res in results
+                             if res.obs_ids_path)
+
       executor = concurrent.futures.ProcessPoolExecutor(max_workers=num_workers)
+
+      def import_whole(
+          file: File,
+          part_results: list[ImportProcResult]) -> concurrent.futures.Future:
+        self._discard_part_outputs(file, part_results)
+        return executor.submit(_run_single_import_proc, _ImportTask.of(file),
+                               worker_args)
+
       try:
-        futures = [
-            executor.submit(_run_single_import_proc, file.path,
-                            file.gcs_object(), file.store_path(), worker_args,
-                            ids_path)
-            for file, ids_path in zip(files, obs_ids_paths)
+        # Submit largest tasks first so a huge file doesn't run alone at the end.
+        indexed_tasks = [(fi, ti, task)
+                         for fi, file_tasks in enumerate(tasks_by_file)
+                         for ti, task in enumerate(file_tasks)]
+        futures_by_file: list[list[concurrent.futures.Future | None]] = [
+            [None] * len(file_tasks) for file_tasks in tasks_by_file
         ]
+        for fi, ti, task in sorted(indexed_tasks,
+                                   key=lambda x: x[2].size,
+                                   reverse=True):
+          futures_by_file[fi][ti] = executor.submit(_run_single_import_proc,
+                                                    task, worker_args)
         failures = _finish_imports(files,
-                                   futures,
-                                   merge=self._merge_worker_result)
+                                   futures_by_file,
+                                   merge=merge,
+                                   import_whole=import_whole)
       except BaseException:
         # E.g. Ctrl-C: files not yet started are cancelled, and the run fails
         # without waiting for the ones in progress. (Not a `with` block: its
@@ -792,25 +888,34 @@ class Runner:
             (files_by_path[f.file_path], error)
             for f, error in zip(failures, self._failure_errors))
         _raise_for_failures(failures)
-      # Workers save ids only for files with observations.
-      self._merge_cross_file_collisions([
-          (file.path, ids_path)
-          for file, ids_path in zip(files, obs_ids_paths)
-          if os.path.exists(ids_path)
-      ])
+      self._merge_cross_file_collisions(obs_ids_files)
+
+  def _discard_part_outputs(self, file: File,
+                            part_results: list[ImportProcResult]) -> None:
+    """Deletes the shards and observation ids that `file`'s parts wrote."""
+    self.graph_writer.delete_part_shards(file)
+    for res in part_results:
+      if res.obs_ids_path:
+        os.remove(res.obs_ids_path)
 
   def _merge_cross_file_collisions(
       self, obs_ids_files: list[tuple[str, str]]) -> None:
-    """Adds the collisions between `obs_ids_files` to the writer's summary."""
+    """Adds the collisions between `obs_ids_files` to the writer's summary.
+
+    `obs_ids_files` are (input file path, ids path) of every file, or part of
+    a split file, with observations, in import order. Collisions between the
+    parts of a file are the file's own, as if it were imported whole.
+    """
     if len(obs_ids_files) < 2:
       return
     logging.info("Checking observation ids of %d files for collisions...",
-                 len(obs_ids_files))
+                 len({path for path, _ in obs_ids_files}))
     collisions = find_cross_file_collisions(obs_ids_files)
     if collisions.count:
       logging.warning(
-          "Found %d observation @id collisions between files: different files"
-          " produce identical observation ids.", collisions.count)
+          "Found %d observation @id collisions between files, or between parts"
+          " of a split file: they produce identical observation ids.",
+          collisions.count)
     self.graph_writer.merge_collisions(collisions.file_counts,
                                        collisions.file_samples)
 
@@ -830,7 +935,10 @@ class Runner:
     files = mcf_files + csv_files
     if not files:
       return
-    self._run_multiprocess_imports(files)
+    parts_by_path = csv_split.plan_splits(csv_files, self.config,
+                                          self.max_workers,
+                                          self.split_file_bytes)
+    self._run_multiprocess_imports(files, parts_by_path)
 
   def _record_report_errors(self) -> None:
     """Passes the errors that failed the run to the report.
@@ -846,16 +954,22 @@ class Runner:
       folder, provenance_id = self._report_folder_and_provenance(file)
       self.summary_generator.record_failure(error, folder, provenance_id)
 
-  def _merge_worker_result(self, file: File, res: ImportProcResult) -> None:
-    """Merges a worker process's `ImportProcResult` for `file`."""
-    self.nodes.merge_metadata(res.provenances, res.sources)
-    self.graph_writer.merge_worker(res.processed_imports,
-                                   res.file_collision_counts,
-                                   res.file_sample_collisions)
-    self._record_file_summary(file, res)
+  def _merge_file_results(self, file: File,
+                          results: list[ImportProcResult]) -> None:
+    """Merges the results of `file`'s tasks: the whole file, or its parts."""
+    for res in results:
+      self.nodes.merge_metadata(res.provenances, res.sources)
+      self.graph_writer.merge_worker(res.processed_imports,
+                                     res.file_collision_counts,
+                                     res.file_sample_collisions)
+    # One summary for the file: its parts' counts, added up.
+    counts = results[0].counts
+    for res in results[1:]:
+      counts = counts.add(res.counts)
+    self._record_file_summary(file, counts)
 
-  def _record_file_summary(self, file: File, res: ImportProcResult) -> None:
-    """Passes a worker's observation counts for `file` to the report."""
+  def _record_file_summary(self, file: File, counts: ImportCounts) -> None:
+    """Passes the observation counts of `file` to the report."""
     # Folders come only from --imports, as in _record_input_files.
     if not self.import_names:
       return
@@ -864,10 +978,10 @@ class Runner:
         FileSummary(filePath=file.path,
                     folder=folder,
                     provenanceId=provenance_id,
-                    observations=res.counts.observations,
-                    dateRange=res.counts.date_range,
-                    nodes=NodeCounts(count=res.counts.nodes,
-                                     byType=dict(res.counts.nodes_by_type))))
+                    observations=counts.observations,
+                    dateRange=counts.date_range,
+                    nodes=NodeCounts(count=counts.nodes,
+                                     byType=dict(counts.nodes_by_type))))
 
   def _run_imports_and_export_jsonld(self):
     self.graph_writer = JsonLdStreamWriter(self.output_dir, self.import_names,

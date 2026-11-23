@@ -129,8 +129,10 @@ side's code, output directory and log, then:
   or duplicating a subject's records does not change its content.
 - **Ingestion report:** `preprocessor_reports/[<id>/]ingestion_report.json`:
   the `run` block without volatile fields, and each folder's entry.
-- **Shards:** observation shards are matched by name. Node shards, whose
-  names end in a random uid, are matched by content within their folder.
+- **Shards:** observation shards are matched by name. The shards of a file
+  that either side imported in parts (`observation-<file>-p001-00000.jsonld`)
+  are compared as one, by their records. Node shards, whose names end in a
+  random uid, are matched by content within their folder.
 
 ### Difference categories
 
