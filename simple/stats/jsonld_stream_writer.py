@@ -28,7 +28,6 @@ import uuid
 
 import numpy as np
 import pandas as pd
-
 from stats.config import Config
 from stats.data import Triple
 from stats.data import validate_numeric_values

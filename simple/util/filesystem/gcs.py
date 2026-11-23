@@ -27,7 +27,6 @@ from google.cloud import storage
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-
 from util.filesystem.paths import GCS_PATH_PREFIX
 from util.filesystem.paths import normpath
 from util.filesystem.ranges import RangesReader
