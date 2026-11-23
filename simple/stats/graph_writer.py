@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Collection
+
 import pandas as pd
 from stats.data import Triple
 from util.filesystem import File
@@ -31,7 +33,10 @@ class GraphWriter:
                     provenance_dir: str = None):
     pass
 
-  def write_observations(self, observations_df: pd.DataFrame, input_file: File):
+  def write_observations(self,
+                         observations_df: pd.DataFrame,
+                         input_file: File,
+                         entity_properties: Collection[str] = ()):
     """Writes observations from a DataFrame.
 
     Args:
@@ -39,6 +44,8 @@ class GraphWriter:
                        provenance, unit, scaling_factor, measurement_method,
                        observation_period, properties] - all transformations applied
       input_file: Source file for context
+      entity_properties: Property keys in `properties` whose values are entity
+                         references (e.g. mapped entity dimension columns).
     """
     pass
 

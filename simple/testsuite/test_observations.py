@@ -102,11 +102,7 @@ OBSERVATION_ABOUT = [
     Case("surrounding whitespace is trimmed",
          given=" country/USA ",
          expect="country/USA"),
-    Case("NA is Namibia, not a missing value",
-         given="NA",
-         expect="NA",
-         bug="pandas reads the entity id NA as a missing value, so the"
-         " observation loses observationAbout"),
+    Case("NA is Namibia, not a missing value", given="NA", expect="NA"),
 ]
 
 
@@ -127,11 +123,18 @@ VARIABLES = [
     Case("surrounding whitespace is trimmed",
          given=" Count_Person ",
          expect="Count_Person"),
-    Case("None in variable column fails",
-         given="None",
-         expect=b.Fails("ValueError", ""),
-         bug="pandas reads None as a missing value, so the observation is"
-         " written with variableMeasured: null instead of failing"),
+    Case(
+        "None in variable column fails",
+        given="None",
+        expect=b.Fails("PreprocessorError",
+                       "Invalid or missing variable value(s)"),
+    ),
+    Case(
+        "empty variable column fails",
+        given="",
+        expect=b.Fails("PreprocessorError",
+                       "Invalid or missing variable value(s)"),
+    ),
     Case("newline inside a variable id fails",
          given="Count_\nPerson",
          expect=b.Fails("ValueError", ""),
@@ -327,8 +330,6 @@ def test_files_with_the_same_name_in_two_imports_are_summarized_apart(caplog):
   ]
 
 
-@known_bug(reason="the observation id is hashed before trimming whitespace, so"
-           " 'country/USA ' and 'country/USA' get different ids")
 def test_surrounding_whitespace_does_not_change_observation_id():
   result = b.run_csv(
       b.csv_file(b.obs_row("country/USA ", value="1"),
@@ -444,6 +445,33 @@ def test_second_entity_dimension():
       b.obs(variable="Count_Trip", value="10", destination=b.ref("country/FRA"))
   ])
   assert result.dimensions("Count_Trip") == ["observationAbout", "destination"]
+
+
+def test_entity_dimensions_and_config_observation_properties():
+  """Mapped entity columns are always refs (even without '/'); config props keep ref/literal behavior."""
+  result = b.run_csv(
+      b.csv_file(["country/USA", "NA", "Count_Trip", "2020", "10"],
+                 header=["origin", "destination", "variable", "date", "value"]),
+      b.obs_config(
+          {
+              **b.OBS_MAPPINGS,
+              "dcid:observationAbout": "origin",
+              "dcid:destination": "destination",
+          },
+          observationProperties={
+              "country": "country/FRA",
+              "sex": "Female",
+          },
+      ))
+  b.assert_records(result.observations, [
+      b.obs(
+          variable="Count_Trip",
+          value="10",
+          destination=b.ref("NA"),
+          country=b.ref("country/FRA"),
+          sex="Female",
+      )
+  ])
 
 
 @known_bug(reason="observationProperties is embedded in every observation's"

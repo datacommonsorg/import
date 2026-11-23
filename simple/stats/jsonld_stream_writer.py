@@ -14,6 +14,7 @@
 """A GraphWriter implementation that streams JSON-LD shards directly to GCS/Disk."""
 
 from collections import defaultdict
+from collections.abc import Collection
 import concurrent.futures
 from datetime import datetime
 from datetime import timezone
@@ -33,6 +34,7 @@ from stats.config import Config
 from stats.data import ImportType
 from stats.data import Triple
 from stats.data import validate_numeric_values
+from stats.data import validate_variable_values
 from stats.graph_writer import GraphWriter
 from stats.obs_id_collisions import MAX_SAMPLES_PER_FILE
 from stats.obs_id_collisions import ObsIds
@@ -264,7 +266,10 @@ _EMPTY_COMPILED_PROPS = _CompiledProps(b"", "", "", _NO_PROPS, False, False)
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
-def _compile_props_cached(props: str) -> _CompiledProps:
+def _compile_props_cached(
+    props: str,
+    entity_properties: frozenset[str] = frozenset(),
+) -> _CompiledProps:
   """Parses and pre-serializes a distinct custom-properties JSON string."""
   parsed = json.loads(props)
   if not isinstance(parsed, dict) or not parsed:
@@ -282,7 +287,8 @@ def _compile_props_cached(props: str) -> _CompiledProps:
     elif prop_key in _OTHER_STD_OBS_KEYS:
       has_other_std = True
     val_json = (_ref_json(v) or
-                "null") if is_entity_reference(v) else _text_json(v)
+                "null") if (prop_key in entity_properties or
+                            is_entity_reference(v)) else _text_json(v)
     parts.append(f",{json.dumps(prop_key)}:{val_json}")
   return _CompiledProps(
       id_props_bytes=id_props_bytes,
@@ -294,12 +300,17 @@ def _compile_props_cached(props: str) -> _CompiledProps:
   )
 
 
-def _compile_props(props, entity, variable) -> _CompiledProps:
+def _compile_props(
+    props,
+    entity,
+    variable,
+    entity_properties: frozenset[str] = frozenset(),
+) -> _CompiledProps:
   """Compiles custom properties JSON, logging and falling back on bad JSON."""
   if not _has_value(props):
     return _EMPTY_COMPILED_PROPS
   try:
-    return _compile_props_cached(props)
+    return _compile_props_cached(props, entity_properties)
   except json.JSONDecodeError as e:
     logging.warning(
         "Failed to decode properties JSON for observation %s/%s: %s", entity,
@@ -325,8 +336,12 @@ def _format_optional_fields(provenance, unit, scaling_factor, mmethod,
   return "".join(parts)
 
 
-def _build_conflicting_observation_json(row: tuple, obs_hash: str,
-                                        parsed_props: Mapping[str, Any]) -> str:
+def _build_conflicting_observation_json(
+    row: tuple,
+    obs_hash: str,
+    parsed_props: Mapping[str, Any],
+    entity_properties: frozenset[str] = frozenset(),
+) -> str:
   """Dict-based fallback when custom properties overwrite a standard key."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, _ = row
   var_obj = _ref(variable)
@@ -355,7 +370,8 @@ def _build_conflicting_observation_json(row: tuple, obs_hash: str,
     obs_obj["dcid:observationPeriod"] = p
   for k, v in parsed_props.items():
     prop_key = _prefix_dcid(k)
-    obs_obj[prop_key] = _ref(v) if is_entity_reference(v) else _text(v)
+    obs_obj[prop_key] = _ref(v) if (prop_key in entity_properties or
+                                    is_entity_reference(v)) else _text(v)
   return _to_json(obs_obj)
 
 
@@ -424,12 +440,15 @@ def _col_to_list(series: pd.Series) -> list:
   return vals
 
 
-def _observation_shard(chunk,
-                       shard_index: int,
-                       ns_map: dict[str, str],
-                       track_hash_fn: Callable,
-                       file_name: str,
-                       shard_tag: str = "") -> tuple[str, str]:
+def _observation_shard(
+    chunk,
+    shard_index: int,
+    ns_map: dict[str, str],
+    track_hash_fn: Callable,
+    file_name: str,
+    shard_tag: str = "",
+    entity_properties: frozenset[str] = frozenset(),
+) -> tuple[str, str]:
   """Returns the name and JSON text of the observation shard of `chunk`.
 
   `file_name` is the path of the input file, relative to the input directory.
@@ -457,7 +476,7 @@ def _observation_shard(chunk,
     (entity, variable, date, value, provenance, unit, scaling_factor, mmethod,
      period, props) = row
 
-    compiled = (compile_props(props, entity, variable)
+    compiled = (compile_props(props, entity, variable, entity_properties)
                 if _has_value(props) else _EMPTY_COMPILED_PROPS)
 
     hash_key = (entity, variable, date, provenance, unit, mmethod, period)
@@ -475,7 +494,8 @@ def _observation_shard(chunk,
     has_entity = _has_value(entity)
     if compiled.has_other_std or (compiled.has_about and has_entity):
       node_strs.append(
-          _build_conflicting_observation_json(row, obs_hash, compiled.parsed))
+          _build_conflicting_observation_json(row, obs_hash, compiled.parsed,
+                                              entity_properties))
       continue
 
     var_key = (variable, compiled.obs_props_suffix)
@@ -690,8 +710,13 @@ class JsonLdStreamWriter(GraphWriter):
           file_samples.get(f_name,
                            [])[:max(0, MAX_SAMPLES_PER_FILE - len(samples))])
 
-  def _write_observation_shards(self, df: pd.DataFrame, import_name: str,
-                                file_name: str):
+  def _write_observation_shards(
+      self,
+      df: pd.DataFrame,
+      import_name: str,
+      file_name: str,
+      entity_properties: frozenset[str] = frozenset(),
+  ):
     dir_name = import_name.replace("/", "_")
     n = len(df)
     col_lists = [_col_to_list(df[c]) for c in constants.OBSERVATION_COLUMNS]
@@ -708,19 +733,27 @@ class JsonLdStreamWriter(GraphWriter):
                                       self.ns_map,
                                       track_hash_fn=self.track_observation_hash,
                                       file_name=file_name,
-                                      shard_tag=self.shard_tag)
+                                      shard_tag=self.shard_tag,
+                                      entity_properties=entity_properties)
       self._write_shard(dir_name, name, text)
 
-  def write_observations(self, observations_df: pd.DataFrame, input_file: File):
+  def write_observations(self,
+                         observations_df: pd.DataFrame,
+                         input_file: File,
+                         entity_properties: Collection[str] = ()):
     if observations_df.empty:
       return
+    validate_variable_values(observations_df, input_file.path)
     validate_numeric_values(observations_df, input_file.path)
 
     import_name = self.config.import_name(input_file)
     self._processed_imports.add(import_name)
+    prefixed_entity_props = frozenset(
+        _prefix_dcid(p) for p in entity_properties)
     self._write_observation_shards(observations_df,
                                    import_name,
-                                   file_name=input_file.path)
+                                   file_name=input_file.path,
+                                   entity_properties=prefixed_entity_props)
 
   def _write_node_shards(self,
                          triples: list[Triple],

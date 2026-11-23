@@ -53,7 +53,7 @@ def _apply_property_defaults(df: pd.DataFrame,
   for col_name in constants.STANDARD_PROPERTY_COLUMNS.values():
     default_value = obs_props.standard.get(col_name, "")
     if col_name in df.columns:
-      source_col = df[col_name].replace("", pd.NA)
+      source_col = df[col_name].str.strip().replace("", pd.NA)
       df[col_name] = source_col.fillna(default_value).astype(str)
     else:
       df[col_name] = default_value
@@ -67,7 +67,7 @@ def _format_numeric_values(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
-  """Strip namespace prefixes from DCID columns."""
+  """Strip surrounding whitespace and namespace prefixes from DCID columns."""
 
   # Strip namespaces from columns that exist
   for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
@@ -76,6 +76,9 @@ def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
       df[constants.COLUMN_PROVENANCE] = strip_namespace(provenance)
     elif col in df.columns:
       df[col] = strip_namespace_series(df[col])
+
+  if constants.COLUMN_DATE in df.columns:
+    df[constants.COLUMN_DATE] = df[constants.COLUMN_DATE].str.strip()
 
   return df
 
@@ -193,8 +196,10 @@ class VariablePerRowImporter(Importer):
     mapped = list(self.column_mappings.values())
 
     with self._open_rows() as stream:
+      # Read cells verbatim so IDs like "NA" (Namibia) aren't turned into NaN;
+      # NA tokens are filtered only on the value column.
       reader = pd.read_csv(stream,
-                           na_values=constants.STANDARD_NA_VALUES,
+                           keep_default_na=False,
                            chunksize=10000,
                            dtype=str,
                            usecols=mapped)
@@ -211,7 +216,10 @@ class VariablePerRowImporter(Importer):
                             _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.counts = self.counts.add(self.count_observations(observations_df))
-        self.graph_writer.write_observations(observations_df, self.input_file)
+        self.graph_writer.write_observations(
+            observations_df,
+            self.input_file,
+            entity_properties=self.custom_dimensions)
 
   def _open_rows(self):
     """Opens a text stream of the CSV header and the rows to import."""
@@ -268,6 +276,8 @@ def _serialize_row_dimensions(row: dict[str, object],
   """Serializes a row's custom dimensions merged with `static_props` into JSON."""
   props = dict(static_props)
   for col, val in row.items():
-    if pd.notna(val) and val != "":
-      props[col] = strip_namespace(str(val))
+    if pd.notna(val):
+      cleaned = strip_namespace(str(val))
+      if cleaned:
+        props[col] = cleaned
   return json.dumps(props) if props else ""
