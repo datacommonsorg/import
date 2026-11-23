@@ -229,3 +229,18 @@ def test_mcf_split_falls_back_to_whole_file_when_part_fails(caplog):
   assert any(
       "failed to import, so the file is imported whole" in r.getMessage()
       for r in caplog.records)
+
+
+@pytest.mark.parametrize("mode", ["disk_input", "gcs_input"])
+def test_entity_csv_split_matches_unsplit(mode):
+  """Split entity CSV output, report and handshake match unsplit."""
+  rows = [[f"author{i}", "Author", f"Author {i}", f"00{i}"] for i in range(12)]
+  files = {
+      "provenance.mcf":
+          b.PROVENANCE_MCF,
+      "case.csv":
+          b.csv_file(*rows, header=["author_id", "type", "author_name",
+                                    "code"]),
+  }
+  config = b.entities_config(mappings=b.entity_mappings("author_name", "code"))
+  _run_split_and_unsplit(files, config, mode=mode)

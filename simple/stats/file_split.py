@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Splits large observation CSVs and MCF files into byte-range parts.
+"""Splits large CSV and MCF files into byte-range parts to import in parallel.
 
 Each part is a byte range parsed after the file's header (the CSV header row,
 or any leading `Context:` block before the first `Node:` line in MCF).
@@ -77,25 +77,28 @@ def _is_mcf(file: File) -> bool:
   return file.path.lower().endswith(".mcf")
 
 
-def _can_split(file: File, config: Config, csv_stems: set[str]) -> bool:
-  if _is_mcf(file):
+def _can_split(file: File, config: Config, obs_stems: set[str]) -> bool:
+  if _is_mcf(file) or config.import_type(file) != ImportType.OBSERVATIONS:
     return True
-  return (config.import_type(file) == ImportType.OBSERVATIONS and
-          not part_shards_could_collide(file.path, csv_stems))
+  return not part_shards_could_collide(file.path, obs_stems)
 
 
 def plan_splits(files: list[File],
                 config: Config,
                 max_workers: int,
                 split_bytes: int | None = None) -> dict[str, list[FilePart]]:
-  """Returns byte-range parts for each large observation CSV or MCF, by path."""
+  """Returns byte-range parts for each large input file, by path."""
   threshold = split_bytes or SPLIT_FILE_BYTES
-  csv_stems = {file_shard_stem(f.path) for f in files if not _is_mcf(f)}
+  obs_stems = {
+      file_shard_stem(f.path)
+      for f in files
+      if not _is_mcf(f) and config.import_type(f) == ImportType.OBSERVATIONS
+  }
   candidates = [
       (f, parts)
       for f in files
       if (parts := num_parts(f.size() or 0, max_workers, threshold)) > 1 and
-      _can_split(f, config, csv_stems)
+      _can_split(f, config, obs_stems)
   ]
   if not candidates:
     return {}

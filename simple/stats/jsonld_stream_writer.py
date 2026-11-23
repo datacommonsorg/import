@@ -29,6 +29,7 @@ import uuid
 import numpy as np
 import pandas as pd
 from stats.config import Config
+from stats.data import ImportType
 from stats.data import Triple
 from stats.data import validate_numeric_values
 from stats.graph_writer import GraphWriter
@@ -240,13 +241,12 @@ def part_shards_could_collide(file_path: str, stems: set[str]) -> bool:
       if other.startswith(prefix))
 
 
-def _is_part_shard(name: str, file_path: str) -> bool:
-  """Whether `name` is a shard written for a part of `file_path`."""
-  stem = file_shard_stem(file_path)
-  if file_path.lower().endswith(".mcf"):
-    prefix, suffix_re = f"node-{stem}-", _NODE_PART_SUFFIX_RE
-  else:
+def _is_part_shard(name: str, stem: str, *, is_obs: bool) -> bool:
+  """Whether `name` is a shard written for a part of `stem`."""
+  if is_obs:
     prefix, suffix_re = f"observation-{stem}-", _OBS_PART_SUFFIX_RE
+  else:
+    prefix, suffix_re = f"node-{stem}-", _NODE_PART_SUFFIX_RE
   return name.startswith(prefix) and bool(
       suffix_re.fullmatch(name[len(prefix):]))
 
@@ -574,10 +574,13 @@ class JsonLdStreamWriter(GraphWriter):
   def delete_part_shards(self, input_file: File) -> None:
     """Deletes the shards of every part of `input_file`."""
     folder = self.config.import_name(input_file).replace("/", "_")
+    stem = file_shard_stem(input_file.path)
+    is_obs = (not input_file.path.lower().endswith(".mcf") and
+              self.config.import_type(input_file) == ImportType.OBSERVATIONS)
     shards = [
         shard
         for shard in self.jsonld_dir.open_dir(folder, create=False).all_files()
-        if _is_part_shard(shard.name(), input_file.path)
+        if _is_part_shard(shard.name(), stem, is_obs=is_obs)
     ]
     if not shards:
       return

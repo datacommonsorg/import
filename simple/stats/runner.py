@@ -137,7 +137,7 @@ def _create_importer_for_file(
     nodes: Nodes,
     part: FilePart | None = None,
 ) -> Importer:
-  """Returns the importer of `input_file`, or of its `part` (observations or MCF)."""
+  """Returns the importer of `input_file`, or of its `part`."""
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
         input_file=input_file,
@@ -163,6 +163,7 @@ def _create_importer_for_file(
           input_file=input_file,
           graph_writer=graph_writer,
           nodes=nodes,
+          part=part,
       )
 
     case _:
@@ -404,8 +405,8 @@ class Runner:
         concurrently. Defaults to `default_max_workers()`. Lower it to reduce
         peak memory, since each worker holds the data of the file it imports.
       split_file_bytes: Files larger than this are imported in parts, in
-        parallel (observation CSVs and MCF files; see `file_split.num_parts`).
-        Defaults to `file_split.SPLIT_FILE_BYTES`.
+        parallel (see `file_split.num_parts`). Defaults to
+        `file_split.SPLIT_FILE_BYTES`.
     """
     if max_workers is not None and max_workers < 1:
       raise ValueError(f"max_workers must be at least 1, got {max_workers}")
