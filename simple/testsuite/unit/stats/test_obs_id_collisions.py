@@ -96,7 +96,8 @@ def test_parallel_matches_serial_counts_and_samples(tmp_path):
       {rng.getrandbits(64) for _ in range(300)} | shared for _ in range(4)
   ]
   files = _files(tmp_path, *id_sets)
-  with mock.patch.object(obs_id_collisions, "_BUCKET_SIZE", 50):
+  with (mock.patch.object(obs_id_collisions, "_BUCKET_SIZE",
+                          50), mock.patch("os.cpu_count", return_value=4)):
     with mock.patch.object(obs_id_collisions, "_MAX_BUCKET_WORKERS", 1):
       serial = find_cross_file_collisions(files)
     with mock.patch.object(obs_id_collisions, "_MAX_BUCKET_WORKERS", 4):

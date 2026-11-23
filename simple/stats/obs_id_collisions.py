@@ -180,7 +180,7 @@ def find_cross_file_collisions(
                            f" '{files[prev][0]}'")
 
   workers = min(_MAX_BUCKET_WORKERS, os.cpu_count() or 1)
-  if workers > 1 and (len(arrays) > 1 or num_buckets > 1):
+  if workers > 1:
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
       cuts = list(pool.map(_file_cuts, arrays))
       _accumulate(pool.map(_check_bucket, range(num_buckets)))
