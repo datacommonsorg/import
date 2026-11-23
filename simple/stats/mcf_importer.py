@@ -17,10 +17,13 @@ import logging
 from kg_util.mcf_parser import mcf_to_triples
 from stats.data import strip_namespace
 from stats.data import Triple
+from stats.file_split import FilePart
+from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.util import is_uri_or_namespace
+from util.filesystem import File
 
 _ID = 'ID'
 _DCID = 'dcid'
@@ -42,13 +45,34 @@ class McfImporter(Importer):
   """Imports a MCF file.
 
   The MCF nodes are parsed and inserted as triples via the GraphWriter.
+  """
+
+  def __init__(self,
+               input_file: File,
+               graph_writer: GraphWriter,
+               nodes: Nodes,
+               part: FilePart | None = None) -> None:
     """
+    Args:
+      part: The part of `input_file` to import (see `stats.file_split`), or
+        None to import all of it.
+    """
+    super().__init__(input_file, graph_writer, nodes)
+    self.part = part
+
+  def _open_stream(self):
+    """Opens a text stream of the MCF header and the nodes to import."""
+    if self.part is None:
+      return self.input_file.open_stream()
+    return self.input_file.open_part_stream(self.part.header_end,
+                                            self.part.start, self.part.end)
 
   def do_import(self) -> None:
     # Pass 1: Resolve local ID mappings and identify metadata subject IDs
     local2dcid = {}
     metadata_subject_ids = set()
-    triples_list = list(mcf_to_triples(self.input_file.read_string_io()))
+    with self._open_stream() as stream:
+      triples_list = list(mcf_to_triples(stream))
     for subject_id, predicate, value, _ in triples_list:
       if predicate == _DCID and value:
         local2dcid[subject_id] = value
@@ -109,9 +133,11 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   # Resolve the subject ID using the map, fallback to original if not mapped
   resolved_subject = local2dcid.get(subject_id, subject_id)
 
-  # If it was not mapped AND it doesn't start with a valid namespace or URI, it's an error!
-  if resolved_subject == subject_id and not is_uri_or_namespace(
-      resolved_subject):
+  # If it was not mapped AND it's an unresolved `l:` local id or lacks a valid
+  # namespace/URI, fail so a split part can fall back to whole-file import.
+  if resolved_subject == subject_id and (
+      resolved_subject.startswith("l:") or
+      not is_uri_or_namespace(resolved_subject)):
     raise ValueError(f"dcid not specified for node: {subject_id}")
 
   if value_type == _ID:
