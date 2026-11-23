@@ -17,7 +17,7 @@ import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.datacommons.ingestion.data.ExpandedNode;
+import org.datacommons.ingestion.data.NodeSubGraph;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.data.TimeSeries;
@@ -267,16 +267,16 @@ public class GraphIngestionPipeline {
               org.apache.beam.sdk.transforms.ParDo.of(new GraphTransformer(isBaseDc)));
     }
 
-    // Convert transformed graph to a PCollection of ExpandedNode
-    PCollection<ExpandedNode> expandedNodes =
-        GraphReader.extractExpandedNodesFromGraph(
+    // Convert transformed graph to a PCollection of NodeSubGraph
+    PCollection<NodeSubGraph> nodeSubGraphs =
+        GraphReader.extractNodeSubGraphsFromGraph(
             importName, transformedGraph, provenance, nodeInvalidTypeCounter);
 
-    // Extract node and edge mutations from expandedNodes
+    // Extract node and edge mutations from nodeSubGraphs
     PCollection<Mutation> nodeMutations =
-        GraphReader.nodesToMutations(importName, expandedNodes, spannerClient, nodeCounter);
+        GraphReader.nodesToMutations(importName, nodeSubGraphs, spannerClient, nodeCounter);
     PCollection<Mutation> edgeMutations =
-        GraphReader.edgesToMutations(importName, expandedNodes, spannerClient, edgeCounter);
+        GraphReader.edgesToMutations(importName, nodeSubGraphs, spannerClient, edgeCounter);
 
     PCollection<TimeSeries> uniqueSeries =
         GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc, timeSeriesCounter);

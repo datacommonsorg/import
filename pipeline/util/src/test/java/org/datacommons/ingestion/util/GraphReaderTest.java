@@ -30,8 +30,8 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
-import org.datacommons.ingestion.data.ExpandedNode;
 import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.NodeSubGraph;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.data.TimeSeriesKey;
@@ -426,9 +426,9 @@ public class GraphReaderTest {
     Mockito.verify(mockContext, Mockito.times(1)).output(Mockito.any(TimeSeries.class));
   }
 
-  private Map<Node, Set<Edge>> transformAndExtractExpandedNodesFromGraph(McfGraph graph) {
-    return GraphReader.extractExpandedNodesFromGraph(graph, PROVENANCE, noTypeCounter).stream()
-        .collect(toMap(ExpandedNode::getNode, n -> ImmutableSet.copyOf(n.getEdges())));
+  private Map<Node, Set<Edge>> transformAndExtractNodeSubGraphsFromGraph(McfGraph graph) {
+    return GraphReader.extractNodeSubGraphsFromGraph(graph, PROVENANCE, noTypeCounter).stream()
+        .collect(toMap(NodeSubGraph::getNode, n -> ImmutableSet.copyOf(n.getEdges())));
   }
 
   private static long getCounterValue(PipelineResult result, String counterName) {
@@ -445,7 +445,7 @@ public class GraphReaderTest {
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_skipsObservations() {
+  public void extractNodeSubGraphsFromGraph_skipsObservations() {
     McfGraph graph =
         McfGraph.newBuilder()
             .putNodes(
@@ -455,11 +455,11 @@ public class GraphReaderTest {
                     .build())
             .build();
 
-    assertEquals(Map.of(), transformAndExtractExpandedNodesFromGraph(graph));
+    assertEquals(Map.of(), transformAndExtractNodeSubGraphsFromGraph(graph));
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_textValue_createsLeafNodeAndEdge() {
+  public void extractNodeSubGraphsFromGraph_textValue_createsLeafNodeAndEdge() {
     McfGraph graph =
         McfGraph.newBuilder()
             .putNodes(
@@ -478,11 +478,11 @@ public class GraphReaderTest {
                 edge("city1", "name", leaf("Springfield").getSubjectId())),
             leaf("Springfield"),
             Set.of()),
-        transformAndExtractExpandedNodesFromGraph(graph));
+        transformAndExtractNodeSubGraphsFromGraph(graph));
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_bytesPredicate_createsCompressedLeafNode() {
+  public void extractNodeSubGraphsFromGraph_bytesPredicate_createsCompressedLeafNode() {
     String geoJson = "{\"type\": \"Polygon\", \"coordinates\": [[[9, 7], [9, 6.5], [9, 7]]]}";
     McfGraph graph =
         McfGraph.newBuilder()
@@ -502,11 +502,11 @@ public class GraphReaderTest {
                 edge("place1", "geoJsonCoordinates", bytesLeaf(geoJson).getSubjectId())),
             bytesLeaf(geoJson),
             Set.of()),
-        transformAndExtractExpandedNodesFromGraph(graph));
+        transformAndExtractNodeSubGraphsFromGraph(graph));
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_referenceValue_createsEdgeWithoutLeafNode() {
+  public void extractNodeSubGraphsFromGraph_referenceValue_createsEdgeWithoutLeafNode() {
     McfGraph graph =
         McfGraph.newBuilder()
             .putNodes(
@@ -521,11 +521,11 @@ public class GraphReaderTest {
         Map.of(
             subjectNode("city1", "city1", "City"),
             Set.of(edge("city1", "typeOf", "City"), edge("city1", "containedInPlace", "geoId/06"))),
-        transformAndExtractExpandedNodesFromGraph(graph));
+        transformAndExtractNodeSubGraphsFromGraph(graph));
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_excludesDcidProperty() {
+  public void extractNodeSubGraphsFromGraph_excludesDcidProperty() {
     McfGraph graph =
         McfGraph.newBuilder()
             .putNodes(
@@ -538,22 +538,22 @@ public class GraphReaderTest {
 
     assertEquals(
         Map.of(subjectNode("dcid0", "dcid0", "Class"), Set.of(edge("dcid0", "typeOf", "Class"))),
-        transformAndExtractExpandedNodesFromGraph(graph));
+        transformAndExtractNodeSubGraphsFromGraph(graph));
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_nodeWithoutType_defaultsToThingAndIncrementsCounter() {
+  public void extractNodeSubGraphsFromGraph_nodeWithoutType_defaultsToThingAndIncrementsCounter() {
     McfGraph graph =
         McfGraph.newBuilder().putNodes("dcid2", PropertyValues.newBuilder().build()).build();
 
     assertEquals(
         Map.of(subjectNode("dcid2", "dcid2", "Thing"), Set.of()),
-        transformAndExtractExpandedNodesFromGraph(graph));
+        transformAndExtractNodeSubGraphsFromGraph(graph));
     Mockito.verify(noTypeCounter, Mockito.times(1)).inc();
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_nodeWithoutDcidOrName_fallsBackToKey() {
+  public void extractNodeSubGraphsFromGraph_nodeWithoutDcidOrName_fallsBackToKey() {
     McfGraph graph =
         McfGraph.newBuilder()
             .putNodes(
@@ -563,11 +563,11 @@ public class GraphReaderTest {
 
     assertEquals(
         Map.of(subjectNode("node1", "node1", "Class"), Set.of(edge("node1", "typeOf", "Class"))),
-        transformAndExtractExpandedNodesFromGraph(graph));
+        transformAndExtractNodeSubGraphsFromGraph(graph));
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_oversizedValue_dropsLeafNodeAndEdge() {
+  public void extractNodeSubGraphsFromGraph_oversizedValue_dropsLeafNodeAndEdge() {
     String oversized = "a".repeat(SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE + 1);
     McfGraph graph =
         McfGraph.newBuilder()
@@ -588,11 +588,11 @@ public class GraphReaderTest {
                 edge("dcid0", "name", leaf("Node Zero").getSubjectId())),
             leaf("Node Zero"),
             Set.of()),
-        transformAndExtractExpandedNodesFromGraph(graph));
+        transformAndExtractNodeSubGraphsFromGraph(graph));
   }
 
   @Test
-  public void extractExpandedNodesFromGraph_pipelineAndMutations() {
+  public void extractNodeSubGraphsFromGraph_pipelineAndMutations() {
     McfGraph graph =
         McfGraph.newBuilder()
             .putNodes(
@@ -614,13 +614,13 @@ public class GraphReaderTest {
     Counter edgeCounter = Metrics.counter(GraphReaderTest.class, "edges");
 
     PCollection<McfGraph> inputGraph = pipeline.apply("CreateGraph", Create.of(graph));
-    PCollection<ExpandedNode> expandedNodes =
-        GraphReader.extractExpandedNodesFromGraph(
+    PCollection<NodeSubGraph> nodeSubGraphs =
+        GraphReader.extractNodeSubGraphsFromGraph(
             "test", inputGraph, PROVENANCE, invalidTypeCounter);
     PCollection<Mutation> nodeMutations =
-        GraphReader.nodesToMutations("test", expandedNodes, spannerClient, nodeCounter);
+        GraphReader.nodesToMutations("test", nodeSubGraphs, spannerClient, nodeCounter);
     PCollection<Mutation> edgeMutations =
-        GraphReader.edgesToMutations("test", expandedNodes, spannerClient, edgeCounter);
+        GraphReader.edgesToMutations("test", nodeSubGraphs, spannerClient, edgeCounter);
 
     PAssert.that(nodeMutations)
         .containsInAnyOrder(

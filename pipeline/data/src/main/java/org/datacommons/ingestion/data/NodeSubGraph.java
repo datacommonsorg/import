@@ -9,16 +9,16 @@ import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 
 /** Models a graph node paired with its outgoing edges. */
 @DefaultCoder(AvroCoder.class)
-public class ExpandedNode implements Serializable {
+public class NodeSubGraph implements Serializable {
 
   private Node node;
   private List<Edge> edges;
 
   // Default constructor for AvroCoder
-  private ExpandedNode() {}
+  private NodeSubGraph() {}
 
   // Private constructor to enforce use of Builder
-  private ExpandedNode(Builder builder) {
+  private NodeSubGraph(Builder builder) {
     this.node = builder.node;
     this.edges = builder.edges != null ? new ArrayList<>(builder.edges) : new ArrayList<>();
   }
@@ -39,7 +39,7 @@ public class ExpandedNode implements Serializable {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    ExpandedNode that = (ExpandedNode) o;
+    NodeSubGraph that = (NodeSubGraph) o;
     return Objects.equals(node, that.node) && Objects.equals(edges, that.edges);
   }
 
@@ -50,7 +50,7 @@ public class ExpandedNode implements Serializable {
 
   @Override
   public String toString() {
-    return String.format("ExpandedNode{node=%s, edges=%s}", node, edges);
+    return String.format("NodeSubGraph{node=%s, edges=%s}", node, edges);
   }
 
   public static class Builder {
@@ -69,13 +69,13 @@ public class ExpandedNode implements Serializable {
       return this;
     }
 
-    public ExpandedNode build() {
+    public NodeSubGraph build() {
       Objects.requireNonNull(node, "node cannot be null");
-      return new ExpandedNode(this);
+      return new NodeSubGraph(this);
     }
   }
 
-  public static AvroCoder<ExpandedNode> getCoder() {
-    return AvroCoder.of(ExpandedNode.class);
+  public static AvroCoder<NodeSubGraph> getCoder() {
+    return AvroCoder.of(NodeSubGraph.class);
   }
 }

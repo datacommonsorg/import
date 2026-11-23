@@ -20,8 +20,8 @@ import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
-import org.datacommons.ingestion.data.ExpandedNode;
 import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.NodeSubGraph;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.data.TimeSeriesKey;
@@ -394,17 +394,17 @@ public class GraphReader implements Serializable {
     return Observation.builder().seriesKey(seriesKey).date(obs.getDate()).value(value).build();
   }
 
-  public static ImmutableList<ExpandedNode> extractExpandedNodesFromGraph(
+  static ImmutableList<NodeSubGraph> extractNodeSubGraphsFromGraph(
       McfGraph graph, String provenance, Counter nodesWithoutTypeCounter) {
     return graph.getNodesMap().entrySet().stream()
         .filter(nodeEntry -> !GraphUtils.isObservation(nodeEntry.getValue()))
         .flatMap(
             nodeEntry ->
-                extractExpandedNodes(nodeEntry, provenance, nodesWithoutTypeCounter).stream())
+                extractNodeSubGraphs(nodeEntry, provenance, nodesWithoutTypeCounter).stream())
         .collect(ImmutableList.toImmutableList());
   }
 
-  static ImmutableList<ExpandedNode> extractExpandedNodes(
+  static ImmutableList<NodeSubGraph> extractNodeSubGraphs(
       Map.Entry<String, PropertyValues> nodeEntry,
       String provenance,
       Counter nodesWithoutTypeCounter) {
@@ -443,15 +443,15 @@ public class GraphReader implements Serializable {
     ImmutableList<Edge> subjectEdges =
         edgesAndLeafNodes.stream().map(KV::getKey).collect(ImmutableList.toImmutableList());
 
-    ImmutableList<ExpandedNode> leafEntries =
+    ImmutableList<NodeSubGraph> leafEntries =
         edgesAndLeafNodes.stream()
             .map(KV::getValue)
             .filter(Objects::nonNull)
-            .map(leafNode -> ExpandedNode.builder().node(leafNode).build())
+            .map(leafNode -> NodeSubGraph.builder().node(leafNode).build())
             .collect(ImmutableList.toImmutableList());
 
-    return ImmutableList.<ExpandedNode>builder()
-        .add(ExpandedNode.builder().node(subjectNode).edges(subjectEdges).build())
+    return ImmutableList.<NodeSubGraph>builder()
+        .add(NodeSubGraph.builder().node(subjectNode).edges(subjectEdges).build())
         .addAll(leafEntries)
         .build();
   }
@@ -504,19 +504,19 @@ public class GraphReader implements Serializable {
     return leafNode.build();
   }
 
-  public static PCollection<ExpandedNode> extractExpandedNodesFromGraph(
+  public static PCollection<NodeSubGraph> extractNodeSubGraphsFromGraph(
       String importName,
       PCollection<McfGraph> graph,
       String provenance,
       Counter nodesWithoutTypeCounter) {
     return graph.apply(
-        "ExtractExpandedNodesFromGraph-" + importName,
+        "ExtractNodeSubGraphsFromGraph-" + importName,
         ParDo.of(
-            new DoFn<McfGraph, ExpandedNode>() {
+            new DoFn<McfGraph, NodeSubGraph>() {
               @ProcessElement
               public void processElement(
-                  @Element McfGraph element, OutputReceiver<ExpandedNode> receiver) {
-                extractExpandedNodesFromGraph(element, provenance, nodesWithoutTypeCounter)
+                  @Element McfGraph element, OutputReceiver<NodeSubGraph> receiver) {
+                extractNodeSubGraphsFromGraph(element, provenance, nodesWithoutTypeCounter)
                     .forEach(receiver::output);
               }
             }));
@@ -524,16 +524,16 @@ public class GraphReader implements Serializable {
 
   public static PCollection<Mutation> nodesToMutations(
       String importName,
-      PCollection<ExpandedNode> expandedNodes,
+      PCollection<NodeSubGraph> nodeSubGraphs,
       SpannerClient spannerClient,
       Counter nodeCounter) {
-    return expandedNodes.apply(
+    return nodeSubGraphs.apply(
         "GenerateNodeMutations-" + importName,
         ParDo.of(
-            new DoFn<ExpandedNode, Mutation>() {
+            new DoFn<NodeSubGraph, Mutation>() {
               @ProcessElement
               public void processElement(
-                  @Element ExpandedNode element, OutputReceiver<Mutation> receiver) {
+                  @Element NodeSubGraph element, OutputReceiver<Mutation> receiver) {
                 receiver.output(spannerClient.toNodeMutation(element.getNode()));
                 nodeCounter.inc();
               }
@@ -542,16 +542,16 @@ public class GraphReader implements Serializable {
 
   public static PCollection<Mutation> edgesToMutations(
       String importName,
-      PCollection<ExpandedNode> expandedNodes,
+      PCollection<NodeSubGraph> nodeSubGraphs,
       SpannerClient spannerClient,
       Counter edgeCounter) {
-    return expandedNodes.apply(
+    return nodeSubGraphs.apply(
         "GenerateEdgeMutations-" + importName,
         ParDo.of(
-            new DoFn<ExpandedNode, Mutation>() {
+            new DoFn<NodeSubGraph, Mutation>() {
               @ProcessElement
               public void processElement(
-                  @Element ExpandedNode element, OutputReceiver<Mutation> receiver) {
+                  @Element NodeSubGraph element, OutputReceiver<Mutation> receiver) {
                 List<Edge> edges = element.getEdges();
                 edges.forEach(edge -> receiver.output(spannerClient.toEdgeMutation(edge)));
                 edgeCounter.inc(edges.size());
