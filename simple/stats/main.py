@@ -44,9 +44,9 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     "split_file_bytes",
     None,
-    "Files larger than this many bytes are imported in parts, in parallel "
-    "(currently observation CSVs): up to one part per worker, each at least a "
-    "quarter of this size. Defaults to 256 MiB; see csv_split.num_parts.",
+    "Files larger than this many bytes are imported in parts, in parallel: up "
+    "to one part per worker, each at least a quarter of this size. Defaults "
+    "to 256 MiB; see file_split.num_parts.",
     lower_bound=1,
 )
 

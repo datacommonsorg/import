@@ -21,16 +21,17 @@ import logging
 import os
 import posixpath
 import tempfile
+import threading
+import time
 import traceback
 from typing import Callable, Optional
 
 from stats import constants
-from stats import csv_split
+from stats import file_split
 from stats.config import Config
 from stats.config import ImportConfig
 from stats.config import InputFileConfig
 from stats.config import parse_config
-from stats.csv_split import FilePart
 from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import ImportType
@@ -39,6 +40,7 @@ from stats.data import PreprocessorError
 from stats.data import Provenance
 from stats.data import Source
 from stats.entities_importer import EntitiesImporter
+from stats.file_split import FilePart
 from stats.graph_writer import GraphWriter
 from stats.importer import count_nodes_from_triples
 from stats.importer import Importer
@@ -137,12 +139,13 @@ def _create_importer_for_file(
     nodes: Nodes,
     part: FilePart | None = None,
 ) -> Importer:
-  """Returns the importer of `input_file`, or of its `part` (observations)."""
+  """Returns the importer of `input_file`, or of its `part`."""
   if input_file.path.lower().endswith(".mcf"):
     return McfImporter(
         input_file=input_file,
         graph_writer=graph_writer,
         nodes=nodes,
+        part=part,
     )
 
   import_type = config.import_type(input_file)
@@ -162,6 +165,7 @@ def _create_importer_for_file(
           input_file=input_file,
           graph_writer=graph_writer,
           nodes=nodes,
+          part=part,
       )
 
     case _:
@@ -321,7 +325,7 @@ def _run_single_import_proc(task: _ImportTask,
       args.import_names,
       config,
       jsonld_dir_name=args.jsonld_dir_name,
-      obs_shard_tag=part_shard_tag(task.part.index) if task.part else "")
+      shard_tag=part_shard_tag(task.part.index) if task.part else "")
   importer = _create_importer_for_file(config, input_file, graph_writer, nodes,
                                        task.part)
   try:
@@ -403,8 +407,8 @@ class Runner:
         concurrently. Defaults to `default_max_workers()`. Lower it to reduce
         peak memory, since each worker holds the data of the file it imports.
       split_file_bytes: Files larger than this are imported in parts, in
-        parallel (currently observation CSVs; see `csv_split.num_parts`).
-        Defaults to `csv_split.SPLIT_CSV_BYTES`.
+        parallel (see `file_split.num_parts`). Defaults to
+        `file_split.SPLIT_FILE_BYTES`.
     """
     if max_workers is not None and max_workers < 1:
       raise ValueError(f"max_workers must be at least 1, got {max_workers}")
@@ -854,6 +858,27 @@ class Runner:
         return executor.submit(_run_single_import_proc, _ImportTask.of(file),
                                worker_args)
 
+      progress_lock = threading.Lock()
+      completed_tasks = 0
+      last_logged_count = 0
+      last_logged_time = time.monotonic()
+      progress_step = max(1, num_tasks // 20)
+
+      def _on_task_done(future: concurrent.futures.Future) -> None:
+        nonlocal completed_tasks, last_logged_count, last_logged_time
+        if future.cancelled() or num_tasks <= 1:
+          return
+        with progress_lock:
+          completed_tasks += 1
+          now = time.monotonic()
+          if (completed_tasks == num_tasks or
+              completed_tasks - last_logged_count >= progress_step or
+              now - last_logged_time >= 30.0):
+            last_logged_count = completed_tasks
+            last_logged_time = now
+            logging.info("Completed %d/%d tasks (%.0f%%)", completed_tasks,
+                         num_tasks, 100.0 * completed_tasks / num_tasks)
+
       try:
         # Submit largest tasks first so a huge file doesn't run alone at the end.
         indexed_tasks = [(fi, ti, task)
@@ -865,8 +890,9 @@ class Runner:
         for fi, ti, task in sorted(indexed_tasks,
                                    key=lambda x: x[2].size,
                                    reverse=True):
-          futures_by_file[fi][ti] = executor.submit(_run_single_import_proc,
-                                                    task, worker_args)
+          fut = executor.submit(_run_single_import_proc, task, worker_args)
+          fut.add_done_callback(_on_task_done)
+          futures_by_file[fi][ti] = fut
         failures = _finish_imports(files,
                                    futures_by_file,
                                    merge=merge,
@@ -935,9 +961,8 @@ class Runner:
     files = mcf_files + csv_files
     if not files:
       return
-    parts_by_path = csv_split.plan_splits(csv_files, self.config,
-                                          self.max_workers,
-                                          self.split_file_bytes)
+    parts_by_path = file_split.plan_splits(files, self.config, self.max_workers,
+                                           self.split_file_bytes)
     self._run_multiprocess_imports(files, parts_by_path)
 
   def _record_report_errors(self) -> None:

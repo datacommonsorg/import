@@ -96,9 +96,9 @@ def test_a_worker_reads_each_input_file_once_and_writes_only_shards():
 
   kinds = collections.Counter(r.kind for r in requests.of(gcs_requests.WORKER))
   # Per CSV: one ranged read and one observation shard upload. The MCF file
-  # is read whole, in one download.
+  # is also streamed via a ranged read.
   csvs = 1 + _CSVS_PER_IMPORT
-  assert kinds == {"range": csvs, "upload": csvs, "download": 1}
+  assert kinds == {"range": csvs + 1, "upload": csvs}
 
 
 def test_a_csv_larger_than_a_header_read_is_read_in_one_request(monkeypatch):
