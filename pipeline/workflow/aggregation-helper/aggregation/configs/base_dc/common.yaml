@@ -33,6 +33,7 @@ calculations:
       - "NCES_PublicSchool"
       - "NCES_PrivateSchool"
       - "NCES_SchoolDistrict"
+      - "EPA_GHGRPFacilities"
 
   # Generates summary statistics in the KeyValueStore table
   - name: "Global: KeyValueStore Provenance & Lineage Summary"
