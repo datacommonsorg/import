@@ -26,22 +26,26 @@ An id is the first 64 bits of the observation's sha256 hash, as in
 
 Memory: a worker keeps its file's distinct ids in numpy arrays (`ObsIds`), 8
 bytes per observation, and saves them as a sorted uint64 array in a local
-temporary directory. The coordinator memory
-maps those arrays and compares them one range of ids (a bucket) at a time, so
-it holds about `_BUCKET_SIZE` ids at once (~70 MB with the sort's
-temporaries) however many observations the import has. Ids are hashes, so
-splitting the id space evenly splits the ids evenly.
+temporary directory. The coordinator memory maps those arrays and compares
+disjoint ranges of ids (buckets) across up to `_MAX_BUCKET_WORKERS` threads, so
+it holds at most `_MAX_BUCKET_WORKERS * _BUCKET_SIZE` ids at once (~0.5-2 GiB
+including sort temporaries) however many observations the import has. Ids are
+hashes, so splitting the id space evenly splits the ids evenly.
 """
 
+import concurrent.futures
 from dataclasses import dataclass
 from dataclasses import field
+import os
 
 import numpy as np
 
 # Collision samples kept per file for the end-of-run summary.
 MAX_SAMPLES_PER_FILE = 3
-# Ids compared at once by the coordinator.
+# Ids compared at once per bucket (~16 MB on the collision-free fast path).
 _BUCKET_SIZE = 1 << 21
+# Cap worker threads so concurrent buckets stay memory-bounded (~0.5-2 GiB).
+_MAX_BUCKET_WORKERS = 32
 _ID_SPACE = 1 << 64
 
 
@@ -121,6 +125,13 @@ class CrossFileCollisions:
     return sum(self.file_counts.values())
 
 
+def _available_cpus() -> int:
+  """Returns the CPUs available to this process (honoring container affinity)."""
+  if hasattr(os, "sched_getaffinity"):
+    return len(os.sched_getaffinity(0)) or 1
+  return os.cpu_count() or 1
+
+
 def find_cross_file_collisions(
     files: list[tuple[str, str]]) -> CrossFileCollisions:
   """Finds the ids that more than one file produced.
@@ -140,36 +151,49 @@ def find_cross_file_collisions(
   Example: if a.csv, b.csv and c.csv all produce id X, b.csv gets one
   collision with a.csv, and c.csv one with b.csv.
   """
+  if len(files) < 2:
+    return CrossFileCollisions()
   arrays = [np.load(path, mmap_mode="r") for _, path in files]
   num_buckets = max(1, -(-sum(len(a) for a in arrays) // _BUCKET_SIZE))
   inner_bounds = np.array(
       [b * _ID_SPACE // num_buckets for b in range(1, num_buckets)],
       dtype=np.uint64)
+
   # cuts[i][b]:cuts[i][b + 1] is the slice of arrays[i] in bucket b.
-  cuts = [
-      np.concatenate(([0], np.searchsorted(a, inner_bounds), [len(a)]))
-      for a in arrays
-  ]
+  def _file_cuts(a: np.ndarray) -> np.ndarray:
+    return np.concatenate(([0], np.searchsorted(a, inner_bounds), [len(a)]))
+
+  def _check_bucket(b: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    return _bucket_collisions([a[c[b]:c[b + 1]] for a, c in zip(arrays, cuts)])
 
   result = CrossFileCollisions()
-  for b in range(num_buckets):
-    ids, owners, prev_owners = _bucket_collisions(
-        [a[c[b]:c[b + 1]] for a, c in zip(arrays, cuts)])
-    for i in np.unique(owners).tolist():
-      key = files[i][0]
-      mine = owners == i
-      count = int(np.count_nonzero(mine))
-      result.file_counts[key] = result.file_counts.get(key, 0) + count
-      samples = result.file_samples.setdefault(key, [])
-      needed = max(0, MAX_SAMPLES_PER_FILE - len(samples))
-      for obs_id, prev in zip(ids[mine][:needed].tolist(),
-                              prev_owners[mine][:needed].tolist()):
-        if files[prev][0] == key:
-          samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
-                         " another part of the file")
-        else:
-          samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
-                         f" '{files[prev][0]}'")
+
+  def _accumulate(bucket_results) -> None:
+    for ids, owners, prev_owners in bucket_results:
+      for i in np.unique(owners).tolist():
+        key = files[i][0]
+        mine = owners == i
+        count = int(np.count_nonzero(mine))
+        result.file_counts[key] = result.file_counts.get(key, 0) + count
+        samples = result.file_samples.setdefault(key, [])
+        needed = max(0, MAX_SAMPLES_PER_FILE - len(samples))
+        for obs_id, prev in zip(ids[mine][:needed].tolist(),
+                                prev_owners[mine][:needed].tolist()):
+          if files[prev][0] == key:
+            samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
+                           " another part of the file")
+          else:
+            samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
+                           f" '{files[prev][0]}'")
+
+  workers = min(_MAX_BUCKET_WORKERS, _available_cpus())
+  if workers > 1:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+      cuts = list(pool.map(_file_cuts, arrays))
+      _accumulate(pool.map(_check_bucket, range(num_buckets)))
+  else:
+    cuts = [_file_cuts(a) for a in arrays]
+    _accumulate(_check_bucket(b) for b in range(num_buckets))
   return result
 
 
@@ -180,10 +204,23 @@ def _bucket_collisions(
   `parts[i]` is file i's sorted, distinct ids in one bucket.
   """
   ids = np.concatenate(parts)
+  if len(ids) < 2:
+    empty_u64 = np.empty(0, dtype=np.uint64)
+    empty_u32 = np.empty(0, dtype=np.uint32)
+    return empty_u64, empty_u32, empty_u32
+  # Fast path: in-place stable sort (exploits the pre-sorted per-part runs)
+  # without owner/index arrays when no duplicates exist in this bucket.
+  ids.sort(kind="stable")
+  if not np.any(ids[1:] == ids[:-1]):
+    empty_u64 = np.empty(0, dtype=np.uint64)
+    empty_u32 = np.empty(0, dtype=np.uint32)
+    return empty_u64, empty_u32, empty_u32
+  # At least one collision exists in this bucket: re-gather with file owners
+  # and stable-sort so every id after the first of a run collides with the
+  # file just before it in import order.
+  ids = np.concatenate(parts)
   owners = np.repeat(np.arange(len(parts), dtype=np.uint32),
                      [len(p) for p in parts])
-  # A stable sort keeps the files of one id in import order, so every id after
-  # the first of a run collides with the file just before it.
   order = np.argsort(ids, kind="stable")
   ids = ids[order]
   owners = owners[order]
