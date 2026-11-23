@@ -27,6 +27,7 @@ from google.cloud import storage
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
 from util.filesystem.paths import GCS_PATH_PREFIX
 from util.filesystem.paths import normpath
 from util.filesystem.ranges import RangesReader
@@ -151,6 +152,7 @@ class GcsStorage:
     """Returns bytes [start, end) of the object, in one ranged request."""
     if not self.can_read_ranges(gcs_object):
       raise ValueError(f"Can't read byte ranges of {self._key(path)}")
+    end = min(end, gcs_object.size)
     if start >= end:
       return b""
     blob = self._blob(path, generation=gcs_object.generation)

@@ -28,6 +28,7 @@ import uuid
 
 import numpy as np
 import pandas as pd
+
 from stats.config import Config
 from stats.data import Triple
 from stats.data import validate_numeric_values
@@ -545,12 +546,18 @@ class JsonLdStreamWriter(GraphWriter):
     """Deletes the observation shards of every part of `input_file`."""
     folder = self.config.import_name(input_file).replace("/", "_")
     prefix = f"observation-{observation_shard_stem(input_file.path)}-"
-    for shard in self.jsonld_dir.open_dir(folder, create=False).all_files():
-      name = shard.name()
-      if name.startswith(prefix) and name.endswith(".jsonld"):
-        tag = name[len(prefix):-len(".jsonld")].rsplit("-", 1)[0]
-        if _PART_TAG_RE.fullmatch(tag):
-          shard.delete()
+    shards = [
+        shard
+        for shard in self.jsonld_dir.open_dir(folder, create=False).all_files()
+        if shard.name().startswith(prefix) and
+        shard.name().endswith(".jsonld") and _PART_TAG_RE.fullmatch(
+            shard.name()[len(prefix):-len(".jsonld")].rsplit("-", 1)[0])
+    ]
+    if not shards:
+      return
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(_UPLOAD_CONCURRENCY, len(shards))) as pool:
+      list(pool.map(File.delete, shards))
 
   def _write_shard(self, folder: str, name: str, text: str) -> None:
     """Writes shard `text` to jsonld_dir/folder/name, in the background.

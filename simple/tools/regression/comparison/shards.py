@@ -43,7 +43,7 @@ _KINDS = (OBSERVATION, NODE)
 _HASH_CHUNK_BYTES = 1 << 20
 # The end of an observation shard name after its input file: the part tag of a
 # split file, if any, and the shard index.
-_OBS_SHARD_SUFFIX = re.compile(r"(-p\d{3,})?-\d{5}\.jsonld$")
+_OBS_SHARD_SUFFIX = re.compile(r"(-p\d{3,})?-\d{5,}\.jsonld$")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -182,7 +182,7 @@ def _split_files(shards: dict[str, str]) -> set[str]:
   return {
       _input_file(rel_path)
       for rel_path in shards
-      if _OBS_SHARD_SUFFIX.search(rel_path).group(1)
+      if (m := _OBS_SHARD_SUFFIX.search(rel_path)) and m.group(1)
   }
 
 
