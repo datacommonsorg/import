@@ -26,11 +26,11 @@ An id is the first 64 bits of the observation's sha256 hash, as in
 
 Memory: a worker keeps its file's distinct ids in numpy arrays (`ObsIds`), 8
 bytes per observation, and saves them as a sorted uint64 array in a local
-temporary directory. The coordinator memory
-maps those arrays and compares them one range of ids (a bucket) at a time, so
-it holds about `_BUCKET_SIZE` ids at once (~70 MB with the sort's
-temporaries) however many observations the import has. Ids are hashes, so
-splitting the id space evenly splits the ids evenly.
+temporary directory. The coordinator memory maps those arrays and compares
+disjoint ranges of ids (buckets) across up to `_MAX_BUCKET_WORKERS` threads, so
+it holds at most `_MAX_BUCKET_WORKERS * _BUCKET_SIZE` ids at once (~0.5-2 GiB
+including sort temporaries) however many observations the import has. Ids are
+hashes, so splitting the id space evenly splits the ids evenly.
 """
 
 import concurrent.futures
@@ -125,6 +125,13 @@ class CrossFileCollisions:
     return sum(self.file_counts.values())
 
 
+def _available_cpus() -> int:
+  """Returns the CPUs available to this process (honoring container affinity)."""
+  if hasattr(os, "sched_getaffinity"):
+    return len(os.sched_getaffinity(0)) or 1
+  return os.cpu_count() or 1
+
+
 def find_cross_file_collisions(
     files: list[tuple[str, str]]) -> CrossFileCollisions:
   """Finds the ids that more than one file produced.
@@ -179,7 +186,7 @@ def find_cross_file_collisions(
             samples.append(f"@id='dcid:obs_{obs_id:016x}...' also produced by"
                            f" '{files[prev][0]}'")
 
-  workers = min(_MAX_BUCKET_WORKERS, os.cpu_count() or 1)
+  workers = min(_MAX_BUCKET_WORKERS, _available_cpus())
   if workers > 1:
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
       cuts = list(pool.map(_file_cuts, arrays))
