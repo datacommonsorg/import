@@ -297,7 +297,7 @@ class AggregationDeletionsIntegrationTest(AggregationIntegrationTestBase):
         self.add_edge('geoId/36061', 'linkedContainedInPlace', 'geoId/36', f'generated/{import_b}')
         self.flush_to_spanner()
         
-        calculations = [{"name": "Linked Edges", "type": "LINKED_EDGES", "stage": 1, "input_imports": ["*"]}]
+        calculations = [{"name": "Linked ContainedInPlace", "type": "LINKED_CONTAINED_IN_PLACE", "stage": 1, "input_imports": ["*"]}]
         self.run_orchestrator(calculations=calculations, active_imports=[import_a])
         
         with self.database.snapshot(multi_use=True) as snapshot:

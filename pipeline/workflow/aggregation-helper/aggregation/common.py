@@ -122,33 +122,41 @@ def _escape_sql_literal(val: str) -> str:
 # Execution priority ranks for calculation types within a stage.
 # Deterministically resolves execution order when multiple calculation types exist in the same stage.
 #
-# Tier 0 (0-3): Graph Topology & Schema Prerequisite Generation
-#   - LINKED_EDGES (0): Computes transitive graph closures (linkedContainedInPlace, linkedMemberOf, linkedMember).
-#     Must run first as place rollups rely on containment graph edges to determine target places.
-#   - STAT_VAR_GROUPS (1): Constructs StatVarGroup nodes and hierarchy edges (specializationOf, memberOf).
-#     Queries specializationOf and curated memberOf edges.
-#   - PROVENANCE_SUMMARY (2): Generates summary statistics for observation tables in KeyValueStore.
-#     Summary over observation data and place type edges.
-#   - NODE_PROPERTIES (3): Aggregates node properties (types and resolved names) into Node table.
-#
-# Tier 1 (10-15): Data Rollups, Series, & Derived Calculations
-#   - PLACE_AGGREGATION (10): Primary spatial rollup aggregating raw observations up geographic containment trees.
-#   - STAT_VAR_AGGREGATION (11): Sums component variables into ancestor variables across spatial rollups.
-#   - ENTITY_AGGREGATION (12): Aggregates event occurrences across spatial/temporal bounds.
-#   - STAT_VAR_SERIES_AGGREGATION (13): Aggregates time series across temporal granularities (e.g. Daily -> Monthly).
-#   - STAT_VAR_CALCULATION (14): Computes derived metrics/formulas (e.g. per-capita ratios like Income / Population).
-#     Must run after rollups so numerators and denominators exist across all spatial and variable levels.
-#   - SUPER_ENUM_AGGREGATION (15): Aggregates across enumerated concept categories.
-#
-# Tier 2 (20): Global Post-Processing
-#   - EMBEDDING_GENERATION (20): Computes vector embeddings across finalized node properties.
+# +-----+-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+# | Pri | Calculation type            | What it does                                                                                                                                                                             |
+# +-----+-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+# | Tier 0: Graph Topology & Schema Prerequisite Generation                                                                                                                                                                      |
+# +-----+-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+# |   0 | STAT_VAR_GROUPS             | Constructs StatVarGroup nodes and hierarchy edges (specializationOf, memberOf). Queries specializationOf and curated memberOf edges.                                                     |
+# |   1 | LINKED_MEMBER               | Transitive graph closure: linkedMember.                                                                                                                                                  |
+# |   2 | LINKED_MEMBER_OF            | Transitive graph closure: linkedMemberOf.                                                                                                                                                |
+# |   3 | LINKED_CONTAINED_IN_PLACE   | Transitive graph closure: linkedContainedInPlace.                                                                                                                                        |
+# |   4 | PROVENANCE_SUMMARY          | Generates summary statistics for observation tables in KeyValueStore. Summary over observation data and place type edges.                                                                |
+# |   5 | NODE_PROPERTIES             | Aggregates node properties (types and resolved names) into Node table.                                                                                                                   |
+# +-----+-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+# | Tier 1: Data Rollups, Series, & Derived Calculations                                                                                                                                                                         |
+# +-----+-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+# |  10 | PLACE_AGGREGATION           | Primary spatial rollup aggregating raw observations up geographic containment trees.                                                                                                     |
+# |  11 | STAT_VAR_AGGREGATION        | Sums component variables into ancestor variables across spatial rollups.                                                                                                                 |
+# |  12 | ENTITY_AGGREGATION          | Aggregates event occurrences across spatial/temporal bounds.                                                                                                                             |
+# |  13 | STAT_VAR_SERIES_AGGREGATION | Aggregates time series across temporal granularities (e.g. Daily -> Monthly).                                                                                                            |
+# |  14 | STAT_VAR_CALCULATION        | Computes derived metrics/formulas (e.g. per-capita ratios like Income / Population). Must run after rollups so numerators and denominators exist across all spatial and variable levels. |
+# |  15 | SUPER_ENUM_AGGREGATION      | Aggregates across enumerated concept categories.                                                                                                                                         |
+# +-----+-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+# | Tier 2: Global Post-Processing                                                                                                                                                                                               |
+# +-----+-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+# |  20 | EMBEDDING_GENERATION        | Computes vector embeddings across finalized node properties.                                                                                                                             |
+# |  20 | MATERIALIZED_EDGES          | Materializes topic and peer group member lists.                                                                                                                                          |
+# +-----+-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 #
 # Note: The priority values are arbitrary and relative, used only to establish execution order.
 CALCULATION_TYPE_PRIORITY = {
     "STAT_VAR_GROUPS": 0,
-    "LINKED_EDGES": 1,
-    "PROVENANCE_SUMMARY": 2,
-    "NODE_PROPERTIES": 3,
+    "LINKED_MEMBER": 1,
+    "LINKED_MEMBER_OF": 2,
+    "LINKED_CONTAINED_IN_PLACE": 3,
+    "PROVENANCE_SUMMARY": 4,
+    "NODE_PROPERTIES": 5,
     "PLACE_AGGREGATION": 10,
     "STAT_VAR_AGGREGATION": 11,
     "ENTITY_AGGREGATION": 12,

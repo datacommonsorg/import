@@ -11,15 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Worker processes: pool sizing and what they write to GCS."""
+"""Worker processes: pool sizing, what they write to GCS, and interrupts."""
 
+import concurrent.futures
+import json
 import os
 import shutil
+import time
+import types
 
 from google.cloud import storage
 from google.cloud.storage import Blob
 import pytest
+from stats import constants
 from stats import runner
+from stats.report.summary_generator import SummaryGenerator
 from testsuite.lib import builders as b
 from testsuite.lib import fake_gcs
 from testsuite.lib import run as runlib
@@ -241,3 +247,93 @@ def test_overlapping_input_and_output_dirs_are_rejected(input_dir, output_dir,
       runner._check_not_overlapping(input_store, output_store)
   else:
     runner._check_not_overlapping(input_store, output_store)
+
+
+def _done_future(result=None, error=None) -> concurrent.futures.Future:
+  future = concurrent.futures.Future()
+  if error:
+    future.set_exception(error)
+  else:
+    future.set_result(result)
+  return future
+
+
+def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
+  files = [types.SimpleNamespace(path=p) for p in ("a.csv", "b.csv", "c.csv")]
+  futures = [
+      _done_future(error=ValueError("cannot import a")),
+      _done_future("b"),
+      _done_future("c")
+  ]
+  merged = []
+
+  def merge(file, result):
+    if result == "b":
+      raise RuntimeError("cannot merge b")
+    merged.append(file.path)
+
+  failures = runner._finish_imports(files, futures, merge)
+  assert [(f.file_path, str(f.error)) for f in failures] == [
+      ("a.csv", "cannot import a"),
+      ("b.csv", "cannot merge b"),
+  ]
+  assert merged == ["c.csv"]
+
+
+_SLOW_IMPORT_SECONDS = 1
+_real_run_single_import_proc = runner._run_single_import_proc
+
+
+def _slow_import_proc(*args):
+  """A worker's import that takes at least _SLOW_IMPORT_SECONDS.
+
+  Module-level so that the worker processes can unpickle it.
+  """
+  time.sleep(_SLOW_IMPORT_SECONDS)
+  return _real_run_single_import_proc(*args)
+
+
+def test_an_interrupted_run_fails_promptly_and_reports_the_failure(monkeypatch):
+  """
+  Ctrl-C cancels the files not yet started and reports the failure.
+
+  The interrupt is raised while the first result is merged, as Ctrl-C would
+  be while the coordinator waits. Waiting for every file would take
+  `all_files_seconds`.
+  """
+  monkeypatch.setattr(runner, "_run_single_import_proc", _slow_import_proc)
+
+  def interrupt(generator, summary):
+    raise KeyboardInterrupt
+
+  monkeypatch.setattr(SummaryGenerator, "add_file_summary", interrupt)
+  prefixes = _record_new_gcs_prefixes(monkeypatch)
+  files = {"provenance.mcf": b.PROVENANCE_MCF}
+  for i in range(29):
+    files[f"case_{i:02d}.csv"] = b.csv_file(b.obs_row(f"country/C{i}"))
+  workers = 2
+  all_files_seconds = len(files) / workers * _SLOW_IMPORT_SECONDS
+
+  start = time.monotonic()
+  with pytest.raises(KeyboardInterrupt):
+    b.run_dir(files,
+              b.obs_config(b.OBS_MAPPINGS),
+              runner_kwargs={"max_workers": workers})
+  assert time.monotonic() - start < all_files_seconds / 2
+
+  [root] = prefixes
+  report = fake_gcs.read_text(
+      f"{root}/output/{constants.INGESTION_REPORTS_DIR_NAME}/"
+      f"{runlib.WORKFLOW_ID}/{constants.INGESTION_REPORT_FILE_NAME}")
+  assert json.loads(report)["run"]["status"] == "FAILURE"
+  handshake = fake_gcs.read_text(runlib.handshake_path(root))
+  assert json.loads(handshake) == {
+      "status":
+          "FAILURE",
+      "errors": [{
+          "file": "",
+          "errorType": "GENERIC_ERROR",
+          "problemColumns": [],
+          "errorMessage": "KeyboardInterrupt",
+      }],
+  }

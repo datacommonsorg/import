@@ -123,6 +123,38 @@ def test_provenance_without_a_name_gets_its_id_as_name():
   ])
 
 
+def test_a_node_named_like_another_node_id_does_not_replace_it():
+  """Provenances and Sources are known by id, not by name."""
+  result = b.run_mcf(
+      b.mcf_node("dcid:OtherSource4",
+                 typeOf="dcs:Source",
+                 url='"https://other.example.com"'),
+      b.mcf_node("dcid:SourceA", typeOf="dcs:Source", name='"OtherSource4"'),
+      b.mcf_node("dcid:ProvenanceA",
+                 typeOf="dcs:Provenance",
+                 name='"ProvenanceB"',
+                 source="dcid:OtherSource4"),
+      b.mcf_node("dcid:ProvenanceB",
+                 typeOf="dcs:Provenance",
+                 source="dcid:OtherSource4"))
+  b.assert_records(result.added, [
+      b.record("OtherSource4",
+               "Source",
+               name="OtherSource4",
+               url="https://other.example.com",
+               domain="other.example.com"),
+      b.record("SourceA", "Source", name="OtherSource4"),
+      b.record("ProvenanceA",
+               "Provenance",
+               name="ProvenanceB",
+               source=b.ref("OtherSource4")),
+      b.record("ProvenanceB",
+               "Provenance",
+               name="ProvenanceB",
+               source=b.ref("OtherSource4")),
+  ])
+
+
 _METADATA_WITH_EXTRA_TRIPLES = (
     b.mcf_node("dcid:OtherSource3",
                typeOf="dcs:Source, dcs:Organization",
@@ -153,7 +185,7 @@ def test_every_mcf_triple_of_a_metadata_node_is_kept():
                name=["Source A", "Source B"],
                url=["https://a.example.org", "https://b.example.org"],
                domain="a.example.org",
-               established=1990),
+               established="1990"),
       b.record("OtherProvenance3", ["Dataset", "Provenance"],
                name="Other Provenance",
                source=b.ref("OtherSource3"),
@@ -362,6 +394,15 @@ def test_files_after_a_failed_one_still_run():
   assert _observed_places(result) == {"dcid:country/A", "dcid:country/C"}
 
 
+def test_a_failed_file_is_named_in_the_handshake():
+  result = b.run({"bad.mcf": "typeOf: dcs:Thing\nNode: dcid:T1\n"},
+                 b.obs_config(b.OBS_MAPPINGS))
+  assert result.error["type"] == "AssertionError"
+  errors = result.output["handshake"]["errors"]
+  assert [(e["file"], e["errorType"]) for e in errors] == [("bad.mcf",
+                                                            "GENERIC_ERROR")]
+
+
 def test_failed_mcf_and_csv_files_are_reported_together():
   result = b.run(
       {
@@ -374,6 +415,15 @@ def test_failed_mcf_and_csv_files_are_reported_together():
       "3 files failed to import:\n  bad1.mcf: AssertionError:")
   assert "\n  bad2.mcf: AssertionError:" in result.error["message"]
   assert f"\n  case_bad.csv: {_BAD_VALUE}" in result.error["message"]
+  # The handshake has one error per failed file.
+  errors = result.output["handshake"]["errors"]
+  assert [(e["file"], e["errorType"]) for e in errors] == [
+      ("bad1.mcf", "GENERIC_ERROR"),
+      ("bad2.mcf", "GENERIC_ERROR"),
+      ("case_bad.csv", "GENERIC_ERROR"),
+  ]
+  assert errors[0]["errorMessage"].startswith("Line 1: Prop-Values before")
+  assert errors[2]["errorMessage"].startswith("Invalid non-numeric value(s)")
 
 
 # --- Validation ---------------------------------------------------------------

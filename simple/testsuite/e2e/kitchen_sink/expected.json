@@ -9,6 +9,7 @@
     ]
   },
   "ingestion_report": {
+    "errors": [],
     "folders": [
       {
         "folderName": "kitchen_sink",
@@ -18,6 +19,7 @@
               "max": "2021",
               "min": "2020"
             },
+            "errors": [],
             "fileCount": 5,
             "id": "KitchenProvenance",
             "nodes": {
@@ -200,14 +202,14 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
             "dcid:unit": {
               "@id": "dcid:Year"
             },
-            "dcid:value": 38.5,
+            "dcid:value": "38.5",
             "dcid:variableMeasured": {
               "@id": "dcid:Median_Age_Person",
               "dcid:observationProperties": [
@@ -221,11 +223,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2021,
+            "dcid:observationDate": "2021",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 169000000,
+            "dcid:value": "169000000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person_Female",
               "dcid:observationProperties": [
@@ -239,11 +241,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:kitchen/Region1"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 1200,
+            "dcid:value": "1200",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person_Female",
               "dcid:observationProperties": [
@@ -257,14 +259,14 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
             "dcid:unit": {
               "@id": "dcid:Year"
             },
-            "dcid:value": 42.3,
+            "dcid:value": "42.3",
             "dcid:variableMeasured": {
               "@id": "dcid:Median_Age_Person",
               "dcid:observationProperties": [
@@ -281,11 +283,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 7,
+            "dcid:value": "7",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Trip",
               "dcid:observationProperties": [
@@ -300,11 +302,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 168000000,
+            "dcid:value": "168000000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person_Female",
               "dcid:observationProperties": [
@@ -318,11 +320,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/FRA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 34500000,
+            "dcid:value": "34500000",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Person_Female",
               "dcid:observationProperties": [
@@ -339,11 +341,11 @@
             "dcid:observationAbout": {
               "@id": "dcid:country/USA"
             },
-            "dcid:observationDate": 2020,
+            "dcid:observationDate": "2020",
             "dcid:provenance": {
               "@id": "dcid:KitchenProvenance"
             },
-            "dcid:value": 10,
+            "dcid:value": "10",
             "dcid:variableMeasured": {
               "@id": "dcid:Count_Trip",
               "dcid:observationProperties": [

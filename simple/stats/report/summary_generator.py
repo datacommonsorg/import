@@ -35,6 +35,7 @@ from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
 from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import Provenance
+from stats.report.model.summary import ReportError
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from util.filesystem import Dir
@@ -61,6 +62,9 @@ class _FolderStats:
   # {"oecdProv": {"StatisticalVariable": 2, "Property": 4}}.
   node_types_by_provenance: dict[str, Counter[str]] = field(
       default_factory=lambda: defaultdict(Counter))
+  # Provenance ID -> errors in its input files that failed the run.
+  errors_by_provenance: dict[str, list[ReportError]] = field(
+      default_factory=lambda: defaultdict(list))
 
 
 class SummaryGenerator:
@@ -95,7 +99,8 @@ class SummaryGenerator:
     self._provenance_data: dict[str, dict] = {}
     # Counts per import folder, keyed by folder name.
     self._folders: dict[str, _FolderStats] = defaultdict(_FolderStats)
-    # TODO: Add a container for errors.
+    # Errors that failed the run and belong to no recorded input file.
+    self._run_errors: list[ReportError] = []
 
   def set_execution_metadata(self, start_time: str, output_dir: Dir) -> None:
     """Sets run metadata known at the start of the run.
@@ -187,13 +192,24 @@ class SummaryGenerator:
         stats.nodes_by_provenance[provenance_id] += nodes
         stats.node_types_by_provenance[provenance_id].update(nodes_by_type)
 
-  def record_failure(self, error: FileValidationError) -> None:
-    """Records a run-level error.
+  def record_failure(self,
+                     error: FileValidationError,
+                     folder: str | None = None,
+                     provenance_id: str | None = None) -> None:
+    """Records an error that failed the run.
 
     Args:
       error: The error, in the same shape as the handshake's errors.
+      folder: Import folder of the input file at fault, if any.
+      provenance_id: Provenance of the input file at fault, if any. Without a
+        folder and provenance, the error goes in the report's top-level errors.
     """
-    # TODO: Keep the error for the report.
+    report_error = ReportError(**error.to_dict())
+    if folder is None or provenance_id is None:
+      self._run_errors.append(report_error)
+      return
+    self._folders[folder].errors_by_provenance[provenance_id].append(
+        report_error)
 
   def build_report(self, status: RunStatus, end_time: str) -> IngestionReport:
     """Builds the report models from the recorded facts.
@@ -223,7 +239,9 @@ class SummaryGenerator:
       stats = self._folders[name]
       folders.append(self._build_folder(name, stats))
 
-    return IngestionReport(run=metadata, folders=folders)
+    return IngestionReport(run=metadata,
+                           folders=folders,
+                           errors=self._run_errors)
 
   def _build_folder(self, name: str, stats: _FolderStats) -> Folder:
     """Returns the report entry for one folder."""
@@ -238,9 +256,9 @@ class SummaryGenerator:
               fileCount=stats.files_by_provenance[provenance_id],
               observations=stats.observations_by_provenance[provenance_id],
               dateRange=stats.date_range_by_provenance.get(provenance_id),
-              nodes=_node_counts(
-                  stats.nodes_by_provenance[provenance_id],
-                  stats.node_types_by_provenance[provenance_id])))
+              nodes=_node_counts(stats.nodes_by_provenance[provenance_id],
+                                 stats.node_types_by_provenance[provenance_id]),
+              errors=stats.errors_by_provenance[provenance_id]))
 
     files = FileCounts(count=sum(stats.files_by_type.values()),
                        byType=dict(sorted(stats.files_by_type.items())))

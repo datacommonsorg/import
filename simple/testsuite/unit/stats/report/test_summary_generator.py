@@ -18,6 +18,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+from stats.data import FileValidationError
 from stats.report.model.summary import DateRange
 from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileCounts
@@ -27,8 +28,10 @@ from stats.report.model.summary import FolderSummary
 from stats.report.model.summary import IngestionReport
 from stats.report.model.summary import NodeCounts
 from stats.report.model.summary import Provenance
+from stats.report.model.summary import ReportError
 from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
+from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
 from util.filesystem import Dir
 from util.filesystem import open_dir
@@ -154,6 +157,28 @@ class TestSummaryGenerator(unittest.TestCase):
     expected = NodeCounts(count=2, byType={"Provenance": 1, "Source": 1})
     self.assertEqual([(f.folderName, f.provenances[0].nodes) for f in folders],
                      [("ilo", expected), ("oecd", expected)])
+
+  def test_errors_go_to_provenance_or_run(self):
+    """An error with a folder and provenance goes there; others go to the run."""
+    file_error = FileValidationError(
+        file="a.csv",
+        error_type=ValidationErrorType.UNMAPPED_COLUMNS,
+        problem_columns=["notes"],
+        error_message="Unmapped columns")
+    config_error = FileValidationError(
+        file="",
+        error_type=ValidationErrorType.INVALID_CONFIGURATION,
+        error_message="Bad config")
+    with tempfile.TemporaryDirectory() as tmp:
+      generator = _generator("wf-123", open_dir(tmp))
+      generator.record_input_file("oecd", ["oecdProv"], "a.csv")
+      generator.record_failure(file_error, "oecd", "oecdProv")
+      generator.record_failure(config_error)
+      report = generator.build_report(RunStatus.FAILURE, _END)
+
+    self.assertEqual(report.folders[0].provenances[0].errors,
+                     [ReportError(**file_error.to_dict())])
+    self.assertEqual(report.errors, [ReportError(**config_error.to_dict())])
 
   def test_write_to_json_without_workflow_id_skips_id_folder(self):
     """Runs outside the workflow write to preprocessor_reports/ directly."""

@@ -20,8 +20,11 @@ from stats.data import FileValidationError
 from stats.data import ImportCounts
 from stats.data import strip_namespace
 from stats.data import Triple
-from stats.data import ValidationErrorType
+from stats.graph_writer import GraphWriter
+from stats.nodes import Nodes
 from stats.report.model.summary import DateRange
+from stats.report.model.summary import ValidationErrorType
+from util.filesystem import File
 
 
 def missing_column_mappings_error(file_path: str) -> FileValidationError:
@@ -237,9 +240,14 @@ def count_nodes_from_triples(
 
 
 class Importer:
-  """The base class for all importers."""
+  """The base class for all importers: each imports one input file."""
 
-  def __init__(self) -> None:
+  def __init__(self, input_file: File, graph_writer: GraphWriter,
+               nodes: Nodes) -> None:
+    self.input_file = input_file
+    self.graph_writer = graph_writer
+    self.nodes = nodes
+    self.config = nodes.config
     # The file's counts so far, for the ingestion report. Each importer adds
     # what it is about to write with count_observations() or
     # count_nodes_from_triples().
@@ -257,12 +265,10 @@ class Importer:
                         if not dates.empty else None)
 
   def do_import(self) -> None:
-    pass
+    raise NotImplementedError
 
   def get_column_mappings(self) -> dict[str, str]:
     """Returns the column mappings for the input file."""
-    if not hasattr(self, "config") or not hasattr(self, "input_file"):
-      return {}
     return self.config.column_mappings(self.input_file)
 
   def get_reverse_column_mappings(self) -> dict[str, str]:

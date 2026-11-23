@@ -16,13 +16,11 @@ import json
 
 import pandas as pd
 from stats import constants
-from stats import schema_constants as sc
 from stats.data import FileValidationError
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
 from stats.data import strip_namespace
 from stats.data import strip_namespace_series
-from stats.data import ValidationErrorType
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
 from stats.importer import Importer
@@ -30,43 +28,30 @@ from stats.importer import mapping_errors
 from stats.importer import missing_column_mappings_error
 from stats.importer import read_csv_columns
 from stats.nodes import Nodes
+from stats.report.model.summary import ValidationErrorType
 from util.filesystem import File
 
 # Mapping from official DCID keys in config.json to internal importer columns.
 STANDARD_PROPERTY_MAPPING = {
-    "dcid:variableMeasured": constants.COLUMN_VARIABLE,  # "variable"
-    "dcid:observationDate": constants.COLUMN_DATE,  # "date"
-    "dcid:value": constants.COLUMN_VALUE,  # "value"
-    "dcid:unit": constants.COLUMN_UNIT,  # "unit"
-    "dcid:measurementMethod":
-        constants.COLUMN_MEASUREMENT_METHOD,  # "measurement_method"
-    "dcid:observationPeriod":
-        constants.COLUMN_OBSERVATION_PERIOD,  # "observation_period"
-    "dcid:scalingFactor": constants.COLUMN_SCALING_FACTOR,  # "scaling_factor"
+    "dcid:variableMeasured": constants.COLUMN_VARIABLE,
+    "dcid:observationDate": constants.COLUMN_DATE,
+    "dcid:value": constants.COLUMN_VALUE,
+    **{
+        f"dcid:{p}": c for p, c in constants.STANDARD_PROPERTY_COLUMNS.items()
+    },
 }
 
 
 def _apply_property_defaults(df: pd.DataFrame,
                              obs_props: ObservationProperties) -> pd.DataFrame:
-  """Apply property defaults, using per-row values where available."""
-  property_mapping = {
-      sc.PREDICATE_UNIT: constants.COLUMN_UNIT,
-      sc.PREDICATE_SCALING_FACTOR: constants.COLUMN_SCALING_FACTOR,
-      sc.PREDICATE_MEASUREMENT_METHOD: constants.COLUMN_MEASUREMENT_METHOD,
-      sc.PREDICATE_OBSERVATION_PERIOD: constants.COLUMN_OBSERVATION_PERIOD,
-  }
-
-  for prop, col_name in property_mapping.items():
-    default_value = getattr(obs_props, col_name, "")
+  """Fills each standard property column from config where a cell is empty."""
+  for col_name in constants.STANDARD_PROPERTY_COLUMNS.values():
+    default_value = obs_props.standard.get(col_name, "")
     if col_name in df.columns:
       source_col = df[col_name].replace("", pd.NA)
       df[col_name] = source_col.fillna(default_value).astype(str)
     else:
-      # If the column doesn't exist, use default for all rows
       df[col_name] = default_value
-
-  # Custom properties column (always empty for variable_per_row_importer)
-  df[constants.COLUMN_PROPERTIES] = ""
   return df
 
 
@@ -100,16 +85,11 @@ class VariablePerRowImporter(Importer):
 
   def __init__(self, input_file: File, graph_writer: GraphWriter,
                nodes: Nodes) -> None:
-    super().__init__()
-    self.input_file = input_file
-    self.graph_writer = graph_writer
-    self.nodes = nodes
-    self.config = nodes.config
-    self.custom_dimensions = []
-    self.column_mappings = {}
+    super().__init__(input_file, graph_writer, nodes)
+    # Validated by validate_headers, which the runner calls before do_import.
+    self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
 
   def do_import(self) -> None:
-    self._map_columns()
     self._write_observations()
 
   def validate_headers(self) -> list[FileValidationError]:
@@ -121,8 +101,8 @@ class VariablePerRowImporter(Importer):
     if errors:
       return errors
 
-    column_mappings, custom_dimensions = self._parse_column_mappings()
-    errors = self._validate_mappings(column_mappings, custom_dimensions)
+    errors = self._validate_mappings(self.column_mappings,
+                                     self.custom_dimensions)
 
     if errors:
       return errors
@@ -131,15 +111,9 @@ class VariablePerRowImporter(Importer):
     if isinstance(actual_columns, FileValidationError):
       return [actual_columns]
     return column_coverage_errors(
-        self.input_file.path, actual_columns, set(column_mappings.values()),
+        self.input_file.path, actual_columns,
+        set(self.column_mappings.values()),
         set(self.config.ignore_columns(self.input_file)))
-
-  def _map_columns(self):
-    self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
-    errors = self._validate_mappings(self.column_mappings,
-                                     self.custom_dimensions)
-    if errors:
-      raise ValueError(errors[0].error_message)
 
   def _parse_column_mappings(self) -> tuple[dict[str, str], list[str]]:
     config_mappings = self.get_column_mappings()
@@ -199,12 +173,16 @@ class VariablePerRowImporter(Importer):
     provenance = self.nodes.provenance_id(self.input_file)
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
+    # Only mapped columns are read, so an ignored column named like an internal
+    # column (e.g. "unit") can't end up in the observations.
+    mapped = list(self.column_mappings.values())
 
     with self.input_file.open_stream() as stream:
       reader = pd.read_csv(stream,
                            na_values=constants.STANDARD_NA_VALUES,
                            chunksize=10000,
-                           dtype=str)
+                           dtype=str,
+                           usecols=mapped)
 
       for chunk_df in reader:
         if chunk_df.empty:

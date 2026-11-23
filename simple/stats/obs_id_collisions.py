@@ -22,8 +22,9 @@ compares the saved ids of every file once all files are imported
 An id is the first 64 bits of the observation's sha256 hash, as in
 `JsonLdStreamWriter.track_observation_hash`.
 
-Memory: a worker saves its file's distinct ids as a sorted uint64 array, 8
-bytes per observation, in a local temporary directory. The coordinator memory
+Memory: a worker keeps its file's distinct ids in numpy arrays (`ObsIds`), 8
+bytes per observation, and saves them as a sorted uint64 array in a local
+temporary directory. The coordinator memory
 maps those arrays and compares them one range of ids (a bucket) at a time, so
 it holds about `_BUCKET_SIZE` ids at once (~70 MB with the sort's
 temporaries) however many observations the import has. Ids are hashes, so
@@ -32,20 +33,72 @@ splitting the id space evenly splits the ids evenly.
 
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Collection
 
 import numpy as np
-from stats.jsonld_stream_writer import MAX_SAMPLES_PER_FILE
 
+# Collision samples kept per file for the end-of-run summary.
+MAX_SAMPLES_PER_FILE = 3
 # Ids compared at once by the coordinator.
 _BUCKET_SIZE = 1 << 21
 _ID_SPACE = 1 << 64
 
 
-def save_obs_ids(obs_ids: Collection[int], path: str) -> None:
-  """Saves `obs_ids` (distinct 64-bit ids) to `path` as a sorted .npy array."""
-  ids = np.fromiter(obs_ids, dtype=np.uint64, count=len(obs_ids))
-  ids.sort()
+class ObsIds:
+  """The distinct observation ids that one file produced so far.
+
+  Not a Python set: the garbage collector's full passes walk every item of a
+  set, and they keep happening while pandas reads the file, so a file's import
+  time would grow with the square of its rows. numpy arrays aren't walked, and
+  take 8 bytes per id instead of ~60-100.
+
+  The ids are kept in sorted runs, each more than twice as long as the next, so
+  an id is looked up in O(log) runs and moved O(log) times by merges.
+  """
+
+  def __init__(self):
+    self._runs: list[np.ndarray] = []
+
+  def __len__(self) -> int:
+    return sum(len(run) for run in self._runs)
+
+  def add(self, ids: np.ndarray) -> np.ndarray:
+    """Adds uint64 `ids`; returns which ones were seen before, in order.
+
+    An id seen before is one already added, or one earlier in `ids`.
+    """
+    unique, first, inverse = np.unique(ids,
+                                       return_index=True,
+                                       return_inverse=True)
+    known = np.zeros(len(unique), dtype=bool)
+    for run in self._runs:
+      positions = np.minimum(np.searchsorted(run, unique), len(run) - 1)
+      known |= run[positions] == unique
+    seen = known[inverse.reshape(-1)]
+    repeated = np.ones(len(ids), dtype=bool)
+    repeated[first] = False
+    self._add_run(unique[~known])
+    return seen | repeated
+
+  def sorted(self) -> np.ndarray:
+    """Returns every id, sorted."""
+    ids = np.concatenate(self._runs) if self._runs else np.empty(0, np.uint64)
+    ids.sort(kind="stable")
+    return ids
+
+  def _add_run(self, run: np.ndarray) -> None:
+    if not len(run):
+      return
+    self._runs.append(run)
+    while len(self._runs) > 1 and len(
+        self._runs[-2]) <= 2 * len(self._runs[-1]):
+      last = self._runs.pop()
+      merged = np.concatenate((self._runs.pop(), last))
+      merged.sort(kind="stable")  # Merges the two sorted runs.
+      self._runs.append(merged)
+
+
+def save_obs_ids(ids: np.ndarray, path: str) -> None:
+  """Saves sorted, distinct uint64 `ids` (see `ObsIds.sorted`) to `path`."""
   np.save(path, ids, allow_pickle=False)
 
 
@@ -53,9 +106,9 @@ def save_obs_ids(obs_ids: Collection[int], path: str) -> None:
 class CrossFileCollisions:
   """Collisions between files, each counted for the later of the two files.
 
-  `file_counts` and `file_samples` are keyed like the writer's per-file
-  collision stats. A sample names the 64-bit id prefix and an earlier file
-  that produced the same id.
+  `file_counts` and `file_samples` are keyed by input file path, like the
+  writer's per-file collision stats. A sample names the 64-bit id prefix and
+  an earlier file that produced the same id.
   """
   file_counts: dict[str, int] = field(default_factory=dict)
   file_samples: dict[str, list[str]] = field(default_factory=dict)
@@ -70,8 +123,8 @@ def find_cross_file_collisions(
   """Finds the ids that more than one file produced.
 
   Args:
-    files: (file key, path written by `save_obs_ids`) for every file that
-      produced observations, in import order.
+    files: (input file path, path written by `save_obs_ids`) for every file
+      that produced observations, in import order.
 
   An id that k files produce is k - 1 collisions, one for each file but the
   first. With the collisions that each worker counts within its file, the

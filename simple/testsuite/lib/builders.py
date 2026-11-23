@@ -341,8 +341,8 @@ def record(dcid: str,
 
 def obs(about: str = "country/USA",
         variable: str = "Count_Person",
-        date: Any = 2020,
-        value: Any = 1,
+        date: Any = "2020",
+        value: Any = "1",
         **props: Any) -> dict:
   """
   An expected observation record, without "@id".

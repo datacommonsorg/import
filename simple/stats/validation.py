@@ -16,8 +16,8 @@ import logging
 
 from stats.config import Config
 from stats.data import PreprocessorError
-from stats.data import ValidationErrorType
 from stats.nodes import Nodes
+from stats.report.model.summary import ValidationErrorType
 from stats.util import has_namespace_prefix
 
 

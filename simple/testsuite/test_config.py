@@ -82,7 +82,7 @@ PATTERNS = [
 def test_input_files_pattern_matching(given, expect):
   result = b.run(_PATTERN_FILES, b.obs_config(b.OBS_MAPPINGS, pattern=given))
   b.assert_records(result.observations,
-                   [b.obs(about, value=val) for about, val in expect])
+                   [b.obs(about, value=str(val)) for about, val in expect])
 
 
 _NESTED_FILES = {
@@ -96,8 +96,8 @@ def test_files_in_subdirectories_are_imported_except_archives():
   result = b.run(_NESTED_FILES, b.obs_config(b.OBS_MAPPINGS))
   b.assert_records(
       result.observations,
-      [b.obs("country/USA", value=1),
-       b.obs("country/FRA", value=2)])
+      [b.obs("country/USA", value="1"),
+       b.obs("country/FRA", value="2")])
 
 
 # includeInputSubdirs is deprecated: any value is accepted, with a warning
@@ -128,8 +128,8 @@ def test_include_input_subdirs_is_ignored_with_a_warning(given, caplog):
     })
   b.assert_records(
       result.observations,
-      [b.obs("country/USA", value=1),
-       b.obs("country/FRA", value=2)])
+      [b.obs("country/USA", value="1"),
+       b.obs("country/FRA", value="2")])
   assert _include_input_subdirs_warnings(caplog) == [f"{b.IMPORT}/config.json"]
 
 
@@ -180,7 +180,7 @@ def test_input_files_entry_for_a_file(given, expect):
               "not,a,csv\n",
       }, config)
   b.assert_records(result.observations,
-                   [b.obs(about, value=val) for about, val in expect])
+                   [b.obs(about, value=str(val)) for about, val in expect])
 
 
 def test_empty_config_writes_no_provenance_or_source():
@@ -216,7 +216,7 @@ def test_single_import_name_runs_only_that_subdirectory():
           **b.import_subdir("ilo", _FRA),
       },
       runner_kwargs={"import_names": ["oecd"]})
-  b.assert_records(result.observations, [b.obs("country/USA", value=1)])
+  b.assert_records(result.observations, [b.obs("country/USA", value="1")])
   assert result.output["ingestion_report"]["run"]["folderNames"] == ["oecd"]
   assert result.output["ingestion_report"]["folders"] == [{
       "folderName":
@@ -243,6 +243,7 @@ def test_single_import_name_runs_only_that_subdirectory():
               "max": "2020"
           },
           "nodes": _PROVENANCE_AND_SOURCE_NODES,
+          "errors": [],
       }],
   }]
 
@@ -257,8 +258,8 @@ def test_selected_import_names_run_only_those_subdirectories():
       runner_kwargs={"import_names": ["oecd", "ilo"]})
   b.assert_records(
       result.observations,
-      [b.obs("country/USA", value=1),
-       b.obs("country/FRA", value=2)])
+      [b.obs("country/USA", value="1"),
+       b.obs("country/FRA", value="2")])
   assert result.output["ingestion_report"]["run"]["folderNames"] == [
       "ilo", "oecd"
   ]
@@ -404,8 +405,8 @@ INVALID_CONFIGS = [
          },
          expect=b.Fails(
              "PreprocessorError",
-             "Unknown key(s) in config.json: ['unknownTopLevelKey']",
-             _INVALID)),
+             f"<input>/{b.IMPORT}/config.json: Unknown key(s) in config.json:"
+             " ['unknownTopLevelKey']", _INVALID)),
     Case("legacy sources key is rejected",
          given={
              **b.obs_config(b.OBS_MAPPINGS),
@@ -605,9 +606,9 @@ INVALID_CONFIG_FILES = [
              **b.import_subdir("oecd", _USA),
              "ilo/config.json": "{not json",
          },
-         expect=b.Fails("PreprocessorError",
-                        "Expecting property name enclosed in double quotes",
-                        _INVALID)),
+         expect=b.Fails(
+             "PreprocessorError", "<input>/ilo/config.json: Expecting property"
+             " name enclosed in double quotes", _INVALID)),
     Case("subdirectory config that is not a JSON object",
          given={
              **b.import_subdir("oecd", _USA),
@@ -647,6 +648,14 @@ def test_missing_config_json_fails():
   result = b.run({"case.csv": _USA}, None)
   b.assert_fails(result, "FileNotFoundError",
                  f"File not found: <input>/{b.IMPORT}/config.json")
+
+
+def test_empty_config_json_fails():
+  result = b.run({"case.csv": _USA, "config.json": ""}, None)
+  b.assert_fails(result,
+                 "PreprocessorError",
+                 f"<input>/{b.IMPORT}/config.json: Expecting value: line 1",
+                 handshake_error_types=_INVALID)
 
 
 # An input dir whose only config.json is at its root, which is never an import.
