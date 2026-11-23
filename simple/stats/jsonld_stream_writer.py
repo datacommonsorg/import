@@ -62,6 +62,23 @@ _STANDARD_PREFIXES = {"http", "https", "dcid", "schema", "dcs"}
 
 _NO_PROPS: Mapping[str, Any] = types.MappingProxyType({})
 
+# ---------------------------------------------------------------------------
+# Fast-path observation JSON-LD serialization
+# ---------------------------------------------------------------------------
+# Observation shards are the hottest loop in the preprocessor (~1B+ rows on
+# large imports). Rather than building a Python dict per row and calling
+# json.dumps() on 10k-node lists, `_observation_shard` assembles JSON-LD
+# fragments directly from cached pieces (`_CompiledProps`, `_cached_var_json`,
+# `_cached_text_json`, `_format_optional_fields`). This is ~4x faster end to
+# end (~1.7x faster than even dict + orjson) with zero extra dependencies and
+# byte-identical output.
+#
+# MAINTENANCE INVARIANT: Any schema change to `dcid:StatVarObservation` fields
+# MUST be kept in sync across:
+#   1. `_OTHER_STD_OBS_KEYS` (conflict detection with custom properties),
+#   2. `_format_optional_fields` and `_observation_shard` (fast path), and
+#   3. `_build_conflicting_observation_json` (rare key-override fallback).
+#
 # Fixed observation keys other than dcid:observationAbout (checked separately
 # because observationAbout only conflicts when the entity column is also set).
 _OTHER_STD_OBS_KEYS = frozenset({
@@ -223,7 +240,17 @@ def _obs_hash_base(entity, variable, date, provenance, unit, mmethod, period):
 
 
 class _CompiledProps(NamedTuple):
-  """Pre-serialized custom properties for an observation row."""
+  """Pre-serialized custom properties for an observation row.
+
+  Attributes:
+    id_props_bytes: UTF-8 JSON with sorted keys, fed into the @id SHA-256 hash.
+    obs_props_suffix: `,"dcid:observationProperties":[...]` appended inside
+      `dcid:variableMeasured`, or `""` when there are no custom properties.
+    fields_json: Leading-comma JSON fragment for every custom property.
+    parsed: Read-only mapping used only by `_build_conflicting_observation_json`.
+    has_about: True if `dcid:observationAbout` appears in `parsed`.
+    has_other_std: True if any key in `_OTHER_STD_OBS_KEYS` appears in `parsed`.
+  """
   id_props_bytes: bytes
   obs_props_suffix: str
   fields_json: str
@@ -383,6 +410,19 @@ def _is_part_shard(name: str, stem: str, *, is_obs: bool) -> bool:
       suffix_re.fullmatch(name[len(prefix):]))
 
 
+def _col_to_list(series: pd.Series) -> list:
+  """Converts a DataFrame column to a Python list, normalizing pd.NA to None.
+
+  Replacing pandas' tri-state `pd.NA` once up front prevents row-cache tuple
+  comparisons (`!=`) inside `_observation_shard` from raising
+  `TypeError: boolean value of NA is ambiguous`.
+  """
+  vals = series.tolist()
+  if series.isna().any():
+    return [None if v is pd.NA else v for v in vals]
+  return vals
+
+
 def _observation_shard(chunk,
                        shard_index: int,
                        ns_map: dict[str, str],
@@ -400,6 +440,9 @@ def _observation_shard(chunk,
   cached_text_json = _cached_text_json
   json_dumps = json.dumps
 
+  # Row-to-row caches: CSVs typically group rows by variable, date, and
+  # provenance/unit/period, so consecutive rows reuse the same SHA-256 prefix
+  # and serialized JSON fragments without touching the LRU caches.
   prev_hash_key = None
   base_hasher = None
   prev_tail_key = None
@@ -650,7 +693,7 @@ class JsonLdStreamWriter(GraphWriter):
                                 file_name: str):
     dir_name = import_name.replace("/", "_")
     n = len(df)
-    col_lists = [df[c].tolist() for c in constants.OBSERVATION_COLUMNS]
+    col_lists = [_col_to_list(df[c]) for c in constants.OBSERVATION_COLUMNS]
     for i in range(0, n, _CHUNK_SIZE):
       if i == 0 and n <= _CHUNK_SIZE:
         chunk_records = list(zip(*col_lists))

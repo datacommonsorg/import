@@ -90,25 +90,38 @@ def _write_and_load_obs(
 def test_observation_json_escaping_and_custom_namespaces(tmp_path):
   nodes, _ = _write_and_load_obs(
       tmp_path,
-      [{
-          constants.COLUMN_ENTITY:
-              "acme:place/1",
-          constants.COLUMN_DATE:
-              '2020 "Q1"',
-          constants.COLUMN_VALUE:
-              "42.50",
-          constants.COLUMN_UNIT:
-              "acme:USD",
-          constants.COLUMN_OBSERVATION_PERIOD:
-              "P1Y",
-          constants.COLUMN_PROPERTIES:
-              json.dumps({
-                  "customNote": 'line1\n"quoted"\\path',
-                  "emptyDim": None,
-              }),
-      }],
+      [
+          {
+              constants.COLUMN_ENTITY:
+                  "acme:place/1",
+              constants.COLUMN_DATE:
+                  '2020 "Q1"',
+              constants.COLUMN_VALUE:
+                  "42.50",
+              constants.COLUMN_UNIT:
+                  "acme:USD",
+              constants.COLUMN_OBSERVATION_PERIOD:
+                  "P1Y",
+              constants.COLUMN_PROPERTIES:
+                  json.dumps({
+                      "customNote": 'line1\n"quoted"\\path',
+                      "emptyDim": None,
+                  }),
+          },
+          {
+              # pd.NA / float('nan') in optional fields must not raise TypeError.
+              constants.COLUMN_ENTITY:
+                  pd.NA,
+              constants.COLUMN_UNIT:
+                  float("nan"),
+              constants.COLUMN_MEASUREMENT_METHOD:
+                  pd.NA,
+              constants.COLUMN_PROPERTIES:
+                  pd.NA,
+          },
+      ],
   )
-  assert len(nodes) == 1
+  assert len(nodes) == 2
   obs = nodes[0]
   assert obs["dcid:observationAbout"] == {"@id": "dcid:place/1"}
   assert obs["dcid:emptyDim"] is None
@@ -120,6 +133,8 @@ def test_observation_json_escaping_and_custom_namespaces(tmp_path):
       "@id": "dcid:Count_Person",
       "dcid:observationProperties": ["dcid:customNote", "dcid:emptyDim"],
   }
+  assert "dcid:observationAbout" not in nodes[1]
+  assert "dcid:unit" not in nodes[1]
 
 
 def test_observation_custom_property_overrides_standard_key(tmp_path):
