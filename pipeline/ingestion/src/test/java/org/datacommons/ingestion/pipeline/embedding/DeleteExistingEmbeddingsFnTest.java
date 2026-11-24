@@ -31,6 +31,7 @@ import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.Rule;
@@ -66,14 +67,14 @@ public class DeleteExistingEmbeddingsFnTest {
   public void testBuildDeleteMutation() {
     Mutation mutation =
         DeleteExistingEmbeddingsFn.buildDeleteMutation(
-            "NodeEmbedding", "base_text_embedding", List.of("Count_Person", "", "dc/topic/1"));
+            "NodeEmbedding", List.of("Count_Person", "", "dc/topic/1"));
 
     assertEquals(Mutation.Op.DELETE, mutation.getOperation());
     assertEquals("NodeEmbedding", mutation.getTable());
     List<KeyRange> ranges = Lists.newArrayList(mutation.getKeySet().getRanges());
     assertEquals(2, ranges.size());
-    assertEquals(KeyRange.prefix(Key.of("Count_Person", "base_text_embedding")), ranges.get(0));
-    assertEquals(KeyRange.prefix(Key.of("dc/topic/1", "base_text_embedding")), ranges.get(1));
+    assertEquals(KeyRange.prefix(Key.of("Count_Person")), ranges.get(0));
+    assertEquals(KeyRange.prefix(Key.of("dc/topic/1")), ranges.get(1));
   }
 
   @Test
@@ -81,12 +82,10 @@ public class DeleteExistingEmbeddingsFnTest {
     PCollection<String> subjectIds = pipeline.apply(Create.of("Count_Person"));
 
     PCollection<Mutation> mutations =
-        DeleteExistingEmbeddingsFn.buildDeleteMutations(
-            "testImport", subjectIds, "NodeEmbedding", "base_text_embedding");
+        DeleteExistingEmbeddingsFn.buildDeleteMutations("testImport", subjectIds, "NodeEmbedding");
 
     Mutation expected =
-        DeleteExistingEmbeddingsFn.buildDeleteMutation(
-            "NodeEmbedding", "base_text_embedding", List.of("Count_Person"));
+        DeleteExistingEmbeddingsFn.buildDeleteMutation("NodeEmbedding", List.of("Count_Person"));
     PAssert.that(mutations).containsInAnyOrder(expected);
     PipelineResult result = pipeline.run();
 
@@ -97,8 +96,7 @@ public class DeleteExistingEmbeddingsFnTest {
                 MetricsFilter.builder()
                     .addNameFilter(
                         MetricNameFilter.named(
-                            DeleteExistingEmbeddingsFn.class,
-                            "embedding_deleted_nodes:base_text_embedding"))
+                            DeleteExistingEmbeddingsFn.class, "embedding_deleted_nodes"))
                     .build());
     List<MetricResult<Long>> counters = Lists.newArrayList(metrics.getCounters());
     assertEquals(1, counters.size());
@@ -111,13 +109,11 @@ public class DeleteExistingEmbeddingsFnTest {
         pipeline.apply(Create.of(List.of(List.of("Count_Person", "Count_Person", "dc/topic/1"))));
 
     PCollection<Mutation> mutations =
-        batchedIds.apply(
-            org.apache.beam.sdk.transforms.ParDo.of(
-                new DeleteExistingEmbeddingsFn("NodeEmbedding", "base_text_embedding")));
+        batchedIds.apply(ParDo.of(new DeleteExistingEmbeddingsFn("NodeEmbedding")));
 
     Mutation expected =
         DeleteExistingEmbeddingsFn.buildDeleteMutation(
-            "NodeEmbedding", "base_text_embedding", List.of("Count_Person", "dc/topic/1"));
+            "NodeEmbedding", List.of("Count_Person", "dc/topic/1"));
     PAssert.that(mutations).containsInAnyOrder(expected);
     PipelineResult result = pipeline.run();
 
@@ -128,8 +124,7 @@ public class DeleteExistingEmbeddingsFnTest {
                 MetricsFilter.builder()
                     .addNameFilter(
                         MetricNameFilter.named(
-                            DeleteExistingEmbeddingsFn.class,
-                            "embedding_deleted_nodes:base_text_embedding"))
+                            DeleteExistingEmbeddingsFn.class, "embedding_deleted_nodes"))
                     .build());
     List<MetricResult<Long>> counters = Lists.newArrayList(metrics.getCounters());
     assertEquals(1, counters.size());

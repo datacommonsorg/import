@@ -16,13 +16,6 @@
             "isOptional": true
         },
         {
-            "name": "location",
-            "label": "GCP location",
-            "helpText": "GCP location/region (e.g. us-central1).",
-            "paramType": "TEXT",
-            "isOptional": true
-        },
-        {
             "name": "spannerInstanceId",
             "label": "Spanner instance Id",
             "helpText": "Spanner instance Id",

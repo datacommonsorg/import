@@ -6,24 +6,28 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.util.List;
 import java.util.Objects;
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.Reshuffle;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.data.NodeSubGraph;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.data.TimeSeries;
+import org.datacommons.ingestion.pipeline.embedding.DeleteExistingEmbeddingsFn;
 import org.datacommons.ingestion.pipeline.embedding.EmbeddingConfig;
-import org.datacommons.ingestion.pipeline.embedding.SpannerEmbeddingPipeline;
+import org.datacommons.ingestion.pipeline.embedding.GenerateEmbeddingMutations;
 import org.datacommons.ingestion.pipeline.embedding.VertexAiEmbeddingClient;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.GraphReader;
@@ -83,7 +87,8 @@ public class GraphIngestionPipeline {
     if (!isEmbeddingsEnabled(options)) {
       return null;
     }
-    return new VertexAiEmbeddingClient(options.getProjectId(), options.getLocation());
+    return new VertexAiEmbeddingClient(
+        options.getProjectId(), options.as(DataflowPipelineOptions.class).getRegion());
   }
 
   public static void main(String[] args) {
@@ -241,16 +246,32 @@ public class GraphIngestionPipeline {
     // immediately.
     PCollection<Void> deleteObsWait;
     PCollection<Void> deleteEdgesWait;
+    PCollection<Void> deleteEmbeddingsWait = null;
     if (!options.getSkipDelete()) {
       deleteObsWait =
           spannerClient.deleteDataForImport(
-              pipeline, provenance, spannerClient.getTimeSeriesTableName(), "provenance");
+              pipeline,
+              provenance,
+              spannerClient.getTimeSeriesTableName(),
+              "provenance",
+              /* waitSignal= */ null);
+      if (embeddingConfig != null) {
+        // Read Edge subject_ids once per import and delete existing NodeEmbedding rows before
+        // running DELETE FROM Edge so Edge rows are not deleted out from under the scan.
+        // TODO(b/584694504): Once NodeEmbedding schema includes provenance, delete existing
+        // embeddings directly via spannerClient.deleteDataForImport(pipeline, provenance,
+        // embeddingTable, "provenance", /* waitSignal= */ null).
+        deleteEmbeddingsWait =
+            DeleteExistingEmbeddingsFn.deleteExistingEmbeddings(
+                pipeline, spannerClient, importName, options.getEmbeddingTableName(), provenance);
+      }
       deleteEdgesWait =
           spannerClient.deleteDataForImport(
-              pipeline, provenance, spannerClient.getEdgeTableName(), "provenance");
-      // TODO(b/584694504): Once NodeEmbedding schema includes provenance, delete existing
-      // embeddings directly via spannerClient.deleteDataForImport(pipeline, provenance,
-      // embeddingTable, "provenance").
+              pipeline,
+              provenance,
+              spannerClient.getEdgeTableName(),
+              "provenance",
+              deleteEmbeddingsWait);
     } else {
       deleteObsWait =
           pipeline.apply(
@@ -265,19 +286,18 @@ public class GraphIngestionPipeline {
       TfRecordProcessingResult result =
           processTfRecordImport(
               pipeline, importName, graphPath, isBaseDc, obsCounter, timeSeriesCounter);
-      SpannerWriteResult writtenNodes =
-          spannerClient.writeMutations(
-              pipeline, "WriteNodesToSpanner-" + importName, result.nodeMutations);
       writeToSpanner(
           pipeline,
           spannerClient,
           importName,
-          writtenNodes.getOutput(),
+          result.nodeMutations,
           result.edgeMutations,
+          /* embeddingMutations= */ List.of(),
           result.uniqueSeries,
           result.obsDataPoints,
           deleteObsWait,
-          deleteEdgesWait);
+          deleteEdgesWait,
+          deleteEmbeddingsWait);
       return;
     }
 
@@ -320,63 +340,81 @@ public class GraphIngestionPipeline {
         GraphReader.extractNodeSubGraphsFromGraph(
             importName, transformedGraph, provenance, nodeInvalidTypeCounter);
 
-    // Extract node and edge mutations from nodeSubGraphs
+    // Extract node, edge, and embedding mutations from nodeSubGraphs
     PCollection<Mutation> nodeMutations =
         GraphReader.nodesToMutations(importName, nodeSubGraphs, spannerClient, nodeCounter);
     PCollection<Mutation> edgeMutations =
         GraphReader.edgesToMutations(importName, nodeSubGraphs, spannerClient, edgeCounter);
+    List<PCollection<Mutation>> embeddingMutations =
+        embeddingConfig != null
+            ? GenerateEmbeddingMutations.buildEmbeddingMutations(
+                importName,
+                embeddingConfig,
+                embeddingClient,
+                options.getEmbeddingTableName(),
+                options.getEmbeddingBatchSize(),
+                nodeSubGraphs)
+            : List.of();
 
     PCollection<TimeSeries> uniqueSeries =
         GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc, timeSeriesCounter);
     PCollection<Observation> obsDataPoints =
         GraphReader.extractObservations(observationNodes, importName, isBaseDc, obsCounter);
 
-    // Write Nodes first so downstream Edge and NodeEmbedding writes can wait on parent Node rows.
-    SpannerWriteResult writtenNodes =
-        spannerClient.writeMutations(pipeline, "WriteNodesToSpanner-" + importName, nodeMutations);
-
     writeToSpanner(
         pipeline,
         spannerClient,
         importName,
-        writtenNodes.getOutput(),
+        nodeMutations,
         edgeMutations,
+        embeddingMutations,
         uniqueSeries,
         obsDataPoints,
         deleteObsWait,
-        deleteEdgesWait);
-
-    if (embeddingConfig != null) {
-      SpannerEmbeddingPipeline.attachTransforms(
-          pipeline,
-          spannerClient,
-          importName,
-          provenance,
-          embeddingConfig,
-          embeddingClient,
-          options.getEmbeddingTableName(),
-          options.getEmbeddingBatchSize(),
-          nodeSubGraphs,
-          writtenNodes.getOutput(),
-          options.getSkipDelete());
-    }
+        deleteEdgesWait,
+        deleteEmbeddingsWait);
   }
 
   private static void writeToSpanner(
       Pipeline pipeline,
       SpannerClient spannerClient,
       String importName,
-      PCollection<Void> writtenNodesWait,
+      PCollection<Mutation> nodeMutations,
       PCollection<Mutation> edgeMutations,
+      List<PCollection<Mutation>> embeddingMutations,
       PCollection<TimeSeries> uniqueSeries,
       PCollection<Observation> obsDataPoints,
       PCollection<Void> deleteObsWait,
-      PCollection<Void> deleteEdgesWait) {
+      PCollection<Void> deleteEdgesWait,
+      PCollection<Void> deleteEmbeddingsWait) {
+    // Write Nodes first so downstream Edge and NodeEmbedding writes can wait on parent Node rows.
+    SpannerWriteResult writtenNodes =
+        spannerClient.writeMutations(pipeline, "WriteNodesToSpanner-" + importName, nodeMutations);
+
     // Write Edges (wait for Nodes write and Edges delete)
     PCollection<Mutation> waitingEdges =
         edgeMutations.apply(
-            "EdgesWaitOn-" + importName, Wait.on(List.of(writtenNodesWait, deleteEdgesWait)));
+            "EdgesWaitOn-" + importName,
+            Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
     spannerClient.writeMutations(pipeline, "WriteEdgesToSpanner-" + importName, waitingEdges);
+
+    // Write NodeEmbeddings (wait for Nodes write and, if enabled, NodeEmbedding pre-delete)
+    if (embeddingMutations != null && !embeddingMutations.isEmpty()) {
+      PCollection<Mutation> allEmbeddingMutations =
+          embeddingMutations.size() == 1
+              ? embeddingMutations.get(0)
+              : PCollectionList.of(embeddingMutations)
+                  .apply("FlattenNodeEmbeddings-" + importName, Flatten.pCollections());
+      List<PCollection<?>> embeddingWaits =
+          deleteEmbeddingsWait != null
+              ? List.of(writtenNodes.getOutput(), deleteEmbeddingsWait)
+              : List.of(writtenNodes.getOutput());
+      PCollection<Mutation> waitingEmbeddings =
+          allEmbeddingMutations.apply(
+              "NodeEmbeddingsWaitOn-" + importName, Wait.on(embeddingWaits));
+      spannerClient.writeMutations(
+          pipeline, "WriteNodeEmbeddingsToSpanner-" + importName, waitingEmbeddings);
+    }
 
     // Convert unique TimeSeries to TimeSeries mutations
     PCollection<Mutation> timeSeriesMutations =

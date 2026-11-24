@@ -30,7 +30,7 @@ import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.NodeSubGraph;
-import org.datacommons.ingestion.pipeline.GraphIngestionUtil;
+import org.datacommons.ingestion.pipeline.GraphTestUtil;
 import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +42,7 @@ import org.junit.runners.JUnit4;
 public class ReadCandidateNodesFnTest {
 
   private static final NodeSubGraph STAT_VAR_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph(
+      GraphTestUtil.subjectNodeSubGraph(
           "Count_Person",
           "Total Population",
           List.of("StatisticalVariable"),
@@ -55,16 +55,16 @@ public class ReadCandidateNodesFnTest {
                   .build()));
 
   private static final NodeSubGraph TOPIC_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph("dc/topic/Health", "Health", List.of("Topic"));
+      GraphTestUtil.subjectNodeSubGraph("dc/topic/Health", "Health", List.of("Topic"));
 
   private static final NodeSubGraph CLASS_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph("Farm", "Farm", List.of("Class"));
+      GraphTestUtil.subjectNodeSubGraph("Farm", "Farm", List.of("Class"));
 
   private static final NodeSubGraph PLACE_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph("country/USA", "United States", List.of("Country"));
+      GraphTestUtil.subjectNodeSubGraph("country/USA", "United States", List.of("Country"));
 
   private static final NodeSubGraph EMPTY_NAME_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph("Count_Empty", "   ", List.of("StatisticalVariable"));
+      GraphTestUtil.subjectNodeSubGraph("Count_Empty", "   ", List.of("StatisticalVariable"));
 
   private static final NodeSubGraph LEAF_VALUE_NODE =
       NodeSubGraph.builder()

@@ -19,12 +19,6 @@ import org.apache.beam.sdk.options.Description;
 
 /** IngestionPipelineOptions interface for defining Spanner ingestion pipeline options. */
 public interface IngestionPipelineOptions extends SpannerPipelineOptions, EmbeddingOptions {
-  @Description("GCP location/region")
-  @Default.String("us-central1")
-  String getLocation();
-
-  void setLocation(String location);
-
   @Description("GCS bucket Id for input data")
   @Default.String("datcom-store")
   String getStorageBucketId();

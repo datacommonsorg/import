@@ -34,9 +34,11 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.transforms.resourcehints.ResourceHints;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.spanner.model.EdgeRecord;
 
@@ -49,6 +51,8 @@ public class MockSpannerClient extends SpannerClient {
   private static final List<Mutation> CAPTURED_MUTATIONS =
       Collections.synchronizedList(new ArrayList<>());
   private static final List<String> CAPTURED_STAGE_EVENTS =
+      Collections.synchronizedList(new ArrayList<>());
+  private static final List<String> CAPTURED_EDGE_READS =
       Collections.synchronizedList(new ArrayList<>());
 
   private final transient PCollection<Void> deleteSignal;
@@ -85,6 +89,18 @@ public class MockSpannerClient extends SpannerClient {
     this.edgeSubjectIdsByProvenance = edgeSubjectIdsByProvenance;
   }
 
+  /**
+   * Creates a serializable mock {@link SpannerWriteResult} backed by an empty completion signal.
+   */
+  public static SpannerWriteResult createMockWriteResult(Pipeline pipeline, String suffix) {
+    SpannerWriteResult mockWriteResult =
+        mock(SpannerWriteResult.class, withSettings().serializable());
+    PCollection<Void> mockWriteOutput =
+        pipeline.apply("CreateWriteSignal_" + suffix, Create.empty(TypeDescriptor.of(Void.class)));
+    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
+    return mockWriteResult;
+  }
+
   public static List<Mutation> getCapturedMutations() {
     return CAPTURED_MUTATIONS;
   }
@@ -93,15 +109,40 @@ public class MockSpannerClient extends SpannerClient {
     return CAPTURED_STAGE_EVENTS;
   }
 
+  public static List<String> getCapturedEdgeReads() {
+    return CAPTURED_EDGE_READS;
+  }
+
   public static void clearCapturedMutations() {
     CAPTURED_MUTATIONS.clear();
     CAPTURED_STAGE_EVENTS.clear();
+    CAPTURED_EDGE_READS.clear();
   }
 
   @Override
   public PCollection<Void> deleteDataForImport(
-      Pipeline pipeline, String importName, String tableName, String columnName) {
-    return deleteSignal;
+      Pipeline pipeline,
+      String importName,
+      String tableName,
+      String columnName,
+      PCollection<Void> waitSignal) {
+    if (deleteSignal != null) {
+      return deleteSignal;
+    }
+    String stageName = tableName + "-" + importName.replaceFirst("^dc/base/", "");
+    PCollection<String> trigger = pipeline.apply("StartDelete" + stageName, Create.of(importName));
+    if (waitSignal != null) {
+      trigger = trigger.apply("WaitBeforeDelete" + stageName, Wait.on(waitSignal));
+    }
+    return trigger.apply(
+        "ExecuteDelete" + stageName,
+        ParDo.of(
+            new DoFn<String, Void>() {
+              @ProcessElement
+              public void processElement(@Element String value) {
+                CAPTURED_STAGE_EVENTS.add("ExecuteDelete" + stageName);
+              }
+            }));
   }
 
   @Override
@@ -115,6 +156,7 @@ public class MockSpannerClient extends SpannerClient {
             inv -> {
               Statement stmt = inv.getArgument(0);
               String provenance = stmt.getParameters().get(EdgeRecord.COL_PROVENANCE).getString();
+              CAPTURED_EDGE_READS.add(provenance);
               List<Struct> structs =
                   edgeSubjectIdsByProvenance.getOrDefault(provenance, List.of()).stream()
                       .map(id -> Struct.newBuilder().set(EdgeRecord.COL_SUBJECT_ID).to(id).build())

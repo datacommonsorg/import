@@ -20,16 +20,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.BatchElements;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
-import org.datacommons.ingestion.spanner.SpannerClient;
 
 /**
  * Batches {@link EmbeddingContent} elements via {@link BatchElements}, invokes {@link
@@ -61,35 +57,6 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
         Metrics.counter(GenerateEmbeddingsFn.class, "node_embeddings_generated:" + label);
     this.vertexBatchCallsCounter =
         Metrics.counter(GenerateEmbeddingsFn.class, "vertex_ai_batch_calls:" + label);
-  }
-
-  /**
-   * Batches {@code contents}, predicts vector embeddings via {@code embeddingClient} for {@code
-   * spec}, gates writes on {@code deleteWaitSignal} (when non-null), and writes the resulting
-   * {@link Mutation}s to Spanner via {@link SpannerClient#writeMutations}.
-   */
-  public static PCollection<Void> generateAndWriteEmbeddings(
-      Pipeline pipeline,
-      SpannerClient spannerClient,
-      String importName,
-      PCollection<EmbeddingContent> contents,
-      PCollection<Void> deleteWaitSignal,
-      VertexAiEmbeddingClient embeddingClient,
-      String embeddingTableName,
-      EmbeddingSpec spec,
-      int batchSize) {
-    String stageSuffix = spec.embeddingLabel() + "-" + importName;
-    PCollection<Mutation> mutations =
-        buildEmbeddingMutations(
-            importName, contents, embeddingClient, embeddingTableName, spec, batchSize);
-    PCollection<Mutation> mutationsToWrite =
-        deleteWaitSignal != null
-            ? mutations.apply("WaitForDeletedEmbeddings_" + stageSuffix, Wait.on(deleteWaitSignal))
-            : mutations;
-    SpannerWriteResult writeResult =
-        spannerClient.writeMutations(
-            pipeline, "WriteNodeEmbeddings_" + stageSuffix, mutationsToWrite);
-    return writeResult.getOutput();
   }
 
   /**

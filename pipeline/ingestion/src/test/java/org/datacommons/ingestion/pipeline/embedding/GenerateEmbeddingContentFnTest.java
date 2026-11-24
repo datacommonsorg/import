@@ -31,7 +31,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.NodeSubGraph;
-import org.datacommons.ingestion.pipeline.GraphIngestionUtil;
+import org.datacommons.ingestion.pipeline.GraphTestUtil;
 import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,11 +52,11 @@ public class GenerateEmbeddingContentFnTest {
   }
 
   private static final NodeSubGraph STAT_VAR_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph(
+      GraphTestUtil.subjectNodeSubGraph(
           "Count_Person", "Total Population", List.of("StatisticalVariable"));
 
   private static final NodeSubGraph FARM_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph(
+      GraphTestUtil.subjectNodeSubGraph(
           "Farm",
           "Farm",
           List.of("Class"),
@@ -65,10 +65,10 @@ public class GenerateEmbeddingContentFnTest {
               edge("Farm", "description", "First sentence")));
 
   private static final NodeSubGraph BLANK_NAME_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph("dc/123", "   ", List.of("StatisticalVariable"));
+      GraphTestUtil.subjectNodeSubGraph("dc/123", "   ", List.of("StatisticalVariable"));
 
   private static final NodeSubGraph UNMATCHED_TYPE_NODE =
-      GraphIngestionUtil.subjectNodeSubGraph("dc/456", "Valid Name", List.of("UnconfiguredType"));
+      GraphTestUtil.subjectNodeSubGraph("dc/456", "Valid Name", List.of("UnconfiguredType"));
 
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
@@ -187,7 +187,7 @@ public class GenerateEmbeddingContentFnTest {
             NodeFilterType.NO_FILTER);
 
     NodeSubGraph longFarmNode =
-        GraphIngestionUtil.subjectNodeSubGraph(
+        GraphTestUtil.subjectNodeSubGraph(
             "Farm",
             "Farm",
             List.of("Class"),

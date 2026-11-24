@@ -21,6 +21,7 @@ import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
@@ -99,14 +100,30 @@ public class SpannerClient implements Serializable {
     return mutations.apply(name, getWriteTransform());
   }
 
+  /**
+   * Deletes existing rows matching {@code importName} in {@code columnName} from {@code tableName}.
+   *
+   * @param pipeline The Beam pipeline.
+   * @param importName The import/provenance value to match for deletion.
+   * @param tableName The Spanner table to delete from.
+   * @param columnName The column to filter by.
+   * @param waitSignal Optional signal to wait on before running the delete; pass {@code null} to
+   *     execute immediately without waiting on an upstream stage.
+   * @return Completion signal for the delete operation.
+   */
   public PCollection<Void> deleteDataForImport(
-      Pipeline pipeline, String importName, String tableName, String columnName) {
+      Pipeline pipeline,
+      String importName,
+      String tableName,
+      String columnName,
+      PCollection<Void> waitSignal) {
     String stageName = tableName + "-" + importName.replaceFirst("^dc/base/", "");
-    return pipeline
-        .apply("StartDelete" + stageName, Create.of(importName))
-        .apply(
-            "ExecuteDelete" + stageName,
-            ParDo.of(new DeleteByColumnFn(this, tableName, columnName)));
+    PCollection<String> trigger = pipeline.apply("StartDelete" + stageName, Create.of(importName));
+    if (waitSignal != null) {
+      trigger = trigger.apply("WaitBeforeDelete" + stageName, Wait.on(waitSignal));
+    }
+    return trigger.apply(
+        "ExecuteDelete" + stageName, ParDo.of(new DeleteByColumnFn(this, tableName, columnName)));
   }
 
   static class DeleteByColumnFn extends DoFn<String, Void> {
