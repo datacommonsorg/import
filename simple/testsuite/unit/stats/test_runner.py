@@ -25,6 +25,8 @@ from google.cloud.storage import Blob
 import pytest
 from stats import constants
 from stats import runner
+from stats import worker_pool
+from stats.config import discovery
 from stats.report.summary_generator import SummaryGenerator
 from testsuite.lib import builders as b
 from testsuite.lib import fake_gcs
@@ -46,12 +48,12 @@ def _set_cpus(monkeypatch, affinity: set[int] | None, cpu_count: int) -> None:
 
 def test_default_max_workers_uses_cpu_affinity(monkeypatch):
   _set_cpus(monkeypatch, affinity={0, 3, 5}, cpu_count=64)
-  assert runner.default_max_workers(uses_gcs=False) == 3
+  assert worker_pool.default_max_workers(uses_gcs=False) == 3
 
 
 def test_default_max_workers_falls_back_to_cpu_count(monkeypatch):
   _set_cpus(monkeypatch, affinity=None, cpu_count=6)
-  assert runner.default_max_workers(uses_gcs=False) == 6
+  assert worker_pool.default_max_workers(uses_gcs=False) == 6
 
 
 @pytest.mark.parametrize("cpus, expected", [(1, 2), (6, 12), (16, 32), (24, 32),
@@ -59,7 +61,7 @@ def test_default_max_workers_falls_back_to_cpu_count(monkeypatch):
 def test_default_max_workers_on_gcs_is_two_per_cpu_up_to_32_never_below_cpus(
     monkeypatch, cpus, expected):
   _set_cpus(monkeypatch, affinity=set(range(cpus)), cpu_count=128)
-  assert runner.default_max_workers(uses_gcs=True) == expected
+  assert worker_pool.default_max_workers(uses_gcs=True) == expected
 
 
 @pytest.mark.parametrize("input_on_gcs, output_on_gcs, expected",
@@ -88,8 +90,8 @@ def test_runner_defaults_workers_by_where_it_reads_and_writes(
 
 
 def test_num_import_workers_never_exceeds_the_files():
-  assert runner.num_import_workers(max_workers=8, num_tasks=3) == 3
-  assert runner.num_import_workers(max_workers=2, num_tasks=3) == 2
+  assert worker_pool.num_import_workers(max_workers=8, num_tasks=3) == 3
+  assert worker_pool.num_import_workers(max_workers=2, num_tasks=3) == 2
 
 
 @pytest.mark.parametrize("max_workers", [0, -1])
@@ -244,9 +246,9 @@ def test_overlapping_input_and_output_dirs_are_rejected(input_dir, output_dir,
   input_store, output_store = open_dir(input_dir), open_dir(output_dir)
   if overlaps:
     with pytest.raises(ValueError, match="overlaps"):
-      runner._check_not_overlapping(input_store, output_store)
+      discovery.check_not_overlapping(input_store, output_store)
   else:
-    runner._check_not_overlapping(input_store, output_store)
+    discovery.check_not_overlapping(input_store, output_store)
 
 
 def _done_future(result=None, error=None) -> concurrent.futures.Future:
@@ -272,7 +274,7 @@ def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
       raise RuntimeError("cannot merge b")
     merged.append(file.path)
 
-  failures = runner._finish_imports(files, futures, merge)
+  failures = worker_pool._finish_imports(files, futures, merge)
   assert [(f.file_path, str(f.error)) for f in failures] == [
       ("a.csv", "cannot import a"),
       ("b.csv", "cannot merge b"),
@@ -281,7 +283,7 @@ def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
 
 
 _SLOW_IMPORT_SECONDS = 1
-_real_run_single_import_proc = runner._run_single_import_proc
+_real_run_single_import_proc = worker_pool._run_single_import_proc
 
 
 def _slow_import_proc(*args):
@@ -301,7 +303,7 @@ def test_an_interrupted_run_fails_promptly_and_reports_the_failure(monkeypatch):
   be while the coordinator waits. Waiting for every file would take
   `all_files_seconds`.
   """
-  monkeypatch.setattr(runner, "_run_single_import_proc", _slow_import_proc)
+  monkeypatch.setattr(worker_pool, "_run_single_import_proc", _slow_import_proc)
 
   def interrupt(generator, summary):
     raise KeyboardInterrupt
