@@ -449,8 +449,6 @@ class Runner:
     # under the file's folder and provenance.
     self._file_errors: list[tuple[File, FileValidationError]] = []
 
-    # Both are set by the ingestion workflow. Any mode other than DRY_RUN,
-    # including none, is reported as INGEST.
     self.summary_generator = SummaryGenerator(
         workflow_execution_id=os.getenv("WORKFLOW_EXECUTION_ID"),
         mode=(RunMode.DRY_RUN if os.getenv("INGESTION_MODE") == RunMode.DRY_RUN
