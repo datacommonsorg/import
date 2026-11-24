@@ -119,7 +119,7 @@ public class SpannerEmbeddingPipelineTest implements Serializable {
         upserts.stream()
             .collect(Collectors.toMap(m -> m.asMap().get("embedding_label").getString(), m -> m));
     assertEquals(
-        "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}",
+        "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}",
         byLabel.get("base_text_embedding").asMap().get("embedding_content").getString());
     assertEquals(
         "{\"name\":\"Farm\",\"description\":\"Agricultural land.\"}",
@@ -131,7 +131,7 @@ public class SpannerEmbeddingPipelineTest implements Serializable {
             .collect(Collectors.toSet());
     assertEquals(
         Set.of(
-            "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}",
+            "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}",
             "{\"name\":\"Farm\",\"description\":\"Agricultural land.\"}"),
         predictedTexts);
 

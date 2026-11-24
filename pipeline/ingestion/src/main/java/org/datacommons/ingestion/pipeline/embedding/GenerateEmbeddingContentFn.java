@@ -43,6 +43,7 @@ import org.datacommons.ingestion.spanner.model.NodeRecord;
  */
 public class GenerateEmbeddingContentFn extends DoFn<NodeSubGraph, EmbeddingContent> {
   private static final Gson GSON = new Gson();
+  private static final String SUBJECT_ID_JSON_KEY = "title";
   private static final ImmutableSet<String> NODE_TABLE_FIELDS =
       ImmutableSet.of(NodeRecord.COL_SUBJECT_ID, NodeRecord.COL_NAME);
   // Approximate max token cap (2048 tokens * ~4 chars/token) to be embedded.
@@ -84,9 +85,9 @@ public class GenerateEmbeddingContentFn extends DoFn<NodeSubGraph, EmbeddingCont
    * Builds the {@link EmbeddingContent} for a candidate {@link NodeSubGraph}.
    *
    * <p>Fields {@code "subject_id"} and {@code "name"} configured in {@link
-   * EmbeddingSpec#nodeTypes()} are populated from the node's {@code subjectId} and {@code name},
-   * while any other configured fields are populated from matching outgoing {@link Edge}s on the
-   * candidate {@link NodeSubGraph}.
+   * EmbeddingSpec#nodeTypes()} are populated from the node's {@code subjectId} (mapped to JSON key
+   * {@code "title"}) and {@code name}, while any other configured fields are populated from
+   * matching outgoing {@link Edge}s on the candidate {@link NodeSubGraph}.
    */
   public static EmbeddingContent buildEmbeddingContent(NodeSubGraph candidate, EmbeddingSpec spec) {
     if (candidate == null || candidate.getNode() == null) {
@@ -123,11 +124,11 @@ public class GenerateEmbeddingContentFn extends DoFn<NodeSubGraph, EmbeddingCont
       String subjectId, String name, List<String> types, EmbeddingSpec spec) {
     ImmutableSet<String> embeddingFields = getEmbeddingNodeFields(types, spec);
     ImmutableMap.Builder<String, String> contentMap = ImmutableMap.builder();
-    if (embeddingFields.contains(NodeRecord.COL_SUBJECT_ID)) {
-      contentMap.put(NodeRecord.COL_SUBJECT_ID, subjectId);
-    }
     if (embeddingFields.contains(NodeRecord.COL_NAME)) {
       contentMap.put(NodeRecord.COL_NAME, name);
+    }
+    if (embeddingFields.contains(NodeRecord.COL_SUBJECT_ID)) {
+      contentMap.put(SUBJECT_ID_JSON_KEY, subjectId);
     }
     return contentMap.buildOrThrow();
   }

@@ -470,7 +470,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     Mutation statVarEmb = embUpsertsByLabel.get("base_text_embedding");
     assertEquals("Count_Person", statVarEmb.asMap().get("subject_id").getString());
     assertEquals(
-        "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}",
+        "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}",
         statVarEmb.asMap().get("embedding_content").getString());
     assertEquals(List.of(0.5, -0.5), statVarEmb.asMap().get("embeddings").getFloat64Array());
 
@@ -521,9 +521,9 @@ public class GraphIngestionPipelineTest implements Serializable {
     assertEquals(
         Map.of(
             "dc/topic/Health",
-            "{\"subject_id\":\"dc/topic/Health\",\"name\":\"Health\"}",
+            "{\"name\":\"Health\",\"title\":\"dc/topic/Health\"}",
             "dc/topic/Economy",
-            "{\"subject_id\":\"dc/topic/Economy\",\"name\":\"Economy\"}"),
+            "{\"name\":\"Economy\",\"title\":\"dc/topic/Economy\"}"),
         embContentBySubject);
   }
 }

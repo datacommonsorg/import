@@ -407,13 +407,13 @@ public class GraphIngestionPipelineIntegrationTest {
         dbClient,
         "Count_Person",
         "base_text_embedding",
-        "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}",
+        "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}",
         List.of("StatisticalVariable"));
     verifyNodeEmbedding(
         dbClient,
         "dc/topic/Health",
         "base_text_embedding",
-        "{\"subject_id\":\"dc/topic/Health\",\"name\":\"Health\"}",
+        "{\"name\":\"Health\",\"title\":\"dc/topic/Health\"}",
         List.of("Topic"));
     verifyNodeEmbedding(
         dbClient, "Farm", "type_embedding", "{\"name\":\"Farm\"}", List.of("Class"));

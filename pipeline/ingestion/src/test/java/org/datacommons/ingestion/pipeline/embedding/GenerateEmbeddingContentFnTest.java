@@ -143,12 +143,13 @@ public class GenerateEmbeddingContentFnTest {
     Map<String, String> statVarMap =
         GenerateEmbeddingContentFn.buildBaseContentMap(
             "Count_Person", "Total Population", List.of("StatisticalVariable"), spec);
-    assertEquals("Count_Person", statVarMap.get("subject_id"));
+    assertFalse(statVarMap.containsKey("subject_id"));
+    assertEquals("Count_Person", statVarMap.get("title"));
     assertEquals("Total Population", statVarMap.get("name"));
 
     Map<String, String> classMap =
         GenerateEmbeddingContentFn.buildBaseContentMap("Farm", "Farm", List.of("Class"), spec);
-    assertFalse(classMap.containsKey("subject_id"));
+    assertFalse(classMap.containsKey("title"));
     assertEquals("Farm", classMap.get("name"));
 
     Map<String, String> predOnlyMap =
@@ -201,7 +202,7 @@ public class GenerateEmbeddingContentFnTest {
 
   @Test
   public void testComputeFarmFingerprintKey() {
-    String input = "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}";
+    String input = "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}";
     long expected =
         Hashing.farmHashFingerprint64().hashString(input, StandardCharsets.UTF_8).asLong();
     assertEquals(
@@ -236,7 +237,7 @@ public class GenerateEmbeddingContentFnTest {
     assertEquals("base_text_embedding", content.embeddingLabel());
     assertEquals(List.of("StatisticalVariable"), content.nodeTypes());
 
-    String expectedJson = "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}";
+    String expectedJson = "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}";
     assertEquals(expectedJson, content.embeddingContentJson());
     assertEquals(expectedJson, content.textToEmbed());
 
@@ -303,7 +304,7 @@ public class GenerateEmbeddingContentFnTest {
     PCollection<EmbeddingContent> contents =
         GenerateEmbeddingContentFn.generateEmbeddingContent("testImport", candidates, spec);
 
-    String expectedJson = "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}";
+    String expectedJson = "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}";
     long expectedFp =
         Hashing.farmHashFingerprint64().hashString(expectedJson, StandardCharsets.UTF_8).asLong();
 
