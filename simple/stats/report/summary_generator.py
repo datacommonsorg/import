@@ -82,14 +82,18 @@ class SummaryGenerator:
 
   """
 
-  def __init__(self, workflow_execution_id: str | None = None) -> None:
+  def __init__(self,
+               workflow_execution_id: str | None = None,
+               mode: RunMode = RunMode.INGEST) -> None:
     """Creates a generator for one preprocessor run.
 
     Args:
       workflow_execution_id: Ingestion workflow execution ID. Empty for
         runs outside the workflow (local runs and tests).
+      mode: How the ingestion workflow runs the preprocessor.
     """
     self._workflow_execution_id = workflow_execution_id or ""
+    self._mode = mode
     # The report's run block, created by set_execution_metadata() and
     # completed by build_report().
     self._execution_metadata: ExecutionMetadata | None = None
@@ -115,7 +119,7 @@ class SummaryGenerator:
     """
     self._execution_metadata = ExecutionMetadata(
         workflowExecutionId=self._workflow_execution_id,
-        mode=RunMode.INGEST,
+        mode=self._mode,
         startTime=start_time,
     )
     self._output_dir = output_dir

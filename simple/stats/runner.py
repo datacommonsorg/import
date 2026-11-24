@@ -48,6 +48,7 @@ from stats.importers.mcf_importer import McfImporter
 from stats.importers.variable_per_row_importer import VariablePerRowImporter
 from stats.report.model.summary import FileSummary
 from stats.report.model.summary import NodeCounts
+from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
@@ -449,7 +450,9 @@ class Runner:
     self._file_errors: list[tuple[File, FileValidationError]] = []
 
     self.summary_generator = SummaryGenerator(
-        os.getenv("WORKFLOW_EXECUTION_ID"))
+        workflow_execution_id=os.getenv("WORKFLOW_EXECUTION_ID"),
+        mode=(RunMode.DRY_RUN if os.getenv("INGESTION_MODE") == RunMode.DRY_RUN
+              else RunMode.INGEST))
 
   def _open_input_dir(self, path: str) -> Dir:
     self.input_dir = open_dir(path)
