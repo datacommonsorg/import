@@ -218,7 +218,8 @@ class VariablePerRowImporter(Importer):
         row_offset += chunk_len
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.counts = self.counts.add(self.count_observations(observations_df))
-        pp_rules.current().collect_obs_refs(observations_df)
+        pp_rules.current().collect_obs_refs(observations_df,
+                                            self.input_file.path)
         self.graph_writer.write_observations(observations_df, self.input_file)
 
   def _open_rows(self):

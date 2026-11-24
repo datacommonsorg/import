@@ -36,6 +36,7 @@ import time
 
 import numpy as np
 import pandas as pd
+from stats.node_resolver import NodeExistenceResolver
 
 K = 20
 # Max distinct strings cached per check kind in one worker task.
@@ -173,6 +174,7 @@ TRIPLE_RULES = (
     "dc.sv.stat_type_valid",
     "dc.dcid.format.node",
     "dc.dcid.max_length.node",
+    "dc.ref.exists",
 )
 
 # Pre-grouped rules by column for single-pass per-column evaluation.
@@ -263,7 +265,8 @@ class RuleAccumulator:
             "samples": [],
         } for r in [x.rule_id for x in OBS_RULES] + list(TRIPLE_RULES)
     }
-    self.refs: list[np.ndarray] = []
+    self.ref_dcids: dict[str, str] = {}  # dcid -> first file referencing it
+    self.defined_dcids: set[str] = set()
     self.defined: list[np.ndarray] = []
     self.typed: list[np.ndarray] = []
     self.untyped: dict[int, tuple[str, str]] = {}  # hash -> (subject, file)
@@ -276,7 +279,9 @@ class RuleAccumulator:
     self._valid_cache: dict[str, set] = {
         r.rule_id: set() for r in OBS_RULES if r.check != "required"
     }
-    self._seen_refs: set[str] = set()
+    self._bad_cache: dict[str, set] = {
+        r.rule_id: set() for r in OBS_RULES if r.check != "required"
+    }
     self._checked_node_dcids: set[str] = set()
 
   def _add_mask(self, rule_id: str, bad: np.ndarray | None, checked: int,
@@ -292,17 +297,14 @@ class RuleAccumulator:
       if need > 0:
         st["samples"].extend(samples_fn(np.flatnonzero(bad)[:need]))
 
-  def _record_refs_from_strings(self, values: set) -> None:
-    """Adds namespace-stripped distinct strings to the ref cache."""
-    seen = self._seen_refs
+  def _record_refs_from_strings(self, values: set, file: str = "") -> None:
+    """Adds namespace-stripped distinct referenced DCIDs."""
+    refs = self.ref_dcids
     for v in values:
       if isinstance(v, str) and v:
         ns = _strip_ns(v)
-        if ns and ns not in seen:
-          if len(seen) >= _MAX_CACHE_SIZE:
-            self.refs.append(hash_distinct(seen))
-            seen.clear()
-          seen.add(ns)
+        if ns and ns not in refs:
+          refs[ns] = file
 
   def _check_distinct_rules(self, rules: list[PropertyCheck], s: pd.Series,
                             present_uniq: set, missing: np.ndarray | None,
@@ -312,22 +314,41 @@ class RuleAccumulator:
     for rule in rules:
       if checked == 0:
         continue
-      cache = self._valid_cache[rule.rule_id]
-      unseen = present_uniq - cache
+      vcache = self._valid_cache[rule.rule_id]
+      bcache = self._bad_cache[rule.rule_id]
+      unseen = present_uniq - vcache
       if not unseen:
         self.stats[rule.rule_id]["checked"] += checked
         continue
-      pred = _RULE_PREDICATES[rule.rule_id]
-      bad_vals = set()
-      for v in unseen:
-        if pred(v):
-          if len(cache) >= _MAX_CACHE_SIZE:
-            cache.clear()
-          cache.add(v)
-        else:
-          bad_vals.add(v)
+      known_bad = unseen & bcache
+      to_eval = unseen - known_bad
+      bad_vals = set(known_bad)
+      if to_eval:
+        pred = _RULE_PREDICATES[rule.rule_id]
+        for v in to_eval:
+          if pred(v):
+            if len(vcache) >= _MAX_CACHE_SIZE:
+              vcache.clear()
+            vcache.add(v)
+          else:
+            if len(bcache) < _MAX_CACHE_SIZE:
+              bcache.add(v)
+            bad_vals.add(v)
       if not bad_vals:
         self.stats[rule.rule_id]["checked"] += checked
+        continue
+      # O(1) fast path when every present value in the chunk is invalid
+      # (e.g. a constant bad default like observationPeriod="P8H").
+      if len(bad_vals) == len(present_uniq):
+        st = self.stats[rule.rule_id]
+        st["checked"] += checked
+        st["violations"] += checked
+        need = K - len(st["samples"])
+        if need > 0:
+          idx = (np.arange(min(checked, need))
+                 if missing is None else np.flatnonzero(~missing)[:need])
+          st["samples"].extend(
+              self._make_obs_samples(file, s, idx, row_offset, part_index))
         continue
       bad = s.isin(bad_vals).to_numpy(dtype=bool, na_value=False)
       if missing is not None:
@@ -395,7 +416,7 @@ class RuleAccumulator:
             any_col_complete = True
             self._check_distinct_rules(entity_value_rules, s, uniq, None, n,
                                        file, row_offset, part_index)
-            self._record_refs_from_strings(uniq)
+            self._record_refs_from_strings(uniq, file)
             continue
           miss = s.eq("").to_numpy(dtype=bool, na_value=False)
           checked = n - int(miss.sum())
@@ -409,7 +430,7 @@ class RuleAccumulator:
           all_missing = miss if all_missing is None else (all_missing & miss)
         self._check_distinct_rules(entity_value_rules, s, present_uniq, miss,
                                    checked, file, row_offset, part_index)
-        self._record_refs_from_strings(present_uniq)
+        self._record_refs_from_strings(present_uniq, file)
 
       if any_col_complete or all_missing is None or not all_missing.any():
         self.stats["dc.obs.entity_required"]["checked"] += n
@@ -507,13 +528,13 @@ class RuleAccumulator:
         self._check_distinct_rules(num_rules, s, present_uniq, miss, checked,
                                    file, row_offset, part_index)
       if col == "variable" and present_uniq:
-        self._record_refs_from_strings(present_uniq)
+        self._record_refs_from_strings(present_uniq, file)
 
     self.seconds += time.perf_counter() - t0
     return df
 
-  def collect_obs_refs(self, df: pd.DataFrame) -> None:
-    """Collects referenced DCIDs (variable, unit, measurement_method)."""
+  def collect_obs_refs(self, df: pd.DataFrame, file: str = "") -> None:
+    """Collects referenced DCIDs (unit, measurement_method)."""
     t0 = time.perf_counter()
     for col in REF_COLUMNS:
       if col not in df.columns:
@@ -523,14 +544,14 @@ class RuleAccumulator:
         uniq = set(s.tolist())
         uniq.discard("")
         if uniq:
-          self._record_refs_from_strings(uniq)
+          self._record_refs_from_strings(uniq, file)
       else:
         present = s.dropna()
         if len(present):
           uniq = set(present.tolist())
           uniq.discard("")
           if uniq:
-            self._record_refs_from_strings(uniq)
+            self._record_refs_from_strings(uniq, file)
     self.seconds += time.perf_counter() - t0
 
   # ---- triples ------------------------------------------------------------
@@ -547,7 +568,16 @@ class RuleAccumulator:
     codes, usubj = pd.factorize(subj)
     uh = pd.util.hash_array(usubj.astype(object), categorize=False)
     self.defined.append(uh)
-    self.refs.append(hash_distinct(oid))
+    for s_val in usubj:
+      if isinstance(s_val, str) and s_val:
+        ns = _strip_ns(s_val)
+        if ns:
+          self.defined_dcids.add(ns)
+    oid_set = set(oid.tolist())
+    oid_set.discard("")
+    oid_set.discard(None)
+    if oid_set:
+      self._record_refs_from_strings(oid_set, file)
 
     # Validate node subject DCID format and max length (distinct per subject).
     fmt_st = self.stats["dc.dcid.format.node"]
@@ -601,12 +631,10 @@ class RuleAccumulator:
         0, dtype=np.uint64)
 
   def partial(self) -> dict:
-    if self._seen_refs:
-      self.refs.append(hash_distinct(self._seen_refs))
-      self._seen_refs.clear()
     return {
         "stats": self.stats,
-        "refs": self._u(self.refs),
+        "ref_dcids": self.ref_dcids,
+        "defined_dcids": self.defined_dcids,
         "defined": self._u(self.defined),
         "typed": self._u(self.typed),
         "untyped": self.untyped,
@@ -622,9 +650,12 @@ class RuleAccumulator:
       m["checked"] += st["checked"]
       m["violations"] += st["violations"]
       m["samples"] = (m["samples"] + st["samples"])[:K]
-    for k, dst in (("refs", self.refs), ("defined", self.defined),
-                   ("typed", self.typed), ("svs", self.svs),
-                   ("stat_checked", self.stat_checked_subjects)):
+    for d, f in p["ref_dcids"].items():
+      self.ref_dcids.setdefault(d, f)
+    self.defined_dcids.update(p["defined_dcids"])
+    for k, dst in (("defined", self.defined), ("typed", self.typed),
+                   ("svs", self.svs), ("stat_checked",
+                                       self.stat_checked_subjects)):
       if len(p[k]):
         dst.append(p[k])
     for h, v in p["untyped"].items():
@@ -633,15 +664,12 @@ class RuleAccumulator:
       self.bad_stat.setdefault(h, v)
     self.seconds += p["seconds"]
 
-  def finalize(self) -> dict:
+  def finalize(self,
+               resolver: NodeExistenceResolver | None = None) -> dict:
     t0 = time.perf_counter()
-    if self._seen_refs:
-      self.refs.append(hash_distinct(self._seen_refs))
-      self._seen_refs.clear()
     defined = self._u(self.defined)
     typed = self._u(self.typed)
     svs = self._u(self.svs)
-    refs = self._u(self.refs)
 
     st = self.stats["dc.node.typeof_required"]
     st["checked"] = len(defined)
@@ -667,18 +695,33 @@ class RuleAccumulator:
         "value": val,
     } for _, (s, val, f) in bad[:K]]
 
-    unresolved = np.setdiff1d(refs, defined, assume_unique=True)
+    unresolved = set(self.ref_dcids) - self.defined_dcids
+    references: dict = {
+        "referenced_distinct": len(self.ref_dcids),
+        "defined_distinct": len(self.defined_dcids),
+        "referenced_not_defined": len(unresolved),
+        "mixer_v2_node_calls_at_1000": int(-(-len(unresolved) // 1000)),
+    }
+
+    active_resolver = (resolver if resolver is not None else
+                       NodeExistenceResolver.from_env())
+    if active_resolver is not None:
+      res = active_resolver.verify(unresolved)
+      ref_st = self.stats["dc.ref.exists"]
+      ref_st["checked"] = len(self.ref_dcids)
+      ref_st["violations"] = res.mixer_missing
+      ref_st["samples"] = [{
+          "dcid": d,
+          "file": self.ref_dcids.get(d, ""),
+      } for d in res.missing_dcids[:K]]
+      references["resolution"] = res.to_dict()
+
     total_violations = sum(s["violations"] for s in self.stats.values())
     self.seconds += time.perf_counter() - t0
     return {
         "rules": self.stats,
         "total_violations": total_violations,
-        "references": {
-            "referenced_distinct": int(len(refs)),
-            "defined_distinct": int(len(defined)),
-            "referenced_not_defined": int(len(unresolved)),
-            "mixer_v2_node_calls_at_1000": int(-(-len(unresolved) // 1000)),
-        },
+        "references": references,
         "rule_seconds_total_all_processes": round(self.seconds, 3),
     }
 
