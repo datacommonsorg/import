@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for stats.importer."""
+"""Tests for stats.importers.importer."""
 
 import unittest
 
-from stats.data import Triple
-from stats.importer import count_nodes_from_triples
+from stats.graph.data import Triple
+from stats.importers.importer import count_nodes_from_triples
 
 
 def _type_of(node_id: str, node_type: str) -> Triple:

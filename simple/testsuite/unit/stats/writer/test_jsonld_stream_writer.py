@@ -18,9 +18,9 @@ import os
 
 import pandas as pd
 from stats import constants
-from stats.config import Config
-from stats.data import Triple
-from stats.jsonld_stream_writer import JsonLdStreamWriter
+from stats.config.config import Config
+from stats.graph.data import Triple
+from stats.writer.jsonld_stream_writer import JsonLdStreamWriter
 from util.filesystem import open_dir
 
 

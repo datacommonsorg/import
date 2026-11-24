@@ -19,9 +19,9 @@ from unittest import mock
 
 import numpy as np
 import pytest
-from stats import obs_id_collisions
-from stats.obs_id_collisions import find_cross_file_collisions
-from stats.obs_id_collisions import save_obs_ids
+from stats.writer import obs_id_collisions
+from stats.writer.obs_id_collisions import find_cross_file_collisions
+from stats.writer.obs_id_collisions import save_obs_ids
 
 _MAX_ID = (1 << 64) - 1
 

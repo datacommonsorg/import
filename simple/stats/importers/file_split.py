@@ -30,11 +30,11 @@ import re
 from typing import Callable
 
 import pandas as pd
-from stats.config import Config
-from stats.data import ImportType
-from stats.jsonld_stream_writer import file_shard_stem
-from stats.jsonld_stream_writer import node_part_stem
-from stats.jsonld_stream_writer import part_shards_could_collide
+from stats.config.config import Config
+from stats.graph.data import ImportType
+from stats.writer.jsonld_stream_writer import file_shard_stem
+from stats.writer.jsonld_stream_writer import node_part_stem
+from stats.writer.jsonld_stream_writer import part_shards_could_collide
 from util.filesystem import File
 
 # Files larger than this are split, by default (see `num_parts`).
