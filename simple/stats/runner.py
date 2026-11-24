@@ -451,10 +451,10 @@ class Runner:
 
     # Both are set by the ingestion workflow. Any mode other than DRY_RUN,
     # including none, is reported as INGEST.
-    mode = (RunMode.DRY_RUN if os.getenv("INGESTION_MODE") == RunMode.DRY_RUN
-            else RunMode.INGEST)
     self.summary_generator = SummaryGenerator(
-        os.getenv("WORKFLOW_EXECUTION_ID"), mode)
+        workflow_execution_id=os.getenv("WORKFLOW_EXECUTION_ID"),
+        mode=(RunMode.DRY_RUN if os.getenv("INGESTION_MODE") == RunMode.DRY_RUN
+              else RunMode.INGEST))
 
   def _open_input_dir(self, path: str) -> Dir:
     self.input_dir = open_dir(path)
