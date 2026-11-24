@@ -39,7 +39,8 @@ class RunMode(str, Enum):
   """How the preprocessor was run."""
 
   INGEST = "INGEST"
-  # TODO: Add DRY_RUN once the workflow supports dry runs.
+  # Preprocessing only: the workflow stops before dataflow.
+  DRY_RUN = "DRY_RUN"
 
 
 class RunStatus(str, Enum):
