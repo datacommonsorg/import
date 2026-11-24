@@ -47,6 +47,7 @@ from stats.importer import Importer
 from stats.jsonld_stream_writer import JsonLdStreamWriter
 from stats.jsonld_stream_writer import part_shard_tag
 from stats.mcf_importer import McfImporter
+from stats import pp_rules
 from stats.nodes import Nodes
 from stats.obs_id_collisions import find_cross_file_collisions
 from stats.obs_id_collisions import save_obs_ids
@@ -192,6 +193,7 @@ class ImportProcResult:
   processed_imports: set[str]
   counts: ImportCounts
   obs_ids_path: str | None
+  rules_partial: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -328,6 +330,7 @@ def _run_single_import_proc(task: _ImportTask,
       shard_tag=part_shard_tag(task.part.index) if task.part else "")
   importer = _create_importer_for_file(config, input_file, graph_writer, nodes,
                                        task.part)
+  pp_rules.reset()
   try:
     importer.do_import()
   except BaseException:
@@ -348,6 +351,7 @@ def _run_single_import_proc(task: _ImportTask,
       processed_imports=graph_writer.processed_imports(),
       counts=importer.counts,
       obs_ids_path=obs_ids_path,
+      rules_partial=pp_rules.take_partial(),
   )
 
 
@@ -984,6 +988,8 @@ class Runner:
     """Merges the results of `file`'s tasks: the whole file, or its parts."""
     for res in results:
       self.nodes.merge_metadata(res.provenances, res.sources)
+      if res.rules_partial is not None:
+        pp_rules.current().merge(res.rules_partial)
       self.graph_writer.merge_worker(res.processed_imports,
                                      res.file_collision_counts,
                                      res.file_sample_collisions)
@@ -1009,6 +1015,7 @@ class Runner:
                                      byType=dict(counts.nodes_by_type))))
 
   def _run_imports_and_export_jsonld(self):
+    pp_rules.reset()
     self.graph_writer = JsonLdStreamWriter(self.output_dir, self.import_names,
                                            self.config)
 
@@ -1022,7 +1029,11 @@ class Runner:
       counts = count_nodes_from_triples(triples)
       self.summary_generator.add_runner_node_counts(prov_dir, counts.nodes,
                                                     counts.nodes_by_type)
+      pp_rules.current().check_triples(triples,
+                                       f"<nodes:{prov_dir or '_global'}>")
       self.graph_writer.write_triples(triples, provenance_dir=prov_dir)
+
+    pp_rules.report(pp_rules.current())
 
     # Perform strict metadata validation before committing and closing
     MetadataValidator(self.config, self.nodes).validate()

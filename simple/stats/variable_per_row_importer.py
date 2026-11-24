@@ -16,6 +16,7 @@ import json
 
 import pandas as pd
 from stats import constants
+from stats import pp_rules
 from stats.data import FileValidationError
 from stats.data import filter_invalid_observation_values
 from stats.data import ObservationProperties
@@ -199,18 +200,25 @@ class VariablePerRowImporter(Importer):
                            dtype=str,
                            usecols=mapped)
 
+      row_offset = 0
+      part_index = self.part.index if self.part is not None else None
       for chunk_df in reader:
         if chunk_df.empty:
           continue
+        chunk_len = len(chunk_df)
         observations_df = (self._apply_column_mappings(chunk_df).pipe(
             _apply_property_defaults, obs_props).pipe(
-                self._serialize_custom_dimensions,
-                obs_props.properties).pipe(_format_numeric_values).pipe(
-                    filter_invalid_observation_values).pipe(
-                        self._ensure_entity_column).pipe(
-                            _strip_namespaces, provenance))
+                pp_rules.current().check_observations, self.input_file.path,
+                self.custom_dimensions, row_offset, part_index).pipe(
+                    self._serialize_custom_dimensions,
+                    obs_props.properties).pipe(_format_numeric_values).pipe(
+                        filter_invalid_observation_values).pipe(
+                            self._ensure_entity_column).pipe(
+                                _strip_namespaces, provenance))
+        row_offset += chunk_len
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.counts = self.counts.add(self.count_observations(observations_df))
+        pp_rules.current().collect_obs_refs(observations_df)
         self.graph_writer.write_observations(observations_df, self.input_file)
 
   def _open_rows(self):

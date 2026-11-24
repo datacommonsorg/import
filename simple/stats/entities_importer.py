@@ -15,6 +15,7 @@
 import logging
 
 import pandas as pd
+from stats import pp_rules
 from stats.data import FileValidationError
 from stats.data import PreprocessorError
 from stats.data import RowEntity
@@ -190,4 +191,5 @@ class EntitiesImporter(Importer):
       triples.extend(row_entity.triples())
 
     self.counts = self.counts.add(count_nodes_from_triples(triples))
+    pp_rules.current().check_triples(triples, self.input_file.path)
     self.graph_writer.write_triples(triples, self.input_file)
