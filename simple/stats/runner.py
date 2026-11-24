@@ -449,10 +449,12 @@ class Runner:
     # under the file's folder and provenance.
     self._file_errors: list[tuple[File, FileValidationError]] = []
 
-    # Both are set by the ingestion workflow; local runs use the defaults.
+    # Both are set by the ingestion workflow. Any mode other than DRY_RUN,
+    # including none, is reported as INGEST.
+    mode = (RunMode.DRY_RUN if os.getenv("INGESTION_MODE") == RunMode.DRY_RUN
+            else RunMode.INGEST)
     self.summary_generator = SummaryGenerator(
-        os.getenv("WORKFLOW_EXECUTION_ID"),
-        RunMode(os.getenv("INGESTION_MODE") or RunMode.INGEST))
+        os.getenv("WORKFLOW_EXECUTION_ID"), mode)
 
   def _open_input_dir(self, path: str) -> Dir:
     self.input_dir = open_dir(path)
