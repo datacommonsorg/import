@@ -263,8 +263,9 @@ def test_report_mode_comes_from_the_ingestion_workflow(monkeypatch):
 def test_unknown_report_mode_fails_the_run(monkeypatch):
   """An INGESTION_MODE the report doesn't know fails before anything runs."""
   monkeypatch.setenv("INGESTION_MODE", "BOGUS")
+  runner_kwargs = {"import_names": ["oecd"]}
   error = b.run_dir(b.import_subdir("oecd", _USA),
-                    runner_kwargs={"import_names": ["oecd"]}).output["error"]
+                    runner_kwargs=runner_kwargs).output["error"]
   assert error["type"] == "ValueError"
   assert "'BOGUS' is not a valid RunMode" in error["message"]
 
