@@ -16,20 +16,20 @@ import json
 
 import pandas as pd
 from stats import constants
-from stats.data import FileValidationError
-from stats.data import filter_invalid_observation_values
-from stats.data import ObservationProperties
-from stats.data import strip_namespace
-from stats.data import strip_namespace_series
-from stats.file_split import FilePart
-from stats.graph_writer import GraphWriter
-from stats.importer import column_coverage_errors
-from stats.importer import Importer
-from stats.importer import mapping_errors
-from stats.importer import missing_column_mappings_error
-from stats.importer import read_csv_columns
-from stats.nodes import Nodes
+from stats.graph.data import FileValidationError
+from stats.graph.data import filter_invalid_observation_values
+from stats.graph.data import ObservationProperties
+from stats.graph.data import strip_namespace
+from stats.graph.data import strip_namespace_series
+from stats.graph.nodes import Nodes
+from stats.importers.file_split import FilePart
+from stats.importers.importer import column_coverage_errors
+from stats.importers.importer import Importer
+from stats.importers.importer import mapping_errors
+from stats.importers.importer import missing_column_mappings_error
+from stats.importers.importer import read_csv_columns
 from stats.report.model.summary import ValidationErrorType
+from stats.writer.graph_writer import GraphWriter
 from util.filesystem import File
 
 # Mapping from official DCID keys in config.json to internal importer columns.
@@ -99,7 +99,7 @@ class VariablePerRowImporter(Importer):
                part: FilePart | None = None) -> None:
     """
     Args:
-      part: The part of `input_file` to import (see `stats.file_split`), or
+      part: The part of `input_file` to import (see `stats.importers.file_split`), or
         None to import all of it.
     """
     super().__init__(input_file, graph_writer, nodes)

@@ -27,36 +27,37 @@ import traceback
 from typing import Callable, Optional
 
 from stats import constants
-from stats import file_split
-from stats.config import Config
-from stats.config import ImportConfig
-from stats.config import InputFileConfig
-from stats.config import parse_config
-from stats.data import FileValidationError
-from stats.data import ImportCounts
-from stats.data import ImportType
-from stats.data import invalid_configuration
-from stats.data import PreprocessorError
-from stats.data import Provenance
-from stats.data import Source
-from stats.entities_importer import EntitiesImporter
-from stats.file_split import FilePart
-from stats.graph_writer import GraphWriter
-from stats.importer import count_nodes_from_triples
-from stats.importer import Importer
-from stats.jsonld_stream_writer import JsonLdStreamWriter
-from stats.jsonld_stream_writer import part_shard_tag
-from stats.mcf_importer import McfImporter
-from stats.nodes import Nodes
-from stats.obs_id_collisions import find_cross_file_collisions
-from stats.obs_id_collisions import save_obs_ids
+from stats.config.config import Config
+from stats.config.config import ImportConfig
+from stats.config.config import InputFileConfig
+from stats.config.config import parse_config
+from stats.graph.data import FileValidationError
+from stats.graph.data import ImportCounts
+from stats.graph.data import ImportType
+from stats.graph.data import invalid_configuration
+from stats.graph.data import PreprocessorError
+from stats.graph.data import Provenance
+from stats.graph.data import Source
+from stats.graph.nodes import Nodes
+from stats.importers import file_split
+from stats.importers.entities_importer import EntitiesImporter
+from stats.importers.file_split import FilePart
+from stats.importers.importer import count_nodes_from_triples
+from stats.importers.importer import Importer
+from stats.importers.mcf_importer import McfImporter
+from stats.importers.variable_per_row_importer import VariablePerRowImporter
 from stats.report.model.summary import FileSummary
 from stats.report.model.summary import NodeCounts
+from stats.report.model.summary import RunMode
 from stats.report.model.summary import RunStatus
 from stats.report.model.summary import ValidationErrorType
 from stats.report.summary_generator import SummaryGenerator
-from stats.validation import MetadataValidator
-from stats.variable_per_row_importer import VariablePerRowImporter
+from stats.validation.validation import MetadataValidator
+from stats.writer.graph_writer import GraphWriter
+from stats.writer.jsonld_stream_writer import JsonLdStreamWriter
+from stats.writer.jsonld_stream_writer import part_shard_tag
+from stats.writer.obs_id_collisions import find_cross_file_collisions
+from stats.writer.obs_id_collisions import save_obs_ids
 from util.file_match import match
 from util.filesystem import Dir
 from util.filesystem import File
@@ -312,7 +313,7 @@ def _run_single_import_proc(task: _ImportTask,
   which comes from config. The Provenance and Source nodes that an MCF file
   defines are returned for the coordinator to merge. The task's observation
   ids, if any, are saved to a new file in `args.obs_ids_dir` (see
-  `stats.obs_id_collisions`). The coordinator found the file, and its GCS
+  `stats.writer.obs_id_collisions`). The coordinator found the file, and its GCS
   object if any, so neither is looked up again.
   """
   input_file = open_dir(task.input_dir_path).open_file(
@@ -449,7 +450,9 @@ class Runner:
     self._file_errors: list[tuple[File, FileValidationError]] = []
 
     self.summary_generator = SummaryGenerator(
-        os.getenv("WORKFLOW_EXECUTION_ID"))
+        workflow_execution_id=os.getenv("WORKFLOW_EXECUTION_ID"),
+        mode=(RunMode.DRY_RUN if os.getenv("INGESTION_MODE") == RunMode.DRY_RUN
+              else RunMode.INGEST))
 
   def _open_input_dir(self, path: str) -> Dir:
     self.input_dir = open_dir(path)

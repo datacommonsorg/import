@@ -15,14 +15,14 @@
 import logging
 
 from kg_util.mcf_parser import mcf_to_triples
-from stats.data import strip_namespace
-from stats.data import Triple
-from stats.file_split import FilePart
-from stats.graph_writer import GraphWriter
-from stats.importer import count_nodes_from_triples
-from stats.importer import Importer
-from stats.nodes import Nodes
-from stats.util import is_uri_or_namespace
+from stats.graph.data import strip_namespace
+from stats.graph.data import Triple
+from stats.graph.nodes import Nodes
+from stats.graph.util import is_uri_or_namespace
+from stats.importers.file_split import FilePart
+from stats.importers.importer import count_nodes_from_triples
+from stats.importers.importer import Importer
+from stats.writer.graph_writer import GraphWriter
 from util.filesystem import File
 
 _ID = 'ID'
@@ -54,7 +54,7 @@ class McfImporter(Importer):
                part: FilePart | None = None) -> None:
     """
     Args:
-      part: The part of `input_file` to import (see `stats.file_split`), or
+      part: The part of `input_file` to import (see `stats.importers.file_split`), or
         None to import all of it.
     """
     super().__init__(input_file, graph_writer, nodes)

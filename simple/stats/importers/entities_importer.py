@@ -15,22 +15,22 @@
 import logging
 
 import pandas as pd
-from stats.data import FileValidationError
-from stats.data import PreprocessorError
-from stats.data import RowEntity
-from stats.data import strip_namespace
-from stats.data import Triple
-from stats.file_split import FilePart
-from stats.graph_writer import GraphWriter
-from stats.importer import column_coverage_errors
-from stats.importer import count_nodes_from_triples
-from stats.importer import Importer
-from stats.importer import mapping_errors
-from stats.importer import missing_column_mappings_error
-from stats.importer import read_csv_columns
-from stats.nodes import Nodes
+from stats.graph.data import FileValidationError
+from stats.graph.data import PreprocessorError
+from stats.graph.data import RowEntity
+from stats.graph.data import strip_namespace
+from stats.graph.data import Triple
+from stats.graph.nodes import Nodes
+from stats.graph.util import has_namespace_prefix
+from stats.importers.file_split import FilePart
+from stats.importers.importer import column_coverage_errors
+from stats.importers.importer import count_nodes_from_triples
+from stats.importers.importer import Importer
+from stats.importers.importer import mapping_errors
+from stats.importers.importer import missing_column_mappings_error
+from stats.importers.importer import read_csv_columns
 from stats.report.model.summary import ValidationErrorType
-from stats.util import has_namespace_prefix
+from stats.writer.graph_writer import GraphWriter
 from util.filesystem import File
 
 # Properties whose columns give each row's DCID and type. Every entities CSV

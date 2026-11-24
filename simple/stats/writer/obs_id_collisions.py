@@ -18,7 +18,7 @@ finds the collisions within that file only. To find collisions between files,
 each worker saves the ids of its file (`save_obs_ids`) and the coordinator
 compares the saved ids of every file once all files are imported
 (`find_cross_file_collisions`). A large CSV may be imported in parts, each in
-its own worker (see `stats.file_split`): each part saves its ids, and
+its own worker (see `stats.importers.file_split`): each part saves its ids, and
 collisions between the parts of a file are counted as the file's own.
 
 An id is the first 64 bits of the observation's sha256 hash, as in

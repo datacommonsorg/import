@@ -18,7 +18,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from stats.data import FileValidationError
+from stats.graph.data import FileValidationError
 from stats.report.model.summary import DateRange
 from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileCounts

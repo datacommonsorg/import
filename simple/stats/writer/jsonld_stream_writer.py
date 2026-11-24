@@ -30,16 +30,16 @@ import uuid
 import numpy as np
 import pandas as pd
 from stats import constants
-from stats.config import Config
-from stats.data import ImportType
-from stats.data import Triple
-from stats.data import validate_numeric_values
-from stats.data import validate_variable_values
-from stats.graph_writer import GraphWriter
-from stats.obs_id_collisions import MAX_SAMPLES_PER_FILE
-from stats.obs_id_collisions import ObsIds
-from stats.util import is_entity_reference
-from stats.util import is_uri_or_namespace
+from stats.config.config import Config
+from stats.graph.data import ImportType
+from stats.graph.data import Triple
+from stats.graph.data import validate_numeric_values
+from stats.graph.data import validate_variable_values
+from stats.graph.util import is_entity_reference
+from stats.graph.util import is_uri_or_namespace
+from stats.writer.graph_writer import GraphWriter
+from stats.writer.obs_id_collisions import MAX_SAMPLES_PER_FILE
+from stats.writer.obs_id_collisions import ObsIds
 from util.filesystem import Dir
 from util.filesystem import File
 from util.filesystem import gcs_client
@@ -666,7 +666,7 @@ class JsonLdStreamWriter(GraphWriter):
     """Tracks 64-bit observation id prefixes and records any collisions.
 
     Only collisions with observations that this writer saw are found: a worker
-    sees one file. See `stats.obs_id_collisions` for collisions between files.
+    sees one file. See `stats.writer.obs_id_collisions` for collisions between files.
     """
     collisions = np.flatnonzero(self.obs_ids.add(ids))
     if not len(collisions):

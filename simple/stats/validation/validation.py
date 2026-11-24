@@ -14,11 +14,11 @@
 
 import logging
 
-from stats.config import Config
-from stats.data import PreprocessorError
-from stats.nodes import Nodes
+from stats.config.config import Config
+from stats.graph.data import PreprocessorError
+from stats.graph.nodes import Nodes
+from stats.graph.util import has_namespace_prefix
 from stats.report.model.summary import ValidationErrorType
-from stats.util import has_namespace_prefix
 
 
 class MetadataValidator:
