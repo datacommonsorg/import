@@ -169,6 +169,18 @@ def rename_obs_shard(shards: dict) -> None:
   folder["observation-other-00000.jsonld"] = folder.pop(OBS_SHARD)
 
 
+def split_obs_shard(shards: dict) -> None:
+  """Writes ProvA's observations as two parts of a split file."""
+  records = shards["ProvA"].pop(OBS_SHARD)
+  shards["ProvA"]["observation-data-p000-00000.jsonld"] = records[:200]
+  shards["ProvA"]["observation-data-p001-00000.jsonld"] = records[200:]
+
+
+def split_obs_shard_and_change_a_value(shards: dict) -> None:
+  obs_shard(shards)[300].update({"dcid:value": 99})
+  split_obs_shard(shards)
+
+
 # (planted change, expected non-zero counts). A changed shard also counts as
 # shard_bytes_changed, which is informational.
 PLANTED = {
@@ -195,6 +207,10 @@ PLANTED = {
     "obs_folder_moved": (move_obs_to_prov_b,
                          dict(obs_folder_moved=1, shard_bytes_changed=2)),
     "obs_shard_renamed": (rename_obs_shard, dict(shard_set_changed=2)),
+    "obs_shards_of_a_split_file": (split_obs_shard, {}),
+    "obs_value_changed_in_a_split_file": (split_obs_shard_and_change_a_value,
+                                          dict(obs_value_changed=1,
+                                               shard_bytes_changed=1)),
     "node_only_baseline": (lambda s: s["ProvB"][NODE_SHARD_B].pop(),
                            dict(node_only_baseline=1, shard_bytes_changed=2)),
     "node_only_candidate":

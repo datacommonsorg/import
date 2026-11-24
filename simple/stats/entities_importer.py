@@ -20,6 +20,7 @@ from stats.data import PreprocessorError
 from stats.data import RowEntity
 from stats.data import strip_namespace
 from stats.data import Triple
+from stats.file_split import FilePart
 from stats.graph_writer import GraphWriter
 from stats.importer import column_coverage_errors
 from stats.importer import count_nodes_from_triples
@@ -81,9 +82,13 @@ class EntitiesImporter(Importer):
     + Currently this importer does not resolve any entities and all entities are assumed to be pre-resolved into dcids.
     """
 
-  def __init__(self, input_file: File, graph_writer: GraphWriter,
-               nodes: Nodes) -> None:
+  def __init__(self,
+               input_file: File,
+               graph_writer: GraphWriter,
+               nodes: Nodes,
+               part: FilePart | None = None) -> None:
     super().__init__(input_file, graph_writer, nodes)
+    self.part = part
     self.ignore_columns = self.config.ignore_columns(self.input_file)
     self.provenance_id = ""
     # Map from CSV column name to the predicate its values are written under.
@@ -115,10 +120,15 @@ class EntitiesImporter(Importer):
                                   set(self.reverse_mappings),
                                   set(self.ignore_columns))
 
+  def _open_stream(self):
+    if self.part is None:
+      return self.input_file.open_stream()
+    return self.input_file.open_part_stream(self.part.header_end,
+                                            self.part.start, self.part.end)
+
   def _read_csv(self) -> None:
-    self.df = pd.read_csv(self.input_file.read_string_io(),
-                          skipinitialspace=True,
-                          dtype=str)
+    with self._open_stream() as stream:
+      self.df = pd.read_csv(stream, skipinitialspace=True, dtype=str)
     logging.info("Read %s rows.", self.df.index.size)
 
   def _check_required_values(self) -> None:
