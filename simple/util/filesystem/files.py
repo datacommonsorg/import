@@ -178,7 +178,7 @@ class File(_Entry):
     """Returns a text stream of bytes [0, header_end), then [start, end).
 
     E.g. a part of a CSV or MCF file: its header, then its body (see
-    `stats.file_split`). Read and decoded as `open_stream` reads and decodes
+    `stats.importers.file_split`). Read and decoded as `open_stream` reads and decodes
     the whole file. Reading raises ValueError unless `can_read_ranges`.
     """
     raw = self._root.open_ranges(self.path, self._gcs_object, [(0, header_end),

@@ -16,7 +16,7 @@
 import logging
 
 import pytest
-from stats import file_split
+from stats.importers import file_split
 from testsuite.lib import builders as b
 from testsuite.lib import canonical
 

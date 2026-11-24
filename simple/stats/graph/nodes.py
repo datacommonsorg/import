@@ -15,11 +15,11 @@
 from collections import defaultdict
 from dataclasses import replace
 
-from stats.config import Config
-from stats.data import Provenance
-from stats.data import Source
-from stats.data import strip_namespace
-from stats.data import Triple
+from stats.config.config import Config
+from stats.graph.data import Provenance
+from stats.graph.data import Source
+from stats.graph.data import strip_namespace
+from stats.graph.data import Triple
 from util.filesystem import File
 
 # Every run writes the global root StatVarGroup and the custom root under it,

@@ -105,7 +105,7 @@ def test_a_csv_larger_than_a_header_read_is_read_in_one_request(monkeypatch):
   # Header reads shrunk to 1 KiB, so that a small CSV spans several of them
   # but still fits in one data chunk (8 MiB).
   header_read_bytes = 1024
-  monkeypatch.setattr("stats.importer._HEADER_READ_CHUNK_BYTES",
+  monkeypatch.setattr("stats.importers.importer._HEADER_READ_CHUNK_BYTES",
                       header_read_bytes)
   files = _imports("alpha")
   rows = [b.obs_row(date=str(1000 + n)) for n in range(100)]

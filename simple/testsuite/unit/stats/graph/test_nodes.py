@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from stats.config import Config
-from stats.data import Triple
-from stats.nodes import Nodes
+from stats.config.config import Config
+from stats.graph.data import Triple
+from stats.graph.nodes import Nodes
 
 
 def test_merge_metadata_keeps_every_field():
