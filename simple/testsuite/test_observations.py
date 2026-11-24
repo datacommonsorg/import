@@ -103,6 +103,7 @@ OBSERVATION_ABOUT = [
          given=" country/USA ",
          expect="country/USA"),
     Case("NA is Namibia, not a missing value", given="NA", expect="NA"),
+    Case("NAN is kept as an entity id, not null", given="NAN", expect="NAN"),
 ]
 
 

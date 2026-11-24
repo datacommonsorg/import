@@ -129,7 +129,7 @@ def _uri_ref(val):
   if not val or pd.isna(val):
     return None
   val_str = str(val).strip()
-  if val_str == "" or val_str.lower() in ("nan", "<na>"):
+  if not val_str:
     return None
   if is_uri_or_namespace(val_str):
     return {"@id": val_str}

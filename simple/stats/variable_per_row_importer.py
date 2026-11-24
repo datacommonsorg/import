@@ -53,8 +53,12 @@ def _apply_property_defaults(df: pd.DataFrame,
   for col_name in constants.STANDARD_PROPERTY_COLUMNS.values():
     default_value = obs_props.standard.get(col_name, "")
     if col_name in df.columns:
-      source_col = df[col_name].str.strip().replace("", pd.NA)
-      df[col_name] = source_col.fillna(default_value).astype(str)
+      default_str = str(default_value)
+      df[col_name] = [
+          (v.strip() or default_str) if isinstance(v, str) else
+          (str(v).strip() or default_str if pd.notna(v) else default_str)
+          for v in df[col_name].tolist()
+      ]
     else:
       df[col_name] = default_value
   return df

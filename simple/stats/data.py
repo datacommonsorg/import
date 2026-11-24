@@ -291,7 +291,8 @@ def validate_variable_values(df: pd.DataFrame, file_path: str) -> None:
         invalid.append("")
       continue
     s = v if isinstance(v, str) else str(v)
-    if s.strip().lower() in _INVALID_VARIABLE_VALUES:
+    if strip_namespace(
+        s).lower() in _INVALID_VARIABLE_VALUES and s not in invalid:
       invalid.append(s)
   if invalid:
     raise PreprocessorError(
