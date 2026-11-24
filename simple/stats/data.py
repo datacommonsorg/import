@@ -284,23 +284,15 @@ def validate_variable_values(df: pd.DataFrame, file_path: str) -> None:
   Raises:
       PreprocessorError: If any variable is empty or a null sentinel.
   """
-  invalid_set = _INVALID_VARIABLE_VALUES
   invalid = []
-  seen = set()
-  for v in df[constants.COLUMN_VARIABLE].tolist():
-    if isinstance(v, str):
-      if v.strip().lower() in invalid_set and v not in seen:
-        seen.add(v)
-        invalid.append(v)
-    elif v is None or pd.isna(v):
-      if "" not in seen:
-        seen.add("")
+  for v in dict.fromkeys(df[constants.COLUMN_VARIABLE].tolist()):
+    if v is None or (not isinstance(v, str) and pd.isna(v)):
+      if "" not in invalid:
         invalid.append("")
-    else:
-      s = str(v)
-      if s.strip().lower() in invalid_set and s not in seen:
-        seen.add(s)
-        invalid.append(s)
+      continue
+    s = v if isinstance(v, str) else str(v)
+    if s.strip().lower() in _INVALID_VARIABLE_VALUES:
+      invalid.append(s)
   if invalid:
     raise PreprocessorError(
         f"Invalid or missing variable value(s) found in file '{file_path}': "
