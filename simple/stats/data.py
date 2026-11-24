@@ -244,7 +244,17 @@ def strip_namespace_series(series: pd.Series) -> pd.Series:
   Returns:
     Series with namespaces stripped
   """
-  return series.str.split(_NAMESPACE_DELIMITER, n=1).str[-1]
+  if series.empty:
+    return series
+  delim = _NAMESPACE_DELIMITER
+  return pd.Series(
+      [
+          v[v.find(delim) + 1:] if isinstance(v, str) and delim in v else v
+          for v in series.tolist()
+      ],
+      index=series.index,
+      dtype=series.dtype,
+  )
 
 
 def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
@@ -253,7 +263,10 @@ def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
   Runs after `_format_numeric_values`, which turns missing values (including
   pandas NA strings such as "<NA>") into "".
   """
-  return df[df[constants.COLUMN_VALUE] != ""].copy()
+  mask = df[constants.COLUMN_VALUE] != ""
+  if mask.all():
+    return df
+  return df[mask].copy()
 
 
 def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:

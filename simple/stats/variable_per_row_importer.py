@@ -42,6 +42,10 @@ STANDARD_PROPERTY_MAPPING = {
     },
 }
 
+# Max distinct custom-dimension tuples cached across chunks of one file.
+# Large enough to hold census-tract-scale places (~72-85k) without thrashing.
+_MAX_CUSTOM_DIM_CACHE = 1 << 17
+
 
 def _apply_property_defaults(df: pd.DataFrame,
                              obs_props: ObservationProperties) -> pd.DataFrame:
@@ -98,6 +102,7 @@ class VariablePerRowImporter(Importer):
     self.part = part
     # Validated by validate_headers, which the runner calls before do_import.
     self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
+    self._custom_dim_cache: dict[tuple, str] = {}
 
   def do_import(self) -> None:
     self._write_observations()
@@ -226,21 +231,28 @@ class VariablePerRowImporter(Importer):
     custom_cols = [dim for dim in self.custom_dimensions if dim in df.columns]
 
     if not custom_cols:
-      static_json = json.dumps(static_props) if static_props else ""
-      df[constants.COLUMN_PROPERTIES] = static_json
+      df[constants.COLUMN_PROPERTIES] = (json.dumps(static_props)
+                                         if static_props else "")
       return df
 
-    # Rows repeat the same few dimension values (e.g. places), so each
-    # distinct combination is serialized once. Missing values become "", which
-    # serializing skips too, so that they compare equal (NaN != NaN).
-    serialized_by_values: dict[tuple, str] = {}
+    # Rows repeat the same dimension values across chunks (e.g. places across
+    # dates), so cache distinct combinations across chunks with a bounded dict.
+    # Missing values become "", which serializing skips too, so that they
+    # compare equal (NaN != NaN).
+    cache = self._custom_dim_cache
+    if len(cache) >= _MAX_CUSTOM_DIM_CACHE:
+      cache.clear()
+    col_lists = [df[c].tolist() for c in custom_cols]
     serialized = []
-    dimensions = df[custom_cols].fillna("")
-    for values in dimensions.itertuples(index=False, name=None):
-      if values not in serialized_by_values:
-        serialized_by_values[values] = _serialize_row_dimensions(
-            dict(zip(custom_cols, values)), static_props)
-      serialized.append(serialized_by_values[values])
+    for raw_values in zip(*col_lists):
+      key = tuple(v if isinstance(v, str) else ("" if pd.isna(v) else str(v))
+                  for v in raw_values)
+      res = cache.get(key)
+      if res is None:
+        res = _serialize_row_dimensions(dict(zip(custom_cols, key)),
+                                        static_props)
+        cache[key] = res
+      serialized.append(res)
     df[constants.COLUMN_PROPERTIES] = serialized
     return df.drop(columns=custom_cols)
 
