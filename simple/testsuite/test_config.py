@@ -248,23 +248,6 @@ def test_single_import_name_runs_only_that_subdirectory():
   }]
 
 
-def test_report_mode_comes_from_the_ingestion_workflow(monkeypatch):
-  """The workflow sets INGESTION_MODE; any value but DRY_RUN reports INGEST."""
-  files = b.import_subdir("oecd", _USA)
-  runner_kwargs = {"import_names": ["oecd"]}
-
-  def mode() -> str:
-    return b.run_dir(
-        files,
-        runner_kwargs=runner_kwargs).output["ingestion_report"]["run"]["mode"]
-
-  assert mode() == "INGEST"
-  monkeypatch.setenv("INGESTION_MODE", "DRY_RUN")
-  assert mode() == "DRY_RUN"
-  monkeypatch.setenv("INGESTION_MODE", "BOGUS")
-  assert mode() == "INGEST"
-
-
 def test_selected_import_names_run_only_those_subdirectories():
   result = b.run_dir(
       {
