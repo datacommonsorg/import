@@ -260,6 +260,7 @@ class Importer:
     counted but don't affect the date range.
     """
     dates = observations_df[constants.COLUMN_DATE].dropna()
+    dates = dates[dates != ""]
     return ImportCounts(observations=len(observations_df),
                         date_range=DateRange(min=dates.min(), max=dates.max())
                         if not dates.empty else None)
