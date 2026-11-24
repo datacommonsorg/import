@@ -16,5 +16,8 @@
 Layout:
   graph_writer         Abstract GraphWriter sink.
   jsonld_stream_writer Streams observation and node JSON-LD shards to disk/GCS.
+  jsonld_serializer    Pure JSON-LD serialization for observation & node shards.
+  shard_naming         Shard naming stems, part tags, and collision checks.
+  shard_sink           Asynchronous local/GCS shard upload and cleanup pool.
   obs_id_collisions    Within-file ObsIds and cross-file collision detection.
 """
