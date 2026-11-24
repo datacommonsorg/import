@@ -25,10 +25,10 @@ from pydantic import model_validator
 from pydantic import ValidationError
 from pydantic.alias_generators import to_camel
 from pydantic_core import PydanticCustomError
-from stats.data import ImportType
-from stats.data import invalid_configuration
-from stats.data import strip_namespace
-from stats.util import is_uri_or_namespace
+from stats.graph.data import ImportType
+from stats.graph.data import invalid_configuration
+from stats.graph.data import strip_namespace
+from stats.graph.util import is_uri_or_namespace
 from util.file_match import match
 from util.file_match import validate_pattern
 from util.filesystem import File

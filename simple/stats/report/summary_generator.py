@@ -25,7 +25,7 @@ import logging
 import os
 
 from stats import constants
-from stats.data import FileValidationError
+from stats.graph.data import FileValidationError
 from stats.report.model.summary import DateRange
 from stats.report.model.summary import ExecutionMetadata
 from stats.report.model.summary import FileCounts

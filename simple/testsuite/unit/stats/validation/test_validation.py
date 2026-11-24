@@ -14,10 +14,10 @@
 
 import unittest
 
-from stats.config import Config
-from stats.nodes import Nodes
+from stats.config.config import Config
+from stats.graph.nodes import Nodes
 from stats.report.model.summary import ValidationErrorType
-from stats.validation import MetadataValidator
+from stats.validation.validation import MetadataValidator
 
 
 class TestMetadataValidator(unittest.TestCase):

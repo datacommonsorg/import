@@ -15,7 +15,7 @@
 from collections.abc import Collection
 
 import pandas as pd
-from stats.data import Triple
+from stats.graph.data import Triple
 from util.filesystem import File
 
 
