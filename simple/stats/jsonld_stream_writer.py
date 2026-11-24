@@ -249,7 +249,8 @@ class _CompiledProps(NamedTuple):
     fields_json: Leading-comma JSON fragment for every custom property.
     parsed: Read-only mapping used only by `_build_conflicting_observation_json`.
     has_about: True if `dcid:observationAbout` appears in `parsed`.
-    has_other_std: True if any key in `_OTHER_STD_OBS_KEYS` appears in `parsed`.
+    has_other_std: True if any key in `_OTHER_STD_OBS_KEYS` appears in `parsed`
+      or two custom properties normalize to the same `dcid:` key.
   """
   id_props_bytes: bytes
   obs_props_suffix: str
@@ -274,7 +275,7 @@ def _compile_props_cached(props: str) -> _CompiledProps:
   obs_props_suffix = f',"dcid:observationProperties":{_to_json(prefixed_keys)}'
   parts = []
   has_about = False
-  has_other_std = False
+  has_other_std = len(set(prefixed_keys)) != len(prefixed_keys)
   for prop_key, v in zip(prefixed_keys, parsed.values()):
     if prop_key == "dcid:observationAbout":
       has_about = True
@@ -342,13 +343,13 @@ def _build_conflicting_observation_json(row: tuple, obs_hash: str,
   }
   if entity_ref := _ref(entity):
     obs_obj["dcid:observationAbout"] = entity_ref
-  if provenance:
+  if _has_value(provenance):
     obs_obj["dcid:provenance"] = _ref(provenance)
-  if unit:
+  if _has_value(unit):
     obs_obj["dcid:unit"] = _ref(unit)
   if sf := _text(scaling_factor):
     obs_obj["dcid:scalingFactor"] = sf
-  if mmethod:
+  if _has_value(mmethod):
     obs_obj["dcid:measurementMethod"] = _ref(mmethod)
   if p := _text(period):
     obs_obj["dcid:observationPeriod"] = p

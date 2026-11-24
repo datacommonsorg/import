@@ -140,22 +140,41 @@ def test_observation_json_escaping_and_custom_namespaces(tmp_path):
 def test_observation_custom_property_overrides_standard_key(tmp_path):
   nodes, _ = _write_and_load_obs(
       tmp_path,
-      [{
-          constants.COLUMN_ENTITY:
-              "country/USA",
-          constants.COLUMN_UNIT:
-              "USD",
-          constants.COLUMN_PROPERTIES:
-              json.dumps({
-                  "dcid:observationAbout": "country/FRA",
-                  "unit": "dcid:EUR",
-              }),
-      }],
+      [
+          {
+              constants.COLUMN_ENTITY:
+                  "country/USA",
+              constants.COLUMN_UNIT:
+                  "USD",
+              constants.COLUMN_MEASUREMENT_METHOD:
+                  float("nan"),
+              constants.COLUMN_PROPERTIES:
+                  json.dumps({
+                      "dcid:observationAbout": "country/FRA",
+                      "unit": "dcid:EUR",
+                  }),
+          },
+          {
+              # Duplicate normalized custom keys ("gender" and "dcid:gender")
+              # must overwrite rather than emit duplicate keys in JSON.
+              constants.COLUMN_ENTITY:
+                  "country/USA",
+              constants.COLUMN_PROPERTIES:
+                  json.dumps({
+                      "gender": "dcs:Female",
+                      "dcid:gender": "dcs:Male",
+                  }),
+          },
+      ],
   )
-  assert len(nodes) == 1
+  assert len(nodes) == 2
   obs = nodes[0]
   assert obs["dcid:observationAbout"] == {"@id": "dcid:country/FRA"}
   assert obs["dcid:unit"] == {"@id": "dcid:EUR"}
+  assert "dcid:measurementMethod" not in obs
+  assert nodes[1]["dcid:gender"] == {"@id": "dcs:Male"}
+  [shard] = list((tmp_path / "out").glob("jsonld/run_*/*/observation-*.jsonld"))
+  assert shard.read_text().count('"dcid:gender":') == 1
 
 
 def test_observation_invalid_properties_json_falls_back(tmp_path, caplog):
