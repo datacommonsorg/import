@@ -71,21 +71,24 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
   public static PCollection<Void> generateAndWriteEmbeddings(
       Pipeline pipeline,
       SpannerClient spannerClient,
+      String importName,
       PCollection<EmbeddingContent> contents,
       PCollection<Void> deleteWaitSignal,
       VertexAiEmbeddingClient embeddingClient,
       String embeddingTableName,
       EmbeddingSpec spec,
       int batchSize) {
-    String label = spec.embeddingLabel();
+    String stageSuffix = spec.embeddingLabel() + "-" + importName;
     PCollection<Mutation> mutations =
-        buildEmbeddingMutations(contents, embeddingClient, embeddingTableName, spec, batchSize);
+        buildEmbeddingMutations(
+            importName, contents, embeddingClient, embeddingTableName, spec, batchSize);
     PCollection<Mutation> mutationsToWrite =
         deleteWaitSignal != null
-            ? mutations.apply("WaitForDeletedEmbeddings_" + label, Wait.on(deleteWaitSignal))
+            ? mutations.apply("WaitForDeletedEmbeddings_" + stageSuffix, Wait.on(deleteWaitSignal))
             : mutations;
     SpannerWriteResult writeResult =
-        spannerClient.writeMutations(pipeline, "WriteNodeEmbeddings_" + label, mutationsToWrite);
+        spannerClient.writeMutations(
+            pipeline, "WriteNodeEmbeddings_" + stageSuffix, mutationsToWrite);
     return writeResult.getOutput();
   }
 
@@ -94,12 +97,13 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
    * GenerateEmbeddingsFn} to produce Spanner {@link Mutation}s for {@code embeddingTableName}.
    */
   public static PCollection<Mutation> buildEmbeddingMutations(
+      String importName,
       PCollection<EmbeddingContent> contents,
       VertexAiEmbeddingClient embeddingClient,
       String embeddingTableName,
       EmbeddingSpec spec,
       int batchSize) {
-    String label = spec.embeddingLabel();
+    String stageSuffix = spec.embeddingLabel() + "-" + importName;
     int effectiveBatchSize =
         batchSize > 0 ? Math.min(batchSize, MAX_BATCH_SIZE) : DEFAULT_BATCH_SIZE;
     BatchElements.BatchConfig batchConfig =
@@ -108,9 +112,9 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
             .withMaxBatchSize(effectiveBatchSize)
             .build();
     return contents
-        .apply("BatchContentsForEmbedding_" + label, BatchElements.withConfig(batchConfig))
+        .apply("BatchContentsForEmbedding_" + stageSuffix, BatchElements.withConfig(batchConfig))
         .apply(
-            "GenerateEmbeddings_" + label,
+            "GenerateEmbeddings_" + stageSuffix,
             ParDo.of(new GenerateEmbeddingsFn(embeddingClient, embeddingTableName, spec)));
   }
 

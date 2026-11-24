@@ -29,13 +29,10 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.ingestion.data.Edge;
+import org.datacommons.ingestion.data.NodeSubGraph;
+import org.datacommons.ingestion.pipeline.GraphIngestionUtil;
 import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
-import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
-import org.datacommons.proto.Mcf.McfGraph.TypedValue;
-import org.datacommons.proto.Mcf.McfGraph.Values;
-import org.datacommons.proto.Mcf.ValueType;
-import org.datacommons.util.McfUtil;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,65 +42,33 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class GenerateEmbeddingContentFnTest {
 
-  private static final McfGraph STAT_VAR_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "Count_Person",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Count_Person"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Total Population"))
-                  .putPvs(
-                      "typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "StatisticalVariable"))
-                  .build())
-          .build();
+  private static Edge edge(String subjectId, String predicate, String objectId) {
+    return Edge.builder()
+        .subjectId(subjectId)
+        .predicate(predicate)
+        .objectId(objectId)
+        .provenance("dc/base/Test")
+        .build();
+  }
 
-  private static final McfGraph FARM_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "Farm",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Farm"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Farm"))
-                  .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "Class"))
-                  .putPvs(
-                      "description",
-                      Values.newBuilder()
-                          .addTypedValues(
-                              TypedValue.newBuilder()
-                                  .setType(ValueType.TEXT)
-                                  .setValue("Second sentence")
-                                  .build())
-                          .addTypedValues(
-                              TypedValue.newBuilder()
-                                  .setType(ValueType.TEXT)
-                                  .setValue("First sentence")
-                                  .build())
-                          .build())
-                  .build())
-          .build();
+  private static final NodeSubGraph STAT_VAR_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph(
+          "Count_Person", "Total Population", List.of("StatisticalVariable"));
 
-  private static final McfGraph BLANK_NAME_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "dc/123",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "dc/123"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "   "))
-                  .putPvs(
-                      "typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "StatisticalVariable"))
-                  .build())
-          .build();
+  private static final NodeSubGraph FARM_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph(
+          "Farm",
+          "Farm",
+          List.of("Class"),
+          List.of(
+              edge("Farm", "description", "Second sentence"),
+              edge("Farm", "description", "First sentence")));
 
-  private static final McfGraph UNMATCHED_TYPE_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "dc/456",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "dc/456"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Valid Name"))
-                  .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "UnconfiguredType"))
-                  .build())
-          .build();
+  private static final NodeSubGraph BLANK_NAME_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph("dc/123", "   ", List.of("StatisticalVariable"));
+
+  private static final NodeSubGraph UNMATCHED_TYPE_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph("dc/456", "Valid Name", List.of("UnconfiguredType"));
 
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
@@ -203,10 +168,9 @@ public class GenerateEmbeddingContentFnTest {
             Map.of("Class", List.of("name", "description")),
             NodeFilterType.NO_FILTER);
 
-    PropertyValues pvs = FARM_GRAPH.getNodesMap().get("Farm");
-
     Map<String, String> props =
-        GenerateEmbeddingContentFn.extractPredicateProperties(pvs, List.of("Class"), spec);
+        GenerateEmbeddingContentFn.extractPredicateProperties(
+            FARM_NODE.getEdges(), List.of("Class"), spec);
     assertEquals(Map.of("description", "First sentence. Second sentence"), props);
   }
 
@@ -221,20 +185,14 @@ public class GenerateEmbeddingContentFnTest {
             Map.of("Class", List.of("name", "description")),
             NodeFilterType.NO_FILTER);
 
-    McfGraph longFarmGraph =
-        McfGraph.newBuilder()
-            .putNodes(
-                "Farm",
-                PropertyValues.newBuilder()
-                    .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Farm"))
-                    .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Farm"))
-                    .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "Class"))
-                    .putPvs("description", McfUtil.newValues(ValueType.TEXT, "a".repeat(10000)))
-                    .build())
-            .build();
+    NodeSubGraph longFarmNode =
+        GraphIngestionUtil.subjectNodeSubGraph(
+            "Farm",
+            "Farm",
+            List.of("Class"),
+            List.of(edge("Farm", "description", "a".repeat(10000))));
 
-    EmbeddingContent content =
-        GenerateEmbeddingContentFn.buildEmbeddingContent(longFarmGraph, spec);
+    EmbeddingContent content = GenerateEmbeddingContentFn.buildEmbeddingContent(longFarmNode, spec);
     assertNotNull(content);
     assertEquals(GenerateEmbeddingContentFn.MAX_CHAR_LENGTH, content.textToEmbed().length());
     assertTrue(
@@ -271,7 +229,7 @@ public class GenerateEmbeddingContentFnTest {
             NodeFilterType.NO_FILTER);
 
     EmbeddingContent content =
-        GenerateEmbeddingContentFn.buildEmbeddingContent(STAT_VAR_GRAPH, spec);
+        GenerateEmbeddingContentFn.buildEmbeddingContent(STAT_VAR_NODE, spec);
 
     assertNotNull(content);
     assertEquals("Count_Person", content.subjectId());
@@ -298,7 +256,7 @@ public class GenerateEmbeddingContentFnTest {
             Map.of("Class", List.of("name", "description")),
             NodeFilterType.NO_FILTER);
 
-    EmbeddingContent content = GenerateEmbeddingContentFn.buildEmbeddingContent(FARM_GRAPH, spec);
+    EmbeddingContent content = GenerateEmbeddingContentFn.buildEmbeddingContent(FARM_NODE, spec);
 
     assertNotNull(content);
     String expectedJson = "{\"name\":\"Farm\",\"description\":\"First sentence. Second sentence\"}";
@@ -321,8 +279,8 @@ public class GenerateEmbeddingContentFnTest {
             Map.of("StatisticalVariable", List.of("subject_id", "name")),
             NodeFilterType.NO_FILTER);
 
-    assertNull(GenerateEmbeddingContentFn.buildEmbeddingContent(BLANK_NAME_GRAPH, spec));
-    assertNull(GenerateEmbeddingContentFn.buildEmbeddingContent(UNMATCHED_TYPE_GRAPH, spec));
+    assertNull(GenerateEmbeddingContentFn.buildEmbeddingContent(BLANK_NAME_NODE, spec));
+    assertNull(GenerateEmbeddingContentFn.buildEmbeddingContent(UNMATCHED_TYPE_NODE, spec));
   }
 
   @Test
@@ -340,9 +298,10 @@ public class GenerateEmbeddingContentFnTest {
                 List.of("subject_id", "name")),
             NodeFilterType.NO_FILTER);
 
-    PCollection<McfGraph> candidates = pipeline.apply(Create.of(STAT_VAR_GRAPH, BLANK_NAME_GRAPH));
+    PCollection<NodeSubGraph> candidates =
+        pipeline.apply(Create.of(STAT_VAR_NODE, BLANK_NAME_NODE));
     PCollection<EmbeddingContent> contents =
-        GenerateEmbeddingContentFn.generateEmbeddingContent(candidates, spec);
+        GenerateEmbeddingContentFn.generateEmbeddingContent("testImport", candidates, spec);
 
     String expectedJson = "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}";
     long expectedFp =

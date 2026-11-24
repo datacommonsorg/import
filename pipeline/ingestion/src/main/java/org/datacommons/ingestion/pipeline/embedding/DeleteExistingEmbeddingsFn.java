@@ -68,16 +68,18 @@ public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
   public static PCollection<Void> deleteExistingEmbeddings(
       Pipeline pipeline,
       SpannerClient spannerClient,
+      String importName,
       String embeddingTable,
       String embeddingLabel,
       String provenance) {
+    String stageSuffix = embeddingLabel + "-" + importName;
     PCollection<String> subjectIds =
-        readSubjectIdsByProvenance(pipeline, spannerClient, provenance, embeddingLabel);
+        readSubjectIdsByProvenance(pipeline, spannerClient, provenance, stageSuffix);
     PCollection<Mutation> deleteMutations =
-        buildDeleteMutations(subjectIds, embeddingTable, embeddingLabel);
+        buildDeleteMutations(importName, subjectIds, embeddingTable, embeddingLabel);
     SpannerWriteResult writeResult =
         spannerClient.writeMutations(
-            pipeline, "WriteDeletedEmbeddings_" + embeddingLabel, deleteMutations);
+            pipeline, "WriteDeletedEmbeddings_" + stageSuffix, deleteMutations);
     return writeResult.getOutput();
   }
 
@@ -112,17 +114,20 @@ public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
   }
 
   static PCollection<Mutation> buildDeleteMutations(
-      PCollection<String> subjectIds, String embeddingTable, String embeddingLabel) {
+      String importName,
+      PCollection<String> subjectIds,
+      String embeddingTable,
+      String embeddingLabel) {
+    String stageSuffix = embeddingLabel + "-" + importName;
     BatchElements.BatchConfig batchConfig =
         BatchElements.BatchConfig.builder()
             .withMinBatchSize(DELETE_BATCH_SIZE)
             .withMaxBatchSize(DELETE_BATCH_SIZE)
             .build();
     return subjectIds
+        .apply("BatchCandidateIdsForDelete_" + stageSuffix, BatchElements.withConfig(batchConfig))
         .apply(
-            "BatchCandidateIdsForDelete_" + embeddingLabel, BatchElements.withConfig(batchConfig))
-        .apply(
-            "BuildDeleteEmbeddingMutations_" + embeddingLabel,
+            "BuildDeleteEmbeddingMutations_" + stageSuffix,
             ParDo.of(new DeleteExistingEmbeddingsFn(embeddingTable, embeddingLabel)));
   }
 

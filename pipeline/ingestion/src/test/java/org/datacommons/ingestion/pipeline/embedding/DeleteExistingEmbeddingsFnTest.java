@@ -82,7 +82,7 @@ public class DeleteExistingEmbeddingsFnTest {
 
     PCollection<Mutation> mutations =
         DeleteExistingEmbeddingsFn.buildDeleteMutations(
-            subjectIds, "NodeEmbedding", "base_text_embedding");
+            "testImport", subjectIds, "NodeEmbedding", "base_text_embedding");
 
     Mutation expected =
         DeleteExistingEmbeddingsFn.buildDeleteMutation(

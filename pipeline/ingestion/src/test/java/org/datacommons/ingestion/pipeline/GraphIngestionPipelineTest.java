@@ -1,6 +1,10 @@
 package org.datacommons.ingestion.pipeline;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,6 +16,9 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TFRecordIO;
@@ -21,6 +28,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.datacommons.ingestion.pipeline.embedding.VertexAiEmbeddingClient;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
@@ -74,7 +82,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
 
     // 4. Build Pipeline
-    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient, null);
 
     // 5. Run Pipeline
     pipeline.run().waitUntilFinish();
@@ -142,7 +150,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
 
     // 4. Build Pipeline
-    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient, null);
 
     // 5. Run Pipeline
     pipeline.run().waitUntilFinish();
@@ -196,7 +204,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
 
     // 4. Build Pipeline
-    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient, null);
 
     // 5. Run Pipeline
     pipeline.run().waitUntilFinish();
@@ -261,7 +269,7 @@ public class GraphIngestionPipelineTest implements Serializable {
     SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
 
     // 4. Build and Run Pipeline
-    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient, null);
     pipeline.run().waitUntilFinish();
 
     // 5. Assertions: one TimeSeries mutation per record, one Observation mutation per obs.
@@ -359,5 +367,163 @@ public class GraphIngestionPipelineTest implements Serializable {
 
     assertTrue("Process should terminate within 30 seconds without hanging", finished);
     assertTrue("Process should exit with non-zero exit code", process.exitValue() != 0);
+  }
+
+  private SpannerWriteResult createMockWriteResult(String suffix) {
+    SpannerWriteResult mockWriteResult =
+        mock(SpannerWriteResult.class, withSettings().serializable());
+    PCollection<Void> mockWriteOutput =
+        pipeline.apply("CreateWriteSignal_" + suffix, Create.empty(TypeDescriptor.of(Void.class)));
+    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
+    return mockWriteResult;
+  }
+
+  @Test
+  public void testIsEmbeddingsEnabled() {
+    assertFalse(GraphIngestionPipeline.isEmbeddingsEnabled(null));
+
+    IngestionPipelineOptions defaultOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    assertFalse(GraphIngestionPipeline.isEmbeddingsEnabled(defaultOpts));
+
+    defaultOpts.setEnableEmbeddings(true);
+    assertTrue(GraphIngestionPipeline.isEmbeddingsEnabled(defaultOpts));
+  }
+
+  @Test
+  public void testCreateVertexAiEmbeddingClient_conditionalOnEnableEmbeddings() {
+    IngestionPipelineOptions disabledOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    disabledOpts.setProjectId("spanner-project");
+    assertNull(GraphIngestionPipeline.createVertexAiEmbeddingClient(disabledOpts));
+
+    IngestionPipelineOptions defaultLocationOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    defaultLocationOpts.setProjectId("spanner-project");
+    defaultLocationOpts.setEnableEmbeddings(true);
+    VertexAiEmbeddingClient defaultClient =
+        GraphIngestionPipeline.createVertexAiEmbeddingClient(defaultLocationOpts);
+    assertNotNull(defaultClient);
+    assertEquals("spanner-project", defaultClient.getProjectId());
+    assertEquals("us-central1", defaultClient.getLocation());
+
+    IngestionPipelineOptions customLocationOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    customLocationOpts.setProjectId("spanner-project");
+    customLocationOpts.setLocation("us-east1");
+    customLocationOpts.setEnableEmbeddings(true);
+    VertexAiEmbeddingClient customClient =
+        GraphIngestionPipeline.createVertexAiEmbeddingClient(customLocationOpts);
+    assertNotNull(customClient);
+    assertEquals("spanner-project", customClient.getProjectId());
+    assertEquals("us-east1", customClient.getLocation());
+
+    IngestionPipelineOptions blankLocationOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    blankLocationOpts.setProjectId("spanner-project");
+    blankLocationOpts.setLocation("  ");
+    blankLocationOpts.setEnableEmbeddings(true);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> GraphIngestionPipeline.createVertexAiEmbeddingClient(blankLocationOpts));
+  }
+
+  @Test
+  public void testBuildPipeline_embeddingsEnabled_generatesAndWritesEmbeddings() throws Exception {
+    MockVertexAIClient.clearCapturedCalls();
+    File mcfFile = tmpFolder.newFile("embed.mcf");
+    Files.writeString(
+        Path.of(mcfFile.getPath()),
+        "Node: dcid:Count_Person\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "name: \"Total Population\"\n\n"
+            + "Node: dcid:Farm\n"
+            + "typeOf: dcs:Class\n"
+            + "name: \"Farm\"\n\n"
+            + "Node: dcid:geoId/06\n"
+            + "typeOf: dcs:Place\n"
+            + "name: \"California\"\n\n");
+
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList(
+        String.format(
+            "[{\"importName\": \"testImport\", \"graphPath\": \"%s\"}]", mcfFile.getPath()));
+    options.setProjectId("test-project");
+    options.setEnableEmbeddings(true);
+    options.setSkipDelete(true);
+    options.setSkipTransformation(true);
+
+    SpannerClient mockSpannerClient = new MockSpannerClient(createMockWriteResult("Embed"));
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, new MockVertexAIClient(List.of(0.5, -0.5)));
+    pipeline.run().waitUntilFinish();
+
+    Map<String, Mutation> embUpsertsByLabel =
+        MockSpannerClient.getCapturedMutations().stream()
+            .filter(
+                m ->
+                    m.getTable().equals("NodeEmbedding")
+                        && m.getOperation() == Mutation.Op.INSERT_OR_UPDATE)
+            .collect(Collectors.toMap(m -> m.asMap().get("embedding_label").getString(), m -> m));
+    assertEquals(Set.of("base_text_embedding", "type_embedding"), embUpsertsByLabel.keySet());
+
+    Mutation statVarEmb = embUpsertsByLabel.get("base_text_embedding");
+    assertEquals("Count_Person", statVarEmb.asMap().get("subject_id").getString());
+    assertEquals(
+        "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}",
+        statVarEmb.asMap().get("embedding_content").getString());
+    assertEquals(List.of(0.5, -0.5), statVarEmb.asMap().get("embeddings").getFloat64Array());
+
+    Mutation classEmb = embUpsertsByLabel.get("type_embedding");
+    assertEquals("Farm", classEmb.asMap().get("subject_id").getString());
+    assertEquals("{\"name\":\"Farm\"}", classEmb.asMap().get("embedding_content").getString());
+  }
+
+  @Test
+  public void testBuildPipeline_embeddingsEnabled_multiImportUsesUniqueTransformNames()
+      throws Exception {
+    MockVertexAIClient.clearCapturedCalls();
+    File importA = tmpFolder.newFile("importA.mcf");
+    Files.writeString(
+        Path.of(importA.getPath()),
+        "Node: dcid:dc/topic/Health\n" + "typeOf: dcs:Topic\n" + "name: \"Health\"\n\n");
+    File importB = tmpFolder.newFile("importB.mcf");
+    Files.writeString(
+        Path.of(importB.getPath()),
+        "Node: dcid:dc/topic/Economy\n" + "typeOf: dcs:Topic\n" + "name: \"Economy\"\n\n");
+
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList(
+        String.format(
+            "[{\"importName\": \"importA\", \"graphPath\": \"%s\"},"
+                + "{\"importName\": \"importB\", \"graphPath\": \"%s\"}]",
+            importA.getPath(), importB.getPath()));
+    options.setProjectId("test-project");
+    options.setEnableEmbeddings(true);
+    options.setSkipDelete(true);
+    options.setSkipTransformation(true);
+
+    SpannerClient mockSpannerClient = new MockSpannerClient(createMockWriteResult("Multi"));
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, new MockVertexAIClient(List.of(0.5, -0.5)));
+    pipeline.run().waitUntilFinish();
+
+    Map<String, String> embContentBySubject =
+        MockSpannerClient.getCapturedMutations().stream()
+            .filter(
+                m ->
+                    m.getTable().equals("NodeEmbedding")
+                        && m.getOperation() == Mutation.Op.INSERT_OR_UPDATE)
+            .collect(
+                Collectors.toMap(
+                    m -> m.asMap().get("subject_id").getString(),
+                    m -> m.asMap().get("embedding_content").getString()));
+    assertEquals(
+        Map.of(
+            "dc/topic/Health",
+            "{\"subject_id\":\"dc/topic/Health\",\"name\":\"Health\"}",
+            "dc/topic/Economy",
+            "{\"subject_id\":\"dc/topic/Economy\",\"name\":\"Economy\"}"),
+        embContentBySubject);
   }
 }

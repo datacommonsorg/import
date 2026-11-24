@@ -99,12 +99,14 @@ public class PipelineMetadataTest {
   @Test
   public void testIngestionMetadataMatchesJavaOptions() throws IOException {
     Set<String> expectedJavaOptions =
-        extractDeclaredOptionNames(SpannerPipelineOptions.class, IngestionPipelineOptions.class);
+        extractDeclaredOptionNames(
+            SpannerPipelineOptions.class, IngestionPipelineOptions.class, EmbeddingOptions.class);
     Map<String, JsonObject> metadataParams = parseMetadataParameters("metadata.json");
     Set<String> actualJsonParams = new TreeSet<>(metadataParams.keySet());
 
     assertEquals(
-        "metadata.json parameters must strictly match getters in SpannerPipelineOptions + IngestionPipelineOptions",
+        "metadata.json parameters must strictly match getters in SpannerPipelineOptions +"
+            + " IngestionPipelineOptions + EmbeddingOptions",
         expectedJavaOptions,
         actualJsonParams);
   }

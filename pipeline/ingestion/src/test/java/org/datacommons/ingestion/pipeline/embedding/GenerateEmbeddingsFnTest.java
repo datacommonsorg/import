@@ -130,7 +130,7 @@ public class GenerateEmbeddingsFnTest implements Serializable {
 
     PCollection<Mutation> mutations =
         GenerateEmbeddingsFn.buildEmbeddingMutations(
-            contents, mockEmbeddingClient, "NodeEmbedding", TEST_SPEC, 10);
+            "testImport", contents, mockEmbeddingClient, "NodeEmbedding", TEST_SPEC, 10);
 
     Mutation expected =
         COUNT_PERSON_CONTENT.toNodeEmbeddingRecord(List.of(0.25, 0.75)).toMutation("NodeEmbedding");
@@ -188,6 +188,7 @@ public class GenerateEmbeddingsFnTest implements Serializable {
     GenerateEmbeddingsFn.generateAndWriteEmbeddings(
         pipeline,
         mockSpannerClient,
+        "testImport",
         contents,
         deleteWaitSignal,
         mockEmbeddingClient,

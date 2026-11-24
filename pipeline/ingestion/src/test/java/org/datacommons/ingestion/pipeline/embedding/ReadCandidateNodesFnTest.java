@@ -15,6 +15,7 @@
 package org.datacommons.ingestion.pipeline.embedding;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -26,11 +27,11 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
+import org.datacommons.ingestion.data.Edge;
+import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.NodeSubGraph;
+import org.datacommons.ingestion.pipeline.GraphIngestionUtil;
 import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
-import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
-import org.datacommons.proto.Mcf.ValueType;
-import org.datacommons.util.McfUtil;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,67 +41,40 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ReadCandidateNodesFnTest {
 
-  private static final McfGraph STAT_VAR_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "Count_Person",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Count_Person"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Total Population"))
-                  .putPvs(
-                      "typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "StatisticalVariable"))
-                  .build())
-          .build();
+  private static final NodeSubGraph STAT_VAR_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph(
+          "Count_Person",
+          "Total Population",
+          List.of("StatisticalVariable"),
+          List.of(
+              Edge.builder()
+                  .subjectId("Count_Person")
+                  .predicate("name")
+                  .objectId("Total Population:hash")
+                  .provenance("dc/base/ImportA")
+                  .build()));
 
-  private static final McfGraph TOPIC_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "dc/topic/Health",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "dc/topic/Health"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Health"))
-                  .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "Topic"))
-                  .build())
-          .build();
+  private static final NodeSubGraph TOPIC_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph("dc/topic/Health", "Health", List.of("Topic"));
 
-  private static final McfGraph CLASS_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "Farm",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Farm"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "Farm"))
-                  .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "Class"))
-                  .build())
-          .build();
+  private static final NodeSubGraph CLASS_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph("Farm", "Farm", List.of("Class"));
 
-  private static final McfGraph PLACE_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "country/USA",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "country/USA"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "United States"))
-                  .putPvs("typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "Country"))
-                  .build())
-          .build();
+  private static final NodeSubGraph PLACE_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph("country/USA", "United States", List.of("Country"));
 
-  private static final McfGraph EMPTY_NAME_GRAPH =
-      McfGraph.newBuilder()
-          .putNodes(
-              "Count_Empty",
-              PropertyValues.newBuilder()
-                  .putPvs("dcid", McfUtil.newValues(ValueType.TEXT, "Count_Empty"))
-                  .putPvs("name", McfUtil.newValues(ValueType.TEXT, "   "))
-                  .putPvs(
-                      "typeOf", McfUtil.newValues(ValueType.RESOLVED_REF, "StatisticalVariable"))
-                  .build())
+  private static final NodeSubGraph EMPTY_NAME_NODE =
+      GraphIngestionUtil.subjectNodeSubGraph("Count_Empty", "   ", List.of("StatisticalVariable"));
+
+  private static final NodeSubGraph LEAF_VALUE_NODE =
+      NodeSubGraph.builder()
+          .node(Node.builder().subjectId("Total Population:hash").value("Total Population").build())
           .build();
 
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
   @Test
-  public void testReadCandidateNodes_filtersAndCombinesGraphs() {
+  public void testReadCandidateNodes_filtersNodeSubGraphs() {
     EmbeddingSpec spec =
         new EmbeddingSpec(
             "base_text_embedding",
@@ -112,18 +86,13 @@ public class ReadCandidateNodesFnTest {
                 "Topic", List.of("subject_id", "name")),
             NodeFilterType.NO_FILTER);
 
-    PCollection<McfGraph> graphs =
+    PCollection<NodeSubGraph> nodeSubGraphs =
         pipeline.apply(
-            "CreateGraphs",
-            Create.of(
-                STAT_VAR_GRAPH,
-                STAT_VAR_GRAPH, // duplicate across imports
-                TOPIC_GRAPH,
-                PLACE_GRAPH,
-                EMPTY_NAME_GRAPH));
+            "CreateNodeSubGraphs",
+            Create.of(STAT_VAR_NODE, TOPIC_NODE, PLACE_NODE, EMPTY_NAME_NODE, LEAF_VALUE_NODE));
 
     PCollection<String> candidateIds =
-        ReadCandidateNodesFn.readCandidateNodes(graphs, spec)
+        ReadCandidateNodesFn.readCandidateNodes("testImport", nodeSubGraphs, spec)
             .apply(
                 "ExtractIds",
                 MapElements.into(TypeDescriptors.strings())
@@ -134,21 +103,17 @@ public class ReadCandidateNodesFnTest {
   }
 
   @Test
-  public void testExtractCandidateGraphs_handlesValidAndInvalidNodes() {
+  public void testIsCandidate_handlesValidAndInvalidNodes() {
     Set<String> targetTypes = Set.of("StatisticalVariable", "Topic", "Class");
 
-    List<McfGraph> extracted =
-        ReadCandidateNodesFn.extractCandidateGraphs(STAT_VAR_GRAPH, targetTypes);
-    assertEquals(1, extracted.size());
-    assertEquals("Count_Person", ReadCandidateNodesFn.getSubjectId(extracted.get(0)));
+    assertTrue(ReadCandidateNodesFn.isCandidate(STAT_VAR_NODE, targetTypes));
+    assertTrue(ReadCandidateNodesFn.isCandidate(CLASS_NODE, targetTypes));
+    assertEquals("Count_Person", ReadCandidateNodesFn.getSubjectId(STAT_VAR_NODE));
 
-    assertEquals(1, ReadCandidateNodesFn.extractCandidateGraphs(CLASS_GRAPH, targetTypes).size());
-
-    // Non-matching type returns empty
-    assertTrue(ReadCandidateNodesFn.extractCandidateGraphs(PLACE_GRAPH, targetTypes).isEmpty());
-
-    // Empty name returns empty
-    assertTrue(
-        ReadCandidateNodesFn.extractCandidateGraphs(EMPTY_NAME_GRAPH, targetTypes).isEmpty());
+    // Non-matching type, empty name, and leaf value nodes are skipped.
+    assertFalse(ReadCandidateNodesFn.isCandidate(PLACE_NODE, targetTypes));
+    assertFalse(ReadCandidateNodesFn.isCandidate(EMPTY_NAME_NODE, targetTypes));
+    assertFalse(ReadCandidateNodesFn.isCandidate(LEAF_VALUE_NODE, targetTypes));
+    assertFalse(ReadCandidateNodesFn.isCandidate(null, targetTypes));
   }
 }

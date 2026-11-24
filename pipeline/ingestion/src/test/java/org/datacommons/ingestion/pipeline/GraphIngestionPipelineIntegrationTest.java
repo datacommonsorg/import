@@ -20,14 +20,19 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
+import java.util.List;
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.datacommons.ingestion.pipeline.embedding.GenerateEmbeddingContentFn;
+import org.datacommons.ingestion.pipeline.embedding.VertexAiEmbeddingClient;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.After;
 import org.junit.Before;
@@ -219,6 +224,7 @@ public class GraphIngestionPipelineIntegrationTest {
       dataflowOptions.setProject(projectId);
       dataflowOptions.setTempLocation(tempLocation);
       dataflowOptions.setRegion(region);
+      options.setLocation(region);
       options.setStorageBucketId(gcsBucket);
       graphPath = "gs://" + gcsBucket + "/" + gcsFolder + "/graph.mcf";
     }
@@ -275,7 +281,7 @@ public class GraphIngestionPipelineIntegrationTest {
 
     // Run Pipeline
     Pipeline pipeline = Pipeline.create(options);
-    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient, null);
     pipeline.run().waitUntilFinish();
 
     // Verify Spanner
@@ -325,7 +331,7 @@ public class GraphIngestionPipelineIntegrationTest {
 
     // Run Pipeline
     Pipeline pipeline = Pipeline.create(options);
-    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient, null);
     pipeline.run().waitUntilFinish();
 
     // Verify Spanner
@@ -333,6 +339,134 @@ public class GraphIngestionPipelineIntegrationTest {
     DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
     verifySpannerOutputs(
         dbClient, "CountryUSA", "United States", "Place", "CountryUSA", "CountryFRA");
+  }
+
+  private static final int EMBEDDING_DIM = 768;
+
+  @Test
+  public void testPipelineExecutionNodeEmbedding() throws IOException {
+    IngestionPipelineOptions options =
+        PipelineOptionsFactory.create().as(IngestionPipelineOptions.class);
+
+    String mcfContent =
+        "Node: dcid:TestNode\n"
+            + "typeOf: schema:Thing\n"
+            + "name: \""
+            + nodeNameValue
+            + "\"\n\n"
+            + "Node: dcid:Count_Person\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "name: \"Total Population\"\n"
+            + "populationType: dcs:Person\n"
+            + "measuredProperty: dcs:count\n"
+            + "statType: dcs:measuredValue\n\n"
+            + "Node: dcid:dc/topic/Health\n"
+            + "typeOf: dcs:Topic\n"
+            + "name: \"Health\"\n\n"
+            + "Node: dcid:Farm\n"
+            + "typeOf: dcs:Class\n"
+            + "name: \"Farm\"\n\n"
+            + "Node: dcid:TestObs\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "observationAbout: dcid:TestNode\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 10\n"
+            + "observationDate: \"2023\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n\n"
+            + "Node: dcid:TestObs2\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "observationAbout: dcid:TestNode\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 20\n"
+            + "observationDate: \"2024\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n";
+
+    setPipelineOptions(options, mcfContent);
+    options.setEnableEmbeddings(true);
+
+    VertexAiEmbeddingClient embeddingClient =
+        isLocal
+            ? new MockVertexAIClient(
+                projectId, options.getLocation(), Collections.nCopies(EMBEDDING_DIM, 0.1))
+            : GraphIngestionPipeline.createVertexAiEmbeddingClient(options);
+
+    // Run Pipeline
+    Pipeline pipeline = Pipeline.create(options);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient, embeddingClient);
+    pipeline.run().waitUntilFinish();
+
+    // Verify graph tables (Node, Edge, TimeSeries, Observation)
+    DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
+    DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
+    verifySpannerOutputs(dbClient, "TestNode", nodeNameValue, "Thing", "TestNode", "");
+
+    // Verify NodeEmbedding rows generated for StatisticalVariable, Topic, and Class
+    verifyNodeEmbedding(
+        dbClient,
+        "Count_Person",
+        "base_text_embedding",
+        "{\"subject_id\":\"Count_Person\",\"name\":\"Total Population\"}",
+        List.of("StatisticalVariable"));
+    verifyNodeEmbedding(
+        dbClient,
+        "dc/topic/Health",
+        "base_text_embedding",
+        "{\"subject_id\":\"dc/topic/Health\",\"name\":\"Health\"}",
+        List.of("Topic"));
+    verifyNodeEmbedding(
+        dbClient, "Farm", "type_embedding", "{\"name\":\"Farm\"}", List.of("Class"));
+
+    // Verify unmatched node types (e.g. Thing), leaf value nodes, and observations are not embedded
+    try (ResultSet rs =
+        dbClient
+            .singleUse()
+            .executeQuery(Statement.of("SELECT COUNT(*) AS cnt FROM NodeEmbedding"))) {
+      assertTrue(rs.next());
+      assertEquals(3L, rs.getLong("cnt"));
+    }
+  }
+
+  private void verifyNodeEmbedding(
+      DatabaseClient dbClient,
+      String subjectId,
+      String expectedLabel,
+      String expectedContentJson,
+      List<String> expectedNodeTypes) {
+    try (ResultSet resultSet =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.newBuilder(
+                        "SELECT embedding_content_key, embedding_content, node_types, embeddings"
+                            + " FROM NodeEmbedding WHERE subject_id = @subject_id"
+                            + " AND embedding_label = @embedding_label")
+                    .bind("subject_id")
+                    .to(subjectId)
+                    .bind("embedding_label")
+                    .to(expectedLabel)
+                    .build())) {
+      assertTrue(
+          String.format("NodeEmbedding (%s, %s) should exist", subjectId, expectedLabel),
+          resultSet.next());
+      assertEquals(
+          GenerateEmbeddingContentFn.computeFarmFingerprintKey(expectedContentJson),
+          resultSet.getString("embedding_content_key"));
+      assertEquals(
+          JsonParser.parseString(expectedContentJson),
+          JsonParser.parseString(resultSet.getJson("embedding_content")));
+      assertEquals(expectedNodeTypes, resultSet.getStringList("node_types"));
+      List<Double> embeddings = resultSet.getDoubleList("embeddings");
+      assertEquals(EMBEDDING_DIM, embeddings.size());
+      if (isLocal) {
+        assertEquals(Collections.nCopies(EMBEDDING_DIM, 0.1), embeddings);
+      }
+      assertFalse(
+          String.format(
+              "Should only have one NodeEmbedding row for (%s, %s)", subjectId, expectedLabel),
+          resultSet.next());
+    }
   }
 
   private void verifySpannerOutputs(

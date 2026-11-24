@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.util.List;
+import java.util.Objects;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
@@ -21,6 +22,9 @@ import org.datacommons.ingestion.data.NodeSubGraph;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.data.TimeSeries;
+import org.datacommons.ingestion.pipeline.embedding.EmbeddingConfig;
+import org.datacommons.ingestion.pipeline.embedding.SpannerEmbeddingPipeline;
+import org.datacommons.ingestion.pipeline.embedding.VertexAiEmbeddingClient;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.GraphReader;
 import org.datacommons.ingestion.util.GraphTransformer;
@@ -74,6 +78,14 @@ public class GraphIngestionPipeline {
         .build();
   }
 
+  public static VertexAiEmbeddingClient createVertexAiEmbeddingClient(
+      IngestionPipelineOptions options) {
+    if (!isEmbeddingsEnabled(options)) {
+      return null;
+    }
+    return new VertexAiEmbeddingClient(options.getProjectId(), options.getLocation());
+  }
+
   public static void main(String[] args) {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
@@ -84,8 +96,9 @@ public class GraphIngestionPipeline {
     }
 
     SpannerClient spannerClient = createSpannerClient(options);
+    VertexAiEmbeddingClient embeddingClient = createVertexAiEmbeddingClient(options);
     Pipeline pipeline = Pipeline.create(options);
-    buildPipeline(pipeline, options, spannerClient);
+    buildPipeline(pipeline, options, spannerClient, embeddingClient);
     pipeline.run();
   }
 
@@ -121,8 +134,15 @@ public class GraphIngestionPipeline {
         });
   }
 
+  static boolean isEmbeddingsEnabled(IngestionPipelineOptions options) {
+    return options != null && options.getEnableEmbeddings();
+  }
+
   public static void buildPipeline(
-      Pipeline pipeline, IngestionPipelineOptions options, SpannerClient spannerClient) {
+      Pipeline pipeline,
+      IngestionPipelineOptions options,
+      SpannerClient spannerClient,
+      VertexAiEmbeddingClient embeddingClient) {
     LOGGER.info("Running import pipeline for imports: {}", options.getImportList());
 
     // Parse the input import list JSON.
@@ -131,6 +151,21 @@ public class GraphIngestionPipeline {
     if (jsonArray.isEmpty()) {
       LOGGER.error("Empty import input json: {}", jsonArray.toString());
       return;
+    }
+
+    EmbeddingConfig embeddingConfig = null;
+    if (isEmbeddingsEnabled(options)) {
+      Objects.requireNonNull(
+          embeddingClient, "embeddingClient must not be null when enableEmbeddings is true");
+      embeddingConfig = EmbeddingConfig.load(options.getEmbeddingConfigPath());
+      LOGGER.info(
+          "Embedding ingestion enabled: config='{}', table='{}', specs={}, batchSize={}",
+          options.getEmbeddingConfigPath(),
+          options.getEmbeddingTableName(),
+          embeddingConfig.specs().size(),
+          options.getEmbeddingBatchSize());
+    } else {
+      LOGGER.info("Embedding ingestion disabled (enableEmbeddings=false).");
     }
 
     // Iterate through each import configuration and process it.
@@ -153,7 +188,14 @@ public class GraphIngestionPipeline {
       }
 
       // Process the individual import.
-      processImport(pipeline, spannerClient, importName, graphPath, options);
+      processImport(
+          pipeline,
+          spannerClient,
+          importName,
+          graphPath,
+          options,
+          embeddingConfig,
+          embeddingClient);
     }
   }
 
@@ -165,13 +207,17 @@ public class GraphIngestionPipeline {
    * @param importName The name of the import.
    * @param graphPath The full path to the graph data.
    * @param options The ingestion pipeline options.
+   * @param embeddingConfig Loaded embedding configuration, or {@code null} when disabled.
+   * @param embeddingClient Vertex AI embedding client, or {@code null} when disabled.
    */
   private static void processImport(
       Pipeline pipeline,
       SpannerClient spannerClient,
       String importName,
       String graphPath,
-      IngestionPipelineOptions options) {
+      IngestionPipelineOptions options,
+      EmbeddingConfig embeddingConfig,
+      VertexAiEmbeddingClient embeddingClient) {
     LOGGER.info("Import: {} Graph path: {}", importName, graphPath);
 
     boolean isBaseDc = options.getIsBaseDc();
@@ -203,9 +249,8 @@ public class GraphIngestionPipeline {
           spannerClient.deleteDataForImport(
               pipeline, provenance, spannerClient.getEdgeTableName(), "provenance");
       // TODO(b/584694504): Once NodeEmbedding schema includes provenance, delete existing
-      // embeddings for this
-      // import here via spannerClient.deleteDataForImport(pipeline, provenance, embeddingTable,
-      // "provenance").
+      // embeddings directly via spannerClient.deleteDataForImport(pipeline, provenance,
+      // embeddingTable, "provenance").
     } else {
       deleteObsWait =
           pipeline.apply(
@@ -220,11 +265,14 @@ public class GraphIngestionPipeline {
       TfRecordProcessingResult result =
           processTfRecordImport(
               pipeline, importName, graphPath, isBaseDc, obsCounter, timeSeriesCounter);
+      SpannerWriteResult writtenNodes =
+          spannerClient.writeMutations(
+              pipeline, "WriteNodesToSpanner-" + importName, result.nodeMutations);
       writeToSpanner(
           pipeline,
           spannerClient,
           importName,
-          result.nodeMutations,
+          writtenNodes.getOutput(),
           result.edgeMutations,
           result.uniqueSeries,
           result.obsDataPoints,
@@ -283,37 +331,51 @@ public class GraphIngestionPipeline {
     PCollection<Observation> obsDataPoints =
         GraphReader.extractObservations(observationNodes, importName, isBaseDc, obsCounter);
 
+    // Write Nodes first so downstream Edge and NodeEmbedding writes can wait on parent Node rows.
+    SpannerWriteResult writtenNodes =
+        spannerClient.writeMutations(pipeline, "WriteNodesToSpanner-" + importName, nodeMutations);
+
     writeToSpanner(
         pipeline,
         spannerClient,
         importName,
-        nodeMutations,
+        writtenNodes.getOutput(),
         edgeMutations,
         uniqueSeries,
         obsDataPoints,
         deleteObsWait,
         deleteEdgesWait);
+
+    if (embeddingConfig != null) {
+      SpannerEmbeddingPipeline.attachTransforms(
+          pipeline,
+          spannerClient,
+          importName,
+          provenance,
+          embeddingConfig,
+          embeddingClient,
+          options.getEmbeddingTableName(),
+          options.getEmbeddingBatchSize(),
+          nodeSubGraphs,
+          writtenNodes.getOutput(),
+          options.getSkipDelete());
+    }
   }
 
   private static void writeToSpanner(
       Pipeline pipeline,
       SpannerClient spannerClient,
       String importName,
-      PCollection<Mutation> nodeMutations,
+      PCollection<Void> writtenNodesWait,
       PCollection<Mutation> edgeMutations,
       PCollection<TimeSeries> uniqueSeries,
       PCollection<Observation> obsDataPoints,
       PCollection<Void> deleteObsWait,
       PCollection<Void> deleteEdgesWait) {
-    // Write Nodes
-    SpannerWriteResult writtenNodes =
-        spannerClient.writeMutations(pipeline, "WriteNodesToSpanner-" + importName, nodeMutations);
-
     // Write Edges (wait for Nodes write and Edges delete)
     PCollection<Mutation> waitingEdges =
         edgeMutations.apply(
-            "EdgesWaitOn-" + importName,
-            Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
+            "EdgesWaitOn-" + importName, Wait.on(List.of(writtenNodesWait, deleteEdgesWait)));
     spannerClient.writeMutations(pipeline, "WriteEdgesToSpanner-" + importName, waitingEdges);
 
     // Convert unique TimeSeries to TimeSeries mutations

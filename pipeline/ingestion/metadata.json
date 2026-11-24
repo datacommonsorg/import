@@ -16,6 +16,13 @@
             "isOptional": true
         },
         {
+            "name": "location",
+            "label": "GCP location",
+            "helpText": "GCP location/region (e.g. us-central1).",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
             "name": "spannerInstanceId",
             "label": "Spanner instance Id",
             "helpText": "Spanner instance Id",
@@ -103,6 +110,34 @@
             "name": "emulatorHost",
             "label": "Spanner Emulator Host",
             "helpText": "Local Spanner emulator host override (e.g. localhost:15000).",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "enableEmbeddings",
+            "label": "Enable Embeddings",
+            "helpText": "Whether to enable embedding ingestion during graph ingestion.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "embeddingConfigPath",
+            "label": "Embedding Config Path",
+            "helpText": "Classpath resource name to the embedding JSON config.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "embeddingTableName",
+            "label": "Embedding Table Name",
+            "helpText": "Spanner table name for storing node embeddings.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "embeddingBatchSize",
+            "label": "Embedding Batch Size",
+            "helpText": "Batch size for Vertex AI embedding prediction requests.",
             "paramType": "TEXT",
             "isOptional": true
         }
