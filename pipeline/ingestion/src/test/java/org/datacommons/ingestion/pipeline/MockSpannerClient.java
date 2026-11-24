@@ -19,6 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
@@ -34,7 +35,6 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.transforms.resourcehints.ResourceHints;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
@@ -48,23 +48,29 @@ import org.datacommons.ingestion.spanner.model.EdgeRecord;
  * {@code Edge} reads via {@link #getReadTransform()}.
  */
 public class MockSpannerClient extends SpannerClient {
+  private static final Timestamp DEFAULT_READ_TIMESTAMP =
+      Timestamp.ofTimeSecondsAndNanos(1700000000L, 0);
+
   private static final List<Mutation> CAPTURED_MUTATIONS =
       Collections.synchronizedList(new ArrayList<>());
   private static final List<String> CAPTURED_STAGE_EVENTS =
       Collections.synchronizedList(new ArrayList<>());
   private static final List<String> CAPTURED_EDGE_READS =
       Collections.synchronizedList(new ArrayList<>());
+  private static final List<Timestamp> CAPTURED_EDGE_READ_TIMESTAMPS =
+      Collections.synchronizedList(new ArrayList<>());
 
   private final transient PCollection<Void> deleteSignal;
   private final transient SpannerWriteResult mockWriteResult;
   private final transient Map<String, List<String>> edgeSubjectIdsByProvenance;
+  private final transient Timestamp currentTimestamp;
 
   public MockSpannerClient(SpannerWriteResult mockWriteResult) {
-    this(null, mockWriteResult, null);
+    this(null, mockWriteResult, null, DEFAULT_READ_TIMESTAMP);
   }
 
   public MockSpannerClient(PCollection<Void> deleteSignal, SpannerWriteResult mockWriteResult) {
-    this(deleteSignal, mockWriteResult, null);
+    this(deleteSignal, mockWriteResult, null, DEFAULT_READ_TIMESTAMP);
   }
 
   /**
@@ -72,13 +78,23 @@ public class MockSpannerClient extends SpannerClient {
    * and returning live per-stage {@link SpannerWriteResult} completion signals for {@code Wait.on}.
    */
   public MockSpannerClient(Map<String, List<String>> edgeSubjectIdsByProvenance) {
-    this(null, null, edgeSubjectIdsByProvenance);
+    this(null, null, edgeSubjectIdsByProvenance, DEFAULT_READ_TIMESTAMP);
+  }
+
+  /**
+   * Creates a client stubbing {@code Edge} provenance reads from {@code edgeSubjectIdsByProvenance}
+   * with a fixed {@link #getCurrentTimestamp()} value for snapshot read verification.
+   */
+  public MockSpannerClient(
+      Map<String, List<String>> edgeSubjectIdsByProvenance, Timestamp currentTimestamp) {
+    this(null, null, edgeSubjectIdsByProvenance, currentTimestamp);
   }
 
   private MockSpannerClient(
       PCollection<Void> deleteSignal,
       SpannerWriteResult mockWriteResult,
-      Map<String, List<String>> edgeSubjectIdsByProvenance) {
+      Map<String, List<String>> edgeSubjectIdsByProvenance,
+      Timestamp currentTimestamp) {
     super(
         SpannerClient.builder()
             .gcpProjectId("test")
@@ -87,6 +103,7 @@ public class MockSpannerClient extends SpannerClient {
     this.deleteSignal = deleteSignal;
     this.mockWriteResult = mockWriteResult;
     this.edgeSubjectIdsByProvenance = edgeSubjectIdsByProvenance;
+    this.currentTimestamp = currentTimestamp;
   }
 
   /**
@@ -113,36 +130,40 @@ public class MockSpannerClient extends SpannerClient {
     return CAPTURED_EDGE_READS;
   }
 
+  public static List<Timestamp> getCapturedEdgeReadTimestamps() {
+    return CAPTURED_EDGE_READ_TIMESTAMPS;
+  }
+
   public static void clearCapturedMutations() {
     CAPTURED_MUTATIONS.clear();
     CAPTURED_STAGE_EVENTS.clear();
     CAPTURED_EDGE_READS.clear();
+    CAPTURED_EDGE_READ_TIMESTAMPS.clear();
+  }
+
+  @Override
+  public Timestamp getCurrentTimestamp() {
+    return currentTimestamp;
   }
 
   @Override
   public PCollection<Void> deleteDataForImport(
-      Pipeline pipeline,
-      String importName,
-      String tableName,
-      String columnName,
-      PCollection<Void> waitSignal) {
+      Pipeline pipeline, String importName, String tableName, String columnName) {
     if (deleteSignal != null) {
       return deleteSignal;
     }
     String stageName = tableName + "-" + importName.replaceFirst("^dc/base/", "");
-    PCollection<String> trigger = pipeline.apply("StartDelete" + stageName, Create.of(importName));
-    if (waitSignal != null) {
-      trigger = trigger.apply("WaitBeforeDelete" + stageName, Wait.on(waitSignal));
-    }
-    return trigger.apply(
-        "ExecuteDelete" + stageName,
-        ParDo.of(
-            new DoFn<String, Void>() {
-              @ProcessElement
-              public void processElement(@Element String value) {
-                CAPTURED_STAGE_EVENTS.add("ExecuteDelete" + stageName);
-              }
-            }));
+    return pipeline
+        .apply("StartDelete" + stageName, Create.of(importName))
+        .apply(
+            "ExecuteDelete" + stageName,
+            ParDo.of(
+                new DoFn<String, Void>() {
+                  @ProcessElement
+                  public void processElement(@Element String value) {
+                    CAPTURED_STAGE_EVENTS.add("ExecuteDelete" + stageName);
+                  }
+                }));
   }
 
   @Override
@@ -151,6 +172,12 @@ public class MockSpannerClient extends SpannerClient {
       return super.getReadTransform();
     }
     SpannerIO.Read baseRead = mock(SpannerIO.Read.class);
+    when(baseRead.withTimestamp(any(Timestamp.class)))
+        .thenAnswer(
+            inv -> {
+              CAPTURED_EDGE_READ_TIMESTAMPS.add(inv.getArgument(0));
+              return baseRead;
+            });
     when(baseRead.withQuery(any(Statement.class)))
         .thenAnswer(
             inv -> {

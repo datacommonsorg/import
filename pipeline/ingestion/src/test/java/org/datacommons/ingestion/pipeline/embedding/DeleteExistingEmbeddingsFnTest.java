@@ -15,14 +15,17 @@
 package org.datacommons.ingestion.pipeline.embedding;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.KeyRange;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Statement;
 import com.google.common.collect.Lists;
 import java.util.List;
+import java.util.Map;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.MetricNameFilter;
 import org.apache.beam.sdk.metrics.MetricQueryResults;
@@ -33,7 +36,9 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.ingestion.pipeline.MockSpannerClient;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +49,11 @@ import org.junit.runners.JUnit4;
 public class DeleteExistingEmbeddingsFnTest {
 
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
+
+  @Before
+  public void setUp() {
+    MockSpannerClient.clearCapturedMutations();
+  }
 
   @Test
   public void testBuildSubjectIdsByProvenanceStatement() {
@@ -129,5 +139,28 @@ public class DeleteExistingEmbeddingsFnTest {
     List<MetricResult<Long>> counters = Lists.newArrayList(metrics.getCounters());
     assertEquals(1, counters.size());
     assertEquals(Long.valueOf(2L), counters.get(0).getCommitted());
+  }
+
+  @Test
+  public void testReadSubjectIdsByProvenance_usesReadTimestampSnapshot() {
+    Timestamp readTimestamp = Timestamp.ofTimeSecondsAndNanos(1700000123L, 0);
+    SpannerClient spannerClient =
+        new MockSpannerClient(Map.of("dc/base/Schema", List.of("Count_Person", "Farm")));
+
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            DeleteExistingEmbeddingsFn.readSubjectIdsByProvenance(
+                pipeline, spannerClient, "dc/base/Schema", "schema", null));
+
+    PCollection<String> subjectIds =
+        DeleteExistingEmbeddingsFn.readSubjectIdsByProvenance(
+            pipeline, spannerClient, "dc/base/Schema", "schema", readTimestamp);
+
+    PAssert.that(subjectIds).containsInAnyOrder("Count_Person", "Farm");
+    pipeline.run().waitUntilFinish();
+
+    assertEquals(List.of("dc/base/Schema"), MockSpannerClient.getCapturedEdgeReads());
+    assertEquals(List.of(readTimestamp), MockSpannerClient.getCapturedEdgeReadTimestamps());
   }
 }

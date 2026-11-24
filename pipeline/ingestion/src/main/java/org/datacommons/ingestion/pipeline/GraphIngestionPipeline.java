@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.pipeline;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Mutation;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -159,16 +160,25 @@ public class GraphIngestionPipeline {
     }
 
     EmbeddingConfig embeddingConfig = null;
+    Timestamp edgeReadTimestamp = null;
     if (isEmbeddingsEnabled(options)) {
       Objects.requireNonNull(
           embeddingClient, "embeddingClient must not be null when enableEmbeddings is true");
       embeddingConfig = EmbeddingConfig.load(options.getEmbeddingConfigPath());
+      if (!options.getSkipDelete()) {
+        // Capture Spanner's current TrueTime timestamp before pipeline.run() starts deleting Edge
+        // rows so DeleteExistingEmbeddingsFn reads the pre-delete Edge snapshot independently of
+        // the concurrent DELETE FROM Edge.
+        edgeReadTimestamp = spannerClient.getCurrentTimestamp();
+      }
       LOGGER.info(
-          "Embedding ingestion enabled: config='{}', table='{}', specs={}, batchSize={}",
+          "Embedding ingestion enabled: config='{}', table='{}', specs={}, batchSize={},"
+              + " edgeReadTimestamp={}",
           options.getEmbeddingConfigPath(),
           options.getEmbeddingTableName(),
           embeddingConfig.specs().size(),
-          options.getEmbeddingBatchSize());
+          options.getEmbeddingBatchSize(),
+          edgeReadTimestamp);
     } else {
       LOGGER.info("Embedding ingestion disabled (enableEmbeddings=false).");
     }
@@ -200,7 +210,8 @@ public class GraphIngestionPipeline {
           graphPath,
           options,
           embeddingConfig,
-          embeddingClient);
+          embeddingClient,
+          edgeReadTimestamp);
     }
   }
 
@@ -214,6 +225,8 @@ public class GraphIngestionPipeline {
    * @param options The ingestion pipeline options.
    * @param embeddingConfig Loaded embedding configuration, or {@code null} when disabled.
    * @param embeddingClient Vertex AI embedding client, or {@code null} when disabled.
+   * @param edgeReadTimestamp Fixed pre-delete Spanner snapshot timestamp for reading {@code Edge}
+   *     when deleting existing {@code NodeEmbedding} rows, or {@code null} when disabled/skipped.
    */
   private static void processImport(
       Pipeline pipeline,
@@ -222,7 +235,8 @@ public class GraphIngestionPipeline {
       String graphPath,
       IngestionPipelineOptions options,
       EmbeddingConfig embeddingConfig,
-      VertexAiEmbeddingClient embeddingClient) {
+      VertexAiEmbeddingClient embeddingClient,
+      Timestamp edgeReadTimestamp) {
     LOGGER.info("Import: {} Graph path: {}", importName, graphPath);
 
     boolean isBaseDc = options.getIsBaseDc();
@@ -250,28 +264,25 @@ public class GraphIngestionPipeline {
     if (!options.getSkipDelete()) {
       deleteObsWait =
           spannerClient.deleteDataForImport(
-              pipeline,
-              provenance,
-              spannerClient.getTimeSeriesTableName(),
-              "provenance",
-              /* waitSignal= */ null);
-      if (embeddingConfig != null) {
-        // Read Edge subject_ids once per import and delete existing NodeEmbedding rows before
-        // running DELETE FROM Edge so Edge rows are not deleted out from under the scan.
-        // TODO(b/584694504): Once NodeEmbedding schema includes provenance, delete existing
-        // embeddings directly via spannerClient.deleteDataForImport(pipeline, provenance,
-        // embeddingTable, "provenance", /* waitSignal= */ null).
-        deleteEmbeddingsWait =
-            DeleteExistingEmbeddingsFn.deleteExistingEmbeddings(
-                pipeline, spannerClient, importName, options.getEmbeddingTableName(), provenance);
-      }
+              pipeline, provenance, spannerClient.getTimeSeriesTableName(), "provenance");
       deleteEdgesWait =
           spannerClient.deleteDataForImport(
-              pipeline,
-              provenance,
-              spannerClient.getEdgeTableName(),
-              "provenance",
-              deleteEmbeddingsWait);
+              pipeline, provenance, spannerClient.getEdgeTableName(), "provenance");
+      if (embeddingConfig != null) {
+        // Read Edge subject_ids at the fixed pre-delete snapshot timestamp (edgeReadTimestamp) so
+        // this read can run concurrently with DELETE FROM Edge without losing rows.
+        // TODO(b/584694504): Once NodeEmbedding schema includes provenance, delete existing
+        // embeddings directly via spannerClient.deleteDataForImport(pipeline, provenance,
+        // embeddingTable, "provenance").
+        deleteEmbeddingsWait =
+            DeleteExistingEmbeddingsFn.deleteExistingEmbeddings(
+                pipeline,
+                spannerClient,
+                importName,
+                options.getEmbeddingTableName(),
+                provenance,
+                edgeReadTimestamp);
+      }
     } else {
       deleteObsWait =
           pipeline.apply(

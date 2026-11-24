@@ -7,7 +7,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.Timestamp;
+import com.google.cloud.spanner.Key;
+import com.google.cloud.spanner.KeyRange;
 import com.google.cloud.spanner.Mutation;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -506,7 +510,8 @@ public class GraphIngestionPipelineTest implements Serializable {
   }
 
   @Test
-  public void testBuildPipeline_embeddingsEnabled_deletesEmbeddingsBeforeEdges() throws Exception {
+  public void testBuildPipeline_embeddingsEnabled_readsEdgeSnapshotAtCurrentTimestamp()
+      throws Exception {
     MockVertexAIClient.clearCapturedCalls();
     File mcfFile = tmpFolder.newFile("embed_delete.mcf");
     Files.writeString(
@@ -527,14 +532,28 @@ public class GraphIngestionPipelineTest implements Serializable {
     options.setSkipDelete(false);
     options.setSkipTransformation(true);
 
+    Timestamp expectedReadTimestamp = Timestamp.ofTimeSecondsAndNanos(1700000123L, 456000000);
     SpannerClient mockSpannerClient =
-        new MockSpannerClient(Map.of("dc/base/testImport", List.of("OldNode", "Count_Person")));
+        new MockSpannerClient(
+            Map.of("dc/base/testImport", List.of("OldNode", "Count_Person")),
+            expectedReadTimestamp);
     GraphIngestionPipeline.buildPipeline(
         pipeline, options, mockSpannerClient, new MockVertexAIClient(List.of(0.5, -0.5)));
     pipeline.run().waitUntilFinish();
 
-    // Edge should be queried exactly once per import covering all embedding specs.
+    // Edge should be queried once per import pinned to the pre-delete snapshot timestamp.
     assertEquals(List.of("dc/base/testImport"), MockSpannerClient.getCapturedEdgeReads());
+    assertEquals(List.of(expectedReadTimestamp), MockSpannerClient.getCapturedEdgeReadTimestamps());
+
+    Set<KeyRange> deletedRanges =
+        MockSpannerClient.getCapturedMutations().stream()
+            .filter(
+                m -> m.getTable().equals("NodeEmbedding") && m.getOperation() == Mutation.Op.DELETE)
+            .flatMap(m -> Lists.newArrayList(m.getKeySet().getRanges()).stream())
+            .collect(Collectors.toSet());
+    assertEquals(
+        Set.of(KeyRange.prefix(Key.of("OldNode")), KeyRange.prefix(Key.of("Count_Person"))),
+        deletedRanges);
 
     List<String> stageEvents = MockSpannerClient.getCapturedStageEvents();
     int nodeWriteIdx = stageEvents.lastIndexOf("WriteNodesToSpanner-testImport");
@@ -547,7 +566,6 @@ public class GraphIngestionPipelineTest implements Serializable {
     assertTrue("Missing NodeEmbedding delete event", embDelIdx >= 0);
     assertTrue("Missing Edge delete event", edgeDelIdx >= 0);
     assertTrue("Missing NodeEmbedding write event", embWriteIdx >= 0);
-    assertTrue("Edge delete must wait for NodeEmbedding delete", embDelIdx < edgeDelIdx);
     assertTrue("Edge write must wait for Edge delete", edgeDelIdx < edgeWriteIdx);
     assertTrue("NodeEmbedding write must wait for Node write", nodeWriteIdx < embWriteIdx);
     assertTrue("NodeEmbedding write must wait for NodeEmbedding delete", embDelIdx < embWriteIdx);
