@@ -225,10 +225,10 @@ public class GraphIngestionPipelineTest implements Serializable {
         createOptimizedGraph(
             "count_person",
             "country/USA",
-            createStatVarObs("2020", 1.0),
-            createStatVarObs("2021", 2.0));
+            createStatVarObs("2020", "1.0"),
+            createStatVarObs("2021", "2.0"));
     McfOptimizedGraph india =
-        createOptimizedGraph("count_person", "country/India", createStatVarObs("2020", 3.0));
+        createOptimizedGraph("count_person", "country/India", createStatVarObs("2020", "3.0"));
     // TFRecordIO appends the ".gz" compression suffix to the output file.
     String tfRecordPrefix = tmpFolder.getRoot().getPath() + "/graph.tfrecord";
     Pipeline writePipeline = Pipeline.create();
@@ -286,10 +286,10 @@ public class GraphIngestionPipelineTest implements Serializable {
         .build();
   }
 
-  private static McfStatVarObsSeries.StatVarObs createStatVarObs(String date, double value) {
+  private static McfStatVarObsSeries.StatVarObs createStatVarObs(String date, String value) {
     return McfStatVarObsSeries.StatVarObs.newBuilder()
         .setDate(date)
-        .setNumber(value)
+        .setText(value)
         .setDcid("dc/o/" + date + "_" + value)
         .build();
   }
