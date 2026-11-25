@@ -124,7 +124,7 @@ class InputDiscovery:
     self.input_dir = open_dir(path)
     return self.input_dir
 
-  def load_config(self, output_dir: Dir) -> tuple[Dir, Config]:
+  def load_config(self, output_dir: Dir) -> tuple[Dir, Config, list[str]]:
     """Opens the input dir, reads and validates configs, and checks overlap."""
     imports = import_names_or_raise(self.import_names)
     # Reports and the writer name the run's folders after the cleaned names.
@@ -157,7 +157,7 @@ class InputDiscovery:
 
     # The input dir is searched recursively, so it must not hold the output.
     check_not_overlapping(self.input_dir, output_dir)
-    return self.input_dir, self.config
+    return self.input_dir, self.config, imports
 
   def input_folder_name(self, file: File) -> str:
     """Returns the import an input file belongs to, for the report.

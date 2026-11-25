@@ -84,7 +84,6 @@ class Runner:
     if not output_dir_path:
       raise ValueError("output_dir must be specified")
 
-    self.input_dir_path = input_dir_path
     self.import_names = import_names
     self._discovery = InputDiscovery(input_dir_path, import_names)
 
@@ -115,8 +114,8 @@ class Runner:
 
   def _load_config(self) -> None:
     """Opens the input dir, and reads and validates the config."""
-    self.input_dir, self.config = self._discovery.load_config(self.output_dir)
-    self.import_names = self._discovery.import_names
+    self.input_dir, self.config, self.import_names = (
+        self._discovery.load_config(self.output_dir))
     self.nodes = Nodes(self.config)
     if self.max_workers is None:
       self.max_workers = worker_pool.default_max_workers(uses_gcs=any(
