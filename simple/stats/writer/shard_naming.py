@@ -14,6 +14,7 @@
 """Naming conventions and collision checks for JSON-LD output shards."""
 
 import re
+import uuid
 
 _PART_TAG_RE = re.compile(r"p\d{3,}")
 _OBS_PART_SUFFIX_RE = re.compile(r"p\d{3,}-\d{5,}\.jsonld")
@@ -55,6 +56,30 @@ def part_shards_could_collide(file_path: str, stems: set[str]) -> bool:
       _PART_TAG_RE.fullmatch(other[len(prefix):])
       for other in stems
       if other.startswith(prefix))
+
+
+def observation_shard_name(file_name: str,
+                           shard_index: int,
+                           shard_tag: str = "") -> str:
+  """Returns the filename for an observation shard."""
+  tag = f"-{shard_tag}" if shard_tag else ""
+  return (f"observation-{file_shard_stem(file_name)}{tag}"
+          f"-{shard_index:05d}.jsonld")
+
+
+def node_shard_name(shard_index: int,
+                    file_name: str = "",
+                    shard_tag: str = "") -> str:
+  """Returns the filename for a node shard.
+
+  Every worker numbers its node shards from 0: the uuid tells them apart.
+  """
+  unique_id = uuid.uuid4().hex[:12]
+  if shard_tag and file_name:
+    prefix = f"node-{node_part_stem(file_name)}-{shard_tag}"
+  else:
+    prefix = "node"
+  return f"{prefix}-{shard_index:05d}-{unique_id}.jsonld"
 
 
 def is_part_shard(name: str, stem: str, *, is_obs: bool) -> bool:

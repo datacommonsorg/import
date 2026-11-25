@@ -18,15 +18,14 @@ import hashlib
 import json
 import logging
 import types
-from typing import Any, Callable, Mapping, NamedTuple
-import uuid
+from typing import Any, Mapping, NamedTuple
 
 import numpy as np
 import pandas as pd
 from stats.graph.util import is_entity_reference
 from stats.graph.util import is_uri_or_namespace
-from stats.writer.shard_naming import file_shard_stem
-from stats.writer.shard_naming import node_part_stem
+from stats.writer.shard_naming import node_shard_name
+from stats.writer.shard_naming import observation_shard_name
 
 DCID_URL = "https://datacommons.org/browser/"
 
@@ -379,12 +378,11 @@ def build_observation_shard(
     chunk,
     shard_index: int,
     ns_map: dict[str, str],
-    track_hash_fn: Callable,
     file_name: str,
     shard_tag: str = "",
     entity_properties: frozenset[str] = frozenset(),
-) -> tuple[str, str]:
-  """Returns the name and JSON text of the observation shard of `chunk`.
+) -> tuple[str, str, np.ndarray]:
+  """Returns the name, JSON text, and uint64 @id prefixes of `chunk`'s shard.
 
   `file_name` is the path of the input file, relative to the input directory.
   `shard_tag`, if any, follows the file in the name (see JsonLdStreamWriter).
@@ -470,14 +468,13 @@ def build_observation_shard(
 
   if prefix_buf:
     ids = np.frombuffer(prefix_buf, dtype=">u8").astype(np.uint64, copy=False)
-    track_hash_fn(ids, chunk, file_name)
+  else:
+    ids = np.empty(0, dtype=np.uint64)
 
-  tag = f"-{shard_tag}" if shard_tag else ""
-  shard_name = (f"observation-{file_shard_stem(file_name)}{tag}"
-                f"-{shard_index:05d}.jsonld")
+  shard_name = observation_shard_name(file_name, shard_index, shard_tag)
   shard_text = (
       f'{{"@context":{_to_json(ns_map)},"@graph":[{",".join(node_strs)}]}}')
-  return shard_name, shard_text
+  return shard_name, shard_text, ids
 
 
 def _append_unique_value(subject_dict: dict, key: str, val: object) -> None:
@@ -522,12 +519,5 @@ def build_node_shard(chunk,
   # Sort by @id to match deterministic output order
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
   compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
-
-  # Every worker numbers its node shards from 0: the uuid tells them apart.
-  unique_id = uuid.uuid4().hex[:12]
-  if shard_tag and file_name:
-    prefix = f"node-{node_part_stem(file_name)}-{shard_tag}"
-  else:
-    prefix = "node"
-  shard_name = f"{prefix}-{shard_index:05d}-{unique_id}.jsonld"
+  shard_name = node_shard_name(shard_index, file_name, shard_tag)
   return shard_name, _to_json(compacted_jsonld)

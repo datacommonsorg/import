@@ -161,14 +161,15 @@ class JsonLdStreamWriter(GraphWriter):
         chunk_records = list(zip(*(c[i:end] for c in col_lists)))
       shard_index = self.obs_shard_index
       self.obs_shard_index += 1
-      name, text = build_observation_shard(
+      name, text, ids = build_observation_shard(
           chunk_records,
           shard_index,
           self.ns_map,
-          track_hash_fn=self.track_observation_hash,
           file_name=file_name,
           shard_tag=self.shard_tag,
           entity_properties=entity_properties)
+      if len(ids):
+        self.track_observation_hash(ids, chunk_records, file_name)
       self._sink.write(dir_name, name, text)
 
   def write_observations(self,
