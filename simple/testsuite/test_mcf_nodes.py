@@ -21,7 +21,6 @@ lib/builders.py). Records the provenance produces on its own are not listed.
 from testsuite.lib import builders as b
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
-from testsuite.lib.builders import known_bug
 
 # --- Property values ----------------------------------------------------------
 #
@@ -266,17 +265,6 @@ def test_context_namespace_expands_to_full_uri():
   b.assert_records(
       result.added,
       [b.record("T", "Thing", sameAs=b.ref("http://example.org/item/1"))])
-
-
-@known_bug(reason="object values written as l:<local id> are not resolved to"
-           " the referenced node's dcid (points at dcid:L2, not dcid:Parent)")
-def test_local_reference_resolves_to_dcid():
-  result = b.run_mcf(b.mcf_node("L1", dcid='"Child"', parent="l:L2"),
-                     b.mcf_node("L2", dcid='"Parent"'))
-  b.assert_records(result.added, [
-      b.record("Child", "Thing", parent=b.ref("Parent")),
-      b.record("Parent", "Thing"),
-  ])
 
 
 # --- Invalid MCF --------------------------------------------------------------

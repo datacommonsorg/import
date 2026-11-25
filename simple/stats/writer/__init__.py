@@ -20,4 +20,5 @@ Layout:
   shard_naming         Shard naming stems, part tags, and collision checks.
   shard_sink           Asynchronous local/GCS shard upload and cleanup pool.
   obs_id_collisions    Within-file ObsIds and cross-file collision detection.
+  workflow_handoff     GCS handshake JSON for the Cloud Workflows pipeline.
 """

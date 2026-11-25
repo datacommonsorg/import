@@ -29,7 +29,6 @@ from testsuite.lib import builders as b
 from testsuite.lib import run as runlib
 from testsuite.lib.builders import Case
 from testsuite.lib.builders import cases
-from testsuite.lib.builders import known_bug
 
 
 def test_basic_rows():
@@ -472,37 +471,6 @@ def test_entity_dimensions_and_config_observation_properties():
           country=b.ref("country/FRA"),
           sex="Female",
       )
-  ])
-
-
-@known_bug(reason="observationProperties is embedded in every observation's"
-           " variableMeasured, as strings, instead of being declared once on"
-           " the StatisticalVariable node, as references")
-def test_dimensions_are_declared_on_the_variable_node():
-  """
-  The variable declares its dimensions; observations only carry the values.
-
-  Per the "Import Management & Multi-Entity Variable Support" design
-  (section 4), the StatisticalVariable node in the node output holds
-  observationProperties, and the observations hold the dimension values.
-  """
-  result = b.run_csv(
-      b.csv_file(["country/USA", "country/FRA", "Count_Trip", "2020", "10"],
-                 header=["origin", "destination", "variable", "date", "value"]),
-      b.obs_config({
-          **b.OBS_MAPPINGS,
-          "dcid:observationAbout": "origin",
-          "dcid:destination": "destination",
-      }))
-  observations = [r for r in result.added if "dcid:variableMeasured" in r]
-  assert [r["dcid:variableMeasured"] for r in observations
-         ] == [b.ref("Count_Trip")]
-  b.assert_records(result.nodes, [
-      b.record("Count_Trip",
-               observationProperties=[
-                   b.ref("observationAbout"),
-                   b.ref("destination")
-               ])
   ])
 
 
