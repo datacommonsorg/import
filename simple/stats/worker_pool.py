@@ -184,6 +184,8 @@ def _file_results(
       errors.append(e)
   if not errors:
     return results
+  if import_whole is None:
+    raise errors[0]
   logging.warning(
       "%d of the %d parts of %s failed to import, so the file is imported"
       " whole. The first error: %s: %s", len(errors), len(futures), file.path,
