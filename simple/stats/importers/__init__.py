@@ -15,6 +15,7 @@
 
 Layout:
   importer                  Base Importer, CSV header validation, node counting.
+  factory                   Selects the Importer implementation for an input file.
   variable_per_row_importer Observations CSV importer.
   entities_importer         Entities CSV importer.
   mcf_importer              MCF importer and metadata node registration.

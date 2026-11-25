@@ -14,5 +14,6 @@
 """Import folder discovery and config.json schema & lookup.
 
 Layout:
-  config  config.json schema, error rendering, and file-pattern lookup wrapper.
+  config     config.json schema, error rendering, and file-pattern lookup wrapper.
+  discovery  Import folder discovery, config.json merging, and CSV/MCF filtering.
 """
