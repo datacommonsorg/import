@@ -16,20 +16,20 @@ import json
 
 import pandas as pd
 from stats import constants
-from stats.csv_split import FilePart
-from stats.data import FileValidationError
-from stats.data import filter_invalid_observation_values
-from stats.data import ObservationProperties
-from stats.data import strip_namespace
-from stats.data import strip_namespace_series
-from stats.graph_writer import GraphWriter
-from stats.importer import column_coverage_errors
-from stats.importer import Importer
-from stats.importer import mapping_errors
-from stats.importer import missing_column_mappings_error
-from stats.importer import read_csv_columns
-from stats.nodes import Nodes
+from stats.graph.data import FileValidationError
+from stats.graph.data import filter_invalid_observation_values
+from stats.graph.data import ObservationProperties
+from stats.graph.data import strip_namespace
+from stats.graph.data import strip_namespace_series
+from stats.graph.nodes import Nodes
+from stats.importers.file_split import FilePart
+from stats.importers.importer import column_coverage_errors
+from stats.importers.importer import Importer
+from stats.importers.importer import mapping_errors
+from stats.importers.importer import missing_column_mappings_error
+from stats.importers.importer import read_csv_columns
 from stats.report.model.summary import ValidationErrorType
+from stats.writer.graph_writer import GraphWriter
 from util.filesystem import File
 
 # Mapping from official DCID keys in config.json to internal importer columns.
@@ -42,6 +42,10 @@ STANDARD_PROPERTY_MAPPING = {
     },
 }
 
+# Max distinct custom-dimension tuples cached across chunks of one file.
+# Large enough to hold census-tract-scale places (~72-85k) without thrashing.
+_MAX_CUSTOM_DIM_CACHE = 1 << 17
+
 
 def _apply_property_defaults(df: pd.DataFrame,
                              obs_props: ObservationProperties) -> pd.DataFrame:
@@ -49,21 +53,19 @@ def _apply_property_defaults(df: pd.DataFrame,
   for col_name in constants.STANDARD_PROPERTY_COLUMNS.values():
     default_value = obs_props.standard.get(col_name, "")
     if col_name in df.columns:
-      source_col = df[col_name].replace("", pd.NA)
-      df[col_name] = source_col.fillna(default_value).astype(str)
+      default_str = str(default_value)
+      df[col_name] = [
+          (v.strip() or default_str) if isinstance(v, str) else
+          (str(v).strip() or default_str if pd.notna(v) else default_str)
+          for v in df[col_name].tolist()
+      ]
     else:
       df[col_name] = default_value
   return df
 
 
-def _format_numeric_values(df: pd.DataFrame) -> pd.DataFrame:
-  """Format value column as string."""
-  df[constants.COLUMN_VALUE] = df[constants.COLUMN_VALUE].fillna("").astype(str)
-  return df
-
-
 def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
-  """Strip namespace prefixes from DCID columns."""
+  """Strip surrounding whitespace and namespace prefixes from DCID columns."""
 
   # Strip namespaces from columns that exist
   for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
@@ -72,6 +74,12 @@ def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
       df[constants.COLUMN_PROVENANCE] = strip_namespace(provenance)
     elif col in df.columns:
       df[col] = strip_namespace_series(df[col])
+
+  if constants.COLUMN_DATE in df.columns:
+    df[constants.COLUMN_DATE] = [
+        v.strip() if isinstance(v, str) else v
+        for v in df[constants.COLUMN_DATE].tolist()
+    ]
 
   return df
 
@@ -91,13 +99,14 @@ class VariablePerRowImporter(Importer):
                part: FilePart | None = None) -> None:
     """
     Args:
-      part: The part of `input_file` to import (see `stats.csv_split`), or
+      part: The part of `input_file` to import (see `stats.importers.file_split`), or
         None to import all of it.
     """
     super().__init__(input_file, graph_writer, nodes)
     self.part = part
     # Validated by validate_headers, which the runner calls before do_import.
     self.column_mappings, self.custom_dimensions = self._parse_column_mappings()
+    self._custom_dim_cache: dict[tuple, str] = {}
 
   def do_import(self) -> None:
     self._write_observations()
@@ -188,8 +197,10 @@ class VariablePerRowImporter(Importer):
     mapped = list(self.column_mappings.values())
 
     with self._open_rows() as stream:
+      # Read cells verbatim so IDs like "NA" (Namibia) aren't turned into NaN;
+      # NA tokens are filtered only on the value column.
       reader = pd.read_csv(stream,
-                           na_values=constants.STANDARD_NA_VALUES,
+                           keep_default_na=False,
                            chunksize=10000,
                            dtype=str,
                            usecols=mapped)
@@ -198,15 +209,18 @@ class VariablePerRowImporter(Importer):
         if chunk_df.empty:
           continue
         observations_df = (self._apply_column_mappings(chunk_df).pipe(
-            _apply_property_defaults, obs_props).pipe(
-                self._serialize_custom_dimensions,
-                obs_props.properties).pipe(_format_numeric_values).pipe(
-                    filter_invalid_observation_values).pipe(
-                        self._ensure_entity_column).pipe(
-                            _strip_namespaces, provenance))
+            _apply_property_defaults,
+            obs_props).pipe(self._serialize_custom_dimensions,
+                            obs_props.properties).pipe(
+                                filter_invalid_observation_values).pipe(
+                                    self._ensure_entity_column).pipe(
+                                        _strip_namespaces, provenance))
         observations_df = observations_df[constants.OBSERVATION_COLUMNS]
         self.counts = self.counts.add(self.count_observations(observations_df))
-        self.graph_writer.write_observations(observations_df, self.input_file)
+        self.graph_writer.write_observations(
+            observations_df,
+            self.input_file,
+            entity_properties=self.custom_dimensions)
 
   def _open_rows(self):
     """Opens a text stream of the CSV header and the rows to import."""
@@ -226,21 +240,28 @@ class VariablePerRowImporter(Importer):
     custom_cols = [dim for dim in self.custom_dimensions if dim in df.columns]
 
     if not custom_cols:
-      static_json = json.dumps(static_props) if static_props else ""
-      df[constants.COLUMN_PROPERTIES] = static_json
+      df[constants.COLUMN_PROPERTIES] = (json.dumps(static_props)
+                                         if static_props else "")
       return df
 
-    # Rows repeat the same few dimension values (e.g. places), so each
-    # distinct combination is serialized once. Missing values become "", which
-    # serializing skips too, so that they compare equal (NaN != NaN).
-    serialized_by_values: dict[tuple, str] = {}
+    # Rows repeat the same dimension values across chunks (e.g. places across
+    # dates), so cache distinct combinations across chunks with a bounded dict.
+    # Missing values become "", which serializing skips too, so that they
+    # compare equal (NaN != NaN).
+    cache = self._custom_dim_cache
+    if len(cache) >= _MAX_CUSTOM_DIM_CACHE:
+      cache.clear()
+    col_lists = [df[c].tolist() for c in custom_cols]
     serialized = []
-    dimensions = df[custom_cols].fillna("")
-    for values in dimensions.itertuples(index=False, name=None):
-      if values not in serialized_by_values:
-        serialized_by_values[values] = _serialize_row_dimensions(
-            dict(zip(custom_cols, values)), static_props)
-      serialized.append(serialized_by_values[values])
+    for raw_values in zip(*col_lists):
+      key = tuple(v if isinstance(v, str) else ("" if pd.isna(v) else str(v))
+                  for v in raw_values)
+      res = cache.get(key)
+      if res is None:
+        res = _serialize_row_dimensions(dict(zip(custom_cols, key)),
+                                        static_props)
+        cache[key] = res
+      serialized.append(res)
     df[constants.COLUMN_PROPERTIES] = serialized
     return df.drop(columns=custom_cols)
 
@@ -256,6 +277,8 @@ def _serialize_row_dimensions(row: dict[str, object],
   """Serializes a row's custom dimensions merged with `static_props` into JSON."""
   props = dict(static_props)
   for col, val in row.items():
-    if pd.notna(val) and val != "":
-      props[col] = strip_namespace(str(val))
+    if pd.notna(val):
+      cleaned = strip_namespace(str(val))
+      if cleaned:
+        props[col] = cleaned
   return json.dumps(props) if props else ""

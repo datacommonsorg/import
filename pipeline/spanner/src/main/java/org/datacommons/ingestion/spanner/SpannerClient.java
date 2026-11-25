@@ -11,13 +11,9 @@ import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Value;
-import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
@@ -25,7 +21,6 @@ import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
@@ -230,13 +225,6 @@ public class SpannerClient implements Serializable {
     return EdgeRecord.from(edge).toMutation(this.edgeTableName);
   }
 
-  public List<KV<String, Mutation>> toGraphKVMutations(List<Node> nodes, List<Edge> edges) {
-    return Stream.concat(
-            nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
-        .map(mutation -> KV.of(getGraphKVKey(mutation), mutation))
-        .toList();
-  }
-
   public Mutation toTimeSeriesMutation(TimeSeries obs) {
     return TimeSeriesRecord.from(obs).toMutation(this.timeSeriesTableName);
   }
@@ -263,25 +251,6 @@ public class SpannerClient implements Serializable {
    */
   public static String getMutationValue(Map<String, Value> mutationMap, String columnName) {
     return mutationMap.getOrDefault(columnName, Value.string("")).getString();
-  }
-
-  /**
-   * Returns the key for grouping graph mutations (Nodes and Edges) in a KV.
-   *
-   * <p>Note: For effective de-duplication, the grouping key should be a subset of the primary keys
-   * from the relevant tables (e.g. edges, nodes, observations).
-   */
-  public String getGraphKVKey(Mutation mutation) {
-    var mutationMap = mutation.asMap();
-    String subjectId = getMutationValue(mutationMap, "subject_id");
-    if (numShards <= 1 || !mutation.getTable().equals(edgeTableName)) {
-      return subjectId;
-    }
-
-    String objectId = getMutationValue(mutationMap, "object_id");
-    int shard = Math.abs(Objects.hash(objectId)) % numShards;
-
-    return Joiner.on("::").join(subjectId, shard);
   }
 
   public String getGcpProjectId() {

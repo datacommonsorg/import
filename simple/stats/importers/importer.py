@@ -16,14 +16,14 @@ import collections
 
 import pandas as pd
 from stats import constants
-from stats.data import FileValidationError
-from stats.data import ImportCounts
-from stats.data import strip_namespace
-from stats.data import Triple
-from stats.graph_writer import GraphWriter
-from stats.nodes import Nodes
+from stats.graph.data import FileValidationError
+from stats.graph.data import ImportCounts
+from stats.graph.data import strip_namespace
+from stats.graph.data import Triple
+from stats.graph.nodes import Nodes
 from stats.report.model.summary import DateRange
 from stats.report.model.summary import ValidationErrorType
+from stats.writer.graph_writer import GraphWriter
 from util.filesystem import File
 
 
@@ -260,6 +260,7 @@ class Importer:
     counted but don't affect the date range.
     """
     dates = observations_df[constants.COLUMN_DATE].dropna()
+    dates = dates[dates != ""]
     return ImportCounts(observations=len(observations_df),
                         date_range=DateRange(min=dates.min(), max=dates.max())
                         if not dates.empty else None)

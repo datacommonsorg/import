@@ -3,12 +3,13 @@ package org.datacommons.ingestion.util;
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.beam.sdk.metrics.Counter;
@@ -20,6 +21,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.NodeSubGraph;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.data.TimeSeriesKey;
@@ -40,119 +42,6 @@ public class GraphReader implements Serializable {
   private static final Logger LOGGER = LoggerFactory.getLogger(GraphReader.class);
   private static final String DC_AGGREGATE = "dcAggregate/";
   private static final String DATCOM_AGGREGATE = "DataCommonsAggregate";
-
-  public static List<Node> graphToNodes(McfGraph graph, Counter mcfNodesWithoutTypeCounter) {
-    List<Node> nodes = new ArrayList<>();
-    for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
-      PropertyValues pvs = nodeEntry.getValue();
-      if (!GraphUtils.isObservation(pvs)) {
-
-        // Generate corresponding node
-        Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        Node.Builder node = Node.builder();
-        String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
-        String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
-        node.subjectId(subjectId);
-
-        List<String> types = GraphUtils.getPropertyValues(pv, "typeOf");
-        if (types.isEmpty()) {
-          types = List.of(PipelineUtils.TYPE_THING);
-          LOGGER.info("Found MCF node with no type: {}", nodeEntry.getKey());
-          mcfNodesWithoutTypeCounter.inc();
-        }
-        node.value(subjectId);
-        String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name());
-        node.name(!name.isEmpty() ? name : subjectId);
-        node.types(types);
-        nodes.add(node.build());
-
-        // Generate any leaf nodes
-        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
-          if (entry.getKey().equals("dcid")) {
-            continue;
-          }
-          for (TypedValue val : entry.getValue().getTypedValuesList()) {
-            if (val.getType() != ValueType.RESOLVED_REF) {
-              boolean storeAsBytes = PipelineUtils.storeValueAsBytes(entry.getKey());
-              byte[] compressedBytes =
-                  storeAsBytes ? PipelineUtils.compressString(val.getValue()) : null;
-              int valSize = storeAsBytes ? compressedBytes.length : val.getValue().length();
-              int maxSize =
-                  storeAsBytes
-                      ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
-                      : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
-              if (valSize > maxSize) {
-                LOGGER.warn(
-                    "Dropping node from {} because value size {} exceeds max size.",
-                    subjectId,
-                    valSize);
-                continue;
-              }
-              node = Node.builder();
-              node.subjectId(PipelineUtils.generateObjectValueKey(val.getValue()));
-              if (storeAsBytes) {
-                node.bytes(ByteArray.copyFrom(compressedBytes));
-              } else {
-                node.value(val.getValue());
-              }
-              nodes.add(node.build());
-            }
-          }
-        }
-      }
-    }
-    return nodes;
-  }
-
-  public static List<Edge> graphToEdges(McfGraph graph, String provenance) {
-    List<Edge> edges = new ArrayList<>();
-    for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
-      PropertyValues pvs = nodeEntry.getValue();
-      if (!GraphUtils.isObservation(pvs)) {
-        Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
-        String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
-        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
-          if (entry.getKey().equals("dcid")) {
-            continue;
-          }
-          for (TypedValue val : entry.getValue().getTypedValuesList()) {
-            if (val.getType() != ValueType.RESOLVED_REF) {
-              boolean storeAsBytes = PipelineUtils.storeValueAsBytes(entry.getKey());
-              int maxSize =
-                  storeAsBytes
-                      ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
-                      : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
-
-              int valSize = val.getValue().length();
-              if (storeAsBytes && valSize > maxSize) {
-                valSize = PipelineUtils.compressString(val.getValue()).length;
-              }
-
-              if (valSize > maxSize) {
-                LOGGER.warn(
-                    "Dropping edge from {} because value size {} exceeds max size.",
-                    subjectId,
-                    valSize);
-                continue;
-              }
-            }
-            Edge.Builder edge = Edge.builder();
-            edge.subjectId(subjectId);
-            edge.predicate(entry.getKey());
-            edge.provenance(provenance);
-            if (val.getType() == ValueType.RESOLVED_REF) {
-              edge.objectId(McfUtil.stripNamespace(val.getValue()));
-            } else {
-              edge.objectId(PipelineUtils.generateObjectValueKey(val.getValue()));
-            }
-            edges.add(edge.build());
-          }
-        }
-      }
-    }
-    return edges;
-  }
 
   public static PCollection<TimeSeries> extractUniqueSeries(
       PCollection<McfGraph> graph, String importName, boolean isBaseDc, Counter tsCounter) {
@@ -499,54 +388,167 @@ public class GraphReader implements Serializable {
     return Observation.builder().seriesKey(seriesKey).date(obs.getDate()).value(value).build();
   }
 
-  public static PCollection<KV<String, Mutation>> graphToNodes(
+  static ImmutableList<NodeSubGraph> extractNodeSubGraphsFromGraph(
+      McfGraph graph, String provenance, Counter nodesWithoutTypeCounter) {
+    return graph.getNodesMap().entrySet().stream()
+        .filter(nodeEntry -> !GraphUtils.isObservation(nodeEntry.getValue()))
+        .flatMap(
+            nodeEntry ->
+                extractNodeSubGraphs(nodeEntry, provenance, nodesWithoutTypeCounter).stream())
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  static ImmutableList<NodeSubGraph> extractNodeSubGraphs(
+      Map.Entry<String, PropertyValues> nodeEntry,
+      String provenance,
+      Counter nodesWithoutTypeCounter) {
+    PropertyValues pvs = nodeEntry.getValue();
+    Map<String, McfGraph.Values> pv = pvs.getPvsMap();
+    String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
+    String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
+
+    List<String> types = GraphUtils.getPropertyValues(pv, GraphUtils.Property.typeOf.name());
+    if (types.isEmpty()) {
+      types = ImmutableList.of(PipelineUtils.TYPE_THING);
+      LOGGER.info("Found MCF node with no type: {}", nodeEntry.getKey());
+      nodesWithoutTypeCounter.inc();
+    }
+    String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name());
+    Node subjectNode =
+        Node.builder()
+            .subjectId(subjectId)
+            .value(subjectId)
+            .name(!name.isEmpty() ? name : subjectId)
+            .types(types)
+            .build();
+
+    ImmutableList<KV<Edge, Node>> edgesAndLeafNodes =
+        pv.entrySet().stream()
+            .filter(entry -> !entry.getKey().equals(GraphUtils.Property.dcid.name()))
+            .flatMap(
+                entry ->
+                    entry.getValue().getTypedValuesList().stream()
+                        .map(
+                            val ->
+                                extractEdgeAndLeafNode(subjectId, entry.getKey(), provenance, val))
+                        .filter(Objects::nonNull))
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableList<Edge> subjectEdges =
+        edgesAndLeafNodes.stream().map(KV::getKey).collect(ImmutableList.toImmutableList());
+
+    ImmutableList<NodeSubGraph> leafEntries =
+        edgesAndLeafNodes.stream()
+            .map(KV::getValue)
+            .filter(Objects::nonNull)
+            .map(leafNode -> NodeSubGraph.builder().node(leafNode).build())
+            .collect(ImmutableList.toImmutableList());
+
+    return ImmutableList.<NodeSubGraph>builder()
+        .add(NodeSubGraph.builder().node(subjectNode).edges(subjectEdges).build())
+        .addAll(leafEntries)
+        .build();
+  }
+
+  static KV<Edge, Node> extractEdgeAndLeafNode(
+      String subjectId, String predicate, String provenance, TypedValue val) {
+    String objectId;
+    Node leafNode = null;
+    if (val.getType() == ValueType.RESOLVED_REF) {
+      objectId = McfUtil.stripNamespace(val.getValue());
+    } else {
+      leafNode = buildLeafNode(subjectId, predicate, val.getValue());
+      if (leafNode == null) {
+        return null;
+      }
+      objectId = leafNode.getSubjectId();
+    }
+    Edge edge =
+        Edge.builder()
+            .subjectId(subjectId)
+            .predicate(predicate)
+            .provenance(provenance)
+            .objectId(objectId)
+            .build();
+    return KV.of(edge, leafNode);
+  }
+
+  static Node buildLeafNode(String subjectId, String predicate, String rawValue) {
+    boolean storeAsBytes = PipelineUtils.storeValueAsBytes(predicate);
+    byte[] compressedBytes = storeAsBytes ? PipelineUtils.compressString(rawValue) : null;
+    int valSize = storeAsBytes ? compressedBytes.length : rawValue.length();
+    int maxSize =
+        storeAsBytes
+            ? SpannerClient.MAX_SPANNER_COLUMN_SIZE
+            : SpannerClient.MAX_SPANNER_STRING_COLUMN_SIZE;
+    if (valSize > maxSize) {
+      LOGGER.warn(
+          "Dropping node and edge from {} because value size {} exceeds max size.",
+          subjectId,
+          valSize);
+      return null;
+    }
+    Node.Builder leafNode =
+        Node.builder().subjectId(PipelineUtils.generateObjectValueKey(rawValue));
+    if (storeAsBytes) {
+      leafNode.bytes(ByteArray.copyFrom(compressedBytes));
+    } else {
+      leafNode.value(rawValue);
+    }
+    return leafNode.build();
+  }
+
+  public static PCollection<NodeSubGraph> extractNodeSubGraphsFromGraph(
       String importName,
       PCollection<McfGraph> graph,
-      SpannerClient spannerClient,
-      Counter nodeCounter,
-      Counter mcfNodesWithoutTypeCounter) {
+      String provenance,
+      Counter nodesWithoutTypeCounter) {
     return graph.apply(
-        "GenerateNodeMutations-" + importName,
+        "ExtractNodeSubGraphsFromGraph-" + importName,
         ParDo.of(
-            new DoFn<McfGraph, KV<String, Mutation>>() {
+            new DoFn<McfGraph, NodeSubGraph>() {
               @ProcessElement
               public void processElement(
-                  @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
-                List<Node> nodes = graphToNodes(element, mcfNodesWithoutTypeCounter);
-                List<KV<String, Mutation>> mutations =
-                    spannerClient.toGraphKVMutations(nodes, Collections.emptyList());
-                mutations.stream()
-                    .forEach(
-                        e -> {
-                          receiver.output(e);
-                        });
-                nodeCounter.inc(mutations.size());
+                  @Element McfGraph element, OutputReceiver<NodeSubGraph> receiver) {
+                extractNodeSubGraphsFromGraph(element, provenance, nodesWithoutTypeCounter)
+                    .forEach(receiver::output);
               }
             }));
   }
 
-  public static PCollection<KV<String, Mutation>> graphToEdges(
+  public static PCollection<Mutation> nodesToMutations(
       String importName,
-      PCollection<McfGraph> graph,
-      String provenance,
+      PCollection<NodeSubGraph> nodeSubGraphs,
       SpannerClient spannerClient,
-      Counter edgeCounter) {
-    return graph.apply(
-        "GenerateEdgeMutations-" + importName,
+      Counter nodeCounter) {
+    return nodeSubGraphs.apply(
+        "GenerateNodeMutations-" + importName,
         ParDo.of(
-            new DoFn<McfGraph, KV<String, Mutation>>() {
+            new DoFn<NodeSubGraph, Mutation>() {
               @ProcessElement
               public void processElement(
-                  @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
-                List<Edge> edges = graphToEdges(element, provenance);
-                List<KV<String, Mutation>> mutations =
-                    spannerClient.toGraphKVMutations(Collections.emptyList(), edges);
-                mutations.stream()
-                    .forEach(
-                        e -> {
-                          receiver.output(e);
-                        });
-                edgeCounter.inc(mutations.size());
+                  @Element NodeSubGraph element, OutputReceiver<Mutation> receiver) {
+                receiver.output(spannerClient.toNodeMutation(element.getNode()));
+                nodeCounter.inc();
+              }
+            }));
+  }
+
+  public static PCollection<Mutation> edgesToMutations(
+      String importName,
+      PCollection<NodeSubGraph> nodeSubGraphs,
+      SpannerClient spannerClient,
+      Counter edgeCounter) {
+    return nodeSubGraphs.apply(
+        "GenerateEdgeMutations-" + importName,
+        ParDo.of(
+            new DoFn<NodeSubGraph, Mutation>() {
+              @ProcessElement
+              public void processElement(
+                  @Element NodeSubGraph element, OutputReceiver<Mutation> receiver) {
+                List<Edge> edges = element.getEdges();
+                edges.forEach(edge -> receiver.output(spannerClient.toEdgeMutation(edge)));
+                edgeCounter.inc(edges.size());
               }
             }));
   }

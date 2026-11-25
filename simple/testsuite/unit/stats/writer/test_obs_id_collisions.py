@@ -19,9 +19,9 @@ from unittest import mock
 
 import numpy as np
 import pytest
-from stats import obs_id_collisions
-from stats.obs_id_collisions import find_cross_file_collisions
-from stats.obs_id_collisions import save_obs_ids
+from stats.writer import obs_id_collisions
+from stats.writer.obs_id_collisions import find_cross_file_collisions
+from stats.writer.obs_id_collisions import save_obs_ids
 
 _MAX_ID = (1 << 64) - 1
 
@@ -87,6 +87,23 @@ def test_bucketing_does_not_change_the_result(tmp_path, bucket_size):
   with mock.patch.object(obs_id_collisions, "_BUCKET_SIZE", bucket_size):
     result = find_cross_file_collisions(_files(tmp_path, *id_sets))
   assert result.file_counts == {"f1.csv": 50, "f2.csv": 50}
+
+
+def test_parallel_matches_serial_counts_and_samples(tmp_path):
+  rng = random.Random(42)
+  shared = {rng.getrandbits(64) for _ in range(20)}
+  id_sets = [
+      {rng.getrandbits(64) for _ in range(300)} | shared for _ in range(4)
+  ]
+  files = _files(tmp_path, *id_sets)
+  with (mock.patch.object(obs_id_collisions, "_BUCKET_SIZE", 50),
+        mock.patch.object(obs_id_collisions, "_available_cpus",
+                          return_value=4)):
+    with mock.patch.object(obs_id_collisions, "_MAX_BUCKET_WORKERS", 1):
+      serial = find_cross_file_collisions(files)
+    with mock.patch.object(obs_id_collisions, "_MAX_BUCKET_WORKERS", 4):
+      parallel = find_cross_file_collisions(files)
+  assert parallel == serial
 
 
 @pytest.mark.parametrize("chunk_size", [1, 7, 1000])

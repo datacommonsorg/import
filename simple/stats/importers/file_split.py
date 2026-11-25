@@ -11,38 +11,44 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Splits large observation CSVs into byte-range parts to import in parallel.
+"""Splits large CSV and MCF files into byte-range parts to import in parallel.
 
-Each part is a byte range parsed after the file's header. Boundaries are the
-first newline after evenly spaced offsets, found with small ranged reads so the
-file isn't read whole. If a boundary lands inside a quoted field, that part
-fails to parse (EOF inside string) and the runner falls back to importing the
-file whole.
+Each part is a byte range parsed after the file's header (the CSV header row,
+or any leading `Context:` block before the first `Node:` line in MCF).
+Boundaries are found with small ranged reads so the file isn't read whole. If
+a part fails to parse (e.g. a CSV split inside a quoted field, or an MCF node
+whose `dcid:` is in another block), the runner deletes partial shards and falls
+back to importing the file whole.
 """
 
+import collections
 import concurrent.futures
 import dataclasses
 import io
 import logging
+import re
 from typing import Callable
 
 import pandas as pd
-from stats.config import Config
-from stats.data import ImportType
-from stats.jsonld_stream_writer import observation_shard_stem
-from stats.jsonld_stream_writer import part_shards_could_collide
+from stats.config.config import Config
+from stats.graph.data import ImportType
+from stats.writer.shard_naming import file_shard_stem
+from stats.writer.shard_naming import node_part_stem
+from stats.writer.shard_naming import part_shards_could_collide
 from util.filesystem import File
 
 # Files larger than this are split, by default (see `num_parts`).
-SPLIT_CSV_BYTES = 256 * 1024 * 1024
+SPLIT_FILE_BYTES = 256 * 1024 * 1024
 # Parts are at least this fraction of the split size: 64 MiB by default.
 _MIN_PART_FRACTION = 4
-# Bytes read at a time to find a newline; doubled while none is found.
+# Bytes read at a time to find a boundary; doubled while none is found.
 WINDOW_BYTES = 64 * 1024
 _MAX_PLANNING_THREADS = 32
 
 _UTF8_BOM = b"\xef\xbb\xbf"
 _BLANK = b" \t\r\n"
+_MCF_NODE_LINE_RE = re.compile(rb"[ \t]*Node[ \t]*:")
+_MCF_NEXT_NODE_RE = re.compile(rb"\n[ \t]*Node[ \t]*:")
 
 # Returns bytes [start, end) of a file.
 ReadRange = Callable[[int, int], bytes]
@@ -69,19 +75,38 @@ def num_parts(size: int, max_parts: int, split_bytes: int) -> int:
   return max(1, min(max_parts, size // min_part_bytes))
 
 
-def plan_splits(csv_files: list[File],
+def _is_mcf(file: File) -> bool:
+  return file.path.lower().endswith(".mcf")
+
+
+def _is_obs_csv(file: File, config: Config) -> bool:
+  return not _is_mcf(file) and config.import_type(
+      file) == ImportType.OBSERVATIONS
+
+
+def _can_split(file: File, stem: str,
+               stem_counts: collections.Counter[str]) -> bool:
+  if stem_counts[stem] > 1:
+    return False
+  return not part_shards_could_collide(file.path, set(stem_counts))
+
+
+def plan_splits(files: list[File],
                 config: Config,
                 max_workers: int,
                 split_bytes: int | None = None) -> dict[str, list[FilePart]]:
-  """Returns byte-range parts for each large observation CSV, by file path."""
-  threshold = split_bytes or SPLIT_CSV_BYTES
-  stems = {observation_shard_stem(f.path) for f in csv_files}
+  """Returns byte-range parts for each large input file, by path."""
+  threshold = split_bytes or SPLIT_FILE_BYTES
+  obs_stems = collections.Counter(
+      file_shard_stem(f.path) for f in files if _is_obs_csv(f, config))
+  node_stems = collections.Counter(
+      node_part_stem(f.path) for f in files if not _is_obs_csv(f, config))
   candidates = [
       (f, parts)
-      for f in csv_files
+      for f in files
       if (parts := num_parts(f.size() or 0, max_workers, threshold)) > 1 and
-      config.import_type(f) == ImportType.OBSERVATIONS and
-      not part_shards_could_collide(f.path, stems)
+      (_can_split(f, file_shard_stem(f.path), obs_stems) if _is_obs_csv(
+          f, config) else _can_split(f, node_part_stem(f.path), node_stems))
   ]
   if not candidates:
     return {}
@@ -97,10 +122,10 @@ def plan_splits(csv_files: list[File],
   return parts_by_path
 
 
-def plan_parts(read: ReadRange,
-               size: int,
-               parts: int,
-               window_bytes: int = WINDOW_BYTES) -> list[FilePart] | None:
+def plan_csv_parts(read: ReadRange,
+                   size: int,
+                   parts: int,
+                   window_bytes: int = WINDOW_BYTES) -> list[FilePart] | None:
   """Returns up to `parts` parts of a CSV of `size` bytes, or None to read whole."""
   if parts < 2:
     return None
@@ -108,11 +133,34 @@ def plan_parts(read: ReadRange,
   header_end = _first_non_blank_line_end(prefix)
   if header_end is None or not _header_parses_alone(prefix, header_end):
     return None
+  return _build_parts(
+      size, parts, header_end,
+      lambda start, end: _after_first_newline(read, start, end, window_bytes))
+
+
+def plan_mcf_parts(read: ReadRange,
+                   size: int,
+                   parts: int,
+                   window_bytes: int = WINDOW_BYTES) -> list[FilePart] | None:
+  """Returns up to `parts` parts of an MCF of `size` bytes, or None to read whole."""
+  if parts < 2 or size == 0:
+    return None
+  header_end = _first_mcf_node_offset(read, size, window_bytes)
+  if header_end is None:
+    return None
+  return _build_parts(
+      size, parts, header_end,
+      lambda start, end: _find_mcf_node_after(read, start, end, window_bytes))
+
+
+def _build_parts(
+    size: int, parts: int, header_end: int,
+    find_start: Callable[[int, int], int | None]) -> list[FilePart] | None:
+  """Splits [header_end, size) into up to `parts` contiguous FileParts."""
   offsets = [size * k // parts for k in range(parts)] + [size]
   starts = [header_end]
   for k in range(1, parts):
-    start = _after_first_newline(read, max(offsets[k], header_end),
-                                 offsets[k + 1], window_bytes)
+    start = find_start(max(offsets[k], header_end), offsets[k + 1])
     if start is not None and start < size:
       starts.append(start)
   if len(starts) < 2:
@@ -127,8 +175,9 @@ def _plan_file_or_none(file: File, parts: int) -> list[FilePart] | None:
   size = file.size()
   if parts < 2 or size is None or not file.can_read_ranges():
     return None
+  planner = plan_mcf_parts if _is_mcf(file) else plan_csv_parts
   try:
-    return plan_parts(file.read_bytes, size, parts)
+    return planner(file.read_bytes, size, parts)
   except Exception:  # pylint: disable=broad-except
     logging.exception("Failed to plan parts of %s; importing it whole",
                       file.path)
@@ -171,6 +220,43 @@ def _after_first_newline(read: ReadRange, start: int, end: int,
       return start + nl + 1
     start = window_end
     length *= 2
+  return None
+
+
+def _first_mcf_node_offset(read: ReadRange, size: int,
+                           window_bytes: int) -> int | None:
+  """Returns the byte offset of the first `Node:` line, or None."""
+  head = read(0, min(max(window_bytes, 64), size))
+  if _MCF_NODE_LINE_RE.match(head):
+    return 0
+  return _find_mcf_node_after(read, 0, size, window_bytes)
+
+
+def _find_mcf_node_after(read: ReadRange, start: int, end: int,
+                         window_bytes: int) -> int | None:
+  """Returns the offset of the first `Node:` line after a `\\n` in [start, end)."""
+  pos = start
+  length = window_bytes
+  while pos < end:
+    window_end = min(pos + length, end)
+    chunk = read(pos, window_end)
+    if not chunk:
+      return None
+    if (match := _MCF_NEXT_NODE_RE.search(chunk)) is not None:
+      return pos + match.start() + 1
+    if window_end >= end:
+      return None
+    # Overlap on the last newline so a `\nNode:` straddling the window edge is
+    # seen intact on the next read.
+    last_nl = chunk.rfind(b"\n")
+    if last_nl < 0:
+      pos = window_end
+      length = window_bytes
+    elif last_nl == 0:
+      length *= 2
+    else:
+      pos += last_nl
+      length = window_bytes
   return None
 
 

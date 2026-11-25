@@ -227,12 +227,21 @@ class ImportType(StrEnum):
   ENTITIES = "entities"
 
 
+_STANDARD_NA_LOWER = frozenset(
+    {val.lower() for val in constants.STANDARD_NA_VALUES} | {"nan", ""})
+_INVALID_VARIABLE_VALUES = frozenset({"", "none", "null", "nan", "<na>"})
+
+
 def strip_namespace(v: str) -> str:
+  """Strips surrounding whitespace and any namespace prefix from a DCID.
+
+  e.g. ' dcid:country/USA ' -> 'country/USA'
   """
-  Strips namespaces from dcids.
-  e.g. 'dcid:country/USA' -> 'country/USA'
-  """
-  return v[v.find(_NAMESPACE_DELIMITER) + 1:]
+  v = v.strip()
+  idx = v.find(_NAMESPACE_DELIMITER)
+  if idx != -1:
+    return v[idx + 1:].strip()
+  return v
 
 
 def strip_namespace_series(series: pd.Series) -> pd.Series:
@@ -242,18 +251,54 @@ def strip_namespace_series(series: pd.Series) -> pd.Series:
     series: pandas Series containing DCIDs potentially with namespaces
 
   Returns:
-    Series with namespaces stripped
+    Series with surrounding whitespace and namespaces stripped
   """
-  return series.str.split(_NAMESPACE_DELIMITER, n=1).str[-1]
+  if series.empty:
+    return series
+  delim = _NAMESPACE_DELIMITER
+  out = []
+  for v in series.tolist():
+    if isinstance(v, str):
+      s = v.strip()
+      idx = s.find(delim)
+      out.append(s[idx + 1:].strip() if idx != -1 else s)
+    else:
+      out.append(v)
+  return pd.Series(out, index=series.index, dtype=series.dtype)
 
 
 def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
-  """Drops the rows without a value.
+  """Drops rows whose observation value is empty or a standard NA token."""
+  na_set = _STANDARD_NA_LOWER
+  mask = [(v.strip().lower() not in na_set) if isinstance(v, str) else
+          (pd.notna(v) and str(v).strip().lower() not in na_set)
+          for v in df[constants.COLUMN_VALUE].tolist()]
+  if all(mask):
+    return df
+  return df[mask].copy()
 
-  Runs after `_format_numeric_values`, which turns missing values (including
-  pandas NA strings such as "<NA>") into "".
+
+def validate_variable_values(df: pd.DataFrame, file_path: str) -> None:
+  """Validates that every observation has a non-empty, non-null variable ID.
+
+  Raises:
+      PreprocessorError: If any variable is empty or a null sentinel.
   """
-  return df[df[constants.COLUMN_VALUE] != ""].copy()
+  invalid = []
+  for v in dict.fromkeys(df[constants.COLUMN_VARIABLE].tolist()):
+    if v is None or (not isinstance(v, str) and pd.isna(v)):
+      if "" not in invalid:
+        invalid.append("")
+      continue
+    s = v if isinstance(v, str) else str(v)
+    if strip_namespace(
+        s).lower() in _INVALID_VARIABLE_VALUES and s not in invalid:
+      invalid.append(s)
+  if invalid:
+    raise PreprocessorError(
+        f"Invalid or missing variable value(s) found in file '{file_path}': "
+        f"{invalid[:10]}.",
+        file_path=file_path)
 
 
 def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
@@ -270,9 +315,7 @@ def validate_numeric_values(df: pd.DataFrame, file_path: str) -> None:
     return
   val_series = df.loc[na_mask, constants.COLUMN_VALUE].astype(
       str).str.strip().str.lower()
-  standard_nulls = {val.lower() for val in constants.STANDARD_NA_VALUES
-                   } | {"nan", ""}
-  invalid_mask = ~val_series.isin(standard_nulls)
+  invalid_mask = ~val_series.isin(_STANDARD_NA_LOWER)
   if not invalid_mask.any():
     return
   invalid_examples = df.loc[na_mask].loc[invalid_mask,
