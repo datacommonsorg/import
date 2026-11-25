@@ -55,9 +55,9 @@ from stats.report.summary_generator import SummaryGenerator
 from stats.validation.validation import MetadataValidator
 from stats.writer.graph_writer import GraphWriter
 from stats.writer.jsonld_stream_writer import JsonLdStreamWriter
-from stats.writer.jsonld_stream_writer import part_shard_tag
 from stats.writer.obs_id_collisions import find_cross_file_collisions
 from stats.writer.obs_id_collisions import save_obs_ids
+from stats.writer.shard_naming import part_shard_tag
 from util.file_match import match
 from util.filesystem import Dir
 from util.filesystem import File
