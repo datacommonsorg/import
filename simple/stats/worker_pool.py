@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Multiprocess worker pool, task scheduling, part fallback, and cross-file collisions."""
+"""Multiprocess worker pool orchestration, part fallback, and cross-file collisions."""
 
 import concurrent.futures
 from dataclasses import dataclass
@@ -23,22 +23,15 @@ import time
 import traceback
 from typing import Callable
 
-from stats.config.config import Config
 from stats.config.config import ImportConfig
-from stats.graph.data import ImportCounts
-from stats.graph.data import Provenance
-from stats.graph.data import Source
-from stats.graph.nodes import Nodes
-from stats.importers.factory import create_importer_for_file
+from stats.import_worker import ImportProcResult
+from stats.import_worker import ImportTask
+from stats.import_worker import run_import_task
+from stats.import_worker import WorkerArgs
 from stats.importers.file_split import FilePart
-from stats.writer.jsonld_stream_writer import JsonLdStreamWriter
 from stats.writer.obs_id_collisions import CrossFileCollisions
 from stats.writer.obs_id_collisions import find_cross_file_collisions
-from stats.writer.obs_id_collisions import save_obs_ids
-from stats.writer.shard_naming import part_shard_tag
 from util.filesystem import File
-from util.filesystem import GcsObject
-from util.filesystem import open_dir
 
 # Default worker processes per CPU for runs that read or write GCS, and the
 # count above which no extra workers are added (see default_max_workers).
@@ -73,56 +66,6 @@ def default_max_workers(uses_gcs: bool) -> int:
 def num_import_workers(max_workers: int, num_tasks: int) -> int:
   """Returns how many worker processes to start: never more than the tasks."""
   return min(max_workers, num_tasks)
-
-
-@dataclass
-class ImportProcResult:
-  """What a worker process sends back to the coordinator for one task.
-
-  A task is a file, or a part of a split file (see `_ImportTask`).
-  `sources` and `provenances` are all of the worker's nodes, keyed as in
-  `Nodes`; the coordinator merges them with `Nodes.merge_metadata`. The
-  collision fields mirror the worker's `JsonLdStreamWriter` stats, which cover
-  collisions within the task only. `counts` are the importer's counts of the
-  nodes it wrote, for the ingestion report. `obs_ids_path` is where the
-  task's observation ids were saved, or None if it had none.
-  """
-  file_collision_counts: dict[str, int]
-  file_sample_collisions: dict[str, list[str]]
-  sources: dict[str, Source]
-  provenances: dict[str, Provenance]
-  processed_imports: set[str]
-  counts: ImportCounts
-  obs_ids_path: str | None
-
-
-@dataclass(frozen=True)
-class _WorkerArgs:
-  """Arguments that are the same for every worker process in a run."""
-  output_dir_path: str
-  import_names: list[str]
-  config: ImportConfig
-  jsonld_dir_name: str
-  # The local dir where workers save observation ids for the coordinator.
-  obs_ids_dir: str
-
-
-@dataclass(frozen=True)
-class _ImportTask:
-  """What a worker process imports: a file, or one part of a split file.
-
-  `size` is the bytes the task reads.
-  """
-  file_rel_path: str
-  gcs_object: GcsObject | None
-  input_dir_path: str
-  size: int
-  part: FilePart | None = None  # None for the whole file.
-
-  @classmethod
-  def of(cls, file: File, part: FilePart | None = None) -> "_ImportTask":
-    size = part.size if part else (file.size() or 0)
-    return cls(file.path, file.gcs_object(), file.store_path(), size, part)
 
 
 @dataclass
@@ -208,53 +151,6 @@ def raise_for_failures(failures: list[FileFailure]) -> None:
   raise FileImportsFailedError(failures)
 
 
-def _run_single_import_proc(task: _ImportTask,
-                            args: _WorkerArgs) -> ImportProcResult:
-  """Imports one file, or part of one, in a worker process; returns its results.
-
-  The worker starts from an empty `Nodes`: a CSV needs only its provenance id,
-  which comes from config. The Provenance and Source nodes that an MCF file
-  defines are returned for the coordinator to merge. The task's observation
-  ids, if any, are saved to a new file in `args.obs_ids_dir` (see
-  `stats.writer.obs_id_collisions`). The coordinator found the file, and its GCS
-  object if any, so neither is looked up again.
-  """
-  input_file = open_dir(task.input_dir_path).open_file(
-      task.file_rel_path, gcs_object=task.gcs_object)
-
-  config = Config(args.config)
-  nodes = Nodes(config=config)
-  graph_writer = JsonLdStreamWriter(
-      open_dir(args.output_dir_path),
-      args.import_names,
-      config,
-      jsonld_dir_name=args.jsonld_dir_name,
-      shard_tag=part_shard_tag(task.part.index) if task.part else "")
-  importer = create_importer_for_file(config, input_file, graph_writer, nodes,
-                                      task.part)
-  try:
-    importer.do_import()
-  except BaseException:
-    graph_writer.close_after_error()
-    raise
-  graph_writer.commit_and_close()
-  obs_ids_path = None
-  if len(graph_writer.obs_ids):
-    fd, obs_ids_path = tempfile.mkstemp(suffix=".npy", dir=args.obs_ids_dir)
-    os.close(fd)
-    save_obs_ids(graph_writer.obs_ids.sorted(), obs_ids_path)
-
-  return ImportProcResult(
-      file_collision_counts=dict(graph_writer.file_collision_counts),
-      file_sample_collisions=dict(graph_writer.file_sample_collisions),
-      sources=dict(nodes.sources),
-      provenances=dict(nodes.provenances),
-      processed_imports=graph_writer.processed_imports(),
-      counts=importer.counts,
-      obs_ids_path=obs_ids_path,
-  )
-
-
 def _check_cross_file_collisions(
     obs_ids_files: list[tuple[str, str]]) -> CrossFileCollisions | None:
   """Finds collisions between `obs_ids_files`, or returns None if <2 files."""
@@ -317,8 +213,8 @@ def run_multiprocess_imports(
   so the caller can merge collisions or record/raise failures.
   """
   tasks_by_file = [
-      [_ImportTask.of(file, part)
-       for part in parts_by_path.get(file.path, [])] or [_ImportTask.of(file)]
+      [ImportTask.of(file, part)
+       for part in parts_by_path.get(file.path, [])] or [ImportTask.of(file)]
       for file in files
   ]
   num_tasks = sum(len(t) for t in tasks_by_file)
@@ -330,7 +226,7 @@ def run_multiprocess_imports(
   # ids while the directory is removed.
   with tempfile.TemporaryDirectory(prefix="obs-ids-",
                                    ignore_cleanup_errors=True) as obs_ids_dir:
-    worker_args = _WorkerArgs(
+    worker_args = WorkerArgs(
         output_dir_path=output_dir_path,
         import_names=import_names,
         config=config_model,
@@ -352,8 +248,7 @@ def run_multiprocess_imports(
         file: File,
         part_results: list[ImportProcResult]) -> concurrent.futures.Future:
       discard_part_outputs(file, part_results)
-      return executor.submit(_run_single_import_proc, _ImportTask.of(file),
-                             worker_args)
+      return executor.submit(run_import_task, ImportTask.of(file), worker_args)
 
     on_task_done = _make_progress_callback(num_tasks)
 
@@ -368,7 +263,7 @@ def run_multiprocess_imports(
       for fi, ti, task in sorted(indexed_tasks,
                                  key=lambda x: x[2].size,
                                  reverse=True):
-        fut = executor.submit(_run_single_import_proc, task, worker_args)
+        fut = executor.submit(run_import_task, task, worker_args)
         fut.add_done_callback(on_task_done)
         futures_by_file[fi][ti] = fut
       failures = _finish_imports(files,

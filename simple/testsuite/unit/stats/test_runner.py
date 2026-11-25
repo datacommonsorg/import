@@ -283,7 +283,7 @@ def test_a_file_that_fails_to_merge_is_reported_with_the_other_failures():
 
 
 _SLOW_IMPORT_SECONDS = 1
-_real_run_single_import_proc = worker_pool._run_single_import_proc
+_real_run_import_task = worker_pool.run_import_task
 
 
 def _slow_import_proc(*args):
@@ -292,7 +292,7 @@ def _slow_import_proc(*args):
   Module-level so that the worker processes can unpickle it.
   """
   time.sleep(_SLOW_IMPORT_SECONDS)
-  return _real_run_single_import_proc(*args)
+  return _real_run_import_task(*args)
 
 
 def test_an_interrupted_run_fails_promptly_and_reports_the_failure(monkeypatch):
@@ -303,7 +303,7 @@ def test_an_interrupted_run_fails_promptly_and_reports_the_failure(monkeypatch):
   be while the coordinator waits. Waiting for every file would take
   `all_files_seconds`.
   """
-  monkeypatch.setattr(worker_pool, "_run_single_import_proc", _slow_import_proc)
+  monkeypatch.setattr(worker_pool, "run_import_task", _slow_import_proc)
 
   def interrupt(generator, summary):
     raise KeyboardInterrupt

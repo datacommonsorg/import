@@ -25,6 +25,7 @@ from stats.config.discovery import InputDiscovery
 from stats.graph.data import FileValidationError
 from stats.graph.data import ImportCounts
 from stats.graph.nodes import Nodes
+from stats.import_worker import ImportProcResult
 from stats.importers import file_split
 from stats.importers.factory import create_importer_for_file
 from stats.importers.importer import count_nodes_from_triples
@@ -234,9 +235,8 @@ class Runner:
           "\n".join(formatted_errors))
       raise ValueError(consolidated_msg)
 
-  def _discard_part_outputs(
-      self, file: File,
-      part_results: list[worker_pool.ImportProcResult]) -> None:
+  def _discard_part_outputs(self, file: File,
+                            part_results: list[ImportProcResult]) -> None:
     """Deletes the shards and observation ids that `file`'s parts wrote."""
     self.graph_writer.delete_part_shards(file)
     for res in part_results:
@@ -305,7 +305,7 @@ class Runner:
       self.summary_generator.record_failure(error, folder, provenance_id)
 
   def _merge_file_results(self, file: File,
-                          results: list[worker_pool.ImportProcResult]) -> None:
+                          results: list[ImportProcResult]) -> None:
     """Merges the results of `file`'s tasks: the whole file, or its parts."""
     for res in results:
       self.nodes.merge_metadata(res.provenances, res.sources)
