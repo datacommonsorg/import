@@ -24,13 +24,6 @@ public class ExistenceChecker {
   private static final Set<String> SCHEMA_PROPERTIES =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
 
-  // Types of the nodes that McfMutator generates from complex values.
-  private static final Set<String> COMPLEX_VALUE_TYPES =
-      Set.of(
-          Vocabulary.QUANTITY_TYPE,
-          Vocabulary.QUANTITY_RANGE_TYPE,
-          Vocabulary.GEO_COORDINATES_TYPE);
-
   // Batching thresholds.  Allow tests to set this.
   public static int DC_CALL_BATCH_LIMIT = 1000;
   public static int MAX_PENDING_CALLS = 100000;
@@ -128,25 +121,39 @@ public class ExistenceChecker {
     }
   }
 
-  // Registers the nodes that McfMutator generated from complex values (Quantity, QuantityRange
-  // and GeoCoordinates, e.g., "[SquareKilometer 100]" or "[LatLong 12 34]") as existing locally.
+  // Registers the nodes that a CSV row creates, so that references to them from the same row
+  // are not checked against the KG. These include TMCF entities (e.g., a new AirQualitySite)
+  // and the nodes that McfMutator generates from complex values (e.g., "[LatLong 12 34]").
   //
-  // These nodes are emitted alongside the graph that references them, so references to them
-  // must not be checked against the KG. McfMutator keys such a node by its DCID, which
-  // distinguishes it from other nodes in the graph (e.g., TMCF entities keyed "E:...").
-  public synchronized void addComplexValueNodes(Mcf.McfGraph graph) {
+  // A node with only typeOf and dcid is not registered: it just points at an entity that should
+  // already exist (e.g., "typeOf: Country" and "dcid: country/USA"), so references to it are
+  // still checked against the KG.
+  public synchronized void addRowNodes(Mcf.McfGraph graph) {
     for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
-      String typeOf = McfUtil.getPropVal(node.getValue(), Vocabulary.TYPE_OF);
-      if (!COMPLEX_VALUE_TYPES.contains(typeOf)) {
+      Mcf.McfGraph.PropertyValues pvs = node.getValue();
+      // Skip doing anything with StatVarObs, as in addLocalGraph().
+      String typeOf = McfUtil.getPropVal(pvs, Vocabulary.TYPE_OF);
+      if (typeOf.equals(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
+          || typeOf.equals(Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX)) {
         continue;
       }
-      String dcid = McfUtil.getPropVal(node.getValue(), Vocabulary.DCID);
-      if (dcid.isEmpty() || !dcid.equals(node.getKey())) {
+      String dcid = McfUtil.getPropVal(pvs, Vocabulary.DCID);
+      if (dcid.isEmpty() || !hasPropsBeyondTypeAndDcid(pvs)) {
         continue;
       }
       existingNodesOrTriples.add(dcid);
       missingNodesOrTriples.remove(dcid);
     }
+  }
+
+  // Returns true if the node has a property other than typeOf and dcid.
+  private static boolean hasPropsBeyondTypeAndDcid(Mcf.McfGraph.PropertyValues pvs) {
+    for (String prop : pvs.getPvsMap().keySet()) {
+      if (!prop.equals(Vocabulary.TYPE_OF) && !prop.equals(Vocabulary.DCID)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public synchronized void drainRemoteCalls() throws IOException, InterruptedException {

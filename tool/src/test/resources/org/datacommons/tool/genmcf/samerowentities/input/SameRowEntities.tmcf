@@ -1,0 +1,23 @@
+Node: E:SameRowEntities->E0
+typeOf: dcs:AirQualitySite
+dcid: C:SameRowEntities->Site
+name: C:SameRowEntities->SiteName
+containedInPlace: dcid:geoId/55133
+
+Node: E:SameRowEntities->E1
+typeOf: dcs:StatVarObservation
+variableMeasured: dcs:Mean_Concentration_AirPollutant_Ozone
+observationAbout: E:SameRowEntities->E0
+observationDate: C:SameRowEntities->Date
+value: C:SameRowEntities->Value
+
+Node: E:SameRowEntities->E2
+typeOf: schema:Country
+dcid: C:SameRowEntities->Country
+
+Node: E:SameRowEntities->E3
+typeOf: dcs:StatVarObservation
+variableMeasured: dcs:Count_Person
+observationAbout: E:SameRowEntities->E2
+observationDate: C:SameRowEntities->Date
+value: C:SameRowEntities->Value

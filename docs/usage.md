@@ -161,7 +161,7 @@ You can also run `dc-import --help` to see a list of flags in your terminal.
 
 Checks DCID references to schema nodes against the KG and locally. If this flag is set, then calls will be made to the Staging API server, and instance MCFs get fully loaded into memory.
 
-Suppose the CSV file has a cell value like `dcid:Count_Person` indicating a reference to a DC entity. This check will ensure that such an entity is defined either in Data Commons KG (in this case [it does](https://datacommons.org/browser/Count_Person)), or in another instance MCF given as an input.
+Suppose the CSV file has a cell value like `dcid:Count_Person` indicating a reference to a DC entity. This check will ensure that such an entity is defined either in Data Commons KG (in this case [it does](https://datacommons.org/browser/Count_Person)), or in another instance MCF given as an input. References to nodes created in the same CSV row also pass: TMCF entities that have properties other than `typeOf` and `dcid`, and nodes generated from complex values like `[LatLong 12 34]`. A TMCF entity with only `typeOf` and `dcid` just points at an entity that should already exist, so references to it are still checked.
 
 Defaults to `true`.
 
