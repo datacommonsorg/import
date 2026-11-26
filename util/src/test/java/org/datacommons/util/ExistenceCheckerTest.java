@@ -31,6 +31,23 @@ public class ExistenceCheckerTest {
           + "area: [SquareKilometer 84360.51958]\n"
           + "startLocation: [LatLong 1 -51]\n"
           + "ageRange: [Years 10 20]\n";
+  private static final String NONEXISTING_COUNTRY = "{\"data\":{\"country/USAA\":{}}}";
+  // A row entity with only typeOf and dcid, which points at an entity that should already exist.
+  private static final String POINTER_ONLY_COUNTRY =
+      "Node: dcid:country/USAA\n" + "typeOf: schema:Country\n";
+  private static final String NONEXISTING_OBS_AND_SITE =
+      "{\"data\":{\"dc/o/obs1\":{},\"site1\":{}}}";
+  private static final String OBS_AND_ENTITY_WITHOUT_DCID =
+      "Node: dcid:dc/o/obs1\n"
+          + "typeOf: dcs:StatVarObservation\n"
+          + "variableMeasured: dcs:Count_Person\n"
+          + "observationAbout: dcid:geoId/06\n"
+          + "observationDate: \"2020\"\n"
+          + "value: 1\n"
+          + "\n"
+          + "Node: site1\n"
+          + "typeOf: dcs:AirQualitySite\n"
+          + "name: \"Site without a dcid\"\n";
 
   @Test
   public void testNode() throws IOException, InterruptedException {
@@ -130,7 +147,7 @@ public class ExistenceCheckerTest {
   }
 
   @Test
-  public void testComplexValueNodes() throws IOException, InterruptedException {
+  public void testRowNodes() throws IOException, InterruptedException {
     var mockHttp = Mockito.mock(HttpClient.class);
     var mockResp = Mockito.mock(HttpResponse.class);
     when(mockResp.statusCode()).thenReturn(200);
@@ -150,7 +167,7 @@ public class ExistenceCheckerTest {
             lw,
             /* isBaseDc= */ true,
             /* generateFallbacks= */ false);
-    checker.addComplexValueNodes(graph);
+    checker.addRowNodes(graph);
 
     // References to the generated Quantity, GeoCoordinates and QuantityRange nodes are local
     // hits. No RPCs and no missing references.
@@ -160,10 +177,56 @@ public class ExistenceCheckerTest {
     verify(mockHttp, never()).send(any(), any());
     assertFalse(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 1));
 
-    // Other nodes in the graph are not registered, so they are still checked against the KG.
+    // The row's own entity has properties other than typeOf and dcid, so it is a local hit too.
     checker.submitNodeCheck("droughtEvent1", newLogCb(lw, VREF_KEY, "droughtEvent1"));
+    verify(mockHttp, never()).send(any(), any());
+    assertFalse(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 1));
+  }
+
+  @Test
+  public void testRowNodesSkipsPointerOnlyNodes() throws IOException, InterruptedException {
+    var mockHttp = Mockito.mock(HttpClient.class);
+    var mockResp = Mockito.mock(HttpResponse.class);
+    when(mockResp.statusCode()).thenReturn(200);
+    when(mockResp.body()).thenReturn(NONEXISTING_COUNTRY);
+    when(mockHttp.send(any(), any())).thenReturn(mockResp);
+
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    ExistenceChecker.DC_CALL_BATCH_LIMIT = 1;
+
+    var checker = new ExistenceChecker(mockHttp, false, lw);
+    checker.addRowNodes(TestUtil.graphFromMcf(POINTER_ONLY_COUNTRY));
+
+    // The node only has typeOf and dcid, so it is not registered. The reference is still checked
+    // against the KG, which reports the typo.
+    checker.submitNodeCheck("country/USAA", newLogCb(lw, VREF_KEY, "observationAbout"));
     verify(mockHttp, times(1)).send(any(), any());
     assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 1));
+  }
+
+  @Test
+  public void testRowNodesSkipsObservationsAndNodesWithoutDcid()
+      throws IOException, InterruptedException {
+    var mockHttp = Mockito.mock(HttpClient.class);
+    var mockResp = Mockito.mock(HttpResponse.class);
+    when(mockResp.statusCode()).thenReturn(200);
+    when(mockResp.body()).thenReturn(NONEXISTING_OBS_AND_SITE);
+    when(mockHttp.send(any(), any())).thenReturn(mockResp);
+
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    // Batch both checks into a single RPC.
+    ExistenceChecker.DC_CALL_BATCH_LIMIT = 2;
+
+    var checker = new ExistenceChecker(mockHttp, false, lw);
+    checker.addRowNodes(TestUtil.graphFromMcf(OBS_AND_ENTITY_WITHOUT_DCID));
+
+    // Neither node is registered, so both references are checked against the KG.
+    checker.submitNodeCheck("dc/o/obs1", newLogCb(lw, VREF_KEY, "obs1"));
+    checker.submitNodeCheck("site1", newLogCb(lw, VREF_KEY, "site1"));
+    verify(mockHttp, times(1)).send(any(), any());
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 2));
   }
 
   @Test

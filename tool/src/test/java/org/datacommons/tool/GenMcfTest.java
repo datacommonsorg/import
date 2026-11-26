@@ -69,7 +69,9 @@ public class GenMcfTest {
           "localidresolution",
           5,
           "manyinconsistent",
-          4);
+          4,
+          "samerowentities",
+          2);
 
   // Skip testing the following files. If this List is non-empty, the flaky files should be fixed
   // and removed from this list.

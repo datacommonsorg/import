@@ -330,11 +330,11 @@ public class Processor {
           McfMutator.mutate(
               g.toBuilder(), logCtx, /* isBaseDc= */ true, /* generateFallbacks= */ false);
 
-      // The mutator may have generated nodes from complex values (e.g., Quantity). These are
-      // emitted with this row, so make them known to the existence checker before checking
-      // references to them.
+      // This row may create nodes, such as TMCF entities and nodes generated from complex values
+      // (e.g., Quantity). These are emitted with this row, so make them known to the existence
+      // checker before checking references to them.
       if (existenceChecker != null) {
-        existenceChecker.addComplexValueNodes(g);
+        existenceChecker.addRowNodes(g);
       }
 
       // This will set counters/messages in logCtx.

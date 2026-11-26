@@ -1,0 +1,28 @@
+Node: dcid:epa/999990001
+containedInPlace: dcid:geoId/55133
+dcid: "epa/999990001"
+name: "NEW SITE"
+typeOf: dcid:AirQualitySite
+
+Node: SameRowEntities/E1/1
+observationDate: "2024-01-01"
+observationAbout: dcid:epa/999990001
+variableMeasured: dcid:Mean_Concentration_AirPollutant_Ozone
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=epa/999990001variableMeasured=Mean_Concentration_AirPollutant_OzoneobservationDate=2024-01-01value=1"
+dcid: "dc/o/n4224ec2kv8lc"
+
+Node: dcid:country/USAA
+dcid: "country/USAA"
+typeOf: dcid:Country
+
+Node: SameRowEntities/E3/1
+observationDate: "2024-01-01"
+observationAbout: dcid:country/USAA
+variableMeasured: dcid:Count_Person
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=country/USAAvariableMeasured=Count_PersonobservationDate=2024-01-01value=1"
+dcid: "dc/o/lv4pjmgw1vve7"
+

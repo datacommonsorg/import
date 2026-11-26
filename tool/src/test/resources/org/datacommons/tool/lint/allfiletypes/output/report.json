@@ -32,7 +32,7 @@
       "counters": {
         "MCF_MalformedComplexValue": "2",
         "Sanity_InvalidChars_location": "1",
-        "Existence_MissingReference_observationAbout": "12",
+        "Existence_MissingReference_observationAbout": "8",
         "MCF_InvalidLongitude": "1",
         "Sanity_VeryLongDcid": "1",
         "Sanity_InvalidObsDate": "3",
@@ -306,38 +306,6 @@
       "lineNumber": "3"
     },
     "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-BC'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "12"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-MN'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "12"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-MN'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "9"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CH-SH'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "9"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CH-SH'",
     "counterKey": "Existence_MissingReference_observationAbout"
   }, {
     "level": "LEVEL_ERROR",

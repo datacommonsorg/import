@@ -1,0 +1,38 @@
+{
+  "levelSummary": {
+    "LEVEL_INFO": {
+      "counters": {
+        "NumRowSuccesses": "1",
+        "NumPVSuccesses": "20",
+        "Existence_NumChecks": "23",
+        "NumNodeSuccesses": "4",
+        "Existence_NumDcCalls": "1"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Existence_MissingReference_observationAbout": "1"
+      }
+    }
+  },
+  "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SameRowEntities.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'country/USAA'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_FULL",
+    "numThreads": 1,
+    "statChecks": true,
+    "observationAbout": true,
+    "allowNanSvobs": false,
+    "checkMeasurementResult": false,
+    "coordinatesResolution": false,
+    "includeRuntimeMetadata": true
+  }
+}
