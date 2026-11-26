@@ -14,33 +14,87 @@
 
 package org.datacommons.ingestion.pipeline;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Statement;
+import com.google.cloud.spanner.Struct;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.SerializableCoder;
+import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.resourcehints.ResourceHints;
+import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.ingestion.spanner.model.EdgeRecord;
 
 /**
  * Shared test helper extending {@link SpannerClient} that captures written {@link Mutation}s in
- * memory instead of writing to a live Spanner instance.
+ * memory instead of writing to a live Spanner instance, and optionally stubs provenance-scoped
+ * {@code Edge} reads via {@link #getReadTransform()}.
  */
 public class MockSpannerClient extends SpannerClient {
+  private static final Timestamp DEFAULT_READ_TIMESTAMP =
+      Timestamp.ofTimeSecondsAndNanos(1700000000L, 0);
+
   private static final List<Mutation> CAPTURED_MUTATIONS =
+      Collections.synchronizedList(new ArrayList<>());
+  private static final List<String> CAPTURED_STAGE_EVENTS =
+      Collections.synchronizedList(new ArrayList<>());
+  private static final List<String> CAPTURED_EDGE_READS =
+      Collections.synchronizedList(new ArrayList<>());
+  private static final List<Timestamp> CAPTURED_EDGE_READ_TIMESTAMPS =
       Collections.synchronizedList(new ArrayList<>());
 
   private final transient PCollection<Void> deleteSignal;
   private final transient SpannerWriteResult mockWriteResult;
+  private final transient Map<String, List<String>> edgeSubjectIdsByProvenance;
+  private final transient Timestamp currentTimestamp;
 
   public MockSpannerClient(SpannerWriteResult mockWriteResult) {
-    this(null, mockWriteResult);
+    this(null, mockWriteResult, null, DEFAULT_READ_TIMESTAMP);
   }
 
   public MockSpannerClient(PCollection<Void> deleteSignal, SpannerWriteResult mockWriteResult) {
+    this(deleteSignal, mockWriteResult, null, DEFAULT_READ_TIMESTAMP);
+  }
+
+  /**
+   * Creates a client stubbing {@code Edge} provenance reads from {@code edgeSubjectIdsByProvenance}
+   * and returning live per-stage {@link SpannerWriteResult} completion signals for {@code Wait.on}.
+   */
+  public MockSpannerClient(Map<String, List<String>> edgeSubjectIdsByProvenance) {
+    this(null, null, edgeSubjectIdsByProvenance, DEFAULT_READ_TIMESTAMP);
+  }
+
+  /**
+   * Creates a client stubbing {@code Edge} provenance reads from {@code edgeSubjectIdsByProvenance}
+   * with a fixed {@link #getCurrentTimestamp()} value for snapshot read verification.
+   */
+  public MockSpannerClient(
+      Map<String, List<String>> edgeSubjectIdsByProvenance, Timestamp currentTimestamp) {
+    this(null, null, edgeSubjectIdsByProvenance, currentTimestamp);
+  }
+
+  private MockSpannerClient(
+      PCollection<Void> deleteSignal,
+      SpannerWriteResult mockWriteResult,
+      Map<String, List<String>> edgeSubjectIdsByProvenance,
+      Timestamp currentTimestamp) {
     super(
         SpannerClient.builder()
             .gcpProjectId("test")
@@ -48,34 +102,127 @@ public class MockSpannerClient extends SpannerClient {
             .spannerDatabaseId("test"));
     this.deleteSignal = deleteSignal;
     this.mockWriteResult = mockWriteResult;
+    this.edgeSubjectIdsByProvenance = edgeSubjectIdsByProvenance;
+    this.currentTimestamp = currentTimestamp;
+  }
+
+  /**
+   * Creates a serializable mock {@link SpannerWriteResult} backed by an empty completion signal.
+   */
+  public static SpannerWriteResult createMockWriteResult(Pipeline pipeline, String suffix) {
+    SpannerWriteResult mockWriteResult =
+        mock(SpannerWriteResult.class, withSettings().serializable());
+    PCollection<Void> mockWriteOutput =
+        pipeline.apply("CreateWriteSignal_" + suffix, Create.empty(TypeDescriptor.of(Void.class)));
+    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
+    return mockWriteResult;
   }
 
   public static List<Mutation> getCapturedMutations() {
     return CAPTURED_MUTATIONS;
   }
 
+  public static List<String> getCapturedStageEvents() {
+    return CAPTURED_STAGE_EVENTS;
+  }
+
+  public static List<String> getCapturedEdgeReads() {
+    return CAPTURED_EDGE_READS;
+  }
+
+  public static List<Timestamp> getCapturedEdgeReadTimestamps() {
+    return CAPTURED_EDGE_READ_TIMESTAMPS;
+  }
+
   public static void clearCapturedMutations() {
     CAPTURED_MUTATIONS.clear();
+    CAPTURED_STAGE_EVENTS.clear();
+    CAPTURED_EDGE_READS.clear();
+    CAPTURED_EDGE_READ_TIMESTAMPS.clear();
+  }
+
+  @Override
+  public Timestamp getCurrentTimestamp() {
+    return currentTimestamp;
   }
 
   @Override
   public PCollection<Void> deleteDataForImport(
       Pipeline pipeline, String importName, String tableName, String columnName) {
-    return deleteSignal;
+    if (deleteSignal != null) {
+      return deleteSignal;
+    }
+    String stageName = tableName + "-" + importName.replaceFirst("^dc/base/", "");
+    return pipeline
+        .apply("StartDelete" + stageName, Create.of(importName))
+        .apply(
+            "ExecuteDelete" + stageName,
+            ParDo.of(
+                new DoFn<String, Void>() {
+                  @ProcessElement
+                  public void processElement(@Element String value) {
+                    CAPTURED_STAGE_EVENTS.add("ExecuteDelete" + stageName);
+                  }
+                }));
+  }
+
+  @Override
+  public SpannerIO.Read getReadTransform() {
+    if (edgeSubjectIdsByProvenance == null) {
+      return super.getReadTransform();
+    }
+    SpannerIO.Read baseRead = mock(SpannerIO.Read.class);
+    when(baseRead.withTimestamp(any(Timestamp.class)))
+        .thenAnswer(
+            inv -> {
+              CAPTURED_EDGE_READ_TIMESTAMPS.add(inv.getArgument(0));
+              return baseRead;
+            });
+    when(baseRead.withQuery(any(Statement.class)))
+        .thenAnswer(
+            inv -> {
+              Statement stmt = inv.getArgument(0);
+              String provenance = stmt.getParameters().get(EdgeRecord.COL_PROVENANCE).getString();
+              CAPTURED_EDGE_READS.add(provenance);
+              List<Struct> structs =
+                  edgeSubjectIdsByProvenance.getOrDefault(provenance, List.of()).stream()
+                      .map(id -> Struct.newBuilder().set(EdgeRecord.COL_SUBJECT_ID).to(id).build())
+                      .collect(Collectors.toList());
+              SpannerIO.Read queriedRead = mock(SpannerIO.Read.class);
+              when(queriedRead.getResourceHints()).thenReturn(ResourceHints.create());
+              when(queriedRead.getAdditionalInputs()).thenReturn(Map.of());
+              when(queriedRead.expand(any(PBegin.class)))
+                  .thenAnswer(
+                      expInv -> {
+                        PBegin input = expInv.getArgument(0);
+                        return input.apply(
+                            "EmitEdgeSubjectIds",
+                            Create.of(structs).withCoder(SerializableCoder.of(Struct.class)));
+                      });
+              return queriedRead;
+            });
+    return baseRead;
   }
 
   @Override
   public SpannerWriteResult writeMutations(
       Pipeline pipeline, String name, PCollection<Mutation> mutations) {
-    mutations.apply(
-        "Capture" + name + "Mutations",
-        ParDo.of(
-            new DoFn<Mutation, Void>() {
-              @ProcessElement
-              public void processElement(@Element Mutation m) {
-                CAPTURED_MUTATIONS.add(m);
-              }
-            }));
-    return mockWriteResult;
+    PCollection<Void> done =
+        mutations.apply(
+            "Capture" + name + "Mutations",
+            ParDo.of(
+                new DoFn<Mutation, Void>() {
+                  @ProcessElement
+                  public void processElement(@Element Mutation m) {
+                    CAPTURED_MUTATIONS.add(m);
+                    CAPTURED_STAGE_EVENTS.add(name);
+                  }
+                }));
+    if (mockWriteResult != null) {
+      return mockWriteResult;
+    }
+    SpannerWriteResult result = mock(SpannerWriteResult.class, withSettings().serializable());
+    when(result.getOutput()).thenReturn(done);
+    return result;
   }
 }

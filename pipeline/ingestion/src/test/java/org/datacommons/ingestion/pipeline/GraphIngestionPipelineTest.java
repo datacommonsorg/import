@@ -1,26 +1,35 @@
 package org.datacommons.ingestion.pipeline;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
 
+import com.google.cloud.Timestamp;
+import com.google.cloud.spanner.Key;
+import com.google.cloud.spanner.KeyRange;
 import com.google.cloud.spanner.Mutation;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.TFRecordIO;
-import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.datacommons.ingestion.pipeline.embedding.VertexAiEmbeddingClient;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
@@ -64,17 +73,13 @@ public class GraphIngestionPipelineTest implements Serializable {
     PCollection<Void> emptySignal =
         pipeline.apply("CreateEmptySignal", Create.empty(TypeDescriptor.of(Void.class)));
 
-    // Mock Write Result
-    SpannerWriteResult mockWriteResult =
-        mock(SpannerWriteResult.class, withSettings().serializable());
-    PCollection<Void> mockWriteOutput =
-        pipeline.apply("CreateWriteSignal", Create.empty(TypeDescriptor.of(Void.class)));
-    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
-
-    SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
+    SpannerClient mockSpannerClient =
+        new MockSpannerClient(
+            emptySignal, MockSpannerClient.createMockWriteResult(pipeline, "Default"));
 
     // 4. Build Pipeline
-    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, /* vertexAiClient= */ null);
 
     // 5. Run Pipeline
     pipeline.run().waitUntilFinish();
@@ -133,16 +138,13 @@ public class GraphIngestionPipelineTest implements Serializable {
     PCollection<Void> emptySignal =
         pipeline.apply("CreateEmptySignal_Combine", Create.empty(TypeDescriptor.of(Void.class)));
 
-    SpannerWriteResult mockWriteResult =
-        mock(SpannerWriteResult.class, withSettings().serializable());
-    PCollection<Void> mockWriteOutput =
-        pipeline.apply("CreateWriteSignal_Combine", Create.empty(TypeDescriptor.of(Void.class)));
-    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
-
-    SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
+    SpannerClient mockSpannerClient =
+        new MockSpannerClient(
+            emptySignal, MockSpannerClient.createMockWriteResult(pipeline, "Combine"));
 
     // 4. Build Pipeline
-    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, /* vertexAiClient= */ null);
 
     // 5. Run Pipeline
     pipeline.run().waitUntilFinish();
@@ -186,17 +188,13 @@ public class GraphIngestionPipelineTest implements Serializable {
         pipeline.apply(
             "CreateEmptySignal_SkipTransform", Create.empty(TypeDescriptor.of(Void.class)));
 
-    SpannerWriteResult mockWriteResult =
-        mock(SpannerWriteResult.class, withSettings().serializable());
-    PCollection<Void> mockWriteOutput =
-        pipeline.apply(
-            "CreateWriteSignal_SkipTransform", Create.empty(TypeDescriptor.of(Void.class)));
-    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
-
-    SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
+    SpannerClient mockSpannerClient =
+        new MockSpannerClient(
+            emptySignal, MockSpannerClient.createMockWriteResult(pipeline, "SkipTransform"));
 
     // 4. Build Pipeline
-    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, /* vertexAiClient= */ null);
 
     // 5. Run Pipeline
     pipeline.run().waitUntilFinish();
@@ -253,15 +251,13 @@ public class GraphIngestionPipelineTest implements Serializable {
     // 3. Setup Mock SpannerClient
     PCollection<Void> emptySignal =
         pipeline.apply("CreateEmptySignal_TfRecord", Create.empty(TypeDescriptor.of(Void.class)));
-    SpannerWriteResult mockWriteResult =
-        mock(SpannerWriteResult.class, withSettings().serializable());
-    PCollection<Void> mockWriteOutput =
-        pipeline.apply("CreateWriteOutput_TfRecord", Create.empty(TypeDescriptor.of(Void.class)));
-    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
-    SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
+    SpannerClient mockSpannerClient =
+        new MockSpannerClient(
+            emptySignal, MockSpannerClient.createMockWriteResult(pipeline, "TfRecord"));
 
     // 4. Build and Run Pipeline
-    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, /* vertexAiClient= */ null);
     pipeline.run().waitUntilFinish();
 
     // 5. Assertions: one TimeSeries mutation per record, one Observation mutation per obs.
@@ -359,5 +355,229 @@ public class GraphIngestionPipelineTest implements Serializable {
 
     assertTrue("Process should terminate within 30 seconds without hanging", finished);
     assertTrue("Process should exit with non-zero exit code", process.exitValue() != 0);
+  }
+
+  @Test
+  public void testIsEmbeddingsEnabled() {
+    assertFalse(GraphIngestionPipeline.isEmbeddingsEnabled(null));
+
+    IngestionPipelineOptions defaultOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    assertFalse(GraphIngestionPipeline.isEmbeddingsEnabled(defaultOpts));
+
+    defaultOpts.setEnableEmbeddings(true);
+    assertTrue(GraphIngestionPipeline.isEmbeddingsEnabled(defaultOpts));
+  }
+
+  @Test
+  public void testCreateVertexAiEmbeddingClient_conditionalOnEnableEmbeddings() {
+    IngestionPipelineOptions disabledOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    disabledOpts.setProjectId("spanner-project");
+    assertNull(GraphIngestionPipeline.createVertexAiEmbeddingClient(disabledOpts));
+
+    IngestionPipelineOptions blankRegionOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    blankRegionOpts.setProjectId("spanner-project");
+    blankRegionOpts.as(DataflowPipelineOptions.class).setRegion("  ");
+    blankRegionOpts.setEnableEmbeddings(true);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> GraphIngestionPipeline.createVertexAiEmbeddingClient(blankRegionOpts));
+
+    IngestionPipelineOptions customRegionOpts =
+        PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    customRegionOpts.setProjectId("spanner-project");
+    customRegionOpts.as(DataflowPipelineOptions.class).setRegion("us-east1");
+    customRegionOpts.setEnableEmbeddings(true);
+    VertexAiEmbeddingClient customClient =
+        GraphIngestionPipeline.createVertexAiEmbeddingClient(customRegionOpts);
+    assertNotNull(customClient);
+    assertEquals("spanner-project", customClient.getProjectId());
+    assertEquals("us-east1", customClient.getLocation());
+
+    IngestionPipelineOptions parsedArgsOpts =
+        PipelineOptionsFactory.fromArgs(
+                "--projectId=spanner-project", "--region=europe-west1", "--enableEmbeddings=true")
+            .withValidation()
+            .as(IngestionPipelineOptions.class);
+    VertexAiEmbeddingClient parsedClient =
+        GraphIngestionPipeline.createVertexAiEmbeddingClient(parsedArgsOpts);
+    assertNotNull(parsedClient);
+    assertEquals("spanner-project", parsedClient.getProjectId());
+    assertEquals("europe-west1", parsedClient.getLocation());
+  }
+
+  @Test
+  public void testBuildPipeline_embeddingsEnabled_generatesAndWritesEmbeddings() throws Exception {
+    MockVertexAIClient.clearCapturedCalls();
+    File mcfFile = tmpFolder.newFile("embed.mcf");
+    Files.writeString(
+        Path.of(mcfFile.getPath()),
+        "Node: dcid:Count_Person\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "name: \"Total Population\"\n\n"
+            + "Node: dcid:Farm\n"
+            + "typeOf: dcs:Class\n"
+            + "name: \"Farm\"\n\n"
+            + "Node: dcid:geoId/06\n"
+            + "typeOf: dcs:Place\n"
+            + "name: \"California\"\n\n");
+
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList(
+        String.format(
+            "[{\"importName\": \"testImport\", \"graphPath\": \"%s\"}]", mcfFile.getPath()));
+    options.setProjectId("test-project");
+    options.setEnableEmbeddings(true);
+    options.setSkipDelete(true);
+    options.setSkipTransformation(true);
+
+    SpannerClient mockSpannerClient =
+        new MockSpannerClient(MockSpannerClient.createMockWriteResult(pipeline, "Embed"));
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, new MockVertexAIClient(List.of(0.5, -0.5)));
+    pipeline.run().waitUntilFinish();
+
+    Map<String, Mutation> embUpsertsByLabel =
+        MockSpannerClient.getCapturedMutations().stream()
+            .filter(
+                m ->
+                    m.getTable().equals("NodeEmbedding")
+                        && m.getOperation() == Mutation.Op.INSERT_OR_UPDATE)
+            .collect(Collectors.toMap(m -> m.asMap().get("embedding_label").getString(), m -> m));
+    assertEquals(Set.of("base_text_embedding", "type_embedding"), embUpsertsByLabel.keySet());
+
+    Mutation statVarEmb = embUpsertsByLabel.get("base_text_embedding");
+    assertEquals("Count_Person", statVarEmb.asMap().get("subject_id").getString());
+    assertEquals(
+        "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}",
+        statVarEmb.asMap().get("embedding_content").getString());
+    assertEquals(List.of(0.5, -0.5), statVarEmb.asMap().get("embeddings").getFloat64Array());
+
+    Mutation classEmb = embUpsertsByLabel.get("type_embedding");
+    assertEquals("Farm", classEmb.asMap().get("subject_id").getString());
+    assertEquals("{\"name\":\"Farm\"}", classEmb.asMap().get("embedding_content").getString());
+  }
+
+  @Test
+  public void testBuildPipeline_embeddingsEnabled_multiImportUsesUniqueTransformNames()
+      throws Exception {
+    MockVertexAIClient.clearCapturedCalls();
+    File importA = tmpFolder.newFile("importA.mcf");
+    Files.writeString(
+        Path.of(importA.getPath()),
+        "Node: dcid:dc/topic/Health\n" + "typeOf: dcs:Topic\n" + "name: \"Health\"\n\n");
+    File importB = tmpFolder.newFile("importB.mcf");
+    Files.writeString(
+        Path.of(importB.getPath()),
+        "Node: dcid:dc/topic/Economy\n" + "typeOf: dcs:Topic\n" + "name: \"Economy\"\n\n");
+
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList(
+        String.format(
+            "[{\"importName\": \"importA\", \"graphPath\": \"%s\"},"
+                + "{\"importName\": \"importB\", \"graphPath\": \"%s\"}]",
+            importA.getPath(), importB.getPath()));
+    options.setProjectId("test-project");
+    options.setEnableEmbeddings(true);
+    options.setSkipDelete(true);
+    options.setSkipTransformation(true);
+
+    SpannerClient mockSpannerClient =
+        new MockSpannerClient(MockSpannerClient.createMockWriteResult(pipeline, "Multi"));
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, new MockVertexAIClient(List.of(0.5, -0.5)));
+    pipeline.run().waitUntilFinish();
+
+    Map<String, String> embContentBySubject =
+        MockSpannerClient.getCapturedMutations().stream()
+            .filter(
+                m ->
+                    m.getTable().equals("NodeEmbedding")
+                        && m.getOperation() == Mutation.Op.INSERT_OR_UPDATE)
+            .collect(
+                Collectors.toMap(
+                    m -> m.asMap().get("subject_id").getString(),
+                    m -> m.asMap().get("embedding_content").getString()));
+    assertEquals(
+        Map.of(
+            "dc/topic/Health",
+            "{\"name\":\"Health\",\"title\":\"dc/topic/Health\"}",
+            "dc/topic/Economy",
+            "{\"name\":\"Economy\",\"title\":\"dc/topic/Economy\"}"),
+        embContentBySubject);
+  }
+
+  @Test
+  public void testBuildPipeline_embeddingsEnabled_readsEdgeSnapshotAtCurrentTimestamp()
+      throws Exception {
+    MockVertexAIClient.clearCapturedCalls();
+    File mcfFile = tmpFolder.newFile("embed_delete.mcf");
+    Files.writeString(
+        Path.of(mcfFile.getPath()),
+        "Node: dcid:Count_Person\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "name: \"Total Population\"\n\n"
+            + "Node: dcid:Farm\n"
+            + "typeOf: dcs:Class\n"
+            + "name: \"Farm\"\n\n");
+
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    options.setImportList(
+        String.format(
+            "[{\"importName\": \"testImport\", \"graphPath\": \"%s\"}]", mcfFile.getPath()));
+    options.setProjectId("test-project");
+    options.setEnableEmbeddings(true);
+    options.setSkipDelete(false);
+    options.setSkipTransformation(true);
+
+    Timestamp expectedReadTimestamp = Timestamp.ofTimeSecondsAndNanos(1700000123L, 456000000);
+    SpannerClient mockSpannerClient =
+        new MockSpannerClient(
+            Map.of("dc/base/testImport", List.of("OldNode", "Count_Person")),
+            expectedReadTimestamp);
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, mockSpannerClient, new MockVertexAIClient(List.of(0.5, -0.5)));
+    pipeline.run().waitUntilFinish();
+
+    // Edge should be queried once per import pinned to the pre-delete snapshot timestamp.
+    assertEquals(List.of("dc/base/testImport"), MockSpannerClient.getCapturedEdgeReads());
+    assertEquals(List.of(expectedReadTimestamp), MockSpannerClient.getCapturedEdgeReadTimestamps());
+
+    Set<KeyRange> deletedRanges =
+        MockSpannerClient.getCapturedMutations().stream()
+            .filter(
+                m -> m.getTable().equals("NodeEmbedding") && m.getOperation() == Mutation.Op.DELETE)
+            .flatMap(m -> Lists.newArrayList(m.getKeySet().getRanges()).stream())
+            .collect(Collectors.toSet());
+    assertEquals(
+        Set.of(KeyRange.prefix(Key.of("OldNode")), KeyRange.prefix(Key.of("Count_Person"))),
+        deletedRanges);
+
+    List<String> stageEvents = MockSpannerClient.getCapturedStageEvents();
+    int nodeWriteIdx = stageEvents.lastIndexOf("WriteNodesToSpanner-testImport");
+    int embDelIdx = stageEvents.lastIndexOf("WriteDeletedEmbeddings-testImport");
+    int edgeDelIdx = stageEvents.indexOf("ExecuteDeleteEdge-testImport");
+    int edgeWriteIdx = stageEvents.indexOf("WriteEdgesToSpanner-testImport");
+    int embWriteIdx = stageEvents.indexOf("WriteNodeEmbeddingsToSpanner-testImport");
+
+    assertTrue("Missing Node write event", nodeWriteIdx >= 0);
+    assertTrue("Missing NodeEmbedding delete event", embDelIdx >= 0);
+    assertTrue("Missing Edge delete event", edgeDelIdx >= 0);
+    assertTrue("Missing NodeEmbedding write event", embWriteIdx >= 0);
+    assertTrue("Edge write must wait for Edge delete", edgeDelIdx < edgeWriteIdx);
+    assertTrue("NodeEmbedding write must wait for Node write", nodeWriteIdx < embWriteIdx);
+    assertTrue("NodeEmbedding write must wait for NodeEmbedding delete", embDelIdx < embWriteIdx);
+
+    Set<String> upsertedLabels =
+        MockSpannerClient.getCapturedMutations().stream()
+            .filter(
+                m ->
+                    m.getTable().equals("NodeEmbedding")
+                        && m.getOperation() == Mutation.Op.INSERT_OR_UPDATE)
+            .map(m -> m.asMap().get("embedding_label").getString())
+            .collect(Collectors.toSet());
+    assertEquals(Set.of("base_text_embedding", "type_embedding"), upsertedLabels);
   }
 }

@@ -18,7 +18,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 
 /** IngestionPipelineOptions interface for defining Spanner ingestion pipeline options. */
-public interface IngestionPipelineOptions extends SpannerPipelineOptions {
+public interface IngestionPipelineOptions extends SpannerPipelineOptions, EmbeddingOptions {
   @Description("GCS bucket Id for input data")
   @Default.String("datcom-store")
   String getStorageBucketId();

@@ -20,6 +20,12 @@ import org.apache.beam.sdk.options.PipelineOptions;
 
 /** Embedding-specific pipeline options for Spanner NodeEmbedding generation. */
 public interface EmbeddingOptions extends PipelineOptions {
+  @Description("Whether to enable embedding ingestion during graph ingestion.")
+  @Default.Boolean(false)
+  boolean getEnableEmbeddings();
+
+  void setEnableEmbeddings(boolean enableEmbeddings);
+
   @Description("Classpath resource name to the embedding JSON config.")
   @Default.String("embedding/default.json")
   String getEmbeddingConfigPath();

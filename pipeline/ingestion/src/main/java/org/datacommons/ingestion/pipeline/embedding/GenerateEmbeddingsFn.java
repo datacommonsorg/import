@@ -20,16 +20,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.BatchElements;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
-import org.datacommons.ingestion.spanner.SpannerClient;
 
 /**
  * Batches {@link EmbeddingContent} elements via {@link BatchElements}, invokes {@link
@@ -64,42 +60,17 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
   }
 
   /**
-   * Batches {@code contents}, predicts vector embeddings via {@code embeddingClient} for {@code
-   * spec}, gates writes on {@code deleteWaitSignal} (when non-null), and writes the resulting
-   * {@link Mutation}s to Spanner via {@link SpannerClient#writeMutations}.
-   */
-  public static PCollection<Void> generateAndWriteEmbeddings(
-      Pipeline pipeline,
-      SpannerClient spannerClient,
-      PCollection<EmbeddingContent> contents,
-      PCollection<Void> deleteWaitSignal,
-      VertexAiEmbeddingClient embeddingClient,
-      String embeddingTableName,
-      EmbeddingSpec spec,
-      int batchSize) {
-    String label = spec.embeddingLabel();
-    PCollection<Mutation> mutations =
-        buildEmbeddingMutations(contents, embeddingClient, embeddingTableName, spec, batchSize);
-    PCollection<Mutation> mutationsToWrite =
-        deleteWaitSignal != null
-            ? mutations.apply("WaitForDeletedEmbeddings_" + label, Wait.on(deleteWaitSignal))
-            : mutations;
-    SpannerWriteResult writeResult =
-        spannerClient.writeMutations(pipeline, "WriteNodeEmbeddings_" + label, mutationsToWrite);
-    return writeResult.getOutput();
-  }
-
-  /**
    * Batches {@code contents} into chunks of {@code batchSize} and applies {@link
    * GenerateEmbeddingsFn} to produce Spanner {@link Mutation}s for {@code embeddingTableName}.
    */
   public static PCollection<Mutation> buildEmbeddingMutations(
+      String importName,
       PCollection<EmbeddingContent> contents,
       VertexAiEmbeddingClient embeddingClient,
       String embeddingTableName,
       EmbeddingSpec spec,
       int batchSize) {
-    String label = spec.embeddingLabel();
+    String stageSuffix = spec.embeddingLabel() + "-" + importName;
     int effectiveBatchSize =
         batchSize > 0 ? Math.min(batchSize, MAX_BATCH_SIZE) : DEFAULT_BATCH_SIZE;
     BatchElements.BatchConfig batchConfig =
@@ -108,9 +79,9 @@ public class GenerateEmbeddingsFn extends DoFn<List<EmbeddingContent>, Mutation>
             .withMaxBatchSize(effectiveBatchSize)
             .build();
     return contents
-        .apply("BatchContentsForEmbedding_" + label, BatchElements.withConfig(batchConfig))
+        .apply("BatchContentsForEmbedding_" + stageSuffix, BatchElements.withConfig(batchConfig))
         .apply(
-            "GenerateEmbeddings_" + label,
+            "GenerateEmbeddings_" + stageSuffix,
             ParDo.of(new GenerateEmbeddingsFn(embeddingClient, embeddingTableName, spec)));
   }
 

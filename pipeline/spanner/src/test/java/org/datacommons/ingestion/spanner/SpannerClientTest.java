@@ -3,9 +3,13 @@ package org.datacommons.ingestion.spanner;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Options.QueryOption;
 import com.google.cloud.spanner.Options.UpdateOption;
+import com.google.cloud.spanner.ReadContext;
+import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.Statement;
 import com.google.gson.JsonObject;
@@ -216,5 +220,48 @@ public class SpannerClientTest {
         "DeleteByColumnFn Partitioned DML must pass only SpannerClient.LOW_PRIORITY",
         List.of(SpannerClient.LOW_PRIORITY),
         options.getAllValues());
+  }
+
+  @Test
+  public void testGetCurrentTimestamp_queriesSpannerWithLowPriority() {
+    Timestamp expected = Timestamp.ofTimeSecondsAndNanos(1700000123L, 456000000);
+    ResultSet resultSet = mock(ResultSet.class);
+    when(resultSet.next()).thenReturn(true);
+    when(resultSet.getTimestamp(0)).thenReturn(expected);
+
+    ReadContext readContext = mock(ReadContext.class);
+    when(readContext.executeQuery(any(Statement.class), any(QueryOption.class)))
+        .thenReturn(resultSet);
+
+    DatabaseClient dbClient = mock(DatabaseClient.class);
+    when(dbClient.singleUse()).thenReturn(readContext);
+
+    SpannerClient client =
+        new SpannerClient(
+            SpannerClient.builder()
+                .gcpProjectId("test-project")
+                .spannerInstanceId("test-instance")
+                .spannerDatabaseId("test-db")) {
+          @Override
+          public Spanner createSpanner() {
+            return mock(Spanner.class);
+          }
+
+          @Override
+          public DatabaseClient getDatabaseClient(Spanner spanner) {
+            return dbClient;
+          }
+        };
+
+    assertEquals(expected, client.getCurrentTimestamp());
+
+    ArgumentCaptor<Statement> stmtCaptor = ArgumentCaptor.forClass(Statement.class);
+    ArgumentCaptor<QueryOption> optionCaptor = ArgumentCaptor.forClass(QueryOption.class);
+    verify(readContext).executeQuery(stmtCaptor.capture(), optionCaptor.capture());
+    assertEquals("SELECT CURRENT_TIMESTAMP()", stmtCaptor.getValue().getSql());
+    assertEquals(List.of(SpannerClient.LOW_PRIORITY), optionCaptor.getAllValues());
+
+    when(resultSet.next()).thenReturn(false);
+    assertThrows(IllegalStateException.class, client::getCurrentTimestamp);
   }
 }

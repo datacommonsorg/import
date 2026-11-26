@@ -28,21 +28,22 @@ import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.ingestion.data.Edge;
+import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.NodeSubGraph;
 import org.datacommons.ingestion.spanner.model.NodeRecord;
-import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
-import org.datacommons.util.GraphUtils;
 
 /**
  * Generates {@link EmbeddingContent} payloads and FarmHash64 content keys from candidate {@link
- * McfGraph} nodes.
+ * NodeSubGraph} nodes.
  *
  * <p>Extracts {@code subject_id}, {@code name}, {@code types}, and any configured predicate
  * properties in {@link EmbeddingSpec#nodeTypes()} (e.g., {@code "description"} for {@code "Class"})
- * directly from each {@link McfGraph} node.
+ * directly from each candidate {@link NodeSubGraph}.
  */
-public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent> {
+public class GenerateEmbeddingContentFn extends DoFn<NodeSubGraph, EmbeddingContent> {
   private static final Gson GSON = new Gson();
+  private static final String SUBJECT_ID_JSON_KEY = "title";
   private static final ImmutableSet<String> NODE_TABLE_FIELDS =
       ImmutableSet.of(NodeRecord.COL_SUBJECT_ID, NodeRecord.COL_NAME);
   // Approximate max token cap (2048 tokens * ~4 chars/token) to be embedded.
@@ -60,19 +61,19 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
   }
 
   /**
-   * Transforms candidate {@link McfGraph} nodes into {@link EmbeddingContent} records for {@code
-   * spec}.
+   * Transforms candidate {@link NodeSubGraph} nodes into {@link EmbeddingContent} records for
+   * {@code spec}.
    */
   public static PCollection<EmbeddingContent> generateEmbeddingContent(
-      PCollection<McfGraph> candidateNodes, EmbeddingSpec spec) {
-    String label = spec.embeddingLabel();
+      String importName, PCollection<NodeSubGraph> candidateNodes, EmbeddingSpec spec) {
+    String stageSuffix = spec.embeddingLabel() + "-" + importName;
     return candidateNodes.apply(
-        "GenerateEmbeddingContent_" + label, ParDo.of(new GenerateEmbeddingContentFn(spec)));
+        "GenerateEmbeddingContent_" + stageSuffix, ParDo.of(new GenerateEmbeddingContentFn(spec)));
   }
 
   @ProcessElement
   public void processElement(
-      @Element McfGraph candidate, OutputReceiver<EmbeddingContent> receiver) {
+      @Element NodeSubGraph candidate, OutputReceiver<EmbeddingContent> receiver) {
     EmbeddingContent content = buildEmbeddingContent(candidate, spec);
     if (content != null) {
       contentCounter.inc();
@@ -81,30 +82,30 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
   }
 
   /**
-   * Builds the {@link EmbeddingContent} for a single-node {@link McfGraph}.
+   * Builds the {@link EmbeddingContent} for a candidate {@link NodeSubGraph}.
    *
    * <p>Fields {@code "subject_id"} and {@code "name"} configured in {@link
-   * EmbeddingSpec#nodeTypes()} are populated from the node's DCID and {@code name}, while any other
-   * configured fields are populated from the node's MCF predicate values.
+   * EmbeddingSpec#nodeTypes()} are populated from the node's {@code subjectId} (mapped to JSON key
+   * {@code "title"}) and {@code name}, while any other configured fields are populated from
+   * matching outgoing {@link Edge}s on the candidate {@link NodeSubGraph}.
    */
-  public static EmbeddingContent buildEmbeddingContent(McfGraph candidate, EmbeddingSpec spec) {
-    if (candidate == null || candidate.getNodesMap().isEmpty()) {
+  public static EmbeddingContent buildEmbeddingContent(NodeSubGraph candidate, EmbeddingSpec spec) {
+    if (candidate == null || candidate.getNode() == null) {
       return null;
     }
 
-    String subjectId = ReadCandidateNodesFn.getSubjectId(candidate).trim();
-    PropertyValues pvs = candidate.getNodesMap().values().iterator().next();
-    String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name()).trim();
-    List<String> types =
-        GraphUtils.getPropertyValues(pvs.getPvsMap(), GraphUtils.Property.typeOf.name());
-    if (subjectId.isEmpty() || name.isEmpty() || types.isEmpty()) {
+    Node node = candidate.getNode();
+    String subjectId = ReadCandidateNodesFn.getSubjectId(candidate);
+    String name = node.getName() == null ? "" : node.getName().trim();
+    List<String> types = node.getTypes();
+    if (subjectId.isEmpty() || name.isEmpty() || types == null || types.isEmpty()) {
       return null;
     }
 
     ImmutableMap<String, String> contentMap =
         ImmutableMap.<String, String>builder()
             .putAll(buildBaseContentMap(subjectId, name, types, spec))
-            .putAll(extractPredicateProperties(pvs, types, spec))
+            .putAll(extractPredicateProperties(candidate.getEdges(), types, spec))
             .buildKeepingLast();
 
     if (contentMap.isEmpty()) {
@@ -123,36 +124,37 @@ public class GenerateEmbeddingContentFn extends DoFn<McfGraph, EmbeddingContent>
       String subjectId, String name, List<String> types, EmbeddingSpec spec) {
     ImmutableSet<String> embeddingFields = getEmbeddingNodeFields(types, spec);
     ImmutableMap.Builder<String, String> contentMap = ImmutableMap.builder();
-    if (embeddingFields.contains(NodeRecord.COL_SUBJECT_ID)) {
-      contentMap.put(NodeRecord.COL_SUBJECT_ID, subjectId);
-    }
     if (embeddingFields.contains(NodeRecord.COL_NAME)) {
       contentMap.put(NodeRecord.COL_NAME, name);
+    }
+    if (embeddingFields.contains(NodeRecord.COL_SUBJECT_ID)) {
+      contentMap.put(SUBJECT_ID_JSON_KEY, subjectId);
     }
     return contentMap.buildOrThrow();
   }
 
   /**
-   * Extracts configured predicate properties for a node from its {@link PropertyValues}, joining
-   * multiple values for the same predicate with {@code ". "}.
+   * Extracts configured predicate properties for a candidate node from its outgoing {@link Edge}s,
+   * joining multiple values for the same predicate with {@code ". "}.
    */
   public static ImmutableMap<String, String> extractPredicateProperties(
-      PropertyValues pvs, List<String> types, EmbeddingSpec spec) {
+      List<Edge> edges, List<String> types, EmbeddingSpec spec) {
     ImmutableSet<String> embeddingPredicates = getEmbeddingPredicates(types, spec);
-    if (embeddingPredicates.isEmpty() || pvs == null) {
+    if (embeddingPredicates.isEmpty() || edges == null || edges.isEmpty()) {
       return ImmutableMap.of();
     }
 
     return embeddingPredicates.stream()
-        .map(predicate -> Map.entry(predicate, extractSinglePredicateValues(pvs, predicate)))
+        .map(predicate -> Map.entry(predicate, extractSinglePredicateValues(edges, predicate)))
         .filter(entry -> !entry.getValue().isEmpty())
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
-  static String extractSinglePredicateValues(PropertyValues pvs, String predicate) {
+  static String extractSinglePredicateValues(List<Edge> edges, String predicate) {
     ImmutableList<String> values =
-        GraphUtils.getPropertyValues(pvs.getPvsMap(), predicate).stream()
-            .map(String::trim)
+        edges.stream()
+            .filter(edge -> predicate.equals(edge.getPredicate()))
+            .map(edge -> edge.getObjectId().trim())
             .filter(v -> !v.isEmpty())
             .sorted()
             .collect(ImmutableList.toImmutableList());

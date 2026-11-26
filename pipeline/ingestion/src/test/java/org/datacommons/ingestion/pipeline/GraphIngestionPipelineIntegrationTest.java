@@ -24,10 +24,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
+import java.util.List;
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.datacommons.ingestion.pipeline.embedding.VertexAiEmbeddingClient;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.After;
 import org.junit.Before;
@@ -71,6 +74,7 @@ public class GraphIngestionPipelineIntegrationTest {
   private static final String TEST_MODE_PROPERTY = "testMode";
   private static final String MODE_LOCAL = "LOCAL";
   private static final String MODE_DATAFLOW = "DATAFLOW";
+  private static final int EMBEDDING_DIM = 768;
 
   @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -275,13 +279,15 @@ public class GraphIngestionPipelineIntegrationTest {
 
     // Run Pipeline
     Pipeline pipeline = Pipeline.create(options);
-    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient);
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, spannerClient, /* vertexAiClient= */ null);
     pipeline.run().waitUntilFinish();
 
     // Verify Spanner
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
     DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
-    verifySpannerOutputs(dbClient, "TestNode", nodeNameValue, "Thing", "TestNode", "");
+    GraphTestUtil.verifySpannerOutputs(
+        dbClient, importName, "TestNode", nodeNameValue, "Thing", "TestNode", "");
   }
 
   @Test
@@ -325,150 +331,104 @@ public class GraphIngestionPipelineIntegrationTest {
 
     // Run Pipeline
     Pipeline pipeline = Pipeline.create(options);
-    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient);
+    GraphIngestionPipeline.buildPipeline(
+        pipeline, options, spannerClient, /* vertexAiClient= */ null);
     pipeline.run().waitUntilFinish();
 
     // Verify Spanner
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
     DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
-    verifySpannerOutputs(
-        dbClient, "CountryUSA", "United States", "Place", "CountryUSA", "CountryFRA");
+    GraphTestUtil.verifySpannerOutputs(
+        dbClient, importName, "CountryUSA", "United States", "Place", "CountryUSA", "CountryFRA");
   }
 
-  private void verifySpannerOutputs(
-      DatabaseClient dbClient,
-      String expectedNodeId,
-      String expectedNodeName,
-      String expectedNodeType,
-      String expectedEntity1,
-      String expectedExtraEntitiesId) {
-    // Verify Node
-    try (ResultSet resultSet =
+  @Test
+  public void testPipelineExecutionNodeEmbedding() throws IOException {
+    IngestionPipelineOptions options =
+        PipelineOptionsFactory.create().as(IngestionPipelineOptions.class);
+
+    String mcfContent =
+        "Node: dcid:TestNode\n"
+            + "typeOf: schema:Thing\n"
+            + "name: \""
+            + nodeNameValue
+            + "\"\n\n"
+            + "Node: dcid:Count_Person\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "name: \"Total Population\"\n"
+            + "populationType: dcs:Person\n"
+            + "measuredProperty: dcs:count\n"
+            + "statType: dcs:measuredValue\n\n"
+            + "Node: dcid:dc/topic/Health\n"
+            + "typeOf: dcs:Topic\n"
+            + "name: \"Health\"\n\n"
+            + "Node: dcid:Farm\n"
+            + "typeOf: dcs:Class\n"
+            + "name: \"Farm\"\n\n"
+            + "Node: dcid:TestObs\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "observationAbout: dcid:TestNode\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 10\n"
+            + "observationDate: \"2023\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n\n"
+            + "Node: dcid:TestObs2\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "observationAbout: dcid:TestNode\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 20\n"
+            + "observationDate: \"2024\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n";
+
+    setPipelineOptions(options, mcfContent);
+    options.setEnableEmbeddings(true);
+
+    List<Double> expectedEmbeddings = Collections.nCopies(EMBEDDING_DIM, 0.1);
+    VertexAiEmbeddingClient embeddingClient = new MockVertexAIClient(expectedEmbeddings);
+
+    // Run Pipeline
+    Pipeline pipeline = Pipeline.create(options);
+    GraphIngestionPipeline.buildPipeline(pipeline, options, spannerClient, embeddingClient);
+    pipeline.run().waitUntilFinish();
+
+    // Verify graph tables (Node, Edge, TimeSeries, Observation)
+    DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
+    DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
+    GraphTestUtil.verifySpannerOutputs(
+        dbClient, importName, "TestNode", nodeNameValue, "Thing", "TestNode", "");
+
+    // Verify NodeEmbedding rows generated for StatisticalVariable, Topic, and Class
+    GraphTestUtil.verifyNodeEmbedding(
+        dbClient,
+        "Count_Person",
+        "base_text_embedding",
+        "{\"name\":\"Total Population\",\"title\":\"Count_Person\"}",
+        List.of("StatisticalVariable"),
+        expectedEmbeddings);
+    GraphTestUtil.verifyNodeEmbedding(
+        dbClient,
+        "dc/topic/Health",
+        "base_text_embedding",
+        "{\"name\":\"Health\",\"title\":\"dc/topic/Health\"}",
+        List.of("Topic"),
+        expectedEmbeddings);
+    GraphTestUtil.verifyNodeEmbedding(
+        dbClient,
+        "Farm",
+        "type_embedding",
+        "{\"name\":\"Farm\"}",
+        List.of("Class"),
+        expectedEmbeddings);
+
+    // Verify unmatched node types (e.g. Thing), leaf value nodes, and observations are not embedded
+    try (ResultSet rs =
         dbClient
             .singleUse()
-            .executeQuery(
-                Statement.of("SELECT * FROM Node where subject_id = '" + expectedNodeId + "'"))) {
-      boolean found = false;
-      while (resultSet.next()) {
-        String subjectId = resultSet.getString("subject_id");
-        String name = resultSet.getString("name");
-        if (expectedNodeId.equals(subjectId) || ("dcid:" + expectedNodeId).equals(subjectId)) {
-          found = true;
-          assertTrue("Name should match", expectedNodeName.equals(name));
-        }
-      }
-      assertTrue("Node should exist in Spanner", found);
-    }
-
-    // Verify Edges
-    String expectedObjectId =
-        org.datacommons.ingestion.util.PipelineUtils.generateObjectValueKey(expectedNodeName);
-
-    // Verify 'name' edge
-    try (ResultSet resultSet =
-        dbClient
-            .singleUse()
-            .executeQuery(
-                Statement.newBuilder(
-                        "SELECT * FROM Edge WHERE subject_id = @subject_id AND predicate = @predicate")
-                    .bind("subject_id")
-                    .to(expectedNodeId)
-                    .bind("predicate")
-                    .to("name")
-                    .build())) {
-      assertTrue("Name edge should exist", resultSet.next());
-      assertEquals(
-          "Name edge object_id should match", expectedObjectId, resultSet.getString("object_id"));
-      assertEquals(
-          "Name edge provenance should match",
-          "dc/base/" + importName,
-          resultSet.getString("provenance"));
-      assertFalse("Should only have one name edge", resultSet.next());
-    }
-
-    // Verify 'typeOf' edge
-    try (ResultSet resultSet =
-        dbClient
-            .singleUse()
-            .executeQuery(
-                Statement.newBuilder(
-                        "SELECT * FROM Edge WHERE subject_id = @subject_id AND predicate = @predicate")
-                    .bind("subject_id")
-                    .to(expectedNodeId)
-                    .bind("predicate")
-                    .to("typeOf")
-                    .build())) {
-      assertTrue("TypeOf edge should exist", resultSet.next());
-      assertEquals(
-          "TypeOf edge object_id should match", expectedNodeType, resultSet.getString("object_id"));
-      assertEquals(
-          "TypeOf edge provenance should match",
-          "dc/base/" + importName,
-          resultSet.getString("provenance"));
-      assertFalse("Should only have one typeOf edge", resultSet.next());
-    }
-
-    // Verify TimeSeries
-    String variableMeasured = null;
-    String entity1 = null;
-    String extraEntitiesId = null;
-    String facetId = null;
-    try (ResultSet resultSet =
-        dbClient
-            .singleUse()
-            .executeQuery(
-                Statement.newBuilder(
-                        "SELECT * FROM TimeSeries WHERE variable_measured LIKE '%TestVariable' AND provenance = @provenance")
-                    .bind("provenance")
-                    .to("dc/base/" + importName)
-                    .build())) {
-      assertTrue("TimeSeries should exist", resultSet.next());
-      variableMeasured = resultSet.getString("variable_measured");
-      entity1 = resultSet.getString("entity1");
-      extraEntitiesId = resultSet.getString("extra_entities_id");
-      facetId = resultSet.getString("facet_id");
-      assertEquals("entity1 should match", expectedEntity1, entity1);
-      assertEquals("extraEntitiesId should match", expectedExtraEntitiesId, extraEntitiesId);
-
-      // Verify facet JSON contains unit and measurement method
-      String facet = resultSet.getJson("facet");
-      assertTrue("Unit should be found in attributes: " + facet, facet.contains("TestUnit"));
-      assertTrue(
-          "Measurement method should be found in attributes: " + facet,
-          facet.contains("TestMethod"));
-
-      assertFalse("Should only have ONE TimeSeries row (deduplication check)", resultSet.next());
-    }
-
-    // Verify Observation
-    try (ResultSet resultSet =
-        dbClient
-            .singleUse()
-            .executeQuery(
-                Statement.newBuilder(
-                        "SELECT * FROM Observation WHERE variable_measured = @variable_measured AND entity1 = @entity1 AND extra_entities_id = @extra_entities_id AND facet_id = @facet_id ORDER BY date ASC")
-                    .bind("variable_measured")
-                    .to(variableMeasured)
-                    .bind("entity1")
-                    .to(entity1)
-                    .bind("extra_entities_id")
-                    .to(extraEntitiesId)
-                    .bind("facet_id")
-                    .to(facetId)
-                    .build())) {
-      // First Observation (2023)
-      assertTrue("First Observation should exist", resultSet.next());
-      assertEquals("First Observation date should match", "2023", resultSet.getString("date"));
-      String val1 = resultSet.getString("value");
-      assertTrue("First Observation value should match", "10".equals(val1) || "10.0".equals(val1));
-
-      // Second Observation (2024)
-      assertTrue("Second Observation should exist", resultSet.next());
-      assertEquals("Second Observation date should match", "2024", resultSet.getString("date"));
-      String val2 = resultSet.getString("value");
-      assertTrue("Second Observation value should match", "20".equals(val2) || "20.0".equals(val2));
-
-      assertFalse("Should only have TWO Observation rows", resultSet.next());
+            .executeQuery(Statement.of("SELECT COUNT(*) AS cnt FROM NodeEmbedding"))) {
+      assertTrue(rs.next());
+      assertEquals(3L, rs.getLong("cnt"));
     }
   }
 }

@@ -30,7 +30,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.MetricNameFilter;
 import org.apache.beam.sdk.metrics.MetricQueryResults;
 import org.apache.beam.sdk.metrics.MetricResult;
@@ -39,10 +38,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.TypeDescriptor;
-import org.datacommons.ingestion.pipeline.MockSpannerClient;
 import org.datacommons.ingestion.pipeline.embedding.EmbeddingSpec.NodeFilterType;
-import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -77,7 +73,6 @@ public class GenerateEmbeddingsFnTest implements Serializable {
 
   @Before
   public void setUp() {
-    MockSpannerClient.clearCapturedMutations();
     mockEmbeddingClient = mock(VertexAiEmbeddingClient.class, withSettings().serializable());
   }
 
@@ -130,7 +125,7 @@ public class GenerateEmbeddingsFnTest implements Serializable {
 
     PCollection<Mutation> mutations =
         GenerateEmbeddingsFn.buildEmbeddingMutations(
-            contents, mockEmbeddingClient, "NodeEmbedding", TEST_SPEC, 10);
+            "testImport", contents, mockEmbeddingClient, "NodeEmbedding", TEST_SPEC, 10);
 
     Mutation expected =
         COUNT_PERSON_CONTENT.toNodeEmbeddingRecord(List.of(0.25, 0.75)).toMutation("NodeEmbedding");
@@ -164,41 +159,5 @@ public class GenerateEmbeddingsFnTest implements Serializable {
     List<MetricResult<Long>> batchCallCounters = Lists.newArrayList(batchCallMetrics.getCounters());
     assertEquals(1, batchCallCounters.size());
     assertEquals(Long.valueOf(1L), batchCallCounters.get(0).getCommitted());
-  }
-
-  @Test
-  public void testGenerateAndWriteEmbeddings_waitsOnDeleteAndWritesToSpanner() {
-    when(mockEmbeddingClient.predictEmbeddings(
-            anyList(), eq("text-embedding-005"), eq("RETRIEVAL_QUERY")))
-        .thenReturn(List.of(List.of(0.5, -0.5)));
-
-    PCollection<EmbeddingContent> contents =
-        pipeline.apply("CreateContents", Create.of(COUNT_PERSON_CONTENT));
-    PCollection<Void> deleteWaitSignal =
-        pipeline.apply("CreateDeleteSignal", Create.empty(TypeDescriptor.of(Void.class)));
-
-    SpannerWriteResult mockWriteResult =
-        mock(SpannerWriteResult.class, withSettings().serializable());
-    PCollection<Void> mockWriteOutput =
-        pipeline.apply("CreateWriteOutput", Create.empty(TypeDescriptor.of(Void.class)));
-    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
-
-    SpannerClient mockSpannerClient = new MockSpannerClient(mockWriteResult);
-
-    GenerateEmbeddingsFn.generateAndWriteEmbeddings(
-        pipeline,
-        mockSpannerClient,
-        contents,
-        deleteWaitSignal,
-        mockEmbeddingClient,
-        "NodeEmbedding",
-        TEST_SPEC,
-        10);
-
-    pipeline.run().waitUntilFinish();
-
-    Mutation expected =
-        COUNT_PERSON_CONTENT.toNodeEmbeddingRecord(List.of(0.5, -0.5)).toMutation("NodeEmbedding");
-    assertEquals(List.of(expected), MockSpannerClient.getCapturedMutations());
   }
 }

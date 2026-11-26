@@ -20,6 +20,7 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Statement;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
+import java.util.Objects;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
@@ -35,8 +36,9 @@ import org.datacommons.ingestion.spanner.model.EdgeRecord;
 
 /**
  * Deletes existing rows in {@code NodeEmbedding} by querying distinct {@code subject_id}s from
- * {@code Edge} for a given {@code provenance}, batching them in chunks of {@link
- * #DELETE_BATCH_SIZE}, and writing primary-key prefix delete {@link Mutation}s via {@link
+ * {@code Edge} for a given {@code provenance} at a fixed pre-ingestion snapshot timestamp, batching
+ * them in chunks of {@link #DELETE_BATCH_SIZE}, and writing primary-key prefix delete {@link
+ * Mutation}s (all {@code embedding_label}s for each {@code subject_id}) via {@link
  * SpannerClient#writeMutations}.
  *
  * <p>TODO: This class will help migrate the existing {@code NodeEmbedding} table to include {@code
@@ -48,52 +50,56 @@ public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
   public static final int DELETE_BATCH_SIZE = 1000;
 
   private final String embeddingTable;
-  private final String embeddingLabel;
   private final Counter deletedNodesCounter;
 
-  public DeleteExistingEmbeddingsFn(String embeddingTable, String embeddingLabel) {
+  public DeleteExistingEmbeddingsFn(String embeddingTable) {
     this.embeddingTable = embeddingTable;
-    this.embeddingLabel = embeddingLabel;
     this.deletedNodesCounter =
-        Metrics.counter(
-            DeleteExistingEmbeddingsFn.class, "embedding_deleted_nodes:" + embeddingLabel);
+        Metrics.counter(DeleteExistingEmbeddingsFn.class, "embedding_deleted_nodes");
   }
 
   /**
-   * Reads distinct {@code subject_id}s from {@code Edge} for {@code provenance}, builds prefix
-   * delete {@link Mutation}s for {@code embeddingTable} and {@code embeddingLabel}, and writes them
-   * via {@link SpannerClient#writeMutations}, returning a completion signal {@link PCollection} for
-   * {@code Wait.on}.
+   * Reads distinct {@code subject_id}s from {@code Edge} for {@code provenance} at the exact
+   * snapshot {@code readTimestamp} (so a concurrent {@code DELETE FROM Edge} does not hide rows),
+   * builds prefix delete {@link Mutation}s for {@code embeddingTable} regardless of {@code
+   * embedding_label}, and writes them via {@link SpannerClient#writeMutations}, returning a
+   * completion signal {@link PCollection} for {@code Wait.on}.
    */
   public static PCollection<Void> deleteExistingEmbeddings(
       Pipeline pipeline,
       SpannerClient spannerClient,
+      String importName,
       String embeddingTable,
-      String embeddingLabel,
-      String provenance) {
+      String provenance,
+      com.google.cloud.Timestamp readTimestamp) {
     PCollection<String> subjectIds =
-        readSubjectIdsByProvenance(pipeline, spannerClient, provenance, embeddingLabel);
+        readSubjectIdsByProvenance(pipeline, spannerClient, provenance, importName, readTimestamp);
     PCollection<Mutation> deleteMutations =
-        buildDeleteMutations(subjectIds, embeddingTable, embeddingLabel);
+        buildDeleteMutations(importName, subjectIds, embeddingTable);
     SpannerWriteResult writeResult =
         spannerClient.writeMutations(
-            pipeline, "WriteDeletedEmbeddings_" + embeddingLabel, deleteMutations);
+            pipeline, "WriteDeletedEmbeddings-" + importName, deleteMutations);
     return writeResult.getOutput();
   }
 
   /**
    * Reads distinct {@code subject_id}s from the {@code Edge} table constrained to {@code
-   * provenance}.
+   * provenance} at the exact Spanner snapshot {@code readTimestamp}.
    */
   public static PCollection<String> readSubjectIdsByProvenance(
-      Pipeline pipeline, SpannerClient spannerClient, String provenance, String stageSuffix) {
+      Pipeline pipeline,
+      SpannerClient spannerClient,
+      String provenance,
+      String stageSuffix,
+      com.google.cloud.Timestamp readTimestamp) {
+    Objects.requireNonNull(readTimestamp, "readTimestamp must not be null");
     Statement stmt = buildSubjectIdsByProvenanceStatement(spannerClient, provenance);
     return pipeline
         .apply(
-            "ReadEdgeSubjectIdsForDelete_" + stageSuffix,
-            spannerClient.getReadTransform().withQuery(stmt))
+            "ReadEdgeSubjectIdsForDelete-" + stageSuffix,
+            spannerClient.getReadTransform().withTimestamp(readTimestamp).withQuery(stmt))
         .apply(
-            "ExtractEdgeSubjectIdForDelete_" + stageSuffix,
+            "ExtractEdgeSubjectIdForDelete-" + stageSuffix,
             MapElements.into(TypeDescriptors.strings())
                 .via(struct -> struct.getString(EdgeRecord.COL_SUBJECT_ID)));
   }
@@ -112,18 +118,17 @@ public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
   }
 
   static PCollection<Mutation> buildDeleteMutations(
-      PCollection<String> subjectIds, String embeddingTable, String embeddingLabel) {
+      String importName, PCollection<String> subjectIds, String embeddingTable) {
     BatchElements.BatchConfig batchConfig =
         BatchElements.BatchConfig.builder()
             .withMinBatchSize(DELETE_BATCH_SIZE)
             .withMaxBatchSize(DELETE_BATCH_SIZE)
             .build();
     return subjectIds
+        .apply("BatchCandidateIdsForDelete-" + importName, BatchElements.withConfig(batchConfig))
         .apply(
-            "BatchCandidateIdsForDelete_" + embeddingLabel, BatchElements.withConfig(batchConfig))
-        .apply(
-            "BuildDeleteEmbeddingMutations_" + embeddingLabel,
-            ParDo.of(new DeleteExistingEmbeddingsFn(embeddingTable, embeddingLabel)));
+            "BuildDeleteEmbeddingMutations-" + importName,
+            ParDo.of(new DeleteExistingEmbeddingsFn(embeddingTable)));
   }
 
   @ProcessElement
@@ -138,20 +143,19 @@ public class DeleteExistingEmbeddingsFn extends DoFn<List<String>, Mutation> {
             .collect(ImmutableSet.toImmutableSet());
 
     deletedNodesCounter.inc(uniqueIds.size());
-    receiver.output(buildDeleteMutation(embeddingTable, embeddingLabel, uniqueIds));
+    receiver.output(buildDeleteMutation(embeddingTable, uniqueIds));
   }
 
   /**
-   * Builds a {@link Mutation#delete(String, KeySet)} targeting the composite primary key prefix
-   * {@code (subject_id, embedding_label)} for each subject ID in {@code subjectIds}.
+   * Builds a {@link Mutation#delete(String, KeySet)} targeting the primary key prefix {@code
+   * (subject_id)} for each subject ID in {@code subjectIds}, deleting all embeddings regardless of
+   * {@code embedding_label}.
    */
-  public static Mutation buildDeleteMutation(
-      String embeddingTable, String embeddingLabel, Iterable<String> subjectIds) {
+  public static Mutation buildDeleteMutation(String embeddingTable, Iterable<String> subjectIds) {
     KeySet.Builder keySetBuilder = KeySet.newBuilder();
     for (String id : subjectIds) {
       if (id != null && !id.isEmpty()) {
-        keySetBuilder.addRange(
-            KeyRange.prefix(com.google.cloud.spanner.Key.of(id, embeddingLabel)));
+        keySetBuilder.addRange(KeyRange.prefix(com.google.cloud.spanner.Key.of(id)));
       }
     }
     return Mutation.delete(embeddingTable, keySetBuilder.build());

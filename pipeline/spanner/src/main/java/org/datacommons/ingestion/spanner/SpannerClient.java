@@ -1,6 +1,7 @@
 package org.datacommons.ingestion.spanner;
 
 import com.google.cloud.NoCredentials;
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Mutation;
@@ -184,6 +185,26 @@ public class SpannerClient implements Serializable {
         ResultSet resultSet =
             getDatabaseClient(spanner).singleUse().executeQuery(statement, LOW_PRIORITY)) {
       return resultSet.next() && resultSet.getLong(0) > 0;
+    }
+  }
+
+  /**
+   * Returns Spanner's current TrueTime timestamp via {@code SELECT CURRENT_TIMESTAMP()}.
+   *
+   * <p>Issued via a strong single-use read-only query so callers receive a Spanner-authoritative
+   * timestamp suitable for exact point-in-time snapshot reads (e.g., {@link
+   * SpannerIO.Read#withTimestamp(Timestamp)}).
+   */
+  public Timestamp getCurrentTimestamp() {
+    try (Spanner spanner = createSpanner();
+        ResultSet resultSet =
+            getDatabaseClient(spanner)
+                .singleUse()
+                .executeQuery(Statement.of("SELECT CURRENT_TIMESTAMP()"), LOW_PRIORITY)) {
+      if (!resultSet.next()) {
+        throw new IllegalStateException("Spanner SELECT CURRENT_TIMESTAMP() returned no rows");
+      }
+      return resultSet.getTimestamp(0);
     }
   }
 

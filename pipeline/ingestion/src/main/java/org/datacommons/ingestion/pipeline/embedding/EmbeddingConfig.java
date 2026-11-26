@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 /** Global configuration for embedding ingestion, parsed from a JSON configuration file. */
 public record EmbeddingConfig(List<EmbeddingSpec> specs) implements Serializable {
@@ -35,7 +36,7 @@ public record EmbeddingConfig(List<EmbeddingSpec> specs) implements Serializable
     if (specs == null || specs.isEmpty()) {
       throw new IllegalArgumentException("specs must not be empty");
     }
-    if (specs.contains(null)) {
+    if (specs.stream().anyMatch(Objects::isNull)) {
       throw new IllegalArgumentException("specs must not contain null elements");
     }
   }
