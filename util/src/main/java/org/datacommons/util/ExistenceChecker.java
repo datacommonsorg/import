@@ -121,9 +121,11 @@ public class ExistenceChecker {
     }
   }
 
-  // Registers the nodes that a CSV row creates, so that references to them from the same row
-  // are not checked against the KG. These include TMCF entities (e.g., a new AirQualitySite)
-  // and the nodes that McfMutator generates from complex values (e.g., "[LatLong 12 34]").
+  // Registers the nodes that a CSV row creates, so that references to them from this row or a
+  // later row are not checked against the KG. These include TMCF entities (e.g., a new
+  // AirQualitySite) and the nodes that McfMutator generates from complex values (e.g.,
+  // "[LatLong 12 34]"). Rows are processed in order, so references to nodes that a later row
+  // creates are still checked against the KG.
   //
   // A node with only typeOf and dcid is not registered: it just points at an entity that should
   // already exist (e.g., "typeOf: Country" and "dcid: country/USA"), so references to it are
