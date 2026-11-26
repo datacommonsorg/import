@@ -1,22 +1,26 @@
 package org.datacommons.ingestion.differ;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Distinct;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Flatten;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.TupleTag;
 import org.datacommons.ingestion.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DifferPipeline {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DifferPipeline.class);
-  private static final String DIFF_HEADER =
-      "key_combined,value_combined_current,value_combined_previous,diff_type";
 
   public static void main(String[] args) {
 
@@ -25,10 +29,23 @@ public class DifferPipeline {
         PipelineOptionsFactory.fromArgs(args).withValidation().as(DifferOptions.class);
     Pipeline p = Pipeline.create(options);
 
+    buildPipeline(p, options);
+
+    PipelineResult result = p.run();
+
+    try {
+      result.waitUntilFinish();
+      DifferUtils.generateSummary(result, options.getOutputLocation());
+    } catch (UnsupportedOperationException e) {
+      LOGGER.info("Pipeline run in template mode. Not waiting or writing metrics.");
+    }
+  }
+
+  public static PCollectionTuple buildPipeline(Pipeline p, DifferOptions options) {
     // Read input graph files and convert into PCollections.
     PCollection<McfGraph> previousNodes;
     PCollection<McfGraph> currentNodes;
-    if (options.getUseOptimizedGraphFormat()) {
+    if (options.getUseOptimizedGraphFormat() != null && options.getUseOptimizedGraphFormat()) {
       LOGGER.info("Using tfrecord file format");
       currentNodes = PipelineUtils.readMcfGraph("differ", options.getCurrentData(), p);
       previousNodes = PipelineUtils.readMcfGraph("differ", options.getPreviousData(), p);
@@ -39,32 +56,54 @@ public class DifferPipeline {
     }
 
     // Process the input and perform diff operation.
-    PCollectionTuple currentNodesTuple = DifferUtils.processGraph(currentNodes);
-    PCollectionTuple previousNodesTuple = DifferUtils.processGraph(previousNodes);
-    PCollection<KV<String, String>> nCollection =
+    PCollectionTuple currentNodesTuple = DifferUtils.processGraph(currentNodes, true);
+    PCollectionTuple previousNodesTuple = DifferUtils.processGraph(previousNodes, false);
+
+    PCollection<KV<String, PropertyValues>> nCollectionObs =
         currentNodesTuple.get(DifferUtils.OBSERVATION_NODES_TAG);
-    PCollection<KV<String, String>> pCollection =
+    PCollection<KV<String, PropertyValues>> pCollectionObs =
         previousNodesTuple.get(DifferUtils.OBSERVATION_NODES_TAG);
-    PCollection<String> obsDiff = DifferUtils.performDiff(nCollection, pCollection);
+    PCollection<KV<String, String>> obsDiff =
+        DifferUtils.performDiff(nCollectionObs, pCollectionObs, true, true);
 
-    nCollection = currentNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG).apply(Distinct.create());
-    pCollection = previousNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG).apply(Distinct.create());
-    PCollection<String> schemaDiff = DifferUtils.performDiff(nCollection, pCollection);
+    PCollection<KV<String, PropertyValues>> nCollectionSchema =
+        currentNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
+    PCollection<KV<String, PropertyValues>> pCollectionSchema =
+        previousNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
+    PCollection<KV<String, String>> schemaDiff =
+        DifferUtils.performDiff(nCollectionSchema, pCollectionSchema, false, true);
 
-    obsDiff.apply(
-        "Write observation diff output",
-        TextIO.write()
-            .to(options.getOutputLocation() + "/" + "obs-diff")
-            .withSuffix(".csv")
-            .withNumShards(1)
-            .withHeader(DIFF_HEADER));
-    schemaDiff.apply(
-        "Write schema diff output",
-        TextIO.write()
-            .to(options.getOutputLocation() + "/" + "schema-diff")
-            .withSuffix(".csv")
-            .withNumShards(1)
-            .withHeader(DIFF_HEADER));
-    p.run();
+    if (options.getOutputLocation() != null) {
+      DoFn<KV<String, String>, String> injectDiffTypeFn =
+          new DoFn<KV<String, String>, String>() {
+            @ProcessElement
+            public void processElement(ProcessContext c) {
+              KV<String, String> element = c.element();
+              String diffType = element.getKey();
+              String mcf = element.getValue();
+              if (mcf == null || mcf.isEmpty()) return;
+              for (String node : mcf.split("\n\n")) {
+                String trimmed = node.trim();
+                if (!trimmed.isEmpty()) {
+                  c.output(trimmed + "\nDiffType: " + diffType + "\n");
+                }
+              }
+            }
+          };
+
+      PCollection<String> obsDiffFormatted =
+          obsDiff.apply("FormatObsDiff", ParDo.of(injectDiffTypeFn));
+      PCollection<String> schemaDiffFormatted =
+          schemaDiff.apply("FormatSchemaDiff", ParDo.of(injectDiffTypeFn));
+
+      PCollectionList<String> combinedList =
+          PCollectionList.of(obsDiffFormatted).and(schemaDiffFormatted);
+      PCollection<String> combinedDiff = combinedList.apply("FlattenDiffs", Flatten.pCollections());
+      combinedDiff.apply(
+          "WriteCombinedDiff",
+          TextIO.write().to(options.getOutputLocation() + "/diff").withSuffix(".mcf"));
+    }
+    return PCollectionTuple.of(new TupleTag<KV<String, String>>("obsDiff"), obsDiff)
+        .and(new TupleTag<KV<String, String>>("schemaDiff"), schemaDiff);
   }
 }
